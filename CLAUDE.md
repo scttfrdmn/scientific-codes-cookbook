@@ -43,6 +43,14 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   from S3 and writes its outputs to S3, so a failed task 2 is rerun alone. That
   falls out of the shape for free — just don't design it out by having a task
   depend on a previous task's local disk. **Build no machinery for it.**
+- **Every staged path is flat in `/tmp`, and directory intermediates travel as a
+  tar.** Host `/tmp` is `1777` and the one mount writable whatever user the image
+  runs as. `spawn` advertises directory staging (a manifest source ending in `/`
+  gets `--recursive`) but a **directory output cannot work on the container path**:
+  output parents are never `mkdir`-ed, so dockerd creates them as root and the
+  container can't write there (spawn#564). An index is a directory, so `tar -cf` it
+  to one flat file, `rm -rf` the dir to stay inside the ~6.1 GiB budget, and untar
+  in the consuming task. (Unlaunchable recipe, or worse, a green check over nothing.)
 - **Boot dominates; say so in the README.** First recipe: 46.6s of `bwa index` and
   32s of `bwa mem` inside 6m40s billed. Boot, Docker install and image pull are
   most of every task, and the ratio worsens with each task added. Irrelevant to

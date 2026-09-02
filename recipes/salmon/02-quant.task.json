@@ -1,0 +1,57 @@
+{
+  "task_id": "cookbook-salmon-quant-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 ==\"\n{ printf '%s  %s\\n' 1198ed07e41fdf6f53710dfe4eee376d978e1bf61f0d9dcdd8b7ec2ce7c5432e ERR188026_sub_1.fq.gz\n  printf '%s  %s\\n' 6104ee4641702156ce3f5330b750db6fd461e597de43bb280158bc751a7e120a ERR188026_sub_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\ntar -xf salmon-index.tar\nrm -f salmon-index.tar          # free 1.6 GiB; 6.1 GiB of usable root is the whole budget\ntest -s sidx/index.ssi\n\necho \"== salmon quant, library type inferred (-l A) ==\"\nsalmon quant -i sidx -l A -1 ERR188026_sub_1.fq.gz -2 ERR188026_sub_2.fq.gz -o squant -p 8\n\n# salmon writes into squant/. Copy the artifacts to FLAT /tmp names before declaring\n# them as outputs: an output whose parent dir is /tmp/squant would make spawn mount\n# a root-owned host dir there. Flat /tmp is the only reliably writable destination.\ncp squant/quant.sf                    quant.sf\ncp squant/aux_info/meta_info.json     meta_info.json\ncp squant/cmd_info.json               cmd_info.json\ncp squant/logs/salmon_quant.log       salmon_quant.log\n\n# ---- smoke check ----\n# No python or jq in this image, so read the JSON with awk.\njget() { awk -v k=\"$1\" 'match($0, \"\\\"\"k\"\\\"[[:space:]]*:[[:space:]]*[-0-9.eE+]+\") {\n           s = substr($0, RSTART, RLENGTH); sub(/.*:[[:space:]]*/, \"\", s); print s; exit }' meta_info.json; }\n\n# salmon 2.x reports this configuration as \"deterministic\" in its own log and\n# reproduces its counts exactly, so anything derived from the inputs is asserted\n# exactly. percent_mapped is banded: it is a property of these reads against this\n# transcriptome, which a future salmon could legitimately shift by a point or two.\nPROCESSED=$(jget num_processed)\nMAPPED=$(jget num_mapped)\nPCT=$(jget percent_mapped)\nECLASSES=$(jget num_eq_classes)\nROWS=$(tail -n +2 quant.sf | wc -l | tr -d ' ')\nTPMSUM=$(awk 'NR>1{s+=$4}END{printf \"%.0f\", s}' quant.sf)\nREADSUM=$(awk 'NR>1{s+=$5}END{printf \"%.0f\", s}' quant.sf)\nEXPRESSED=$(awk 'NR>1 && $4>0' quant.sf | wc -l | tr -d ' ')\n\n{\n  echo \"fragments_processed   $PROCESSED  want exactly 200000\"\n  echo \"quant_sf_rows         $ROWS       want exactly 453553   (every transcript, zeros included)\"\n  echo \"tpm_sum               $TPMSUM     want exactly 1000000  (TPM is a per-million normalisation)\"\n  echo \"numreads_sum          $READSUM    want == fragments_mapped ($MAPPED)\"\n  echo \"percent_mapped        $PCT        want 85..99           (observed 94.506)\"\n  echo \"equivalence_classes   $ECLASSES   want 50000..95000     (observed 73772)\"\n  echo \"expressed_transcripts $EXPRESSED  want 8000..30000      (observed 17731)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$PROCESSED\" -eq 200000\ntest \"$ROWS\"      -eq 453553\ntest \"$TPMSUM\"    -eq 1000000\ntest \"$READSUM\"   -eq \"$MAPPED\"\ntest \"$ECLASSES\"  -ge 50000\ntest \"$ECLASSES\"  -le 95000\ntest \"$EXPRESSED\" -ge 8000\ntest \"$EXPRESSED\" -le 30000\nawk -v p=\"$PCT\" 'BEGIN{ if (p >= 85 && p <= 99) exit 0; print \"percent_mapped \" p \" outside band\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/salmon-index.tar",
+      "destination": "/tmp/salmon-index.tar"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ERR188026_sub_1.fq.gz",
+      "destination": "/tmp/ERR188026_sub_1.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ERR188026_sub_2.fq.gz",
+      "destination": "/tmp/ERR188026_sub_2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/quant.sf",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/quant.sf"
+    },
+    {
+      "source": "/tmp/meta_info.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/meta_info.json"
+    },
+    {
+      "source": "/tmp/cmd_info.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/cmd_info.json"
+    },
+    {
+      "source": "/tmp/salmon_quant.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/salmon_quant.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "task_id": "cookbook-iqtree-ml-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged input against its pinned sha256 ==\"\nprintf '%s  %s\\n' b4d4d74594d6213f26dfbd8eeb194ae9a9eaf6c529242384a7395bb56c7c7294 \\\n  pfam38.2_seed_alignment.fa > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== iqtree3: maximum-likelihood tree, LG+G4, fixed seed ==\"\n# -T 4, not AUTO: the number of threads changes the order of likelihood updates and\n# therefore which local optimum the search lands in, so a fixed thread count plus a\n# fixed seed is what makes this run comparable to the next one. -m is given\n# explicitly rather than letting ModelFinder choose, for the same reason.\niqtree3 -s pfam38.2_seed_alignment.fa -m LG+G4 -T 4 --seed 12345 --prefix iqout -redo\n\n# ---- smoke check ----\n# The shape checks are exact: taxon and column counts come straight from the pinned\n# alignment, and every tip must appear in the tree. The log-likelihood is BANDED,\n# and deliberately wide: heuristic tree search is not reproducible across IQ-TREE\n# versions or thread counts even with a fixed seed, so a tight bound here would be\n# a check that fails for uninteresting reasons. The band's job is to catch a tree\n# built from garbage \u2014 a mis-parsed alignment or an all-gap column block lands\n# nowhere near it.\nNTAX_IN=$(grep -c '^>' pfam38.2_seed_alignment.fa)\nNTAX_TREE=$(grep -oE '[(,][A-Za-z0-9_]+:' iqout.treefile | wc -l | tr -d ' ')\nCOLS=$(awk '/sequences with/ {for(i=1;i<=NF;i++) if($i ~ /^columns/) {print $(i-1); exit}}' iqout.log)\nLOGL=$(awk '/^BEST SCORE FOUND/ {print $NF}' iqout.log)\nTERMINATED=$(tail -n 5 iqout.log | grep -c 'Date and Time' || true)\nSEMICOLON=$(tail -c 2 iqout.treefile | tr -d '\\n')\n\n{\n  echo \"taxa_in_alignment   $NTAX_IN     want exactly 114\"\n  echo \"tips_in_tree        $NTAX_TREE   want exactly 114\"\n  echo \"alignment_columns   $COLS        want exactly 477\"\n  echo \"best_log_likelihood $LOGL        want -54000..-52000  (observed -52706.731)\"\n  echo \"newick_terminated   $SEMICOLON   want exactly ;\"\n  echo \"iqtree_wrote_footer $TERMINATED  want exactly 1\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$NTAX_IN\"     -eq 114\ntest \"$NTAX_TREE\"   -eq 114\ntest \"$COLS\"        -eq 477\ntest \"$SEMICOLON\"    = \";\"\ntest \"$TERMINATED\"  -eq 1\ntest -s iqout.treefile\n# Log-likelihoods are negative reals, so compare in awk, not test(1).\nawk -v l=\"$LOGL\" 'BEGIN{ if (l > -54000 && l < -52000) exit 0; print \"log-likelihood \" l \" outside band\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "destination": "/tmp/pfam38.2_seed_alignment.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/iqout.treefile",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.treefile"
+    },
+    {
+      "source": "/tmp/iqout.iqtree",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.iqtree"
+    },
+    {
+      "source": "/tmp/iqout.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.log"
+    },
+    {
+      "source": "/tmp/iqout.mldist",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.mldist"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "35m",
+    "on_complete": "terminate"
+  }
+}

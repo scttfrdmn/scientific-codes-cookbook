@@ -1,0 +1,45 @@
+{
+  "task_id": "cookbook-hmmer-search-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\n{ printf '%s  %s\\n' c686564b490098a9de36c6738206496b746f69739fb11855cfb9cdad958e0d4b pfam38.2_first200.hmm\n  printf '%s  %s\\n' 9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668 ensembl116_pep.fa.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# hmmsearch cannot read a gzipped sequence database, so decompress first. gzip is\n# a base-image utility, not a second scientific tool: this is still one tool, one task.\ngzip -dc ensembl116_pep.fa.gz > pep.fa\n\necho \"== hmmsearch: 200 Pfam 38.2 models vs the Ensembl 116 human proteome ==\"\nhmmsearch --cpu 8 --tblout hits.tbl -o hmmer.out pfam38.2_first200.hmm pep.fa\n\n# ---- smoke check ----\n# hmmsearch is deterministic: the same version over the same two inputs gives the\n# same numbers every time. The bands below are still bands, because a future HMMER\n# version may legitimately shift hit counts; they are wide enough for that and\n# tight enough that an empty, truncated or wrong-database search fails. Measured\n# values are in the README's Observed column.\nQUERIES=$(grep -c '^Query:' hmmer.out || true)\nTARGETS=$(awk '/Target sequences:/ {print $3; exit}' hmmer.out)\nHITS=$(grep -vc '^#' hits.tbl || true)\nMODELS_WITH_HITS=$(grep -v '^#' hits.tbl | awk '{print $3}' | sort -u | wc -l | tr -d ' ')\nSTRONG=$(grep -v '^#' hits.tbl | awk '$5 < 1e-10' | wc -l | tr -d ' ')\n# hmmsearch writes a literal \"[ok]\" as its last line only on clean completion.\n# This is the check that catches a search killed part-way with a partial tblout.\nTRAILER=$(tail -n 1 hmmer.out)\n\n{\n  echo \"models_searched     $QUERIES              want exactly 200\"\n  echo \"target_sequences    $TARGETS              want exactly 382428\"\n  echo \"tblout_hits         $HITS                 want  40000..80000   (observed 59840)\"\n  echo \"models_with_a_hit   $MODELS_WITH_HITS     want    140..200     (observed   168)\"\n  echo \"hits_at_E_lt_1e-10  $STRONG               want   5000..20000   (observed 10050)\"\n  echo \"hmmsearch_trailer   $TRAILER              want exactly [ok]\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$QUERIES\"           -eq 200\ntest \"$TARGETS\"           -eq 382428\ntest \"$HITS\"              -ge 40000\ntest \"$HITS\"              -le 80000\ntest \"$MODELS_WITH_HITS\"  -ge 140\ntest \"$MODELS_WITH_HITS\"  -le 200\ntest \"$STRONG\"            -ge 5000\ntest \"$STRONG\"            -le 20000\ntest \"$TRAILER\"            = \"[ok]\"\ntest -s hits.tbl\n\ngzip -n -6 hmmer.out          # 75 MB of per-domain detail compresses to a few MB\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/hmmer@sha256:ecae1325123858761f0d744aacae948a89368440fd6d91f69c178402294fc792",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/hmmer/pfam38.2_first200.hmm",
+      "destination": "/tmp/pfam38.2_first200.hmm"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/hmmer/ensembl116_pep.fa.gz",
+      "destination": "/tmp/ensembl116_pep.fa.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/hits.tbl",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/hits.tbl"
+    },
+    {
+      "source": "/tmp/hmmer.out.gz",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/hmmer.out.gz"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate"
+  }
+}

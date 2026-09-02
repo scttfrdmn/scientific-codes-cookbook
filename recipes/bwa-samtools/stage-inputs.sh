@@ -32,7 +32,7 @@ cat chr20.seq >> chr20.fa
 for i in 1 2; do
   aws s3api get-object --bucket 1000genomes --key "${SRC_FQ}_${i}.filt.fastq.gz" \
     --range bytes=0-41943039 "part_${i}.gz" > /dev/null
-  gzip -dc "part_${i}.gz" 2>/dev/null | head -n 1600000 > "r${i}.fq"
+  { gzip -dc "part_${i}.gz" 2>/dev/null || true; } | head -n 1600000 > "r${i}.fq"
   [ "$(wc -l < "r${i}.fq")" -eq 1600000 ] || { echo "mate $i short" >&2; exit 1; }
   gzip -n -9 "r${i}.fq"
 done
