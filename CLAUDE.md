@@ -59,6 +59,13 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 - **Smoke-check every run.** Runs-to-exit-0 with empty or garbage output is a
   failure, not a success. This is the correctness bar — the minimum, not ceremony.
   Don't report a run worked without checking its output. (Silent failure.)
+- **Never trust spawn's exit code as evidence the outputs exist.** Measured: a
+  task whose declared output fails to stage is still recorded `state: completed,
+  exit_code: 0`, because the wrapper computes the stage-out result and discards it
+  (spore-host/spawn#561). So run the smoke check **inside** the task, where it can
+  fail the task, *and* confirm the objects are actually in the bucket afterwards.
+  Also: a task with **no completion record at all** is a probable stage-in failure,
+  not a hang. (Silent failure, again — this one wearing a green check.)
 - **Stop at the boundary.** Writing a recipe, staging an input, requesting an image
   are in bounds. Building a harness, a gate framework, a shared engine, or anything
   with its own test suite is not — stop and report. (Scope drift, the main risk.)

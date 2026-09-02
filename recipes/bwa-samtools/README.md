@@ -147,11 +147,12 @@ python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["command"][2])' 0
 
 ---
 
-## Two things about the container path that this recipe works around
+## Three things about the container path, worth knowing before the next recipe
 
-Both are `spawn task run` behaviours worth knowing before writing the next
-container recipe. The first is filed as spore-host/spawn#555; the disk limit
-that forced chr20 is spore-host/spawn#556.
+All three are `spawn task run` behaviours. Filed as spore-host/spawn#555 (the
+container can't write staged dirs, confirmed), spore-host/spawn#561 (a lost output
+is still reported as success), and spore-host/spawn#556 (the 8 GiB disk that forced
+chr20, plus other silent narrowings). The third bullet is not a bug at all.
 
 - **Every path is directly in `/tmp`, deliberately.** The generated wrapper
   bind-mounts the parent directory of each staged path and creates it as the
@@ -162,12 +163,21 @@ that forced chr20 is spore-host/spawn#556.
   location that works regardless of the image's user. This affects every
   bioconda-derived image, not just these two.
 
-  **Status: the uid is measured, the `EACCES` is still inference.** Because this
-  recipe puts everything in `/tmp`, the run never exercised the failing path — it
-  avoided it. So a passing run here is not evidence the write would have worked
-  elsewhere, and it is not evidence it would have failed either. Settling it needs
-  a task that deliberately stages into a non-`/tmp` directory and reports `id` plus
-  per-directory write results instead of dying.
+  **Status: confirmed by a deliberate probe task, not inferred.** `uid=57439`,
+  a staged `/tmp/pw/in` owned `1000:1000` mode `0755` → `Permission denied`,
+  `/tmp` (mode `1777`) → OK, in the same run. The flat-`/tmp` layout is
+  load-bearing. Two extra wrinkles the probe found: parents of *output* sources are
+  never created by the wrapper, so Docker creates them as **root** — even less
+  writable — and any destination outside `/tmp` fails at `mkdir` before the uid
+  matters at all, because stage-in runs unprivileged and cannot create a directory
+  at the filesystem root. The `/data` + `/work` layout in spawn's own
+  `examples/task-spec.json` cannot work on this path.
+
+- **spawn's exit code does not prove the outputs exist.** A task whose declared
+  output fails to stage is still recorded `state: completed, exit_code: 0`
+  (spore-host/spawn#561 — the wrapper computes the stage-out result and never reads
+  it). This is why the smoke check runs *inside* task 2 rather than after it: there
+  it can fail the task. Confirm the five objects are in the bucket regardless.
 - **One image per task, so this is two tasks — by design, not by accident.**
   `spec.container` takes a single image, and aarch.* ships one tool per image
   deliberately: every image traces to a single signed conda recipe, and mulled
