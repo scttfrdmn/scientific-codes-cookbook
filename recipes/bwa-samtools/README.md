@@ -6,6 +6,11 @@ tasks on Graviton4, both self-terminating.
 
 **Catalog row:** BWA / samtools / bcftools · **Shape:** D · **Round:** One
 
+> **Read this before copying the recipe for real work:** the index is chr20 only,
+> so **29% of reads map** rather than the ~2% that genuinely belong there, and
+> they map with high MAPQ. The BAM is real; the alignments are not correct in the
+> way whole-genome alignments are. See [Why chr20](#why-chr20-and-why-derived-copies-exist).
+
 ---
 
 ## Pins
@@ -80,6 +85,11 @@ Both tasks are `on_complete: terminate`. Nothing is left running.
 | `01-align` | c8g.2xlarge (8 vCPU / 16 GiB) | $0.3190/hr | ~4 min ≈ $0.021 | $0.16 |
 | `02-sort-and-check` | c8g.large (2 vCPU / 4 GiB) | $0.0798/hr | ~3 min ≈ $0.004 | $0.04 |
 
+**Actual, first run:** task 1 billed 3m51s = $0.0205 (`bwa index` 46.6s, `bwa mem
+-t 8` 32.0s wall / 247.0s CPU); task 2 billed 2m49s = $0.0037. **$0.024 total**,
+against an expected $0.03. Both boxes self-terminated. Boot plus Docker install
+plus image pull is the majority of both, which is the argument for one task.
+
 **Expected ≈ $0.03; absolute worst case $0.20** if both tasks hang until TTL.
 `spawn task run` exposes no `--cost-limit`, so the TTL *is* the cost cap here —
 30 minutes × the on-demand rate. That bound is why the TTL is 30m and not 4h.
@@ -105,7 +115,9 @@ assertions, all in `02-sort-and-check.task.json`:
 | properly paired (`-f 0x2`) | > 50000 | 132080 | mates handled as singles |
 
 The `Observed` column comes from running both commands in the pinned images on
-arm64 before any launch. The bands are set wide enough around those values to
+arm64 before any launch, and the run on Graviton4 reproduced **every one of those
+numbers exactly** — 808,505 records, 800,000 primary, 233,036 primary mapped
+(29.13%), 61,160 at MAPQ ≥ 30, 132,080 properly paired. The bands are set wide enough around those values to
 survive aligner nondeterminism and tight enough that an empty, unmapped,
 truncated or wrong-reference BAM fails. The exact `800000` is the strongest of
 them: it is a conservation check, not a threshold.
@@ -133,9 +145,16 @@ that forced chr20 is spore-host/spawn#556.
   instance user (uid 1000), but `docker run` is issued with no `--user`, so an
   aarchbio image runs as `mambauser` — **uid 57439**. A 0755 directory owned by
   uid 1000 is not writable by uid 57439, so a command that writes its output into
-  a staged directory gets `EACCES`. Host `/tmp` is 1777, so it is the one location
-  that works regardless of the image's user. This affects every bioconda-derived
-  image, not just these two.
+  a staged directory should get `EACCES`. Host `/tmp` is 1777, so it is the one
+  location that works regardless of the image's user. This affects every
+  bioconda-derived image, not just these two.
+
+  **Status: the uid is measured, the `EACCES` is still inference.** Because this
+  recipe puts everything in `/tmp`, the run never exercised the failing path — it
+  avoided it. So a passing run here is not evidence the write would have worked
+  elsewhere, and it is not evidence it would have failed either. Settling it needs
+  a task that deliberately stages into a non-`/tmp` directory and reports `id` plus
+  per-directory write results instead of dying.
 - **One image per task, so this is two tasks.** `spec.container` takes a single
   image and aarchbio ships no combined bwa+samtools image, so the canonical
   `bwa mem | samtools sort` pipe is not available. The SAM travels between tasks
