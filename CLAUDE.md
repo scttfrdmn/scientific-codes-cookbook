@@ -28,6 +28,28 @@ real: it exists, is non-empty, is the right shape. That's done. Don't gold-plate
 GPU-bound codes are **Round Two** (an x86 pass) — the only Graviton GPU is g7g,
 too small to be representative. Don't force them onto Graviton now.
 
+## The shape of a recipe: one tool per task, S3 between them
+
+**aarch.* ships one tool per image, deliberately, and that is not changing.** The
+registries' value is that every image traces to a single signed conda recipe;
+mulled multi-tool images mean resolving a joint environment, which breaks exactly
+that provenance. Same trust reason aarch.* doesn't compile from source. So:
+
+- **Don't expect pipes.** `bwa mem | samtools sort` is not expressible —
+  `spec.container` takes one image. A multi-tool recipe is a **sequence of
+  single-tool tasks**, and intermediate data round-trips through S3. Pins verified
+  at each hop. This is the model, not a workaround; don't describe it as one.
+- **Recipes stay resumable at task boundaries.** Every task reads all its inputs
+  from S3 and writes its outputs to S3, so a failed task 2 is rerun alone. That
+  falls out of the shape for free — just don't design it out by having a task
+  depend on a previous task's local disk. **Build no machinery for it.**
+- **Boot dominates; say so in the README.** First recipe: 46.6s of `bwa index` and
+  32s of `bwa mem` inside 6m40s billed. Boot, Docker install and image pull are
+  most of every task, and the ratio worsens with each task added. Irrelevant to
+  Round One (working examples, not benchmarks) but it means **recipe timings are
+  not compute cost** — note that in the README so no one reads them as such, and
+  leave the rest to the deferred measurement phase.
+
 ## Rules (each earns its place by preventing a real harm)
 
 - **Sentinel always fires; the box self-terminates.** A run that hits TTL instead

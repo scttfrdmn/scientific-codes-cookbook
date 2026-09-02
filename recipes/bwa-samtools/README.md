@@ -87,8 +87,21 @@ Both tasks are `on_complete: terminate`. Nothing is left running.
 
 **Actual, first run:** task 1 billed 3m51s = $0.0205 (`bwa index` 46.6s, `bwa mem
 -t 8` 32.0s wall / 247.0s CPU); task 2 billed 2m49s = $0.0037. **$0.024 total**,
-against an expected $0.03. Both boxes self-terminated. Boot plus Docker install
-plus image pull is the majority of both, which is the argument for one task.
+against an expected $0.03. Both boxes self-terminated.
+
+**These timings are not compute cost.** 78 seconds of actual work sits inside 6m40s
+of billed time — boot, Docker install and image pull are the majority of both
+tasks, and that ratio gets worse with every task a recipe adds. Fine here, and
+irrelevant to Round One, which builds working examples rather than benchmarks. But
+don't quote these numbers as what BWA costs.
+
+**Rerunning one task.** Each task reads all of its inputs from S3 and writes its
+outputs to S3, so if task 2 fails you rerun task 2 alone — task 1's `aln.sam` is
+already in the bucket and task 2 reads it from there. Nothing in either task
+depends on the other's local disk. One caveat: `task_id` is fixed in the spec, so a
+rerun writes over the previous `completion.json` and `command.log` under
+`s3://spawn-results-…/tasks/<task_id>/`. Bump the `task_id` suffix if you want to
+keep both records.
 
 **Expected ≈ $0.03; absolute worst case $0.20** if both tasks hang until TTL.
 `spawn task run` exposes no `--cost-limit`, so the TTL *is* the cost cap here —
@@ -155,11 +168,14 @@ that forced chr20 is spore-host/spawn#556.
   elsewhere, and it is not evidence it would have failed either. Settling it needs
   a task that deliberately stages into a non-`/tmp` directory and reports `id` plus
   per-directory write results instead of dying.
-- **One image per task, so this is two tasks.** `spec.container` takes a single
-  image and aarchbio ships no combined bwa+samtools image, so the canonical
-  `bwa mem | samtools sort` pipe is not available. The SAM travels between tasks
-  through S3 instead. That is honest but it is two boots for what should be one;
-  a mulled bwa+samtools arm64 image would collapse this recipe to a single task.
+- **One image per task, so this is two tasks — by design, not by accident.**
+  `spec.container` takes a single image, and aarch.* ships one tool per image
+  deliberately: every image traces to a single signed conda recipe, and mulled
+  multi-tool images would mean resolving a joint environment, which breaks that
+  provenance. So the canonical `bwa mem | samtools sort` pipe is not available
+  here and will not become available. The SAM round-trips through S3 instead, and
+  the second boot is the price of a pinned, single-recipe image. Don't read this
+  as a gap waiting to be filled.
 
 ---
 
