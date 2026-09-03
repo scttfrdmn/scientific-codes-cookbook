@@ -61,7 +61,9 @@ viral or plant-specific and have no human member.
 
 ## Resources, and what the timings mean
 
-8 vCPU / 16 GiB, `c8g` (resolves to `c8g.2xlarge`), TTL 20m. `hmmsearch --cpu 8`. Measured work: **3m12s** on 4
+8 vCPU / 16 GiB, `c8g` (resolves to `c8g.2xlarge`), TTL 20m, `lifecycle.cost_limit`
+$0.13 — TTL × the on-demand rate, the same ceiling stated twice.
+`hmmsearch --cpu 8`. Measured work: **3m12s** on 4
 threads locally; memory stays around 1–2 GiB, so the box is sized for the thread
 count, not the footprint.
 

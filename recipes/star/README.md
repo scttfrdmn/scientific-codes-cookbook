@@ -16,15 +16,23 @@ gene. Both are STAR in the same pinned image.
 
 ## Why chromosome 20, and why that is a real constraint
 
-Not convenience — disk. `spawn`'s task path never sets a root volume size
-([`cmd/task.go:626`](https://github.com/spore-host/spawn/blob/main/cmd/task.go)), so
-the box gets the AL2023 arm64 AMI default of **8 GiB, about 6.1 GiB usable** after
-the OS. A full human STAR index is ~30 GiB. It does not fit, and no flag in the
-TaskSpec can make it fit, because there is no disk field in the spec at all.
+Not convenience — disk, at the time this recipe was written. A task got the AL2023
+arm64 AMI default of **8 GiB, about 6.1 GiB usable** after the OS, and a full human
+STAR index is ~30 GiB. It did not fit, and no field in the TaskSpec could make it
+fit. A chr20 index is 619 MiB and leaves room for the reads, the BAM and the tar.
 
-A chr20 index is 619 MiB and leaves room for the reads, the BAM and the tar. So this
-recipe is shaped by a platform limit, and the honest version of that is to say so and
-show the consequence in the mapping rate rather than pick an input that hides it.
+**That constraint has since been lifted.** spawn 0.103.0 added
+`resources.disk_gib`, which wires into the same root-volume size `--volume-size`
+sets on the launch path (spawn#556/#558); `--dry-run` now prints the resolved root
+disk either way. A whole-genome index is therefore expressible now — set
+`disk_gib` to ~60 and the shape of this recipe doesn't otherwise change.
+
+It is deliberately **not** done here. This recipe's job is "STAR runs on Graviton4
+and produces a real BAM," which chr20 demonstrates for pennies; a whole-genome index
+is a different, slower, more expensive recipe and belongs to the round that cares
+about realistic mapping rates. What's recorded above is the constraint the run was
+shaped by, kept because the 6.67% mapping rate below is only interpretable if you
+know why the reference is one chromosome.
 
 ## Why two tasks
 
@@ -125,8 +133,11 @@ was silently ignored.
 
 | task | shape | measured work |
 |---|---|---|
-| `01-index` | 8 vCPU / 16 GiB, `c8g`, TTL 20m | 25s |
-| `02-align` | 8 vCPU / 16 GiB, `c8g`, TTL 30m | 4m37s |
+| `01-index` | 8 vCPU / 16 GiB, `c8g`, TTL 20m, cap $0.13 | 25s |
+| `02-align` | 8 vCPU / 16 GiB, `c8g`, TTL 30m, cap $0.18 | 4m37s |
+
+Each cap is `lifecycle.cost_limit` — TTL × the on-demand rate, the same ceiling TTL
+already implies, stated explicitly now that a TaskSpec can carry it (spawn#558).
 
 The align step is slow for 200,000 reads — STAR reports 2.60 million reads/hour —
 and that is the chr20 effect again: STAR searches exhaustively before giving up on a

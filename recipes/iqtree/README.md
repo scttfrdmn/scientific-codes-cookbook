@@ -84,8 +84,9 @@ the boot overhead.
 TTL is 35m against ~7m of work, the loosest ratio of the five recipes and
 deliberately so: heuristic search time is not perfectly predictable, and 4 Graviton4
 vCPUs may not match the 4 threads this was measured on. A run that hits TTL instead of
-completing is a failure by this project's rules. TTL is also the cost cap — at
-`c8g.xlarge` the worst case is about $0.09.
+completing is a failure by this project's rules. TTL is also the binding cost
+mechanism — at `c8g.xlarge` the worst case is about $0.09, and
+`lifecycle.cost_limit: 0.11` states that ceiling explicitly too.
 
 ## Running it
 

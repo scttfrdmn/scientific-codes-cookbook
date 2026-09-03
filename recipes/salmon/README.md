@@ -96,9 +96,12 @@ why the family is `c8g` (compute-bound, 2 GiB/vCPU) rather than a memory-heavier
 Truffle resolves this to `c8g.2xlarge`.
 
 TTL is 20m against ~9 minutes of expected wall time (boot, image pull, staging, then
-3 minutes of work) — a bit over 2× headroom. TTL is also the cost cap, so it is not
-set loose "just in case": a run that hits TTL instead of completing is a failure by
-this project's rules, and a TTL far above the work is just a larger blast radius.
+3 minutes of work) — a bit over 2× headroom. TTL is the binding cost mechanism, so it
+is not set loose "just in case": a run that hits TTL instead of completing is a failure
+by this project's rules, and a TTL far above the work is just a larger blast radius.
+`lifecycle.cost_limit: 0.13` states that ceiling explicitly as well — TTL × the
+on-demand rate, plus a couple of cents. It is a second belt on the same trousers, and
+it only became expressible in a TaskSpec in spawn 0.103.0 (spawn#558).
 
 **These timings are not compute cost.** Each task pays instance boot, image pull
 and S3 staging before the tool starts — on recipe #1 that overhead was ~5 minutes

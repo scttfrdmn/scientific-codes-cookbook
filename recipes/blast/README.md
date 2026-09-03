@@ -70,8 +70,9 @@ be about correctness. 20 is enough headroom that the self-hit cannot be crowded 
 
 ## Resources, and what the timings mean
 
-8 vCPU / 16 GiB, `c8g` (resolves to `c8g.2xlarge`), TTL 20m. Measured work: **54s** for `makeblastdb`, **2.8s**
-for `blastp` on 4 threads.
+8 vCPU / 16 GiB, `c8g` (resolves to `c8g.2xlarge`), TTL 20m, `lifecycle.cost_limit`
+$0.13 — TTL × the on-demand rate, the same ceiling stated twice. Measured work:
+**54s** for `makeblastdb`, **2.8s** for `blastp` on 4 threads.
 
 **These timings are not compute cost.** Each task pays instance boot, image pull and
 S3 staging before the tool starts — on recipe #1 that overhead was ~5 minutes
