@@ -67,6 +67,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 - **Smoke-check every run.** Runs-to-exit-0 with empty or garbage output is a
   failure, not a success. This is the correctness bar — the minimum, not ceremony.
   Don't report a run worked without checking its output. (Silent failure.)
+- **Size the instance and the TTL from a local run, never from a guess about what
+  the tool "probably needs."** Run the tool in the pinned image first, read its peak
+  RSS and wall time, then pick the family from the measurement and set TTL at ~2x
+  measured wall. This is also how smoke-check bands get their numbers — same local
+  run, so it costs nothing extra. **TTL is the cost cap, not a safety margin**: a
+  loose TTL is not free caution, it is a larger blast radius. Measured beats guessed
+  by real money — sizing the five recipes from observation instead of from a hunch
+  about `m8g` took the batch from $1.37 worst case to $0.80. (Overspend, and a band
+  that was never observed.)
 - **Never trust spawn's exit code as evidence the outputs exist.** Measured: a
   task whose declared output fails to stage is still recorded `state: completed,
   exit_code: 0`, because the wrapper computes the stage-out result and discards it
