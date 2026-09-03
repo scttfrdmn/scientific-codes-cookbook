@@ -96,8 +96,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   exit_code: 0`, because the wrapper computes the stage-out result and discards it
   (spore-host/spawn#561). So run the smoke check **inside** the task, where it can
   fail the task, *and* confirm the objects are actually in the bucket afterwards.
-  Also: a task with **no completion record at all** is a probable stage-in failure,
-  not a hang. (Silent failure, again — this one wearing a green check.)
+  Also: a task with **no completion record at all** has not hung — it either failed
+  stage-in or **failed inside the container**, and measurement can't tell those apart
+  from S3, because a failing command writes no record either and the box then rides to
+  TTL (spawn#566). Read the **instance console output** to find out which; that is
+  where the real error is. TTL does fire reliably, so this is bounded spend, not
+  stranded. (Silent failure, again — this one wearing a green check.)
 - **Stop at the boundary.** Writing a recipe, staging an input, requesting an image
   are in bounds. Building a harness, a gate framework, a shared engine, or anything
   with its own test suite is not — stop and report. (Scope drift, the main risk.)
