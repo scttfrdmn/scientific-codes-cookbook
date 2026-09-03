@@ -82,6 +82,22 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 - **Smoke-check every run.** Runs-to-exit-0 with empty or garbage output is a
   failure, not a success. This is the correctness bar — the minimum, not ceremony.
   Don't report a run worked without checking its output. (Silent failure.)
+- **Reach for a conservation identity or a completion sentinel before a threshold.**
+  The assertions that actually earned their place across the seven genomics recipes are
+  the ones the tool must satisfy to be correct at all, not bands on observed values:
+  salmon's TPM sum is exactly `1000000` and its `sum(NumReads)` equals its own mapped
+  count, so a `quant.sf` truncated on a zero-count tail fails even though the row count
+  passes; BLAST's queries are the first 20 records **of its own database**, so each must
+  find itself full-length at 100.000% identity and nothing can outscore it — algorithmic,
+  so no band at all; `hmmsearch` writes `[ok]` only on clean completion, catching a search
+  killed part-way whose partial `tblout` would still land inside any hit-count band; a BAM
+  starts `1f8b0804`. These cost nothing, need no headroom, and cannot go flaky. A band on a
+  measured value is the fallback, not the first move — and a *flaky* check is worse than no
+  check, because it teaches people to ignore failures: a ceiling 3% above the observed
+  value fails on noise, and "the best hit is itself" failed 19-of-20 because BLAST breaks
+  score ties arbitrarily. Assert the claim you mean ("nothing beats itself"), not the
+  convenient proxy for it. (An assertion that fails for reasons unrelated to correctness,
+  or waves through garbage.)
 - **Size the instance and the TTL from a local run, never from a guess about what
   the tool "probably needs."** Run the tool in the pinned image first, read its peak
   RSS and wall time, then pick the family from the measurement and set TTL at ~2x
@@ -109,8 +125,17 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   loops, no polling babysitters, no CLI-output scraping where structured output
   exists.
 - **Zero spend by default.** Any launch needs explicit authorization with a stated
-  ceiling; estimate first, TTL and a cost cap on every launch, report the pre-flight
+  ceiling; estimate first, TTL and a cost cap on every launch (`lifecycle.ttl` and
+  `lifecycle.cost_limit`, both in-spec since spawn 0.103.0), report the pre-flight
   and hold.
+- **A spec that parses is not a spec that acts — confirm a TaskSpec field is honored
+  before relying on it.** Until spawn 0.103.0, `ParseSpec` discarded unknown keys
+  silently *and* `resources.disk_gib` / `lifecycle.cost_limit` did not exist, so a spec
+  asking for a bigger disk or a cost cap validated cleanly and launched without either
+  (spawn#556/#558 added both fields plus `DisallowUnknownFields`). Two free checks settle
+  it: does the spec still parse with the field present, and does `--dry-run` echo the
+  resolved value back. Both were run before `cost_limit` went on the seven recipes.
+  (A guardrail you believe is armed and isn't.)
 
 ## Inputs and images
 
@@ -146,3 +171,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 CHARTER.md (why). GitHub project board (state). docs.spore.host and the
 spore-host / aarchbio / aarchsci repo sources (tooling truth). catalog/cookbook.md
 (the ~50-code list this project works through).
+
+**How a recipe is built is these rules plus a worked example, not a separate document.**
+`recipes/salmon/` is the exemplar — copy its section order (caveat-first if the result
+misleads, why-N-tasks, pins with data tier, smoke-check table as assertion + observed,
+resources with "these timings are not compute cost", running-it with the bucket check,
+re-running). `recipes/star/README.md` shows the caveat blockquote when the science is
+real but the numbers are not representative. There is no pattern doc, for the same
+reason there is no findings log: a second statement of these rules is a second thing
+to keep true.
