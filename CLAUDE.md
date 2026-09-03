@@ -140,10 +140,29 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 ## Inputs and images
 
 - **Orchestration:** the spore.host suite only.
-- **arm64 images:** aarch.bio (bioconda layer) / aarch.science (conda-forge). If an
-  image is missing, that's a gap — **record it, never fall back to x86 or an
-  unverified image.** Image requests are **batched for Scott's review**, not
-  auto-filed (his repos, his backlog).
+- **arm64 images: if a real arm64 container already exists upstream, use it.** aarch.bio
+  (bioconda layer) / aarch.science (conda-forge) exist to fill the many gaps where one
+  does not — **or where a "multi-arch" tag does not actually contain an arm64 entry.**
+  Never fall back to x86 or an emulated image; a missing image is still a gap to record.
+- **Walk the manifest list's entries; a manifest list is not evidence of arm64.**
+  `docker manifest inspect <img>` returning a list means multi-arch was *intended*, not
+  that arm64 is in it. Measured: `gromacs/gromacs:latest` and `psi4/psi4:latest` are both
+  manifest lists whose only entry is `linux/amd64`, so a Graviton pull fails or silently
+  emulates. And a *single* manifest carries no `os`/`architecture` at the top level, so
+  it reads as `?/?` — resolve it with `--verbose` and read `Descriptor.platform` (that is
+  how the three BioContainers images below were confirmed `linux/amd64`). Check before
+  requesting a build: it removed **R** (official `r-base` is `linux/arm64/v8`, `rocker/r-ver`
+  is amd64+arm64) and **NWChem** (`ghcr.io/nwchemgit/nwchem-dev` ships `linux/arm64`) from
+  an approved 11-code request batch. (Asking for a build that already exists, or pinning a
+  tag that emulates.)
+- **Image requests are filed directly on `playgroundlogic/aarchbio` and
+  `playgroundlogic/aarchsci`, through their own templates.** aarchbio takes one tool per
+  image: title `request: <tool>=<version>`, label `container-request`. aarchsci ships
+  **curated envs, not per-code images**, so an ask is "new env X" or "add P to existing
+  env Y" (`env-request: <name>`) — check what already ships first. Carry the evidence in
+  the body: the conda-forge/bioconda `linux-aarch64` build string, that the namespace
+  doesn't already have it (paginate — the quay API caps at 100 of 503 repos), and the
+  upstream container's real architecture.
 - **Data:** RODA first → a stable public source with a durable id (Zenodo/DOI,
   Ensembl/UCSC, versioned release) → build last. Pick the tier yourself and record
   it; flag build-tier inputs for later replacement. Pin regardless of tier — if it
