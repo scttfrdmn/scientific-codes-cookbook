@@ -138,8 +138,16 @@ S3 staging before the tool starts — on recipe #1 that overhead was ~5 minutes 
 78 seconds of work. Boot dominates; the 25-second index task is essentially all boot.
 
 Disk: task 1 peaks at ~1.5 GiB (65 MiB fasta + 116 MiB GTF decompressed + 619 MiB
-index + 619 MiB tar); task 2 at ~1.3 GiB, dropping once it deletes the tar after
-extracting. Both are comfortable against ~6.1 GiB usable — the whole point of chr20.
+index + 619 MiB tar); task 2 holds ~1.3 GiB for its whole run (619 MiB staged tar +
+619 MiB extracted index + 27 MiB reads). Both are comfortable against ~6.1 GiB
+usable — the whole point of chr20.
+
+**Task 2 does not delete the tar after extracting it, and must not.** The first run
+of this task died trying: host `/tmp` is sticky (`1777`) and stage-in runs as the
+instance user while the container runs as the image's own user, so the container gets
+`EPERM` unlinking a staged input it does not own, and `rm -f` does not suppress `EPERM`. Deleting a directory the container
+*created* is fine, which is why task 1's `rm -rf idx` works — the rule is only about
+staged inputs.
 
 ## Running it
 

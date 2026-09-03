@@ -51,6 +51,21 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   container can't write there (spawn#564). An index is a directory, so `tar -cf` it
   to one flat file, `rm -rf` the dir to stay inside the ~6.1 GiB budget, and untar
   in the consuming task. (Unlaunchable recipe, or worse, a green check over nothing.)
+- **Never `rm` a staged input; only files the container itself created.** Host `/tmp`
+  is sticky (`1777`) and stage-in runs as the **instance** user while the container
+  runs as the **image's** user, so the container gets `EPERM` unlinking a staged file
+  it does not own — and `rm -f` does **not** suppress
+  `EPERM`, only `ENOENT`, so it returns 1 and kills the task under `set -e`. Measured:
+  this killed both dependent tasks in the five-recipe batch, at `rm` of the index tar.
+  Budget for holding the staged copy instead. `rm -rf` on a directory the task built
+  is fine. (A task that dies after its inputs verify, for a reason unrelated to the
+  science.)
+- **Local Docker on macOS cannot prove uid/permission behaviour.** Bind mounts there
+  don't enforce sticky-bit ownership, so a dry run passes where the real Linux host
+  fails — that is exactly how the `rm` above got through seven green dry runs. When
+  the question is *permissions*, test it on a real Linux filesystem: create the file
+  as root in a `1777` dir inside the container's own fs, then `setpriv --reuid` to the
+  image's user. (False confidence from a green local run.)
 - **Boot dominates; say so in the README.** First recipe: 46.6s of `bwa index` and
   32s of `bwa mem` inside 6m40s billed. Boot, Docker install and image pull are
   most of every task, and the ratio worsens with each task added. Irrelevant to

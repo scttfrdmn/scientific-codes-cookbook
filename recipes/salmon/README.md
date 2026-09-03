@@ -107,8 +107,16 @@ Read the numbers above as "does this run and how long does the science take", ne
 as a benchmark.
 
 Disk: 8 GiB root, ~6.1 GiB usable. Task 1 peaks at ~3.4 GiB (184 MiB input +
-1.6 GiB index + 1.6 GiB tar); task 2 at ~3.3 GiB, and drops to ~1.7 GiB because it
-deletes the tar right after extracting it.
+1.6 GiB index + 1.6 GiB tar); task 2 holds ~3.2 GiB for its whole run (1.6 GiB
+staged tar + 1.6 GiB extracted index + 27 MiB reads).
+
+**Task 2 does not delete the tar after extracting it, and must not.** The first run
+of this task died trying: host `/tmp` is sticky (`1777`) and stage-in runs as the
+instance user while the container runs as the image's own user, so the container gets
+`EPERM` unlinking a staged input it does not own. `rm -f` does not suppress `EPERM`, only `ENOENT`, so it returned 1 and killed
+the task under `set -e`. Holding both copies costs 3.2 of 6.1 GiB, so there was never
+anything to gain. Deleting a directory the container *created* is fine, which is why
+task 1's `rm -rf sidx` works — the rule is only about staged inputs.
 
 ## Running it
 
