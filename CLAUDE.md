@@ -98,6 +98,20 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   score ties arbitrarily. Assert the claim you mean ("nothing beats itself"), not the
   convenient proxy for it. (An assertion that fails for reasons unrelated to correctness,
   or waves through garbage.)
+- **Where two codes solve the same problem, run them on the same bytes and compare —
+  cross-validation beats any identity.** RAxML-NG and IQ-TREE, same alignment, same
+  LG+G4, independently reached `-52706.731409` and `-52706.731`: two unrelated codebases
+  and two different search heuristics agreeing to ~1 part in 1e8. No single-tool
+  assertion can reach that, because it confirms the *numerics*, not just internal
+  consistency — and each recipe becomes the other's check for free. It cost nothing but
+  **not** copying the input under a second prefix; a second copy of a derived input is a
+  second conversion to keep true, and the agreement only means something on identical
+  bytes. So: when the catalog holds a second code for the same job — aligners, DFT
+  codes, MD force fields — point it at the first one's staged input and assert the
+  agreement, in both READMEs. RELION is the same move against a *published* result
+  rather than a sibling recipe: the RODA archive holds the depositors' own output, so
+  all 221 FSC shells could be compared at `max|diff| = 0`. Prefer either to a band.
+  (A check that only proves a tool is self-consistent, when a stronger one was free.)
 - **Size the instance and the TTL from a local run, never from a guess about what
   the tool "probably needs."** Run the tool in the pinned image first, read its peak
   RSS and wall time, then pick the family from the measurement and set TTL at ~2x
@@ -105,8 +119,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   run, so it costs nothing extra. **TTL is the cost cap, not a safety margin**: a
   loose TTL is not free caution, it is a larger blast radius. Measured beats guessed
   by real money — sizing the five recipes from observation instead of from a hunch
-  about `m8g` took the batch from $1.37 worst case to $0.80. (Overspend, and a band
-  that was never observed.)
+  about `m8g` took the batch from $1.37 worst case to $0.80. **Then retighten from the
+  first real run**, which is strictly better evidence and already paid for: Graviton4
+  ran RAxML-NG's search 2.17x faster than Docker Desktop (7m39s vs 16m35s), so the TTL
+  sized from the local measurement came down 35m → 20m and the cap $0.19 → $0.11 on
+  identical work. A local run is the right *first* move because it is free, not because
+  it is accurate. (Overspend, and a band that was never observed.)
 - **Never trust spawn's exit code as evidence the outputs exist.** Measured: a
   task whose declared output fails to stage is still recorded `state: completed,
   exit_code: 0`, because the wrapper computes the stage-out result and discards it
