@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-ambertools-md-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== ff14SB ships in the ambertools package (zero staging) ==\"\ntest -f /opt/conda/dat/leap/cmd/leaprc.protein.ff14SB\n\necho \"== tleap builds a capped alanine, sander runs 20-step in-vacuo NVE ==\"\ncat > l.in <<'EOF'\nsource leaprc.protein.ff14SB\nsys = sequence { ACE ALA NME }\nsaveamberparm sys sys.parm7 sys.rst7\nquit\nEOF\ntleap -f l.in > tleap.log 2>&1\ncat > md.in <<'EOF'\nminimal\n &cntrl\n  imin=0, nstlim=20, dt=0.001, ntb=0, cut=99.0,\n  ntpr=1, ntt=0, ntc=1\n /\nEOF\nsander -O -i md.in -p sys.parm7 -c sys.rst7 -o md.out -r md.rst > sander.log 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:24s} {detail}\")\n    if not ok: fail.append(label)\n\n# tleap wrote the topology+coords -- exact shape\nimport os\nfor f in (\"sys.parm7\",\"sys.rst7\"):\n    check(f\"tleap_wrote_{f.split('.')[1]}\", os.path.getsize(f)>0, f\"{os.path.getsize(f) if os.path.exists(f) else 0} B\")\n# ACE+ALA+NME capped alanine is 22 atoms in ff14SB -- read from rst7 line 2\nnatoms=int(open(\"sys.rst7\").read().splitlines()[1].split()[0])\ncheck(\"atoms_in_system\", natoms==22, f\"{natoms}  want exactly 22 (ACE-ALA-NME)\")\n\ntext=open(\"md.out\").read()\n# per-step Etot only (drop the AVERAGES / RMS trailing summary blocks)\nsteps=text.split(\"A V E R A G E S\")[0]\netot=[float(m.group(1)) for m in re.finditer(r\"Etot\\s+=\\s*(-?\\d+\\.\\d+)\", steps)]\ncheck(\"etot_steps\", len(etot)>=2, f\"{len(etot)} per-step Etot values  want >= 2\")\n# NVE conservation: no thermostat, so total energy must be conserved -- a physical law\ndrift=max(etot)-min(etot) if etot else 99\ncheck(\"nve_conserved\", drift<0.5, f\"drift {drift:.4f} kcal/mol < 0.5 over 20 steps (NVE)\")\ncheck(\"etot_negative\", etot and etot[0]<0, f\"{etot[0] if etot else 'NA'}  want < 0\")\n# cross-check against sander's OWN independently-computed RMS fluctuation of Etot\nrms=re.search(r\"R M S.*?Etot\\s+=\\s*(-?\\d+\\.\\d+)\", text, re.S)\ncheck(\"sander_own_rms\", rms and float(rms.group(1))<0.5, f\"{rms.group(1) if rms else 'NA'}  sander's own Etot RMS < 0.5\")\n\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/md.out",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/ambertools/r1/md.out"
+    },
+    {
+      "source": "/tmp/tleap.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/ambertools/r1/tleap.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/ambertools/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-psi4-scf-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PSI_SCRATCH=/tmp\ncd /tmp\n\necho \"== psi4 RHF/STO-3G on H2 at 0.74 A (geometry inline, zero staging) ==\"\ncat > h2.py <<'EOF'\nimport psi4, json\npsi4.core.set_output_file(\"/tmp/psi4.out\", False)\npsi4.set_memory(\"500 MB\")\npsi4.geometry(\"0 1\\nH 0.0 0.0 0.0\\nH 0.0 0.0 0.74\\nunits angstrom\\n\")\ne = psi4.energy(\"scf/sto-3g\")\njson.dump({\"scf_energy\": e}, open(\"/tmp/energy.json\",\"w\"))\nprint(\"SCF_ENERGY\", repr(e))\nEOF\npython3 h2.py > psi4run.log 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json, re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:24s} {detail}\")\n    if not ok: fail.append(label)\n\ne=json.load(open(\"/tmp/energy.json\"))[\"scf_energy\"]\n# H2 at 0.74 A in a minimal basis: the textbook RHF/STO-3G total energy is\n# -1.1167 Hartree -- a well-known literature value, so this is a reference identity,\n# not a self-consistent band. psi4 computes it through its own native integral/SCF\n# stack (an independent kernel from gpaw's in the same env).\ncheck(\"scf_energy\", -1.1180 < e < -1.1150, f\"{e:.6f} Ha  want -1.1180..-1.1150 (textbook RHF/STO-3G H2 = -1.1167)\")\n# SCF must have converged -- psi4 raises on non-convergence, but confirm the output says so\nout=open(\"/tmp/psi4.out\").read()\nconv=(\"converged\" in out.lower()) or (\"Energy and wave function converged\" in out)\ncheck(\"scf_converged\", conv, f\"{'yes' if conv else 'NO'}  want a converged-SCF line\")\ncheck(\"energy_is_float\", isinstance(e,float), f\"{type(e).__name__}\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/psi4.out",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/psi4/r1/psi4.out"
+    },
+    {
+      "source": "/tmp/energy.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/psi4/r1/energy.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/psi4/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

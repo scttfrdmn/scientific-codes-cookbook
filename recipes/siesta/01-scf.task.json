@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-siesta-scf-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\ncd /tmp\n\necho \"== verify staged pseudopotential against its pinned sha256 ==\"\nprintf '%s  %s\\n' 0afddde32f30e43fa8d603822f3dd1ddf357e8ff33a1af21eb4982b6e63080d7 Si.psf > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== SIESTA 5.4.2: bulk Si SCF, 2-rank MPI (the env's whole point) ==\"\n# This is SIESTA's own Tests/01.PseudoPotentials `psf` case (base_si2.fdf + psf.fdf),\n# inlined. Running it against the version-matched Si.psf lets the total energy be\n# cross-checked against SIESTA's committed reference for 5.4.2.\ncat > si.fdf <<'EOF'\nSystemName   Si bulk\nSystemLabel  psf\n%block ChemicalSpeciesLabel\n 1  14  Si\n%endblock ChemicalSpeciesLabel\nNumberOfAtoms       2\nNumberOfSpecies     1\nPAO.BasisSize       SZP\nLatticeConstant     5.430 Ang\n%block LatticeVectors\n  0.000  0.500  0.500\n  0.500  0.000  0.500\n  0.500  0.500  0.000\n%endblock LatticeVectors\n%block kgrid_Monkhorst_Pack\n 3 0 0  0.\n 0 3 0  0.\n 0 0 3  0.\n%endblock kgrid_Monkhorst_Pack\nMeshCutoff          150.0 Ry\nDM.UseSaveDM        F\nAtomicCoordinatesFormat  ScaledCartesian\n%block AtomicCoordinatesAndAtomicSpecies\n    0.000    0.000    0.000   1 #  Si  1\n    0.250    0.250    0.250   1 #  Si  2\n%endblock AtomicCoordinatesAndAtomicSpecies\nEOF\nmpiexec -n 2 siesta < si.fdf > psf.out 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:24s} {detail}\")\n    if not ok: fail.append(label)\nout=open(\"psf.out\").read()\n# completion sentinel: SIESTA writes this only when the SCF actually converges\nconv=re.search(r\"SCF cycle converged after (\\d+) iterations\", out)\ncheck(\"scf_converged\", conv is not None, f\"{'yes ('+conv.group(1)+' iters)' if conv else 'NO'}  want the converged line\")\n# MPI really ran on 2 ranks -- the env exists for the MPI build\nnodes=re.search(r\"Running on (\\d+) nodes\", out)\ncheck(\"mpi_ranks\", nodes and int(nodes.group(1))==2, f\"{nodes.group(1) if nodes else 'NA'}  want 2 nodes\")\n# total energy: cross-check against SIESTA's committed 5.4.2 reference (Total = -214.377236 eV)\nm=re.search(r\"siesta:\\s*Total\\s*=\\s*(-?\\d+\\.\\d+)\", out)\ntot=float(m.group(1)) if m else 0.0\ncheck(\"total_energy\", abs(tot-(-214.377236))<0.01, f\"{tot}  want -214.377236 +/-0.01 (SIESTA 5.4.2 committed reference)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/siesta/Si.psf",
+      "destination": "/tmp/Si.psf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/psf.out",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/siesta/r1/psf.out"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/siesta/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
