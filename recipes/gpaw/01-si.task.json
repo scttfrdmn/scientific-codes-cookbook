@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-gpaw-si-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\ncd /tmp\n\necho \"== GPAW plane-wave DFT on bulk Si, serial and 2-rank (the dft env's primary engine) ==\"\n# ASE builds the Si cell in-code -- zero staging. This is the dft env's own D3 reference\n# calculation (PW 200 eV, LDA, 2x2x2 k-points), so the energy is comparable to what\n# aarch.science published for this image.\ncat > si.py <<'EOF'\nfrom ase.build import bulk\nfrom gpaw import GPAW, PW\nfrom gpaw.mpi import world\nsi = bulk(\"Si\",\"diamond\",a=5.43)\nsi.calc = GPAW(mode=PW(200), xc=\"LDA\", kpts=(2,2,2), txt=None)\ne = si.get_potential_energy()\nif world.rank == 0:\n    open(\"gpaw-%d.txt\" % world.size,\"w\").write(\"WORLD_SIZE %d\\nENERGY %.6f\\n\" % (world.size, e))\n    print(\"WORLD_SIZE\", world.size, \"ENERGY %.6f\" % e)\nEOF\npython3 si.py\nmpiexec -n 2 python3 si.py\n\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re,sys,glob\ndef parse(f):\n    t=open(f).read()\n    ws=int(re.search(r\"WORLD_SIZE (\\d+)\",t).group(1))\n    en=float(re.search(r\"ENERGY (-?\\d+\\.\\d+)\",t).group(1))\n    return ws,en\nws1,e1=parse(\"gpaw-1.txt\"); ws2,e2=parse(\"gpaw-2.txt\")\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n# reference reproduction: aarch.science dft D3 bulk-Si PW/LDA energy\ncheck(\"energy_serial\", abs(e1-(-11.703689))<1e-4, f\"{e1:.6f} eV  want -11.703689 +/-1e-4 (dft D3 reference)\")\n# MPI really ran: gpaw's world communicator > 1 (the serial-gpaw regression guard)\ncheck(\"mpi_world_size\", ws2==2, f\"{ws2}  want exactly 2 (gpaw.mpi world > 1, not two serial jobs)\")\ncheck(\"serial_world_size\", ws1==1, f\"{ws1}  want exactly 1\")\n# internal cross-validation: serial vs 2-rank total energy\ncheck(\"serial_eq_2rank\", abs(e1-e2)<1e-5, f\"|{e1:.6f} - {e2:.6f}| < 1e-5 (parallel == serial)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/gpaw-1.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gpaw/r1/gpaw-1.txt"
+    },
+    {
+      "source": "/tmp/gpaw-2.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gpaw/r1/gpaw-2.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gpaw/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

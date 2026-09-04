@@ -1,0 +1,40 @@
+{
+  "task_id": "cookbook-geospatial-roundtrip-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== geospatial core: pyproj reproject, shapely GEOS, rasterio<->GDAL round-trip ==\"\n# All synthetic/in-memory: a projected coordinate, geometric areas, and a raster written\n# then read back and re-opened through GDAL. Nothing staged. Mirrors the geospatial env's\n# own D3 so the numbers are comparable.\ncat > geo.py <<'EOF'\nimport json\nfrom pyproj import Transformer\nfrom shapely.geometry import Point, Polygon\nimport numpy as np, rasterio\nfrom rasterio.transform import from_origin\nfrom osgeo import gdal\ngdal.UseExceptions()\n\nfwd = Transformer.from_crs(\"EPSG:4326\",\"EPSG:3857\",always_xy=True)\nx,y = fwd.transform(-83.0,40.0)                     # near Columbus OH\ninv = Transformer.from_crs(\"EPSG:3857\",\"EPSG:4326\",always_xy=True)\nlon,lat = inv.transform(x,y)                        # round-trip\n\ntri = Polygon([(0,0),(1,0),(0,1)]).area\nbuf = Point(0,0).buffer(1.0).area\n\n# raster round-trip: write uint8 EPSG:4326, read back, re-open via GDAL\ndata = (np.arange(16,dtype=\"uint8\")).reshape(4,4)\ntr = from_origin(-83.0,40.0,0.01,0.01)\nwith rasterio.open(\"tiny.tif\",\"w\",driver=\"GTiff\",height=4,width=4,count=1,\n                   dtype=\"uint8\",crs=\"EPSG:4326\",transform=tr) as dst:\n    dst.write(data,1)\nwith rasterio.open(\"tiny.tif\") as src:\n    back = src.read(1); epsg = src.crs.to_epsg()\nidentical = bool((back==data).all())\nds = gdal.Open(\"tiny.tif\")\ngx,gy = ds.RasterXSize, ds.RasterYSize\nchk = ds.GetRasterBand(1).Checksum()\n\njson.dump({\"merc_x\":x,\"merc_y\":y,\"rt_lon\":lon,\"rt_lat\":lat,\"tri\":tri,\"buf\":buf,\n          \"epsg\":epsg,\"identical\":identical,\"gx\":gx,\"gy\":gy,\"chk\":chk},\n         open(\"geo-results.json\",\"w\"))\nprint(f\"merc=({x:.4f},{y:.4f}) rt=({lon:.9f},{lat:.9f}) tri={tri} buf={buf:.6f} \"\n      f\"epsg={epsg} identical={identical} dims=({gx},{gy}) chk={chk}\")\nEOF\npython3 geo.py | tee geo-results.txt\n\necho \"== smoke check ==\"\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json,sys\nd=json.load(open(\"geo-results.json\")); fail=[]\ndef check(l,ok,detail):\n    print(f\"{l:28s} {detail}\");\n    if not ok: fail.append(l)\n# reference identity: standard WebMercator of (-83,40)\ncheck(\"webmercator_x\", abs(d[\"merc_x\"]-(-9239517.7358))<1.0, f\"{d['merc_x']:.4f}  want -9239517.74 +/-1 m (EPSG:3857)\")\ncheck(\"webmercator_y\", abs(d[\"merc_y\"]-4865942.2795)<1.0, f\"{d['merc_y']:.4f}  want 4865942.28 +/-1 m\")\n# conservation: reprojection round-trips to the original coordinate\ncheck(\"reproject_roundtrip\", abs(d[\"rt_lon\"]-(-83.0))<1e-6 and abs(d[\"rt_lat\"]-40.0)<1e-6,\n      f\"({d['rt_lon']:.9f},{d['rt_lat']:.9f})  want (-83,40) +/-1e-6 (4326->3857->4326)\")\n# geometric identity: right triangle area is exactly 1/2\ncheck(\"triangle_area\", abs(d[\"tri\"]-0.5)<1e-12, f\"{d['tri']}  want exactly 0.5\")\n# shapely buffer approximates the unit disk (pi); default quadsegs -> ~3.1365\ncheck(\"buffer_is_disk\", 3.10<d[\"buf\"]<3.15, f\"{d['buf']:.6f}  want 3.10..3.15 (unit-disk area ~ pi)\")\n# raster conservation + interop: bit-identical read-back, CRS kept, GDAL agrees\ncheck(\"raster_roundtrip\", d[\"identical\"], f\"{d['identical']}  want True (read-back == written)\")\ncheck(\"crs_preserved\", d[\"epsg\"]==4326, f\"{d['epsg']}  want 4326\")\ncheck(\"gdal_interop\", d[\"gx\"]==4 and d[\"gy\"]==4 and d[\"chk\"]>=0, f\"dims=({d['gx']},{d['gy']}) chk={d['chk']}  want 4x4, checksum>=0\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/geo-results.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/geo-results.txt"
+    },
+    {
+      "source": "/tmp/geo-results.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/geo-results.json"
+    },
+    {
+      "source": "/tmp/tiny.tif",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/tiny.tif"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
