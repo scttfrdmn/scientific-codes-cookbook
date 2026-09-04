@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-nwchem-scf-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\ncd /tmp\n\necho \"== NWChem RHF/STO-3G on H2O (geometry inline, zero staging), serial + 2-rank ==\"\n# The env's basis sets are set by activation (NWCHEM_BASIS_LIBRARY); spawn runs the\n# container through its entrypoint, which runs activate.d. Confirm it, since without it\n# nwchem falls back to the feedstock build path baked into the binary and exits 255.\ntest -n \"${NWCHEM_BASIS_LIBRARY:-}\" && test -f \"$NWCHEM_BASIS_LIBRARY/sto-3g\"\n\ncat > h2o.nw <<'EOF'\necho\nstart h2o\nmemory total 400 mb\ngeometry units angstrom\n  O  0.00000  0.00000  0.11730\n  H  0.00000  0.75720 -0.46920\n  H  0.00000 -0.75720 -0.46920\nend\nbasis\n  * library sto-3g\nend\ntask scf energy\nEOF\nmkdir -p s p\n( cd s && cp ../h2o.nw . && nwchem h2o.nw > nwchem.out 2>&1 )\n( cd p && cp ../h2o.nw . && mpiexec -n 2 nwchem h2o.nw > nwchem.out 2>&1 )\ncp s/nwchem.out nwchem-serial.out; cp p/nwchem.out nwchem-2rank.out\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\ndef scf(f):\n    m=re.search(r\"Total SCF energy\\s*=\\s*(-?\\d+\\.\\d+)\", open(f).read()); return float(m.group(1)) if m else None\ndef nproc(f):\n    m=re.search(r\"^\\s*nproc\\s*=\\s*(\\d+)\", open(f).read(), re.M); return int(m.group(1)) if m else None\ns=scf(\"nwchem-serial.out\"); pq=scf(\"nwchem-2rank.out\")\nnp_s=nproc(\"nwchem-serial.out\"); np_p=nproc(\"nwchem-2rank.out\")\n# reference identity: reproduces aarch.science's published D3 nwchem energy\ncheck(\"scf_energy_serial\", s is not None and abs(s-(-74.963023))<1e-5,\n      f\"{s}  want -74.963023 +/-1e-5 (aarch.science dft D3 reference)\")\n# MPI really ran on 2 ranks (the _ts OpenMPI build, the env's whole point)\ncheck(\"mpi_ranks\", np_p==2, f\"{np_p}  want exactly 2 (nwchem's own nproc)\")\ncheck(\"serial_nproc\", np_s==1, f\"{np_s}  want exactly 1\")\n# internal cross-validation: serial vs 2-rank SCF energy identical\ncheck(\"serial_eq_2rank\", (s is not None and pq is not None and abs(s-pq)<1e-6),\n      f\"|{s} - {pq}| < 1e-6 (serial == 2-rank)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/nwchem-serial.out",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/nwchem/r1/nwchem-serial.out"
+    },
+    {
+      "source": "/tmp/nwchem-2rank.out",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/nwchem/r1/nwchem-2rank.out"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/nwchem/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
