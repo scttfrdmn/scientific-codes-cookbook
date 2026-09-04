@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-vina-dock-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged 1iep receptor + ligand against pinned sha256 ==\"\nprintf '%s  %s\\n' f13cf3b36f61d87c3b58983e0b8ecf1c3456a685eb86dfe9ccfb139c7bdc2586 1iep_receptor.pdbqt > pins.sha256\nprintf '%s  %s\\n' 15fb35648d8c18c70317842f3a0631b73a19429c710a037ab07310084d579bb8 1iep_ligand.pdbqt >> pins.sha256\nsha256sum -c pins.sha256\n\necho \"== AutoDock Vina: dock imatinib into Abl kinase (1iep), fixed seed, twice ==\"\ncat > dock.py <<'EOF'\nfrom vina import Vina\nimport json\ndef dock(seed):\n    v = Vina(sf_name='vina', seed=seed, verbosity=0)\n    v.set_receptor('1iep_receptor.pdbqt')\n    v.set_ligand_from_file('1iep_ligand.pdbqt')\n    v.compute_vina_maps(center=[15.190,53.903,16.917], box_size=[20,20,20])\n    v.dock(exhaustiveness=32, n_poses=5)\n    return v.energies(n_poses=5)\ne1 = dock(42)\ne2 = dock(42)\njson.dump({\"top1\": float(e1[0][0]), \"top2\": float(e2[0][0]), \"n_poses\": len(e1)},\n          open(\"dock.json\",\"w\"))\nprint(\"TOP1\", e1[0][0], \"TOP2\", e2[0][0], \"N\", len(e1))\nEOF\npython3 dock.py > dock.log 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\nd=json.load(open(\"dock.json\"))\nt1,t2,n=d[\"top1\"],d[\"top2\"],d[\"n_poses\"]\n# top affinity reproduces the published v1.2.7 basic-docking tutorial result for 1iep\n# (imatinib in Abl kinase): reference top pose -13.234 kcal/mol. Band allows for MC\n# search noise across hosts; a failed dock lands near 0 or positive.\ncheck(\"top_affinity\", -13.7 < t1 < -12.7, f\"{t1:.3f} kcal/mol  want -13.7..-12.7 (v1.2.7 reference -13.234)\")\n# reproducibility identity: same seed -> identical result (proves --seed controls the MC)\ncheck(\"deterministic_seed\", abs(t1-t2)<1e-6, f\"|{t1:.3f} - {t2:.3f}| < 1e-6 (fixed seed is deterministic)\")\ncheck(\"poses_returned\", n>=3, f\"{n}  want >= 3 poses\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/vina/1iep_receptor.pdbqt",
+      "destination": "/tmp/1iep_receptor.pdbqt"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/vina/1iep_ligand.pdbqt",
+      "destination": "/tmp/1iep_ligand.pdbqt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/dock.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/dock.log"
+    },
+    {
+      "source": "/tmp/dock.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/dock.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "10m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
