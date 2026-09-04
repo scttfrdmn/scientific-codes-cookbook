@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-raxml-ng-search-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged input against its pinned sha256 ==\"\nprintf '%s  %s\\n' b4d4d74594d6213f26dfbd8eeb194ae9a9eaf6c529242384a7395bb56c7c7294 \\\n  pfam38.2_seed_alignment.fa > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== raxml-ng --search: adaptive ML tree search, LG+G4, fixed seed ==\"\n# The search is left on its RAxML-NG 2.0 default (start tree \"adaptive\"): the tool\n# predicts the difficulty of the alignment and picks the number and kind of starting\n# trees from it. That default is the thing worth demonstrating, so it is not overridden.\n#\n# --threads 8 --workers 1, not the default AUTO: the thread count feeds the parallel\n# parsimony that the difficulty prediction is computed from, so it decides how many\n# starting trees the adaptive heuristic generates. Pinning it, together with --seed,\n# is what makes this run comparable to the next one. --model is given explicitly\n# rather than inferred for the same reason.\nraxml-ng --search --msa pfam38.2_seed_alignment.fa --model LG+G4 \\\n  --threads 8 --workers 1 --seed 12345 --prefix rx --redo\n\n# ---- smoke check ----\n# Almost all of this is arithmetic RAxML-NG must satisfy to be self-consistent at all,\n# not a band on an observed value. Three information criteria it prints are closed-form\n# functions of the log-likelihood, the free-parameter count and the site count it also\n# prints, and the free-parameter count is itself fixed by the taxon count and the model:\n# an unrooted binary tree on n taxa has 2n-3 branches, and LG+G4 adds exactly one free\n# parameter (the gamma shape alpha), so k must be 2n-2. Those cannot go flaky and need\n# no headroom. Likewise --search means \"report the best of the searches\", so the final\n# log-likelihood must equal the maximum over the per-search values, exactly; and the\n# tool must write exactly one ML tree and one starting tree per search it reports.\n#\n# There is no python3 in this image (one tool per image, deliberately), so the checks\n# are awk. The only banded value is the log-likelihood itself, and it is banded wide\n# on purpose -- see the README.\nNSEARCH=$(grep -c 'ML tree search #' rx.raxml.log)\n# One Newick per line, each terminated by ';'.\nNMLTREES=$(grep -c ';' rx.raxml.mlTrees)\nNSTART=$(grep -c ';' rx.raxml.startTree)\nNTAX_IN=$(grep -c '^>' pfam38.2_seed_alignment.fa)\nNTIPS=$(grep -oE '[(,][A-Za-z0-9_]+:' rx.raxml.bestTree | wc -l | tr -d ' ')\nSEMICOLON=$(tail -c 2 rx.raxml.bestTree | tr -d '\\n')\n# RAxML-NG writes this line only after the whole analysis completes cleanly, so it is a\n# completion sentinel: a search killed part-way leaves a log whose per-search lines and\n# tree files would still look plausible.\n# `|| true` on these three: a count of 0 is the interesting answer, and grep -c exits 1\n# when it counts nothing, which under `set -e` would kill the task before the table\n# below prints. A red row beats a bare exit.\nFINISHED=$(grep -c '^Analysis started: .* / finished: ' rx.raxml.log || true)\n# The optimised model must still be LG+G4m over all 477 sites of the one partition --\n# evidence --model was honoured and no site was dropped.\nMODEL_OK=$(grep -cF 'LG+G4m{' rx.raxml.bestModel || true)\nSITES_OK=$(grep -cF '= 1-477' rx.raxml.bestModel || true)\n\nawk -v nsearch=\"$NSEARCH\" -v nmltrees=\"$NMLTREES\" -v nstart=\"$NSTART\" \\\n    -v ntax_in=\"$NTAX_IN\" -v ntips=\"$NTIPS\" -v semi=\"$SEMICOLON\" \\\n    -v finished=\"$FINISHED\" -v model_ok=\"$MODEL_OK\" -v sites_ok=\"$SITES_OK\" '\n/^Final LogLikelihood:/            { L = $NF }\n/^AIC score:/                      { aic = $3; aicc = $7; bic = $11 }\n/^Free parameters/                 { k = $NF }\n/Loaded alignment with/            { ntax = $(NF-4); nsites = $(NF-1) }\n/^Alignment sites \\/ patterns:/    { npatt = $NF }\n/ML tree search #/                 { v = $NF + 0; if (best == \"\" || v > best) best = v }\nfunction check(label, ok, detail) {\n  printf \"%-28s %s\\n\", label, detail\n  if (!ok) fail = fail (fail ? \", \" : \"\") label\n}\nEND {\n  # --- shape, straight from the pinned alignment, so exact ---\n  check(\"taxa_in_alignment\", ntax_in == 114, ntax_in \"  want exactly 114\")\n  check(\"taxa_read_by_raxml\", ntax == ntax_in, ntax \"  want exactly \" ntax_in \" (= taxa in the FASTA)\")\n  check(\"tips_in_best_tree\", ntips == ntax_in, ntips \"  want exactly \" ntax_in \" (every taxon present)\")\n  check(\"alignment_sites\", nsites == 477, nsites \"  want exactly 477\")\n  check(\"distinct_site_patterns\", npatt == 465 && npatt <= nsites,\n        npatt \"  want exactly 465, and <= \" nsites)\n\n  # --- identities: closed-form, no tolerance needed beyond float printing ---\n  check(\"free_parameters\", k == 2 * ntax - 2,\n        k \"  want exactly \" 2 * ntax - 2 \" (= 2n-3 branches + 1 gamma alpha)\")\n  e = 2 * k - 2 * L\n  check(\"aic_identity\", (aic - e < 1e-4 && e - aic < 1e-4),\n        aic \"  want 2k-2lnL = \" sprintf(\"%.6f\", e))\n  if (nsites - k - 1 > 0) {\n    e = aic + 2 * k * (k + 1) / (nsites - k - 1)\n    check(\"aicc_identity\", (aicc - e < 1e-4 && e - aicc < 1e-4),\n          aicc \"  want AIC+2k(k+1)/(n-k-1) = \" sprintf(\"%.6f\", e))\n  } else {\n    check(\"aicc_identity\", 0, \"n-k-1 = \" nsites - k - 1 \"  want > 0\")\n  }\n  e = k * log(nsites) - 2 * L\n  check(\"bic_identity\", (bic - e < 1e-4 && e - bic < 1e-4),\n        bic \"  want k*ln(n)-2lnL = \" sprintf(\"%.6f\", e))\n  check(\"final_is_best_of_searches\", (L - best < 1e-6 && best - L < 1e-6),\n        L \"  want exactly the best of the \" nsearch \" searches (\" sprintf(\"%.6f\", best) \")\")\n\n  # --- conservation: one ML tree and one starting tree per reported search ---\n  check(\"ml_trees_vs_searches\", nmltrees == nsearch,\n        nmltrees \"  want exactly \" nsearch \" (one per reported search)\")\n  check(\"start_trees_vs_searches\", nstart == nsearch,\n        nstart \"  want exactly \" nsearch \" (one per reported search)\")\n\n  # --- completion and syntax ---\n  check(\"raxml_reported_finished\", finished == 1, finished \"  want exactly 1\")\n  check(\"newick_terminated\", semi == \";\", semi \"  want exactly ;\")\n  check(\"model_is_LG+G4m\", model_ok == 1, model_ok \"  want exactly 1 (bestModel says LG+G4m{alpha})\")\n  check(\"all_sites_in_partition\", sites_ok == 1, sites_ok \"  want exactly 1 (bestModel says = 1-477)\")\n\n  # --- the one band, deliberately wide; see the README ---\n  check(\"best_log_likelihood\", L > -54000 && L < -52000,\n        L \"  want -54000..-52000  (observed -52706.731409; IQ-TREE: -52706.731)\")\n\n  if (fail != \"\") { print \"FAILED: \" fail; exit 1 }\n}' rx.raxml.log > smoke-check.txt || { cat smoke-check.txt; exit 1; }\ncat smoke-check.txt\n\ntest -s rx.raxml.bestTree\ntest -s rx.raxml.mlTrees\ntest -s rx.raxml.bestModel\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/raxml-ng@sha256:3a6bbc162ff43249ada42bd92828ac0024855c33b614c0cdbaaa1e3e3eed89e5",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "destination": "/tmp/pfam38.2_seed_alignment.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/rx.raxml.bestTree",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.bestTree"
+    },
+    {
+      "source": "/tmp/rx.raxml.mlTrees",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.mlTrees"
+    },
+    {
+      "source": "/tmp/rx.raxml.startTree",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.startTree"
+    },
+    {
+      "source": "/tmp/rx.raxml.bestModel",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.bestModel"
+    },
+    {
+      "source": "/tmp/rx.raxml.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.11
+  }
+}

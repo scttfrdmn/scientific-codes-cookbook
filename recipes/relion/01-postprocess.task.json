@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-relion-postprocess-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\ncat > pins.sha256 <<'EOF'\n8fe4881f98b31d0acb070229afc91d53fa9b43efaf114baa7548aebfe7a6c76e  run_half1_class001_unfil.mrc\n69bdea0c8e1d204bc420cbc6e3d44639490f59eb5202a65fc0870e291a644617  run_half2_class001_unfil.mrc\n07939784952a5f4592af1daeb1c6b6ca2ad514f252edca62fc883680b834166d  mask3d_emd_0731_apix0o968_d440.mrc\nb0611c8ef5a082fb350f78f1bd9cac17eaa84367b9828840d11b53df7c1b6f71  reference_postprocess.star\nEOF\nsha256sum -c pins.sha256\n\necho \"== relion_postprocess: masked gold-standard FSC + automatic B-factor sharpening ==\"\n# --o is an absolute path in /tmp deliberately. RELION writes a PDF log to\n# dirname(--o)/logfile.pdf and shells out to ghostscript to build it; ghostscript is a\n# host-only dependency of the bioconda recipe, so `gs` is absent at run time and RELION\n# falls back to touching an empty PDF at that path. With a bare prefix the fallback path\n# is <prefix>/logfile.pdf, a directory that does not exist, and the touch is fatal \u2014\n# the science is already written by then, so the task would die holding correct output.\n# With /tmp/postprocess the fallback lands in /tmp and the run exits 0.\n#\n# The flags are the archived job's own (--angpix 0.968 --auto_bfac --autob_lowres 10),\n# because the point of this recipe is that the numbers come out the same.\nrelion_postprocess --mask mask3d_emd_0731_apix0o968_d440.mrc \\\n  --i run_half1_class001_unfil.mrc --o /tmp/postprocess \\\n  --angpix 0.968 --auto_bfac --autob_lowres 10 > postprocess.log 2>&1\n\n# ---- smoke check ----\n# Almost nothing here is a band. relion_postprocess is deterministic arithmetic over\n# the two half-maps and the mask, so every number it prints is reproducible \u2014 and the\n# staged reference_postprocess.star is that same computation done by RELION 5.0.0 on\n# x86 by the people who deposited the project. The check is therefore a reproduction:\n# our 221-shell FSC table must equal theirs, column for column. A wrong map, a wrong\n# mask, a truncated read or a broken FFT cannot survive that.\nFINAL_RES=$(awk '/FINAL RESOLUTION/ {print $NF}' postprocess.log)\nFRACTION=$(awk '/fraction f \\(solvent mask based\\)/ {print $NF}' postprocess.log)\nMOLWEIGHT=$(awk '/molecular weight inside protein mask/ {print $NF}' postprocess.log)\nBFACTOR=$(awk '/apply b-factor of/ {print $NF}' postprocess.log)\nGUINIER_R=$(awk '/correlation of fit/ {print $NF}' postprocess.log)\n# The only errors this run may legitimately print are the missing-ghostscript ones.\n# Count anything else, rather than grepping for \"ERROR\" and tripping over the known pair.\nUNEXPECTED_ERR=$(grep -c 'ERROR' postprocess.log | tr -d ' ')\nKNOWN_ERR=$(grep -c -e 'in executing: gs' -e 'empty PDF-file' postprocess.log | tr -d ' ')\nOTHER_ERR=$(( UNEXPECTED_ERR - $(grep -c 'ERROR in executing: gs' postprocess.log | tr -d ' ') ))\n\npython3 - <<'PY' > repro-check.txt\nimport struct, sys\n\ndef parse(path):\n    \"\"\"Return (header scalars, fsc column names, fsc rows) from a RELION postprocess star.\n\n    The file holds data_general, then data_fsc, then data_guinier. Only the middle\n    block is the FSC table, so stop at the next data_ header \u2014 reading on would run\n    the guinier rows in with the FSC rows.\n    \"\"\"\n    head, cols, rows, in_fsc = {}, [], [], False\n    for line in open(path):\n        s = line.strip()\n        if s.startswith(\"data_fsc\"):\n            in_fsc = True\n            continue\n        if in_fsc and s.startswith(\"data_\"):\n            break\n        if not in_fsc:\n            if s.startswith(\"_rln\"):\n                p = s.split()\n                if len(p) > 1:\n                    head[p[0]] = p[1]\n            continue\n        if s.startswith(\"_rln\"):\n            cols.append(s.split()[0])\n        elif s and s[0].isdigit():\n            rows.append([float(x) for x in s.split()])\n    return head, cols, rows\n\nref_h, ref_c, ref_r = parse(\"reference_postprocess.star\")\nour_h, our_c, our_r = parse(\"postprocess.star\")\n\nfail = []\ndef check(label, ok, detail):\n    print(f\"{label:<34} {detail}\")\n    if not ok:\n        fail.append(label)\n\ncheck(\"fsc_columns_match\", ref_c == our_c, f\"{len(our_c)} columns, same names as reference\")\ncheck(\"fsc_shells\", len(our_r) == len(ref_r) == 221,\n      f\"{len(our_r)}  want exactly 221 (= box 440 / 2 + 1)\")\n\n# Shell 0 is the zero-frequency term: it correlates with itself by construction.\ncheck(\"fsc_shell0_is_unity\", all(abs(v - 1.0) < 1e-9 for v in our_r[0][3:]),\n      f\"{our_r[0][3]:.6f}  want exactly 1.000000\")\n\nworst, worst_col = 0.0, None\nfor j, name in enumerate(our_c):\n    d = max(abs(a[j] - b[j]) for a, b in zip(ref_r, our_r))\n    if d > worst:\n        worst, worst_col = d, name\ncheck(\"fsc_table_vs_reference\", worst <= 1e-6,\n      f\"max|diff| = {worst:.3e} over 221x{len(our_c)} values  want <= 1e-6\"\n      + (f\"  (worst: {worst_col})\" if worst_col else \"\"))\n\nfor key, want, tol in ((\"_rlnFinalResolution\", 2.747871, 1e-5),\n                       (\"_rlnBfactorUsedForSharpening\", -50.25665, 1e-4),\n                       (\"_rlnParticleBoxFractionSolventMask\", 74.847360, 1e-4),\n                       (\"_rlnRandomiseFrom\", 17.746667, 1e-4),\n                       (\"_rlnFittedSlopeGuinierPlot\", -12.56416, 1e-4),\n                       (\"_rlnFittedInterceptGuinierPlot\", -14.36036, 1e-4),\n                       (\"_rlnCorrelationFitGuinierPlot\", 0.870246, 1e-5)):\n    ours, theirs = float(our_h[key]), float(ref_h[key])\n    check(key[4:], abs(ours - want) <= tol and abs(ours - theirs) <= tol,\n          f\"{ours}  want {want} (reference: {theirs})\")\n\n# Resolution cannot be finer than Nyquist. Algorithmic, so no band: 2 x 0.968 A.\nres = float(our_h[\"_rlnFinalResolution\"])\ncheck(\"resolution_coarser_than_nyquist\", res > 2 * 0.968,\n      f\"{res} A  want > 1.936 A (Nyquist at 0.968 A/px)\")\n\nfor name in (\"postprocess.mrc\", \"postprocess_masked.mrc\"):\n    with open(name, \"rb\") as fh:\n        h = fh.read(1024)\n    nx, ny, nz, mode = struct.unpack(\"<4i\", h[0:16])\n    magic = h[208:212].decode(\"latin-1\")\n    import os\n    size = os.path.getsize(name)\n    ok = (nx == ny == nz == 440 and mode == 2 and magic == \"MAP \" and size == 340737024)\n    check(f\"{name}\", ok, f\"box {nx}^3 mode {mode} magic {magic!r} bytes {size}\"\n                         \"  want 440^3, mode 2, 'MAP ', 340737024\")\n\nif fail:\n    print(\"FAILED: \" + \", \".join(fail))\n    sys.exit(1)\nPY\n\n{\n  echo \"final_resolution_A     $FINAL_RES        want 2.74787 (archived RELION 5.0.0 value)\"\n  echo \"solvent_mask_fraction  $FRACTION       want 74.8474\"\n  echo \"molecular_weight_kDa   $MOLWEIGHT       want 398015\"\n  echo \"applied_b_factor       $BFACTOR      want -50.2567\"\n  echo \"guinier_fit_r          $GUINIER_R      want 0.870246\"\n  echo \"unexpected_error_lines $OTHER_ERR             want exactly 0 (the ghostscript pair is expected)\"\n  cat repro-check.txt\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$OTHER_ERR\" -eq 0\ntest -s postprocess.mrc\ntest -s postprocess_masked.mrc\ntest -s postprocess.star\nawk -v r=\"$FINAL_RES\" 'BEGIN{ if (r > 2.7478 && r < 2.7480) exit 0; print \"final resolution \" r \" is not the archived 2.74787\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/relion@sha256:74aef38176ce4b9929f1312bb977c54c06994329e63c94fc3accce44ea844119",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/run_half1_class001_unfil.mrc",
+      "destination": "/tmp/run_half1_class001_unfil.mrc"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/run_half2_class001_unfil.mrc",
+      "destination": "/tmp/run_half2_class001_unfil.mrc"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/mask3d_emd_0731_apix0o968_d440.mrc",
+      "destination": "/tmp/mask3d_emd_0731_apix0o968_d440.mrc"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/reference_postprocess.star",
+      "destination": "/tmp/reference_postprocess.star"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/postprocess.mrc",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.mrc"
+    },
+    {
+      "source": "/tmp/postprocess_masked.mrc",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess_masked.mrc"
+    },
+    {
+      "source": "/tmp/postprocess.star",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.star"
+    },
+    {
+      "source": "/tmp/postprocess_fsc.dat",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess_fsc.dat"
+    },
+    {
+      "source": "/tmp/postprocess.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
