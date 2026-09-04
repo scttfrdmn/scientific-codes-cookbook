@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-r-lm-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== R OLS on the bundled cars dataset, two independent ways ==\"\n# The r env ships no Python (the catalog's first such env), so the smoke check is R.\n# datasets::cars ships with r-base -- zero staging. The OLS fit is a textbook result\n# (every R intro fits lm(dist ~ speed, data=cars)); the closed-form normal equations\n# recompute it through a separate code path, so the two must agree.\ncat > fit.R <<'EOF'\nver <- as.character(getRversion()); arch <- R.version$arch\nn <- nrow(cars)\nfit <- lm(dist ~ speed, data = cars)\nci <- unname(coef(fit))                     # lm(): QR decomposition\nX <- cbind(1, cars$speed)\nb  <- as.vector(solve(t(X) %*% X, t(X) %*% cars$dist))   # normal equations\n# ecosystem is real, not bare r-base: attach tidyverse + data.table (no warning-unwind;\n# suppress startup messages explicitly rather than via a handler that would swallow more)\neco <- tryCatch({ suppressMessages({library(tidyverse); library(data.table)}); TRUE },\n                error = function(e) FALSE)\nwriteLines(c(\n  sprintf(\"R_VERSION %s\", ver),\n  sprintf(\"R_ARCH %s\", arch),\n  sprintf(\"N_OBS %d\", n),\n  sprintf(\"LM_INTERCEPT %.6f\", ci[1]),\n  sprintf(\"LM_SLOPE %.6f\", ci[2]),\n  sprintf(\"NORMEQ_INTERCEPT %.6f\", b[1]),\n  sprintf(\"NORMEQ_SLOPE %.6f\", b[2]),\n  sprintf(\"MAX_COEF_DIFF %.3e\", max(abs(ci - b))),\n  sprintf(\"ECOSYSTEM_LOADED %s\", eco)\n), \"fit.txt\")\nEOF\nRscript fit.R\ncat fit.txt\n\necho \"== smoke check ==\"\nRscript - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nkv <- setNames(as.list(sub(\"^\\\\S+ \", \"\", readLines(\"fit.txt\"))),\n               sub(\" .*$\", \"\", readLines(\"fit.txt\")))\nnum <- function(k) as.numeric(kv[[k]])\nfail <- character(0)\ncheck <- function(label, ok, detail) {\n  cat(sprintf(\"%-26s %s\\n\", label, detail))\n  if (!isTRUE(ok)) fail <<- c(fail, label)\n}\n# shape / build\ncheck(\"r_version\", kv$R_VERSION == \"4.5.3\", paste(kv$R_VERSION, \" want 4.5.3 (r45 CRAN layer)\"))\ncheck(\"r_arch\", kv$R_ARCH == \"aarch64\", paste(kv$R_ARCH, \" want aarch64\"))\ncheck(\"n_obs\", num(\"N_OBS\") == 50, paste(kv$N_OBS, \" want exactly 50 (cars dataset)\"))\n# reference identity: canonical OLS coefficients for cars\ncheck(\"ols_intercept\", abs(num(\"LM_INTERCEPT\") - (-17.579095)) < 1e-4,\n      sprintf(\"%.6f  want -17.579095 (textbook cars OLS)\", num(\"LM_INTERCEPT\")))\ncheck(\"ols_slope\", abs(num(\"LM_SLOPE\") - 3.932409) < 1e-4,\n      sprintf(\"%.6f  want 3.932409 (textbook cars OLS)\", num(\"LM_SLOPE\")))\n# internal cross-validation: lm() (QR) vs normal equations (solve) -- two code paths\ncheck(\"lm_eq_normeq\", num(\"MAX_COEF_DIFF\") < 1e-8,\n      sprintf(\"%.3e  want < 1e-8 (QR fit == normal-equations fit)\", num(\"MAX_COEF_DIFF\")))\n# ecosystem present, not bare r-base\ncheck(\"ecosystem_loaded\", kv$ECOSYSTEM_LOADED == \"TRUE\",\n      paste(kv$ECOSYSTEM_LOADED, \" want TRUE (tidyverse + data.table attach)\"))\nif (length(fail)) { cat(\"FAILED: \", paste(fail, collapse=\", \"), \"\\n\"); quit(status=1) }\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/fit.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/r/r1/fit.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/r/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
