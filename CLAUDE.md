@@ -193,6 +193,13 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   **auto-file** an issue on the relevant spore.host repo with file:line evidence;
   name the pattern if several share a root cause. Keep any local mitigation as well.
 - **Missing arm64 image** → aarch.* (batched, above).
+- **An upstream packaging or code bug we hit and can characterize** → file it wherever
+  it lives, not only spore.host/aarch.*. A reproduction plus a root cause is worth a
+  report on any repo: bioconda's `relion` recipe carries `ghostscript` in `host:` but
+  not `run:`, so `relion_postprocess` hard-fails at the end of a correct run — filed
+  `bioconda/bioconda-recipes#68838` with the `CPlot2D.cpp` line chain and the one-line
+  fix. Offer the PR if the fix is small and certain; a fixed package unblocks everyone,
+  not just us. Keep the local workaround regardless (here, an absolute `--o`).
 - Blocked-and-filed is honest. Worked-around-quietly is the trap.
 
 ## Tracking and findings
