@@ -130,6 +130,19 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   the conda build; reach for them before settling for init-only or a bare band.
   (A recipe that asserts nothing physical, when the code's own tests were a pinnable
   reference away.)
+- **When a recipe claims MPI, assert the rank count from inside the run.** A serial
+  fallback produces the *right physics* and a false claim about the build: conda-forge
+  ships nompi builds at higher build numbers than the openmpi ones, so an unpinned solve
+  silently hands back a serial binary that, under `mpiexec -n 2`, runs two independent
+  rank-0 calculations — both print the same energy, and a naive "parallel == serial"
+  check passes vacuously. So read the rank count the tool itself reports and assert it is
+  what you launched: LAMMPS `with 2 MPI task(s)`, SIESTA `Running on 2 nodes`, NWChem
+  `nproc = 2`, GPAW `gpaw.mpi.world.size == 2` — four recipes now carry this, and GPAW's
+  is the sharpest because aarch.science found `dft` was one resolver tie from shipping a
+  serial gpaw that would have passed everything else. The serial-vs-2-rank energy
+  agreement is the cross-validation; the rank-count assertion is what proves the
+  parallelism it's cross-validating actually happened. (A green MPI recipe running
+  serially — correct answer, wrong build, silent.)
 - **Size the instance and the TTL from a local run, never from a guess about what
   the tool "probably needs."** Run the tool in the pinned image first, read its peak
   RSS and wall time, then pick the family from the measurement and set TTL at ~2x
