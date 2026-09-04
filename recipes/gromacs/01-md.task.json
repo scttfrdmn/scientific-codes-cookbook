@@ -1,0 +1,44 @@
+{
+  "task_id": "cookbook-gromacs-md-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== bundled inputs ship in the gromacs package (zero staging) ==\"\nGRO=/opt/conda/share/gromacs/top/spc216.gro\ntest -f \"$GRO\"\ntest -d /opt/conda/share/gromacs/top/amber99sb-ildn.ff\n\ncat > topol.top <<'EOF'\n#include \"amber99sb-ildn.ff/forcefield.itp\"\n#include \"amber99sb-ildn.ff/tip3p.itp\"\n[ system ]\nwater\n[ molecules ]\nSOL 216\nEOF\ncat > md.mdp <<'EOF'\nintegrator = md\nnsteps = 20\ndt = 0.002\ncutoff-scheme = Verlet\ncoulombtype = cut-off\nrvdw = 0.9\nrcoulomb = 0.9\nconstraints = h-bonds\nEOF\n\necho \"== grompp + mdrun: 216 SPC waters, 20 steps ==\"\ngmx_mpi grompp -f md.mdp -c \"$GRO\" -p topol.top -o t.tpr -maxwarn 5 > grompp.log 2>&1\ngmx_mpi mdrun -s t.tpr -deffnm out -ntomp \"${GMX_NTOMP:-2}\" -nsteps 20 > mdrun.log 2>&1\nprintf 'Potential\\nTotal-Energy\\n' | gmx_mpi energy -f out.edr -o e.xvg > energy.log 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:24s} {detail}\")\n    if not ok: fail.append(label)\n\nenergy=open(\"energy.log\").read()\nmdrun=open(\"mdrun.log\").read()\nnatoms=int(open(\"out.gro\").read().splitlines()[1].strip())\n\n# shape, straight from the structure mdrun wrote -- exact\ncheck(\"atoms_in_system\", natoms==648, f\"{natoms}  want exactly 648 (216 SPC x 3)\")\n\n# potential energy: reproduction of aarch.science's published D3 figure on this pinned\n# image. bit-stable across ntomp 1/2/4 (measured), so the band is tight.\npe=re.search(r\"^Potential\\s+(-?\\d+\\.?\\d*)\", energy, re.M)\npe_val=float(pe.group(1)) if pe else 0.0\ncheck(\"potential_energy\", -9629.0 < pe_val < -9626.0,\n      f\"{pe_val}  want -9629..-9626 (published D3 -9627.9; observed -9627.87)\")\ncheck(\"per_water_energy\", -46.0 < pe_val/216.0 < -43.0,\n      f\"{pe_val/216.0:.3f}  want -46..-43 kJ/mol/water (physical cohesion)\")\n\nte=re.search(r\"^Total Energy\\s+(-?\\d+\\.?\\d*)\", energy, re.M)\ncheck(\"total_energy_readable\", te is not None, f\"{te.group(1) if te else 'MISSING'}  want a value (exercises .edr reader)\")\n\n# completion sentinel: GROMACS prints the Performance: summary only on clean finish\ncheck(\"mdrun_completed\", \"Performance:\" in mdrun, f\"{'yes' if 'Performance:' in mdrun else 'NO'}  want the Performance: summary\")\n\nif fail:\n    print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\ntest -s out.gro; test -s e.xvg\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out.gro",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/out.gro"
+    },
+    {
+      "source": "/tmp/e.xvg",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/e.xvg"
+    },
+    {
+      "source": "/tmp/mdrun.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/mdrun.log"
+    },
+    {
+      "source": "/tmp/grompp.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/grompp.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
