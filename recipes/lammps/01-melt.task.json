@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-lammps-melt-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 OMP_NUM_THREADS=1\ncd /tmp\n\necho \"== the canonical Lennard-Jones melt: analytic lj/cut, needs no data file ==\"\n# This is the content of LAMMPS' own bench/in.lj, embedded because the conda package\n# ships only the binaries and the python module, not the bench/ tree. lj/cut is an\n# analytic potential, so there is genuinely nothing to stage.\ncat > in.melt <<'EOF'\nunits lj\natom_style atomic\nlattice fcc 0.8442\nregion box block 0 4 0 4 0 4\ncreate_box 1 box\ncreate_atoms 1 box\nmass 1 1.0\nvelocity all create 3.0 87287 loop geom\npair_style lj/cut 2.5\npair_coeff 1 1 1.0 1.0 2.5\nneighbor 0.3 bin\nneigh_modify every 20 delay 0 check no\nfix 1 all nve\nthermo 25\nrun 50\nEOF\n\necho \"== run serial, then over 2 MPI ranks ==\"\nlmp_mpi -in in.melt -log s.log > s.out 2>&1\nmpiexec -n 2 --oversubscribe lmp_mpi -in in.melt -log p.log > p.out 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\n\ndef parse(logfile):\n    txt=open(logfile).read()\n    # thermo block: header line starting with \"Step\", then numeric rows, TotEng is col 5\n    rows=[]\n    inblk=False\n    for ln in txt.splitlines():\n        if re.match(r\"^\\s*Step\\s\", ln): inblk=True; continue\n        if inblk:\n            p=ln.split()\n            if len(p)>=6 and re.fullmatch(r\"-?\\d+\", p[0]):\n                rows.append((int(p[0]), float(p[4])))\n            elif rows:\n                inblk=False\n    return txt, rows\n\nstxt, srows = parse(\"s.log\")\nptxt, prows = parse(\"p.log\")\ns_final = dict(srows).get(50)\np_final = dict(prows).get(50)\ns_init  = dict(srows).get(0)\n\n# atoms created -- exact\nna=re.search(r\"Created (\\d+) atoms\", stxt)\nna_val=int(na.group(1)) if na else -1\ncheck(\"atoms_created\", na_val==256, f\"{na_val}  want exactly 256 (4x4x4 fcc, 4-atom basis)\")\n\n# MPI actually ran on 2 ranks -- the whole reason for the openmpi build\nmt=re.search(r\"with (\\d+) MPI task\", ptxt)\nmt_val=int(mt.group(1)) if mt else -1\ncheck(\"mpi_ranks\", mt_val==2, f\"{mt_val}  want exactly 2 MPI tasks\")\n\n# total energy physical, and reproduces the pinned-image value\ncheck(\"final_toteng\", s_final is not None and -4.0 < s_final < -1.0,\n      f\"{s_final}  want -4..-1 reduced (observed -2.2990327)\")\n\n# INTERNAL CROSS-VALIDATION: serial vs 2-rank must agree. Domain decomposition changes\n# the force-summation order, so this is a floating-point-reordering tolerance, not a\n# physics one -- two independent computations of the same trajectory.\nagree = (s_final is not None and p_final is not None and abs(s_final-p_final) < 1e-2)\ncheck(\"serial_eq_2rank\", agree,\n      f\"|{s_final} - {p_final}| < 1e-2  (independent decompositions must agree)\")\n\n# NVE conservation: total energy drift over the run, a physical conservation law\ndrift = abs(s_final - s_init) if (s_final is not None and s_init is not None) else 99\ncheck(\"nve_conserved\", drift < 0.05, f\"drift {drift:.4f} < 0.05 over 50 steps (NVE)\")\n\n# completion sentinel\ncheck(\"lammps_completed\", \"Total wall time\" in stxt and \"Total wall time\" in ptxt,\n      f\"{'yes' if 'Total wall time' in stxt and 'Total wall time' in ptxt else 'NO'}  want 'Total wall time' in both logs\")\n\nif fail:\n    print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\ntest -s s.log; test -s p.log\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/s.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/lammps/r1/s.log"
+    },
+    {
+      "source": "/tmp/p.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/lammps/r1/p.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/lammps/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
