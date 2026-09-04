@@ -112,6 +112,24 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   rather than a sibling recipe: the RODA archive holds the depositors' own output, so
   all 221 FSC shells could be compared at `max|diff| = 0`. Prefer either to a band.
   (A check that only proves a tool is self-consistent, when a stronger one was free.)
+- **When a conda package strips the data a code needs, stage it from the code's own
+  version-matched test suite — it usually ships a committed reference alongside, which
+  turns "produce a number" into "reproduce a published number" for free.** This is a
+  *sourcing* rule that manufactures the identity above, not another kind of check.
+  conda-forge SIESTA ships no pseudopotentials, so a naive recipe could only prove the
+  binary parses input (aarch.science's own env check is init-only for exactly this
+  reason). But `siesta-project/siesta` at the tag matching the image (`5.4.2`) ships
+  `Tests/Pseudos/Si.psf` **and** `Tests/01.PseudoPotentials/Reference/psf.out` with
+  `Total = -214.377236 eV` — so staging the pinned pseudopotential let the run reproduce
+  SIESTA's own committed reference exactly. Vina was the same shape: the `vina` package
+  ships no example data, but `AutoDock-Vina` at `v1.2.7` carries the 1iep receptor/ligand
+  and a reference docked pose (`-13.234`). The version match is load-bearing (a reference
+  from another version is a different number), and staging a pinned file to S3 is **not**
+  runtime-fetching — it is allowed where an env's build-time constraints forbid bundling
+  data. Lots of scientific packages ship tests with reference outputs that never enter
+  the conda build; reach for them before settling for init-only or a bare band.
+  (A recipe that asserts nothing physical, when the code's own tests were a pinnable
+  reference away.)
 - **Size the instance and the TTL from a local run, never from a guess about what
   the tool "probably needs."** Run the tool in the pinned image first, read its peak
   RSS and wall time, then pick the family from the measurement and set TTL at ~2x
