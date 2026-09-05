@@ -59,33 +59,39 @@ investigation, not a recipe-sized check — deliberately out of scope.
 
 | | |
 |---|---|
-| executor | `nf-spawn@0.8.0` (see install note — **not** in the Nextflow plugin registry) |
+| executor | `nf-spawn@0.10.1` (see install note — **not** in the Nextflow plugin registry) |
 | MAFFT | `quay.io/aarchbio/mafft@sha256:f23e4545…` (cosign-verified, `linux/arm64`) |
 | MUSCLE | `quay.io/aarchbio/muscle@sha256:ecfe0f74…` (cosign-verified) |
 | iqtree | `quay.io/aarchbio/iqtree@sha256:dc6d9f62…` (cosign-verified) |
 | input | `inputs/mafft-muscle/pfam_unaligned.fa` (114 proteins, 49098 residues) — reused from `recipes/mafft`/`recipes/muscle` |
 | Nextflow | 26.04.x (plugin built against 26.04.3) |
 
-**Three nf-spawn findings filed** while building this — the workflow path had never been
-exercised by the project, so every one is a real rough edge, honestly worked around:
-- `spore-host/nf-spawn#90` — the README's `plugins { id 'nf-spawn@0.10.0' }` fails: the plugin
-  isn't in the Nextflow registry. Workaround: install the release zip (below).
-- `#91` — the v0.10.0 release zip ships a manifest versioned **0.8.0**, so the config must say
-  `nf-spawn@0.8.0` or the wrong/no plugin loads.
-- `#92` — **the blocker.** nf-spawn runs each process's container via `docker run` on the task
-  instance as a user not in the `docker` group → **every process fails exit 126**
-  ("permission denied ... /var/run/docker.sock"). Two runs failed identically before this was
-  found. Workaround (in `nextflow.config`): `ext.setup = 'sudo chmod 666 /var/run/docker.sock'`
-  loosens the socket on the ephemeral, single-use instance before the task. Honest mitigation on
-  a box that's torn down anyway — not a fix.
+**Three nf-spawn findings, filed building this and all FIXED in v0.10.1** (this project's
+findings drove the release — the workflow path had never been exercised before) — kept as
+history, verified fixed by re-running on 0.10.1 with the workaround removed, not by reading the
+changelog:
+- `spore-host/nf-spawn#90` (README install) — the plugin still isn't in the Nextflow registry,
+  but the upstream README no longer implies it is; install from the release zip (below).
+- `#91` (manifest mismatch) — **fixed**: the v0.10.0 zip shipped a `0.8.0` manifest; the 0.10.1
+  zip genuinely reports `Plugin-Version: 0.10.1` (re-verified from the downloaded asset).
+- `#92` (the blocker — docker-socket permission → every process exit 126) — **fixed**: on 0.10.1
+  the DAG runs `completed=5` with **no `ext.setup` socket workaround** and zero permission errors
+  in any `.command.err`. Dropping the mitigation and watching it run clean is what confirms the
+  fix is in the executor, not incidental.
 
-## Install (the workarounds for #90/#91; #92's socket mitigation already ships in `nextflow.config`)
+**Still open — `#96` (instance termination at DAG scale).** The terminal task's instance lingers
+after a clean run (the join, both on 0.8.0 and 0.10.1), and a failed task's instance didn't
+self-terminate at all. Not part of the #92 fix. **Verify terminations explicitly after a Shape-F
+run** (below); TTL is the backstop.
+
+## Install (still zip-based — #90's plugin isn't in the registry; the 0.10.1 zip extracts a bare `classes/`)
 
 ```sh
-curl -sSL -o /tmp/nf-spawn.zip \
-  https://github.com/spore-host/nf-spawn/releases/download/v0.10.0/nf-spawn-0.10.0.zip
-unzip -o /tmp/nf-spawn.zip -d ~/.nextflow/plugins/    # → ~/.nextflow/plugins/nf-spawn-0.8.0/
-export JAVA_HOME=/path/to/jdk17    # Nextflow needs a JDK 17+ on PATH
+curl -sSL -o /tmp/nf-spawn-0.10.1.zip \
+  https://github.com/spore-host/nf-spawn/releases/download/v0.10.1/nf-spawn-0.10.1.zip
+mkdir -p ~/.nextflow/plugins/nf-spawn-0.10.1
+unzip -o /tmp/nf-spawn-0.10.1.zip -d ~/.nextflow/plugins/nf-spawn-0.10.1/
+export JAVA_HOME=/path/to/jdk17    # Nextflow 26.04.x needs a JDK 17+ on PATH
 ```
 
 ## Resources — a per-job cost model, not one flat task
@@ -105,19 +111,20 @@ sizes:
 pull dominate each of the five instances, so Shape F pays that overhead *per rule*. The head
 (the `nextflow` process) runs locally and is free; the S3 work dir holds a few MB.
 
-**Recorded run (once the socket mitigation was in place): `completed=5, failed=0`.** All five
-`.exitcode` objects in the S3 work dir were `0`, and `rf-observation.txt` published — verified
-by reading the `.exitcode`/objects from S3, **not** by trusting Nextflow's summary line. That
-distinction earned its place here: on the failed pre-mitigation run, Nextflow's summary showed
-`completed=1` while that task's `.exitcode` in S3 was `126` and it produced no output — the
-executor-path version of the "an exit/summary is not evidence the output is real" rule. The
-observed RF was **26** (see the observation caveat above).
+**Recorded run (v0.10.1, no workaround): `completed=5, failed=0`.** All five `.exitcode` objects
+in the S3 work dir were `0`, and `rf-observation.txt` published (RF **26**) — verified by reading
+the `.exitcode`/objects from S3, **not** by trusting Nextflow's summary line. That distinction
+earned its place: on an earlier failed run, Nextflow's summary showed `completed=1` while that
+task's `.exitcode` in S3 was `126` with no output — the executor-path version of the "an
+exit/summary is not evidence the output is real" rule (spawn#561's shape). The S3 check is what
+both caught that and confirmed this clean run is real.
 
-**Verify termination explicitly.** Instances did not promptly self-terminate: a *failed*
-task's instance stayed `running` after the pipeline aborted, and even a completed task's
-instance lingered a minute or two. At DAG scale (N instances, N lifecycles) check
-`aws ec2 describe-instances` / `spawn list` after a run rather than assuming — see
-`spore-host/nf-spawn#92`. TTLs (10–15m) are the backstop and **retighten from the first run**.
+**Verify termination explicitly (`spore-host/nf-spawn#96`, still open).** Instances do not
+reliably self-terminate at DAG scale: the **terminal task's instance lingers** after a clean run
+(the OBSERVE_RF join, both on 0.8.0 and 0.10.1 — a consistent pattern, not lag), and a *failed*
+task's instance stayed `running` after abort. At Shape F (N instances, N lifecycles) a mid-DAG
+failure can leave several boxes up — check `aws ec2 describe-instances` / `spawn list` after a
+run rather than assuming. TTLs (10–15m) are the backstop and **retighten from the first run**.
 
 ## Running it
 
