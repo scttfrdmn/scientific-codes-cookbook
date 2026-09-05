@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-pymatgen-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== pymatgen: bulk silicon structure + symmetry + a CIF round-trip ==\"\n# Constructs Si from its space group, then asserts exact structural identities and a\n# Structure -> CIF -> Structure round-trip (the decode-statistic move on a crystal-structure\n# format). Space group is via SpacegroupAnalyzer, which is spglib-backed -- so it's a\n# reference check against the known value (Fd-3m, #227), NOT an independent second engine.\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys\nfrom pymatgen.core import Structure, Lattice\nfrom pymatgen.symmetry.analyzer import SpacegroupAnalyzer\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:24s} {detail}\")\n    if not ok: fail.append(l)\ns=Structure.from_spacegroup(\"Fd-3m\", Lattice.cubic(5.43), [\"Si\"], [[0,0,0]])\ncheck(\"nsites\", len(s)==8, f\"{len(s)}  want 8 (conventional diamond cell)\")\ncheck(\"reduced_formula\", s.composition.reduced_formula==\"Si\", f\"{s.composition.reduced_formula}  want Si\")\ncheck(\"lattice_a\", abs(s.lattice.a-5.43)<1e-6, f\"{s.lattice.a:.4f}  want 5.43 (by construction)\")\n# density is exact from mass/volume, and matches silicon's known ~2.329 g/cm^3 (reference)\ncheck(\"density\", abs(float(s.density)-2.3304)<1e-3, f\"{float(s.density):.4f} g/cm^3  want 2.3304 (Si known ~2.329)\")\nsga=SpacegroupAnalyzer(s, symprec=1e-4)\ncheck(\"spacegroup\", sga.get_space_group_symbol()==\"Fd-3m\" and sga.get_space_group_number()==227,\n      f\"{sga.get_space_group_symbol()} (#{sga.get_space_group_number()})  want Fd-3m (#227), reference\")\n# decode: Structure -> CIF -> Structure recovers sites, formula and lattice\ns2=Structure.from_str(s.to(fmt=\"cif\"), fmt=\"cif\")\nok=(len(s2)==len(s) and s2.composition.reduced_formula==s.composition.reduced_formula and abs(s2.lattice.a-s.lattice.a)<1e-6)\ncheck(\"cif_roundtrip\", ok, f\"{ok}  want True (sites+formula+lattice recovered)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt; echo \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/pymatgen/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
