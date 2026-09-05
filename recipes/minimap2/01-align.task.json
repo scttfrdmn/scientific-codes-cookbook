@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-minimap2-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 (the exact bytes bwa aligned) ==\"\n{ printf '%s  %s\\n' 61eba5b05ef7d9ae5310e756c1143fa48072de3856d36871bb14e57aa2435ff3 chr20.fa\n  printf '%s  %s\\n' 4bd24cdfa4486964f070e69b5dd109b6e1e78561783d48c4e62cc6fae3536a00 HG00096_chr20smoke_1.fq.gz\n  printf '%s  %s\\n' ebd1ad56bc572a4bf157ba21d1ad8ef074ea25f02eb2d982d9f0089180d82a04 HG00096_chr20smoke_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== minimap2 short-read alignment (-ax sr), 400k pairs vs chr20 ==\"\nminimap2 -ax sr -t 4 chr20.fa HG00096_chr20smoke_1.fq.gz HG00096_chr20smoke_2.fq.gz > mm.sam 2> minimap2.log\n\n# The cross-code check reads bwa's staged SAM (bwa_aln.sam = runs/bwa-samtools/r1/aln.sam).\n# It is a staged input owned by the instance user; NEVER rm it (sticky /tmp -> EPERM,\n# which `rm -f` does not suppress and would kill the task under set -e).\necho \"== minimap2 vs bwa concordance, gated on confident (MAPQ>=30) placements in BOTH ==\"\nread MMP MMM MMHI COHI SAMEHI CONC BWATOT < <(awk '\n  function prim(f){ return (int(f/256)%2==0 && int(f/2048)%2==0) }\n  function unmapped(f){ return (int(f/4)%2==1) }\n  function mate(f){ return (int(f/64)%2==1)?1:2 }\n  FNR==NR{ if($0~/^@/)next; if(!prim($2))next; bt++; k=$1\"\\t\"mate($2);\n           if(!unmapped($2)){ bpos[k]=$3\":\"$4; bq[k]=$5 } next }\n  { if($0~/^@/)next; if(!prim($2))next; mmP++; k=$1\"\\t\"mate($2);\n    if(!unmapped($2)){ mmM++; if($5>=30)mmHi++;\n      if((k in bpos) && bq[k]>=30 && $5>=30){ coHi++; split(bpos[k],a,\":\");\n        if(a[1]==$3){ d=a[2]-$4; if(d<0)d=-d; if(d<=5) sameHi++ } } }\n  }\n  END{ printf \"%d %d %d %d %d %.4f %d\\n\", mmP,mmM,mmHi,coHi,sameHi,(coHi>0?sameHi/coHi:0),bt }\n' bwa_aln.sam mm.sam)\n\n{\n  echo \"bwa_reference_primary   $BWATOT   want 800000    (bwa staged aln.sam; same 400k pairs)\"\n  echo \"minimap2_primary        $MMP      want 800000    (400k pairs x2, one primary line each)\"\n  echo \"minimap2_mapped          $MMM     want 100000..250000  (observed 169183; sensitivity, not asserted equal to bwa)\"\n  echo \"minimap2_mapq30          $MMHI    want 10000..40000    (observed 21990)\"\n  echo \"both_confident           $COHI    want > 10000         (observed 20051; the concordance denominator)\"\n  echo \"confident_concordance    $CONC    want >= 0.98         (observed 0.9921)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$BWATOT\" -eq 800000\ntest \"$MMP\"    -eq 800000\ntest \"$MMM\"    -ge 100000; test \"$MMM\" -le 250000\ntest \"$MMHI\"   -ge 10000;  test \"$MMHI\" -le 40000\ntest \"$COHI\"   -gt 10000\nawk -v c=\"$CONC\" 'BEGIN{ if(c>=0.98) exit 0; print \"concordance \"c\" below 0.98\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/aln.sam",
+      "destination": "/tmp/bwa_aln.sam"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/mm.sam",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/minimap2/r1/mm.sam"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/minimap2/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

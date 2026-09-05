@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-bowtie2-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 (bwa's inputs, reused verbatim) ==\"\n{ printf '%s  %s\\n' 61eba5b05ef7d9ae5310e756c1143fa48072de3856d36871bb14e57aa2435ff3 chr20.fa\n  printf '%s  %s\\n' 4bd24cdfa4486964f070e69b5dd109b6e1e78561783d48c4e62cc6fae3536a00 HG00096_chr20smoke_1.fq.gz\n  printf '%s  %s\\n' ebd1ad56bc572a4bf157ba21d1ad8ef074ea25f02eb2d982d9f0089180d82a04 HG00096_chr20smoke_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== bowtie2-build (GRCh38 chr20, 64444167 bp) ==\"\nbowtie2-build --threads 4 chr20.fa idx > build.log 2>&1\ntest -s idx.1.bt2\n\n# --local matches bwa mem's local (soft-clipping) alignment, which is what makes the\n# cross-check against bwa valid: bowtie2's DEFAULT is end-to-end (global) alignment,\n# which rejects reads bwa soft-clips, so default-vs-bwa disagree by design. See README.\necho \"== bowtie2 --local -p 4 (same 400k pairs bwa aligned) ==\"\nbowtie2 --local -p 4 -x idx -1 HG00096_chr20smoke_1.fq.gz -2 HG00096_chr20smoke_2.fq.gz -S out.sam 2> align.log\ngrep \"overall alignment rate\" align.log\n\n# Do NOT rm any staged input (chr20.fa / the fastqs / aln.sam): host /tmp is sticky\n# (1777) and stage-in writes them as the instance user, so this container (a different\n# uid) gets EPERM unlinking them, and `rm -f` does not suppress EPERM. idx*.bt2 and\n# out.sam are this task's own files.\necho \"== smoke check: conservation + alignment rate + bowtie2<->bwa concordance ==\"\npython3 - > smoke-check.txt <<'PY'\nimport re,sys\ndef load(path):\n    st={}\n    with open(path) as f:\n        for line in f:\n            if line[0]=='@': continue\n            p=line.split('\\t',6); flag=int(p[1])\n            if flag & 0x900: continue                       # primary alignments only\n            st[(p[0], 1 if flag & 0x40 else 2)] = 0 if flag & 0x4 else 1   # mapped?\n    return st\nbt=load('out.sam'); bwa=load('aln.sam')\nprim=len(bt); mapped=sum(bt.values())\nrate=float(re.search(r'([\\d.]+)% overall alignment rate', open('align.log').read()).group(1))\nkeys=set(bt)&set(bwa); n=len(keys)\nconc=sum(1 for k in keys if bt[k]==bwa[k])/n\nfail=[]\ndef chk(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\n# 400,000 pairs in -> exactly 800,000 primary records out: a conservation identity, no band.\nchk(\"bt2_primary_records\", prim==800000, f\"{prim}  want exactly 800000 (400k pairs x2, conservation)\")\n# bowtie2 is deterministic, so these reproduce exactly; bands are for aligner-version drift.\nchk(\"bt2_primary_mapped\", 150000<=mapped<=260000, f\"{mapped}  want 150000..260000 (observed 206155)\")\nchk(\"bt2_alignment_rate_pct\", 22.0<=rate<=29.0, f\"{rate}  want 22..29 (observed 25.77, --local)\")\nchk(\"shared_readmates\", n==800000, f\"{n}  want 800000 (identical read set to bwa)\")\n# Cross-code: two independent LOCAL aligners on identical reads+reference agree on which\n# reads map. Floor justified by method (residual disagreement is reads at the local-score\n# threshold), not picked to pass; deterministic so it cannot go flaky.\nchk(\"concordance_vs_bwa\", conc>=0.90, f\"{conc:.4f}  want >=0.90 (observed 0.9462)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/aln.sam",
+      "destination": "/tmp/aln.sam"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/align.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/align.log"
+    },
+    {
+      "source": "/tmp/build.log",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/build.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
