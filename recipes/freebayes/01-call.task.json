@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-freebayes-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged 30x fixture against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a HG00096.chr20_2.0-2.4Mb.30x.bam > b.sha256\nsha256sum -c b.sha256\n\necho \"== index the reference (samtools is in this image) and call, restricted to the fixture's region ==\"\nsamtools faidx chr20.fa\nfreebayes -f chr20.fa -r chr20:2000000-2400000 HG00096.chr20_2.0-2.4Mb.30x.bam > freebayes.vcf 2> freebayes.log\n\n# ---- smoke check (inside the task so it can fail it) ----\nTOTAL=$(grep -vc '^#' freebayes.vcf)\nCONF=$(awk '!/^#/ && $6>=20' freebayes.vcf | wc -l | tr -d ' ')\nHDR=$(grep -c '^##fileformat=VCF' freebayes.vcf)\nSAMPLE=$(awk '/^#CHROM/{print ($10!=\"\")+0; exit}' freebayes.vcf)\n{\n  echo \"vcf_header           $HDR    want 1\"\n  echo \"sample_column        $SAMPLE want 1       (a genotyped sample column is present)\"\n  echo \"variants_total       $TOTAL  want 1400..2200  (observed 1797; includes freebayes's QUAL~0 tail)\"\n  echo \"confident_QUAL>=20   $CONF   want 680..840    (observed 757)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$HDR\"    -eq 1\ntest \"$SAMPLE\" -eq 1\ntest \"$TOTAL\"  -ge 1400\ntest \"$TOTAL\"  -le 2200\ntest \"$CONF\"   -ge 680\ntest \"$CONF\"   -le 840\necho \"SMOKE CHECK PASSED\""
+  ],
+  "container": "quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
+      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
+      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam.bai"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/freebayes.vcf",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/freebayes.vcf"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

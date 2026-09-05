@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-mafft-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== verify staged input against pinned sha256 (same residues iqtree's alignment holds) ==\"\necho \"3adadccdf1c0af2d2931b7d6dae68355c4df5ac2cff3905cb5c251bf1d78d43f  pfam_unaligned.fa\" | sha256sum -c -\necho \"== mafft align: FFT-NS-2, single thread (deterministic) ==\"\nmafft --thread 1 --retree 2 --maxiterate 0 pfam_unaligned.fa > mafft_aln.fa 2> mafft.log\necho \"== determinism: identical on rerun ==\"\nmafft --thread 1 --retree 2 --maxiterate 0 pfam_unaligned.fa > rerun.fa 2>/dev/null\nDET=$(cmp -s mafft_aln.fa rerun.fa && echo YES || echo NO)\nrm -f rerun.fa\n# ---- smoke check (awk; no python in image). RESIDUE CONSERVATION is the identity:\n# an aligner may only insert gaps, never alter/drop residues -- exact, method-independent.\n# NOT a column comparison vs muscle (two MSAs differ by design; the mafft<->muscle\n# cross-code check is downstream RF=0 via iqtree, in the nf-spawn Shape-F recipe).\nlin() { awk '/^>/{if(s)print id\"\\t\"s; id=substr($1,2); s=\"\"; next}{gsub(/\\r/,\"\");s=s$0}END{if(s)print id\"\\t\"s}' \"$1\" | tr 'a-z' 'A-Z'; }\nlin pfam_unaligned.fa > in.tsv\nlin mafft_aln.fa       > out.tsv\nNIN=$(wc -l < in.tsv | tr -d ' '); NOUT=$(wc -l < out.tsv | tr -d ' ')\nNWIDTHS=$(awk -F'\\t' '{print length($2)}' out.tsv | sort -u | wc -l | tr -d ' ')\nAWID=$(awk -F'\\t' '{print length($2); exit}' out.tsv)\nMAXIN=$(awk -F'\\t' '{if(length($2)>m)m=length($2)}END{print m}' in.tsv)\nUNGAP=$(awk -F'\\t' '{g=$2; gsub(/-/,\"\",g); s+=length(g)}END{print s}' out.tsv)\nCONS=$(join -t\"$(printf '\\t')\" <(sort in.tsv) <(awk -F'\\t' '{g=$2;gsub(/-/,\"\",g);print $1\"\\t\"g}' out.tsv | sort) | awk -F'\\t' '$2==$3{ok++}END{print ok+0}')\n{\n  echo \"aligned_sequences    $NOUT   want 114 (== input)\"\n  echo \"residue_conservation $CONS   want 114 (ungap(row)==input, every sequence)\"\n  echo \"ungapped_total       $UNGAP   want 49098 (residues preserved, none altered/dropped)\"\n  echo \"rectangular          $NWIDTHS distinct row length   want 1\"\n  echo \"aln_width_ge_max_in  width=$AWID max_input=$MAXIN   want width>=max\"\n  echo \"deterministic_rerun  $DET   want YES\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$NIN\" -eq 114; test \"$NOUT\" -eq 114; test \"$CONS\" -eq 114\ntest \"$UNGAP\" -eq 49098; test \"$NWIDTHS\" -eq 1; test \"$AWID\" -ge \"$MAXIN\"; test \"$DET\" = YES\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/mafft-muscle/pfam_unaligned.fa",
+      "destination": "/tmp/pfam_unaligned.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/mafft_aln.fa",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/mafft/r1/mafft_aln.fa"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/mafft/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

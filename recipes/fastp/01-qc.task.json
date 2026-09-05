@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-fastp-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (same bytes bwa used) ==\"\n{ printf '%s  %s\\n' 4bd24cdfa4486964f070e69b5dd109b6e1e78561783d48c4e62cc6fae3536a00 HG00096_chr20smoke_1.fq.gz\n  printf '%s  %s\\n' ebd1ad56bc572a4bf157ba21d1ad8ef074ea25f02eb2d982d9f0089180d82a04 HG00096_chr20smoke_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== fastp QC + trim, paired-end ==\"\nfastp -i HG00096_chr20smoke_1.fq.gz -I HG00096_chr20smoke_2.fq.gz \\\n      -o out_1.fq.gz -O out_2.fq.gz -j fastp.json -h fastp.html -w 2 2> fastp.log\n# Do NOT rm the staged reads (sticky /tmp -> EPERM, which `rm -f` does not suppress and\n# would kill the task under set -e). They are inputs owned by the instance user.\n\n# ---- smoke check (inside the task; no python/jq in this image, parse with awk/grep) ----\ngetnum() { grep -oE \"\\\"$1\\\"[[:space:]]*:[[:space:]]*[0-9]+\" fastp.json | head -1 | grep -oE '[0-9]+$'; }\nBEFORE=$(getnum total_reads)            # first total_reads = summary.before_filtering\nPASSED=$(getnum passed_filter_reads)\nLOWQ=$(getnum low_quality_reads)\nMANYN=$(getnum too_many_N_reads)\nSHORT=$(getnum too_short_reads)\nLONG=$(getnum too_long_reads)\nACCOUNTED=$((PASSED + LOWQ + MANYN + SHORT + LONG))\nOUT1=$(( $(gzip -dc out_1.fq.gz | wc -l) / 4 ))\nOUT2=$(( $(gzip -dc out_2.fq.gz | wc -l) / 4 ))\nOUTSUM=$((OUT1 + OUT2))\n\n{\n  echo \"reads_before        $BEFORE   want exactly 800000  (400k pairs x2)\"\n  echo \"passed_filter       $PASSED   (observed 748116)\"\n  echo \"low_quality         $LOWQ   (observed 51656)\"\n  echo \"too_many_N          $MANYN   (observed 228)\"\n  echo \"too_short           $SHORT   (observed 0)\"\n  echo \"too_long            $LONG   (observed 0)\"\n  echo \"accounted_for       $ACCOUNTED   want == reads_before ($BEFORE)  [CONSERVATION]\"\n  echo \"out1_reads          $OUT1\"\n  echo \"out2_reads          $OUT2   want == out1 (paired stays paired)\"\n  echo \"out1+out2           $OUTSUM   want == passed_filter ($PASSED)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$BEFORE\"   -eq 800000\ntest \"$ACCOUNTED\" -eq \"$BEFORE\"\ntest \"$OUT1\"     -eq \"$OUT2\"\ntest \"$OUTSUM\"   -eq \"$PASSED\"\necho \"SMOKE CHECK PASSED\""
+  ],
+  "container": "quay.io/aarchbio/fastp@sha256:061ee7c6b8e5af265dfed6f25c51e482e3bb403c51f167561405010e5c5f632a",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out_1.fq.gz",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/out_1.fq.gz"
+    },
+    {
+      "source": "/tmp/out_2.fq.gz",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/out_2.fq.gz"
+    },
+    {
+      "source": "/tmp/fastp.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/fastp.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

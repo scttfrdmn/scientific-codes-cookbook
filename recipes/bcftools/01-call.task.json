@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-bcftools-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged 30x fixture against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a HG00096.chr20_2.0-2.4Mb.30x.bam > b.sha256\nsha256sum -c b.sha256\n\necho \"== bcftools mpileup+call, region-restricted; mpileup auto-builds chr20.fa.fai (no samtools needed) ==\"\nbcftools mpileup -f chr20.fa -r chr20:2000000-2400000 HG00096.chr20_2.0-2.4Mb.30x.bam -Ou 2> bcf.log | bcftools call -mv -Oz -o bcftools.vcf.gz 2>> bcf.log\nbcftools index -t bcftools.vcf.gz\n\n# ---- per-tool ----\nBTOTAL=$(bcftools view -H bcftools.vcf.gz | wc -l | tr -d ' ')\nBCONF=$(bcftools view -H -i 'QUAL>=20' bcftools.vcf.gz | wc -l | tr -d ' ')\n\n# ---- cross-code, LIKE WITH LIKE ----\n# bcftools (pileup) and freebayes (haplotype) are different models; a raw VCF diff would\n# fail by design. Normalise both (split multiallelics, left-align), restrict to CONFIDENT\n# SNVs (QUAL>=20) -- SNVs because the two callers represent indels differently even after\n# norm, so SNVs are the apples-to-apples set -- and assert Jaccard of POS:REF:ALT. The\n# floor is what two correct callers should reach at 30x, not the observed value shaved.\nbcftools norm -f chr20.fa -m- bcftools.vcf.gz -Oz -o bcf.norm.vcf.gz 2>/dev/null\nbcftools norm -f chr20.fa -m- freebayes.vcf   -Oz -o fb.norm.vcf.gz  2>/dev/null\nbcftools view -H -v snps -i 'QUAL>=20' bcf.norm.vcf.gz | awk '{print $2\":\"$4\":\"$5}' | sort -u > bcf.snv\nbcftools view -H -v snps -i 'QUAL>=20' fb.norm.vcf.gz  | awk '{print $2\":\"$4\":\"$5}' | sort -u > fb.snv\nI=$(comm -12 bcf.snv fb.snv | wc -l | tr -d ' ')\nU=$(cat bcf.snv fb.snv | sort -u | wc -l | tr -d ' ')\nJAC=$(awk -v i=\"$I\" -v u=\"$U\" 'BEGIN{printf \"%.4f\", (u>0)?i/u:0}')\n\n{\n  echo \"variants_total          $BTOTAL  want 650..950   (observed 806)\"\n  echo \"confident_QUAL>=20      $BCONF   want 710..880   (observed 797)\"\n  echo \"snv_concordance_jaccard $JAC   want >= 0.85    (observed 0.9103; confident SNVs vs freebayes, I=$I U=$U)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$BTOTAL\" -ge 650\ntest \"$BTOTAL\" -le 950\ntest \"$BCONF\"  -ge 710\ntest \"$BCONF\"  -le 880\nawk -v j=\"$JAC\" 'BEGIN{ if (j>=0.85) exit 0; print \"snv concordance \" j \" below 0.85\"; exit 1 }'\necho \"SMOKE CHECK PASSED\""
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
+      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
+      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam.bai"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/freebayes.vcf",
+      "destination": "/tmp/freebayes.vcf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/bcftools.vcf.gz",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bcftools/r1/bcftools.vcf.gz"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bcftools/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
