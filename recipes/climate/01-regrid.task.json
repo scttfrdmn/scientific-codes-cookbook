@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-climate-regrid-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged netCDF against its pinned sha256 ==\"\nprintf '%s  %s\\n' c606b89c35970a2983b914b76df4adbb409003ef34aa7cfd7f582e41f307482b air.nc > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== climate: netCDF reader path, xESMF conservative regrid, metpy identity ==\"\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json,sys,numpy as np,xarray as xr\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:24s} {detail}\")\n    if not ok: fail.append(l)\n\n# 1. reader path on a REAL file (netcdf4 engine): known structure + deterministic stat.\n#    Air temp NCEP reanalysis, pydata/xarray-data air_temperature.nc @ 2baf0c22d967.\nds=xr.open_dataset(\"/tmp/air.nc\")\nvar=\"air\" if \"air\" in ds else list(ds.data_vars)[0]\nshp=tuple(ds[var].shape); mean=round(float(ds[var].mean()),6)\ncheck(\"netcdf_var\", var==\"air\", f\"{var}  want air\")\ncheck(\"netcdf_shape\", shp==(2920,25,53), f\"{shp}  want (2920, 25, 53)\")\ncheck(\"netcdf_mean\", abs(mean-281.255037)<1e-4, f\"{mean}  want 281.255037 K (deterministic reader stat)\")\n\n# 2. xESMF conservative regrid CONSERVATION: on global periodic grids a conservative\n#    scheme reproduces a constant field exactly -- the conservation law, exact-or-wrong.\nimport xesmf as xe\nsrc=xe.util.grid_global(5,4); dst=xe.util.grid_global(8,6)\nny,nx=src[\"lat\"].shape\nrg=xe.Regridder(src,dst,\"conservative\",periodic=True)\nout=rg(xr.DataArray(np.ones((ny,nx)),dims=(\"y\",\"x\")))\ncmin,cmax=round(float(out.min()),8),round(float(out.max()),8)\ncheck(\"regrid_conservation\", abs(cmin-1.0)<1e-6 and abs(cmax-1.0)<1e-6,\n      f\"[{cmin},{cmax}]  want [1.0,1.0] (constant preserved -> conservative)\")\n\n# 3. metpy companion identity: wind speed of (3,4) m/s = 5 exactly\nfrom metpy.calc import wind_speed\nfrom metpy.units import units\nspd=round(float(wind_speed(np.array([3.0])*units(\"m/s\"), np.array([4.0])*units(\"m/s\")).magnitude[0]),6)\ncheck(\"metpy_windspeed\", abs(spd-5.0)<1e-6, f\"{spd}  want 5.0 (3-4-5)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/climate/air.nc",
+      "destination": "/tmp/air.nc"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/climate/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

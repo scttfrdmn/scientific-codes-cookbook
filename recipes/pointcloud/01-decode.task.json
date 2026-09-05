@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-pointcloud-decode-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged point cloud against its pinned sha256 ==\"\nprintf '%s  %s\\n' 944b947501156e45df1b3b9d25bc1dc04ff5ef377e7e169576ba59231c2896ba autzen.laz > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== PDAL: read header, then decode all points and compute a statistic ==\"\n# autzen is PDAL's canonical reference cloud (documented 10,653,336 points). The header\n# gives count + bounds (metadata); the Z-mean over every decoded point is the DECODE\n# identity -- PDAL must LZ-decompress and apply scale/offset to all 10.6M points to\n# reproduce it, which header integrity (and sha256) do not prove.\npdal info --summary /tmp/autzen.laz > summary.json 2>/dev/null\npdal info --stats --dimensions Z /tmp/autzen.laz > zstats.json 2>/dev/null\n\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json,sys\ns=json.load(open(\"summary.json\"))[\"summary\"]\nz=json.load(open(\"zstats.json\"))[\"stats\"][\"statistic\"][0]\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:22s} {detail}\")\n    if not ok: fail.append(l)\ncnt=s[\"num_points\"]; b=s[\"bounds\"]\n# canonical documented count -- a reference identity, and the header value\ncheck(\"point_count\", cnt==10653336, f\"{cnt}  want 10653336 (canonical autzen)\")\n# bounds (header metadata), exact\ncheck(\"bounds_x\", (round(b['minx'],2),round(b['maxx'],2))==(635577.79,639003.73), f\"{round(b['minx'],2)}..{round(b['maxx'],2)}  want 635577.79..639003.73\")\ncheck(\"bounds_y\", (round(b['miny'],2),round(b['maxy'],2))==(848882.15,853537.66), f\"{round(b['miny'],2)}..{round(b['maxy'],2)}  want 848882.15..853537.66\")\ncheck(\"bounds_z\", (round(b['minz'],2),round(b['maxz'],2))==(406.14,615.26), f\"{round(b['minz'],2)}..{round(b['maxz'],2)}  want 406.14..615.26\")\n# decode identity: mean Z over ALL decoded points, and the stat pass saw every point\nzc=int(z[\"count\"]); zm=round(z[\"average\"],4)\ncheck(\"z_stat_count\", zc==cnt, f\"{zc}  want {cnt} (decoded every point; header==decode)\")\ncheck(\"z_mean_decode\", abs(zm-434.1025)<1e-3, f\"{zm}  want 434.1025 (mean Z over all points -- PDAL decode)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/pointcloud/autzen.laz",
+      "destination": "/tmp/autzen.laz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/summary.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/pointcloud/r1/summary.json"
+    },
+    {
+      "source": "/tmp/zstats.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/pointcloud/r1/zstats.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/pointcloud/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
