@@ -166,17 +166,19 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   sized from the local measurement came down 35m → 20m and the cap $0.19 → $0.11 on
   identical work. A local run is the right *first* move because it is free, not because
   it is accurate. (Overspend, and a band that was never observed.)
-- **Never trust spawn's exit code as evidence the outputs exist.** Measured: a
-  task whose declared output fails to stage is still recorded `state: completed,
-  exit_code: 0`, because the wrapper computes the stage-out result and discards it
-  (spore-host/spawn#561). So run the smoke check **inside** the task, where it can
-  fail the task, *and* confirm the objects are actually in the bucket afterwards.
-  Also: a task with **no completion record at all** has not hung — it either failed
-  stage-in or **failed inside the container**, and measurement can't tell those apart
-  from S3, because a failing command writes no record either and the box then rides to
-  TTL (spawn#566). Read the **instance console output** to find out which; that is
-  where the real error is. TTL does fire reliably, so this is bounded spend, not
-  stranded. (Silent failure, again — this one wearing a green check.)
+- **Never trust an exit code as evidence the outputs are real.** The correctness bar is
+  a smoke check that runs **inside** the task (so it can fail the task) *plus* a
+  confirmation that the objects are actually in the bucket afterwards. This is stronger
+  than any exit code by construction, and independent of whether the runner's exit codes
+  are even honest: an exit code reports that the command *ran*, never that its output is
+  real — output that is empty, truncated, or garbage still exits 0. So the rule is
+  smoke-check-plus-bucket-check because they prove *realness*, full stop. (History, so
+  no one re-derives it: two spawn bugs once widened the gap — a lost output recorded
+  `state: completed, exit_code: 0` [spawn#561], and a failed command writing no
+  completion record at all so the box rode to TTL [spawn#566] — both fixed in spawn
+  0.104.0, so failures now surface with a record. The rule predates and outlives them.)
+  (Silent failure — output that exists but is empty, garbage, or absent, wearing a green
+  check.)
 - **Stop at the boundary.** Writing a recipe, staging an input, requesting an image
   are in bounds. Building a harness, a gate framework, a shared engine, or anything
   with its own test suite is not — stop and report. (Scope drift, the main risk.)
