@@ -1,0 +1,40 @@
+{
+  "task_id": "cookbook-openmm-mdanalysis-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== OpenMM: NVE MD of a 27-atom argon lattice; writes topology + trajectory ==\"\n# A cross-LAYER workflow: OpenMM writes top.pdb + traj.dcd, MDAnalysis reads them back.\n# OpenMM's own identity is NVE energy conservation (2nd instance in the catalog after\n# ambertools). MDAnalysis then recovers the exact atom/frame/box counts OpenMM wrote,\n# plus the lattice spacing from the coordinates -- the decode identity for a trajectory,\n# the same move as the COG checksum and PDAL Z-mean applied to a trajectory format.\npython3 - <<'EOF'\nimport json, numpy as np, openmm as mm\nfrom openmm import unit, app\nn=3; sp=0.382; Lnm=n*sp\nsig=0.34*unit.nanometer; eps=0.996*unit.kilojoule_per_mole; m=39.948*unit.amu\nsystem=mm.System()\nboxv=unit.Quantity([mm.Vec3(Lnm,0,0),mm.Vec3(0,Lnm,0),mm.Vec3(0,0,Lnm)],unit.nanometer)\nsystem.setDefaultPeriodicBoxVectors(*boxv)\nnb=mm.NonbondedForce(); nb.setNonbondedMethod(mm.NonbondedForce.CutoffPeriodic)\nnb.setCutoffDistance(0.5*unit.nanometer); nb.setUseSwitchingFunction(True); nb.setSwitchingDistance(0.42*unit.nanometer)\ntop=app.Topology(); chain=top.addChain(); Ar=app.Element.getBySymbol(\"Ar\"); pos=[]\nfor i in range(n):\n  for j in range(n):\n    for k in range(n):\n      system.addParticle(m); nb.addParticle(0.0,sig,eps)\n      res=top.addResidue(\"AR\",chain); top.addAtom(\"Ar\",Ar,res); pos.append(mm.Vec3(i*sp,j*sp,k*sp))\nsystem.addForce(nb); top.setPeriodicBoxVectors(boxv)\npositions=unit.Quantity(pos,unit.nanometer)\nsim=app.Simulation(top,system,mm.VerletIntegrator(1*unit.femtosecond),mm.Platform.getPlatformByName(\"CPU\"))\nsim.context.setPositions(positions); app.PDBFile.writeFile(top,positions,open(\"top.pdb\",\"w\"))\nsim.context.setVelocitiesToTemperature(30*unit.kelvin,12345)\ndef etot():\n  s=sim.context.getState(getEnergy=True); return (s.getKineticEnergy()+s.getPotentialEnergy()).value_in_unit(unit.kilojoule_per_mole)\ne0=etot(); sim.reporters.append(app.DCDReporter(\"traj.dcd\",20)); sim.step(200); eN=etot()\njson.dump({\"n_atoms\":system.getNumParticles(),\"e0\":e0,\"eN\":eN,\n           \"drift_rel\":abs(eN-e0)/abs(e0),\"box_a\":Lnm*10,\"nn_a\":sp*10,\"n_frames_expected\":10},\n          open(\"omm.json\",\"w\"))\nprint(f\"OpenMM: {system.getNumParticles()} atoms, NVE drift {abs(eN-e0)/abs(e0):.2e}\")\nEOF\n\necho \"== MDAnalysis: read OpenMM's outputs back and cross-check ==\"\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json,sys,numpy as np\nimport MDAnalysis as mda\nfrom MDAnalysis.lib.distances import distance_array\no=json.load(open(\"omm.json\")); fail=[]\ndef check(l,ok,detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n# OpenMM identity: NVE energy conserved (physics band; observed ~4e-7). 2nd such check\n# in the catalog, on a different engine than ambertools.\ncheck(\"nve_conserved\", o[\"drift_rel\"]<1e-4, f\"{o['drift_rel']:.2e}  want < 1e-4 relative (NVE)\")\n# cross-layer: MDAnalysis recovers exactly what OpenMM wrote\nu=mda.Universe(\"top.pdb\",\"traj.dcd\")\ncheck(\"mda_atoms_eq_openmm\", len(u.atoms)==o[\"n_atoms\"]==27, f\"{len(u.atoms)}  want {o['n_atoms']} (==27, OpenMM built)\")\ncheck(\"mda_frames\", len(u.trajectory)==o[\"n_frames_expected\"], f\"{len(u.trajectory)}  want {o['n_frames_expected']} (OpenMM wrote)\")\nu.trajectory[0]\ncheck(\"mda_box_eq_openmm\", abs(float(u.dimensions[0])-o[\"box_a\"])<1e-2, f\"{float(u.dimensions[0]):.3f}  want {o['box_a']:.3f} A (OpenMM box)\")\n# decode identity: lattice spacing recovered from OpenMM's PDB coordinates\np=mda.Universe(\"top.pdb\")\nd=np.sort(distance_array(p.atoms.positions[:1],p.atoms.positions)[0])\ncheck(\"lattice_spacing_decode\", abs(float(d[1])-o[\"nn_a\"])<1e-2, f\"{float(d[1]):.3f}  want {o['nn_a']:.3f} A (nearest-neighbour == lattice)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/top.pdb",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/top.pdb"
+    },
+    {
+      "source": "/tmp/traj.dcd",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/traj.dcd"
+    },
+    {
+      "source": "/tmp/omm.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/omm.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
