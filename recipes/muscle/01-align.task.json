@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-muscle-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== verify staged input sha256 (same bytes the mafft recipe aligns) ==\"\nprintf '%s  %s\\n' 3adadccdf1c0af2d2931b7d6dae68355c4df5ac2cff3905cb5c251bf1d78d43f unaligned.fa > pin.sha256\nsha256sum -c pin.sha256\necho \"== muscle v5 align ==\"\nmuscle -align unaligned.fa -output aln.fa 2> muscle.log\n# Do NOT rm unaligned.fa: it is a staged input owned by the instance user; on host /tmp\n# (sticky 1777) the container gets EPERM unlinking it and `rm -f` does not suppress EPERM.\n# ---- smoke check: RESIDUE CONSERVATION (exact-or-wrong, method-independent) ----\n# An aligner may only insert gap columns; ungapping every aligned row must reproduce the\n# exact input sequence. Cross-code agreement with mafft is a DIFFERENT question (two MSAs\n# differ by design) and is checked downstream via tree topology -- see recipes/nf-spawn.\nawk '\nFNR==1{fn++}\n/^>/{id=substr($1,2); if(fn==1){uord[++nu]=id} else {aord[++na]=id}; cur=id; next}\n{ if(fn==1){U[cur]=U[cur] $0} else {A[cur]=A[cur] $0} }\nEND{\n  fail=0; maxin=0\n  for(i=1;i<=nu;i++){ if(length(U[uord[i]])>maxin) maxin=length(U[uord[i]]) }\n  alnlen=-1; totres=0\n  for(i=1;i<=na;i++){ id=aord[i]; a=A[id]\n    if(alnlen==-1) alnlen=length(a); else if(length(a)!=alnlen){print \"FAIL non-rectangular \"id; fail=1}\n    g=a; gsub(/[-.]/,\"\",g)\n    if(!(id in U)){print \"FAIL id-not-in-input \"id; fail=1; continue}\n    if(g!=U[id]){print \"FAIL residues-differ \"id; fail=1}\n    totres+=length(g)\n  }\n  printf \"nseqs                    %d   want exactly 114\\n\", na          > \"smoke-check.txt\"\n  printf \"aln_len                  %d  want >= %d (longest input)\\n\", alnlen, maxin >> \"smoke-check.txt\"\n  printf \"total_ungapped_residues  %d   want exactly 49098 (residue conservation)\\n\", totres >> \"smoke-check.txt\"\n  if(na!=114) fail=1\n  if(alnlen<maxin) fail=1\n  if(totres!=49098) fail=1\n  if(fail){ print \"residue conservation broken\" > \"/dev/stderr\"; exit 1 }\n}\n' unaligned.fa aln.fa\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/mafft-muscle/pfam_unaligned.fa",
+      "destination": "/tmp/unaligned.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln.fa",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/muscle/r1/aln.fa"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/muscle/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
