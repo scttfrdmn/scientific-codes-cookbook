@@ -122,6 +122,22 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   different justified tolerance; the basis sets it, not the noise.
   (A check that only proves a tool is self-consistent, when a stronger one was free; or a
   cross-code tolerance picked to pass rather than justified by the problem.)
+- **A cross-code check must compare like with like — before asserting agreement, verify the
+  metric measures agreement and not a difference in method.** A naive metric failing is not
+  evidence of a bug in either tool; it is evidence the comparison was wrong, and a green
+  check on the wrong metric is worse than none. The three failure modes, all caught in local
+  validation in the first aarch.bio batch: **different models make raw values incomparable —
+  use rank** (kallisto↔salmon TPM: raw log-TPM Pearson 0.61 because the two use different
+  EM/effective-length models, Spearman rank 0.912 once you ask the question they can both
+  answer); **repeat-heavy references make all-mapped concordance meaningless — restrict to
+  confident calls** (minimap2↔bwa: naive all-mapped 0.43 on the chr20-only subsample where
+  two correct aligners break repeat ties differently, 0.9921 gated on MAPQ≥30 and ≤5 bp —
+  "agree where both are sure"); **different alignment modes reject different reads — match the
+  modes** (bowtie2↔bwa: default end-to-end vs bwa's soft-clipping gave 82%, `--local` on the
+  mapped set gave 0.9462). This is the sibling of the tolerance rule above — that one justifies
+  the *number*, this one justifies the *metric*. Both are the same discipline: assert the claim
+  you mean. (A cross-code check that fails, or passes, for a reason unrelated to correctness
+  because the metric compared a method difference instead of the science.)
 - **When a conda package strips the data a code needs, stage it from the code's own
   version-matched test suite — it usually ships a committed reference alongside, which
   turns "produce a number" into "reproduce a published number" for free.** This is a
