@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-megahit-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (same bytes SPAdes assembles) ==\"\n{ printf '%s  %s\\n' 4f43bf362b2391f03b2621226a04fb702b025d39b0a002ff2adf6d885dda4b86 reads_1.fq.gz\n  printf '%s  %s\\n' 93f4a67742e5509e8eabfc1966c384f5e3e7faadca866d7c20a8db817a48eca0 reads_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== MEGAHIT, -t 4 --min-count 2 (deterministic: verified identical across runs) ==\"\n# megahit refuses a pre-existing -o dir; /tmp/out is fresh on the instance.\nmegahit -1 reads_1.fq.gz -2 reads_2.fq.gz -t 4 --min-count 2 -o out\ncp out/final.contigs.fa contigs.fa\n\n# ---- smoke check ----\nN=$(grep -c '^>' contigs.fa)\nBP=$(awk '!/^>/{t+=length($0)}END{print t}' contigs.fa)\n{\n  echo \"megahit_contigs   $N   want exactly 2       (deterministic assembly, -t 4)\"\n  echo \"megahit_total_bp  $BP   want exactly 400811\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  -eq 2\ntest \"$BP\" -eq 400811\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/megahit@sha256:d82953bf0096098b0b892edf7180f99b599e8ad17be14c47b1e8c2e1b6a8bdfd",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
+      "destination": "/tmp/reads_1.fq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
+      "destination": "/tmp/reads_2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/contigs.fa",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/contigs.fa"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

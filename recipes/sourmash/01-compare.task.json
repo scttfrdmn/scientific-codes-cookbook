@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-sourmash-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\n# Same two inputs as recipes/mash: the spades (23 contigs) and megahit (2 contigs)\n# assemblies of identical reads -- the same ~400kb region built two ways, so highly\n# similar. sourmash uses FracMinHash (scaled), a DIFFERENT MinHash variant from mash's\n# bottom-sketch, so its NUMBER differs from mash's (Jaccard similarity vs a distance);\n# the two tools AGREE qualitatively (both call the pair near-identical), not on the raw\n# value. See README.\necho \"== sourmash similarity: spades assembly vs megahit assembly ==\"\nsourmash sketch dna -p k=31,scaled=1000 spades_contigs.fa -o spades.sig\nsourmash sketch dna -p k=31,scaled=1000 megahit_contigs.fa -o megahit.sig\nsourmash compare spades.sig megahit.sig --csv compare.csv\ncat compare.csv\n\n# The off-diagonal of the 2x2 compare matrix is the Jaccard similarity.\nJACC=$(awk -F, 'NR==2{print $2}' compare.csv)\n{\n  echo \"sourmash_jaccard   $JACC   want >= 0.95   (same ~400kb region, two assemblers; observed 0.9952)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\n# Method-justified threshold: FracMinHash Jaccard of two assemblies of identical sequence\n# approaches 1; a broken sketch or mismatched pair collapses far below 0.95. Not shaved.\nawk -v j=\"$JACC\" 'BEGIN{ if (j+0 >= 0.95 && j+0 <= 1.0) exit 0; print \"sourmash jaccard \" j \" not >= 0.95\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/spades/r1/contigs.fasta",
+      "destination": "/tmp/spades_contigs.fa"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/contigs.fa",
+      "destination": "/tmp/megahit_contigs.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/compare.csv",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/sourmash/r1/compare.csv"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/sourmash/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
