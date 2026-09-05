@@ -111,7 +111,17 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   agreement, in both READMEs. RELION is the same move against a *published* result
   rather than a sibling recipe: the RODA archive holds the depositors' own output, so
   all 221 FSC shells could be compared at `max|diff| = 0`. Prefer either to a band.
-  (A check that only proves a tool is self-consistent, when a stronger one was free.)
+  **A cross-code check's tolerance is set by the shared problem's precision, not by how
+  closely the codes happen to agree** — and stating *why* is what separates it from a
+  fudge. RAxML-NG/IQ-TREE can assert 1e-8 because the ML optimum is defined to that
+  precision. PySCF and Psi4 on H2 RHF/STO-3G agree only to 2.4e-5 Ha, and that is *correct*:
+  STO-3G's contraction coefficients aren't standardized across packages, so two right HF
+  codes must differ at the 5th decimal on a minimal basis — the check asserts agreement to
+  chemical accuracy (<1 mHa), which still catches a broken integral/SCF (those diverge by
+  mHa–Ha) while a 1e-8 band would fail for a reason unrelated to correctness. Same technique,
+  different justified tolerance; the basis sets it, not the noise.
+  (A check that only proves a tool is self-consistent, when a stronger one was free; or a
+  cross-code tolerance picked to pass rather than justified by the problem.)
 - **When a conda package strips the data a code needs, stage it from the code's own
   version-matched test suite — it usually ships a committed reference alongside, which
   turns "produce a number" into "reproduce a published number" for free.** This is a
