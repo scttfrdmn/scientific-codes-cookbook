@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-rdkit-descriptors-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== RDKit: exact cheminformatics identities on aspirin ==\"\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys\nfrom rdkit import Chem\nfrom rdkit.Chem import rdMolDescriptors as rd, Descriptors\nsmi=\"CC(=O)Oc1ccccc1C(=O)O\"   # aspirin\nm=Chem.MolFromSmiles(smi)\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:22s} {detail}\")\n    if not ok: fail.append(l)\ncan=Chem.MolToSmiles(m)\nrt=Chem.MolToSmiles(Chem.MolFromSmiles(can))==can\n# canonical SMILES is idempotent under a round-trip -- exact\ncheck(\"canonical_roundtrip\", rt, f\"{rt}  want True (canonical SMILES stable)\")\n# molecular formula -- exact graph property\ncheck(\"formula\", rd.CalcMolFormula(m)==\"C9H8O4\", f\"{rd.CalcMolFormula(m)}  want C9H8O4\")\n# InChIKey against the PUBLISHED value (PubChem CID 2244) -- a reference identity,\n# effectively a checksum of the molecular graph verified against an external source\nik=Chem.MolToInchiKey(m)\ncheck(\"inchikey_published\", ik==\"BSYNRYMUTXBXSQ-UHFFFAOYSA-N\", f\"{ik}  want BSYNRYMUTXBXSQ-UHFFFAOYSA-N (aspirin)\")\n# ring count, heavy-atom count -- exact\ncheck(\"ring_count\", rd.CalcNumRings(m)==1, f\"{rd.CalcNumRings(m)}  want 1\")\ncheck(\"heavy_atoms\", m.GetNumHeavyAtoms()==13, f\"{m.GetNumHeavyAtoms()}  want 13\")\ncheck(\"mol_weight\", abs(Descriptors.MolWt(m)-180.16)<0.01, f\"{round(Descriptors.MolWt(m),2)}  want 180.16\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/rdkit/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
