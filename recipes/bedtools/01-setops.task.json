@@ -1,0 +1,44 @@
+{
+  "task_id": "cookbook-bedtools-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== bedtools: exact set algebra on constructed intervals (algorithmic, no band) ==\"\n# Inline BED. A is sorted by start; B likewise. Every asserted integer below is\n# hand-derived in the README, which is what makes this exact-or-wrong, not a band.\nprintf 'chr1\\t0\\t100\\nchr1\\t50\\t150\\nchr1\\t200\\t300\\n' > a.bed\nprintf 'chr1\\t75\\t125\\nchr1\\t250\\t350\\n' > b.bed\nprintf 'chr1\\t400\\n' > genome.txt\n\nbedtools merge     -i a.bed          > merge.bed\nbedtools intersect -a a.bed -b b.bed > intersect.bed\nbedtools subtract  -a a.bed -b b.bed > subtract.bed\nbedtools genomecov -i a.bed -g genome.txt > genomecov.txt\n\nbp(){ awk '{s+=$3-$2}END{print s+0}' \"$1\"; }\nMI=$(wc -l < merge.bed | tr -d ' ');     MB=$(bp merge.bed)\nII=$(wc -l < intersect.bed | tr -d ' '); IB=$(bp intersect.bed)\nSI=$(wc -l < subtract.bed | tr -d ' ');  SB=$(bp subtract.bed)\nD0=$(awk '$1==\"chr1\"&&$2==0{print $3}' genomecov.txt)\nD1=$(awk '$1==\"chr1\"&&$2==1{print $3}' genomecov.txt)\nD2=$(awk '$1==\"chr1\"&&$2==2{print $3}' genomecov.txt)\nGS=$(awk '$1==\"chr1\"{s+=$3}END{print s}' genomecov.txt)\n\n{\n  echo \"merge_intervals      $MI   want 2     ([0,100]u[50,150] -> [0,150]; [200,300])\"\n  echo \"merge_bp             $MB   want 250   (150 + 100)\"\n  echo \"intersect_intervals  $II   want 3     ([75,100],[75,125],[250,300])\"\n  echo \"intersect_bp         $IB   want 125   (25 + 50 + 50)\"\n  echo \"subtract_intervals   $SI   want 4     ([0,75],[50,75],[125,150],[200,250])\"\n  echo \"subtract_bp          $SB   want 175   (75 + 25 + 25 + 50)\"\n  echo \"genomecov_depth0     $D0   want 150   ([150,200)+[300,400))\"\n  echo \"genomecov_depth1     $D1   want 200   ([0,50)+[100,150)+[200,300))\"\n  echo \"genomecov_depth2     $D2   want 50    ([50,100))\"\n  echo \"genomecov_sum        $GS   want 400   == genome length (conservation)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$MI\" -eq 2;   test \"$MB\" -eq 250\ntest \"$II\" -eq 3;   test \"$IB\" -eq 125\ntest \"$SI\" -eq 4;   test \"$SB\" -eq 175\ntest \"$D0\" -eq 150; test \"$D1\" -eq 200; test \"$D2\" -eq 50\ntest \"$GS\" -eq 400\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/bedtools@sha256:cd1e72a29500369c5576c10e98b2c1723a09a73bde9fb50d80bf4022096b449b",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/merge.bed",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/merge.bed"
+    },
+    {
+      "source": "/tmp/intersect.bed",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/intersect.bed"
+    },
+    {
+      "source": "/tmp/subtract.bed",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/subtract.bed"
+    },
+    {
+      "source": "/tmp/genomecov.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/genomecov.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
