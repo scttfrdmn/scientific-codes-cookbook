@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-geo-ml-spatial-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== geo-ml: spatial join, CRS-aware area, PySAL weights, OLS (statsmodels + sklearn) ==\"\n# All synthetic/constructed, so every check is exact-or-wrong. Two independent regression\n# engines fit the same collinear data as a cross-check.\ncat > work.py <<'EOF'\nimport json, numpy as np\nimport statsmodels.api as sm\nfrom sklearn.linear_model import LinearRegression\nimport geopandas as gpd\nfrom shapely.geometry import Point, box\nfrom libpysal.weights import lat2W\n\nx=np.arange(10.0); y=3*x+7                       # exactly collinear\nr=sm.OLS(y, sm.add_constant(x)).fit()\nm=LinearRegression().fit(x.reshape(-1,1), y)\n\npts=gpd.GeoDataFrame(geometry=[Point(0.5,0.5),Point(0.5,0.5),Point(2.5,0.5),\n                               Point(9,9),Point(-1,-1)],crs=\"EPSG:32611\")\npolys=gpd.GeoDataFrame({\"pid\":[0,1]},geometry=[box(0,0,1,1),box(2,0,3,1)],crs=\"EPSG:32611\")\nsjoin_n=len(gpd.sjoin(pts,polys,predicate=\"within\"))\narea=gpd.GeoSeries([box(0,0,1000,1000)],crs=\"EPSG:32611\").area.iloc[0]\nw=lat2W(3,3,rook=True)\n\njson.dump({\"ols_r2\":r.rsquared,\"ols_int\":r.params[0],\"ols_slope\":r.params[1],\n           \"sk_slope\":m.coef_[0],\"sk_int\":m.intercept_,\"sk_r2\":m.score(x.reshape(-1,1),y),\n           \"sjoin_n\":sjoin_n,\"area\":area,\"w_n\":w.n,\"w_s0\":int(w.s0)}, open(\"geoml-results.json\",\"w\"))\nprint(f\"OLS R2={r.rsquared:.12f} slope={r.params[1]:.6f} int={r.params[0]:.6f}; \"\n      f\"sjoin={sjoin_n} area={area:.1f} rook_s0={int(w.s0)}\")\nEOF\npython3 work.py | tee geoml-results.txt\n\necho \"== smoke check ==\"\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport json,sys\nd=json.load(open(\"geoml-results.json\")); fail=[]\ndef check(l,ok,detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n# exact regression identity on collinear data\ncheck(\"ols_r2\", abs(d[\"ols_r2\"]-1.0)<1e-12, f\"{d['ols_r2']:.12f}  want exactly 1.0 (collinear)\")\ncheck(\"ols_slope\", abs(d[\"ols_slope\"]-3.0)<1e-9, f\"{d['ols_slope']:.9f}  want 3.0\")\ncheck(\"ols_intercept\", abs(d[\"ols_int\"]-7.0)<1e-9, f\"{d['ols_int']:.9f}  want 7.0\")\n# cross-engine: sklearn agrees with statsmodels to machine precision\ncheck(\"sklearn_eq_statsmodels\",\n      abs(d[\"sk_slope\"]-d[\"ols_slope\"])<1e-9 and abs(d[\"sk_int\"]-d[\"ols_int\"])<1e-9 and abs(d[\"sk_r2\"]-1.0)<1e-12,\n      f\"slope|int|R2 match  ({d['sk_slope']:.6f},{d['sk_int']:.6f},{d['sk_r2']:.12f})\")\n# geopandas spatial predicate: exact count of points within the two squares\ncheck(\"spatial_join_count\", d[\"sjoin_n\"]==3, f\"{d['sjoin_n']}  want exactly 3 (points within squares)\")\n# CRS-aware geometry: 1000m square in a metric CRS has area exactly 1e6 m^2\ncheck(\"projected_area\", abs(d[\"area\"]-1_000_000.0)<1e-6, f\"{d['area']:.6f}  want exactly 1000000.0 m^2\")\n# PySAL rook contiguity on a 3x3 grid: 12 shared edges -> 24 directed links\ncheck(\"pysal_rook_links\", d[\"w_n\"]==9 and d[\"w_s0\"]==24, f\"n={d['w_n']} s0={d['w_s0']}  want n=9, s0=24\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23bb00d083c6f163b25529e0",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/geoml-results.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/geoml-results.txt"
+    },
+    {
+      "source": "/tmp/geoml-results.json",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/geoml-results.json"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

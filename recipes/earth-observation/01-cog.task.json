@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-earth-observation-cog-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged Sentinel-2 COG against its pinned sha256 ==\"\nprintf '%s  %s\\n' 8626d4bb645a0ec92ba0099b2c6aab94d0ee328a12ada9190d1c2d0d1771a3f0 B01.tif > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== open the COG and cross-check header against the scene's STAC metadata ==\"\n# Scene S2B_11SKA_20240704_0_L2A (Sentinel-2 L2A, RODA sentinel-cogs). Its STAC item\n# declares proj:epsg 32611, proj:shape [1830,1830], transform [60,0,199980,0,-60,4100040],\n# uint16, nodata 0. This asserts the fetched pixels/header agree with that metadata, and\n# adds a deterministic GDAL band checksum -- the pixel-level decode identity that sha256\n# (byte integrity) does not cover.\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys\nimport rasterio, rioxarray\nfrom osgeo import gdal\ngdal.UseExceptions()\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n\nwith rasterio.open(\"/tmp/B01.tif\") as s:\n    epsg=s.crs.to_epsg(); dt=s.dtypes[0]; h,w,cnt=s.height,s.width,s.count\n    nod=s.nodata; tr=[round(v,3) for v in list(s.transform)[:6]]\n_ds=gdal.Open(\"/tmp/B01.tif\"); chk=_ds.GetRasterBand(1).Checksum()\nrx_epsg=rioxarray.open_rasterio(\"/tmp/B01.tif\").rio.crs.to_epsg()\n\n# each is exact-or-wrong and cross-checked against the STAC-declared value\ncheck(\"crs_epsg\", epsg==32611, f\"{epsg}  want 32611 (STAC proj:epsg)\")\ncheck(\"dtype\", dt==\"uint16\", f\"{dt}  want uint16 (STAC data_type)\")\ncheck(\"shape\", (h,w)==(1830,1830), f\"({h},{w})  want (1830,1830) (STAC proj:shape)\")\ncheck(\"band_count\", cnt==1, f\"{cnt}  want 1\")\ncheck(\"nodata\", nod==0, f\"{nod}  want 0 (STAC nodata)\")\ncheck(\"transform\", tr==[60.0,0.0,199980.0,0.0,-60.0,4100040.0], f\"{tr}  want [60,0,199980,0,-60,4100040]\")\ncheck(\"gdal_checksum\", chk==55297, f\"{chk}  want 55297 (deterministic pixel decode)\")\ncheck(\"rioxarray_agrees\", rx_epsg==32611, f\"{rx_epsg}  want 32611 (rioxarray reads same CRS)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/earth-observation/B01.tif",
+      "destination": "/tmp/B01.tif"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/earth-observation/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
