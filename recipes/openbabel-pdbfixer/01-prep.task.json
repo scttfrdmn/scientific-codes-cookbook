@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-openbabel-pdbfixer-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== openbabel + pdbfixer: a structure-prep chain, cross-validated ==\"\n# openbabel handles chemical perception (SMILES<->SDF, formula, InChIKey); pdbfixer repairs\n# a protein structure (adds missing atoms + H); then openbabel independently reads pdbfixer's\n# output and counts the H it added -- so the two tools cross-validate the repair rather than\n# being two isolated checks. InChIKey is an IUPAC standard, so openbabel's must equal RDKit's\n# -- a two-engine cross-check that canonical SMILES (algorithm-specific) could not give.\ncat > ala2.pdb <<'EOF'\nCRYST1    0.000    0.000    0.000  90.00  90.00  90.00 P 1           1\nATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N\nATOM      2  CA  ALA A   1       1.458   0.000   0.000  1.00  0.00           C\nATOM      3  C   ALA A   1       2.009   1.420   0.000  1.00  0.00           C\nATOM      4  O   ALA A   1       1.251   2.390   0.000  1.00  0.00           O\nATOM      5  CB  ALA A   1       1.988  -0.773   1.199  1.00  0.00           C\nATOM      6  N   ALA A   2       3.332   1.560   0.000  1.00  0.00           N\nATOM      7  CA  ALA A   2       3.977   2.860   0.000  1.00  0.00           C\nATOM      8  C   ALA A   2       5.486   2.700   0.000  1.00  0.00           C\nATOM      9  O   ALA A   2       6.019   1.590   0.000  1.00  0.00           O\nATOM     10  CB  ALA A   2       3.581   3.649   1.239  1.00  0.00           C\nTER\nEND\nEOF\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys\nfrom openbabel import pybel\nfrom rdkit import Chem\nfrom pdbfixer import PDBFixer\nfrom openmm.app import PDBFile\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:24s} {detail}\")\n    if not ok: fail.append(l)\nsmi=\"CC(=O)Oc1ccccc1C(=O)O\"   # aspirin\nm=pybel.readstring(\"smi\",smi)\ncan1=m.write(\"can\").split()[0]\ncan2=pybel.readstring(\"sdf\",m.write(\"sdf\")).write(\"can\").split()[0]\n# chemical-format decode: SMILES -> SDF -> SMILES recovers the canonical form\ncheck(\"ob_smiles_roundtrip\", can1==can2, f\"{can1==can2}  want True (SMILES->SDF->SMILES stable)\")\ncheck(\"ob_formula\", m.formula==\"C9H8O4\", f\"{m.formula}  want C9H8O4\")\ncheck(\"ob_heavy\", sum(1 for a in m.atoms if a.atomicnum>1)==13, f\"{sum(1 for a in m.atoms if a.atomicnum>1)}  want 13\")\n# two-engine cross-check: openbabel and RDKit agree on the standardized InChIKey\nob_ik=m.write(\"inchikey\").strip(); rd_ik=Chem.MolToInchiKey(Chem.MolFromSmiles(smi))\ncheck(\"inchikey_two_engine\", ob_ik==rd_ik==\"BSYNRYMUTXBXSQ-UHFFFAOYSA-N\", f\"OB={ob_ik} RDKit={rd_ik}\")\n# pdbfixer repairs the heavy-atom ALA-ALA: adds the C-terminal OXT and hydrogens\nfx=PDBFixer(filename=\"ala2.pdb\"); fx.findMissingResidues(); fx.findMissingAtoms(); fx.addMissingAtoms()\nheavy=sum(1 for a in fx.topology.atoms() if a.element and a.element.symbol!=\"H\")\nfx.addMissingHydrogens(7.0)\nnh=sum(1 for a in fx.topology.atoms() if a.element and a.element.symbol==\"H\")\ncheck(\"pdbfixer_heavy\", heavy==11, f\"{heavy}  want 11 (10 input + OXT added)\")\ncheck(\"pdbfixer_h_added\", nh==12, f\"{nh}  want 12 (H added to ALA-ALA at pH 7)\")\nPDBFile.writeFile(fx.topology, fx.positions, open(\"fixed.pdb\",\"w\"))\n# chain: openbabel reads pdbfixer's repaired PDB and independently confirms the H count\nobh=sum(1 for a in next(pybel.readfile(\"pdb\",\"fixed.pdb\")).atoms if a.atomicnum==1)\ncheck(\"chain_openbabel_confirms_H\", obh==nh, f\"openbabel counts {obh} H  want {nh} (== pdbfixer added)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt; echo \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/fixed.pdb",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openbabel-pdbfixer/r1/fixed.pdb"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/openbabel-pdbfixer/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
