@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-plumed-cv-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so\ncd /tmp\n\necho \"== GROMACS runs a rigid-water MD with PLUMED coupled live (-plumed) ==\"\n# The chain: GROMACS integrates and hands coordinates to PLUMED every step; PLUMED computes\n# collective variables and writes COLVAR. spc216 + amber99sb-ildn/tip3p ship in the gromacs\n# package (zero staging). Water is held rigid (constraints), so the O-H distance and H-O-H\n# angle are exact force-field constants -- a fixed-geometry check, not a sampled one -- and\n# a CV that comes out right validates the GROMACS<->PLUMED coupling and PLUMED's CV machinery,\n# not the two tools in isolation.\nGRO=/opt/conda/share/gromacs/top/spc216.gro\nprintf '#include \"amber99sb-ildn.ff/forcefield.itp\"\\n#include \"amber99sb-ildn.ff/tip3p.itp\"\\n[ system ]\\nwater\\n[ molecules ]\\nSOL 216\\n' > topol.top\nprintf 'integrator = md\\nnsteps = 50\\ndt = 0.002\\ncutoff-scheme = Verlet\\ncoulombtype = cut-off\\nrvdw = 0.9\\nrcoulomb = 0.9\\nconstraints = h-bonds\\n' > md.mdp\n# DISTANCE (O-H1) and ANGLE (H1-O-H2) of water 1; PLUMED atom indices are 1-based\nprintf 'd: DISTANCE ATOMS=1,2\\na: ANGLE ATOMS=2,1,3\\nPRINT ARG=d,a FILE=COLVAR STRIDE=10\\n' > plumed.dat\ngmx_mpi grompp -f md.mdp -c \"$GRO\" -p topol.top -o t.tpr -maxwarn 5 > grompp.log 2>&1\ngmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat -nsteps 50 > mdrun.log 2>&1\n\npython3 - <<'EOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys, numpy as np\nrows=[l.split() for l in open(\"COLVAR\") if l.strip() and not l.startswith(\"#\")]\nt=np.array([float(r[0]) for r in rows]); d=np.array([float(r[1]) for r in rows]); a=np.array([float(r[2]) for r in rows])\nmdrun=open(\"mdrun.log\").read(); fail=[]\ndef check(l,ok,detail):\n    print(f\"{l:24s} {detail}\")\n    if not ok: fail.append(l)\n# GROMACS+PLUMED coupling actually ran and PLUMED wrote the CV file\ncheck(\"gromacs_plumed_ran\", \"Performance:\" in mdrun and len(d)>0, f\"{len(d)} COLVAR rows, mdrun {'finished' if 'Performance:' in mdrun else 'NO'}\")\ncheck(\"colvar_rows\", len(d)==6, f\"{len(d)}  want 6 (50 steps / stride 10 + t=0)\")\n# exact-geometry: PLUMED's DISTANCE == the TIP3P O-H constrained bond length (0.09572 nm)\ncheck(\"distance_cv\", abs(d.mean()-0.09572)<1e-4, f\"{d.mean():.5f} nm  want 0.09572 (TIP3P O-H, PLUMED DISTANCE)\")\n# exact-geometry: PLUMED's ANGLE == the TIP3P H-O-H angle (104.52 deg = 1.82422 rad)\ncheck(\"angle_cv\", abs(a.mean()-1.82422)<2e-3, f\"{a.mean():.5f} rad  want 1.82422 (104.52 deg, PLUMED ANGLE)\")\n# rigid water: both CVs are invariant across the trajectory (a construction, not sampling)\ncheck(\"distance_invariant\", (d.max()-d.min())<1e-4, f\"spread {d.max()-d.min():.2e} nm  want < 1e-4 (rigid)\")\ncheck(\"angle_invariant\", (a.max()-a.min())<1e-3, f\"spread {a.max()-a.min():.2e} rad  want < 1e-3 (rigid)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/COLVAR",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/plumed/r1/COLVAR"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/plumed/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
