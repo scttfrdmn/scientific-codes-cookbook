@@ -138,6 +138,20 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   the *number*, this one justifies the *metric*. Both are the same discipline: assert the claim
   you mean. (A cross-code check that fails, or passes, for a reason unrelated to correctness
   because the metric compared a method difference instead of the science.)
+- **A stochastic-search tool needs pinned threads and a fixed seed before an exact identity
+  means anything.** Many correct tools don't produce the *same* output run to run: the thread
+  count changes the order of updates and therefore which local optimum / assembly the search
+  lands on. The tool is right and each result is valid — but an exact assertion on it is flaky
+  unless the search is pinned. Bitten in three domains now, so it's a pattern not a coincidence:
+  IQ-TREE's ML search (thread count changes the tree, so `-T <n>` fixed not AUTO, plus `-seed`);
+  SPAdes/Flye assembly (Flye at `-t 4` gave 2 *or* 3 contigs across runs, `-t 1` is byte-identical
+  — and Flye's raw modes OOM where `--nano-hq` fits, a separate measured constraint); and it's
+  why the mafft↔muscle RF check is an *observation* not an assertion (RF 26-vs-4 on the same
+  alignments was search stochasticity, not signal). So: for any tree-builder, assembler, or
+  sampler, pin `-t 1` (or a fixed thread count) **and** a fixed seed, verify byte-identical
+  across two local runs, *then* assert the exact number — otherwise assert a band or report it
+  as an observation. (An exact identity that's exact one run and different the next: correct
+  tool, valid result, flaky check — the subtlest way an assertion goes bad.)
 - **When a conda package strips the data a code needs, stage it from the code's own
   version-matched test suite — it usually ships a committed reference alongside, which
   turns "produce a number" into "reproduce a published number" for free.** This is a
