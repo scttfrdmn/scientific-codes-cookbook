@@ -79,10 +79,15 @@ changelog:
   in any `.command.err`. Dropping the mitigation and watching it run clean is what confirms the
   fix is in the executor, not incidental.
 
-**Still open — `#96` (instance termination at DAG scale).** The terminal task's instance lingers
-after a clean run (the join, both on 0.8.0 and 0.10.1), and a failed task's instance didn't
-self-terminate at all. Not part of the #92 fix. **Verify terminations explicitly after a Shape-F
-run** (below); TTL is the backstop.
+**Termination: not a bug (`#96`, closed not-reproducible).** During this build the terminal
+task's instance *looked* like it lingered — but that was a false alarm: instances self-terminate
+on a bounded `spored` lifecycle tick (~1–2 min from the instance's own boot), and the checks here
+were run immediately after completion, then the instance was terminated manually out of caution —
+so the self-termination that would have fired a tick later was never observed. A live re-test on
+v0.10.1 with a real join-topology DAG showed every task's instance self-terminating on its own
+(join in ~128 s, a failed task in ~163 s), and a code review found no DAG-position-aware path that
+could make a terminal/join task behave differently. So don't read a just-completed instance still
+being `up` as a hang — it's the tick delay. TTL is the backstop as always.
 
 ## Install (still zip-based — #90's plugin isn't in the registry; the 0.10.1 zip extracts a bare `classes/`)
 
@@ -119,12 +124,15 @@ task's `.exitcode` in S3 was `126` with no output — the executor-path version 
 exit/summary is not evidence the output is real" rule (spawn#561's shape). The S3 check is what
 both caught that and confirmed this clean run is real.
 
-**Verify termination explicitly (`spore-host/nf-spawn#96`, still open).** Instances do not
-reliably self-terminate at DAG scale: the **terminal task's instance lingers** after a clean run
-(the OBSERVE_RF join, both on 0.8.0 and 0.10.1 — a consistent pattern, not lag), and a *failed*
-task's instance stayed `running` after abort. At Shape F (N instances, N lifecycles) a mid-DAG
-failure can leave several boxes up — check `aws ec2 describe-instances` / `spawn list` after a
-run rather than assuming. TTLs (10–15m) are the backstop and **retighten from the first run**.
+**Termination is fine — the "linger" was a false alarm (`spore-host/nf-spawn#96`, closed
+not-reproducible).** Instances self-terminate on a bounded `spored` lifecycle tick (~1–2 min from
+their own boot). The checks during this build ran *immediately* after completion and then
+terminated the instance manually out of caution, so the tick's self-termination was pre-empted,
+not absent — a measurement artifact misread as a hang, on the DAG topology. A v0.10.1 live re-test
+saw every task (including the join and a failed task) self-terminate unaided within a normal tick
+window, and a code review found no DAG-position-aware path that could single out a terminal task.
+So a just-completed instance still showing `up` for a minute or two is the tick, not a leak; TTLs
+(10–15m) remain the backstop.
 
 ## Running it
 
