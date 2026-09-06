@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-macs2-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\necho \"== verify staged ChIP + control against pinned sha256 ==\"\n{ printf '%s  %s\\n' 32db48ec96a8680108f745df6abee2b52d775eb539ccc268184a9e9a88cb6a2a ctcf_chr20.bam\n  printf '%s  %s\\n' a33c376a1fb9b3eb820b268495b0bd0fb5df4f3b29076049950c99a11a3e5ef5 input_chr20.bam\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== macs2 callpeak: CTCF treatment vs matched input control (single-end -f BAM) ==\"\nmacs2 callpeak -t ctcf_chr20.bam -c input_chr20.bam -f BAM -g hs -n ctcf --outdir out 2>&1 | tee macs2.log\ncp out/ctcf_peaks.narrowPeak peaks.narrowPeak\n\n# ---- smoke check ----\nPEAKS=$(grep -vc '^#' peaks.narrowPeak)\n{\n  echo \"peaks           $PEAKS   want exactly 1390  (CTCF chr20 vs input control; bit-identical on local Apple arm64 AND Graviton4)\"\n  echo \"enrichment_real $([ \"$PEAKS\" -ge 1000 ] && echo yes || echo no)   want yes (a matched-control sharp-factor ChIP is enriched, NOT the degenerate 0-peak WGS case)\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$PEAKS\" -eq 1390\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/macs2/ctcf_chr20.bam",
+      "destination": "/tmp/ctcf_chr20.bam"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/macs2/input_chr20.bam",
+      "destination": "/tmp/input_chr20.bam"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/peaks.narrowPeak",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/macs2/r1/peaks.narrowPeak"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/macs2/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
