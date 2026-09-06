@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-flye-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against pinned sha256 (flye's own toy data, pinned to the 2.9.6 image tag) ==\"\n{ printf '%s  %s\\n' 65b7cbd9fb7ce90958d821d85c96ea078ee3ed4d446e02a07a9c1d29767dcbe2 ecoli_500kb_reads.fastq.gz\n  printf '%s  %s\\n' de2efb0bdf2e880b769b53777fd6d300cf8b65a82dbb42ca6c8a0d279a97aa76 ecoli_500kb.fasta\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== flye assemble, single thread for reproducibility ==\"\n# -t 1: flye's contig count varies with thread count (thread scheduling changes the\n# assembly graph, the same class of nondeterminism iqtree documents). Single-threaded\n# is deterministic here (3 contigs, byte-identical across 3 local runs).\nflye --nano-hq ecoli_500kb_reads.fastq.gz -g 500k -t 1 -o out 2>&1 | tee flye.log\n# Flatten the two artifacts we keep (never rm the staged inputs -- sticky /tmp EPERM).\ncp out/assembly.fasta assembly.fasta\ncp out/assembly_info.txt assembly_info.txt\n\n# ---- smoke check ----\nN=$(grep -c '^>' assembly.fasta)\nTOT=$(awk '!/^>/{t+=length($0)}END{print t}' assembly.fasta)\nBIG=$(awk '/^>/{if(s>m)m=s;s=0;next}{s+=length($0)}END{if(s>m)m=s;print m}' assembly.fasta)\nREF=$(awk '!/^>/{t+=length($0)}END{print t}' ecoli_500kb.fasta)\nDIFF=$(( BIG>REF ? BIG-REF : REF-BIG ))\n{\n  echo \"contigs         $N     want exactly 3        (flye 2.9.6 --nano-hq -t1, deterministic)\"\n  echo \"total_bp        $TOT   want exactly 466356\"\n  echo \"largest_contig  $BIG   want ~420910; must recover the reference within 25 kb\"\n  echo \"reference_bp    $REF   (419860 -- the toy E. coli region)\"\n  echo \"largest_vs_ref  $DIFF  want <= 25000         (largest contig recovers the ~420 kb region)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$N\"   -eq 3\ntest \"$TOT\" -eq 466356\ntest \"$DIFF\" -le 25000\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/flye/ecoli_500kb_reads.fastq.gz",
+      "destination": "/tmp/ecoli_500kb_reads.fastq.gz"
+    },
+    {
+      "source": "s3://scicookbook-942542972736-us-east-1/inputs/flye/ecoli_500kb.fasta",
+      "destination": "/tmp/ecoli_500kb.fasta"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/assembly.fasta",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/assembly.fasta"
+    },
+    {
+      "source": "/tmp/assembly_info.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/assembly_info.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
