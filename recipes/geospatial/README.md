@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # GDAL/PROJ/GEOS core (geospatial env) — reproject, geometry, and a raster round-trip
 
-The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects a coordinate, computes geometry, and writes then reads back a raster; the check is a reference projection, a round-trip conservation, an exact geometric identity, and bit-identical raster I/O across two libraries.
+The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects coordinates, computes geometry, and round-trips a raster — the foundation every GIS tool sits on.
 
 > **What this covers.** The *shared core* the `geospatial`, `earth-observation`, `geo-ml`, and `pointcloud` envs all build on — GDAL/PROJ/GEOS + rasterio/shapely/pyproj — on small synthetic data. Proof it's correct on Graviton4; not a benchmark and not a large real raster or full EO workflow. It's the domain's foundational recipe.
 

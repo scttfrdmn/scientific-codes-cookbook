@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # geopandas + PySAL + sklearn (geo-ml env) — spatial join, projected area, weights, two-engine OLS
 
-The geospatial-ML stack computes a spatial join, a CRS-aware area, a spatial-weights graph, and a regression fit two ways; the check is six exact-or-wrong identities, including scikit-learn and statsmodels landing on the same OLS to machine precision.
+The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) computes a spatial join, a CRS-aware area, a spatial-weights graph, and an OLS fit — the core operations of spatial data science.
 
 > **What this covers.** The `geo-ml` analysis layer (geopandas / libpysal / scikit-learn / statsmodels) on small constructed inputs — proof it's correct on Graviton4. Not a benchmark; the heavier learners (xgboost/lightgbm ship in the env) aren't exercised here.
 

@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # ParaView (viz env) — headless render of a synthetic volume, verified by a second library
 
-`pvbatch` builds a synthetic volume, contours it, and renders to a PNG with no GPU and no display; then `pillow` — which had no part in drawing it — reads the PNG back and confirms it contains real geometry.
+`pvbatch` renders a scientific dataset to a PNG headlessly — no GPU, no display — the batch-visualization path for a server or CI.
 
 > **What this covers.** Headless ParaView 6.1.1 (`pvbatch`) rendering a small built-in dataset via the CPU software rasteriser — proof the whole offscreen pipeline works on Graviton4 (a real achievement for this env; see below). Not a benchmark, and no large real mesh, client/server, or GPU path.
 

@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # PDAL (pointcloud env) — decode the canonical autzen cloud, header vs a decode statistic
 
-`pdal` reads a real LiDAR point cloud; the check pairs the header count and bounds with a statistic computed over *every decoded point*, so it proves PDAL LZ-decompressed and decoded the 10.6M points, not just that it parsed the header.
+`pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline.
 
 > **What this covers.** One real cloud (10.6M points), verified by structure + a decoded statistic — proof PDAL's native LAZ decode and stats engine work on Graviton4. Not a benchmark; no filtering pipeline, terrain product, or tiled/streaming workflow. The domain's second stage-and-pin recipe over real data (with [earth-observation](../earth-observation/README.md)).
 

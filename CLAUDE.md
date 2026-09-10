@@ -311,8 +311,12 @@ domain competence — never explain what a variant call or an SCF *is*. Do expla
 a spawn/staging/instance concept when it's load-bearing.
 
 **Recipe pages (`recipes/*/README.md`):**
-- **R1 — Lede in ≤2 lines after the H1:** what it does + who it's for, before any section or
-  caveat blockquote. [auto: ≤8 non-blank lines between H1 and first `##`; human: is it buried]
+- **R1 — Lede in ≤2 lines after the H1: what it does and who it's for — nothing else.**
+  **Verification philosophy goes below the fold, always.** A lede that says "the check is that…"
+  is the most common drift in this catalog — the check description belongs in `<details>`, where
+  it already lives; a second copy in the lede is duplication in the wrong place, not a summary.
+  [auto: ≤8 non-blank lines between H1 and first `##`; human: is it buried, does it verify above
+  the fold]
 - **R2 — `## Run it` is the first `##`,** with a fenced real invocation inside it (before
   `## Make it yours`) that a user of the tool recognizes at a glance. [auto]
 - **R3 — `## Make it yours` is mandatory:** the fixture / swap / what-to-know table **and** an
