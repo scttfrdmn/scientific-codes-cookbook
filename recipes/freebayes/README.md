@@ -1,76 +1,54 @@
-# freebayes — Bayesian haplotype variant calling, cross-checked against bcftools
+---
+tool: freebayes
+tool_version: 1.3.10
+image: quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9
+spawn_version: 0.104.0
+---
+# freebayes — Bayesian haplotype variant calling
 
-One task. freebayes calls variants on a 30× human exon-region BAM; the smoke check confirms
-a valid, plausibly-sized call set. Its VCF is then the cross-check counterpart for
-`recipes/bcftools`, which computes a confident-SNV concordance between the two callers.
+A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them.
 
-> **Why a 30× targeted fixture, not the bwa subsample.** The first attempt reused bwa's
-> chr20 alignments — but that is a ~0.3× subsample built for *alignment* identities, and at
-> that depth two correct callers concord at only ~0.34 Jaccard (measured), because confident
-> calls are dominated by single-read events where their error models legitimately diverge.
-> That is the like-with-like rule rejecting a comparison the data can't support. So a small
-> **30× fixture** was staged (chr20:2,000,000–2,400,000, HG00096 1000G NYGC high-coverage,
-> mean depth 35.2×, clean euchromatin) — and the concordance becomes meaningful (0.91). Not a
-> benchmark; a proof that freebayes runs on Graviton4 and agrees with an unrelated caller.
+## Run it
 
-## Two callers, one confident-SNV concordance
+```bash
+freebayes -f ref.fa aln.bam > calls.vcf
+```
 
-- **Per-tool (this recipe):** freebayes produces a valid VCF with a genotyped sample and a
-  plausible confident-variant count (QUAL ≥ 20). Region-restricted to the fixture.
-- **Cross-code (computed in `recipes/bcftools`, documented in both):** bcftools (pileup model)
-  and freebayes (haplotype model) are *different algorithms* — a raw VCF diff fails by design.
-  The honest metric normalises both (split multiallelics, left-align), restricts to
-  **confident SNVs (QUAL ≥ 20)** — SNVs because the two represent indels differently even
-  after normalisation, so SNVs are the apples-to-apples set — and asserts the **Jaccard of
-  POS:REF:ALT ≥ 0.85** (observed **0.9103**). The floor is what two correct germline callers
-  should reach at 30× (literature 0.85–0.95 on confident SNVs; the residual is complex /
-  low-mappability loci), not the observed value shaved. A broken caller falls far below.
+The recipe calls the same 30× human region as [bcftools](../bcftools/README.md), and its VCF is the counterpart for the confident-SNV concordance the two compute between them.
 
-## Pins
+## Make it yours
 
-| | |
-|---|---|
-| image | `quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9` |
-| | tag `1.3.10--h1c6109c_0`, freebayes 1.3.10, cosign-verified (`sign-existing.yml@refs/heads/main`), `linux/arm64` |
-| BAM | `HG00096.chr20_2.0-2.4Mb.30x.bam`, `sha256:6949939b…21b04a` (+ `.bai` `sha256:657150da…537e22`) |
-| reference | `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header `LN:64444167`), reused |
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the 30× region BAM (chr20:2.0–2.4 Mb, HG00096) | your own aligned BAM | one `-f` reference, one BAM; region-restricted here to the fixture. |
+| **30× coverage** | keep real coverage | **load-bearing** — freebayes's confident calls are dominated by multi-read haplotype support; at the ~0.3× subsample the first attempt used, two correct callers concord at only 0.34. Depth is the point. |
 
-**Data tier: stable public source with a durable id.** The 30× fixture's provenance (1000G
-NYGC high-coverage, region slice, sha256s) is in `recipes/bcftools/stage-inputs.sh`.
+`freebayes` is deterministic on a fixed BAM — **nothing here is determinism scaffolding**. Like bcftools, the depth is a scale-it that earned it (a shallow fixture misrepresented the caller), already settled at 30×.
 
-## Smoke check
+## Shape, size, cost
 
-Measured in the pinned image (`--user 1000:1000`, arm64).
+One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/container-path.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
+
+<details>
+<summary>As shipped: the cross-code concordance, pins, smoke check</summary>
+
+Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The **cross-code** check lives in [bcftools](../bcftools/README.md) and is documented in both: bcftools (pileup) and freebayes (haplotype) are *different algorithms*, so a raw diff fails by design. The honest metric normalises both, restricts to **confident SNVs (QUAL ≥ 20)**, and asserts **Jaccard(POS:REF:ALT) ≥ 0.85** (observed **0.9103**) — the floor two correct germline callers reach at 30× (literature 0.85–0.95), not shaved to the observed value.
 
 | observable | assertion | observed |
 |---|---|---|
-| VCF header | present (`##fileformat=VCF`) | yes |
-| sample column | a genotyped sample present | yes |
-| variants total | 1400..2200 (incl. freebayes's QUAL~0 tail) | 1797 |
-| **confident (QUAL ≥ 20)** | 680..840 | 757 |
+| VCF header + genotyped sample | present | yes |
+| variants total (incl. QUAL~0 tail) | 1400–2200 | 1797 |
+| confident (QUAL ≥ 20) | 680–840 | 757 |
 
-The cross-code SNV concordance (Jaccard 0.9103) is asserted in `recipes/bcftools`.
+freebayes emits a large QUAL~0 tail by design, hence the wide total band; the confident count is the meaningful one.
 
-## Resources, and what the timings mean
+**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `recipes/bcftools/stage-inputs.sh`.
 
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. The call is **~5 s** on
-the 30× 400 kb region.
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the freebayes
-image are the whole task. The recorded run's window was **55s** (18:33:39 → 18:34:34 UTC),
-1797 variants / 757 confident. TTL/cap already minimal; no retighten needed. Disk is trivial.
-
-## Running it
-
-**Run this recipe first** — `recipes/bcftools` stages this VCF for the concordance step.
-
+**Run + verify.**
 ```sh
 spawn task run --spec recipes/freebayes/01-call.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/   # expect freebayes.vcf, smoke-check.txt
 ```
+Re-running: bump the `-r1` suffix.
 
-The smoke check runs *inside* the task; the bucket listing is the second half of it. Expect
-two objects (`freebayes.vcf`, `smoke-check.txt`).
-
-**Re-running.** `task_id` is fixed; bump the `-r1` suffix in both `task_id` and the output
-prefix to keep both records.
+</details>

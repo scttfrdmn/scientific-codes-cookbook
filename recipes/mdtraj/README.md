@@ -1,87 +1,75 @@
+---
+tool: mdtraj
+tool_version: 1.11.1
+env: md
+image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
+spawn_version: 0.104.0
+---
 # MDTraj ← GROMACS — read an XTC trajectory, cross-checked against MDAnalysis
 
-One task, a producer and two readers. GROMACS writes a compressed `.xtc` trajectory;
-MDTraj reads it back, and MDAnalysis reads the *same file* independently. The smoke check
-confirms MDTraj recovers what GROMACS wrote **and** that the two parsers agree on a
-computed geometry from the same bytes.
+GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently. The check is that MDTraj recovers what GROMACS wrote **and** that the two parsers agree on a geometry computed from the same bytes.
 
-> **What this recipe does and does not cover.** It writes a 50-step rigid-water trajectory
-> and reads it two ways — enough to prove MDTraj's GROMACS-XTC reader works on Graviton4
-> and agrees with a second parser. Not a benchmark; no large trajectory or analysis
-> pipeline.
+> **What this covers.** Write a 50-step rigid-water trajectory and read it two ways — proof MDTraj's GROMACS-XTC reader works on Graviton4 and agrees with a second parser. Not a benchmark; no large trajectory or analysis pipeline.
 
-## Two identities: cross-layer decode, and a two-reader cross-check
+## Run it
 
-- **Cross-layer decode (MDTraj ← GROMACS).** GROMACS writes `.xtc`; MDTraj recovers the
-  exact atom count (648), frame count (6) and box (1.8621 nm), plus the coordinates. This
-  is the decode-statistic move — the **fourth instance** after `recipes/earth-observation`
-  (GDAL COG checksum), `recipes/pointcloud` (PDAL Z-mean) and `recipes/openmm-mdanalysis`
-  (MDAnalysis on DCD) — now on **XTC, a format neither MDAnalysis recipe covered**.
-- **Two-reader cross-check (MDTraj vs MDAnalysis).** Both read the same `out.xtc` and
-  compute the same O-H distance; they agree to **< 1e-6 nm**. Two unrelated trajectory
-  parsers landing on the same geometry from the same bytes is the cross-code move
-  (RAxML-NG/IQ-TREE) applied to trajectory parsing — stronger than either reader's
-  self-report, and it came for free since both ship in the image. Counts and box could be
-  preserved by a handoff that still mangled coordinates; the agreed distance is what proves
-  the coordinates survived.
+```python
+import mdtraj
+t = mdtraj.load('out.xtc', top='out.pdb')     # GROMACS-written XTC
+t.n_atoms, t.n_frames, t.unitcell_lengths[0]   # 648, 6, 1.8621 nm
+# then MDAnalysis reads the same out.xtc and computes the same O-H distance
+```
 
-## Pins
+One task: GROMACS produces the trajectory, both readers parse it in the same container. The XTC handoff is the point, so routing it through S3 would add a boot for no scientific gain — the input (spc216 water) is bundled in the gromacs package, so nothing is staged.
+
+## Make it yours
+
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| GROMACS-written spc216 `.xtc` | your own trajectory + topology | MDTraj reads many formats; XTC is chosen because it's the compressed format neither MDAnalysis recipe covered. |
+| the O-H distance as the agreed quantity | any geometry your analysis needs | counts + box can survive a handoff that still mangles coordinates; an agreed *distance* is what proves the coordinates round-tripped. |
+
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** two readers agreeing on the same bytes is exact-or-wrong at any trajectory length, and a short trajectory keeps the check fast. Leave-it.
+
+## Shape, size, cost
+
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. MD + both reads take ~1 s. Recorded command window **100s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+
+<details>
+<summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>
+
+### The checks — cross-layer decode + a two-reader cross-check
+
+- **Cross-layer decode (MDTraj ← GROMACS).** MDTraj recovers the exact atom count (648), frame count (6) and box (1.8621 nm) that GROMACS wrote.
+- **Two-reader cross-check (MDTraj vs MDAnalysis).** Both read the same `out.xtc` and compute the same O-H distance, agreeing to < 1e-6 nm. Two unrelated parsers landing on the same geometry from the same bytes is [comparing like with like](../../practices/cross-checks.md) — a stronger statement than either reader's self-report, and free since both ship in the image.
+
+### Pins (data tier: bundled in the image)
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` |
-| | tag `2026.09.04`, GROMACS 2026.3 + MDTraj 1.11.1 + MDAnalysis, cosign-signed, `linux/arm64` |
-| input | spc216 water + tip3p, **bundled in the gromacs package** — nothing staged |
+| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` (tag `2026.09.04`, GROMACS 2026.3 + MDTraj 1.11.1 + MDAnalysis, cosign-signed, `linux/arm64`) |
+| input | spc216 water + tip3p, bundled in the gromacs package — nothing staged |
 
-**Data tier: bundled in the image.** Same `md` image as `recipes/gromacs`; this recipe uses
-GROMACS, MDTraj and MDAnalysis.
+Same `md` image as [gromacs](../gromacs/README.md).
 
-## Smoke check
+### Smoke check (inside the task; measured before launch)
 
-Measured in this image, before any launch.
+| observable | assertion | observed | catches |
+|---|---|---|---|
+| MDTraj atoms | exactly 648 (216 waters × 3) | 648 | wrong decode |
+| MDTraj frames | exactly 6 (50 steps / 10 + t=0) | 6 | wrong frame stride |
+| MDTraj box | 1.8621 nm (from the XTC) | 1.8621 | box not recovered |
+| MDAnalysis atoms / frames | 648 / 6 (agree) | 648 / 6 | reader disagreement |
+| distance physical | O-H ≈ 0.0956 nm | 0.09560 | coordinates mangled |
+| **two-reader agreement** | \|MDTraj − MDAnalysis\| < 1e-6 nm | ~1e-8 | one parser wrong |
 
-| observable | assertion | observed |
-|---|---|---|
-| MDTraj atoms | exactly 648 (216 waters × 3) | 648 |
-| MDTraj frames | exactly 6 (50 steps / 10 + t=0) | 6 |
-| MDTraj box | 1.8621 nm (spc216 box, from the XTC) | 1.8621 |
-| MDAnalysis atoms / frames | 648 / 6 (agree) | 648 / 6 |
-| distance physical | O-H ≈ 0.0956 nm | 0.09560 |
-| **two-reader agreement** | \|MDTraj − MDAnalysis\| < 1e-6 nm (same file) | ~1e-8 |
-
-## Resources, and what the timings mean
-
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. The MD + both reads
-take **~1 second**.
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the
-**1.19 GB** `md` image are the whole task. The recorded run's command window was **100s**
-(02:33:59 → 02:35:39 UTC), MDTraj and MDAnalysis agreeing to ~1e-8 nm. TTL was
-**retightened from that first real run**: 10m → **5m**, `cost_limit` $0.03 → $0.02. A loose
-TTL is a larger blast radius, not caution; the recorded run used the original 10m. Disk is
-trivial.
-
-## Running it
-
-No `stage-inputs.sh` — the system is bundled in the image.
+### Run + verify
 
 ```sh
 spawn task run --spec recipes/mdtraj/01-read.task.json --wait
-```
-
-Then **check the bucket**, every time:
-
-```sh
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/mdtraj/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke
-check runs *inside* the task, and the bucket listing is the second half of it. Expect two
-objects (`out.xtc`, `smoke-check.txt`).
+`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: bump the `-r1` suffix. A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
 
-**Re-running.** `task_id` is fixed; bump the `-r1` suffix in both `task_id` and the output
-prefix to keep both records.
-
-**Note on parallel launches.** A transient AWS `Invalid IAM Instance Profile name` on a
-parallel launch is the IAM-propagation race (spore-host/spawn#572), not a recipe fault —
-re-run.
+</details>

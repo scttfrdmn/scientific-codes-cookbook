@@ -1,101 +1,75 @@
-# OpenMM → MDAnalysis — an NVE trajectory written by one tool, read back and checked by another
+---
+tool: openmm
+env: comp-chem
+image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
+spawn_version: 0.104.0
+---
+# OpenMM → MDAnalysis — write an NVE trajectory, read it back and check it
 
-One task, two tools, one workflow. OpenMM runs a short NVE molecular dynamics simulation
-and writes a topology + trajectory; MDAnalysis reads them back. The smoke check confirms
-OpenMM conserved energy **and** that MDAnalysis recovers exactly what OpenMM wrote — a
-cross-layer identity, not two isolated checks.
+OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back. The checks are that OpenMM conserved energy **and** that MDAnalysis recovers exactly what OpenMM wrote — a cross-layer identity, not two isolated checks.
 
-> **What this recipe does and does not cover.** It runs a 27-atom argon NVE simulation
-> (200 steps) and analyzes the trajectory — enough to prove OpenMM's integrator and
-> MDAnalysis's DCD/PDB readers work correctly, and hand off correctly, on Graviton4. Not a
-> benchmark; no biomolecular force field, thermostat/barostat, or long trajectory.
+> **What this covers.** A 27-atom argon NVE run (200 steps) analyzed by MDAnalysis — proof OpenMM's integrator and MDAnalysis's DCD/PDB readers work, and hand off correctly, on Graviton4. Not a benchmark; no biomolecular force field, thermostat/barostat, or long trajectory.
 
-## Why the pairing, and why one task
+## Run it
 
-OpenMM is a third MD engine in the catalog (after GROMACS and LAMMPS) and MDAnalysis is
-the analysis layer; run together, **an OpenMM trajectory read back by MDAnalysis is a real
-workflow** rather than two tool checks in isolation. Both are in the `comp-chem` image, so
-this is one task: OpenMM writes `top.pdb` + `traj.dcd`, MDAnalysis reads them in the same
-container. The identity is about the **format handoff** (OpenMM's writer ↔ MDAnalysis's
-reader), not the storage path, so routing the trajectory through S3 between two tasks would
-add a boot for no scientific gain — the catalog already has plenty of S3-between examples.
-Zero staging: the system is built in code.
+```python
+# OpenMM: 27-atom argon NVE, 200 steps → top.pdb + traj.dcd
+import MDAnalysis as mda
+u = mda.Universe('top.pdb', 'traj.dcd')       # read back what OpenMM wrote
+u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å
+```
 
-## Two kinds of identity
+One task: OpenMM writes the trajectory and MDAnalysis reads it in the same container. The identity is about the *format handoff* (OpenMM's writer ↔ MDAnalysis's reader), not the storage path, so routing through S3 would add a boot for no scientific gain. The system is built in code, so nothing is staged.
 
-- **OpenMM: NVE energy conservation.** With no thermostat, kinetic + potential energy must
-  be conserved — a physical law, the same class as `recipes/ambertools`' check, and a
-  **second independent instance** of it in the catalog on a different engine. Observed
-  relative drift **3.9e-7** over 200 steps (a switching function on the Lennard-Jones
-  cutoff and a 1 fs timestep are what make it that clean).
-- **Cross-layer decode: MDAnalysis recovers what OpenMM wrote.** Exact atom count, frame
-  count and box dimensions, plus the lattice spacing read back from the coordinates — the
-  same decode-statistic move as `recipes/earth-observation`'s GDAL checksum and
-  `recipes/pointcloud`'s PDAL Z-mean, applied to a trajectory format. A writer/reader
-  mismatch (wrong endianness, unit, or frame stride) fails these even if both tools "ran".
+## Make it yours
 
-## Pins
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| 27-atom argon lattice (built in code) | your own system + force field | argon on a Lennard-Jones potential is a hand-checkable NVE test; the readers don't care about the force field. |
+| NVE, no thermostat | a thermostat / barostat | NVE is what makes energy conservation an *exact* check — add a thermostat and you check temperature control instead. |
+
+Deterministic on fixed input — **nothing is determinism scaffolding**. **Leave the fixture:** the decode identities are exact-or-wrong at any trajectory length, and a short run keeps the check fast. Leave-it.
+
+## Shape, size, cost
+
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Simulation + analysis take ~1 s. Recorded command window **70s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+
+<details>
+<summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>
+
+### The checks — energy conservation + a cross-layer decode
+
+- **OpenMM: NVE energy conservation.** With no thermostat, kinetic + potential energy must be conserved — a physical law, the same class as [ambertools](../ambertools/README.md)' check on a different engine. Observed relative drift **3.9e-7** over 200 steps (a switching function on the LJ cutoff and a 1 fs timestep make it that clean).
+- **Cross-layer decode: MDAnalysis recovers what OpenMM wrote.** Exact atom count, frame count and box, plus the lattice spacing read back from the coordinates. A writer/reader mismatch (endianness, unit, frame stride) fails these even if both tools "ran".
+
+### Pins (data tier: none / in-task)
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` |
-| | tag `2026.09.04`, OpenMM + MDAnalysis (+ pyscf, rdkit, …), cosign-signed, `linux/arm64` |
-| input | 27-atom argon lattice, **built in code** — nothing staged |
+| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` (tag `2026.09.04`, OpenMM + MDAnalysis + …, cosign-signed, `linux/arm64`) |
+| input | 27-atom argon lattice, built in code — nothing staged |
 
-**Data tier: none / in-task.** Same `comp-chem` image as `recipes/pyscf`, `recipes/rdkit`,
-`recipes/vina`; this recipe uses OpenMM and MDAnalysis.
+Same `comp-chem` image as [pyscf](../pyscf/README.md), [rdkit](../rdkit/README.md), [vina](../vina/README.md).
 
-## Smoke check
+### Smoke check (inside the task; measured before launch)
 
-Measured in this image, before any launch.
+| observable | assertion | observed | catches |
+|---|---|---|---|
+| **NVE conserved** | relative drift < 1e-4 over 200 steps | 3.91e-7 | broken integrator |
+| **MDA atoms == OpenMM** | exactly 27 | 27 | wrong decode |
+| **MDA frames** | exactly 10 (DCD every 20 of 200) | 10 | wrong frame stride |
+| **MDA box == OpenMM** | 11.460 Å | 11.460 | box not recovered |
+| **lattice spacing decode** | nearest-neighbour 3.820 Å (from coords) | 3.820 | coordinates mangled |
 
-| observable | assertion | observed |
-|---|---|---|
-| **NVE conserved** | relative energy drift < 1e-4 over 200 steps | 3.91e-7 |
-| **MDA atoms == OpenMM** | exactly 27 (what OpenMM built) | 27 |
-| **MDA frames** | exactly 10 (what OpenMM wrote, DCD every 20 of 200) | 10 |
-| **MDA box == OpenMM** | 11.460 Å (the periodic box OpenMM set) | 11.460 |
-| **lattice spacing decode** | nearest-neighbour 3.820 Å (== lattice, from the coords) | 3.820 |
+The NVE drift is a physics band (must conserve; 1e-4 is cleared by ~250×), robust to cross-host floating point. The other four are exact structural identities.
 
-The NVE drift is a physics band (must conserve; 1e-4 is generous, cleared by ~250×) —
-robust to cross-host floating point, not a value picked to pass. The other four are exact
-structural/geometric identities that only hold if OpenMM wrote and MDAnalysis parsed the
-formats correctly.
-
-## Resources, and what the timings mean
-
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. The simulation +
-analysis take **~1 second**.
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the
-**~0.62 GB** `comp-chem` image are the whole task. The recorded run's command window was
-**70s** (01:30:16 → 01:31:26 UTC), NVE drift 3.9e-7 and MDAnalysis recovering all of
-OpenMM's counts. TTL was **retightened from that first real run**: 10m → **5m**,
-`cost_limit` $0.03 → $0.02. A loose TTL is a larger blast radius, not caution; the recorded
-run used the original 10m. Disk is trivial.
-
-## Running it
-
-No `stage-inputs.sh` — the system is built in code.
+### Run + verify
 
 ```sh
 spawn task run --spec recipes/openmm-mdanalysis/01-md-analyze.task.json --wait
-```
-
-Then **check the bucket**, every time:
-
-```sh
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke
-check runs *inside* the task, and the bucket listing is the second half of it. Expect four
-objects — `top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt` (the topology and trajectory
-are the artifacts).
+`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix. A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
 
-**Re-running.** `task_id` is fixed; bump the `-r1` suffix in both `task_id` and the output
-prefix to keep both records.
-
-**Note on parallel launches.** A transient AWS `Invalid IAM Instance Profile name` on a
-parallel launch is the IAM-propagation race (spore-host/spawn#572), not a recipe fault —
-re-run.
+</details>

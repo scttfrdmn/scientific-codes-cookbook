@@ -1,3 +1,10 @@
+---
+tool: gpaw
+env: dft
+image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
+spawn_version: 0.104.0
+---
+
 # GPAW — plane-wave DFT on bulk silicon, serial and over 2 MPI ranks
 
 One task. `gpaw` computes the LDA energy of bulk silicon in a plane-wave basis, serially
@@ -32,8 +39,8 @@ aarch.science published for this image:
 
 That's the reproduction move. And the same calculation over **2 MPI ranks** must give the
 same energy — an internal cross-validation. The parallel leg additionally asserts
-`gpaw.mpi.world.size == 2`: this is the guard aarch.science added after finding GPAW was
-one resolver tie from silently shipping a *serial* build, which under `mpiexec -n 2` runs
+`gpaw.mpi.world.size == 2`: this is the [rank-count guard](../../practices/mpi-rank-count.md)
+aarch.science added after finding GPAW was one resolver tie from silently shipping a *serial* build, which under `mpiexec -n 2` runs
 two independent rank-0 calculations that both print the same energy and pass a naive
 "parallel matches serial" check vacuously. Requiring `world.size > 1` closes that hole, so
 this recipe carries the same guard.

@@ -1,3 +1,9 @@
+---
+tool: salmon
+image: quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e
+spawn_version: 0.104.0
+---
+
 # Salmon — transcript quantification, Ensembl 116 human transcriptome
 
 Two tasks. `salmon index` builds a 1.6 GiB index over the whole human

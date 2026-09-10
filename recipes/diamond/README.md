@@ -1,102 +1,57 @@
-# DIAMOND — protein search against the human proteome, cross-checked against BLAST+
+---
+tool: diamond
+tool_version: 2.2.6
+image: quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5
+spawn_version: 0.104.0
+---
+# DIAMOND — fast protein search, cross-checked against BLAST+
 
-One task. `diamond makedb` builds a protein database from all 382,428 Ensembl 116 human
-proteins, then `diamond blastp` searches the same 20 queries BLAST+ used. The smoke check
-confirms an exact self-hit identity **and** that DIAMOND and BLAST+ — an accelerator and the
-reference — recover the same self-hits, on the same bytes.
+The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed.
 
-> **What this recipe does and does not cover.** It searches 20 proteins against the human
-> proteome with DIAMOND and cross-checks the result against `recipes/blast` — enough to prove
-> DIAMOND's DB build and `blastp` mode work on Graviton4 and agree with BLAST+. Not a
-> benchmark; no all-vs-all or large query set.
+## Run it
 
-## The queries are drawn from the database, and reused from BLAST+ byte for byte
+```bash
+diamond makedb --in proteome.fa -d db
+diamond blastp -q queries.fa -d db --very-sensitive -o hits.tsv
+```
 
-The 20 queries are the first 20 records **of the database itself** — BLAST+'s design, reused
-here so the cross-code check is on identical bytes. Every query therefore has a guaranteed
-exact self-hit: full-length, 100% identity, and nothing can outscore it. That is a property
-of the algorithm, not a measured threshold, so the assertions are exact, not bands — the
-DIAMOND analog of `recipes/blast`'s self-hit identity.
+The recipe searches the same 20 queries against the same Ensembl 116 human proteome as [blast](../blast/README.md), then checks that the accelerator and the reference recover the same self-hits on the same bytes.
 
-## Cross-code, done like-with-like
+## Make it yours
 
-DIAMOND is a heuristic accelerator of BLAST+, so two things would make a naive comparison
-lie, and both are avoided:
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the Ensembl 116 proteome DB (reused from blast) | your own reference proteome | `diamond makedb` reads gzip directly, unlike `makeblastdb`. |
+| queries = first 20 DB records | your own queries | same load-bearing trick as blast — guarantees an exact self-hit to assert against. |
+| **`--very-sensitive`** | keep it for a fair comparison | scaffolding that **must stay** for the cross-check: DIAMOND's default `fast` mode is far less sensitive than `blastp` default, so comparing them would compare *modes*, not correctness. For your own work, pick the sensitivity your search needs. |
 
-- **Sensitivity mode.** DIAMOND's default is `fast`, far less sensitive than `blastp`'s
-  default. Comparing them would compare *modes*, not correctness (the same error as bowtie2
-  end-to-end vs `--local`). The recipe runs `diamond blastp --very-sensitive`, a regime
-  comparable to `blastp` default, then compares.
-- **The metric itself.** The obvious metric — does DIAMOND's #1 subject per query equal
-  BLAST+'s #1 — scores **1/20** here. That is not disagreement: these first-20 proteins are
-  near-identical paralogs, so each query's self-hit **ties on bitscore** with a paralog
-  (measured: 19/20 are exact ties, 0 real losses), and each tool breaks the tie by its own
-  arbitrary order — exactly the caveat `recipes/blast` documents ("nothing beats itself", not
-  "self is first"). DIAMOND's heuristic bitscores also differ from `blastp`'s by design, so
-  comparing raw scores is meaningless. **The asserted cross-code claim is therefore
-  tie-agnostic and score-agnostic: both tools recover all 20 full-length 100% self-hits with
-  none beaten** — the shared algorithmic truth. (This is CLAUDE.md's "compare like with like"
-  rule; the 1/20 → 20/20 fix is the protein-search sibling of minimap2's 0.43 → 0.9921.)
+DIAMOND is deterministic — **nothing here is determinism scaffolding** (its arbitrary tie order is a comparison subtlety, handled below). **Leave the DB full-size:** the real proteome and the byte-identical reuse of blast's inputs are what make the cross-check meaningful.
 
-## Pins
+## Shape, size, cost
 
-| | |
-|---|---|
-| image | `quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5` |
-| | tag `2.2.6--he0fd7ac_0`, DIAMOND 2.2.6, cosign-verified (`publish.yml@refs/heads/main`), `linux/arm64` |
-| proteome | Ensembl release-116 `Homo_sapiens.GRCh38.pep.all.fa.gz`, byte for byte |
-| | `sha256:9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668` (382,428 proteins) |
-| queries | first 20 records of the proteome |
-| | `sha256:6b43cff7568a5dead256262b159fe4b1d7fd7f97128efbcc8613d4dbedaacfa9` |
-| blast reference | `runs/blast/r1/hits.tsv` (this recipe's cross-check counterpart) |
+One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/container-path.md)). Inputs come from [blast](../blast/README.md) — stage those first.
 
-**Data tier: stable public source with a durable id — reused from `recipes/blast`.** Nothing
-is staged by this recipe; run `recipes/blast/stage-inputs.sh` first if the objects aren't in
-the bucket.
+<details>
+<summary>As shipped: the self-hit identity, the like-with-like cross-code metric, pins, smoke check</summary>
 
-## Smoke check
+Queries are the first 20 DB records (blast's design, reused byte-for-byte), so each has a guaranteed exact self-hit — algorithmic, not empirical, so exact assertions with no band.
 
-Measured in the pinned image (`--user 1000:1000`).
+**The cross-code metric, made like-with-like** — two ways a naive comparison would lie, both avoided:
+- **Mode:** `--very-sensitive` puts DIAMOND in a regime comparable to `blastp` default (the same error as bowtie2 end-to-end vs `--local`).
+- **Metric:** "does DIAMOND's #1 subject equal BLAST+'s #1" scores **1/20** — but that's not disagreement: these first-20 proteins are near-identical paralogs, so each self-hit **ties on bitscore** (19/20 exact ties, 0 real losses) and each tool breaks the tie its own way; DIAMOND's heuristic bitscores also differ from blastp's by design. So the asserted claim is **tie-agnostic and score-agnostic: both tools recover all 20 full-length 100% self-hits, none beaten** — the shared algorithmic truth. ([compare like with like](../../practices/cross-checks.md); the 1/20 → 20/20 fix is the protein-search sibling of minimap2's 0.43 → 0.9921.)
 
 | observable | assertion | observed |
 |---|---|---|
-| diamond self-hits | exactly 20 (full-length, 100% id) | 20 |
-| diamond self beaten | exactly 0 (nothing outscores a self-hit) | 0 |
-| diamond queries hit | exactly 20 | 20 |
-| **blast self-hits** (cross-code) | exactly 20 (same self-hits recovered) | 20 |
-| **blast self beaten** (cross-code) | exactly 0 (unbeaten in blast too) | 0 |
+| diamond self-hits / beaten / queries hit | 20 / 0 / 20 | 20 / 0 / 20 |
+| blast self-hits / beaten (cross-code) | 20 / 0 | 20 / 0 |
 
-No bands — the self-hit is algorithmic, and the cross-code claim is the tie- and
-score-agnostic truth both tools must satisfy.
+**Pins.** Image `quay.io/aarchbio/diamond@sha256:6356f5b243c3…` (2.2.6, cosign-verified, `linux/arm64`). Proteome + queries reused from blast (`sha256:9b43da92…` / `6b43cff7…`); blast reference `runs/blast/r1/hits.tsv`.
 
-## Resources, and what the timings mean
-
-4 vCPU / 8 GiB, `c8g` (resolves to `c8g.xlarge`), TTL 5m, cap $0.02. `makedb` was
-**15 s** and `blastp --very-sensitive` **11 s** locally — DIAMOND is lean (the DB is 270 MB and
-the build showed no memory pressure, unlike BLAST+'s `makeblastdb`).
-
-**These timings are not compute cost.** Boot, the Docker install, pulling the DIAMOND image,
-and downloading the 23 MB proteome are much of the task. The recorded run's window was **63s**
-(18:33:17 → 18:34:20 UTC), all 20 self-hits recovered by both tools, 0 beaten. TTL was
-**retightened from that first real run**: 10m → **5m**, `cost_limit` $0.03 → $0.02; the recorded
-run used the original 10m. Disk is modest (proteome + 270 MB DB).
-
-## Running it
-
-Inputs come from `recipes/blast` — stage those first if needed, then:
-
+**Run + verify.**
 ```sh
 spawn task run --spec recipes/diamond/01-search.task.json --wait
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/diamond/r1/   # expect dmnd_hits.tsv, smoke-check.txt
 ```
+Re-running: bump the `-r1` suffix.
 
-Then **check the bucket**, every time:
-
-```sh
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/diamond/r1/
-```
-
-The smoke check runs *inside* the task; the bucket listing is the second half of it. Expect
-two objects (`dmnd_hits.tsv`, `smoke-check.txt`).
-
-**Re-running.** `task_id` is fixed; bump the `-r1` suffix in both `task_id` and the output
-prefix to keep both records.
+</details>

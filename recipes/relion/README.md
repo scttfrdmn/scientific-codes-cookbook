@@ -29,7 +29,7 @@ deposited results. That means the bucket holds both the *inputs* of a
 post-processing job (`Refine3D/job044`'s half-maps, `Import/job022`'s mask) and the
 *output* the depositors themselves got (`PostProcess/job045/postprocess.star`).
 
-So the recipe is not "RELION produced plausible numbers." It is a **reproduction**:
+So the recipe is not "RELION produced plausible numbers." It is a **[reproduction](../../practices/reference-from-tests.md)**:
 the same arithmetic, on the same bytes, done by RELION 5.0.0 on x86 and by RELION
 5.1.0 on arm64, compared value for value. `relion_postprocess` is deterministic —
 FFTs, a shell-wise correlation and a straight-line fit, with no sampling and no

@@ -1,62 +1,53 @@
-# SPAdes — de novo genome assembly, cross-validated by QUAST
+---
+tool: spades
+tool_version: 4.3.0
+image: quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c
+spawn_version: 0.104.0
+---
+# SPAdes — de novo genome assembly
 
-One task in a three-recipe chain. SPAdes assembles the staged short reads into contigs;
-the smoke check asserts SPAdes' exact, deterministic assembly, and `recipes/quast`
-independently measures this assembly (and MEGAHIT's) as the cross-validator.
+Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler.
 
-> **What this recipe does and does not cover.** It assembles a ~400 kb chr20 region from
-> ~35× reads into contigs and asserts the exact contig count and total length — enough to
-> prove SPAdes runs deterministically on Graviton4. Not a benchmark; not a whole-genome
-> assembly (the input is a subsampled region).
+## Run it
 
-## Deterministic assembly is the identity
+```bash
+spades.py --isolate -t 4 -1 reads_1.fq.gz -2 reads_2.fq.gz -o out
+```
 
-SPAdes with a fixed thread count (`--isolate -t 4`) is **deterministic** — verified by
-assembling the same reads twice and getting an identical contig set (237 contigs, 428,168 bp
-both times). So the recipe asserts those exact integers: a non-deterministic or broken
-assembly changes them. SPAdes and MEGAHIT produce *different* contig sets on the same reads
-(different algorithms — that is expected and correct); the two are not compared to each
-other, they are each measured independently by QUAST. See `recipes/quast`.
+The recipe assembles a ~400 kb region and asserts the exact contig set; [QUAST](../quast/README.md) then measures this assembly (and [MEGAHIT's](../megahit/README.md)) independently.
 
-## Pins
+## Make it yours
 
-| | |
-|---|---|
-| image | `quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c` |
-| | tag `4.3.0`, SPAdes 4.3.0, cosign-verified (`publish.yml`), `linux/arm64` |
-| reads | `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` (51,933 pairs) |
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the 30× region reads (51,933 pairs) | your own reads | `--isolate` is the mode for high-coverage isolate data; use `--meta`, `--rna`, etc. for other libraries. |
+| **`-t 4` (fixed)** | scale threads for speed — but then drop the exact assertion | **determinism scaffolding — the load-bearing knob.** SPAdes at a *fixed* thread count is deterministic (verified: 237 contigs / 428,168 bp on two runs); change the thread count and the exact numbers can shift, so assert a band or pin the count. Same discipline as [flye](../flye/README.md) and the tree-builders. |
 
-**Data tier: reused shared fixture.** The reads are `samtools fastq` of the 30× fixture
-(`recipes/bcftools/stage-inputs.sh`) — its **fourth reuse** (bcftools, freebayes, and the
-depth-sensitive callers were the first three). Pinned by sha256, re-verified on the box.
+**Leave the fixture small:** a subsampled region assembles deterministically and lets the check assert exact integers; a whole-genome assembly is a different, slower recipe and wouldn't make the tool *more* legible. Leave-it.
 
-## Smoke check
+## Shape, size, cost
+
+One task, ~74 s assembly. `c8g.xlarge`, ~$0.02, **~113s** wall — boot and image pull ([why](../../practices/container-path.md)). First in a chain: run SPAdes + [MEGAHIT](../megahit/README.md) before [QUAST](../quast/README.md).
+
+<details>
+<summary>As shipped: the deterministic identity, pins, smoke check</summary>
+
+SPAdes at `-t 4 --isolate` is **deterministic** — verified by assembling the same reads twice for an identical contig set — so the recipe asserts exact integers; a nondeterministic or broken assembly changes them. SPAdes and MEGAHIT produce *different* contig sets on the same reads (different algorithms, expected) — they're **not** compared to each other, each is measured independently by [QUAST](../quast/README.md).
 
 | observable | assertion | observed |
 |---|---|---|
-| contigs | exactly 237 (deterministic, `-t 4`) | 237 |
+| contigs | exactly 237 (`-t 4`, deterministic) | 237 |
 | total length | exactly 428168 bp | 428168 |
 
-Exact-or-wrong: the numbers are a deterministic function of fixed reads + fixed threads.
+Exact-or-wrong: a deterministic function of fixed reads + fixed threads.
 
-## Resources, and what the timings mean
+**Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`recipes/bcftools/stage-inputs.sh`), pinned by sha256.
 
-4 vCPU / 8 GiB, `c8g` (resolves to `c8g.xlarge`), TTL 5m, cap $0.02. Assembly was **~74 s**
-locally, no memory pressure (fit well within 8 GiB).
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the SPAdes
-image are much of the task. The recorded run's window was **113s** (21:43:58 → 21:45:51 UTC),
-237 contigs / 428,168 bp exact. TTL was **retightened from that first real run**: 10m → **5m**,
-`cost_limit` $0.03 → $0.02; the recorded run used the original 10m. Disk is modest.
-
-## Running it
-
+**Run + verify.**
 ```sh
 spawn task run --spec recipes/spades/01-assemble.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/spades/r1/
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/spades/r1/   # expect contigs.fasta, smoke-check.txt
 ```
+[QUAST](../quast/README.md) reads `contigs.fasta` from this prefix. Re-running: bump the `-r1` suffix.
 
-Expect `contigs.fasta` + `smoke-check.txt`. `recipes/quast` consumes `contigs.fasta` from
-this prefix, so run SPAdes and MEGAHIT before QUAST.
-
-**Re-running.** Bump the `-r1` suffix in `task_id` and the output prefix.
+</details>
