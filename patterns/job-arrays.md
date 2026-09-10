@@ -92,15 +92,11 @@ something is truly wrong. So after the array drains, confirm every index actuall
 spawn array status align-cohort     # requested vs launched vs finished; nothing still running
 ```
 
-The platform accounting *is* the check — you don't need a raw `aws ec2` query for it. And if you'd
-rather not think in CLI at all, the spore.host **MCP server** lets you ask your AI assistant
-"what's still running?" and "stop the one that hung" in plain language — the same verify-terminations
-move, for the audience that won't write a filter query.
-
-Same discipline covers storage: if your tasks hydrate
-scratch (EFS/Lustre) from S3, verify the *scratch* is torn down too — a stranded filesystem
-bills quietly and never looks as obviously wasteful as an idle instance. See
-[Data movement](data-movement.md).
+The platform accounting *is* the check — no raw `aws ec2` query needed; the spore.host **MCP
+server** even lets you ask your assistant "what's still running?" and "stop the one that hung" in
+plain language, for the audience that won't write a filter query. (If your tasks hydrate scratch
+from S3, verify that's torn down too — a stranded filesystem bills as quietly as an idle box:
+[Data movement](data-movement.md).)
 
 ## Where this shows up
 
