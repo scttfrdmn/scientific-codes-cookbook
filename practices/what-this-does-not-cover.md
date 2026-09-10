@@ -1,0 +1,21 @@
+# What this cookbook does not cover
+
+Knowing where a promise stops is what keeps it from turning into a disappointment. These recipes prove a scientific code **runs cleanly on Graviton4 and self-terminates with real, checked output** — that, and no more. Two kinds of "no" live here, and they're worth keeping apart: things we chose not to do, and things physics won't let us do. Don't read the first as a limitation or the second as a bug.
+
+## By design — scope we chose
+
+- **Working examples, not benchmarks.** Round One asks one question of each code — does it run correctly and produce real output — and answers it with a smoke check. It does **not** measure or tune performance. A wall time on a recipe page is "the platform started a box," never "what this code costs." (Where we *did* measure scaling, it's on the [sizing page](../patterns/sizing.md), clearly labelled as such.)
+- **One tool per image.** aarch.* ships one tool per signed conda recipe, so a pipe like `bwa mem | samtools sort` becomes a **chain through S3**, not one image. That's the provenance model, not a gap — see [the container path](container-path.md).
+- **arm64 first; GPU is Round Two.** These run on Graviton4 (arm64). GPU-bound codes wait for an x86 pass — the only Graviton GPU is too small to be representative. Nothing here is emulated; a missing arm64 image is recorded as a gap, not worked around.
+- **Ephemeral and self-terminating.** Every run is TTL-capped and turns itself off; there is no standing infrastructure and no pre-baked AMI. If a recipe needs shared reference data, it's mounted read-only and torn down (or needs nothing torn down at all) — not left running.
+- **Pinned by digest, not durable forever.** A digest pin is *reproducibility-of-record* — you can say exactly what ran. It is not a guarantee the image pulls years from now; for that, mirror it. (A registry can garbage-collect an untagged manifest; a transient `401` is not a missing image.)
+
+## Physical limits — measured, and not ours to beat
+
+- **Boot and image pull floor every short run.** Booting the box, installing Docker, and pulling a GB-scale image are most of a short task; the science can be seconds. [Job arrays](../patterns/job-arrays.md) amortize that overhead across a cohort — nothing removes it, so a single short run is mostly overhead by construction.
+- **Staging space is a tmpfs ≈ ½ the instance's RAM.** Inputs and outputs land in `/tmp`, which is memory-backed — *not* the root disk, and `disk_gib` doesn't grow it. Size the box for what must fit in `/tmp` by choosing **RAM**, not disk.
+- **The scaling knee is real.** Past a point set by work-per-rank (atoms/rank, k-points/rank, serial phases), more cores stop paying, and cost-per-result rises even while throughput still climbs. Bigger is faster is not bigger is cheaper — [sizing](../patterns/sizing.md).
+- **A container tool can't use the instance's cloud credentials.** IMDS is unreachable from inside the container (hop-limit 1), so a tool's *native* S3 (e.g. `samtools s3://`) can't authenticate to a private bucket on this path — stage through the wrapper instead.
+- **How you launch can cost 7×.** `mpirun`'s default binding pins a rank's threads to one core; give each rank its cores or lose more than any tuning will win back — [sizing](../patterns/sizing.md).
+
+The wins these recipes claim — runs correctly, self-terminates, output is real — hold *within* these bounds. The value is in removing the friction of getting a code running on Graviton at all, not in outrunning boot time, memory, or the physics of strong scaling.

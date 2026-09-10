@@ -57,6 +57,17 @@ and that's your `--instance-type`. The array's cost is that per-task cost × N; 
 about *one* task's. Ten small right-sized instances beat one oversized one on both axes — and
 "right-sized" is a dial that doesn't exist on a node you bought.
 
+**Wider is sooner, not free — and it has a floor.** Two honest caveats keep this from being a
+slogan. First, cost is *not* flat across width: the core-hours of the science are conserved, but
+every task pays the boot-and-image-pull overhead ([the container path](../practices/container-path.md))
+*again*, so total cost rises gently with N. Second, wall-clock **floors** at roughly one task's
+time — once N reaches the number of pieces the work splits into, more instances buy nothing, and
+past that you're paying overhead for idle boxes. So the question isn't *whether* to go wide, it's
+*how* wide: fan out to about your number of samples (or shards), not further. Done right it is both
+sooner and cheaper than one big node — a mount-based fan-out over shared read-only data has been
+demonstrated at 64 nodes coming out both faster and cheaper than staging (see [Copy, mount, or
+share?](data-movement.md) and [lith](https://scttfrdmn.github.io/lith/deadline/)).
+
 <details>
 <summary>Choosing N, concurrency, and partial success</summary>
 
