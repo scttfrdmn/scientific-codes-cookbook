@@ -16,7 +16,114 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REQUIRED_FM = ("tool", "image", "spawn_version")
 RECOMMENDED_FM = ("tool_version", "run_date")
 BAD_LINK_TEXT = {"here", "click here", "link", "this", "read more"}
+# Contract (see CLAUDE.md "Recipe pages"). Enforced structurally; prose quality is human review.
+RECIPE_LEDE_MAX = 8      # non-blank lines between the H1 and the first `##` before it's a buried-lede smell
+RECIPE_FOLD_MAX = 50     # lines outside the one <details>
+ANCILLARY_MAX = 90       # a pattern/practice page over this is probably doing too much
+# A phrase a practice/pattern OWNS; a recipe using it must LINK that page, not restate the idea.
+OWNED_PHRASES = {
+    "compare like with like": "cross-checks.md",
+    "reproduce a published": "reference-from-tests.md",
+    "silent serial build": "mpi-rank-count.md",
+    "one tool per image": "container-path.md",
+    "pay for the bytes you touch": "data-movement.md",
+}
 errors, warns = [], []
+
+
+def _headings(text):
+    return [(i, len(m.group(1)), m.group(2).strip())
+            for i, line in enumerate(text.split("\n"))
+            if (m := re.match(r"(#{1,6}) (.*)", line))]
+
+
+def _outside_details_lines(text):
+    """Count lines NOT inside a <details>...</details> block (frontmatter + blanks included,
+    matching the 'lines before <details>' the ceiling was calibrated against)."""
+    depth, outside = 0, 0
+    for line in text.split("\n"):
+        o, c = line.count("<details"), line.count("</details>")
+        if depth == 0 and o == 0:
+            outside += 1
+        depth += o - c
+        if depth < 0:
+            depth = 0
+    return outside
+
+
+def check_recipe_contract(text, rel):
+    lines = text.split("\n")
+    hs = _headings(text)
+    h1 = next((i for i, lvl, _ in hs if lvl == 1), None)
+    h2s = [(i, t) for i, lvl, t in hs if lvl == 2]
+    titles = [t for _, t in h2s]
+
+    # R1 — lede not buried: few non-blank lines between H1 and the first `##`.
+    if h1 is not None and h2s:
+        gap = [l for l in lines[h1 + 1:h2s[0][0]] if l.strip()]
+        if len(gap) > RECIPE_LEDE_MAX:
+            warns.append(f"{rel}: {len(gap)} non-blank lines before the first `##` — lede may be buried (R1, human-check)")
+
+    # R2 — `## Run it` is the first `##`, with a fenced invocation inside it.
+    if "Run it" not in titles:
+        errors.append(f"{rel}: missing `## Run it` (R2)")
+    elif titles[0] != "Run it":
+        errors.append(f"{rel}: `## Run it` is not the first section (first is `## {titles[0]}`) (R2)")
+    else:
+        run_i = h2s[0][0]
+        nxt = h2s[1][0] if len(h2s) > 1 else len(lines)
+        if not any(l.startswith("```") for l in lines[run_i:nxt]):
+            errors.append(f"{rel}: no fenced invocation inside `## Run it` (R2)")
+
+    # R3 — `## Make it yours` present, with a table.
+    if "Make it yours" not in titles:
+        errors.append(f"{rel}: missing `## Make it yours` (R3)")
+    else:
+        mi = next(i for i, t in h2s if t == "Make it yours")
+        nxt = next((i for i, _ in h2s if i > mi), len(lines))
+        if not any("|" in l and "---" in l for l in lines[mi:nxt]):
+            warns.append(f"{rel}: `## Make it yours` has no table (R3, human-check)")
+
+    # R4 — order: Run it < Make it yours < <details>.
+    det = text.find("<details")
+    det_ln = text[:det].count("\n") if det != -1 else None
+    order = [(titles.index(t), t) for t in ("Run it", "Make it yours") if t in titles]
+    if order != sorted(order):
+        errors.append(f"{rel}: sections out of order — want Run it → Make it yours (R4)")
+    if det_ln is not None and "Make it yours" in titles:
+        mi = next(i for i, t in h2s if t == "Make it yours")
+        if det_ln < mi:
+            errors.append(f"{rel}: `<details>` appears before `## Make it yours` (R4)")
+
+    # R5 — exactly one <details>.
+    n_det = text.count("<details")
+    if n_det == 0:
+        errors.append(f"{rel}: no `<details>` — verification must live in one collapsed block (R5)")
+    elif n_det > 1:
+        errors.append(f"{rel}: {n_det} `<details>` blocks — verification must be in exactly one (R5)")
+
+    # R6 — line ceiling outside <details>.
+    od = _outside_details_lines(text)
+    if od > RECIPE_FOLD_MAX:
+        errors.append(f"{rel}: {od} lines outside `<details>` (ceiling {RECIPE_FOLD_MAX}) — cut, or justify (R6)")
+
+    # R7 — no re-teaching: an owned phrase without a link to its page.
+    low = text.lower()
+    for phrase, page in OWNED_PHRASES.items():
+        if phrase in low and page not in text:
+            warns.append(f"{rel}: says \"{phrase}\" but doesn't link {page} — restating, not linking? (R7, human-check)")
+
+
+def check_ancillary_contract(text, rel):
+    lines = text.split("\n")
+    hs = _headings(text)
+    h1 = next((i for i, lvl, _ in hs if lvl == 1), None)
+    # A1 — lede present: non-blank content within 2 lines after the H1.
+    if h1 is not None and not any(l.strip() for l in lines[h1 + 1:h1 + 3]):
+        warns.append(f"{rel}: no lede within 2 lines of the H1 (A1, human-check)")
+    # A3 — tight.
+    if len(lines) > ANCILLARY_MAX:
+        warns.append(f"{rel}: {len(lines)} lines — a pattern/practice page over {ANCILLARY_MAX} is likely doing too much (A3)")
 
 
 def pages():
@@ -79,6 +186,10 @@ def check(path, needs_fm):
         dest = os.path.normpath(os.path.join(os.path.dirname(path), url))
         if not os.path.exists(dest):
             errors.append(f"{rel}: broken internal link -> {target}")
+    if needs_fm:
+        check_recipe_contract(text, rel)
+    else:
+        check_ancillary_contract(text, rel)
 
 
 def check_external():

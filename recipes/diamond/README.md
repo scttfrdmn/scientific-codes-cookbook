@@ -29,7 +29,7 @@ DIAMOND is deterministic — **nothing here is determinism scaffolding** (its ar
 
 ## Shape, size, cost
 
-One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/container-path.md)). Inputs come from [blast](../blast/README.md) — stage those first.
+One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/what-this-does-not-cover.md)). Inputs come from [blast](../blast/README.md) — stage those first.
 
 <details>
 <summary>As shipped: the self-hit identity, the like-with-like cross-code metric, pins, smoke check</summary>

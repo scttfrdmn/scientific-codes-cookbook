@@ -37,7 +37,7 @@ STAR alignment is deterministic given the index — no seed. The index is a dire
 
 ## Shape, size, cost
 
-Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/container-path.md).
+Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/what-this-does-not-cover.md).
 
 **Sizing a whole-genome index (the scale-it):** a full human STAR index is ~30 GiB and is built **in `/tmp`, which is a tmpfs ≈ ½ the instance's RAM** — so it's sized by *RAM*, not disk (an `r8g.4xlarge`, 128 GiB → ~64 GiB `/tmp`, holds it; `disk_gib` grows the container root, which the build doesn't use). That's the real constraint the chr20 fixture sidesteps.
 

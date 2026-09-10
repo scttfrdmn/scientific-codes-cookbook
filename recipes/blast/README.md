@@ -29,7 +29,7 @@ BLAST is deterministic, but its **tie-breaking is arbitrary** — which is a det
 
 ## Shape, size, cost
 
-One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s** on 4 threads. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/container-path.md).
+One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s** on 4 threads. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
 
 <details>
 <summary>As shipped: the self-hit identity, the flaky-check lesson, pins, smoke check</summary>

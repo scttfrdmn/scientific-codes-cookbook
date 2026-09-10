@@ -27,7 +27,7 @@ minimap2 is deterministic on fixed input — **nothing here is determinism scaff
 
 ## Shape, size, cost
 
-One task, ~12 s of alignment. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/container-path.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs and output — run that first.
+One task, ~12 s of alignment. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs and output — run that first.
 
 <details>
 <summary>As shipped: the confident-concordance cross-check, pins, smoke check</summary>

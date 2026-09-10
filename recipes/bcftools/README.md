@@ -28,7 +28,7 @@ The recipe calls a 30× human region and then cross-checks the result against [f
 
 ## Shape, size, cost
 
-One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image pull, not bcftools ([why](../../practices/container-path.md)). Depends on [freebayes](../freebayes/README.md) for the cross-check (an S3 chain — run it first).
+One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image pull, not bcftools ([why](../../practices/what-this-does-not-cover.md)). Depends on [freebayes](../freebayes/README.md) for the cross-check (an S3 chain — run it first).
 
 <details>
 <summary>As shipped: the like-with-like cross-code check, pins, smoke check</summary>

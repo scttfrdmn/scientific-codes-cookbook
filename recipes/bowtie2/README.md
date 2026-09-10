@@ -28,7 +28,7 @@ Bowtie 2 is deterministic — **nothing here is determinism scaffolding**. **Lea
 
 ## Shape, size, cost
 
-One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~114s** wall — boot and image pull ([why](../../practices/container-path.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs — run that first.
+One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~114s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs — run that first.
 
 <details>
 <summary>As shipped: the like-with-like cross-check, pins, smoke check</summary>

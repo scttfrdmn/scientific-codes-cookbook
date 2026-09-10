@@ -33,7 +33,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: why the render path is hard, the two checks, pins, smoke check, run + verify</summary>

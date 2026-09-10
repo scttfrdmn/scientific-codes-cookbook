@@ -26,7 +26,7 @@ QUAST is deterministic — **nothing here is determinism scaffolding**. **Leave 
 
 ## Shape, size, cost
 
-One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot and image pull ([why](../../practices/container-path.md)). The join of a chain: run [SPAdes](../spades/README.md) + [MEGAHIT](../megahit/README.md) first.
+One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). The join of a chain: run [SPAdes](../spades/README.md) + [MEGAHIT](../megahit/README.md) first.
 
 <details>
 <summary>As shipped: why QUAST rather than assembler-vs-assembler, pins, smoke check</summary>

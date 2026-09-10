@@ -32,7 +32,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Opening and checksumming a 6 MB COG is ~1 s, single-threaded. Recorded command window **71s** — boot, Docker install, the ~0.53 GB image pull, and staging the ~6 MB scene are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Opening and checksumming a 6 MB COG is ~1 s, single-threaded. Recorded command window **71s** — boot, Docker install, the ~0.53 GB image pull, and staging the ~6 MB scene are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the STAC cross-check, the decode checksum, pins, smoke check, run + verify</summary>

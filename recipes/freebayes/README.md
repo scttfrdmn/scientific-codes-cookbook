@@ -27,7 +27,7 @@ The recipe calls the same 30× human region as [bcftools](../bcftools/README.md)
 
 ## Shape, size, cost
 
-One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/container-path.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
+One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/what-this-does-not-cover.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
 
 <details>
 <summary>As shipped: the cross-code concordance, pins, smoke check</summary>

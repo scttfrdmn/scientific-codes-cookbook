@@ -27,7 +27,7 @@ The recipe classifies the SARS-CoV-2 reference genome against a real prebuilt **
 
 ## Shape, size, cost
 
-One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/container-path.md)). Not memory-bound: Kraken2 loaded the hash and ran clean within a 2 GiB cap locally.
+One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/what-this-does-not-cover.md)). Not memory-bound: Kraken2 loaded the hash and ran clean within a 2 GiB cap locally.
 
 <details>
 <summary>As shipped: the known-answer identity, why not EFS, pins, smoke check</summary>

@@ -26,12 +26,12 @@ MUSCLE v5 is deterministic on this input (verified: byte-identical on rerun) —
 
 ## Shape, size, cost
 
-One task, **~17 s** align — MUSCLE v5 is heavier than MAFFT but comfortable in 4 GiB. `c8g.large`, ~$0.02, **~115s** wall — boot and image pull ([why](../../practices/container-path.md)).
+One task, **~17 s** align — MUSCLE v5 is heavier than MAFFT but comfortable in 4 GiB. `c8g.large`, ~$0.02, **~115s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: why residue conservation not a column comparison, pins, smoke check</summary>
 
-Two aligners on the same sequences produce **different alignments by design**, so comparing MUSCLE's columns against MAFFT's (or the Pfam seed) would fail for a reason unrelated to correctness ([compare like with like](../../practices/container-path.md)). The honest per-tool identity is one every correct aligner satisfies: ungapping each row recovers the exact input sequence, total residue count invariant — exact-or-wrong, no band.
+Two aligners on the same sequences produce **different alignments by design**, so comparing MUSCLE's columns against MAFFT's (or the Pfam seed) would fail for a reason unrelated to correctness ([compare like with like](../../practices/cross-checks.md)). The honest per-tool identity is one every correct aligner satisfies: ungapping each row recovers the exact input sequence, total residue count invariant — exact-or-wrong, no band.
 
 | observable | assertion | observed |
 |---|---|---|
