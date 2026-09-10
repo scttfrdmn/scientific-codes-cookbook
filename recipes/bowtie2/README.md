@@ -1,98 +1,56 @@
-# Bowtie 2 ← reuses bwa's reads, cross-checked against bwa mem
+---
+tool: bowtie2
+tool_version: 2.5.5
+image: quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
+spawn_version: 0.104.0
+---
+# Bowtie 2 — short-read alignment, cross-checked against bwa
 
-One task. Bowtie 2 aligns the **same 400,000 read pairs bwa already aligned** to the
-same GRCh38 chr20, and the smoke check confirms a conservation identity plus a
-cross-code agreement with bwa on which reads map — the two aligners run on identical
-bytes, so the agreement means something.
+Build an index, align paired reads — checked against bwa on identical bytes.
 
-> **What this recipe does and does not cover.** It builds a chr20 index and aligns a
-> 400k-pair HG00096 slice, then cross-checks the mapped set against `recipes/bwa-samtools`
-> — enough to prove Bowtie 2 works on Graviton4 and agrees with an independent aligner on
-> identical input. Not a benchmark; no variant calling or full-genome alignment. Mapping
-> rate is low (~26%) **by design** — the reference is chr20 only, so most reads have no
-> home in it.
+## Run it
 
-## The cross-check, and why `--local` (a finding worth keeping)
+```bash
+bowtie2-build ref.fa idx
+bowtie2 --local -x idx -1 reads_1.fq.gz -2 reads_2.fq.gz -S aln.sam
+```
 
-bwa mem does **local** alignment (it soft-clips the part of a read that doesn't match and
-keeps the rest); Bowtie 2's **default is end-to-end** (global) alignment, which requires
-the whole read to align or calls it unmapped. On this slice that difference is large and
-real: Bowtie 2 default maps **11.25%** and agrees with bwa on only **82%** of reads,
-because it rejects exactly the reads bwa soft-clips. Running Bowtie 2 in **`--local`**
-mode — the apples-to-apples match to bwa mem — lifts the mapped rate to **25.77%** (vs
-bwa's 29.13%) and the mapped-set agreement to **94.6%**. So the recipe uses `--local`,
-and the residual ~5% disagreement is reads sitting at the local-alignment score
-threshold, where two different scoring schemes legitimately differ — a **method-limited**
-tolerance, not one picked to pass.
+The recipe aligns the **same 400k read pairs bwa aligned** to the same chr20, then checks a conservation identity plus mapped-set agreement with bwa.
 
-Position agreement is deliberately **not** asserted: with a chr20-only, repeat-heavy
-slice, both aligners often find a different equally-valid placement for the same read, so
-leftmost-position concordance is low (~32%) and says nothing about correctness. The
-mapped-**set** concordance is the honest cross-code identity here.
+## Make it yours
 
-## Pins
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the 400k-pair HG00096 slice + chr20 (bwa's exact inputs) | your own reads + reference | reused byte-for-byte from [bwa](../bwa-samtools/README.md) so the cross-check is valid — nothing re-staged. |
+| **`--local`** | Bowtie 2's default end-to-end, if your workflow wants it | **load-bearing for the cross-check** — bwa does *local* alignment (soft-clips), Bowtie 2's default is *end-to-end* (whole read must align). Comparing them compares *modes*: default maps 11.25% and agrees with bwa on 82%; `--local` (the apples-to-apples match) lifts that to 25.77% mapped and 94.6% agreement. |
 
-| | |
-|---|---|
-| image | `quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59` |
-| | tag `2.5.5--hf3d0eb7_0`, Bowtie 2 2.5.5, cosign-signed (`sign-existing.yml`), `linux/arm64` |
-| input (reused) | `inputs/bwa-samtools/chr20.fa` — GRCh38 chr20, sha256 `61eba5b0…` |
-| input (reused) | `inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz` — sha256 `4bd24cdf…` |
-| input (reused) | `inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz` — sha256 `ebd1ad56…` |
-| cross-check ref | `runs/bwa-samtools/r1/aln.sam` — bwa's alignment of the same reads |
+Bowtie 2 is deterministic — **nothing here is determinism scaffolding**. **Leave the chr20 fixture:** mapping rate is low (~26%) *by design* (most reads have no chr20 home), but the claim is cross-aligner *concordance*, which is honest at this scale; it's not a mapping-rate recipe (that's [STAR's](../star/README.md) caveat). Leave-it.
 
-**Data tier: reused, not re-staged.** These are the exact bytes `recipes/bwa-samtools`
-staged (a chr20 slice of the GRCh38 reference + a 400k-pair HG00096 slice from the 1000
-Genomes RODA mirror). Pointing Bowtie 2 at the same objects is what makes the cross-check
-valid — no second copy to keep true. **No `stage-inputs.sh`** — see `recipes/bwa-samtools`
-for how they were built.
+## Shape, size, cost
 
-## Smoke check
+One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~114s** wall — boot and image pull ([why](../../practices/container-path.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs — run that first.
 
-Measured in the pinned image on arm64, before any launch.
+<details>
+<summary>As shipped: the like-with-like cross-check, pins, smoke check</summary>
+
+The `--local` choice is a finding worth keeping (CLAUDE.md's "compare like with like"): comparing bwa's local alignment to Bowtie 2's default end-to-end would fail for a reason unrelated to correctness — it rejects exactly the reads bwa soft-clips. `--local` is the match; the residual ~5% disagreement is reads at the local-score threshold where two scoring schemes legitimately differ — a *method-limited* tolerance, not one picked to pass. **Position** agreement is deliberately not asserted: on a repeat-heavy chr20 slice both aligners find different equally-valid placements (~32% leftmost concordance, says nothing about correctness). The mapped-**set** concordance is the honest identity.
 
 | observable | assertion | observed |
 |---|---|---|
-| primary records | exactly **800000** (400k pairs × 2) — conservation | 800000 |
+| primary records | exactly 800000 (400k×2) — conservation | 800000 |
 | primary mapped | 150000–260000 | 206155 |
-| overall alignment rate | 22–29 % (`--local`) | 25.77 % |
-| shared read-mates with bwa | exactly 800000 (identical read set) | 800000 |
-| **concordance vs bwa** | **≥ 0.90** (mapped-set agreement) | **0.9462** |
+| overall alignment rate (`--local`) | 22–29% | 25.77% |
+| concordance vs bwa (mapped-set) | ≥ 0.90 | 0.9462 |
 
-The `800000` is a conservation check (reads in = primary records out), not a threshold.
-Bowtie 2 is deterministic, so the counts reproduce exactly; the bands exist only to
-survive an aligner-version change, and the concordance floor is method-justified, so none
-of these can go flaky.
+Bowtie 2 is deterministic, so counts reproduce exactly; bands exist only to survive a version change, and the concordance floor is method-justified — none can go flaky.
 
-## Resources, and what the timings mean
+**Pins.** Image `quay.io/aarchbio/bowtie2@sha256:a6807f0611a1…` (2.5.5, cosign-signed, `linux/arm64`). Reads + reference are [bwa](../bwa-samtools/README.md)'s pinned `inputs/bwa-samtools/` bytes (chr20 slice + 400k-pair HG00096 from the 1000G RODA mirror); cross-check against `runs/bwa-samtools/r1/aln.sam`. Reused — no `stage-inputs.sh`.
 
-4 vCPU / 8 GiB, `c8g` (resolves to `c8g.xlarge`), TTL 5m, cap $0.02.
-`bowtie2-build` on chr20 was **35s**, the `--local` alignment **35s**, the concordance
-check a few seconds — all compute-bound and well within an 8 GiB box (no memory pressure,
-unlike `recipes/kallisto`).
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the small
-`bowtie2` image are most of the task. The recorded run's window was **114s** (05:28:10 →
-05:30:04 UTC), concordance vs bwa 0.9462. TTL was **retightened from that first real run**:
-10m → **5m**, `cost_limit` $0.03 → $0.02; the recorded run used the original 10m. A loose TTL
-is a larger blast radius, not caution. Disk is modest (chr20 + index + reads + bwa's SAM ≈ 0.7 GiB).
-
-## Running it
-
-No `stage-inputs.sh` — the inputs are already in the bucket from `recipes/bwa-samtools`.
-
+**Run + verify.**
 ```sh
 spawn task run --spec recipes/bowtie2/01-align.task.json --wait
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/   # expect smoke-check.txt, align.log, build.log
 ```
+Re-running: bump the `-r1` suffix.
 
-Then **check the bucket**, every time:
-
-```sh
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/
-```
-
-The smoke check runs *inside* the task, and the bucket listing is the second half of it.
-Expect three objects (`smoke-check.txt`, `align.log`, `build.log`).
-
-**Re-running.** `task_id` is fixed; bump the `-r1` suffix in both `task_id` and the output
-prefix to keep both records.
+</details>

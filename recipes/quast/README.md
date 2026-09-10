@@ -1,66 +1,54 @@
-# QUAST — the independent cross-validator for SPAdes and MEGAHIT
+---
+tool: quast
+tool_version: 5.3.0
+image: quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692
+spawn_version: 0.104.0
+---
+# QUAST — assembly quality metrics
 
-The join of a three-recipe assembly chain. QUAST reads **both** assemblies — SPAdes' and
-MEGAHIT's, of the same fixed reads — and the smoke check asserts each assembler's exact
-metrics *as QUAST reports them*. One unrelated tool measuring two, which is a stronger
-construction than comparing the assemblers to each other.
+Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?"
 
-> **What this recipe does and does not cover.** It runs QUAST on two staged assemblies and
-> asserts the exact contig counts (raw and ≥500 bp) and N50 per assembler — enough to prove
-> QUAST evaluates assemblies correctly on Graviton4 and to cross-validate the two assembler
-> recipes. Not a benchmark; no reference-based misassembly analysis.
+## Run it
 
-## Why QUAST rather than SPAdes-vs-MEGAHIT directly
+```bash
+quast.py assembly_1.fasta assembly_2.fasta -o report
+```
 
-Two assemblers on the same reads produce **different** contig sets by design (different
-algorithms) — comparing them to each other would measure the algorithm difference, not
-correctness (the CLAUDE.md "compare like with like" rule). Instead one independent tool
-measures each, and the recipe asserts each assembler's own deterministic numbers. QUAST's
-default `# contigs` applies a ≥500 bp filter, so it reports fewer than the raw FASTA
-(SPAdes 237 → 78; MEGAHIT 2 → 1); the recipe asserts both the raw (`# contigs (>= 0 bp)`)
-and the filtered counts, plus N50 and total length.
+The recipe measures **both** the [SPAdes](../spades/README.md) and [MEGAHIT](../megahit/README.md) assemblies of the same reads and asserts each assembler's exact metrics as QUAST reports them — one independent tool measuring two.
 
-## Pins
+## Make it yours
 
-| | |
-|---|---|
-| image | `quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692` |
-| | tag `5.3.0`, QUAST 5.3.0, cosign-verified (`sign-existing.yml`), `linux/arm64` |
-| inputs | `runs/spades/r1/contigs.fasta` + `runs/megahit/r1/contigs.fa` (the two assemblers' outputs) |
-
-**Data tier: derived — the two assembler outputs.** This task runs *after* SPAdes and
-MEGAHIT (a resumable S3 chain; each reads its inputs from S3 and writes to S3).
-
-## Smoke check (per assembler, from QUAST's `report.tsv`)
-
-| metric | SPAdes | MEGAHIT |
+| In the recipe | Swap for | What to know |
 |---|---|---|
-| `# contigs (>= 0 bp)` (raw) | 237 | 2 |
+| the two sibling assemblies | your own assembly (or several) | add `-r reference.fa` for reference-based misassembly analysis — this recipe is reference-free. |
+
+QUAST is deterministic — **nothing here is determinism scaffolding**. **Leave it:** the inputs are two deterministic assemblies of a small region, so every metric is exact-or-wrong; a larger assembly wouldn't make QUAST more legible. Leave-it.
+
+## Shape, size, cost
+
+One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot and image pull ([why](../../practices/container-path.md)). The join of a chain: run [SPAdes](../spades/README.md) + [MEGAHIT](../megahit/README.md) first.
+
+<details>
+<summary>As shipped: why QUAST rather than assembler-vs-assembler, pins, smoke check</summary>
+
+Two assemblers on the same reads produce **different** contig sets by design — comparing them to each other would measure the algorithm difference, not correctness (CLAUDE.md's "compare like with like"). So one independent tool measures each, and the recipe asserts each assembler's own deterministic numbers. QUAST's default `# contigs` applies a ≥500 bp filter (fewer than the raw FASTA), so both the raw and filtered counts are asserted.
+
+| metric (from `report.tsv`) | SPAdes | MEGAHIT |
+|---|---|---|
+| `# contigs (>= 0 bp)` raw | 237 | 2 |
 | `# contigs` (≥500 bp) | 78 | 1 |
 | N50 | 33380 | 400429 |
 | Total length | 399846 | 400429 |
 
-All exact-or-wrong: each is a deterministic function of a deterministic assembly, measured
-by an independent tool.
+Exact-or-wrong — a deterministic function of two deterministic assemblies, measured independently.
 
-## Resources, and what the timings mean
+**Pins.** Image `quay.io/aarchbio/quast@sha256:54122e645394…` (5.3.0, cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/contigs.fasta` + `runs/megahit/r1/contigs.fa` (derived — the two assembler outputs; a resumable S3 chain).
 
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. QUAST was **~a few
-seconds** of compute locally.
-
-**These timings are not compute cost.** Boot + Docker install + image pull dominate. Recorded
-window **73s** (21:48:19 → 21:49:32 UTC), spades 237/N50 33,380 and megahit 2/N50 400,429 exact.
-TTL/cap already minimal. Disk is trivial.
-
-## Running it
-
-Run `recipes/spades` and `recipes/megahit` first (QUAST reads their staged contigs), then:
-
+**Run + verify.**
 ```sh
 spawn task run --spec recipes/quast/01-evaluate.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/quast/r1/
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/quast/r1/   # expect report.tsv, smoke-check.txt
 ```
+Re-running: bump the `-r1` suffix.
 
-Expect `report.tsv` + `smoke-check.txt`.
-
-**Re-running.** Bump the `-r1` suffix in `task_id` and the output prefix.
+</details>
