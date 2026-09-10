@@ -93,6 +93,22 @@ are much of the task. The recorded `m8g.large` run's window was **147s** (00:39:
 3 contigs / 466,356 bp, largest 420,910. TTL **retightened from that run**: 10m → **5m**,
 `cost_limit` $0.03 → $0.02. Disk is trivial.
 
+## Threads change the assembly — which is the sizing dial
+
+Flye is the [sizing page](../../patterns/sizing.md)'s "the answer moves" case, and it's why this
+recipe pins `-t 1`. Swept on a real E. coli ONT run (DRR242223, ~55×) across `-t 1/2/4/8`, the
+**contig count wandered — 10 / 12 / 11 / 14 — on identical reads.** Not "more threads, more
+fragmentation": it's non-monotonic, so you can't reason about the direction, only that thread count
+changes the *result*. Speed is sublinear too — 3.2× at 4 threads, only 4.8× at 8 — so the knee is
+~4: past it you pay for cores that barely help *and* move the answer.
+
+That is the whole justification for the two-treatment split: pin `-t 1` when you need to assert an
+exact number (this toy: a stable 10-or-3 contigs, byte-identical across runs), and run more threads
+for speed only when you've dropped to **biology floors** (total ≥ a genome, largest contig
+megabase-scale) that survive the wandering. If your assembler behaves this way — and most do —
+never assert an exact count on a multi-threaded run. See [sizing](../../patterns/sizing.md) for the
+contrast with GROMACS (speed moves, answer fixed) and GPAW (a hard wall).
+
 ## Running it
 
 No `stage-inputs.sh` — Flye's toy data is already staged under `inputs/flye/` (pinned to 2.9.6).

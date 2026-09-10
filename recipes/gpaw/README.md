@@ -77,6 +77,22 @@ command window was **96s** (23:34:19 → 23:35:55 UTC), and the energy came back
 run**: 10m → **5m**, `cost_limit` $0.03 → $0.02. A loose TTL is a larger blast radius,
 not caution; the recorded run used the original 10m. Disk is trivial.
 
+## Scaling: MPI helps, until it walls
+
+GPAW is the [sizing page](../../patterns/sizing.md)'s "hits a wall" case, and it's the clean
+counterpart to GROMACS. Swept on a 64-atom Si supercell across n = 1/2/4/8/16/32/48 MPI ranks, wall
+time fell 618 → 22 s — **MPI genuinely speeds DFT up** (k-point/band parallelism), scaling to ~48
+ranks at ~58% efficiency. Then at n = 64 it does not slow down — it **fails**: the cell can't be
+decomposed any further. "It got slower" and "it stopped working" are different problems, and GPAW is
+the second kind.
+
+Crucially, **the energy is rank-independent** — byte-identical −380.305 eV from 1 rank to 48, drifting
+only ~3×10⁻⁵ eV at the largest counts (floating-point summation order). So unlike flye, the *result*
+never moves with core count; scale ranks freely for speed and assert the energy exactly. The only
+caution is the ceiling: past the parallelization wall you get an error, not a wasted bill. (The
+`world.size` assertion in the smoke check is the same discipline — it proves the run is *actually*
+parallel, not a serial binary launched under `mpirun`.)
+
 ## Running it
 
 No `stage-inputs.sh` — the cell and PAW data are in the image.
