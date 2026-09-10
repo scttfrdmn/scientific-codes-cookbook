@@ -42,7 +42,7 @@ The check is a **conservation identity**, not two coincidental numbers: the `cat
 | combined sum_len | 15579900 (== r1+r2) | 15579900 |
 | read length | uniform 150 (min == max) | 150 / 150 |
 
-**Pins.** Image `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.13.0, cosign-verified, `linux/arm64`). Input: the 30× fixture's reads at `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared BAM fixture (`make stage RECIPE=bcftools reused, not re-derived.
+**Pins.** Image `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.13.0, cosign-verified, `linux/arm64`). Input: the 30× fixture's reads at `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared BAM fixture (`make stage RECIPE=bcftools`), reused, not re-derived.
 
 **Run + verify.**
 ```sh

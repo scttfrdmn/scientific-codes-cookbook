@@ -42,7 +42,7 @@ Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The
 
 freebayes emits a large QUAL~0 tail by design, hence the wide total band; the confident count is the meaningful one.
 
-**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `make stage RECIPE=bcftools
+**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `make stage RECIPE=bcftools`.
 
 **Run + verify.**
 ```sh

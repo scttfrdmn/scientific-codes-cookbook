@@ -41,7 +41,7 @@ SPAdes at `-t 4 --isolate` is **deterministic** — verified by assembling the s
 
 Exact-or-wrong: a deterministic function of fixed reads + fixed threads.
 
-**Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`make stage RECIPE=bcftools pinned by sha256.
+**Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`make stage RECIPE=bcftools`), pinned by sha256.
 
 **Run + verify.**
 ```sh

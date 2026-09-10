@@ -41,7 +41,7 @@ bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF 
 | confident (QUAL ≥ 20) | 710–880 | 797 |
 | SNV concordance vs freebayes | Jaccard ≥ 0.85 | 0.9103 |
 
-**Pins.** Image `quay.io/aarchbio/bcftools@sha256:8171fe744646…` (1.24, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`, 1000G NYGC high-coverage slice — provenance + re-stage in `make stage RECIPE=bcftools reference `inputs/bwa-samtools/chr20.fa` (reused); freebayes VCF from `runs/freebayes/r1/`.
+**Pins.** Image `quay.io/aarchbio/bcftools@sha256:8171fe744646…` (1.24, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`, 1000G NYGC high-coverage slice — provenance + re-stage via `make stage RECIPE=bcftools`; reference `inputs/bwa-samtools/chr20.fa` (reused); freebayes VCF from `runs/freebayes/r1/`.
 
 **Run + verify.**
 ```sh
