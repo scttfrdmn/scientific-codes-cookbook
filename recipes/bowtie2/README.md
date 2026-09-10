@@ -33,7 +33,7 @@ One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~
 <details>
 <summary>As shipped: the like-with-like cross-check, pins, smoke check</summary>
 
-The `--local` choice is a finding worth keeping (CLAUDE.md's "compare like with like"): comparing bwa's local alignment to Bowtie 2's default end-to-end would fail for a reason unrelated to correctness — it rejects exactly the reads bwa soft-clips. `--local` is the match; the residual ~5% disagreement is reads at the local-score threshold where two scoring schemes legitimately differ — a *method-limited* tolerance, not one picked to pass. **Position** agreement is deliberately not asserted: on a repeat-heavy chr20 slice both aligners find different equally-valid placements (~32% leftmost concordance, says nothing about correctness). The mapped-**set** concordance is the honest identity.
+The `--local` choice is a finding worth keeping ([compare like with like](../../practices/cross-checks.md)): comparing bwa's local alignment to Bowtie 2's default end-to-end would fail for a reason unrelated to correctness — it rejects exactly the reads bwa soft-clips. `--local` is the match; the residual ~5% disagreement is reads at the local-score threshold where two scoring schemes legitimately differ — a *method-limited* tolerance, not one picked to pass. **Position** agreement is deliberately not asserted: on a repeat-heavy chr20 slice both aligners find different equally-valid placements (~32% leftmost concordance, says nothing about correctness). The mapped-**set** concordance is the honest identity.
 
 | observable | assertion | observed |
 |---|---|---|

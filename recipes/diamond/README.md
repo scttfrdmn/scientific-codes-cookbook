@@ -38,7 +38,7 @@ Queries are the first 20 DB records (blast's design, reused byte-for-byte), so e
 
 **The cross-code metric, made like-with-like** — two ways a naive comparison would lie, both avoided:
 - **Mode:** `--very-sensitive` puts DIAMOND in a regime comparable to `blastp` default (the same error as bowtie2 end-to-end vs `--local`).
-- **Metric:** "does DIAMOND's #1 subject equal BLAST+'s #1" scores **1/20** — but that's not disagreement: these first-20 proteins are near-identical paralogs, so each self-hit **ties on bitscore** (19/20 exact ties, 0 real losses) and each tool breaks the tie its own way; DIAMOND's heuristic bitscores also differ from blastp's by design. So the asserted claim is **tie-agnostic and score-agnostic: both tools recover all 20 full-length 100% self-hits, none beaten** — the shared algorithmic truth. (CLAUDE.md's "compare like with like"; the 1/20 → 20/20 fix is the protein-search sibling of minimap2's 0.43 → 0.9921.)
+- **Metric:** "does DIAMOND's #1 subject equal BLAST+'s #1" scores **1/20** — but that's not disagreement: these first-20 proteins are near-identical paralogs, so each self-hit **ties on bitscore** (19/20 exact ties, 0 real losses) and each tool breaks the tie its own way; DIAMOND's heuristic bitscores also differ from blastp's by design. So the asserted claim is **tie-agnostic and score-agnostic: both tools recover all 20 full-length 100% self-hits, none beaten** — the shared algorithmic truth. ([compare like with like](../../practices/cross-checks.md); the 1/20 → 20/20 fix is the protein-search sibling of minimap2's 0.43 → 0.9921.)
 
 | observable | assertion | observed |
 |---|---|---|

@@ -35,7 +35,7 @@ One task, ~12 s of alignment. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and i
 minimap2 and bwa are independent seed-and-extend aligners; they agree overwhelmingly **where each is confident**, but *not* on every mapped read — most of these whole-genome reads don't belong on chr20 at all and both still report low-MAPQ placements in repeats, where they break ties differently. So the claim is scoped, not "same position for every read" (that would be the arbitrary-tie-break trap):
 
 - **Confident concordance:** of reads *both* place at MAPQ ≥ 30, the fraction at the same locus (within 5 bp, absorbing soft-clip/indel-representation differences) is **0.9921** (19,892 / 20,051). Two unrelated aligners landing confident reads on the same base — the RAxML-NG/IQ-TREE cross-code move applied to alignment. Tolerance set by method (soft-clip/indel shift), not the observed value; a broken index collapses it far below 0.98.
-- **Mapped count is reported, not equated:** minimap2 maps 169,183 primaries, bwa 233,036 — a legitimate preset-sensitivity difference, mostly low-MAPQ. Equating them would assert a coincidence; the concordance is the real claim. (CLAUDE.md's "compare like with like"; the all-mapped-0.43 → confident-0.9921 fix.)
+- **Mapped count is reported, not equated:** minimap2 maps 169,183 primaries, bwa 233,036 — a legitimate preset-sensitivity difference, mostly low-MAPQ. Equating them would assert a coincidence; the concordance is the real claim. ([compare like with like](../../practices/cross-checks.md); the all-mapped-0.43 → confident-0.9921 fix.)
 
 | observable | assertion | observed |
 |---|---|---|

@@ -31,7 +31,7 @@ One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot 
 <details>
 <summary>As shipped: why QUAST rather than assembler-vs-assembler, pins, smoke check</summary>
 
-Two assemblers on the same reads produce **different** contig sets by design — comparing them to each other would measure the algorithm difference, not correctness (CLAUDE.md's "compare like with like"). So one independent tool measures each, and the recipe asserts each assembler's own deterministic numbers. QUAST's default `# contigs` applies a ≥500 bp filter (fewer than the raw FASTA), so both the raw and filtered counts are asserted.
+Two assemblers on the same reads produce **different** contig sets by design — comparing them to each other would measure the algorithm difference, not correctness ([compare like with like](../../practices/cross-checks.md)). So one independent tool measures each, and the recipe asserts each assembler's own deterministic numbers. QUAST's default `# contigs` applies a ≥500 bp filter (fewer than the raw FASTA), so both the raw and filtered counts are asserted.
 
 | metric (from `report.tsv`) | SPAdes | MEGAHIT |
 |---|---|---|
