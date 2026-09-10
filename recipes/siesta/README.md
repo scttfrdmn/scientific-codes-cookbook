@@ -38,9 +38,9 @@ One task, `c8g.large` (2 vCPU / 4 GiB — sized for the 2 ranks), TTL 5m, cap $0
 
 ### The pseudopotential problem, and the reference it manufactures
 
-conda-forge's `siesta` ships no pseudopotentials, so a naive recipe could only prove the binary parses input. This recipe stages one from **SIESTA's own test suite at the tag matching the container** — `Tests/Pseudos/Si.psf` at `siesta-project/siesta` tag `5.4.2`. Because the pseudopotential *and* the input *and* a committed reference output all come from the same version, the run is a **[reproduction of SIESTA's own published result](../../practices/reference-from-tests.md)** — manufactured from the version-matched test suite (a psf from another release would be a subtly wrong reference). Staging a pinned file to S3 is the cookbook's normal model, not runtime-fetching; the digest is verified on the box before SIESTA runs.
+conda-forge `siesta` ships no pseudopotentials, so the recipe stages `Tests/Pseudos/Si.psf` from `siesta-project/siesta` at tag `5.4.2` — the version-matched [reproduction](../../practices/reference-from-tests.md) move: pseudopotential, input, and `Reference/psf.out` all from the same version, so the run matches its `-214.377236 eV`. Staging a pinned file is allowed where build-time constraints forbid bundling; the digest is verified on the box.
 
-**[Assert the rank count](../../practices/mpi-rank-count.md).** Running over 2 ranks is deliberate: the `dft` env pins the OpenMPI build (`siesta=*=mpi_openmpi*`) because the nompi variant has a higher build number and would otherwise win, so the check reads `Running on 2 nodes` to prove the MPI path actually ran.
+**[Assert the rank count](../../practices/mpi-rank-count.md).** The `dft` env pins `siesta=*=mpi_openmpi*` and the check reads `Running on 2 nodes` — proof the MPI path ran, not a silently-serial build.
 
 ### Pins (data tier: stable public source with a durable id)
 
