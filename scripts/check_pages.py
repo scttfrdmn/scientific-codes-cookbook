@@ -47,6 +47,10 @@ def check(path, needs_fm):
             errors.append(f"{rel}: missing YAML frontmatter block")
         else:
             for k in REQUIRED_FM:
+                # A pipeline (Shape-F) recipe pins several images, one per dispatched
+                # tool, under `images:` — accept it in place of a single `image:`.
+                if k == "image" and "images" in keys:
+                    continue
                 if k not in keys:
                     errors.append(f"{rel}: frontmatter missing required field '{k}'")
             for k in RECOMMENDED_FM:
