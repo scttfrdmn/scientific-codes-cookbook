@@ -323,8 +323,12 @@ a spawn/staging/instance concept when it's load-bearing.
 - **R5 — All verification in exactly one collapsed `<details>`** (identities, pins,
   smoke-check table, run+verify); nothing above the fold that isn't for someone running it. [auto]
 - **R6 — ≤50 lines outside `<details>`.** Over is a defect needing justification. [auto]
-- **R7 — No re-teaching:** link a pattern/practice, never restate it. [auto: owned-phrase without
-  its link → warn; human: the rest]
+- **R7 — No re-teaching:** link a pattern/practice, never restate it — and **prefer a link to a
+  paraphrase**, because a paraphrase is *worse* than a verbatim copy: the verbatim one is at least
+  detectable. [auto is only a FLOOR — it catches an exact owned phrase appearing without that
+  page's link. **Synonymic re-teaching** (the same idea in the drafter's own words — bcftools'
+  "apples-to-apples", raxml-ng's "same rule as the assemblers") is invisible to the checker and is
+  human review. Do not trust R7 to cover re-teaching.]
 - **R8 — Cut hard.** Flabby prose under the ceiling still fails the one-minute bar. [human]
 - **Frontmatter** (machine-checkable versions): `tool`, `tool_version`, `image` (full
   `@sha256:`), `spawn_version`, `run_date`. Pipeline recipes use `images:` (one digest per

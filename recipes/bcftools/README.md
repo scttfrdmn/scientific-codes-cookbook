@@ -14,7 +14,7 @@ The workhorse germline caller: pile up the reads, call the variants, get a VCF.
 bcftools mpileup -f ref.fa aln.bam | bcftools call -mv -Oz -o calls.vcf.gz
 ```
 
-The recipe calls a 30× human region and then cross-checks the result against [freebayes](../freebayes/README.md) — two independent caller models agreeing on the variants they're both sure of.
+The recipe calls a 30× human region and cross-checks it against [freebayes](../freebayes/README.md) where both callers are confident.
 
 ## Make it yours
 
@@ -22,9 +22,9 @@ The recipe calls a 30× human region and then cross-checks the result against [f
 |---|---|---|
 | the 30× region BAM (chr20:2.0–2.4 Mb, HG00096) | your own aligned BAM | `mpileup` auto-builds the `.fai`; no separate samtools step. |
 | chr20 reference slice | your reference | one `-f` fasta; bcftools indexes it for you. |
-| **30× coverage** | keep real coverage | **load-bearing, not incidental** — the first attempt reused a ~0.3× subsample and confident calling fell apart (concordance 0.34). Depth is what makes germline calling meaningful; don't hand it a shallow fixture. |
+| **30× coverage** | keep real coverage | **load-bearing** — a first ~0.3× subsample collapsed confident calling (concordance 0.34); germline calling needs real depth. |
 
-`bcftools call` is deterministic — **nothing here is determinism scaffolding**, no seed to pin. The one thing that *had* to change was the input depth, and it already has: this is a scale-it that earned it (a ~0.3× fixture actively misrepresented the tool), settled at 30×.
+`bcftools call` is deterministic — **nothing here is determinism scaffolding**. The one scale-it that earned it is the depth above: a ~0.3× fixture misrepresented the tool, settled at 30×.
 
 ## Shape, size, cost
 
@@ -33,7 +33,7 @@ One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image
 <details>
 <summary>As shipped: the like-with-like cross-code check, pins, smoke check</summary>
 
-bcftools uses a **pileup** model, freebayes a **haplotype** model — a raw VCF diff would fail for a reason unrelated to correctness, so the check is made apples-to-apples: **normalise** both (`bcftools norm -m-`: split multiallelics, left-align), restrict to **confident SNVs** (`QUAL ≥ 20`; SNVs because the two represent indels differently even after norm), and assert **Jaccard(POS:REF:ALT) ≥ 0.85** (observed **0.9103**, intersection 609 / union 669). The floor is what two correct germline callers reach at 30× (literature 0.85–0.95; the residual is complex/low-mappability loci) — set by the shared problem, not shaved to the observed value; a broken caller decorrelates far below it.
+bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF diff would compare methods, not correctness ([compare like with like](../../practices/cross-checks.md)). Made apples-to-apples: **normalise** both (`bcftools norm -m-`), restrict to **confident SNVs** (`QUAL ≥ 20`; the models represent indels differently even after norm), assert **Jaccard(POS:REF:ALT) ≥ 0.85** — observed **0.9103** (609/669). The 0.85 floor is what two correct germline callers reach at 30× (literature 0.85–0.95), not a shaved value.
 
 | observable | assertion | observed |
 |---|---|---|
