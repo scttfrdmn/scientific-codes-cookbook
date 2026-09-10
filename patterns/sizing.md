@@ -1,4 +1,4 @@
-# Sizing and the scaling knee — bigger is not better
+# How many cores should I ask for? — sizing and the scaling knee
 
 > **Throughput keeps climbing while your money doesn't.** On one node, GROMACS on 82k atoms went from 13 ns/day at 8 cores to 148 at 192 — an 11× speedup — but the **cost per result more than doubled**. Faster is real. Cheaper it is not.
 
@@ -11,6 +11,8 @@ That point — where adding cores stops helping enough to justify the cost — i
 A parallel run scales until each core runs out of work to do without talking to the others. For MD that's **atoms per rank**; for a DFT run it's **k-points × bands per rank**; for an assembler it's the length of the serial phases no thread can help with. Past that point, cores spend their time communicating instead of computing, and the curve bends.
 
 So the knee is set by *your problem's size divided by the cores*, not by the cores alone. The same 96-core box is wasteful for a small job, well-matched for a medium one, and barely enough for a large one. **Measure your run; don't inherit someone else's core count.**
+
+**First, though — which resource are you actually sizing on?** This page is for **compute-bound** runs, where cores are the dial and the knee is where they stop paying. If your job spends its time waiting on *bytes* rather than computing on them — streaming a reference, reading an index — you're **data-movement-bound**, and the dials are NIC bandwidth (cold reads) and RAM (the cache), not cores. Size that on [Copy, mount, or share?](data-movement.md) instead. Everything below assumes compute is the bottleneck.
 
 ## Three codes, three shapes — know which yours is
 
