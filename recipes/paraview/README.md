@@ -5,7 +5,7 @@ env: viz
 image: quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6
 spawn_version: 0.104.0
 ---
-# ParaView (viz env) — headless render of a synthetic volume, verified by a second library
+# ParaView (viz env) — headless offscreen rendering
 
 `pvbatch` renders a scientific dataset to a PNG headlessly — no GPU, no display — the batch-visualization path for a server or CI.
 

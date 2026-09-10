@@ -4,7 +4,7 @@ env: climate
 image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7
 spawn_version: 0.104.0
 ---
-# xESMF (climate env) — conservative regridding, verified by a conservation law
+# xESMF (climate env) — conservative regridding between global grids
 
 `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared.
 
