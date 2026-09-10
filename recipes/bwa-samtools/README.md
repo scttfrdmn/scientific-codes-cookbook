@@ -39,9 +39,19 @@ BWA's alignment doesn't depend on thread count. (Contrast an assembler, where `-
 scaffolding and *must* change for real runs — that distinction is [pin threads for stochastic
 search](../../practices/pin-threads.md).)
 
-**As the input grows:** a whole-genome BWA index is ~5.6 GB and won't fit the task path's 8 GiB
-root disk alongside reads and output — so a real run builds the index on a larger disk or
-attaches a prebuilt one. That's the single real constraint the chr20 fixture sidesteps.
+**As the input grows (measured):** aligning 10M HG00096 pairs against the *whole* GRCh38 index
+(≈8.9 GB) maps **99.76%** — the honest rate the chr20 fixture's 29% only ever stood in for — and
+`bwa mem` dominated at ~8.4:1 compute-to-overhead. Two real constraints the fixture sidesteps
+surfaced, both worth knowing before your first whole-genome run:
+
+- **Staging space is a tmpfs sized to ½ the instance's RAM, not the root disk.** The 8.9 GB index
+  plus reads plus SAM overran a 16 GiB box's ~8 GiB `/tmp` at stage-in; `disk_gib` grows the
+  container root, which staging doesn't use. The lever is **RAM** — an `r8g.2xlarge` (64 GiB →
+  ~31 GiB `/tmp`) held it. Size the box by what must land in `/tmp`, not by disk.
+- **A cohort should share one read-only copy of the index, not re-stage 8.9 GB per sample.** Six
+  samples staging the index six times is the waste [job arrays](../../patterns/job-arrays.md) plus a
+  shared reference filesystem exist to avoid — build the index once, mount it read-only, fan out
+  the reads. See [sizing](../../patterns/sizing.md) for where that trade-off pays off.
 
 ## Shape, size, cost
 

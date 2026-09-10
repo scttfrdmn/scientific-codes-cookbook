@@ -27,9 +27,12 @@ directly comparable to the figure they published when they built this image.
 
 > A note on the name. The Round One worklist called this recipe "GROMACS (benchMEM)".
 > benchMEM is a downloadable membrane benchmark; it is **not** in the image, and it
-> carries no bundled reference energy to check against. The shipped 216-SPC box is
-> better on both counts: zero staging, and it lets the recipe assert a *physical*
-> quantity — water's cohesive energy — rather than time an arbitrary system.
+> carries no bundled reference energy to check against. For the *correctness* check the
+> shipped 216-SPC box is better on both counts: zero staging, and a *physical* quantity
+> to assert — water's cohesive energy — rather than a timing of an arbitrary system.
+> benchMEM found its proper use in the **[sizing sweep](../../patterns/sizing.md)**, where
+> "how fast, how many cores, how much money" is the question and no reference energy is
+> needed — the two jobs, correctness and scaling, want different inputs.
 
 So this is not "GROMACS produced plausible numbers." It is a **reproduction**: the same
 setup, on the same bytes, that aarch.science ran when verifying the `md` env, checked
@@ -105,6 +108,33 @@ before any Graviton measurement), now **5m** — about 2.3× the ~2.2-minute ins
 — with `cost_limit` following it down $0.03 → $0.02. A loose TTL is a larger blast
 radius, not free caution; the recorded run used the original 10m. Disk is trivial:
 ~1.2 GB image, a few hundred KB of output.
+
+## Sizing, MPI, and going bigger
+
+The 216-SPC run proves *correctness*; it says nothing about *how many cores to give a real
+job*. That was measured separately on a real membrane system (benchMEM, 81,743 atoms) across
+8→192 cores — the curves and the method live on the **[sizing page](../../patterns/sizing.md)**.
+Three facts from it change how you launch GROMACS, and they belong here because they bite every
+run:
+
+- **Assert the rank count from inside the run.** conda-forge ships `nompi` builds at *higher*
+  build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that,
+  under `mpirun -n 2`, runs two independent rank-0 calculations — same energy, false parallelism.
+  Read the count GROMACS reports (`Using N MPI process(es)`) and assert it is what you launched.
+- **The launch dominates the decomposition.** `mpirun -np 1 -ntomp 8` pins 8 threads to *one*
+  core — **1.9 vs 13.5 ns/day, a 7× loss** — because `mpirun` binds one rank to one core by
+  default. Give each rank its cores (`--map-by slot:PE=<threads> --bind-to core`) before you
+  tune anything else. This dwarfs the ~25% you'd chase optimizing ranks-vs-threads.
+- **Bigger is faster but not cheaper.** benchMEM scales to 192 cores (11× throughput) while
+  cost-per-result more than doubles, the efficiency bending across 96→192 — where the run begins
+  spanning two NUMA nodes (measured; Graviton4 c8g is single-socket, so it's a node crossing
+  *within* the socket, not between sockets) and atoms-per-rank halves. Size to the cost knee
+  unless the deadline is now.
+
+The *result* never depends on core count here — a single-point energy on identical coordinates
+is decomposition-invariant, so only speed and cost move. That is the opposite of an assembler,
+where thread count changes the answer ([flye](../flye/README.md)), and it means you can trust a
+GROMACS energy from any rank layout while sizing purely for cost.
 
 ## Running it
 
