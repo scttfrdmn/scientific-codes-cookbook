@@ -41,7 +41,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks,
 
 The serial and 2-rank runs are two genuinely independent computations of the same trajectory; agreement to floating-point-reordering tolerance means both the kernels and the MPI communication are correct. This is the same class as [raxml-ng](../raxml-ng/README.md)'s two-codes-one-answer, here as one-code-two-decompositions.
 
-**Assert the rank count from inside the run.** conda-forge ships `nompi` builds at higher build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that under `mpiexec -n 2` runs two independent rank-0 jobs — same energy, false parallelism. The `md` env pins `lammps=*=cpu_*mpi_openmpi*` and the check reads the count LAMMPS reports (`with 2 MPI task(s)`) and asserts it is 2.
+**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** conda-forge ships `nompi` builds at higher build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that under `mpiexec -n 2` runs two independent rank-0 jobs — same energy, false parallelism. The `md` env pins `lammps=*=cpu_*mpi_openmpi*` and the check reads the count LAMMPS reports (`with 2 MPI task(s)`) and asserts it is 2.
 
 ### Pins (data tier: bundled / analytic)
 

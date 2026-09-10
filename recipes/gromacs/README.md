@@ -125,7 +125,7 @@ job*. That was measured separately on a real membrane system (benchMEM, 81,743 a
 Three facts from it change how you launch GROMACS, and they belong here because they bite every
 run:
 
-- **Assert the rank count from inside the run.** conda-forge ships `nompi` builds at *higher*
+- **[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** conda-forge ships `nompi` builds at *higher*
   build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that,
   under `mpirun -n 2`, runs two independent rank-0 calculations — same energy, false parallelism.
   Read the count GROMACS reports (`Using N MPI process(es)`) and assert it is what you launched.

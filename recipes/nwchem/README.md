@@ -38,9 +38,9 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), 
 
 ### The check — a published reference plus an internal cross-validation
 
-aarch.science ran exactly this when it verified NWChem into the `dft` env (`dft.smoke.py`), reporting **−74.963023 Ha**; Graviton4 gives −74.963023128766 — the [relion](../relion/README.md)-style reproduce-a-published-result move. The 2-rank leg must match the serial one (catches an MPI stack that links but computes wrong), and NWChem's integral/SCF stack shares no code with the env's [gpaw](../gpaw/README.md) or [psi4](../psi4/README.md), so it's a third independent SCF kernel in the same image.
+aarch.science ran exactly this when it verified NWChem into the `dft` env (`dft.smoke.py`), reporting **−74.963023 Ha**; Graviton4 gives −74.963023128766 — the [reproduce-a-published-result move](../../practices/reference-from-tests.md). The 2-rank leg must match the serial one (catches an MPI stack that links but computes wrong), and NWChem's integral/SCF stack shares no code with the env's [gpaw](../gpaw/README.md) or [psi4](../psi4/README.md), so it's a third independent SCF kernel in the same image.
 
-**Assert the rank count from inside the run.** The 2-rank leg reads `nproc = 2` from NWChem's own banner — proof the OpenMPI build parallelised rather than running two serial jobs.
+**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** The 2-rank leg reads `nproc = 2` from NWChem's own banner — proof the OpenMPI build parallelised rather than running two serial jobs.
 
 ### Pins (data tier: bundled / in-task)
 

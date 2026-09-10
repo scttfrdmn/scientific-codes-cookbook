@@ -39,7 +39,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. R
 
 ### The check — a reference identity
 
-−1.1167 Hartree for H₂ at 0.74 Å in a minimal basis is a fixed, well-known literature number, so the band is tight (±0.0015). Psi4 gives −1.116783 through its own native integral and SCF code (an independent kernel from [gpaw](../gpaw/README.md)'s in the same env). Because the reference is *external*, agreement means the numerics are right — not merely that Psi4 is internally consistent. Psi4 raises on non-convergence and the check confirms the converged-wavefunction line, so a silent failure can't pass. [pyscf](../pyscf/README.md) runs the same calculation and cross-checks against this value; [the tolerance there is basis-limited, and justified](../../practices/cross-checks.md).
+−1.1167 Hartree for H₂ at 0.74 Å in a minimal basis is a fixed, well-known literature number, so the band is tight (±0.0015). Psi4 gives −1.116783 through its own native integral and SCF code (an independent kernel from [gpaw](../gpaw/README.md)'s in the same env). Because the reference is *external*, agreement means the numerics are right — not merely that Psi4 is internally consistent ([reproduce a number, don't self-check](../../practices/reference-from-tests.md)). Psi4 raises on non-convergence and the check confirms the converged-wavefunction line, so a silent failure can't pass. [pyscf](../pyscf/README.md) runs the same calculation and cross-checks against this value; [the tolerance there is basis-limited, and justified](../../practices/cross-checks.md).
 
 ### Pins (data tier: none / in-task)
 

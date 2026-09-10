@@ -40,7 +40,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 10m, cap $0.02. Each dock at exhaust
 
 ### The checks — a published reference and a determinism identity
 
-- **Top affinity reproduces the published tutorial result.** Vina's v1.2.7 basic-docking solution records a top pose of **−13.234 kcal/mol** for imatinib in Abl kinase; this run gives −13.207. Monte-Carlo search makes them close rather than bit-identical (~0.05 kcal/mol spread across seeds), so the band is ±0.5 around the reference — wide enough to survive search noise, tight enough that a failed dock (near zero or positive) fails loudly. This is the [relion](../relion/README.md)/[siesta](../siesta/README.md) reproduce-a-published-number move.
+- **Top affinity reproduces the published tutorial result.** Vina's v1.2.7 basic-docking solution records a top pose of **−13.234 kcal/mol** for imatinib in Abl kinase; this run gives −13.207. Monte-Carlo search makes them close rather than bit-identical (~0.05 kcal/mol spread across seeds), so the band is ±0.5 around the reference — wide enough to survive search noise, tight enough that a failed dock (near zero or positive) fails loudly. This is the [reproduce-a-published-number move](../../practices/reference-from-tests.md), manufactured from Vina's own version-matched test data.
 - **A fixed seed is deterministic.** The recipe docks twice at the same seed and requires the two top affinities to agree to < 1e-6 (measured: identical) — proof `--seed` actually controls the RNG.
 
 ### Pins (data tier: stable public source with a durable id)
