@@ -71,6 +71,6 @@ spawn task run --spec recipes/openbabel-pdbfixer/01-prep.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/openbabel-pdbfixer/r1/
 ```
 
-The smoke check runs *inside* the task, and the bucket listing is the second half of it (spore-host/spawn#561). Expect two objects (`fixed.pdb`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect two objects (`fixed.pdb`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

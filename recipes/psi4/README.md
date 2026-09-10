@@ -65,6 +65,6 @@ spawn task run --spec recipes/psi4/01-scf.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/psi4/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`psi4.out`, `energy.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`psi4.out`, `energy.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

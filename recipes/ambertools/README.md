@@ -69,6 +69,6 @@ spawn task run --spec recipes/ambertools/01-md.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/ambertools/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`md.out`, `tleap.log`, `smoke-check.txt`). Re-run: bump the `-r1` suffix in `task_id` and the output prefix to keep both records.
+`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`md.out`, `tleap.log`, `smoke-check.txt`). Re-run: bump the `-r1` suffix in `task_id` and the output prefix to keep both records.
 
 </details>
