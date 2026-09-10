@@ -65,6 +65,6 @@ spawn task run --spec recipes/geo-ml/01-spatial.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix. A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
+`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

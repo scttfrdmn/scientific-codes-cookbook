@@ -81,6 +81,6 @@ JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/nf-spawn/r1/   # expect rf-observation.txt
 ```
 
-**Verify from S3, not Nextflow's summary.** Recorded run: `completed=5, failed=0`, all five `.exitcode` objects `0`, `rf-observation.txt` published (RF 26) — confirmed by reading the S3 objects. That earned its place: an earlier failed run showed Nextflow `completed=1` while that task's S3 `.exitcode` was `126` with no output — the executor-path version of [exit code isn't proof](../../practices/container-path.md) (spawn#561's shape). Re-run: bump the `-r1` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF` `publishDir`, or a stale work dir resumes cached tasks.
+**Verify from S3, not Nextflow's summary.** Recorded run: `completed=5, failed=0`, all five `.exitcode` objects `0`, `rf-observation.txt` published (RF 26) — confirmed by reading the S3 objects. That earned its place: an earlier failed run showed Nextflow `completed=1` while that task's S3 `.exitcode` was `126` with no output — the executor-path version of [exit code isn't proof](../../practices/container-path.md). Re-run: bump the `-r1` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF` `publishDir`, or a stale work dir resumes cached tasks.
 
 </details>

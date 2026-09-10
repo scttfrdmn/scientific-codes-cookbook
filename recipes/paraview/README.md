@@ -71,6 +71,6 @@ spawn task run --spec recipes/paraview/01-render.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/paraview/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`; the PNG is the artifact worth looking at. Re-run: bump the `-r1` suffix (`pvbatch` overwrites its own output, so no checkpoint guard to defeat). A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
+`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`; the PNG is the artifact worth looking at. Re-run: bump the `-r1` suffix (`pvbatch` overwrites its own output, so no checkpoint guard to defeat).
 
 </details>

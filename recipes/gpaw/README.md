@@ -63,6 +63,6 @@ Same `dft` image as [nwchem](../nwchem/README.md); [siesta](../siesta/README.md)
 spawn task run --spec recipes/gpaw/01-si.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/gpaw/r1/
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix. A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
+Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 
 </details>

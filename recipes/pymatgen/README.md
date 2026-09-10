@@ -72,6 +72,6 @@ spawn task run --spec recipes/pymatgen/01-structure.task.json --wait
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/pymatgen/r1/
 ```
 
-The smoke check runs *inside* the task, and the bucket listing is the second half of it (spore-host/spawn#561). Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>
