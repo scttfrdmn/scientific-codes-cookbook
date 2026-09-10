@@ -47,8 +47,8 @@ Components (folded into the sum): passed 748116, low_quality 51656, too_many_N 2
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/fastp/01-qc.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/   # expect out_1.fq.gz, out_2.fq.gz, fastp.json, smoke-check.txt
+make run RECIPE=fastp
+make ls RECIPE=fastp   # expect out_1.fq.gz, out_2.fq.gz, fastp.json, smoke-check.txt
 ```
 Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

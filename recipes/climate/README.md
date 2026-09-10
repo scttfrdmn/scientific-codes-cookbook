@@ -67,11 +67,11 @@ No thresholds: the mean and wind speed are reference values, the regrid is exact
 ### Run + verify
 
 ```sh
-recipes/climate/stage-inputs.sh       # once; fetch + verify + upload air_temperature.nc (~7 MB)
-spawn task run --spec recipes/climate/01-regrid.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/climate/r1/
+make stage RECIPE=climate       # once; fetch + verify + upload air_temperature.nc (~7 MB)
+make run RECIPE=climate
+make ls RECIPE=climate
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

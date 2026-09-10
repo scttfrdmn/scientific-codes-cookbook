@@ -48,8 +48,8 @@ Bowtie 2 is deterministic, so counts reproduce exactly; bands exist only to surv
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/bowtie2/01-align.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/bowtie2/r1/   # expect smoke-check.txt, align.log, build.log
+make run RECIPE=bowtie2
+make ls RECIPE=bowtie2   # expect smoke-check.txt, align.log, build.log
 ```
 Re-running: bump the `-r1` suffix.
 

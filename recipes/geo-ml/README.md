@@ -61,10 +61,10 @@ The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/geo-ml/01-spatial.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/
+make run RECIPE=geo-ml
+make ls RECIPE=geo-ml
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

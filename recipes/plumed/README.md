@@ -64,10 +64,10 @@ No fitted bands — the distance and angle are defined force-field constants rec
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/plumed/01-cv.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/plumed/r1/
+make run RECIPE=plumed
+make ls RECIPE=plumed
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`COLVAR`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`COLVAR`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

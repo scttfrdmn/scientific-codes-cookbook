@@ -63,10 +63,10 @@ aarch.science ran exactly this when it verified NWChem into the `dft` env (`dft.
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/nwchem/01-scf.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/nwchem/r1/
+make run RECIPE=nwchem
+make ls RECIPE=nwchem
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`nwchem-serial.out`, `nwchem-2rank.out`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`nwchem-serial.out`, `nwchem-2rank.out`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

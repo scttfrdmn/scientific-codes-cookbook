@@ -61,9 +61,9 @@ No samtools in this image (one tool per image), so the BAM is checked by size + 
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/star/01-index.task.json --wait
-spawn task run --spec recipes/star/02-align.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/star/r1/
+make run RECIPE=star
+
+make ls RECIPE=star
 ```
 Task 2 must **not** `rm` the staged index tar — the container can't unlink a staged input it doesn't own (`EPERM`), and `rm -f` doesn't suppress that ([the container path](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

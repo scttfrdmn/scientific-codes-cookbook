@@ -46,8 +46,8 @@ The DB is genome-idx's `viral_20240605`, a *real* RefSeq viral DB — not a toy 
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/kraken2/01-classify.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/kraken2/r1/   # expect out.report, smoke-check.txt
+make run RECIPE=kraken2
+make ls RECIPE=kraken2   # expect out.report, smoke-check.txt
 ```
 Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

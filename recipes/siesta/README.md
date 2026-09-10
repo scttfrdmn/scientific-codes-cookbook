@@ -65,11 +65,11 @@ The energy reproduces `Tests/01.PseudoPotentials/Reference/psf.out`'s `-214.3772
 ### Run + verify
 
 ```sh
-recipes/siesta/stage-inputs.sh          # once; fetch + verify + upload Si.psf (~150 KB)
-spawn task run --spec recipes/siesta/01-scf.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/siesta/r1/
+make stage RECIPE=siesta          # once; fetch + verify + upload Si.psf (~150 KB)
+make run RECIPE=siesta
+make ls RECIPE=siesta
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`psf.out`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`psf.out`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

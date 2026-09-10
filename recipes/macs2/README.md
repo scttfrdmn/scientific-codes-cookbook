@@ -44,8 +44,8 @@ MACS2 `callpeak -t CTCF -c input -f BAM -g hs` on chr20 calls **1390** peaks —
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/macs2/01-callpeak.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/macs2/r1/   # expect peaks.narrowPeak, smoke-check.txt
+make run RECIPE=macs2
+make ls RECIPE=macs2   # expect peaks.narrowPeak, smoke-check.txt
 ```
 Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

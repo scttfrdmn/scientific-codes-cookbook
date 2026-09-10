@@ -59,8 +59,8 @@ The `md` env carries both engines; [lammps](../lammps/README.md) runs the other 
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/gromacs/01-md.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/gromacs/r1/
+make run RECIPE=gromacs
+make ls RECIPE=gromacs
 ```
 Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

@@ -67,10 +67,10 @@ The buffer area is banded (shapely's default segmentation approximates π as ~3.
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/geospatial/01-roundtrip.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/
+make run RECIPE=geospatial
+make ls RECIPE=geospatial
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`geo-results.txt`, `geo-results.json`, `tiny.tif`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`geo-results.txt`, `geo-results.json`, `tiny.tif`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

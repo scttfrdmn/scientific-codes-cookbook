@@ -49,8 +49,8 @@ Queries are the first 20 DB records (blast's design, reused byte-for-byte), so e
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/diamond/01-search.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/diamond/r1/   # expect dmnd_hits.tsv, smoke-check.txt
+make run RECIPE=diamond
+make ls RECIPE=diamond   # expect dmnd_hits.tsv, smoke-check.txt
 ```
 Re-running: bump the `-r1` suffix.
 

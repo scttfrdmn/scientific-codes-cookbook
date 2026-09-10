@@ -66,10 +66,10 @@ The NVE drift is a physics band (must conserve; 1e-4 is cleared by ~250×), robu
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/openmm-mdanalysis/01-md-analyze.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/
+make run RECIPE=openmm-mdanalysis
+make ls RECIPE=openmm-mdanalysis
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

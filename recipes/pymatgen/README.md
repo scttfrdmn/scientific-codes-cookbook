@@ -68,8 +68,8 @@ No fitted bands — structural values exact by construction, density a physical 
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/pymatgen/01-structure.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/pymatgen/r1/
+make run RECIPE=pymatgen
+make ls RECIPE=pymatgen
 ```
 
 The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.

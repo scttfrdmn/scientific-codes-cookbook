@@ -61,10 +61,10 @@ Same `comp-chem` image as [vina](../vina/README.md) and [rdkit](../rdkit/README.
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/pyscf/01-scf.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/pyscf/r1/
+make run RECIPE=pyscf
+make ls RECIPE=pyscf
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

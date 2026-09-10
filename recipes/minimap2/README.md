@@ -50,8 +50,8 @@ SAM parsed with `awk` arithmetic flag tests — no samtools/python in the image.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/minimap2/01-align.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/minimap2/r1/   # expect mm.sam, smoke-check.txt
+make run RECIPE=minimap2
+make ls RECIPE=minimap2   # expect mm.sam, smoke-check.txt
 ```
 Re-running: bump the `-r1` suffix.
 

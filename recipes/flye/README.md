@@ -55,8 +55,8 @@ One task, **`m8g.large`** (2 vCPU / 8 GiB — the catalog's first `m8g`; the 8 G
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/flye/01-assemble.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/flye/r1/
+make run RECIPE=flye
+make ls RECIPE=flye
 ```
 Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

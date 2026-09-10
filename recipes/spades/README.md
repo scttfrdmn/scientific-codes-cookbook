@@ -41,12 +41,12 @@ SPAdes at `-t 4 --isolate` is **deterministic** — verified by assembling the s
 
 Exact-or-wrong: a deterministic function of fixed reads + fixed threads.
 
-**Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`recipes/bcftools/stage-inputs.sh`), pinned by sha256.
+**Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`make stage RECIPE=bcftools pinned by sha256.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/spades/01-assemble.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/spades/r1/   # expect contigs.fasta, smoke-check.txt
+make run RECIPE=spades
+make ls RECIPE=spades   # expect contigs.fasta, smoke-check.txt
 ```
 [QUAST](../quast/README.md) reads `contigs.fasta` from this prefix. Re-running: bump the `-r1` suffix.
 

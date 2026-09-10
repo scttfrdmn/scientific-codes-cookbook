@@ -50,8 +50,8 @@ Counts are banded not because the run is nondeterministic (it isn't) but because
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/hmmer/01-search.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/
+make run RECIPE=hmmer
+make ls RECIPE=hmmer
 ```
 Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
 

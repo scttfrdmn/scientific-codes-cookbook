@@ -41,13 +41,13 @@ bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF 
 | confident (QUAL ≥ 20) | 710–880 | 797 |
 | SNV concordance vs freebayes | Jaccard ≥ 0.85 | 0.9103 |
 
-**Pins.** Image `quay.io/aarchbio/bcftools@sha256:8171fe744646…` (1.24, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`, 1000G NYGC high-coverage slice — provenance + re-stage in `./stage-inputs.sh`); reference `inputs/bwa-samtools/chr20.fa` (reused); freebayes VCF from `runs/freebayes/r1/`.
+**Pins.** Image `quay.io/aarchbio/bcftools@sha256:8171fe744646…` (1.24, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`, 1000G NYGC high-coverage slice — provenance + re-stage in `make stage RECIPE=bcftools reference `inputs/bwa-samtools/chr20.fa` (reused); freebayes VCF from `runs/freebayes/r1/`.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/freebayes/01-call.task.json --wait   # cross-check counterpart, first
-spawn task run --spec recipes/bcftools/01-call.task.json  --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/bcftools/r1/   # expect bcftools.vcf.gz, smoke-check.txt
+make run RECIPE=freebayes   # cross-check counterpart, first
+make run RECIPE=bcftools
+make ls RECIPE=bcftools   # expect bcftools.vcf.gz, smoke-check.txt
 ```
 Re-running: bump the `-r1` suffix in `task_id` and the output prefix.
 

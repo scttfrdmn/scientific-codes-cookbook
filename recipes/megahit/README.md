@@ -43,8 +43,8 @@ MEGAHIT (`-t 4 --min-count 2`) is **deterministic** — verified by assembling t
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/megahit/01-assemble.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/   # expect contigs.fa, smoke-check.txt
+make run RECIPE=megahit
+make ls RECIPE=megahit   # expect contigs.fa, smoke-check.txt
 ```
 [QUAST](../quast/README.md) reads `contigs.fa` from this prefix. Re-running: bump the `-r1` suffix.
 

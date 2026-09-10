@@ -66,10 +66,10 @@ Same `md` image as [gromacs](../gromacs/README.md).
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/mdtraj/01-read.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/mdtraj/r1/
+make run RECIPE=mdtraj
+make ls RECIPE=mdtraj
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

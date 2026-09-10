@@ -46,8 +46,8 @@ Exact-or-wrong — a deterministic function of two deterministic assemblies, mea
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/quast/01-evaluate.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/quast/r1/   # expect report.tsv, smoke-check.txt
+make run RECIPE=quast
+make ls RECIPE=quast   # expect report.tsv, smoke-check.txt
 ```
 Re-running: bump the `-r1` suffix.
 

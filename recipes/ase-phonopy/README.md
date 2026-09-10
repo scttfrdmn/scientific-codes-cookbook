@@ -67,10 +67,10 @@ The acoustic band (1e-2 THz) is method-justified — a residual from the 0.03 Å
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/ase-phonopy/01-phonons.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/ase-phonopy/r1/
+make run RECIPE=ase-phonopy
+make ls RECIPE=ase-phonopy
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>

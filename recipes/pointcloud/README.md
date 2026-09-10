@@ -62,11 +62,11 @@ The count and bounds are the header cross-check; **mean Z is the decode identity
 ### Run + verify
 
 ```sh
-recipes/pointcloud/stage-inputs.sh    # once; fetch + verify + upload autzen.laz (~56 MB)
-spawn task run --spec recipes/pointcloud/01-decode.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/pointcloud/r1/
+make stage RECIPE=pointcloud    # once; fetch + verify + upload autzen.laz (~56 MB)
+make run RECIPE=pointcloud
+make ls RECIPE=pointcloud
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`summary.json`, `zstats.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`summary.json`, `zstats.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
 
 </details>
