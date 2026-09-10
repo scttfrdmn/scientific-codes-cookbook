@@ -1,21 +1,22 @@
+---
+tool: nf-spawn
+tool_version: 0.10.1
+shape: pipeline
+images:
+  mafft: quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9
+  muscle: quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4
+  iqtree: quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
+spawn_version: 0.104.0
+---
 # nf-spawn — a Nextflow workflow whose rules dispatch as spawn tasks (Shape F)
 
-The catalog's **first Shape-F recipe**. All 43 others are Shape B — one headless task on
-one box. This one runs a **Nextflow DAG** where every process step lands on its *own*
-ephemeral EC2 instance via the `nf-spawn` executor (→ `spawn task run`), and data moves
-between steps through an **S3 work dir** (each instance self-terminates before the next
-reads its output). That per-rule dispatch + cross-instance S3 handoff is exactly what a
-single-task recipe cannot demonstrate.
+The catalog's **first Shape-F recipe.** Every other recipe is one headless task on one box; this one runs a **Nextflow DAG** where each process step lands on its *own* ephemeral instance via the `nf-spawn` executor, and data moves between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That per-rule dispatch + cross-instance handoff is exactly what a single-task recipe can't demonstrate.
 
-> **What this recipe proves, and what it does not.** It proves the Shape-F path works on
-> Graviton: a fan-out + join DAG dispatched per-rule to ephemeral instances, with the
-> executor detecting completion from the S3 work dir. It is **not** a benchmark, and it
-> makes **no hard cross-code topology claim** (see the RF observation below). Each stage
-> asserts its own identity; the workflow asserts that it *ran as a DAG across instances*.
+> **What this proves, and what it doesn't.** That the Shape-F path works on Graviton: a fan-out + join DAG dispatched per-rule to ephemeral instances, the executor detecting completion from the S3 work dir. It is **not** a benchmark and makes **no hard cross-code topology claim** (see the RF observation). Each stage asserts its own identity; the workflow asserts it *ran as a DAG across instances*.
 
-## The DAG, and why fan-out + join
+## Run it
 
-```
+```text
           pfam_unaligned.fa (S3)
             /              \
         MAFFT            MUSCLE          ← fan-out: 2 aligners, 2 instances
@@ -25,130 +26,69 @@ single-task recipe cannot demonstrate.
              OBSERVE_RF                  ← join: 1 instance
 ```
 
-Five process tasks → five ephemeral instances. The fan-out + join is the point: a linear
-chain would prove less about the executor (no concurrent dispatch, no multi-input join).
+```bash
+cd recipes/nf-spawn
+JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
+```
 
-## Per-stage identities (asserted — a stage fails the task if wrong)
+Five process tasks → five ephemeral instances. The `nextflow` head process runs locally and is free; the fan-out + join is the point — a linear chain would prove less (no concurrent dispatch, no multi-input join).
 
-- **MAFFT / MUSCLE — residue conservation.** 114 sequences out; ungapped residues == 49098
-  (an aligner must preserve every residue while inserting gaps). Same identity as the
-  standalone `recipes/mafft` and `recipes/muscle`.
-- **TREE — a valid ML tree.** 114 tips and a finite negative log-likelihood (LG+G4, fixed
-  seed, `-T 4`).
+## Make it yours
 
-## The mafft-vs-muscle topology: an OBSERVATION, not an assertion
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the 5-task fan-out+join DAG (2 aligners → 2 trees → join) | your own `main.nf` processes | the DAG *shape* is the fixture — it exercises concurrent dispatch and a multi-input join, which a chain wouldn't. |
+| the `nf-spawn` executor, **installed from a release zip** | keep the zip install | **load-bearing:** the plugin is *not* in the Nextflow registry ([`#90`](https://github.com/spore-host/nf-spawn/issues/90)), so `nextflow run` won't fetch it — install it first (below), or every process fails to launch. |
+| the pinned mafft/muscle/iqtree images | your tools' images | reused byte-for-byte from [mafft](../mafft/README.md)/[muscle](../muscle/README.md)/[iqtree](../iqtree/README.md); each process names its own single-tool image. |
 
-The obvious cross-code check — "both alignments give the same tree" — **does not hold, and
-the reason is instructive.** Robinson-Foulds distance between the two ML trees is small but
-non-zero **and unstable**: measured **26** between the plain ML trees but **4** between the
-UFBoot ML trees — *same alignments, same seed*. RF here confounds two things:
+The trees pin `-T 4` + a fixed seed (iqtree's determinism scaffolding — [why](../iqtree/README.md)); the RF *observation* between the two is deliberately **not** asserted (below).
 
-1. the **alignment-method** difference (mafft vs muscle) — the signal we'd want to test;
-2. **iqtree's own ML-search stochasticity** — `recipes/iqtree` already documents that thread
-   order / search path changes which local optimum it lands on, and `-B` changes that path.
+## Shape, size, cost
 
-The noise floor (2) is as large as the signal (1), so a hard RF assertion would fail (or
-pass) for a reason unrelated to alignment correctness — the cross-code-metric trap
-(CLAUDE.md's "compare like with like"). So the recipe **reports** the RF distance with the
-confound named, and asserts nothing on it. A reader learns something true (two correct MSAs
-give nearly-but-not-identical topologies, and why) without a claim that isn't. A proper
-confident-split comparison (agreement on strongly-supported clades only) is a real phylo
-investigation, not a recipe-sized check — deliberately out of scope.
+Shape F costs **per rule × job count**, not one flat instance — the overhead every recipe pays (boot + Docker install + image pull) is paid *per instance*, five times here:
 
-## Pins
+| process | instance | TTL | worst case |
+|---|---|---|---|
+| MAFFT / MUSCLE / OBSERVE_RF | `c8g.large` | 10m | $0.013 each |
+| TREE (×2) | `c8g.xlarge` | 15m | $0.040 each |
+| **total** | 5 instances | | **~$0.12** |
 
-| | |
-|---|---|
-| executor | `nf-spawn@0.10.1` (see install note — **not** in the Nextflow plugin registry) |
-| MAFFT | `quay.io/aarchbio/mafft@sha256:f23e4545…` (cosign-verified, `linux/arm64`) |
-| MUSCLE | `quay.io/aarchbio/muscle@sha256:ecfe0f74…` (cosign-verified) |
-| iqtree | `quay.io/aarchbio/iqtree@sha256:dc6d9f62…` (cosign-verified) |
-| input | `inputs/mafft-muscle/pfam_unaligned.fa` (114 proteins, 49098 residues) — reused from `recipes/mafft`/`recipes/muscle` |
-| Nextflow | 26.04.x (plugin built against 26.04.3) |
+**These timings are not compute cost** — see [data movement](../../patterns/data-movement.md) for when a workflow's S3 handoffs and per-rule boots are worth it over one bigger box. The S3 work dir holds a few MB.
 
-**Three nf-spawn findings, filed building this and all FIXED in v0.10.1** (this project's
-findings drove the release — the workflow path had never been exercised before) — kept as
-history, verified fixed by re-running on 0.10.1 with the workaround removed, not by reading the
-changelog:
-- `spore-host/nf-spawn#90` (README install) — the plugin still isn't in the Nextflow registry,
-  but the upstream README no longer implies it is; install from the release zip (below).
-- `#91` (manifest mismatch) — **fixed**: the v0.10.0 zip shipped a `0.8.0` manifest; the 0.10.1
-  zip genuinely reports `Plugin-Version: 0.10.1` (re-verified from the downloaded asset).
-- `#92` (the blocker — docker-socket permission → every process exit 126) — **fixed**: on 0.10.1
-  the DAG runs `completed=5` with **no `ext.setup` socket workaround** and zero permission errors
-  in any `.command.err`. Dropping the mitigation and watching it run clean is what confirms the
-  fix is in the executor, not incidental.
+<details>
+<summary>As shipped: per-stage identities, the RF observation, the executor findings, install, run + verify</summary>
 
-**Termination: not a bug (`#96`, closed not-reproducible).** During this build the terminal
-task's instance *looked* like it lingered — but that was a false alarm: instances self-terminate
-on a bounded `spored` lifecycle tick (~1–2 min from the instance's own boot), and the checks here
-were run immediately after completion, then the instance was terminated manually out of caution —
-so the self-termination that would have fired a tick later was never observed. A live re-test on
-v0.10.1 with a real join-topology DAG showed every task's instance self-terminating on its own
-(join in ~128 s, a failed task in ~163 s), and a code review found no DAG-position-aware path that
-could make a terminal/join task behave differently. So don't read a just-completed instance still
-being `up` as a hang — it's the tick delay. TTL is the backstop as always.
+### Per-stage identities (asserted — a bad stage fails the DAG)
 
-## Install (still zip-based — #90's plugin isn't in the registry; the 0.10.1 zip extracts a bare `classes/`)
+- **MAFFT / MUSCLE — residue conservation.** 114 sequences out, ungapped residues == 49098 (an aligner inserts gaps but preserves every residue). Same identity as standalone [mafft](../mafft/README.md)/[muscle](../muscle/README.md).
+- **TREE — a valid ML tree.** 114 tips and a finite negative log-likelihood (LG+G4, `-T 4`, fixed seed).
+
+### The mafft-vs-muscle topology is an OBSERVATION, not an assertion
+
+The obvious cross-code check — "both alignments give the same tree" — does not hold, and the reason is instructive. Robinson-Foulds distance between the two ML trees is small but **unstable**: measured **26** between plain ML trees but **4** between UFBoot trees, *same alignments, same seed*. RF confounds the alignment-method difference (the signal) with iqtree's own ML-search stochasticity (the noise floor — [thread order changes the local optimum](../iqtree/README.md)), and the noise is as large as the signal. A hard RF assertion would pass or fail for a reason unrelated to alignment correctness — [the compare-like-with-like trap](../../practices/cross-checks.md). So the recipe **reports** RF with the confound named and asserts nothing on it; a confident-split comparison is a real phylo investigation, out of recipe scope.
+
+### The executor findings (all filed here, all fixed in v0.10.1)
+
+This project's use first exercised the Shape-F path, and drove the release: `#90` (not in the plugin registry — still zip-install, but the README no longer implies otherwise), `#91` (zip shipped a wrong manifest — fixed), `#92` (the blocker: docker-socket permission → every process exit 126 — fixed; 0.10.1 runs `completed=5` with no workaround). Verified by re-running on 0.10.1 with the mitigations removed, not by reading the changelog. **Termination is fine** — a just-completed instance showing `up` for a minute or two is the bounded `spored` self-termination tick, not a leak (`#96`, closed not-reproducible); TTLs are the backstop.
+
+### Install (zip-based — `#90`)
 
 ```sh
 curl -sSL -o /tmp/nf-spawn-0.10.1.zip \
   https://github.com/spore-host/nf-spawn/releases/download/v0.10.1/nf-spawn-0.10.1.zip
 mkdir -p ~/.nextflow/plugins/nf-spawn-0.10.1
 unzip -o /tmp/nf-spawn-0.10.1.zip -d ~/.nextflow/plugins/nf-spawn-0.10.1/
-export JAVA_HOME=/path/to/jdk17    # Nextflow 26.04.x needs a JDK 17+ on PATH
+export JAVA_HOME=/path/to/jdk17    # Nextflow 26.04.x needs JDK 17+
 ```
 
-## Resources — a per-job cost model, not one flat task
-
-Shape F costs **per rule × job count**, not one instance. This DAG is 5 tasks with knowable
-sizes:
-
-| process | instance | TTL | worst-case (rate×TTL) |
-|---|---|---|---|
-| MAFFT | c8g.large ($0.0798/hr) | 10m | $0.013 |
-| MUSCLE | c8g.large | 10m | $0.013 |
-| TREE (×2) | c8g.xlarge ($0.1595/hr) | 15m | $0.040 each |
-| OBSERVE_RF | c8g.large | 10m | $0.013 |
-| **total** | 5 instances | | **~$0.12 worst case** |
-
-**These timings are not compute cost**, same as every recipe — boot + Docker install + image
-pull dominate each of the five instances, so Shape F pays that overhead *per rule*. The head
-(the `nextflow` process) runs locally and is free; the S3 work dir holds a few MB.
-
-**Recorded run (v0.10.1, no workaround): `completed=5, failed=0`.** All five `.exitcode` objects
-in the S3 work dir were `0`, and `rf-observation.txt` published (RF **26**) — verified by reading
-the `.exitcode`/objects from S3, **not** by trusting Nextflow's summary line. That distinction
-earned its place: on an earlier failed run, Nextflow's summary showed `completed=1` while that
-task's `.exitcode` in S3 was `126` with no output — the executor-path version of the "an
-exit/summary is not evidence the output is real" rule (spawn#561's shape). The S3 check is what
-both caught that and confirmed this clean run is real.
-
-**Termination is fine — the "linger" was a false alarm (`spore-host/nf-spawn#96`, closed
-not-reproducible).** Instances self-terminate on a bounded `spored` lifecycle tick (~1–2 min from
-their own boot). The checks during this build ran *immediately* after completion and then
-terminated the instance manually out of caution, so the tick's self-termination was pre-empted,
-not absent — a measurement artifact misread as a hang, on the DAG topology. A v0.10.1 live re-test
-saw every task (including the join and a failed task) self-terminate unaided within a normal tick
-window, and a code review found no DAG-position-aware path that could single out a terminal task.
-So a just-completed instance still showing `up` for a minute or two is the tick, not a leak; TTLs
-(10–15m) remain the backstop.
-
-## Running it
+### Run + verify
 
 ```sh
 cd recipes/nf-spawn
 JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
+aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/nf-spawn/r1/   # expect rf-observation.txt
 ```
 
-Then **check the bucket**:
+**Verify from S3, not Nextflow's summary.** Recorded run: `completed=5, failed=0`, all five `.exitcode` objects `0`, `rf-observation.txt` published (RF 26) — confirmed by reading the S3 objects. That earned its place: an earlier failed run showed Nextflow `completed=1` while that task's S3 `.exitcode` was `126` with no output — the executor-path version of [exit code isn't proof](../../practices/container-path.md) (spawn#561's shape). Re-run: bump the `-r1` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF` `publishDir`, or a stale work dir resumes cached tasks.
 
-```sh
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/nf-spawn/r1/
-```
-
-Expect `rf-observation.txt`. Per-stage identities are asserted inside each task (a bad stage
-fails the DAG); the published observation is the join's output.
-
-**Re-running.** Bump the `-r1` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF`
-`publishDir` to keep both records; a stale S3 work dir will otherwise resume cached tasks.
+</details>
