@@ -1,3 +1,10 @@
+---
+tool: sourmash
+tool_version: 4.9.4
+image: quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10
+spawn_version: 0.104.0
+---
+
 # sourmash — FracMinHash similarity between two genomes
 
 The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on.

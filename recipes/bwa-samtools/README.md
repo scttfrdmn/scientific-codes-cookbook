@@ -1,3 +1,10 @@
+---
+tool: bwa
+tool_version: 0.7.19
+image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
+spawn_version: 0.104.0
+---
+
 # BWA — align paired reads to a reference
 
 Align paired-end reads to a reference genome and get back a sorted, indexed BAM. If you use
@@ -36,8 +43,8 @@ real work** — and one that's fine to leave:
 
 `bwa mem -t 8` is **not** determinism scaffolding: scale `-t` to your instance's cores freely,
 BWA's alignment doesn't depend on thread count. (Contrast an assembler, where `-t 1` *is*
-scaffolding and *must* change for real runs — that distinction is [pin threads for stochastic
-search](../../practices/pin-threads.md).)
+scaffolding and *must* change for real runs — [flye](../flye/README.md) is the worked example:
+its contig count *wanders* with thread count.)
 
 **As the input grows (measured):** aligning 10M HG00096 pairs against the *whole* GRCh38 index
 (≈8.9 GB) maps **99.76%** — the honest rate the chr20 fixture's 29% only ever stood in for — and

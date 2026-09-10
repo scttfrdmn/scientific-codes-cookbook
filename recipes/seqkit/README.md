@@ -1,3 +1,10 @@
+---
+tool: seqkit
+tool_version: 2.13.0
+image: quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5
+spawn_version: 0.104.0
+---
+
 # seqkit — exact statistics over a FASTQ
 
 The everyday first look at a read set: how many sequences, how long, what spread.

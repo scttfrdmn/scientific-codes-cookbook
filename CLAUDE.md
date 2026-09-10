@@ -297,3 +297,28 @@ re-running). `recipes/star/README.md` shows the caveat blockquote when the scien
 real but the numbers are not representative. There is no pattern doc, for the same
 reason there is no findings log: a second statement of these rules is a second thing
 to keep true.
+
+## Recipe pages — the cookbook layer (conventions, not a second rulebook)
+
+The cookbook *layer* (PRs #81–#83 onward) is a reader-facing rewrite of each recipe on top
+of the verification work. The conventions, so 50+ pages stay consistent:
+
+- **Reader: a graduate student who knows their code and their science, not AWS.** Assume
+  domain competence — never explain what a variant call or an SCF *is*. Do explain (or link)
+  a spawn/staging/instance concept when it's load-bearing. Domain competence assumed, cloud
+  and systems knowledge not.
+- **Template (invocation-first, `recipes/bwa-samtools` and `recipes/seqkit` are the
+  exemplars):** lead with the real invocation a user of that tool recognizes; a "make it
+  yours" table (fixture / scaffolding-that-stays / scaffolding-that-must-change, plus the
+  fixture's load-bearing limit and the explicit leave-vs-scale call); a brief shape/size/cost;
+  then ALL verification (identities, pins, smoke-check table, run+verify) in ONE collapsed
+  `<details>`. The page gets *shorter*; **length is the signal something belongs in a
+  pattern/practice page, not here.** Link patterns; don't re-teach them.
+- **Every page opens with YAML frontmatter** — machine-checkable versions, not prose:
+  `tool`, `tool_version`, `image` (full `@sha256:` digest), `spawn_version`, `run_date` (omit
+  if only a time was recorded). This is the pin discipline surfaced as a reader fact and lets a
+  refresh target re-resolve digests and flag what moved. `make check` validates it (+ markdown
+  a11y + internal links).
+- **Scale a fixture only where it MISREPRESENTS the tool** (chr20's 29% mapped earned it);
+  leave it small otherwise — most fixtures are honest, and a small input is often the point
+  (hand-checkable), not a compromise. Make the call explicitly, argued, per recipe.

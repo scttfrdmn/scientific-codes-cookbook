@@ -1,3 +1,10 @@
+---
+tool: flye
+tool_version: 2.9.6
+image: quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12
+spawn_version: 0.104.0
+---
+
 # Flye — long-read de novo assembly of a small E. coli region
 
 One task. Flye assembles a set of long reads into contigs; the smoke check confirms the

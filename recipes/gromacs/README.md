@@ -1,3 +1,11 @@
+---
+tool: gromacs
+tool_version: 2026.3
+env: md
+image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
+spawn_version: 0.104.0
+---
+
 # GROMACS — molecular dynamics of 216 SPC waters, reproducing a published energy
 
 One task. `gmx_mpi grompp` builds a run input from a 216-molecule SPC water box and

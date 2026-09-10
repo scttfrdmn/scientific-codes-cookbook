@@ -1,3 +1,10 @@
+---
+tool: bedtools
+tool_version: 2.31.1
+image: quay.io/aarchbio/bedtools@sha256:cd1e72a29500369c5576c10e98b2c1723a09a73bde9fb50d80bf4022096b449b
+spawn_version: 0.104.0
+---
+
 # bedtools — genome-interval set algebra
 
 Merge, intersect, subtract, and cover intervals — the set algebra every genomics pipeline leans on.

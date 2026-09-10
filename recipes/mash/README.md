@@ -1,3 +1,10 @@
+---
+tool: mash
+tool_version: "2.3"
+image: quay.io/aarchbio/mash@sha256:abad0c5f4d3365661ffc5533bc6eb5f1bd07d773ea61b1abd1bfc00c1df813fe
+spawn_version: 0.104.0
+---
+
 # Mash — MinHash distance between two genomes
 
 Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes.

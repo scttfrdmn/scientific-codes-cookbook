@@ -8,7 +8,7 @@ Your job needs a reference — a genome index, a taxonomy DB, a model — sittin
 
 Collapse the decision to a single cost model:
 
-```
+```text
 cost = instance $/hr × wall-clock + staging storage + S3 requests
 ```
 

@@ -91,4 +91,4 @@ They're for finding the *shape* of the curve, not a price list — boot, image p
 
 ## Where this shows up
 
-Every compute-bound recipe has a knee; the [decision ladder](which-family.md) turns "which shape is my code, and how big is my problem" into a family and a size. And the whole argument for fanning out a cohort instead of buying one big node rests on sizing *one* task at its knee — [Job arrays](job-arrays.md).
+Every compute-bound recipe has a knee; a decision ladder (a planned page) will turn "which shape is my code, and how big is my problem" into a family and a size. And the whole argument for fanning out a cohort instead of buying one big node rests on sizing *one* task at its knee — [Job arrays](job-arrays.md).

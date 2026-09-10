@@ -1,3 +1,10 @@
+---
+tool: gpaw
+env: dft
+image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
+spawn_version: 0.104.0
+---
+
 # GPAW — plane-wave DFT on bulk silicon, serial and over 2 MPI ranks
 
 One task. `gpaw` computes the LDA energy of bulk silicon in a plane-wave basis, serially
