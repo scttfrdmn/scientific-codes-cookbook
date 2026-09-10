@@ -21,13 +21,13 @@ The recipe classifies the SARS-CoV-2 reference genome against a real prebuilt **
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | SARS-CoV-2 `NC_045512.2` (a known genome) | your own reads | a *known* query is what makes the exact-taxon assertion possible; on unknown reads you'd assert classified-rate bands instead. |
-| the 0.66 GB `viral_20240605` DB (staged as a tar, copy-per-task) | a larger prebuilt DB | at 0.66 GB it fits the copy-per-task model every recipe uses — **no EFS**. A full-size DB (where large reference data is the *subject*) is what would justify the mount; don't reach for EFS as a by-product of an oversized DB ([mechanism follows input](../../practices/container-path.md)). |
+| the 0.66 GB `viral_20240605` DB (staged as a tar, copy-per-task) | a larger prebuilt DB | at 0.66 GB it fits the copy-per-task model every recipe uses — **no EFS**. A full-size DB (where large reference data is the *subject*) is what would justify the mount; don't reach for EFS as a by-product of an oversized DB ([copy, mount, or share?](../../patterns/data-movement.md)). |
 
 **Leave the fixture:** a real prebuilt viral DB (not a toy 2–3-genome DB that classifies nothing) plus a known genome gives an exact-or-wrong identity; a metagenomic workload is a different, larger recipe. Leave-it.
 
 ## Shape, size, cost
 
-One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/container-path.md)). Not memory-bound: Kraken2 loaded the hash and ran clean within a 2 GiB cap locally.
+One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/what-this-does-not-cover.md)). Not memory-bound: Kraken2 loaded the hash and ran clean within a 2 GiB cap locally.
 
 <details>
 <summary>As shipped: the known-answer identity, why not EFS, pins, smoke check</summary>

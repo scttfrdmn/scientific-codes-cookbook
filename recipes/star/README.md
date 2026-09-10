@@ -8,7 +8,7 @@ spawn_version: 0.104.0
 
 Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene.
 
-> **Read this before copying the recipe for real work.** The index is **chromosome 20 only**, so **6.67% of reads map uniquely and 92.7% come back "unmapped: too short."** That is the correct result for a whole-transcriptome library aligned against one chromosome — most reads have no home in the reference — but it means this recipe proves *STAR runs and produces a real BAM*, **not** *these alignments are right*. For real work, index the whole genome (see "make it yours").
+> **Read before reusing this.** The index is **chromosome 20 only**, so only **6.67% of reads map** (92.7% are "unmapped: too short") — the correct result for a whole-transcriptome library against one chromosome, but it proves *STAR runs and makes a real BAM*, **not** that these alignments are right. Index the whole genome for real work (below).
 
 ## Run it
 
@@ -28,7 +28,7 @@ Two tasks, because **the index is the expensive, reusable artifact** — it does
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| **chr20-only index** | the whole-genome index | **the load-bearing limit** — chr20 is why 6.67% map; a whole-genome index gives realistic rates (and, counter-intuitively, aligns *faster*, since STAR won't burn time exhaustively failing the 92.7% that have no chr20 home). |
+| **chr20-only index** | the whole-genome index | **the load-bearing limit** — chr20 is why only 6.67% map; a whole-genome index gives realistic rates and aligns *faster* (STAR stops exhaustively failing reads with no chr20 home). |
 | `--genomeSAindexNbases 11` | `min(14, log2(genomeLen)/2 − 1)` | **must change with the reference** — 11 is right for chr20's 64 Mb; the default 14 is sized for a whole genome. Wrong value wastes memory and STAR warns. |
 | `--sjdbOverhang 74` | `readLength − 1` | these reads are 75 bp (checked). Set it to your read length minus one. |
 | the 200k-pair ERR188026 slice | your reads | same slice [salmon](../salmon/README.md) uses, so the two RNA-seq recipes are directly comparable. |
@@ -37,9 +37,9 @@ STAR alignment is deterministic given the index — no seed. The index is a dire
 
 ## Shape, size, cost
 
-Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/container-path.md).
+Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/what-this-does-not-cover.md).
 
-**Sizing a whole-genome index (the scale-it):** a full human STAR index is ~30 GiB and is built **in `/tmp`, which is a tmpfs ≈ ½ the instance's RAM** — so it's sized by *RAM*, not disk (an `r8g.4xlarge`, 128 GiB → ~64 GiB `/tmp`, holds it; `disk_gib` grows the container root, which the build doesn't use). That's the real constraint the chr20 fixture sidesteps.
+**The scale-it:** a full human index is ~30 GiB, built **in `/tmp` (a tmpfs ≈ ½ RAM)** — so it's sized by *RAM*, not disk: an `r8g.4xlarge` (128 GiB → ~64 GiB `/tmp`) holds it, and `disk_gib` wouldn't help (it grows the container root, which the build doesn't use).
 
 <details>
 <summary>As shipped: the chr20 caveat mechanics, the checks, pins</summary>

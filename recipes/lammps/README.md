@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # LAMMPS — the Lennard-Jones melt, serial and over 2 MPI ranks
 
-`lmp_mpi` runs the canonical LJ melt twice — once serial, once over two MPI ranks — and the check is that the two independent computations land on the same total energy. Domain decomposition sums the forces in a different order across ranks, so their agreement proves the serial kernels *and* the MPI communication are correct.
+`lmp_mpi` runs the canonical Lennard-Jones melt twice — once serial, once over two MPI ranks.
 
 > **What this covers.** A tiny MD: 256 LJ atoms for 50 steps on an analytic potential. Proof LAMMPS 2025.07.22 runs correctly on Graviton4 and its MPI build **actually parallelises**. Not a benchmark; 2 ranks on one small box is not domain decomposition at scale, long-range solvers, or multi-node.
 
@@ -32,7 +32,7 @@ One task, run twice. `in.lj` is LAMMPS's own `bench/in.lj` (a 4×4×4 fcc lattic
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks, not throughput), TTL 5m, cap $0.02. Both runs together take ~3 s. Recorded command window **106s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks, not throughput), TTL 5m, cap $0.02. Both runs together take ~3 s. Recorded command window **106s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the serial-vs-2-rank cross-validation, the rank-count guard, pins, smoke check, run + verify</summary>
@@ -41,7 +41,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks,
 
 The serial and 2-rank runs are two genuinely independent computations of the same trajectory; agreement to floating-point-reordering tolerance means both the kernels and the MPI communication are correct. This is the same class as [raxml-ng](../raxml-ng/README.md)'s two-codes-one-answer, here as one-code-two-decompositions.
 
-**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** conda-forge ships `nompi` builds at higher build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that under `mpiexec -n 2` runs two independent rank-0 jobs — same energy, false parallelism. The `md` env pins `lammps=*=cpu_*mpi_openmpi*` and the check reads the count LAMMPS reports (`with 2 MPI task(s)`) and asserts it is 2.
+**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** The `md` env pins `lammps=*=cpu_*mpi_openmpi*` and the check reads LAMMPS's own `with 2 MPI task(s)` and asserts 2 — so a silently-serial build (which would print the same energy) can't pass.
 
 ### Pins (data tier: bundled / analytic)
 

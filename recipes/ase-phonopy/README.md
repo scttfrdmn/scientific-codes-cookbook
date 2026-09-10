@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # ASE → spglib → phonopy — phonons of bulk silicon
 
-Three tools in a chain: ASE builds a silicon crystal, spglib finds its symmetry, phonopy uses that symmetry to reduce the displacement set and compute Γ-point phonons. The final identity — acoustic modes → 0 at Γ — validates the *whole* chain at once.
+Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal.
 
 > **What this covers.** Build one crystal, find its space group, compute Γ-point phonons — proof ASE, spglib and phonopy work and hand off correctly on Graviton4. Forces come from a generic Lennard-Jones field, so the phonon *frequencies* are not silicon's real spectrum; the asserted identities don't depend on that. No DFT forces, dispersion, or thermodynamics.
 
@@ -20,7 +20,7 @@ from phonopy import Phonopy
 freqs = phonopy_obj.get_frequencies([0, 0, 0])   # 3 acoustic → 0, 3 optical degenerate
 ```
 
-One task; the chain runs in one container. spglib cutting the displacement set to a single unique displacement is the chain link made visible — if it returned the wrong space group, the force constants come out wrong and the acoustic modes don't vanish.
+One task; the chain runs in one container. spglib cutting the displacement set to a single unique displacement is the chain link made visible — a wrong space group there gives wrong force constants and non-vanishing acoustic modes.
 
 ## Make it yours
 
@@ -33,7 +33,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + phonons is sub-second. Recorded command window **94s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + phonons is sub-second. Recorded command window **94s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the physical identities, pins, smoke-check table, run + verify</summary>

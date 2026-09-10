@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 
-`Rscript` fits a linear model to the bundled `cars` dataset; the check is that the coefficients match the textbook values *and* that `lm()`'s QR fit agrees with the closed-form normal equations — two independent computations of the same fit.
+`Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse).
 
 ## Run it
 
@@ -30,7 +30,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The fit is ~1 s. Recorded command window **83s** — boot, Docker install, and the R image pull are the whole task ([why](../../practices/container-path.md)). The `r` env is the catalog's largest, **~0.86 GB compressed → ~3.5 GB extracted** (R's compiler toolchain for `Rcpp`), still well within the ~6.1 GiB root; the extraction did not inflate the window. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The fit is ~1 s. Recorded command window **83s** — boot, Docker install, and the R image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). The `r` env is the catalog's largest, **~0.86 GB compressed → ~3.5 GB extracted** (R's compiler toolchain for `Rcpp`), still well within the ~6.1 GiB root; the extraction did not inflate the window. **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the reference identity, the internal cross-validation, pins, smoke check, run + verify</summary>

@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # NWChem — RHF/STO-3G on water, serial and over 2 MPI ranks
 
-`nwchem` computes the Hartree-Fock energy of a water molecule serially and again over two MPI ranks. The check is that it reproduces aarch.science's published figure for this image *and* that the two runs agree.
+`nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env.
 
 > **What this covers.** One small SCF on H₂O, serial and 2-rank — proof NWChem 7.3.1 and its OpenMPI build compute correctly and in parallel on Graviton4. NWChem is one of the few QC codes that genuinely scales multi-node; this is not that demo (single-node, 2-rank) and not a benchmark.
 
@@ -31,7 +31,7 @@ RHF is deterministic — **nothing is determinism scaffolding**. **Leave the fix
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), TTL 5m, cap $0.02. The two SCF runs take ~4 s. Recorded command window **93s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), TTL 5m, cap $0.02. The two SCF runs take ~4 s. Recorded command window **93s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the reference reproduction, the rank-count guard, the digest note, pins, smoke check, run + verify</summary>

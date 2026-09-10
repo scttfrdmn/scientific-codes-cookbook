@@ -27,12 +27,12 @@ The recipe calls the same 30× human region as [bcftools](../bcftools/README.md)
 
 ## Shape, size, cost
 
-One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/container-path.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
+One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/what-this-does-not-cover.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
 
 <details>
 <summary>As shipped: the cross-code concordance, pins, smoke check</summary>
 
-Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The **cross-code** check lives in [bcftools](../bcftools/README.md) and is documented in both: bcftools (pileup) and freebayes (haplotype) are *different algorithms*, so a raw diff fails by design. The honest metric normalises both, restricts to **confident SNVs (QUAL ≥ 20)**, and asserts **Jaccard(POS:REF:ALT) ≥ 0.85** (observed **0.9103**) — the floor two correct germline callers reach at 30× (literature 0.85–0.95), not shaved to the observed value.
+Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The **cross-code** check — pileup vs haplotype, [compared like with like](../../practices/cross-checks.md) — lives in [bcftools](../bcftools/README.md): normalised, confident SNVs (QUAL ≥ 20), Jaccard ≥ 0.85 (observed **0.9103**).
 
 | observable | assertion | observed |
 |---|---|---|

@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # PDAL (pointcloud env) — decode the canonical autzen cloud, header vs a decode statistic
 
-`pdal` reads a real LiDAR point cloud; the check pairs the header count and bounds with a statistic computed over *every decoded point*, so it proves PDAL LZ-decompressed and decoded the 10.6M points, not just that it parsed the header.
+`pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline.
 
 > **What this covers.** One real cloud (10.6M points), verified by structure + a decoded statistic — proof PDAL's native LAZ decode and stats engine work on Graviton4. Not a benchmark; no filtering pipeline, terrain product, or tiled/streaming workflow. The domain's second stage-and-pin recipe over real data (with [earth-observation](../earth-observation/README.md)).
 
@@ -29,7 +29,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Decoding 10.6M points and computing stats is ~4 s. Recorded command window **80s** — boot, Docker install, the ~0.64 GB `pointcloud` image pull, and staging the ~56 MB cloud are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.** (The ~56 MB cloud stages into `/tmp`, a tmpfs sized to ½ the instance RAM, not the root disk — trivial at this size.)
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Decoding 10.6M points and computing stats is ~4 s. Recorded command window **80s** — boot, Docker install, the ~0.64 GB `pointcloud` image pull, and staging the ~56 MB cloud are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** (The ~56 MB cloud stages into `/tmp`, a tmpfs sized to ½ the instance RAM, not the root disk — trivial at this size.)
 
 <details>
 <summary>As shipped: the header-vs-decode identity, pins, smoke check, run + verify</summary>

@@ -27,7 +27,7 @@ The recipe assembles a ~400 kb region and asserts the exact contig set; [QUAST](
 
 ## Shape, size, cost
 
-One task, ~74 s assembly. `c8g.xlarge`, ~$0.02, **~113s** wall — boot and image pull ([why](../../practices/container-path.md)). First in a chain: run SPAdes + [MEGAHIT](../megahit/README.md) before [QUAST](../quast/README.md).
+One task, ~74 s assembly. `c8g.xlarge`, ~$0.02, **~113s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). First in a chain: run SPAdes + [MEGAHIT](../megahit/README.md) before [QUAST](../quast/README.md).
 
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>

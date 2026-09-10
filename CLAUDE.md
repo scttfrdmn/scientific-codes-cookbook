@@ -298,27 +298,47 @@ real but the numbers are not representative. There is no pattern doc, for the sa
 reason there is no findings log: a second statement of these rules is a second thing
 to keep true.
 
-## Recipe pages — the cookbook layer (conventions, not a second rulebook)
+## Recipe pages — the cookbook layer contract (enforceable, not aspirational)
 
-The cookbook *layer* (PRs #81–#83 onward) is a reader-facing rewrite of each recipe on top
-of the verification work. The conventions, so 50+ pages stay consistent:
+The cookbook *layer* is a reader-facing rewrite of each recipe. **The bar: a reader who
+already knows the tool gets what to run and what to change for their own data in under a
+minute.** A page that takes longer to get to the point is wrong regardless of what it
+contains. Wordiness is the default failure mode — when in doubt, delete. `recipes/bedtools`
+is the exemplar. `make check` enforces the `[auto]` rules below; the rest is human review.
 
-- **Reader: a graduate student who knows their code and their science, not AWS.** Assume
-  domain competence — never explain what a variant call or an SCF *is*. Do explain (or link)
-  a spawn/staging/instance concept when it's load-bearing. Domain competence assumed, cloud
-  and systems knowledge not.
-- **Template (invocation-first, `recipes/bwa-samtools` and `recipes/seqkit` are the
-  exemplars):** lead with the real invocation a user of that tool recognizes; a "make it
-  yours" table (fixture / scaffolding-that-stays / scaffolding-that-must-change, plus the
-  fixture's load-bearing limit and the explicit leave-vs-scale call); a brief shape/size/cost;
-  then ALL verification (identities, pins, smoke-check table, run+verify) in ONE collapsed
-  `<details>`. The page gets *shorter*; **length is the signal something belongs in a
-  pattern/practice page, not here.** Link patterns; don't re-teach them.
-- **Every page opens with YAML frontmatter** — machine-checkable versions, not prose:
-  `tool`, `tool_version`, `image` (full `@sha256:` digest), `spawn_version`, `run_date` (omit
-  if only a time was recorded). This is the pin discipline surfaced as a reader fact and lets a
-  refresh target re-resolve digests and flag what moved. `make check` validates it (+ markdown
-  a11y + internal links).
-- **Scale a fixture only where it MISREPRESENTS the tool** (chr20's 29% mapped earned it);
-  leave it small otherwise — most fixtures are honest, and a small input is often the point
-  (hand-checkable), not a compromise. Make the call explicitly, argued, per recipe.
+**Reader: a graduate student who knows their code and their science, not AWS.** Assume
+domain competence — never explain what a variant call or an SCF *is*. Do explain (or link)
+a spawn/staging/instance concept when it's load-bearing.
+
+**Recipe pages (`recipes/*/README.md`):**
+- **R1 — Lede in ≤2 lines after the H1: what it does and who it's for — nothing else.**
+  **Verification philosophy goes below the fold, always.** A lede that says "the check is that…"
+  is the most common drift in this catalog — the check description belongs in `<details>`, where
+  it already lives; a second copy in the lede is duplication in the wrong place, not a summary.
+  [auto: ≤8 non-blank lines between H1 and first `##`; human: is it buried, does it verify above
+  the fold]
+- **R2 — `## Run it` is the first `##`,** with a fenced real invocation inside it (before
+  `## Make it yours`) that a user of the tool recognizes at a glance. [auto]
+- **R3 — `## Make it yours` is mandatory:** the fixture / swap / what-to-know table **and** an
+  explicit leave-it-or-scale-it sentence with its argument. Scale a fixture only where it
+  MISREPRESENTS the tool (chr20's 29% mapped earned it); most fixtures are honest and small is
+  often the point (hand-checkable). [auto: present; human: argument sound]
+- **R4 — Order:** Run it → Make it yours → brief Shape/size/cost → `<details>`. [auto]
+- **R5 — All verification in exactly one collapsed `<details>`** (identities, pins,
+  smoke-check table, run+verify); nothing above the fold that isn't for someone running it. [auto]
+- **R6 — ≤50 lines outside `<details>`.** Over is a defect needing justification. [auto]
+- **R7 — No re-teaching:** link a pattern/practice, never restate it — and **prefer a link to a
+  paraphrase**, because a paraphrase is *worse* than a verbatim copy: the verbatim one is at least
+  detectable. [auto is only a FLOOR — it catches an exact owned phrase appearing without that
+  page's link. **Synonymic re-teaching** (the same idea in the drafter's own words — bcftools'
+  "apples-to-apples", raxml-ng's "same rule as the assemblers") is invisible to the checker and is
+  human review. Do not trust R7 to cover re-teaching.]
+- **R8 — Cut hard.** Flabby prose under the ceiling still fails the one-minute bar. [human]
+- **Frontmatter** (machine-checkable versions): `tool`, `tool_version`, `image` (full
+  `@sha256:`), `spawn_version`, `run_date`. Pipeline recipes use `images:` (one digest per
+  tool). [auto]
+
+**Ancillary pages (`patterns/`, `practices/`, README, CHARTER):** lede in the first 2 lines
+(a thesis line/blockquote); one idea, tight sections, no re-teaching of a sibling page; no
+`## Run it`/`## Make it yours` (they aren't recipes). [auto: lede present, re-teach grep,
+warn over ~90 lines; human: the rest]

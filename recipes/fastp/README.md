@@ -27,7 +27,7 @@ fastp is deterministic on fixed input — **nothing here is determinism scaffold
 
 ## Shape, size, cost
 
-One task, **~2 s** QC. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull ([why](../../practices/container-path.md)).
+One task, **~2 s** QC. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: why a conservation identity not a cross-check, pins, smoke check</summary>

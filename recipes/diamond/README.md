@@ -25,11 +25,11 @@ The recipe searches the same 20 queries against the same Ensembl 116 human prote
 | queries = first 20 DB records | your own queries | same load-bearing trick as blast — guarantees an exact self-hit to assert against. |
 | **`--very-sensitive`** | keep it for a fair comparison | scaffolding that **must stay** for the cross-check: DIAMOND's default `fast` mode is far less sensitive than `blastp` default, so comparing them would compare *modes*, not correctness. For your own work, pick the sensitivity your search needs. |
 
-DIAMOND is deterministic — **nothing here is determinism scaffolding** (its arbitrary tie order is a comparison subtlety, handled below). **Leave the DB full-size:** the real proteome and the byte-identical reuse of blast's inputs are what make the cross-check meaningful.
+DIAMOND is deterministic — **nothing here is determinism scaffolding** (tie order is a comparison subtlety, below). **Leave the DB full-size:** the real proteome and the byte-identical reuse of blast's inputs are what make the cross-check meaningful.
 
 ## Shape, size, cost
 
-One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/container-path.md)). Inputs come from [blast](../blast/README.md) — stage those first.
+One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/what-this-does-not-cover.md)). Inputs come from [blast](../blast/README.md) — stage those first.
 
 <details>
 <summary>As shipped: the self-hit identity, the like-with-like cross-code metric, pins, smoke check</summary>

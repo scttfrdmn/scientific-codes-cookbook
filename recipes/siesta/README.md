@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # SIESTA — bulk-silicon DFT, reproducing SIESTA's own committed reference
 
-`siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks; the check is that the total energy matches the reference output SIESTA ships for this exact test at this exact version.
+`siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method.
 
 > **What this covers.** One SCF on a 2-atom Si cell (single-ζ-polarised basis, 3×3×3 k-grid) — proof SIESTA 5.4.2 runs a real, converged, MPI-parallel DFT calculation on Graviton4 and lands on the published energy. Not a benchmark; no large cell, geometry relaxation, or many-node scaling.
 
@@ -31,16 +31,16 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — sized for the 2 ranks), TTL 5m, cap $0.02. The SCF takes ~2 s on 2 ranks. Recorded command window **93s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — sized for the 2 ranks), TTL 5m, cap $0.02. The SCF takes ~2 s on 2 ranks. Recorded command window **93s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the pseudopotential sourcing, the reference reproduction, the rank guard, pins, smoke check, run + verify</summary>
 
 ### The pseudopotential problem, and the reference it manufactures
 
-conda-forge's `siesta` ships no pseudopotentials, so a naive recipe could only prove the binary parses input. This recipe stages one from **SIESTA's own test suite at the tag matching the container** — `Tests/Pseudos/Si.psf` at `siesta-project/siesta` tag `5.4.2`. Because the pseudopotential *and* the input *and* a committed reference output all come from the same version, the run is a **[reproduction of SIESTA's own published result](../../practices/reference-from-tests.md)** — manufactured from the version-matched test suite (a psf from another release would be a subtly wrong reference). Staging a pinned file to S3 is the cookbook's normal model, not runtime-fetching; the digest is verified on the box before SIESTA runs.
+conda-forge `siesta` ships no pseudopotentials, so the recipe stages `Tests/Pseudos/Si.psf` from `siesta-project/siesta` at tag `5.4.2` — the version-matched [reproduction](../../practices/reference-from-tests.md) move: pseudopotential, input, and `Reference/psf.out` all from the same version, so the run matches its `-214.377236 eV`. Staging a pinned file is allowed where build-time constraints forbid bundling; the digest is verified on the box.
 
-**[Assert the rank count](../../practices/mpi-rank-count.md).** Running over 2 ranks is deliberate: the `dft` env pins the OpenMPI build (`siesta=*=mpi_openmpi*`) because the nompi variant has a higher build number and would otherwise win, so the check reads `Running on 2 nodes` to prove the MPI path actually ran.
+**[Assert the rank count](../../practices/mpi-rank-count.md).** The `dft` env pins `siesta=*=mpi_openmpi*` and the check reads `Running on 2 nodes` — proof the MPI path ran, not a silently-serial build.
 
 ### Pins (data tier: stable public source with a durable id)
 

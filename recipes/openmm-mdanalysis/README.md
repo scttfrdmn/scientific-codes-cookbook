@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # OpenMM → MDAnalysis — write an NVE trajectory, read it back and check it
 
-OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back. The checks are that OpenMM conserved energy **and** that MDAnalysis recovers exactly what OpenMM wrote — a cross-layer identity, not two isolated checks.
+OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff.
 
 > **What this covers.** A 27-atom argon NVE run (200 steps) analyzed by MDAnalysis — proof OpenMM's integrator and MDAnalysis's DCD/PDB readers work, and hand off correctly, on Graviton4. Not a benchmark; no biomolecular force field, thermostat/barostat, or long trajectory.
 
@@ -32,7 +32,7 @@ Deterministic on fixed input — **nothing is determinism scaffolding**. **Leave
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Simulation + analysis take ~1 s. Recorded command window **70s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Simulation + analysis take ~1 s. Recorded command window **70s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>

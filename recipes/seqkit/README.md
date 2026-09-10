@@ -28,7 +28,7 @@ Nothing here is determinism scaffolding — `seqkit stats` has no seed and no th
 
 ## Shape, size, cost
 
-One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — nearly all of it boot and image pull, not seqkit; [a short task is mostly overhead](../../practices/container-path.md).
+One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — nearly all of it boot and image pull, not seqkit; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
 
 <details>
 <summary>As shipped: exact identities, pins, smoke check</summary>

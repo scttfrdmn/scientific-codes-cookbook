@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # pymatgen — bulk-silicon structure, symmetry, and a CIF round-trip
 
-pymatgen builds silicon from its space group; the checks are exact structural identities — formula, site count, lattice, density, space group — plus a Structure → CIF → Structure round-trip.
+pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling.
 
 > **What this covers.** Construct one crystal and check its exact properties and a format round-trip — proof pymatgen's core structure and symmetry machinery works on Graviton4. Not a benchmark; no materials-database query, phase diagram, or DFT.
 
@@ -32,7 +32,7 @@ Deterministic — **nothing is determinism scaffolding**. Note pymatgen's symmet
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + round-trip is sub-second. Recorded command window **87s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + round-trip is sub-second. Recorded command window **87s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the identities, pins, smoke-check table, run + verify</summary>

@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # AmberTools — build a peptide, integrate it, conserve its energy
 
-`tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory. The check is that the total energy stays conserved — a physical law the integrator either obeys or doesn't.
+`tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path.
 
 > **What this covers.** `sander` (AmberTools' serial MD engine) on a 22-atom peptide for 20 steps — proof the ff14SB kernels and the Fortran integrator are numerically correct on Graviton4. Not `pmemd` (licence-gated, never in AmberTools), explicit solvent, or long trajectories.
 
@@ -31,7 +31,7 @@ One task, two subcommands of the same suite. The ff14SB force field ships inside
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. `tleap` + `sander` take ~1 s on 22 atoms; `sander` is serial, so cores and memory don't bear on correctness. Recorded command window **116s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.** See [sizing](../../patterns/sizing.md) for real MD.
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. `tleap` + `sander` take ~1 s on 22 atoms; `sander` is serial, so cores and memory don't bear on correctness. Recorded command window **116s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** See [sizing](../../patterns/sizing.md) for real MD.
 
 <details>
 <summary>As shipped: the conservation check, pins, smoke-check table, run + verify</summary>

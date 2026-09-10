@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # Psi4 — Hartree-Fock on H₂, against the textbook energy
 
-`psi4` computes the RHF/STO-3G energy of a hydrogen molecule; the check is that it lands on the textbook value, −1.1167 Hartree.
+`psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF.
 
 > **What this covers.** One SCF on H₂ in a minimal basis — proof Psi4's native integral/SCF stack is numerically correct on Graviton4 against a known reference. Not a benchmark; no correlated method, large basis, or big molecule.
 
@@ -32,7 +32,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. Recorded command window **85s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. Recorded command window **85s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the reference identity, the env note, pins, smoke check, run + verify</summary>

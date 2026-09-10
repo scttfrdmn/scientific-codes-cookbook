@@ -7,9 +7,9 @@ spawn_version: 0.104.0
 ---
 # AutoDock Vina — dock imatinib into Abl kinase, against the tutorial's own result
 
-`vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP); the checks are that the top binding affinity reproduces Vina's published tutorial result and that a fixed seed is deterministic.
+`vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target.
 
-> **What this covers.** One real docking of one ligand into one receptor at the tutorial's box and exhaustiveness — proof Vina's native scoring and Monte-Carlo search are correct and reproducible on Graviton4 against a known answer. Not a virtual-screening benchmark; no ligand library or flexible-receptor docking.
+> **What this covers.** One ligand docked into one receptor at the tutorial's box — proof Vina's scoring and Monte-Carlo search are correct and reproducible on Graviton4 against a known answer. Not a virtual-screening benchmark; no ligand library or flexible-receptor docking.
 
 ## Run it
 
@@ -19,21 +19,21 @@ vina --receptor 1iep_receptor.pdbqt --ligand 1iep_ligand.pdbqt \
   --size_x 20 --size_y 20 --size_z 20 --exhaustiveness 32 --seed 42
 ```
 
-One task, one docking run (done twice for the determinism check). The `vina` package ships no example data, so the receptor and ligand are staged — a synthetic inline system would run the code but assert nothing chemical.
+One task, docked twice for the determinism check. The `vina` package ships no example data, so the receptor and ligand are staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| 1IEP receptor + imatinib ligand, from Vina's tutorial at tag **v1.2.7** | your own prepared `.pdbqt` pair | **load-bearing:** the version match to the container is what makes this reproduce a *published* docked pose (−13.234) — a real docking, not a code check. |
+| 1IEP receptor + imatinib ligand, from Vina's tutorial at tag **v1.2.7** | your own prepared `.pdbqt` pair | **load-bearing** — match the pair to the tool version or you reproduce a different number; it's what makes this a [published-pose reproduction](../../practices/reference-from-tests.md) (−13.234), not a code check. |
 | the box center + 20³ Å size (the tutorial's, inline) | your own binding-site box | the box is where the search happens; get it wrong and the score is meaningless even if Vina "ran". |
-| **`--seed 42`** | pin *a* seed for a repeatable run | **determinism scaffolding** — Vina's Monte-Carlo search is stochastic; a fixed seed makes a run repeatable (the recipe docks twice at the same seed to prove `--seed` controls the RNG). Different seeds explore slightly different best poses (~0.05 kcal/mol spread). |
+| **`--seed 42`** | pin *a* seed for a repeatable run | **determinism scaffolding** — the Monte-Carlo search is stochastic, so a fixed seed makes a run repeatable (different seeds spread ~0.05 kcal/mol). |
 
 **Leave the fixture:** 1IEP is a real receptor/ligand reproducing a published number, and one docking is the unit — a ligand library is [job arrays](../../patterns/job-arrays.md), not a bigger input here. Leave-it.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 10m, cap $0.02. Each dock at exhaustiveness 32 takes ~150 s on 2 vCPUs, and the recipe docks twice, so **~300 s of real compute** — by far the heaviest recipe in this batch. Recorded command window **351s** — here compute is a real share of the window, not just boot; TTL is 10m (~1.4× the ~7-minute instance life), tighter than the trivial recipes because compute fills most of it. See [sizing](../../patterns/sizing.md) for a screening run. Vina parallelises over the CPUs.
+One task, `c8g.large`, TTL 10m, cap $0.02. Two docks at exhaustiveness 32 ≈ **300 s of real compute** — the batch's heaviest, so here compute is a real share of the 351s window, not just boot. Vina parallelises over the CPUs; see [sizing](../../patterns/sizing.md) for a screening run.
 
 <details>
 <summary>As shipped: the reference reproduction, the seed check, pins, smoke check, run + verify</summary>

@@ -14,16 +14,16 @@ Infer an ML tree from a multiple-sequence alignment, with an adaptive search tha
 raxml-ng --search --msa alignment.fasta --model LG+G4 --threads 8 --seed 12345
 ```
 
-The recipe infers a 114-taxon protein tree under LG+G4. RAxML-NG 2.0's default search predicts the alignment's difficulty (0.55 here) and generates **13 starting trees — 4 random, 9 parsimony** — from that prediction rather than from a flag. It reaches the **same optimum as [IQ-TREE](../iqtree/README.md)** on the same alignment.
+The recipe infers a 114-taxon protein tree under LG+G4, reaching the **same optimum as [IQ-TREE](../iqtree/README.md)** on the same alignment. RAxML-NG 2.0's `--search` sizes its own starting-tree set from a difficulty prediction — no flag needed.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 114-sequence Pfam seed alignment | your own alignment (FASTA) | reused byte-for-byte from [IQ-TREE](../iqtree/README.md) — there is no `stage-inputs.sh` here; the spec reads `inputs/iqtree/`. The alignment is *derived* (Pfam Stockholm → FASTA by a deterministic rule), so its sha256 pins our conversion; a second copy would be a second converter to keep true, and the cross-check only means anything on identical bytes. |
+| the 114-sequence Pfam seed alignment | your own alignment (FASTA) | reused byte-for-byte from [IQ-TREE](../iqtree/README.md) (the spec reads `inputs/iqtree/`, no `stage-inputs.sh`) — the cross-check only means anything on identical bytes, so it isn't re-staged or re-converted. |
 | `--model LG+G4` | your model | given explicitly to remove a drift source and because it's the model IQ-TREE was given. |
-| the adaptive `--search` default | `--tree pars{n},rand{n}` for a fixed search | the adaptive default is the thing worth demonstrating — a fixed search is faster but less representative. It earns its keep here: the best tree came from a *random* start (−76,542 → −52,706.73) that a parsimony-only search would have missed. |
-| **`--threads 8` and `--seed 12345`** | pin *both* for a repeatable run | **determinism scaffolding.** The thread count feeds the parallel parsimony the difficulty prediction is computed from, so it decides *how many* starting trees get generated; `AUTO` is not reproducible. Same rule as [IQ-TREE](../iqtree/README.md) and the assemblers — pin threads + seed, or assert a band. |
+| the adaptive `--search` default | `--tree pars{n},rand{n}` for a fixed search | the adaptive default is what's worth demonstrating, and it earned it here — the best tree came from a *random* start a parsimony-only search would have missed. |
+| **`--threads 8` and `--seed 12345`** | pin *both* for a repeatable run | **determinism scaffolding** — thread count changes how many starting trees the adaptive search generates, so `AUTO` isn't reproducible. Pin both or assert a band ([pin threads and a seed](../../practices/cross-checks.md)). |
 
 **Leave the fixture:** 114 taxa × 477 sites is a real ML inference that runs in minutes and lets the check assert tree shape exactly. It does *not* exercise the MPI/`--workers` path or a phylogenomic dataset's memory behaviour — a larger alignment is a longer run, not a more legible one. Leave-it.
 

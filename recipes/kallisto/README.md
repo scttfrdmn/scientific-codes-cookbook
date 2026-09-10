@@ -22,7 +22,7 @@ The recipe indexes the Ensembl-116 human transcriptome and quantifies the **same
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the Ensembl-116 transcriptome + 200k ERR188026 pairs | your own transcriptome + reads | reused byte-for-byte from [salmon](../salmon/README.md) so the cross-check is valid — nothing re-staged. |
-| the **`r8g.large` (16 GiB)** box | size *up* for a bigger transcriptome | **the load-bearing sizing fact, and the catalog's first memory-bound recipe.** kallisto 0.52's index build OOM-kills at 7.75 GiB on the human transcriptome (147M k-mers) — so it's sized memory-bound on salmon's proven 16 GiB figure for identical bytes, **not** compute-bound like every prior recipe. If you scale the reference, RAM is the constraint to watch, [not disk_gib](../../practices/container-path.md). |
+| the **`r8g.large` (16 GiB)** box | size *up* for a bigger transcriptome | **the load-bearing sizing fact, and the catalog's first memory-bound recipe.** kallisto 0.52's index build OOM-kills at 7.75 GiB on the human transcriptome (147M k-mers) — so it's sized memory-bound on salmon's proven 16 GiB figure for identical bytes, **not** compute-bound like every prior recipe. If you scale the reference, RAM is the constraint to watch, [not disk_gib](../../practices/what-this-does-not-cover.md). |
 
 **Leave the fixture:** a small sample against a *real* human transcriptome is enough to exercise the index build (the OOM-prone step) and produce a real cross-code agreement; a full-depth sample is a longer run, not a more legible one. Leave-it.
 

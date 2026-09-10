@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # MAFFT — multiple sequence alignment
 
-Align a set of sequences; the check confirms the alignment is faithful and reproducible.
+Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment.
 
 ## Run it
 
@@ -27,12 +27,12 @@ The recipe aligns a 114-protein Pfam family (FFT-NS-2) and verifies **residue co
 
 ## Shape, size, cost
 
-One task, **~1 s** align. `c8g.large`, ~$0.02, **~50s** wall — boot and image pull ([why](../../practices/container-path.md)).
+One task, **~1 s** align. `c8g.large`, ~$0.02, **~50s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: why residue conservation not a column comparison, pins, smoke check</summary>
 
-Two aligners on the same sequences produce **different alignments by design**, so comparing MAFFT's columns to another tool's (or to the original Pfam alignment) would fail for a reason unrelated to correctness — the [compare-like-with-like](../../practices/container-path.md) trap. The honest self-contained identity is **residue conservation**: ungapping each output row must return the exact input sequence and the total residue count is invariant — exact-or-wrong, method-independent.
+Two aligners on the same sequences produce **different alignments by design**, so comparing MAFFT's columns to another tool's (or to the original Pfam alignment) would fail for a reason unrelated to correctness — the [compare-like-with-like](../../practices/cross-checks.md) trap. The honest self-contained identity is **residue conservation**: ungapping each output row must return the exact input sequence and the total residue count is invariant — exact-or-wrong, method-independent.
 
 | observable | assertion | observed |
 |---|---|---|

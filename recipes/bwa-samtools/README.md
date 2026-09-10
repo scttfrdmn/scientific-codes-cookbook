@@ -4,151 +4,71 @@ tool_version: 0.7.19
 image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
 spawn_version: 0.104.0
 ---
-
 # BWA — align paired reads to a reference
 
-Align paired-end reads to a reference genome and get back a sorted, indexed BAM. If you use
-BWA you already know this — so here's the invocation and the two numbers that matter, not a
-lecture.
+Align paired-end reads to a reference genome and get back a sorted, indexed BAM.
 
 ## Run it
-
-`bwa mem` aligns; `samtools sort` gives you the indexed BAM:
 
 ```bash
 bwa index ref.fa
 bwa mem -t 8 -R "@RG\tID:run1\tSM:mysample\tPL:ILLUMINA\tLB:lib1" \
   ref.fa reads_1.fq.gz reads_2.fq.gz > aln.sam
-
 samtools sort -@ 2 -o mysample.bam aln.sam
 samtools index mysample.bam
 ```
 
-That's the whole thing. On spore.host it runs as two `spawn task run` tasks — bwa in one
-image, samtools in the next, the SAM handed between them through S3. aarch.bio ships
-[one tool per image](../../practices/container-path.md), so this is a chain, not a pipe to
-reassemble — and each task reruns independently as a result. Exact shipped commands are in
-[the details below](#as-shipped).
+Two tasks — `bwa` in one image, `samtools` in the next, the SAM handed between them through S3 — because aarch.bio ships [one tool per image](../../practices/container-path.md), so the pipe becomes a chain and each task reruns independently.
 
 ## Make it yours
 
-The recipe aligns a fixed fixture so the output can be checked. **Three things to change for
-real work** — and one that's fine to leave:
-
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `chr20.fa` — GRCh38 **chr20 only** | your whole reference genome | **chr20 is not a genome.** With a chr20-only index, 29% of reads "map" (vs the ~2% that belong) at high MAPQ — reads from elsewhere have nowhere else to go. Fine for proving a BAM is real; wrong for real alignment. This is the fixture's one load-bearing limit. |
-| the 400,000-read subsample | your reads | The subsample is there to make the demo fast and cheap, not because BWA wants small input. |
-| `-R "@RG\t…SM:HG00096…"` | your sample's read group | **Real, not scaffolding** — set `SM`/`LB`/`ID` so downstream dedup and variant-calling can tell samples apart. |
+| `chr20.fa` — GRCh38 **chr20 only** | your whole reference genome | **chr20 is not a genome.** Against a chr20-only index 29% of reads "map" at high MAPQ (vs ~2% that belong) — reads from elsewhere have nowhere else to go. Fine to prove a BAM is real; wrong for real alignment. The fixture's one load-bearing limit. |
+| the 400,000-read subsample | your reads | subsampled for a fast demo, not because BWA wants small input. |
+| `-R "@RG\t…SM:HG00096…"` | your sample's read group | **real, not scaffolding** — set `SM`/`LB`/`ID` so downstream dedup and variant-calling can tell samples apart. |
 
-`bwa mem -t 8` is **not** determinism scaffolding: scale `-t` to your instance's cores freely,
-BWA's alignment doesn't depend on thread count. (Contrast an assembler, where `-t 1` *is*
-scaffolding and *must* change for real runs — [flye](../flye/README.md) is the worked example:
-its contig count *wanders* with thread count.)
+`bwa mem -t 8` is **not** determinism scaffolding — BWA's alignment doesn't depend on thread count, so scale `-t` to your cores freely. (Contrast an [assembler](../flye/README.md), where `-t 1` *is* scaffolding and must change.)
 
-**As the input grows (measured):** aligning 10M HG00096 pairs against the *whole* GRCh38 index
-(≈8.9 GB) maps **99.76%** — the honest rate the chr20 fixture's 29% only ever stood in for — and
-`bwa mem` dominated at ~8.4:1 compute-to-overhead. Two real constraints the fixture sidesteps
-surfaced, both worth knowing before your first whole-genome run:
-
-- **Staging space is a tmpfs sized to ½ the instance's RAM, not the root disk.** The 8.9 GB index
-  plus reads plus SAM overran a 16 GiB box's ~8 GiB `/tmp` at stage-in; `disk_gib` grows the
-  container root, which staging doesn't use. The lever is **RAM** — an `r8g.2xlarge` (64 GiB →
-  ~31 GiB `/tmp`) held it. Size the box by what must land in `/tmp`, not by disk.
-- **A cohort should share one read-only copy of the index, not re-stage 8.9 GB per sample.** Six
-  samples staging the index six times is the waste [job arrays](../../patterns/job-arrays.md) plus a
-  shared reference filesystem exist to avoid — build the index once, mount it read-only, fan out
-  the reads. See [sizing](../../patterns/sizing.md) for where that trade-off pays off.
+**Scale it:** chr20's 29% is the one number that misrepresents the tool — the whole GRCh38 index maps **99.76%** (measured, below). But the 8.9 GB index makes *staging* the constraint, so size by RAM on an `r8g` and share it across a cohort ([copy, mount, or share?](../../patterns/data-movement.md)).
 
 ## Shape, size, cost
 
-- **Shape:** one alignment is one task. A whole cohort is the *same task, fanned out* →
-  [Job arrays](../../patterns/job-arrays.md). Size one sample; run N.
-- **Sized:** `c8g.2xlarge` (8 vCPU / 16 GiB) to align, `c8g.large` to sort. `bwa mem -t 8` ran
-  32 s wall against 247 s CPU here — ~7.7× on 8 threads, so 8 cores is a sensible per-sample
-  size. Find your own knee with an afternoon's sweep → [Sizing](../../patterns/sizing.md).
-- **Cost & time:** first run **$0.024 total**, both boxes self-terminated. But **78 s of actual
-  work sat inside 6m40s of billed time** — boot, Docker install, and image pull dominate a short
-  run. Don't read $0.024 as "what BWA costs"; read it as "a short task is mostly overhead" —
-  which is exactly the waste [job arrays](../../patterns/job-arrays.md) amortize across a cohort.
-
-**Safe to try:** capped by TTL, self-terminating — a wrong guess costs cents.
-
-## Proof it works
-
-The recipe checks its own output, so the task fails if the BAM isn't real — that's what makes
-it a *recipe* and not a snippet. It's proof, not the point of the page. Task 2 asserts, among
-seven checks: exactly **800,000** primary records (400k pairs in → 800k out, a conservation
-check, not a threshold), 233,036 mapped, 61,160 at MAPQ ≥ 30, > 50,000 properly paired — and
-Graviton4 reproduced every number exactly.
+One alignment is one task; a cohort is the same task [fanned out](../../patterns/job-arrays.md). `c8g.2xlarge` to align (`-t 8` ran 32 s wall / 247 s CPU, ~7.7×), `c8g.large` to sort. First run **$0.024**, both boxes self-terminated — but 78 s of work sat inside 6m40s billed, so read that as "a short task is mostly overhead," [not what BWA costs](../../practices/what-this-does-not-cover.md).
 
 <details id="as-shipped">
-<summary>As shipped: exact commands, pins, the chr20 fixture, smoke-check table, container-path notes</summary>
+<summary>As shipped: exact commands, pins, why chr20, the whole-genome measurement, smoke check</summary>
 
 ### Run the shipped recipe
-
 ```bash
 ./stage-inputs.sh                                        # once; ~165 MB of range-gets from s3://1000genomes
 spawn task run --spec 01-align.task.json --wait          # c8g.2xlarge, TTL 30m
 spawn task run --spec 02-sort-and-check.task.json --wait # c8g.large,   TTL 30m
 ```
-
-Both are `on_complete: terminate`. `--wait` blocks on the durable completion record and exits
-with the task's code. Each task reads its inputs from S3 and writes outputs to S3, so a failed
-task 2 reruns alone (task 1's `aln.sam` is already in the bucket). `spawn task run` exposes no
-`--cost-limit`, so the **TTL is the cost cap** — 30 min × the on-demand rate; that bound is why
-TTL is 30m, not 4h. Worst case if both hang to TTL: $0.20.
+Both `on_complete: terminate`. Each task reads inputs from and writes outputs to S3, so a failed task 2 reruns alone. `spawn task run` exposes no `--cost-limit`, so **TTL is the cost cap** (30m × on-demand ≈ $0.20 worst case).
 
 ### Pins (data tier: RODA — every byte traces to `s3://1000genomes`)
-
-| Thing | Pin |
+| thing | pin |
 |---|---|
-| bwa image | `quay.io/aarchbio/bwa@sha256:19f0eceab8…` (`0.7.19--h0cbc5ad_1`) |
-| samtools image | `quay.io/aarchbio/samtools@sha256:1191739637…` (`1.24--h391949c_0`) |
-| reference | GRCh38 chr20, `sha256:61eba5b0…` — byte range of the 1000G GRCh38 analysis-set fasta |
-| reads 1 / 2 | `sha256:4bd24cdf…` / `sha256:ebd1ad56…` — first 1.6M lines of HG00096 `SRR062634` |
+| bwa / samtools images | `bwa@sha256:19f0eceab8…` (`0.7.19`) / `samtools@sha256:1191739637…` (`1.24`) |
+| reference | GRCh38 chr20, `sha256:61eba5b0…` (byte range of the 1000G analysis-set fasta) |
+| reads 1 / 2 | `sha256:4bd24cdf…` / `ebd1ad56…` — first 1.6M lines of HG00096 `SRR062634` |
 
-Both images are cosign keyless-verified against `github.com/playgroundlogic/aarchbio`, and their
-manifest lists contain **only** `linux/arm64` — no amd64 child to fall back to. `stage-inputs.sh`
-materialises the three derived objects (input manifests stage whole S3 objects, so a subsample
-must be pre-materialised) and the align task re-checks their sha256 on the box before running.
+Both images are cosign-verified and `linux/arm64`-only. `stage-inputs.sh` pre-materialises the three derived objects and the align task re-checks their sha256 on the box.
 
-### Why chr20 (the mechanics behind the fixture caveat)
-
-The task path gets an **8 GiB root disk** (`spawn task run` inherits the AMI default and
-`TaskSpec` has no field to raise it), leaving ~6.1 GB free — no room for RODA's 5.63 GB
-prebuilt whole-genome index plus reads plus output. chr20 is 62 MB and indexes on the box in
-under a minute. Aligning whole-genome reads to a chr20-only index is why 29% map at high MAPQ:
-with no competing loci, paralogous/repetitive reads from elsewhere land on chr20. Correct for a
-smoke check ("is this BAM real and the right shape"); wrong for real alignment. The whole-genome
-index on a bigger disk is a Round-Two job.
+### Why chr20, and the whole-genome number it stands in for
+The task path gets an 8 GiB root disk (~6.1 GB free) — no room for RODA's 5.63 GB whole-genome index. chr20 (62 MB) indexes in under a minute; against it, paralogous/repetitive reads from elsewhere land on chr20, which is why 29% map. The honest rate: 10M HG00096 pairs against the whole GRCh38 index map **99.76%**, `bwa mem` dominating ~8.4:1 compute-to-overhead. Two constraints the fixture hides — staging is a **tmpfs ≈ ½ RAM, not `disk_gib`** (the 8.9 GB index overran a 16 GiB box's `/tmp`; an `r8g.2xlarge` held it), and a cohort should **share one read-only index** rather than re-stage 8.9 GB per sample ([data movement](../../patterns/data-movement.md)).
 
 ### Smoke check (inside task 2 — fails the task if the BAM isn't real)
-
-| Check | Threshold | Observed | Catches |
+| check | threshold | observed | catches |
 |---|---|---|---|
 | `samtools quickcheck -v` | clean | clean | truncated / corrupt BGZF |
-| `@SQ` lines | exactly 1 | 1 | wrong or merged reference |
-| `SN:chr20 LN:64444167` | present | present | not the pinned chromosome |
+| `@SQ` lines / `SN:chr20` | exactly 1 / present | 1 / present | wrong or merged reference |
 | primary records (`-F 0x900`) | exactly **800000** | 800000 | reads lost/duplicated (conservation) |
 | mapped primary (`-F 0x904`) | 150000–350000 | 233036 | aligned nothing / everything |
-| MAPQ ≥ 30 (`-q 30`) | 20000–150000 | 61160 | all alignments low-confidence noise |
+| MAPQ ≥ 30 (`-q 30`) | 20000–150000 | 61160 | all low-confidence noise |
 | properly paired (`-f 0x2`) | > 50000 | 132080 | mates handled as singles |
 
-`flagstat.txt`, `idxstats.txt`, `smoke-check.txt` are staged back for inspection after the box
-is gone. Read the authoritative command with
-`python3 -c 'import json;print(json.load(open("02-sort-and-check.task.json"))["command"][2])'`.
-
-### Container-path behaviours
-
-The three things this recipe relies on — flat `/tmp` staging, the exit code not proving the
-output is real, and one-tool-per-image (why it's two tasks) — aren't BWA-specific; they're true
-of every recipe. They live in **[The container path](../../practices/container-path.md)**.
-
-### Outputs
-
-Under `s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/`: `HG00096.chr20.bam`(+`.bai`),
-`flagstat.txt`, `idxstats.txt`, `smoke-check.txt`, and task 1's `aln.sam`; completion records under
-`s3://spawn-results-…/tasks/<task_id>/`.
+`flagstat.txt`, `idxstats.txt`, `smoke-check.txt` stage back for inspection. The three container-path behaviours this leans on (flat `/tmp`, exit-code-isn't-proof, one-tool-per-image) live in [the container path](../../practices/container-path.md). Outputs under `runs/bwa-samtools/r1/`; re-running bumps the `-r1` suffix.
 
 </details>

@@ -31,7 +31,7 @@ Nothing is determinism scaffolding. **Leave the fixture small.** Hand-sized inte
 
 ## Shape, size, cost
 
-One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull, not bedtools ([a short task is mostly overhead](../../practices/container-path.md)).
+One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull, not bedtools ([a short task is mostly overhead](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: the hand-derived answers, the conservation identity, pins, smoke check</summary>

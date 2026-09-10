@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # PySCF — Hartree-Fock on H₂, cross-checked against Psi4
 
-`pyscf` computes the RHF/STO-3G energy of H₂; the check is that it agrees with the value [psi4](../psi4/README.md) produced — two unrelated quantum-chemistry codebases on the same molecule, method and basis.
+`pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase.
 
 > **What this covers.** One SCF on H₂ in a minimal basis — proof PySCF's native integral/SCF stack is correct on Graviton4 and agrees with a second code. Not a benchmark; no correlated method, large basis, or big molecule.
 
@@ -31,7 +31,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF is ~1 s. Recorded command window **71s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF is ~1 s. Recorded command window **71s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the cross-code check, pins, smoke check, run + verify</summary>

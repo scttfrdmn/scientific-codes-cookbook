@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # GDAL/PROJ/GEOS core (geospatial env) — reproject, geometry, and a raster round-trip
 
-The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects a coordinate, computes geometry, and writes then reads back a raster; the check is a reference projection, a round-trip conservation, an exact geometric identity, and bit-identical raster I/O across two libraries.
+The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects coordinates, computes geometry, and round-trips a raster — the foundation every GIS tool sits on.
 
 > **What this covers.** The *shared core* the `geospatial`, `earth-observation`, `geo-ml`, and `pointcloud` envs all build on — GDAL/PROJ/GEOS + rasterio/shapely/pyproj — on small synthetic data. Proof it's correct on Graviton4; not a benchmark and not a large real raster or full EO workflow. It's the domain's foundational recipe.
 
@@ -32,7 +32,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **60s** — the shortest in the cookbook, thanks to the ~0.37 GB `geospatial` image (the smallest env); boot, Docker install, and that pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **60s** — the shortest in the cookbook, thanks to the ~0.37 GB `geospatial` image (the smallest env); boot, Docker install, and that pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: four kinds of identity, the interop cross-check, pins, smoke check, run + verify</summary>

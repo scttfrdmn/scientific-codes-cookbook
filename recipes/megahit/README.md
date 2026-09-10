@@ -27,7 +27,7 @@ The recipe assembles the **same reads [SPAdes](../spades/README.md) uses** and a
 
 ## Shape, size, cost
 
-One task, ~10 s assembly. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/container-path.md)). Run before [QUAST](../quast/README.md).
+One task, ~10 s assembly. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Run before [QUAST](../quast/README.md).
 
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>

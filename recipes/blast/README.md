@@ -22,14 +22,14 @@ The recipe builds a database from all 382,428 Ensembl 116 human proteins and sea
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the whole Ensembl 116 human proteome as the DB | your own reference proteome | `makeblastdb` can't read gzip — decompress first (the recipe does). |
-| **queries = the first 20 DB records** | your own queries | **load-bearing, not lazy** — drawing queries from the DB is what gives the smoke check an *algorithmic* assertion (every query must find itself, 100% identity, unbeatable) instead of a guessed threshold. Swap it and you lose the exact check. |
+| **queries = the first 20 DB records** | your own queries | **load-bearing** — each query then must find itself at 100% identity, unbeatable: an algorithmic check, not a guessed threshold. Swap it and you lose that. |
 | `-max_target_seqs 20` | scale to your needs | scaffolding that **stays** — 20 is deliberate headroom so a query's self-hit can't be crowded out by paralogs (at 5 it can). |
 
-BLAST is deterministic, but its **tie-breaking is arbitrary** — which is a determinism subtlety worth knowing: assert "nothing beats the self-hit," never "the self-hit ranks first." **Leave the DB full-size:** the real proteome is the point (a toy DB wouldn't exercise a real search), and it's shared with [hmmer](../hmmer/README.md) — one pinned release, one fewer thing to sync.
+BLAST is deterministic, but ties break **arbitrarily**: assert "nothing beats the self-hit," never "ranks first." **Leave the DB full-size:** the real proteome is the point (a toy DB wouldn't exercise a real search), and it's shared with [hmmer](../hmmer/README.md) — one pinned release, one fewer thing to sync.
 
 ## Shape, size, cost
 
-One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s** on 4 threads. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/container-path.md).
+One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s** on 4 threads. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
 
 <details>
 <summary>As shipped: the self-hit identity, the flaky-check lesson, pins, smoke check</summary>

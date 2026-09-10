@@ -5,9 +5,9 @@ env: viz
 image: quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6
 spawn_version: 0.104.0
 ---
-# ParaView (viz env) — headless render of a synthetic volume, verified by a second library
+# ParaView (viz env) — headless offscreen rendering
 
-`pvbatch` builds a synthetic volume, contours it, and renders to a PNG with no GPU and no display; then `pillow` — which had no part in drawing it — reads the PNG back and confirms it contains real geometry.
+`pvbatch` renders a scientific dataset to a PNG headlessly — no GPU, no display — the batch-visualization path for a server or CI.
 
 > **What this covers.** Headless ParaView 6.1.1 (`pvbatch`) rendering a small built-in dataset via the CPU software rasteriser — proof the whole offscreen pipeline works on Graviton4 (a real achievement for this env; see below). Not a benchmark, and no large real mesh, client/server, or GPU path.
 
@@ -33,7 +33,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: why the render path is hard, the two checks, pins, smoke check, run + verify</summary>

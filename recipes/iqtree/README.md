@@ -22,7 +22,7 @@ The recipe infers a 114-taxon protein tree under LG+G4 and writes the Newick tre
 |---|---|---|
 | the 114-sequence Pfam seed alignment | your own alignment (FASTA) | derived from Pfam 38.2 by a deterministic rule (first family with 40–150 seqs), so it's a durable, pinnable input rather than the package's fragile test file. |
 | `-m LG+G4` | your model, or let ModelFinder pick | given explicitly here to remove a source of run-to-run drift; for real work choose the model your data wants. |
-| **`-T 4` and `--seed 12345`** | pin *both* for a repeatable run | **determinism scaffolding — must be pinned to assert anything exact.** IQ-TREE's search is heuristic: `--seed` makes a run repeatable against itself, but **thread count changes which local optimum it lands in** (it reorders likelihood updates). `-T AUTO` is not reproducible. Same rule as [flye](../flye/README.md) and the assemblers — pin threads + seed, or assert a band. |
+| **`-T 4` and `--seed 12345`** | pin *both* for a repeatable run | **determinism scaffolding.** The search is heuristic: `--seed` repeats a run against itself, but thread count changes which local optimum it lands in, so `-T AUTO` isn't reproducible. Pin both or assert a band ([pin threads and a seed](../../practices/cross-checks.md)). |
 
 **Leave the fixture:** a curated 114-taxon alignment is a real ML inference that runs in minutes and lets the check assert tree shape exactly; a larger alignment is a longer run, not a more legible one. Leave-it.
 

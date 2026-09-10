@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # rasterio (earth-observation env) — a real Sentinel-2 COG, checked against its STAC metadata
 
-`rasterio` / `rioxarray` / GDAL open a real Sentinel-2 scene; the check is that the raster's CRS, dtype, shape, transform and nodata match what the scene's published STAC item declares, plus a deterministic pixel checksum that proves GDAL actually *decoded* the imagery.
+`rasterio` / `rioxarray` / GDAL open and decode a real Sentinel-2 scene — the read path underneath any earth-observation analysis.
 
 > **What this covers.** One 60 m band of one real Sentinel-2 L2A scene, verified against published metadata — proof the GDAL/rasterio/rioxarray COG path decodes real imagery on Graviton4. Not a benchmark, not a full EO analysis (no time series, mosaic, or ML); the domain's first stage-and-pin recipe over real data.
 
@@ -26,13 +26,13 @@ One task. The scene is staged from AWS Open Data and its expected header values 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the pinned scene `S2B_11SKA_20240704_0_L2A` B01 (1830² uint16 COG) | your own scene / band | one 60 m band is enough to prove the decode path; the identities come from the *scene's* STAC item, so a different scene needs its own declared metadata. |
-| the STAC-declared header values (asserted) | your scene's STAC item | **load-bearing** — the check is *pixels agree with published metadata*, so the reference must be the metadata for the exact scene staged, not a guess. |
+| the STAC-declared header values (asserted) | your scene's STAC item | **load-bearing** — the reference is the exact scene's own STAC metadata, so a different scene needs its own declared values, not a guess. |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** a single real band already exercises COG decode and gives a real-data identity; a full scene or mosaic is a longer run, not a more legible one. Leave-it.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Opening and checksumming a 6 MB COG is ~1 s, single-threaded. Recorded command window **71s** — boot, Docker install, the ~0.53 GB image pull, and staging the ~6 MB scene are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Opening and checksumming a 6 MB COG is ~1 s, single-threaded. Recorded command window **71s** — boot, Docker install, the ~0.53 GB image pull, and staging the ~6 MB scene are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the STAC cross-check, the decode checksum, pins, smoke check, run + verify</summary>

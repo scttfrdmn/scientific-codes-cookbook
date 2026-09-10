@@ -45,15 +45,7 @@ The trees pin `-T 4` + a fixed seed (iqtree's determinism scaffolding — [why](
 
 ## Shape, size, cost
 
-Shape F costs **per rule × job count**, not one flat instance — the overhead every recipe pays (boot + Docker install + image pull) is paid *per instance*, five times here:
-
-| process | instance | TTL | worst case |
-|---|---|---|---|
-| MAFFT / MUSCLE / OBSERVE_RF | `c8g.large` | 10m | $0.013 each |
-| TREE (×2) | `c8g.xlarge` | 15m | $0.040 each |
-| **total** | 5 instances | | **~$0.12** |
-
-**These timings are not compute cost** — see [data movement](../../patterns/data-movement.md) for when a workflow's S3 handoffs and per-rule boots are worth it over one bigger box. The S3 work dir holds a few MB.
+Shape F costs **per rule × job count**, not one flat instance: five instances here (3× `c8g.large`, 2× `c8g.xlarge` for the trees), **~$0.12 worst case** — each pays boot + pull overhead separately. **These timings are not compute cost**; see [data movement](../../patterns/data-movement.md) for when per-rule boots and S3 handoffs beat one bigger box.
 
 <details>
 <summary>As shipped: per-stage identities, the RF observation, the executor findings, install, run + verify</summary>

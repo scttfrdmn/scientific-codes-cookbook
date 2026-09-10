@@ -4,9 +4,9 @@ env: climate
 image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7
 spawn_version: 0.104.0
 ---
-# xESMF (climate env) — conservative regridding, verified by a conservation law
+# xESMF (climate env) — conservative regridding between global grids
 
-`xESMF` conservatively regrids a field between global grids; the check is that a conservative scheme moves a *constant* field without changing it — the conservation law made exact-or-wrong. A real-netCDF read and a MetPy identity exercise the rest of the stack.
+`xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared.
 
 > **What this covers.** One conservative regrid on global periodic grids, one real-netCDF reader path, one MetPy calc — proof the climate stack (xarray / netCDF4 / xESMF / esmpy / MetPy) is correct on Graviton4. Not a benchmark; no large dataset, GRIB decode, or full reanalysis.
 
@@ -24,7 +24,7 @@ One task: the regrid, an `xarray.open_dataset` on a pinned NCEP file, and a MetP
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the constant-field regrid on 5°×4° → 8°×6° global grids | your grids + real field | the constant field is the point: a conservative scheme preserves it *exactly*, so the check is exact-or-wrong. A real field regrids identically but has no closed-form target to assert. |
+| the constant-field regrid on 5°×4° → 8°×6° global grids | your grids + real field | the constant field is the point — a conservative scheme preserves it exactly; a real field regrids the same but gives no closed-form target to assert. |
 | the pinned NCEP `air_temperature.nc` | your own netCDF | opened with the `netcdf4` engine to exercise the *reader* on a real file (the env's own D3 only round-trips a self-made one). |
 | `"conservative"` | `"bilinear"`, `"nearest_s2d"`, … | scaffolding that **must match your science** — only conservative preserves the area-weighted integral, and the conservation check is specific to it. |
 
@@ -32,7 +32,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Reader + regrid + calc take ~2 s. Recorded command window **74s** — boot, Docker install, the ~0.57 GB `climate` image pull, and staging the ~7 MB netCDF are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Reader + regrid + calc take ~2 s. Recorded command window **74s** — boot, Docker install, the ~0.57 GB `climate` image pull, and staging the ~7 MB netCDF are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: three kinds of check, pins, smoke check, run + verify</summary>

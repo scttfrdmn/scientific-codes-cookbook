@@ -26,12 +26,12 @@ Duplicate status is a function of alignment coordinates + flags, not run order, 
 
 ## Shape, size, cost
 
-One task, **~2 s** (JVM start dominates the compute). `c8g.large`, ~$0.02, **~76s** wall — boot and image pull ([why](../../practices/container-path.md)).
+One task, **~2 s** (JVM start dominates the compute). `c8g.large`, ~$0.02, **~76s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: the exact metrics identity, pins, smoke check</summary>
 
-`MarkDuplicates` on a fixed, coordinate-sorted BAM is deterministic, so the metrics reproduce exactly. No cross-code check: Picard has no natural sibling to run on the same bytes, so per [compare-like-with-like](../../practices/container-path.md) the exact metric is the honest claim rather than a manufactured comparison (same reasoning as [fastp](../fastp/README.md)'s conservation identity).
+`MarkDuplicates` on a fixed, coordinate-sorted BAM is deterministic, so the metrics reproduce exactly. No cross-code check: Picard has no natural sibling to run on the same bytes, so per [compare-like-with-like](../../practices/cross-checks.md) the exact metric is the honest claim rather than a manufactured comparison (same reasoning as [fastp](../fastp/README.md)'s conservation identity).
 
 | observable | assertion | observed |
 |---|---|---|

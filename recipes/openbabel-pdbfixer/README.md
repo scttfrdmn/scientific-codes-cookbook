@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # Open Babel + PDBFixer — structure prep, cross-validated
 
-Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens). Then Open Babel reads PDBFixer's output back and independently confirms the repair. The checks are exact chemical identities, a two-engine InChIKey cross-check against RDKit, and cross-tool agreement on the added hydrogens.
+Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back.
 
 > **What this covers.** Round-trip one molecule through a format conversion, cross-check an InChIKey against RDKit, repair a small heavy-atom peptide — proof Open Babel and PDBFixer work and hand off correctly on Graviton4. Not a benchmark; no large-molecule prep or docking pipeline.
 
@@ -31,7 +31,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Conversions + repair are sub-second. Recorded command window **65s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Conversions + repair are sub-second. Recorded command window **65s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: the two flows, pins, smoke-check table, run + verify</summary>
