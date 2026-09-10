@@ -1,110 +1,76 @@
-# geospatial — reproject, geometry, and a raster round-trip across rasterio and GDAL
+---
+tool: gdal
+env: geospatial
+image: quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb
+spawn_version: 0.104.0
+---
+# GDAL/PROJ/GEOS core (geospatial env) — reproject, geometry, and a raster round-trip
 
-One task. The core geospatial stack (PROJ, GEOS, GDAL, rasterio, shapely, pyproj)
-reprojects a coordinate, computes geometry, and writes then reads back a raster — and the
-smoke check confirms a reference projection, a round-trip conservation, an exact geometric
-identity, and bit-identical raster I/O across two libraries.
+The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects a coordinate, computes geometry, and writes then reads back a raster; the check is a reference projection, a round-trip conservation, an exact geometric identity, and bit-identical raster I/O across two libraries.
 
-> **What this recipe does and does not cover.** It exercises the *shared core* of the
-> geospatial/EO envs — the GDAL/PROJ/GEOS + rasterio/shapely/pyproj base that
-> `geospatial`, `earth-observation`, `geo-ml`, and `pointcloud` all build on — with
-> small, synthetic, in-memory data. It proves the stack works correctly on Graviton4; it
-> is not a benchmark and does not process a large real raster or a full EO workflow.
-> **It is the first cookbook recipe in the geo/EO domain**, a block the catalog had zero
-> coverage of.
+> **What this covers.** The *shared core* the `geospatial`, `earth-observation`, `geo-ml`, and `pointcloud` envs all build on — GDAL/PROJ/GEOS + rasterio/shapely/pyproj — on small synthetic data. Proof it's correct on Graviton4; not a benchmark and not a large real raster or full EO workflow. It's the domain's foundational recipe.
 
-## Why one task, and why nothing is staged
+## Run it
 
-One environment, one coherent set of operations run in one `python3` invocation. Every
-input is generated in memory — a coordinate pair, two polygons, and a 4×4 raster written
-to a temp GeoTIFF — so there is **no input to stage** and no `stage-inputs.sh`; the image
-digest is the only pin. (A real EO recipe would stage imagery; this opener deliberately
-stays synthetic so the checks are exact and reproducible.)
+```python
+import pyproj, shapely, rasterio
+pyproj.Transformer.from_crs(4326, 3857).transform(-83, 40)   # → -9239517.74, 4865942.28 m
+shapely.Polygon([(0,0),(1,0),(0,1)]).area                    # → 0.5 exactly (GEOS)
+# write a 4×4 GeoTIFF with rasterio, read it back → bit-identical, GDAL opens the same file
+```
 
-## The checks: four kinds of identity, no bare thresholds
+One task, one `python3` invocation. Every input is generated in memory, so nothing is staged.
 
-The recipe mirrors the `geospatial` env's own D3, so the numbers are comparable, and each
-check is an identity rather than an observation:
+## Make it yours
 
-- **Reference projection** — WGS84 → Web Mercator of (−83°, 40°) is a standard,
-  deterministic PROJ transform with a known answer (`−9239517.74, 4865942.28` m in
-  EPSG:3857). A wrong PROJ data path or a broken transform lands elsewhere.
-- **Round-trip conservation** — reprojecting 4326 → 3857 → 4326 recovers the original
-  coordinate to < 1e-6°. Reprojection is invertible; this asserts it, which is stronger
-  than checking the forward transform alone.
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| synthetic coordinate / polygons / 4×4 raster | your real coordinates + imagery | generating the inputs is what makes the checks exact and reproducible; a real EO recipe stages imagery (see [earth-observation](../earth-observation/README.md), [pointcloud](../pointcloud/README.md)) and gets its identities from the data instead. |
+| WGS84 → Web Mercator of (−83°, 40°) | your CRSs + coordinates | the expected easting/northing are a standard PROJ transform — a wrong PROJ data path lands elsewhere. |
+
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** each identity is exact at this size and the raster round-trip is bit-checkable; a large raster is a longer run, not a more legible one. Leave-it.
+
+## Shape, size, cost
+
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **60s** — the shortest in the cookbook, thanks to the ~0.37 GB `geospatial` image (the smallest env); boot, Docker install, and that pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+
+<details>
+<summary>As shipped: four kinds of identity, the interop cross-check, pins, smoke check, run + verify</summary>
+
+### The checks — four kinds of identity, no bare thresholds
+
+- **Reference projection** — WGS84 → Web Mercator of (−83°, 40°) is a deterministic PROJ transform with a known answer (`−9239517.74, 4865942.28` m in EPSG:3857).
+- **Round-trip conservation** — 4326 → 3857 → 4326 recovers the coordinate to < 1e-6°; reprojection is invertible, and asserting it is stronger than the forward transform alone.
 - **Geometric identity** — a right triangle with legs 1 has area exactly 0.5 (GEOS).
-  Exact, no tolerance.
-- **Raster conservation + interop** — a 4×4 uint8 raster written with rasterio (CRS
-  EPSG:4326) reads back **bit-identical**, keeps its CRS, and GDAL opens the same file at
-  the same dimensions. Two independent libraries agreeing on the bytes is an interop
-  cross-check, not just "a file was written".
+- **Raster conservation + interop** — a 4×4 uint8 raster written with rasterio reads back **bit-identical**, keeps its CRS, and GDAL opens the same file at the same dimensions. Two independent libraries agreeing on the bytes is an [interop cross-check](../../practices/cross-checks.md), not just "a file was written".
 
-## Pins
+### Pins (data tier: synthetic / in-task)
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb` |
-| | tag `2026.09.03`, GDAL/PROJ/GEOS + rasterio/shapely/pyproj/scikit-image, cosign-signed, `linux/arm64` |
+| image | `quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb` (tag `2026.09.03`, GDAL/PROJ/GEOS + rasterio/shapely/pyproj/scikit-image, cosign-signed, `linux/arm64`) |
 | input | synthetic (coordinate, polygons, 4×4 raster), **generated in-task** — nothing staged |
 
-**Data tier: synthetic / in-task.** The image digest is the only pin.
-
-This is the shared base of four EO envs; a domain recipe (STAC in `earth-observation`,
-PDAL in `pointcloud`, geopandas in `geo-ml`) would layer its headline tool on top of this
-same core.
-
-## Smoke check
-
-Measured in this image, before any launch.
+### Smoke check (inside the task; measured before launch)
 
 | observable | assertion | observed |
 |---|---|---|
-| Web Mercator easting | −9239517.74 ± 1 m (EPSG:3857 of −83°,40°) | −9239517.7358 |
-| Web Mercator northing | 4865942.28 ± 1 m | 4865942.2795 |
+| Web Mercator easting / northing | −9239517.74 / 4865942.28 ± 1 m (EPSG:3857 of −83°,40°) | −9239517.74 / 4865942.28 |
 | **reproject round-trip** | 4326→3857→4326 recovers (−83,40) ± 1e-6° | (−83.0, 40.0) |
 | **triangle area** | exactly 0.5 (GEOS) | 0.5 |
 | buffer is a disk | unit-buffer area 3.10–3.15 (≈ π) | 3.136548 |
-| **raster round-trip** | read-back == written (bit-identical) | True |
-| CRS preserved | EPSG 4326 | 4326 |
+| **raster round-trip** | read-back == written (bit-identical), CRS EPSG 4326 | True / 4326 |
 | GDAL interop | GDAL opens the rasterio file, 4×4, checksum ≥ 0 | 4×4, chk 89 |
 
-The buffer area is banded (shapely's default segmentation approximates π as ~3.1365, and
-that is version-dependent), so it's a "this is a disk" check rather than an identity; the
-other seven are exact or reference values.
+The buffer area is banded (shapely's default segmentation approximates π as ~3.1365, version-dependent), so it's a "this is a disk" check; the rest are exact or reference values.
 
-## Resources, and what the timings mean
-
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. The work is
-**~1 second** and single-threaded; `c8g.large` is the smallest box.
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the
-**~0.37 GB** `geospatial` image (the smallest env in the catalog) are the whole task. The
-recorded run's command window was **60s** (23:33:35 → 23:34:35 UTC) — the shortest in the
-cookbook, thanks to that small image. TTL was **retightened from that first real run**:
-10m → **5m**, `cost_limit` $0.03 → $0.02. A loose TTL is a larger blast radius, not
-caution; the recorded run used the original 10m. Disk is trivial.
-
-## Running it
-
-No `stage-inputs.sh` — everything is synthetic.
+### Run + verify
 
 ```sh
 spawn task run --spec recipes/geospatial/01-roundtrip.task.json --wait
-```
-
-Then **check the bucket**, every time:
-
-```sh
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/geospatial/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke
-check runs *inside* the task, and the bucket listing is the second half of it. Expect four
-objects (`geo-results.txt`, `geo-results.json`, `tiny.tif`, `smoke-check.txt`).
+`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`geo-results.txt`, `geo-results.json`, `tiny.tif`, `smoke-check.txt`). Re-run: bump the `-r1` suffix. A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
 
-**Re-running.** `task_id` is fixed, so a re-run overwrites the previous records. Bump the
-`-r1` suffix in both `task_id` and the output prefix to keep both.
-
-**Note on parallel launches.** If launched alongside other tasks and it dies with an AWS
-`Invalid IAM Instance Profile name` error, that is a transient IAM-propagation race
-(spore-host/spawn#572), not a recipe fault — no instance was created, so just re-run it.
+</details>

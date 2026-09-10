@@ -1,130 +1,76 @@
-# ParaView — headless render of a synthetic volume, verified by a second library
+---
+tool: paraview
+tool_version: 6.1.1
+env: viz
+image: quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6
+spawn_version: 0.104.0
+---
+# ParaView (viz env) — headless render of a synthetic volume, verified by a second library
 
-One task. `pvbatch` builds a synthetic volume, contours it, and renders the result to a
-PNG with no GPU and no display — then `pillow`, which had no part in drawing it, reads
-the PNG back and confirms it contains real geometry.
+`pvbatch` builds a synthetic volume, contours it, and renders to a PNG with no GPU and no display; then `pillow` — which had no part in drawing it — reads the PNG back and confirms it contains real geometry.
 
-> **What this recipe does and does not cover.** It runs headless ParaView 6.1.1
-> (`pvbatch`) rendering a small built-in dataset via the CPU software rasteriser. It
-> proves the whole offscreen pipeline works on Graviton4 — which is a real achievement
-> for this env (see below) — but it is not a benchmark and does not render a large
-> real-world mesh or exercise a client/server or GPU path.
+> **What this covers.** Headless ParaView 6.1.1 (`pvbatch`) rendering a small built-in dataset via the CPU software rasteriser — proof the whole offscreen pipeline works on Graviton4 (a real achievement for this env; see below). Not a benchmark, and no large real mesh, client/server, or GPU path.
 
-## Why one task, and why this input
+## Run it
 
-ParaView is one tool and this is one `pvbatch` invocation. There is no reusable
-intermediate to split.
+```python
+# pvbatch script
+Wavelet()                                    # analytic scalar field, generated in memory
+Contour(Isosurfaces=[150.0])                 # → 3034 points, 5768 cells (deterministic)
+SaveScreenshot("render.png", ImageResolution=[400, 300])   # GLX + llvmpipe, no GPU
+```
 
-**The input is synthetic, so nothing is staged.** ParaView's built-in `Wavelet` source
-is an analytic scalar field (`RTData`) generated in memory — there is no data file to
-fetch. The pipeline contours it at a fixed isovalue and colours by the scalar, exactly
-as aarch.science's `viz.smoke.py` does, so the render is comparable to what they
-published for this image. The `pvbatch` script is written into the task by heredoc.
+One `pvbatch` invocation in one task. The dataset is synthetic, so nothing is staged — but the render path is not trivial (below).
 
-## Why this is a harder recipe than it looks
+## Make it yours
 
-"ParaView imported" is spectacularly insufficient here, which is why the check does the
-whole pipeline. A bare conda-forge ParaView on this platform:
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| the built-in `Wavelet` source | your own dataset (`.vtu`, `.vti`, …) | staged through S3; the analytic Wavelet field is what gives the render a *deterministic* contour to assert (3034 points), which a real mesh won't. |
+| the headless GLX + `llvmpipe` render path | leave it | **load-bearing, baked into the image** — conda-forge ParaView on Graviton has no OSMesa and no GPU for EGL, so the only path that works is GLX against `Xvfb` with `LIBGL_ALWAYS_SOFTWARE=1`. The recipe starts `Xvfb` for exactly this reason. |
 
-- **cannot load its own libraries** without a specific `hdf5` pin — the feedstock
-  under-links `libhdf5` and the solver otherwise picks an `hdf5 2.2` build whose soname
-  ParaView's binaries can't find (an upstream bug, not an arm64 one; the `viz` env pins
-  `hdf5=1.14.*` to fix it); and
-- **cannot render** via the usual headless paths — conda-forge ships no OSMesa, and EGL
-  needs a GPU device node that Graviton does not have. The only path that works is GLX
-  against a virtual X server, so the task starts `Xvfb` and renders through `llvmpipe`
-  (the LLVM software rasteriser) with `LIBGL_ALWAYS_SOFTWARE=1`.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the contour counts are an exact invariant of the analytic field and the render is CPU-bound at any size; a large mesh is a longer run, not a more legible one. Leave-it. (A GPU render would be Round Two, but Graviton has no GPU to want here.)
 
-Both of those are baked into the pinned image; the recipe's job is to prove the result
-actually renders on Graviton, end to end, as an unprivileged user with no display.
+## Shape, size, cost
 
-## Pins
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/container-path.md)). **These timings are not compute cost.**
+
+<details>
+<summary>As shipped: why the render path is hard, the two checks, pins, smoke check, run + verify</summary>
+
+### Why this is harder than it looks
+
+"ParaView imported" is spectacularly insufficient here, which is why the check runs the whole pipeline. A bare conda-forge ParaView on this platform **cannot load its own libraries** without a specific `hdf5` pin (the feedstock under-links `libhdf5` and the solver otherwise picks an `hdf5 2.2` build whose soname ParaView's binaries can't find — an upstream bug, not an arm64 one; the `viz` env pins `hdf5=1.14.*`), and **cannot render** via the usual headless paths (no OSMesa in conda-forge, and EGL needs a GPU device node Graviton lacks). Both fixes are baked into the pinned image; the recipe proves the result renders end to end as an unprivileged user with no display.
+
+### The two checks
+
+- **Contour point/cell counts are the conservation-identity equivalent for a render.** The `Wavelet` field is analytic and the isosurface at 150.0 is deterministic, so **3034** points and **5768** cells are an exact algorithmic invariant of this pinned image — caught before a single pixel is drawn. If VTK's flying-edges on Graviton produced anything else, that's a real correctness failure.
+- **The image is verified by something that did not draw it.** `pvbatch` writing a file proves nothing — a silent render failure still touches a PNG. So `pillow` reads it back: **796 distinct colours** (a blank frame has one) and a background filling **79.8%** of the frame. Both reproduce aarch.science's published D3 render exactly — the [reproduce-a-published-result](../../practices/reference-from-tests.md) move.
+
+### Pins (data tier: synthetic / in-image)
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6` |
-| | tag `2026.09.04`, ParaView 6.1.1 (+ vtk, mesa/llvmpipe, Xvfb, pillow), cosign-signed, index has one `linux/arm64` manifest |
+| image | `quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6` (tag `2026.09.04`, ParaView 6.1.1 + vtk + mesa/llvmpipe + Xvfb + pillow, cosign-signed, index has one `linux/arm64` manifest) |
 | input | ParaView `Wavelet` synthetic source, **generated in memory** — nothing staged |
 
-**Data tier: synthetic/in-image.** The dataset is generated by the pinned ParaView, so
-the image digest is the only pin — no `stage-inputs.sh`, no S3 input.
-
-The image is aarch.science's `viz` env, not a per-tool image; this recipe uses `pvbatch`
-and `Xvfb` from it.
-
-## Smoke check
-
-Measured in this image, before any launch. The contour geometry is a deterministic
-invariant of the analytic field — no band — and the PNG is verified by a library that
-did not produce it.
+### Smoke check (inside the task; measured before launch)
 
 | observable | assertion | observed |
 |---|---|---|
-| **contour points** | **exactly 3034** (flying-edges isosurface at 150.0) | **3034** |
-| **contour cells** | **exactly 5768** | **5768** |
-| PNG exists | non-empty file > 1000 B | 23338 B |
-| PNG size | exactly 400×300 | (400, 300) |
+| **contour points / cells** | exactly 3034 / 5768 (flying-edges isosurface at 150.0) | 3034 / 5768 |
+| PNG exists / size | non-empty > 1000 B, exactly 400×300 | 23338 B, (400,300) |
 | real geometry | > 50 distinct colours (published D3: 796; blank = 1) | 796 |
-| not blank | < 98% of pixels one colour (background did not fill the frame) | 79.8% |
+| not blank | < 98% of pixels one colour | 79.8% |
 | luminance range | > 40 (a flat frame is ~0) | 6..225 |
 
-Two of these earn their place:
-
-**The contour point and cell counts are the conservation-identity equivalent for a
-render.** The `Wavelet` field is analytic and the isosurface at 150.0 is a deterministic
-filter, so `3034` points and `5768` cells are an exact algorithmic invariant of this
-pinned image — not a threshold, not observed-and-banded. If VTK's flying-edges
-implementation on Graviton produced anything else, that is a real correctness failure,
-and this catches it before a single pixel is drawn.
-
-**The image is verified by something that did not draw it.** `pvbatch` writing a file
-proves nothing — a silent render failure still touches a PNG. So `pillow` reads it back
-and asserts structure: 796 distinct colours (a blank frame has one) and a background
-filling only 79.8% of the frame. Both figures reproduce aarch.science's published D3
-render (`796 distinct colours, background 79.8% of frame`) exactly — the same
-reproduction-of-a-published-result move `recipes/relion` and `recipes/gromacs` make.
-
-## Resources, and what the timings mean
-
-2 vCPU / 4 GiB, `c8g` (resolves to `c8g.large`), TTL 5m, cap $0.02. The render is
-**~1 second** on the CPU rasteriser; `c8g.large` is the smallest compute box and there
-is no GPU to want. Memory covers ParaView + mesa comfortably at this size.
-
-**These timings are not compute cost.** Boot, the Docker install, and pulling the
-**0.84 GB** `viz` image are the whole task; the render is a second inside it. The
-recorded run's command window was **89s** (19:24:28 → 19:25:57 UTC), and it reproduced
-the local render exactly — 3034 contour points, 796 colours, 79.8% background. TTL was
-**retightened from that first real run**: 10m originally, now **5m** (~2.3× the
-instance life), with `cost_limit` following it down $0.03 → $0.02. A loose TTL is a
-larger blast radius, not caution; the recorded run used the original 10m. Disk is
-trivial: the image plus a 23 KB PNG.
-
-> This recipe's first launch **failed to start** with an AWS `InvalidParameterValue:
-> ... iamInstanceProfile.name is invalid` — a transient IAM instance-profile
-> propagation race when three tasks were launched in parallel (the other two started
-> fine). No instance was created, so it cost nothing; a re-launch a moment later
-> succeeded. Filed as spore-host/spawn#572. If you launch several tasks at once and one
-> dies this way, just re-run it.
-
-## Running it
-
-No `stage-inputs.sh` — the dataset is synthetic.
+### Run + verify
 
 ```sh
 spawn task run --spec recipes/paraview/01-render.task.json --wait
-```
-
-Then **check the bucket**, every time:
-
-```sh
 aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/paraview/r1/
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the
-smoke check runs *inside* the task, and the bucket listing is the second half of it.
-Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`. The PNG is the
-artifact worth looking at.
+`--wait` exiting 0 does **not** prove the outputs exist (spore-host/spawn#561): the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`; the PNG is the artifact worth looking at. Re-run: bump the `-r1` suffix (`pvbatch` overwrites its own output, so no checkpoint guard to defeat). A transient `Invalid IAM Instance Profile name` on a parallel launch is the IAM-propagation race (spore-host/spawn#572) — re-run.
 
-**Re-running.** `task_id` is fixed, so a re-run overwrites the previous records. Bump the
-`-r1` suffix in both `task_id` and the output prefix to keep both. `pvbatch` overwrites
-its own output, so there is no checkpoint guard to defeat.
+</details>
