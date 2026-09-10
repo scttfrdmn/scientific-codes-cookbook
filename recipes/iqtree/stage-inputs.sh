@@ -13,7 +13,7 @@
 # picks the same family every time.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 SEED="https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam38.2/Pfam-A.seed.gz"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT

@@ -8,7 +8,7 @@
 # SIESTA's committed reference output for the same test (Total = -214.377236 eV).
 set -euo pipefail
 
-BUCKET="s3://scicookbook-942542972736-us-east-1"
+BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 SRC="https://gitlab.com/siesta-project/siesta/-/raw/5.4.2/Tests/Pseudos/Si.psf"
 SHA="0afddde32f30e43fa8d603822f3dd1ddf357e8ff33a1af21eb4982b6e63080d7"
 

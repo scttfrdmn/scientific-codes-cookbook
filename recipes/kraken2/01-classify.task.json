@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/kraken2/viral_20240605.tar",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/viral_20240605.tar",
       "destination": "/tmp/viral_20240605.tar"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/kraken2/NC_045512.2.fasta",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/NC_045512.2.fasta",
       "destination": "/tmp/NC_045512.2.fasta"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/out.report",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/kraken2/r1/out.report"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kraken2/r1/out.report"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/kraken2/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kraken2/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

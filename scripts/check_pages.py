@@ -213,10 +213,26 @@ def check_external():
                     warns.append(f"external link unverified ({code or e}): {u}")
 
 
+def check_portability():
+    """The executable path must run in any account. Task specs reference the bucket only as
+    ${COOKBOOK_BUCKET} (make run substitutes it); stage scripts take it, not a hardcoded one."""
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
+        rel = os.path.relpath(f, ROOT)
+        text = open(f, encoding="utf-8").read()
+        for bucket in {m.group(1) for m in re.finditer(r"s3://([^/\"\s]+)", text)}:
+            if bucket != "${COOKBOOK_BUCKET}":
+                errors.append(f"{rel}: hardcoded bucket 's3://{bucket}' — use s3://${{COOKBOOK_BUCKET}} (portability)")
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "stage-inputs.sh"))):
+        rel = os.path.relpath(f, ROOT)
+        if "942542972736" in open(f, encoding="utf-8").read():
+            errors.append(f"{rel}: hardcoded account bucket — default to $COOKBOOK_BUCKET or require the arg (portability)")
+
+
 def main():
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
+    check_portability()
     if "--external" in sys.argv:
         check_external()
     for w in warns:

@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/star/ensembl116_chr20.fa.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star/ensembl116_chr20.fa.gz",
       "destination": "/tmp/ensembl116_chr20.fa.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/star/ensembl116_chr20.gtf.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star/ensembl116_chr20.gtf.gz",
       "destination": "/tmp/ensembl116_chr20.gtf.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/star-index.tar",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/star-index.tar"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/star-index.tar"
     },
     {
       "source": "/tmp/smoke-check-index.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/smoke-check-index.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/smoke-check-index.txt"
     }
   ],
   "lifecycle": {

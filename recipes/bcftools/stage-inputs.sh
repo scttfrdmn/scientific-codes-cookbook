@@ -25,7 +25,7 @@
 # sha256 below is a real pin, not a moving target.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PREFIX="inputs/highcov"
 REGION="chr20:2000000-2400000"
 # HG00096, 1000G NYGC 30x resequencing (ERP114329). ERR3240114 from the release's

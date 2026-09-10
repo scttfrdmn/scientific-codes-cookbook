@@ -16,38 +16,38 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/star-index.tar",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/star/r1/star-index.tar",
       "destination": "/tmp/star-index.tar"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/star/ERR188026_sub_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star/ERR188026_sub_1.fq.gz",
       "destination": "/tmp/ERR188026_sub_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/star/ERR188026_sub_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star/ERR188026_sub_2.fq.gz",
       "destination": "/tmp/ERR188026_sub_2.fq.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/aln_Aligned.sortedByCoord.out.bam",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/aln_Aligned.sortedByCoord.out.bam"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/aln_Aligned.sortedByCoord.out.bam"
     },
     {
       "source": "/tmp/aln_Log.final.out",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/aln_Log.final.out"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/aln_Log.final.out"
     },
     {
       "source": "/tmp/aln_ReadsPerGene.out.tab",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/aln_ReadsPerGene.out.tab"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/aln_ReadsPerGene.out.tab"
     },
     {
       "source": "/tmp/aln_SJ.out.tab",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/aln_SJ.out.tab"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/aln_SJ.out.tab"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/star/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/star/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

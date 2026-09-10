@@ -16,26 +16,26 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
       "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
       "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam.bai"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/chr20.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
       "destination": "/tmp/chr20.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/freebayes.vcf",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/freebayes.vcf"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/freebayes.vcf"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

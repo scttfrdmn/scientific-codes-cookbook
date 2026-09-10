@@ -12,7 +12,7 @@
 # this is a cross-region copy: it is done once here, at staging time, not on the box.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 SRC="s3://cryoem-spa-workflow-records-public/ArXiv/EMPIAR/EMPIAR10581/260123_tmoriya_relion5o0o0_res2o75_run05_nosplit_FSx9600"
 SRC_REGION="ap-northeast-1"
 WORK="$(mktemp -d)"

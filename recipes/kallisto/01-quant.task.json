@@ -16,34 +16,34 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ensembl116_cdna.fa.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon/ensembl116_cdna.fa.gz",
       "destination": "/tmp/cdna.fa.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ERR188026_sub_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon/ERR188026_sub_1.fq.gz",
       "destination": "/tmp/ERR188026_sub_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ERR188026_sub_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon/ERR188026_sub_2.fq.gz",
       "destination": "/tmp/ERR188026_sub_2.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/quant.sf",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/quant.sf",
       "destination": "/tmp/salmon_quant.sf"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/abundance.tsv",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/kallisto/r1/abundance.tsv"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/abundance.tsv"
     },
     {
       "source": "/tmp/run_info.json",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/kallisto/r1/run_info.json"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/run_info.json"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/kallisto/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

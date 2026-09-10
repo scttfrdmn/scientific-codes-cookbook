@@ -16,30 +16,30 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
       "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
       "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/out_1.fq.gz",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/out_1.fq.gz"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastp/r1/out_1.fq.gz"
     },
     {
       "source": "/tmp/out_2.fq.gz",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/out_2.fq.gz"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastp/r1/out_2.fq.gz"
     },
     {
       "source": "/tmp/fastp.json",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/fastp.json"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastp/r1/fastp.json"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/fastp/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastp/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

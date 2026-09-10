@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/spades/r1/contigs.fasta",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/contigs.fasta",
       "destination": "/tmp/spades_contigs.fa"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/contigs.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/contigs.fa",
       "destination": "/tmp/megahit_contigs.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/mash-dist.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/mash/r1/mash-dist.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mash/r1/mash-dist.txt"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/mash/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mash/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

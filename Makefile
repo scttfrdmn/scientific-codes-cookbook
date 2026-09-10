@@ -1,7 +1,42 @@
-.PHONY: check check-links
+.PHONY: check check-links bootstrap stage run ls print-bucket
 
-check: ## frontmatter + markdown-a11y + internal links (offline, fast)
+# Your cookbook bucket — holds staged inputs and run outputs, in YOUR account.
+# Override with `make run COOKBOOK_BUCKET=my-bucket` if you want a different name.
+AWS_ACCOUNT     := $(shell aws sts get-caller-identity --query Account --output text 2>/dev/null)
+AWS_REGION      := $(shell aws configure get region 2>/dev/null)
+COOKBOOK_BUCKET ?= cookbook-$(AWS_ACCOUNT)-$(AWS_REGION)
+
+check: ## frontmatter + markdown-a11y + internal links + spec portability (offline, fast)
 	@python3 scripts/check_pages.py
 
 check-links: ## everything in `check`, plus external link liveness (network)
 	@python3 scripts/check_pages.py --external
+
+print-bucket: ## print the resolved COOKBOOK_BUCKET
+	@echo $(COOKBOOK_BUCKET)
+
+bootstrap: ## create your cookbook bucket in your account (once)
+	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'aws configure' (aws sts get-caller-identity must succeed)"; exit 1; }
+	@test -n "$(AWS_REGION)"  || { echo "no default region — set one with 'aws configure'"; exit 1; }
+	@aws s3 mb s3://$(COOKBOOK_BUCKET) 2>/dev/null && echo "created s3://$(COOKBOOK_BUCKET)" || echo "s3://$(COOKBOOK_BUCKET) already exists — fine"
+	@echo "COOKBOOK_BUCKET=$(COOKBOOK_BUCKET)"
+
+stage: ## build a recipe's inputs into your bucket from public sources: make stage RECIPE=blast
+	@test -n "$(RECIPE)" || { echo "usage: make stage RECIPE=<name>"; exit 1; }
+	@if [ -f recipes/$(RECIPE)/stage-inputs.sh ]; then \
+	  recipes/$(RECIPE)/stage-inputs.sh $(COOKBOOK_BUCKET); \
+	else echo "recipe '$(RECIPE)' builds its input in the task — no staging needed"; fi
+
+run: ## run a recipe against your bucket: make run RECIPE=r
+	@test -n "$(RECIPE)" || { echo "usage: make run RECIPE=<name>"; exit 1; }
+	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'make bootstrap' first"; exit 1; }
+	@for spec in recipes/$(RECIPE)/*.task.json; do \
+	  out="$$(mktemp -t cookbook.XXXXXX)"; \
+	  sed 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' "$$spec" > "$$out"; \
+	  echo "== $$spec  →  s3://$(COOKBOOK_BUCKET) =="; \
+	  spawn task run --spec "$$out" --wait; \
+	done
+
+ls: ## list a recipe's outputs in your bucket: make ls RECIPE=r
+	@test -n "$(RECIPE)" || { echo "usage: make ls RECIPE=<name>"; exit 1; }
+	aws s3 ls s3://$(COOKBOOK_BUCKET)/runs/$(RECIPE)/ --recursive

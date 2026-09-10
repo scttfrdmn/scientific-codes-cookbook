@@ -16,30 +16,30 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree/pfam38.2_seed_alignment.fa",
       "destination": "/tmp/pfam38.2_seed_alignment.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/iqout.treefile",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.treefile"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/iqout.treefile"
     },
     {
       "source": "/tmp/iqout.iqtree",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.iqtree"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/iqout.iqtree"
     },
     {
       "source": "/tmp/iqout.log",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/iqout.log"
     },
     {
       "source": "/tmp/iqout.mldist",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/iqout.mldist"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/iqout.mldist"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/iqtree/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

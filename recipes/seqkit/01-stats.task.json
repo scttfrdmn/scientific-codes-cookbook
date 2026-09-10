@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
       "destination": "/tmp/reads_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
       "destination": "/tmp/reads_2.fq.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/stats.tsv",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/seqkit/r1/stats.tsv"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/r1/stats.tsv"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/seqkit/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

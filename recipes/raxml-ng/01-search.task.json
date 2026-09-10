@@ -16,34 +16,34 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree/pfam38.2_seed_alignment.fa",
       "destination": "/tmp/pfam38.2_seed_alignment.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/rx.raxml.bestTree",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.bestTree"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/rx.raxml.bestTree"
     },
     {
       "source": "/tmp/rx.raxml.mlTrees",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.mlTrees"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/rx.raxml.mlTrees"
     },
     {
       "source": "/tmp/rx.raxml.startTree",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.startTree"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/rx.raxml.startTree"
     },
     {
       "source": "/tmp/rx.raxml.bestModel",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.bestModel"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/rx.raxml.bestModel"
     },
     {
       "source": "/tmp/rx.raxml.log",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/rx.raxml.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/rx.raxml.log"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

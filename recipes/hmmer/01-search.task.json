@@ -16,26 +16,26 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/hmmer/pfam38.2_first200.hmm",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer/pfam38.2_first200.hmm",
       "destination": "/tmp/pfam38.2_first200.hmm"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/hmmer/ensembl116_pep.fa.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer/ensembl116_pep.fa.gz",
       "destination": "/tmp/ensembl116_pep.fa.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/hits.tbl",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/hits.tbl"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/hits.tbl"
     },
     {
       "source": "/tmp/hmmer.out.gz",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/hmmer.out.gz"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/hmmer.out.gz"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/hmmer/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

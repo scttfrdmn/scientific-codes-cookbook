@@ -16,18 +16,18 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/siesta/Si.psf",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/siesta/Si.psf",
       "destination": "/tmp/Si.psf"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/psf.out",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/siesta/r1/psf.out"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/psf.out"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/siesta/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

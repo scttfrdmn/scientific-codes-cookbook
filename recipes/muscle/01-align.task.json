@@ -16,18 +16,18 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/mafft-muscle/pfam_unaligned.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-muscle/pfam_unaligned.fa",
       "destination": "/tmp/unaligned.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/aln.fa",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/muscle/r1/aln.fa"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/muscle/r1/aln.fa"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/muscle/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/muscle/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

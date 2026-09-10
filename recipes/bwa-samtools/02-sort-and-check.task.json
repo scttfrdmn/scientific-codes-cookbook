@@ -16,30 +16,30 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/aln.sam",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sam",
       "destination": "/tmp/aln.sam"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/HG00096.chr20.bam",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/HG00096.chr20.bam"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/HG00096.chr20.bam"
     },
     {
       "source": "/tmp/HG00096.chr20.bam.bai",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/HG00096.chr20.bam.bai"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/HG00096.chr20.bam.bai"
     },
     {
       "source": "/tmp/flagstat.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/flagstat.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/flagstat.txt"
     },
     {
       "source": "/tmp/idxstats.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/idxstats.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/idxstats.txt"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/bwa-samtools/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

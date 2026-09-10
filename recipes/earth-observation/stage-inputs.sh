@@ -10,7 +10,7 @@
 # uint16 / nodata 0, which the recipe cross-checks against the fetched pixels.
 set -euo pipefail
 
-BUCKET="s3://scicookbook-942542972736-us-east-1"
+BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 SRC="https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/11/S/KA/2024/7/S2B_11SKA_20240704_0_L2A/B01.tif"
 SHA="8626d4bb645a0ec92ba0099b2c6aab94d0ee328a12ada9190d1c2d0d1771a3f0"
 

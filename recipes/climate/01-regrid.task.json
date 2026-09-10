@@ -16,14 +16,14 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/climate/air.nc",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/climate/air.nc",
       "destination": "/tmp/air.nc"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/climate/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

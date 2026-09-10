@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/salmon/ensembl116_cdna.fa.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon/ensembl116_cdna.fa.gz",
       "destination": "/tmp/ensembl116_cdna.fa.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/salmon-index.tar",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/salmon-index.tar"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/salmon-index.tar"
     },
     {
       "source": "/tmp/index.log",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/index.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/index.log"
     },
     {
       "source": "/tmp/smoke-check-index.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/smoke-check-index.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/smoke-check-index.txt"
     }
   ],
   "lifecycle": {

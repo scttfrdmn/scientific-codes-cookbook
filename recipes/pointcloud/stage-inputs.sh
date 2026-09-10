@@ -6,7 +6,7 @@
 # in the PDAL/data repo via Git LFS. Pinned at a specific commit + sha256, so the LFS
 # media bytes are immutable.
 set -euo pipefail
-BUCKET="s3://scicookbook-942542972736-us-east-1"
+BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 COMMIT="360327d2ae791b9d52c57b610a5a6b5c1b08c878"
 SRC="https://github.com/PDAL/data/raw/${COMMIT}/autzen/autzen.laz"
 SHA="944b947501156e45df1b3b9d25bc1dc04ff5ef377e7e169576ba59231c2896ba"
