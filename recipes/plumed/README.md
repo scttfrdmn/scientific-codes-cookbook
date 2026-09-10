@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # PLUMED → GROMACS — collective variables computed live during an MD run
 
-GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from GROMACS's coordinates at every step. The check is that the CVs come out at the exact force-field geometry — which validates the *coupling*, not the two tools in isolation.
+GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run.
 
 > **What this covers.** A 50-step MD of 216 rigid waters with PLUMED computing a distance and an angle — proof GROMACS and PLUMED are coupled correctly on Graviton4 and PLUMED's CV machinery is right. Not a benchmark; no metadynamics or biased sampling (a restraint check would be sampling-dependent — this uses a fixed-geometry CV instead).
 

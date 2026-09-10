@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # ASE → spglib → phonopy — phonons of bulk silicon
 
-Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — validated end-to-end by one identity: the acoustic modes go to 0 at Γ.
+Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal.
 
 > **What this covers.** Build one crystal, find its space group, compute Γ-point phonons — proof ASE, spglib and phonopy work and hand off correctly on Graviton4. Forces come from a generic Lennard-Jones field, so the phonon *frequencies* are not silicon's real spectrum; the asserted identities don't depend on that. No DFT forces, dispersion, or thermodynamics.
 

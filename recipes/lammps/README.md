@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # LAMMPS — the Lennard-Jones melt, serial and over 2 MPI ranks
 
-`lmp_mpi` runs the canonical LJ melt twice — serial, then over two MPI ranks — and the check is that the two independent computations land on the same total energy: agreement proves both the kernels and the MPI communication are correct.
+`lmp_mpi` runs the canonical Lennard-Jones melt twice — once serial, once over two MPI ranks.
 
 > **What this covers.** A tiny MD: 256 LJ atoms for 50 steps on an analytic potential. Proof LAMMPS 2025.07.22 runs correctly on Graviton4 and its MPI build **actually parallelises**. Not a benchmark; 2 ranks on one small box is not domain decomposition at scale, long-range solvers, or multi-node.
 

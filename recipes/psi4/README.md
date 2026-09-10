@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # Psi4 — Hartree-Fock on H₂, against the textbook energy
 
-`psi4` computes the RHF/STO-3G energy of a hydrogen molecule; the check is that it lands on the textbook value, −1.1167 Hartree.
+`psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF.
 
 > **What this covers.** One SCF on H₂ in a minimal basis — proof Psi4's native integral/SCF stack is numerically correct on Graviton4 against a known reference. Not a benchmark; no correlated method, large basis, or big molecule.
 

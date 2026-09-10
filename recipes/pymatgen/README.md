@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # pymatgen — bulk-silicon structure, symmetry, and a CIF round-trip
 
-pymatgen builds silicon from its space group; the checks are exact structural identities — formula, site count, lattice, density, space group — plus a Structure → CIF → Structure round-trip.
+pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling.
 
 > **What this covers.** Construct one crystal and check its exact properties and a format round-trip — proof pymatgen's core structure and symmetry machinery works on Graviton4. Not a benchmark; no materials-database query, phase diagram, or DFT.
 

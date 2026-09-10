@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # RDKit — exact cheminformatics identities on aspirin
 
-`rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts; each check is against an exact or published value.
+`rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception.
 
 > **What this covers.** Parse one molecule and check exact graph properties — proof RDKit's native cheminformatics core works correctly on Graviton4. Not a benchmark; no conformer generation, fingerprinting at scale, or reaction handling.
 

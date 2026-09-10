@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # AutoDock Vina — dock imatinib into Abl kinase, against the tutorial's own result
 
-`vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP); the checks are that the top binding affinity reproduces Vina's published tutorial result and that a fixed seed is deterministic.
+`vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target.
 
 > **What this covers.** One ligand docked into one receptor at the tutorial's box — proof Vina's scoring and Monte-Carlo search are correct and reproducible on Graviton4 against a known answer. Not a virtual-screening benchmark; no ligand library or flexible-receptor docking.
 

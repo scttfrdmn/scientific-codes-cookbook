@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # PySCF — Hartree-Fock on H₂, cross-checked against Psi4
 
-`pyscf` computes the RHF/STO-3G energy of H₂; the check is that it agrees with the value [psi4](../psi4/README.md) produced — two unrelated quantum-chemistry codebases on the same molecule, method and basis.
+`pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase.
 
 > **What this covers.** One SCF on H₂ in a minimal basis — proof PySCF's native integral/SCF stack is correct on Graviton4 and agrees with a second code. Not a benchmark; no correlated method, large basis, or big molecule.
 

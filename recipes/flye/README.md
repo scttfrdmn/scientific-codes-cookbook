@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # Flye — long-read de novo assembly
 
-Assemble long reads into contigs — the catalog's first long-read recipe, run deterministically so its contig count can be asserted exactly.
+Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly.
 
 ## Run it
 

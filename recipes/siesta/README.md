@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # SIESTA — bulk-silicon DFT, reproducing SIESTA's own committed reference
 
-`siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks; the check is that the total energy matches the reference output SIESTA ships for this exact test at this exact version.
+`siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method.
 
 > **What this covers.** One SCF on a 2-atom Si cell (single-ζ-polarised basis, 3×3×3 k-grid) — proof SIESTA 5.4.2 runs a real, converged, MPI-parallel DFT calculation on Graviton4 and lands on the published energy. Not a benchmark; no large cell, geometry relaxation, or many-node scaling.
 

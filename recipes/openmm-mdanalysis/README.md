@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # OpenMM → MDAnalysis — write an NVE trajectory, read it back and check it
 
-OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back. The checks are that OpenMM conserved energy **and** that MDAnalysis recovers exactly what OpenMM wrote — a cross-layer identity, not two isolated checks.
+OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff.
 
 > **What this covers.** A 27-atom argon NVE run (200 steps) analyzed by MDAnalysis — proof OpenMM's integrator and MDAnalysis's DCD/PDB readers work, and hand off correctly, on Graviton4. Not a benchmark; no biomolecular force field, thermostat/barostat, or long trajectory.
 

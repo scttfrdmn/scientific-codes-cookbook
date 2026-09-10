@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 
-`Rscript` fits a linear model to the bundled `cars` dataset; the check is that the coefficients match the textbook values *and* that `lm()`'s QR fit agrees with the closed-form normal equations — two independent computations of the same fit.
+`Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse).
 
 ## Run it
 

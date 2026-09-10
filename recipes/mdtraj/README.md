@@ -7,7 +7,7 @@ spawn_version: 0.104.0
 ---
 # MDTraj ← GROMACS — read an XTC trajectory, cross-checked against MDAnalysis
 
-GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently. The check is that MDTraj recovers what GROMACS wrote **and** that the two parsers agree on a geometry computed from the same bytes.
+GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format.
 
 > **What this covers.** Write a 50-step rigid-water trajectory and read it two ways — proof MDTraj's GROMACS-XTC reader works on Graviton4 and agrees with a second parser. Not a benchmark; no large trajectory or analysis pipeline.
 

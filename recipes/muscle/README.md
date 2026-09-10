@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # MUSCLE — multiple sequence alignment
 
-Align a set of sequences with MUSCLE v5; the check confirms the alignment conserves every residue.
+Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../mafft/README.md).
 
 ## Run it
 

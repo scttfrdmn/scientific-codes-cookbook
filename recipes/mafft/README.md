@@ -6,7 +6,7 @@ spawn_version: 0.104.0
 ---
 # MAFFT — multiple sequence alignment
 
-Align a set of sequences; the check confirms the alignment is faithful and reproducible.
+Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment.
 
 ## Run it
 
