@@ -44,6 +44,8 @@ For an **immutable** reference — GRCh38, 1000 Genomes, a pinned kraken2 DB, ou
 
 The limit that scopes it: lith's index is a **point-in-time snapshot, ETag-checked** — if an object mutates out from under it, reads return `EIO` (a *loud* failure, not silent corruption — which is the right failure). So lith is build-once-share-N for data that doesn't change; a **mutating** bucket wants EFS's live filesystem instead. Reference data doesn't mutate, which is exactly why this fits.
 
+And it fits *where reference data actually lives*: the measured runs read the GRCh38 index straight from the **public 1000 Genomes bucket** (RODA), not a private copy — the natural home for shared reference data is a public/open-data bucket, which lith reads directly with no per-instance credential plumbing. (Reading a *private* bucket from a container has the separate IMDS-auth wrinkle in [the container path](../practices/container-path.md); public reference data sidesteps it entirely.)
+
 > **Measured — lith holds under concurrency, and wins.** Six tasks mmap'ing the same index at once averaged **~583 MB/s each** (445–741 range) with **no contention collapse**, because each instance reads S3 over its *own* NIC — unlike EFS's single shared filesystem, whose aggregate capacity is split across readers. Per task, lith (445–741) already beats EFS's 329 MB/s in isolation; under six-way concurrency the gap widens. Setup is ≈0 and it leaves nothing behind. So for immutable reference data across a fan-out, **lith is the pick**: faster per task, no hydration, no cleanup. (The 445–741 MB/s is a *floor* — lith fell back to a conservative readahead with no NIC probe available in the guest.)
 
 ## Which resource are you sizing on?
