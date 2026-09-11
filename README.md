@@ -39,6 +39,20 @@ Every recipe runs the same way — `make run RECIPE=<name>`, with `make stage RE
 
 Scan [the catalog](catalog/recipes.md) for the whole inventory at a glance — what each recipe does, and what a clean account stages or reuses first — or browse [`recipes/`](recipes/) directly, one directory per code. Each README is self-contained: the invocation, what to change for your own work, and all the verification in one place. The catalog spans genomics, molecular dynamics, quantum chemistry, materials, phylogenetics, and geo/EO; every page carries the exact image digest and versions it was run with.
 
+## Reading a recipe page
+
+The pages lean on a small house vocabulary, defined once here:
+
+| Term | Means |
+|---|---|
+| **load-bearing** | a detail you can't change without breaking the result — not just explanation, so it's stated where you'd act on it |
+| **determinism scaffolding** | a fixed setting (thread count, seed) that makes the output byte-identical run to run, so an exact check is safe; change it and you must loosen the check |
+| **identity** | an equality the science forces — a conservation law, a count, two codes agreeing — asserted exactly, stronger than a band |
+| **exact-or-wrong** | a check with no tolerance: the value is precisely this, or the run failed |
+| **band** | a tolerance range for a value that legitimately varies (cross-host floating point) — the fallback when no identity is available |
+| **leave-it / scale-it** | the fixture verdict: keep the small input (the check holds at any size), or enlarge it (only where small misrepresents the tool) |
+| **build-in-task / stage: X / run: X** | how a recipe gets its input (the [catalog](catalog/recipes.md)'s column): built in code with nothing to stage, or do `make stage RECIPE=X` / `make run RECIPE=X` first |
+
 ## Three ideas the recipes lean on
 
 - **Right-size, don't max-size** — more cores stop paying past a knee. → [sizing](patterns/sizing.md)
