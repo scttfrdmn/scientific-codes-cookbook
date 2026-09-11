@@ -4,6 +4,7 @@ tool_version: 1.12a4
 env: dft
 image: quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # Psi4 — Hartree-Fock on H₂, against the textbook energy
 
@@ -15,8 +16,9 @@ spawn_version: 0.104.0
 
 ```python
 import psi4
+psi4.set_options({"scf_type": "pk"})   # exact integrals — Psi4 defaults to density fitting
 psi4.geometry("H 0 0 0\nH 0 0 0.74")
-e = psi4.energy("scf/sto-3g")     # → -1.116783 Ha
+e = psi4.energy("scf/sto-3g")     # → -1.116759 Ha
 ```
 
 One task, one `psi4.energy` call. The molecule (H₂ at 0.74 Å) is three lines of inline geometry, so nothing is staged.
@@ -39,7 +41,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. R
 
 ### The check — a reference identity
 
-−1.1167 Hartree for H₂ at 0.74 Å in a minimal basis is a fixed, well-known literature number, so the band is tight (±0.0015). Psi4 gives −1.116783 through its own native integral and SCF code (an independent kernel from [gpaw](../gpaw/README.md)'s in the same env). Because the reference is *external*, agreement means the numerics are right — not merely that Psi4 is internally consistent ([reproduce a number, don't self-check](../../practices/reference-from-tests.md)). Psi4 raises on non-convergence and the check confirms the converged-wavefunction line, so a silent failure can't pass. [pyscf](../pyscf/README.md) runs the same calculation and cross-checks against this value; [the tolerance there is basis-limited, and justified](../../practices/cross-checks.md).
+−1.1167 Hartree for H₂ at 0.74 Å in a minimal basis is a fixed, well-known literature number, so the band is tight (±0.0015). Psi4 gives −1.116759 through its own native integral and SCF code (an independent kernel from [gpaw](../gpaw/README.md)'s in the same env), run with `SCF_TYPE PK` for exact integrals — Psi4 *defaults* to density fitting, which gives −1.116783 (2.4e-5 higher), so PK is what makes the [pyscf](../pyscf/README.md) cross-check apples-to-apples rather than a comparison of two different methods. Because the reference is *external*, agreement means the numerics are right — not merely that Psi4 is internally consistent ([reproduce a number, don't self-check](../../practices/reference-from-tests.md)). Psi4 raises on non-convergence and the check confirms the converged-wavefunction line, so a silent failure can't pass. [pyscf](../pyscf/README.md) runs the same exact-integral calculation and cross-checks against this value, agreeing to 3e-7.
 
 ### Pins (data tier: none / in-task)
 
@@ -54,7 +56,7 @@ Psi4 lives in `dft` (not `comp-chem`) because of a python-version collision: it 
 
 | observable | assertion | observed | catches |
 |---|---|---|---|
-| **SCF energy** | −1.1180 … −1.1150 Ha (textbook = −1.1167) | **−1.116783** | broken integral/basis/SCF |
+| **SCF energy** | −1.1180 … −1.1150 Ha (textbook = −1.1167) | **−1.116759** | broken integral/basis/SCF |
 | SCF converged | Psi4 reports a converged wavefunction | yes | silent non-convergence |
 | energy is a float | the return value is a real number | float | garbage return |
 

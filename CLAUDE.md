@@ -114,12 +114,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   **A cross-code check's tolerance is set by the shared problem's precision, not by how
   closely the codes happen to agree** — and stating *why* is what separates it from a
   fudge. RAxML-NG/IQ-TREE can assert 1e-8 because the ML optimum is defined to that
-  precision. PySCF and Psi4 on H2 RHF/STO-3G agree only to 2.4e-5 Ha, and that is *correct*:
-  STO-3G's contraction coefficients aren't standardized across packages, so two right HF
-  codes must differ at the 5th decimal on a minimal basis — the check asserts agreement to
-  chemical accuracy (<1 mHa), which still catches a broken integral/SCF (those diverge by
-  mHa–Ha) while a 1e-8 band would fail for a reason unrelated to correctness. Same technique,
-  different justified tolerance; the basis sets it, not the noise.
+  precision. PySCF and Psi4 on H2 RHF/STO-3G, **both run with exact integrals**, agree to
+  3e-7 Ha — and getting there required first matching the *method*: Psi4 defaults to density
+  fitting (DF), and comparing that DF energy against PySCF's exact one made two correct codes
+  look 2.4e-5 Ha apart, a method difference masquerading as a basis limit (the original recipe
+  blamed "unstandardized STO-3G contraction coefficients" — wrong; measured DF−PK = 2.401e-5).
+  Setting `SCF_TYPE PK` makes it like-with-like; then the check asserts <1e-5 (tight enough to
+  be a real cross-validation, loose enough to survive SCF-convergence noise). The integral
+  treatment sets the tolerance, not a basis nuance — and this is the same "match the modes"
+  discipline as the aligners, one env over.
   (A check that only proves a tool is self-consistent, when a stronger one was free; or a
   cross-code tolerance picked to pass rather than justified by the problem.)
 - **A cross-code check must compare like with like — before asserting agreement, verify the

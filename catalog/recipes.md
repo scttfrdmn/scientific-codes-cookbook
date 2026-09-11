@@ -53,7 +53,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 |---|---|---|---|---|---|
 | [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back. | comp-chem | build-in-task | 2026-09-10 | — |
 | [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff. | comp-chem | build-in-task | 2026-09-10 | — |
-| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-09-10 | — |
+| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-09-10 | 2026-09-10 |
 | [rdkit](../recipes/rdkit/README.md) | `rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception. | comp-chem | build-in-task | 2026-09-10 | — |
 | [vina](../recipes/vina/README.md) | `vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target. | comp-chem | stage | 2026-09-10 | — |
 
@@ -64,7 +64,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-09-10 | — |
 | [gpaw](../recipes/gpaw/README.md) | Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch.science's published figure — proof GPAW computes correctly, and in real parallel, on Graviton4. | dft | build-in-task | 2026-09-10 | — |
 | [nwchem](../recipes/nwchem/README.md) | `nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env. | dft | build-in-task | 2026-09-10 | — |
-| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-09-10 | — |
+| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-09-10 | 2026-09-10 |
 | [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-09-10 | — |
 | [siesta](../recipes/siesta/README.md) | `siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method. | dft | stage | 2026-09-10 | — |
 

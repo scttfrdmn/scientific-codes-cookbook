@@ -3,6 +3,7 @@ tool: pyscf
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # PySCF — Hartree-Fock on H₂, cross-checked against Psi4
 
@@ -25,9 +26,9 @@ One task, one SCF. The molecule is three lines of inline geometry, so nothing is
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | H₂ at 0.74 Å (inline) | your own molecule + method | the minimal case is chosen because a second code ([psi4](../psi4/README.md)) fixes the same number to cross-check against. |
-| the cross-check tolerance (< 1 mHa) | keep it — it's basis-justified | **load-bearing:** PySCF and Psi4 agree only to 2.4e-5 Ha because STO-3G's contraction coefficients aren't standardized across packages; asserting 1e-8 would fail for a reason unrelated to correctness ([justify the tolerance by the problem, not the noise](../../practices/cross-checks.md)). |
+| the cross-check tolerance (< 1e-5 Ha) | keep it — it's method-justified | **load-bearing:** both codes run *exact* integrals (Psi4 with `SCF_TYPE PK`), so they agree to 3e-7 Ha. Psi4's density-fitting *default* would differ by 2.4e-5 — match the integral treatment or you measure the approximation, not the agreement ([match the modes](../../practices/cross-checks.md)). |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the cross-code identity is basis-limited at any size, and H₂ makes it hand-checkable. Leave-it.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the cross-code identity holds at any molecule size, and H₂ makes it hand-checkable. Leave-it.
 
 ## Shape, size, cost
 
@@ -36,9 +37,9 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF is ~1 s. Reco
 <details>
 <summary>As shipped: the cross-code check, pins, smoke check, run + verify</summary>
 
-### The check — a basis-limited cross-code identity
+### The check — a matched-method cross-code identity
 
-PySCF is a third independent SCF kernel in the catalog (after [psi4](../psi4/README.md) and [nwchem](../nwchem/README.md)), sharing no integral or SCF code. Psi4 fixed H₂ at 0.74 Å, RHF/STO-3G, at **−1.116783 Ha**; PySCF gives −1.116759 — a difference of **2.4e-5 Ha** (~0.015 kcal/mol), not the ~1e-8 that [raxml-ng](../raxml-ng/README.md) and IQ-TREE reached. The reason is real: STO-3G's contraction coefficients are not defined identically across packages, so two correct HF codes land a few times 1e-5 apart on a minimal basis — the *basis definition* is the limit, not the SCF. So the check asserts agreement to **chemical accuracy** (< 1 mHa), which catches a broken integral or SCF (those diverge by mHa–Ha) but not a 5th-decimal basis nuance. The full reasoning is on the [cross-checks page](../../practices/cross-checks.md).
+PySCF is a third independent SCF kernel in the catalog (after [psi4](../psi4/README.md) and [nwchem](../nwchem/README.md)), sharing no integral or SCF code. Both run H₂ at 0.74 Å, RHF/STO-3G, with **exact integrals** — Psi4 with `SCF_TYPE PK` — and agree to **3e-7 Ha**, near SCF-convergence precision. Matching the integral treatment is what makes that meaningful: Psi4 *defaults* to density fitting (DF), which gives −1.116783 Ha, **2.4e-5 above** the exact −1.116759; comparing that DF value against PySCF's exact one would measure Psi4's approximation, not the two codes' agreement — a method mismatch, not a basis limit ([match the modes](../../practices/cross-checks.md)). So the recipe sets PK and asserts **< 1e-5 Ha**: tight enough to be a real cross-validation (the [raxml-ng](../raxml-ng/README.md)/IQ-TREE move), loose enough to survive convergence noise. The full reasoning is on the [cross-checks page](../../practices/cross-checks.md).
 
 ### Pins (data tier: none / in-task)
 
@@ -55,7 +56,7 @@ Same `comp-chem` image as [vina](../vina/README.md) and [rdkit](../rdkit/README.
 |---|---|---|---|
 | SCF converged | PySCF reports convergence | True | silent non-convergence |
 | **PySCF energy** | −1.116759 ± 1e-4 Ha (RHF/STO-3G) | **−1.116759** | broken integral/SCF |
-| **cross-code vs Psi4** | \|E − (−1.116783)\| < 1e-3 (chemical accuracy) | 2.37e-5 | either code wrong |
+| **cross-code vs Psi4 (PK)** | \|E − (−1.116759)\| < 1e-5 (both exact integrals) | 3.1e-7 | either code wrong |
 | bound state | E < −1.0 Ha | −1.116759 | garbage energetics |
 
 ### Run + verify

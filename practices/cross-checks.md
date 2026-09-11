@@ -23,7 +23,7 @@ Many recipes here check one tool against another — bowtie2 against bwa, PySCF 
 **Do this — two worked tolerances, both justified, both different:**
 
 - **RAxML-NG vs IQ-TREE agree to `1e-8`** on the log-likelihood — because the ML optimum *is* defined to that precision, so a tighter band is meaningful and a looser one throws away signal.
-- **PySCF vs Psi4 (H₂, RHF/STO-3G) agree only to `2.4e-5` Ha — and that is correct.** STO-3G's contraction coefficients aren't standardized across packages, so two right HF codes *must* differ at the 5th decimal on a minimal basis. The check asserts agreement to **chemical accuracy (< 1 mHa)** — which still catches a broken integral/SCF (those diverge by mHa–Ha) while a `1e-8` band would fail for a reason unrelated to correctness. Same technique as the trees; the basis sets the tolerance, not the noise.
+- **PySCF vs Psi4 (H₂, RHF/STO-3G), both with exact integrals, agree to `3e-7` Ha** — but only after matching the method. Psi4 *defaults* to density fitting (DF); comparing that DF energy against PySCF's exact one made two correct codes look `2.4e-5` Ha apart, and the recipe first mis-blamed "unstandardized STO-3G contraction coefficients." It's DF, not the basis (measured DF−PK = `2.401e-5`) — exactly the *match the modes* failure below, one env over. Set `SCF_TYPE PK` so both run exact integrals, and the check asserts `< 1e-5` (tight enough to be a real cross-validation, loose enough to survive SCF-convergence noise). The integral treatment sets the tolerance, not the basis.
 
 ## Pin threads and a seed before an exact identity means anything
 
