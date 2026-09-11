@@ -70,6 +70,6 @@ make run RECIPE=openmm-mdanalysis
 make ls RECIPE=openmm-mdanalysis
 ```
 
-a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

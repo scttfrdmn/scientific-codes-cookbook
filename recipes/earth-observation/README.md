@@ -75,6 +75,6 @@ make run RECIPE=earth-observation
 make ls RECIPE=earth-observation
 ```
 
-a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`) — this recipe verifies an input rather than producing a large output. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect one object (`smoke-check.txt`) — this recipe verifies an input rather than producing a large output. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>
