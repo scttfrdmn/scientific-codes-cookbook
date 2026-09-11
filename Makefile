@@ -24,7 +24,7 @@ bootstrap: ## create your cookbook bucket in your account (once)
 stage: ## build a recipe's inputs into your bucket from public sources: make stage RECIPE=blast
 	@test -n "$(RECIPE)" || { echo "usage: make stage RECIPE=<name>"; exit 1; }
 	@if [ -f recipes/$(RECIPE)/stage-inputs.sh ]; then \
-	  recipes/$(RECIPE)/stage-inputs.sh $(COOKBOOK_BUCKET); \
+	  bash recipes/$(RECIPE)/stage-inputs.sh $(COOKBOOK_BUCKET); \
 	else echo "recipe '$(RECIPE)' builds its input in the task — no staging needed"; fi
 
 run: ## run a recipe against your bucket: make run RECIPE=r

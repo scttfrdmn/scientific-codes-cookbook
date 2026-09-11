@@ -39,7 +39,7 @@ MEGAHIT (`-t 4 --min-count 2`) is **deterministic** — verified by assembling t
 | contigs | exactly 2 (`-t 4`, deterministic) | 2 |
 | total length | exactly 400811 bp | 400811 |
 
-**Pins.** Image `quay.io/aarchbio/megahit@sha256:d82953bf0096…` (1.2.9, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` (the shared 30× fixture, same bytes SPAdes assembles; sha256-pinned).
+**Pins.** Image `quay.io/aarchbio/megahit@sha256:d82953bf0096…` (1.2.9, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` (the shared 30× fixture, same bytes SPAdes assembles; `make stage RECIPE=bcftools` derives them — repinned to that reproducible build, since the prior sha256 came from an unrecorded command).
 
 **Run + verify.**
 ```sh
