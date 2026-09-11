@@ -1,7 +1,7 @@
 # The container path: three things true of every recipe
 
 These aren't facts about BWA or salmon or any one code — they're how `spawn task run` runs a
-container, so they're identical on all 54 recipe pages. Learn them once here; the recipes just
+container, so they're identical on every recipe page. Learn them once here; the recipes just
 obey them.
 
 ## Stage everything flat in `/tmp`

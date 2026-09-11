@@ -100,7 +100,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Every other recipe is one headless task on one box; this one runs a **Nextflow DAG** where each process step lands on its *own* ephemeral instance via the `nf-spawn` executor, and data moves between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That per-rule dispatch + cross-instance handoff is exactly what a single-task recipe can't demonstrate. | pipeline | build-in-task | 2026-09-10 | — |
+| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | build-in-task | 2026-09-10 | — |
 
 ## pointcloud
 
