@@ -6,114 +6,116 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
+**Updated** is the git date of the page's last change (freshness). **Verified** is the date a real run last confirmed it — `—` means not verified since tracking began, an honest TODO for the next run, never backfilled.
+
 ## aarchbio
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [bcftools](../recipes/bcftools/README.md) | The workhorse germline caller: pile up the reads, call the variants, get a VCF. | aarchbio | stage: bcftools, bwa-samtools · run: freebayes |
-| [bedtools](../recipes/bedtools/README.md) | Merge, intersect, subtract, and cover intervals — the set algebra every genomics pipeline leans on. | aarchbio | build-in-task |
-| [blast](../recipes/blast/README.md) | Build a protein database, search sequences against it — the canonical homology search. | aarchbio | stage |
-| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools |
-| [bwa-samtools](../recipes/bwa-samtools/README.md) | Align paired-end reads to a reference genome and get back a sorted, indexed BAM. | aarchbio | stage |
-| [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | run: blast |
-| [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools |
-| [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage |
-| [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools |
-| [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage |
-| [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage |
-| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon |
-| [kraken2](../recipes/kraken2/README.md) | Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass. | aarchbio | stage |
-| [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage |
-| [mafft](../recipes/mafft/README.md) | Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment. | aarchbio | stage |
-| [mash](../recipes/mash/README.md) | Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes. | aarchbio | run: megahit, spades |
-| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools |
-| [minimap2](../recipes/minimap2/README.md) | The versatile aligner — here in its short-read mode, checked against bwa on identical reads. | aarchbio | run: bwa-samtools |
-| [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../mafft/README.md). | aarchbio | stage: mafft |
-| [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | stage: bcftools |
-| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades |
-| [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree |
-| [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage |
-| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../kallisto/README.md). | aarchbio | stage |
-| [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools |
-| [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades |
-| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools |
-| [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [bcftools](../recipes/bcftools/README.md) | The workhorse germline caller: pile up the reads, call the variants, get a VCF. | aarchbio | stage: bcftools, bwa-samtools · run: freebayes | 2026-09-10 | — |
+| [bedtools](../recipes/bedtools/README.md) | Merge, intersect, subtract, and cover intervals — the set algebra every genomics pipeline leans on. | aarchbio | build-in-task | 2026-09-10 | — |
+| [blast](../recipes/blast/README.md) | Build a protein database, search sequences against it — the canonical homology search. | aarchbio | stage | 2026-09-10 | — |
+| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-09-10 | — |
+| [bwa-samtools](../recipes/bwa-samtools/README.md) | Align paired-end reads to a reference genome and get back a sorted, indexed BAM. | aarchbio | stage | 2026-09-10 | — |
+| [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | run: blast | 2026-09-10 | — |
+| [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-10 | — |
+| [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
+| [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-10 | — |
+| [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-10 | — |
+| [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |
+| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-10 | — |
+| [kraken2](../recipes/kraken2/README.md) | Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass. | aarchbio | stage | 2026-09-10 | — |
+| [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-09-10 | 2026-09-10 |
+| [mafft](../recipes/mafft/README.md) | Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment. | aarchbio | stage | 2026-09-10 | — |
+| [mash](../recipes/mash/README.md) | Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes. | aarchbio | run: megahit, spades | 2026-09-10 | — |
+| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-09-10 | 2026-09-10 |
+| [minimap2](../recipes/minimap2/README.md) | The versatile aligner — here in its short-read mode, checked against bwa on identical reads. | aarchbio | run: bwa-samtools | 2026-09-10 | — |
+| [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../mafft/README.md). | aarchbio | stage: mafft | 2026-09-10 | — |
+| [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | stage: bcftools | 2026-09-10 | — |
+| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-10 | 2026-09-10 |
+| [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree | 2026-09-10 | — |
+| [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-09-10 | — |
+| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../kallisto/README.md). | aarchbio | stage | 2026-09-10 | — |
+| [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-10 | — |
+| [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-10 | — |
+| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-10 | 2026-09-10 |
+| [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage | 2026-09-10 | — |
 
 ## climate
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-09-10 | — |
 
 ## comp-chem
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back. | comp-chem | build-in-task |
-| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff. | comp-chem | build-in-task |
-| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task |
-| [rdkit](../recipes/rdkit/README.md) | `rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception. | comp-chem | build-in-task |
-| [vina](../recipes/vina/README.md) | `vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target. | comp-chem | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back. | comp-chem | build-in-task | 2026-09-10 | — |
+| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff. | comp-chem | build-in-task | 2026-09-10 | — |
+| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-09-10 | — |
+| [rdkit](../recipes/rdkit/README.md) | `rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception. | comp-chem | build-in-task | 2026-09-10 | — |
+| [vina](../recipes/vina/README.md) | `vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target. | comp-chem | stage | 2026-09-10 | — |
 
 ## dft
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task |
-| [gpaw](../recipes/gpaw/README.md) | Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch.science's published figure — proof GPAW computes correctly, and in real parallel, on Graviton4. | dft | build-in-task |
-| [nwchem](../recipes/nwchem/README.md) | `nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env. | dft | build-in-task |
-| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task |
-| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task |
-| [siesta](../recipes/siesta/README.md) | `siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method. | dft | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-09-10 | — |
+| [gpaw](../recipes/gpaw/README.md) | Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch.science's published figure — proof GPAW computes correctly, and in real parallel, on Graviton4. | dft | build-in-task | 2026-09-10 | — |
+| [nwchem](../recipes/nwchem/README.md) | `nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env. | dft | build-in-task | 2026-09-10 | — |
+| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-09-10 | — |
+| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-09-10 | — |
+| [siesta](../recipes/siesta/README.md) | `siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method. | dft | stage | 2026-09-10 | — |
 
 ## earth-observation
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | `rasterio` / `rioxarray` / GDAL open and decode a real Sentinel-2 scene — the read path underneath any earth-observation analysis. | earth-observation | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [earth-observation](../recipes/earth-observation/README.md) | `rasterio` / `rioxarray` / GDAL open and decode a real Sentinel-2 scene — the read path underneath any earth-observation analysis. | earth-observation | stage | 2026-09-10 | — |
 
 ## geo-ml
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [geo-ml](../recipes/geo-ml/README.md) | The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) computes a spatial join, a CRS-aware area, a spatial-weights graph, and an OLS fit — the core operations of spatial data science. | geo-ml | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [geo-ml](../recipes/geo-ml/README.md) | The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) computes a spatial join, a CRS-aware area, a spatial-weights graph, and an OLS fit — the core operations of spatial data science. | geo-ml | build-in-task | 2026-09-10 | — |
 
 ## geospatial
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [geospatial](../recipes/geospatial/README.md) | The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects coordinates, computes geometry, and round-trips a raster — the foundation every GIS tool sits on. | geospatial | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [geospatial](../recipes/geospatial/README.md) | The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reprojects coordinates, computes geometry, and round-trips a raster — the foundation every GIS tool sits on. | geospatial | build-in-task | 2026-09-10 | — |
 
 ## md
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path. | md | build-in-task |
-| [gromacs](../recipes/gromacs/README.md) | Run a short MD integration and land on the potential energy aarch.science published for this image — proof GROMACS 2026.3 is numerically correct on Graviton4. | md | build-in-task |
-| [lammps](../recipes/lammps/README.md) | `lmp_mpi` runs the canonical Lennard-Jones melt twice — once serial, once over two MPI ranks. | md | build-in-task |
-| [mdtraj](../recipes/mdtraj/README.md) | GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format. | md | build-in-task |
-| [plumed](../recipes/plumed/README.md) | GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run. | md | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path. | md | build-in-task | 2026-09-10 | — |
+| [gromacs](../recipes/gromacs/README.md) | Run a short MD integration and land on the potential energy aarch.science published for this image — proof GROMACS 2026.3 is numerically correct on Graviton4. | md | build-in-task | 2026-09-10 | — |
+| [lammps](../recipes/lammps/README.md) | `lmp_mpi` runs the canonical Lennard-Jones melt twice — once serial, once over two MPI ranks. | md | build-in-task | 2026-09-10 | — |
+| [mdtraj](../recipes/mdtraj/README.md) | GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format. | md | build-in-task | 2026-09-10 | — |
+| [plumed](../recipes/plumed/README.md) | GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run. | md | build-in-task | 2026-09-10 | — |
 
 ## pipeline
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Every other recipe is one headless task on one box; this one runs a **Nextflow DAG** where each process step lands on its *own* ephemeral instance via the `nf-spawn` executor, and data moves between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That per-rule dispatch + cross-instance handoff is exactly what a single-task recipe can't demonstrate. | pipeline | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Every other recipe is one headless task on one box; this one runs a **Nextflow DAG** where each process step lands on its *own* ephemeral instance via the `nf-spawn` executor, and data moves between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That per-rule dispatch + cross-instance handoff is exactly what a single-task recipe can't demonstrate. | pipeline | build-in-task | 2026-09-10 | — |
 
 ## pointcloud
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-09-10 | — |
 
 ## r
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-09-10 | 2026-09-10 |
 
 ## viz
 
-| Recipe | What it does | Env | Inputs |
-|---|---|---|---|
-| [paraview](../recipes/paraview/README.md) | `pvbatch` renders a scientific dataset to a PNG headlessly — no GPU, no display — the batch-visualization path for a server or CI. | viz | build-in-task |
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [paraview](../recipes/paraview/README.md) | `pvbatch` renders a scientific dataset to a PNG headlessly — no GPU, no display — the batch-visualization path for a server or CI. | viz | build-in-task | 2026-09-10 | — |

@@ -3,6 +3,7 @@ tool: megahit
 tool_version: 1.2.9
 image: quay.io/aarchbio/megahit@sha256:d82953bf0096098b0b892edf7180f99b599e8ad17be14c47b1e8c2e1b6a8bdfd
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # MEGAHIT — de novo assembly
 

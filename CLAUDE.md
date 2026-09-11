@@ -353,8 +353,12 @@ a spawn/staging/instance concept when it's load-bearing.
   human review. Do not trust R7 to cover re-teaching.]
 - **R8 — Cut hard.** Flabby prose under the ceiling still fails the one-minute bar. [human]
 - **Frontmatter** (machine-checkable versions): `tool`, `tool_version`, `image` (full
-  `@sha256:`), `spawn_version`, `run_date`. Pipeline recipes use `images:` (one digest per
-  tool). [auto]
+  `@sha256:`), `spawn_version`, `last_verified`. Pipeline recipes use `images:` (one digest per
+  tool). `last_verified` is a date **only a real verifying run may set** — absent is honest
+  ("not verified since tracking began") and is a TODO queue, never backfilled to silence the
+  warning; that's the false-green trap one layer up. Page freshness (`last_updated`) is *not*
+  frontmatter — it's git-derived and generated into catalog/recipes.md, since git already knows
+  it and a stored copy would be a second source that drifts. [auto]
 
 **Ancillary pages (`patterns/`, `practices/`, README, CHARTER):** lede in the first 2 lines
 (a thesis line/blockquote); one idea, tight sections, no re-teaching of a sibling page; no

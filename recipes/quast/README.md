@@ -3,6 +3,7 @@ tool: quast
 tool_version: 5.3.0
 image: quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # QUAST — assembly quality metrics
 

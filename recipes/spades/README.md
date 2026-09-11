@@ -3,6 +3,7 @@ tool: spades
 tool_version: 4.3.0
 image: quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # SPAdes — de novo genome assembly
 

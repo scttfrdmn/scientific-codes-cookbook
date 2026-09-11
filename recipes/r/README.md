@@ -4,6 +4,7 @@ tool_version: 4.5.3
 env: r
 image: quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 

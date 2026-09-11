@@ -14,7 +14,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The image DIGEST is the authoritative version-of-record; tool_version is a friendly
 # label best resolved accurately from the image (conda list), so it's recommended, not required.
 REQUIRED_FM = ("tool", "image", "spawn_version")
-RECOMMENDED_FM = ("tool_version", "run_date")
+# tool_version is a friendly label. last_verified is a DATE only a real verifying run may set —
+# absent means "not verified since we started tracking," which is true and is the point: the
+# warning is a TODO queue of recipes awaiting a run, never backfilled to silence it. last_updated
+# is NOT frontmatter — it's git-derived and generated into the catalog (git already knows it).
+RECOMMENDED_FM = ("tool_version",)
 BAD_LINK_TEXT = {"here", "click here", "link", "this", "read more"}
 # Contract (see CLAUDE.md "Recipe pages"). Enforced structurally; prose quality is human review.
 RECIPE_LEDE_MAX = 8      # non-blank lines between the H1 and the first `##` before it's a buried-lede smell
@@ -163,6 +167,8 @@ def check(path, needs_fm):
             for k in RECOMMENDED_FM:
                 if k not in keys:
                     warns.append(f"{rel}: frontmatter missing recommended field '{k}' (refresh target fills it)")
+            if "last_verified" not in keys:
+                warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
     for i, m in enumerate(fences):
         if i % 2 == 0 and m.group(1) == "":   # opening fence (even index) with no language; closers are odd

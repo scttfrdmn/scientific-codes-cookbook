@@ -13,6 +13,7 @@ that overrides the inference — item 4 slots in here without a rewrite.
 import glob
 import os
 import re
+import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -52,6 +53,17 @@ def stage_builds(recipe_dir):
     # same regex as check_pages.py's staging-coverage: catches both inputs/<p>/ upload
     # paths and PREFIX="inputs/<p>" variable forms (no trailing slash).
     return {m.group(1) for m in re.finditer(r"inputs/([\w.-]+)", text)}
+
+
+def git_updated(recipe_dir):
+    """git commit date of the recipe's last substantive change — page freshness, derived
+    not stored (git already knows). Normalized out of --check so it can't cause false stale."""
+    try:
+        out = subprocess.run(["git", "log", "-1", "--format=%cd", "--date=short", "--", recipe_dir],
+                             cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+        return out or "—"
+    except Exception:
+        return "—"
 
 
 def spec_inputs(recipe_dir):
@@ -116,7 +128,8 @@ def main():
         if run_deps:
             segs.append("run: " + ", ".join(sorted(run_deps)))
         inputs = " · ".join(segs) if segs else ("build-in-task" if not (prefixes or runs) else "stage")
-        rows.append((domain, name, lede(text), env, inputs))
+        rows.append((domain, name, lede(text), env, inputs,
+                     git_updated(os.path.relpath(d, ROOT)), fm.get("last_verified", "—")))
 
     # group by domain, alphabetical within
     domains = sorted({r[0] for r in rows})
@@ -129,21 +142,31 @@ def main():
            "are different actions: **build-in-task** (nothing to stage) · **stage** "
            "(`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe "
            "reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe "
-           "reads X's run output).", ""]
+           "reads X's run output).", "",
+           "**Updated** is the git date of the page's last change (freshness). **Verified** is "
+           "the date a real run last confirmed it — `—` means not verified since tracking began, "
+           "an honest TODO for the next run, never backfilled.", ""]
     for dom in domains:
         drows = [r for r in rows if r[0] == dom]
         out.append(f"## {dom}")
         out.append("")
-        out.append("| Recipe | What it does | Env | Inputs |")
-        out.append("|---|---|---|---|")
-        for _, name, desc, env, inputs in drows:
-            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} |")
+        out.append("| Recipe | What it does | Env | Inputs | Updated | Verified |")
+        out.append("|---|---|---|---|---|---|")
+        for _, name, desc, env, inputs, updated, verified in drows:
+            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} | {updated} | {verified} |")
         out.append("")
     content = "\n".join(out).rstrip() + "\n"
 
+    # Blank the git-derived Updated column before comparing: it advances on every commit that
+    # touches a recipe, so gating on it would make the catalog perpetually "stale". Structure,
+    # deps, and the hand-set Verified column are still gated.
+    def norm(t):
+        return re.sub(r"\| (?:\d{4}-\d{2}-\d{2}|—) (\| (?:\d{4}-\d{2}-\d{2}|—) \|)$",
+                      r"| UPDATED \1", t, flags=re.M)
+
     if "--check" in sys.argv:
         current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
-        if current != content:
+        if norm(current) != norm(content):
             print("catalog/recipes.md is stale — run `make catalog`", file=sys.stderr)
             return 1
         print("catalog/recipes.md up to date")
