@@ -57,12 +57,12 @@ Two tasks, `c8g.2xlarge` (index peak 2.3 GB RSS — compute-family, not memory-b
 
 **`quant` holds the staged tar, doesn't delete it** — under sticky `/tmp` the container gets `EPERM` unlinking a staged input it doesn't own, and `rm -f` doesn't suppress `EPERM` ([the container path](../../practices/container-path.md)).
 
-**Run + verify.**
+**Run + verify.** Stage the inputs into your bucket from public sources, then run both tasks:
 ```sh
-spawn task run --spec recipes/salmon/01-index.task.json --wait
-spawn task run --spec recipes/salmon/02-quant.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/salmon/r1/
+make stage RECIPE=salmon   # builds the Ensembl-116 transcriptome + reads into your bucket
+make run   RECIPE=salmon   # 01-index then 02-quant, against your bucket
+make ls    RECIPE=salmon   # the outputs: quant.sf, smoke-check.txt
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+`make run` substitutes your `COOKBOOK_BUCKET` into each spec and runs the tasks in order. The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)).
 
 </details>

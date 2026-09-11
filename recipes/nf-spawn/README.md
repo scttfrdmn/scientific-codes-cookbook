@@ -10,7 +10,7 @@ spawn_version: 0.104.0
 ---
 # nf-spawn — a Nextflow workflow whose rules dispatch as spawn tasks (Shape F)
 
-The catalog's **first Shape-F recipe.** Every other recipe is one headless task on one box; this one runs a **Nextflow DAG** where each process step lands on its *own* ephemeral instance via the `nf-spawn` executor, and data moves between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That per-rule dispatch + cross-instance handoff is exactly what a single-task recipe can't demonstrate.
+The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate.
 
 > **What this proves, and what it doesn't.** That the Shape-F path works on Graviton: a fan-out + join DAG dispatched per-rule to ephemeral instances, the executor detecting completion from the S3 work dir. It is **not** a benchmark and makes **no hard cross-code topology claim** (see the RF observation). Each stage asserts its own identity; the workflow asserts it *ran as a DAG across instances*.
 
@@ -76,9 +76,11 @@ export JAVA_HOME=/path/to/jdk17    # Nextflow 26.04.x needs JDK 17+
 ### Run + verify
 
 ```sh
+make stage RECIPE=mafft                       # the shared Pfam family (nf-spawn reuses it), into your bucket
+export COOKBOOK_BUCKET=$(make print-bucket)   # main.nf + nextflow.config read this for the input, work dir, and output
 cd recipes/nf-spawn
 JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/nf-spawn/r1/   # expect rf-observation.txt
+aws s3 ls "s3://$COOKBOOK_BUCKET/runs/nf-spawn/r1/"   # expect rf-observation.txt
 ```
 
 **Verify from S3, not Nextflow's summary.** Recorded run: `completed=5, failed=0`, all five `.exitcode` objects `0`, `rf-observation.txt` published (RF 26) — confirmed by reading the S3 objects. That earned its place: an earlier failed run showed Nextflow `completed=1` while that task's S3 `.exitcode` was `126` with no output — the executor-path version of [exit code isn't proof](../../practices/container-path.md). Re-run: bump the `-r1` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF` `publishDir`, or a stale work dir resumes cached tasks.

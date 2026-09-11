@@ -54,9 +54,9 @@ Two BED files (half-open coordinates): `a.bed` = `[0,100] [50,150] [200,300]`, `
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/bedtools/01-setops.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/bedtools/r1/   # expect merge/intersect/subtract/genomecov + smoke-check.txt
+make run RECIPE=bedtools
+make ls RECIPE=bedtools   # expect merge/intersect/subtract/genomecov + smoke-check.txt
 ```
-Smoke check runs inside the task; the bucket listing is the second half. Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; the bucket listing is the second half. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

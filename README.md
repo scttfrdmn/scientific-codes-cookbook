@@ -19,18 +19,39 @@ All of it is [spore.host](https://docs.spore.host) tooling — the docs cover th
 
 ## Five minutes to a first result
 
+**You need:** the AWS CLI configured with working credentials (`aws sts get-caller-identity` must succeed) and a default region, plus this repo cloned. Everything runs in **your** AWS account, in a bucket you create.
+
+Two recipes stage their inputs by subsetting large public BAMs in a pinned container, so their `make stage` step — `RECIPE=bcftools` (the reads the assembly chain assembles) and `RECIPE=macs2` — also needs a local **Docker** with `linux/arm64` support. Every other recipe stages with the AWS CLI alone, and **no** recipe needs Docker to *run* — only those two stage steps do.
+
 ```sh
 brew install spore-host/tap/truffle spore-host/tap/spawn
-aws sso login                                              # your account, your credentials
-spawn task run --spec recipes/seqkit/01-stats.task.json --wait
-spawn list                                                 # → nothing running
+make bootstrap            # create your cookbook bucket (once — leaves an S3 bucket in your account)
+make run RECIPE=r         # fit a linear model on a Graviton4 box — checked, self-terminating
+make ls  RECIPE=r         # your result: fit.txt, smoke-check.txt
+spawn list                # confirm the box turned itself off (gone within a minute or two)
 ```
 
-That last line is the point. The box booted, ran the recipe, checked its own output, and **turned itself off** — `spawn list` shows nothing because there's nothing left to pay for, and the run reports what it cost. (A short job is mostly boot overhead; [job arrays](patterns/job-arrays.md) amortize that across a cohort.)
+`r` is the first run because **it builds its input inside the task** — no data staging, so it really is five minutes. `make run` sizes a Graviton4 box, runs R's OLS fit on the bundled `cars` dataset in a pinned container, fails if the output isn't real, and turns the box off (`on_complete: terminate`, with the TTL as a backstop). `make run` returns when the task is done; the box then self-terminates on a ~1–2 minute tick, so `spawn list` — which lists every instance in your account, across regions — shows your `cookbook-r-lm` box winding down and gone shortly after, with nothing left to pay for and nothing to remember to shut off. The run reports what it cost (cents). A short job is mostly boot overhead — [job arrays](patterns/job-arrays.md) amortize that across a cohort.
+
+Every recipe runs the same way — `make run RECIPE=<name>`, with `make stage RECIPE=<name>` first for the ones that need input data (each page says which, and where the data comes from).
 
 ## Find your code
 
-Browse [`recipes/`](recipes/) — one directory per code, each README a self-contained page: the invocation, what to change for your own work, and all the verification in one place. The catalog spans genomics, molecular dynamics, quantum chemistry, materials, phylogenetics, and geo/EO; every page carries the exact image digest and versions it was run with.
+Scan [the catalog](catalog/recipes.md) for the whole inventory at a glance — what each recipe does, and what a clean account stages or reuses first — or browse [`recipes/`](recipes/) directly, one directory per code. Each README is self-contained: the invocation, what to change for your own work, and all the verification in one place. The catalog spans genomics, molecular dynamics, quantum chemistry, materials, phylogenetics, and geo/EO; every page carries the exact image digest and versions it was run with.
+
+## Reading a recipe page
+
+The pages lean on a small house vocabulary, defined once here:
+
+| Term | Means |
+|---|---|
+| **load-bearing** | a detail you can't change without breaking the result — not just explanation, so it's stated where you'd act on it |
+| **determinism scaffolding** | a fixed setting (thread count, seed) that makes the output byte-identical run to run, so an exact check is safe; change it and you must loosen the check |
+| **identity** | an equality the science forces — a conservation law, a count, two codes agreeing — asserted exactly, stronger than a band |
+| **exact-or-wrong** | a check with no tolerance: the value is precisely this, or the run failed |
+| **band** | a tolerance range for a value that legitimately varies (cross-host floating point) — the fallback when no identity is available |
+| **leave-it / scale-it** | the fixture verdict: keep the small input (the check holds at any size), or enlarge it (only where small misrepresents the tool) |
+| **build-in-task / stage: X / run: X** | how a recipe gets its input (the [catalog](catalog/recipes.md)'s column): built in code with nothing to stage, or do `make stage RECIPE=X` / `make run RECIPE=X` first |
 
 ## Three ideas the recipes lean on
 

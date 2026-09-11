@@ -50,9 +50,10 @@ The threshold is confirmed-from-the-real-run, not shaved: a local spades build (
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/mash/01-dist.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/mash/r1/   # expect mash-dist.txt, smoke-check.txt
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # mash compares their assemblies
+make run RECIPE=mash
+make ls RECIPE=mash   # expect mash-dist.txt, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

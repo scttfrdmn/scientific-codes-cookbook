@@ -42,13 +42,13 @@ The check is a **conservation identity**, not two coincidental numbers: the `cat
 | combined sum_len | 15579900 (== r1+r2) | 15579900 |
 | read length | uniform 150 (min == max) | 150 / 150 |
 
-**Pins.** Image `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.13.0, cosign-verified, `linux/arm64`). Input: the 30× fixture's reads at `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared BAM fixture (`recipes/bcftools/stage-inputs.sh`), reused, not re-derived.
+**Pins.** Image `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.13.0, cosign-verified, `linux/arm64`). Input: the 30× fixture's reads at `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared BAM fixture (`make stage RECIPE=bcftools`) — repinned to that reproducible derivation, since the prior sha256 came from an unrecorded command.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/seqkit/01-stats.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/seqkit/r1/   # expect stats.tsv, smoke-check.txt
+make run RECIPE=seqkit
+make ls RECIPE=seqkit   # expect stats.tsv, smoke-check.txt
 ```
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix in `task_id` and the output prefix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

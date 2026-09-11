@@ -52,9 +52,10 @@ Only the row count is banded (the `-max_target_seqs 20` cap; a query with fewer 
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/blast/01-search.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/blast/r1/
+make stage RECIPE=blast          # build DB + queries from Ensembl (public)
+make run RECIPE=blast
+make ls RECIPE=blast
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

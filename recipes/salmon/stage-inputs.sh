@@ -9,7 +9,7 @@
 # the reads are a fixed-offset slice, so re-running this reproduces them exactly.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PREFIX="inputs/salmon"
 ENS="https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz"
 ENA="https://ftp.sra.ebi.ac.uk/vol1/fastq/ERR188/ERR188026/ERR188026"

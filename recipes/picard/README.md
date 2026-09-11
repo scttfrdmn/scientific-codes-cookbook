@@ -47,9 +47,9 @@ One task, **~2 s** (JVM start dominates the compute). `c8g.large`, ~$0.02, **~76
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/picard/01-markdup.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/picard/r1/   # expect dup_metrics.txt, smoke-check.txt
+make run RECIPE=picard
+make ls RECIPE=picard   # expect dup_metrics.txt, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

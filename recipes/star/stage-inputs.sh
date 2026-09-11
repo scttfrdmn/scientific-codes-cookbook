@@ -12,7 +12,7 @@
 # current_*/ is not and would not qualify.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PREFIX="inputs/star"
 E="https://ftp.ensembl.org/pub/release-116"
 FA="$E/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.chromosome.20.fa.gz"

@@ -3,7 +3,7 @@
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (extracted from the 30x fixture) ==\"\n{ printf '%s  %s\\n' 4f43bf362b2391f03b2621226a04fb702b025d39b0a002ff2adf6d885dda4b86 reads_1.fq.gz\n  printf '%s  %s\\n' 93f4a67742e5509e8eabfc1966c384f5e3e7faadca866d7c20a8db817a48eca0 reads_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== SPAdes --isolate, -t 4 (deterministic: verified identical across two runs) ==\"\nspades.py --isolate -1 reads_1.fq.gz -2 reads_2.fq.gz -o out -t 4\n# Flatten the one artifact we stage; leave the out/ dir and the staged reads in place\n# (never rm a staged input -- sticky /tmp EPERM kills the task under set -e).\ncp out/contigs.fasta contigs.fasta\n\n# ---- smoke check ----\nN=$(grep -c '^>' contigs.fasta)\nBP=$(awk '!/^>/{t+=length($0)}END{print t}' contigs.fasta)\n{\n  echo \"spades_contigs   $N   want exactly 237     (deterministic assembly, -t 4)\"\n  echo \"spades_total_bp  $BP   want exactly 428168\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  -eq 237\ntest \"$BP\" -eq 428168\necho \"SMOKE CHECK PASSED\"\n"
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (extracted from the 30x fixture) ==\"\n{ printf '%s  %s\\n' c7e6013a0815ad14ddf2a2564fb1d80bccd2e1168b02c41c7f90701cf0ffd94a reads_1.fq.gz\n  printf '%s  %s\\n' b78ada00cad9f5feec6899a560558164b4d1b20fedf8b51082074841e05635c2 reads_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== SPAdes --isolate, -t 4 (deterministic: re-verified byte-identical across two runs on the repinned reads, 2026-09-10) ==\"\nspades.py --isolate -1 reads_1.fq.gz -2 reads_2.fq.gz -o out -t 4\n# Flatten the one artifact we stage; leave the out/ dir and the staged reads in place\n# (never rm a staged input -- sticky /tmp EPERM kills the task under set -e).\ncp out/contigs.fasta contigs.fasta\n\n# ---- smoke check ----\nN=$(grep -c '^>' contigs.fasta)\nBP=$(awk '!/^>/{t+=length($0)}END{print t}' contigs.fasta)\n{\n  echo \"spades_contigs   $N   want exactly 237     (deterministic assembly, -t 4)\"\n  echo \"spades_total_bp  $BP   want exactly 428168\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  -eq 237\ntest \"$BP\" -eq 428168\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c",
   "resources": {
@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
       "destination": "/tmp/reads_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
       "destination": "/tmp/reads_2.fq.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/contigs.fasta",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/spades/r1/contigs.fasta"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/contigs.fasta"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/spades/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

@@ -9,7 +9,7 @@
 # the sha256 sums in README.md, which the align task also re-checks on the box.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PREFIX="inputs/bwa-samtools"
 SRC_REF="technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 SRC_FQ="phase3/data/HG00096/sequence_read/SRR062634"

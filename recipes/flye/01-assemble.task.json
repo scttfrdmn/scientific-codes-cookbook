@@ -16,26 +16,26 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/flye/ecoli_500kb_reads.fastq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/flye/ecoli_500kb_reads.fastq.gz",
       "destination": "/tmp/ecoli_500kb_reads.fastq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/flye/ecoli_500kb.fasta",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/flye/ecoli_500kb.fasta",
       "destination": "/tmp/ecoli_500kb.fasta"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/assembly.fasta",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/assembly.fasta"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/r1/assembly.fasta"
     },
     {
       "source": "/tmp/assembly_info.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/assembly_info.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/r1/assembly_info.txt"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/flye/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

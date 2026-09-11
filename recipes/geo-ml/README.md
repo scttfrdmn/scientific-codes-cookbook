@@ -13,7 +13,9 @@ The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) comp
 ## Run it
 
 ```python
-import geopandas, libpysal, sklearn.linear_model, statsmodels.api as sm
+import geopandas as gpd
+import libpysal
+# points, squares, lattice are built in code (the recipe constructs them); the core ops:
 gpd.sjoin(points, squares, predicate="within")     # → 3 points inside
 squares.to_crs(32611).area                          # → 1,000,000 m² (1 km square)
 libpysal.weights.Rook.from_dataframe(lattice)       # → n=9, s0=24
@@ -61,10 +63,10 @@ The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/geo-ml/01-spatial.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/geo-ml/r1/
+make run RECIPE=geo-ml
+make ls RECIPE=geo-ml
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

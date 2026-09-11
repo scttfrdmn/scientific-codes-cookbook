@@ -1,15 +1,18 @@
 # Job arrays — run many small things, not one big thing
 
-> **Ten instances for one hour cost the same as one instance for ten hours — and finish in one hour.** That dial does not exist on a machine you own.
+> **Ten instances for one hour finish in one — at roughly the same compute cost as one instance for ten hours, before the per-instance boot and image pull you now pay ten times over.** That dial does not exist on a machine you own.
 
 You have 500 samples to align. The instinct you brought from the cluster is to ask for one
 big node and push the samples through it — because on a shared queue each request was
 expensive and you got one shot, so you asked for everything at once and kept it busy.
 
 Drop that instinct. Here, each sample is its own instance: all 500 at once, each sized for
-*one* sample, each turning itself off the moment its sample is done. You pay the same
-core-hours either way — 500 alignments take the compute they take — but the wall-clock
-collapses from "one machine, 500 times in series" to "500 machines, once."
+*one* sample, each turning itself off the moment its sample is done. You pay *roughly* the
+same core-hours either way — 500 alignments take the compute they take — with the caveat this
+cookbook keeps proving: boot, image pull, and staging repeat per instance, so a fan-out of
+short jobs pays that overhead 500 times, not once ([why](../practices/what-this-does-not-cover.md)).
+The real win is wall-clock: it collapses from "one machine, 500 times in series" to "500
+machines, once."
 
 **This is safe to try.** A wrong guess costs cents and self-terminates. Launch 5, look at what
 one costs, then launch 500 — nothing in this pattern can run up a bill you didn't cap.

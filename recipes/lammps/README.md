@@ -68,10 +68,10 @@ Same image as [gromacs](../gromacs/README.md) — the `md` env carries both engi
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/lammps/01-melt.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/lammps/r1/
+make run RECIPE=lammps
+make ls RECIPE=lammps
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`s.log`, `p.log`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`s.log`, `p.log`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

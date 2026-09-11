@@ -65,11 +65,11 @@ One task, `c8g.large`, TTL 10m, cap $0.02. Two docks at exhaustiveness 32 ≈ **
 ### Run + verify
 
 ```sh
-recipes/vina/stage-inputs.sh            # once; fetch + verify + upload the 1iep pair (~220 KB)
-spawn task run --spec recipes/vina/01-dock.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/vina/r1/
+make stage RECIPE=vina            # once; fetch + verify + upload the 1iep pair (~220 KB)
+make run RECIPE=vina
+make ls RECIPE=vina
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`dock.log`, `dock.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`dock.log`, `dock.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

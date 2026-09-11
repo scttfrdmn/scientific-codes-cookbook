@@ -53,11 +53,13 @@ One task, **`m8g.large`** (2 vCPU / 8 GiB — the catalog's first `m8g`; the 8 G
 | image | `quay.io/aarchbio/flye@sha256:d87ccd4e…` (tag `2.9.6--py313h30571f8_1`, cosign-verified, `linux/arm64`) |
 | reads / reference | Flye's toy `ecoli_500kb_reads.fastq.gz` / `.fasta` at tag 2.9.6 — `sha256:65b7cbd9…` / `de2efb0b…` |
 
+`make stage RECIPE=flye` fetches both from the tag and verifies the sha256 — *fetched, not derived*: it reproduces while GitHub keeps the `2.9.6` tag, a weaker guarantee than a derivation ([which and why](../../practices/what-this-does-not-cover.md)).
+
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/flye/01-assemble.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/flye/r1/
+make run RECIPE=flye
+make ls RECIPE=flye
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

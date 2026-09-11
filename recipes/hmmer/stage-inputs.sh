@@ -8,7 +8,7 @@
 # cannot be pinned, so by the project's own rule they do not qualify as inputs.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PFAM="https://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam38.2/Pfam-A.hmm.gz"
 PEP="https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/pep/Homo_sapiens.GRCh38.pep.all.fa.gz"
 MODELS=200

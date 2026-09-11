@@ -25,7 +25,7 @@
 # sha256 below is a real pin, not a moving target.
 set -euo pipefail
 
-BUCKET="${1:-scicookbook-942542972736-us-east-1}"
+BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PREFIX="inputs/highcov"
 REGION="chr20:2000000-2400000"
 # HG00096, 1000G NYGC 30x resequencing (ERP114329). ERR3240114 from the release's
@@ -45,13 +45,20 @@ docker run --rm --platform linux/arm64 --user "$(id -u):$(id -g)" -v "$WORK:/d" 
     samtools index region.bam
     samtools depth -a -r '$REGION' region.bam | \
       awk '{s+=\$3;n++} END{printf \"mean_depth=%.1f over %d bp\n\", s/n, n}'
+    # derive the paired reads (deterministic: collate for pairing, then fastq) — the
+    # 30x fixture's fastqs are samtools fastq of this BAM, used by seqkit/spades/megahit
+    samtools collate -u -O region.bam | \
+      samtools fastq -1 reads_1.fq.gz -2 reads_2.fq.gz -0 /dev/null -s /dev/null -n
   "
 
 # Expected pins (record in the READMEs; the recipes re-verify the BAM's sha256 on the box):
 #   region.bam      sha256 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a
 #   region.bam.bai  sha256 657150daff90fba5aa620d81d7b3691b00f4cc76aabc1c8f2c73a9d690537e22
-shasum -a 256 "$WORK/region.bam" "$WORK/region.bam.bai" 2>/dev/null || sha256sum "$WORK/region.bam" "$WORK/region.bam.bai"
+shasum -a 256 "$WORK"/region.bam "$WORK"/region.bam.bai "$WORK"/reads_1.fq.gz "$WORK"/reads_2.fq.gz 2>/dev/null \
+  || sha256sum "$WORK"/region.bam "$WORK"/region.bam.bai "$WORK"/reads_1.fq.gz "$WORK"/reads_2.fq.gz
 
 aws s3 cp "$WORK/region.bam"     "s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x.bam"     --only-show-errors
 aws s3 cp "$WORK/region.bam.bai" "s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x.bam.bai" --only-show-errors
-echo "staged s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x.bam (+ .bai)"
+aws s3 cp "$WORK/reads_1.fq.gz"  "s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz" --only-show-errors
+aws s3 cp "$WORK/reads_2.fq.gz"  "s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz" --only-show-errors
+echo "staged s3://$BUCKET/$PREFIX/HG00096.chr20_2.0-2.4Mb.30x.bam (+ .bai) and the derived reads"

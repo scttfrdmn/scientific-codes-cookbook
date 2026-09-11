@@ -41,11 +41,11 @@ One alignment is one task; a cohort is the same task [fanned out](../../patterns
 
 ### Run the shipped recipe
 ```bash
-./stage-inputs.sh                                        # once; ~165 MB of range-gets from s3://1000genomes
-spawn task run --spec 01-align.task.json --wait          # c8g.2xlarge, TTL 30m
-spawn task run --spec 02-sort-and-check.task.json --wait # c8g.large,   TTL 30m
+make stage RECIPE=bwa-samtools   # once; ~165 MB of range-gets from s3://1000genomes into your bucket
+make run   RECIPE=bwa-samtools   # 01-align then 02-sort-and-check, on Graviton boxes
+make ls    RECIPE=bwa-samtools   # the sorted BAM + the seven-check smoke output
 ```
-Both `on_complete: terminate`. Each task reads inputs from and writes outputs to S3, so a failed task 2 reruns alone. `spawn task run` exposes no `--cost-limit`, so **TTL is the cost cap** (30m × on-demand ≈ $0.20 worst case).
+Both tasks are `on_complete: terminate`; each reads inputs from and writes outputs to S3, so a failed task 2 reruns alone. `spawn task run` (which `make run` calls) exposes no `--cost-limit`, so **TTL is the cost cap** (30m × on-demand ≈ $0.20 worst case).
 
 ### Pins (data tier: RODA — every byte traces to `s3://1000genomes`)
 | thing | pin |

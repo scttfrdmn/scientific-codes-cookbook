@@ -67,10 +67,10 @@ All exact-or-wrong — standardized graph hashes and exact counts, no bands.
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/openbabel-pdbfixer/01-prep.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/openbabel-pdbfixer/r1/
+make run RECIPE=openbabel-pdbfixer
+make ls RECIPE=openbabel-pdbfixer
 ```
 
-The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect two objects (`fixed.pdb`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect two objects (`fixed.pdb`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

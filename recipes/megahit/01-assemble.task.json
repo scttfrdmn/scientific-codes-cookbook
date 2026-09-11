@@ -3,7 +3,7 @@
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (same bytes SPAdes assembles) ==\"\n{ printf '%s  %s\\n' 4f43bf362b2391f03b2621226a04fb702b025d39b0a002ff2adf6d885dda4b86 reads_1.fq.gz\n  printf '%s  %s\\n' 93f4a67742e5509e8eabfc1966c384f5e3e7faadca866d7c20a8db817a48eca0 reads_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== MEGAHIT, -t 4 --min-count 2 (deterministic: verified identical across runs) ==\"\n# megahit refuses a pre-existing -o dir; /tmp/out is fresh on the instance.\nmegahit -1 reads_1.fq.gz -2 reads_2.fq.gz -t 4 --min-count 2 -o out\ncp out/final.contigs.fa contigs.fa\n\n# ---- smoke check ----\nN=$(grep -c '^>' contigs.fa)\nBP=$(awk '!/^>/{t+=length($0)}END{print t}' contigs.fa)\n{\n  echo \"megahit_contigs   $N   want exactly 2       (deterministic assembly, -t 4)\"\n  echo \"megahit_total_bp  $BP   want exactly 400811\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  -eq 2\ntest \"$BP\" -eq 400811\necho \"SMOKE CHECK PASSED\"\n"
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged reads against their pinned sha256 (same bytes SPAdes assembles) ==\"\n{ printf '%s  %s\\n' c7e6013a0815ad14ddf2a2564fb1d80bccd2e1168b02c41c7f90701cf0ffd94a reads_1.fq.gz\n  printf '%s  %s\\n' b78ada00cad9f5feec6899a560558164b4d1b20fedf8b51082074841e05635c2 reads_2.fq.gz\n} > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== MEGAHIT, -t 1 --min-count 2 (single-threaded => byte-deterministic; assembler thread count changes the result, see CLAUDE.md) ==\"\n# Numbers re-derived on the repinned reads and verified byte-identical across two -t 1 runs (2026-09-10).\n# megahit refuses a pre-existing -o dir; /tmp/out is fresh on the instance.\nmegahit -1 reads_1.fq.gz -2 reads_2.fq.gz -t 1 --min-count 2 -o out\ncp out/final.contigs.fa contigs.fa\n\n# ---- smoke check ----\nN=$(grep -c '^>' contigs.fa)\nBP=$(awk '!/^>/{t+=length($0)}END{print t}' contigs.fa)\n{\n  echo \"megahit_contigs   $N   want exactly 1       (deterministic assembly, -t 1)\"\n  echo \"megahit_total_bp  $BP   want exactly 400429\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  -eq 1\ntest \"$BP\" -eq 400429\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/megahit@sha256:d82953bf0096098b0b892edf7180f99b599e8ad17be14c47b1e8c2e1b6a8bdfd",
   "resources": {
@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_1.fq.gz",
       "destination": "/tmp/reads_1.fq.gz"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_2.fq.gz",
       "destination": "/tmp/reads_2.fq.gz"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/contigs.fa",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/contigs.fa"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/contigs.fa"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

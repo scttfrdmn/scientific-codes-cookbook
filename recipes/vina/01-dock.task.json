@@ -16,26 +16,26 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/vina/1iep_receptor.pdbqt",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina/1iep_receptor.pdbqt",
       "destination": "/tmp/1iep_receptor.pdbqt"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/vina/1iep_ligand.pdbqt",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina/1iep_ligand.pdbqt",
       "destination": "/tmp/1iep_ligand.pdbqt"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/dock.log",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/dock.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/vina/r1/dock.log"
     },
     {
       "source": "/tmp/dock.json",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/dock.json"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/vina/r1/dock.json"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/vina/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/vina/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

@@ -14,7 +14,8 @@ GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED comput
 ## Run it
 
 ```bash
-gmx_mpi mdrun -deffnm md -plumed plumed.dat    # GROMACS integrates, PLUMED reads coords every step
+export PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so   # REQUIRED first, or mdrun aborts ("plumed not available")
+gmx_mpi mdrun -deffnm md -plumed plumed.dat              # GROMACS integrates, PLUMED reads coords every step
 ```
 
 `plumed.dat` computes an O-H distance and an H-O-H angle and prints them to `COLVAR`. One task; GROMACS hands its coordinates to PLUMED in the same container. The input (spc216 water) is bundled in the gromacs package, so nothing is staged.
@@ -64,10 +65,10 @@ No fitted bands — the distance and angle are defined force-field constants rec
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/plumed/01-cv.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/plumed/r1/
+make run RECIPE=plumed
+make ls RECIPE=plumed
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`COLVAR`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect two objects (`COLVAR`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

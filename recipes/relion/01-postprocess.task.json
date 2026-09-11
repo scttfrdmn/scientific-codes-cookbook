@@ -16,46 +16,46 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/run_half1_class001_unfil.mrc",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion/run_half1_class001_unfil.mrc",
       "destination": "/tmp/run_half1_class001_unfil.mrc"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/run_half2_class001_unfil.mrc",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion/run_half2_class001_unfil.mrc",
       "destination": "/tmp/run_half2_class001_unfil.mrc"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/mask3d_emd_0731_apix0o968_d440.mrc",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion/mask3d_emd_0731_apix0o968_d440.mrc",
       "destination": "/tmp/mask3d_emd_0731_apix0o968_d440.mrc"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/relion/reference_postprocess.star",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion/reference_postprocess.star",
       "destination": "/tmp/reference_postprocess.star"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/postprocess.mrc",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.mrc"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/postprocess.mrc"
     },
     {
       "source": "/tmp/postprocess_masked.mrc",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess_masked.mrc"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/postprocess_masked.mrc"
     },
     {
       "source": "/tmp/postprocess.star",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.star"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/postprocess.star"
     },
     {
       "source": "/tmp/postprocess_fsc.dat",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess_fsc.dat"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/postprocess_fsc.dat"
     },
     {
       "source": "/tmp/postprocess.log",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/postprocess.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/postprocess.log"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/relion/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

@@ -48,9 +48,10 @@ Threshold confirmed from the real run: a local spades build measured 0.9952, the
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/sourmash/01-compare.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/sourmash/r1/   # expect compare.csv, smoke-check.txt
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # sourmash compares their assemblies
+make run RECIPE=sourmash
+make ls RECIPE=sourmash   # expect compare.csv, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

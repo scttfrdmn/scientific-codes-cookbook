@@ -14,10 +14,10 @@ GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads t
 ## Run it
 
 ```python
-import mdtraj
-t = mdtraj.load('out.xtc', top='out.pdb')     # GROMACS-written XTC
-t.n_atoms, t.n_frames, t.unitcell_lengths[0]   # 648, 6, 1.8621 nm
-# then MDAnalysis reads the same out.xtc and computes the same O-H distance
+import mdtraj, MDAnalysis as mda
+t = mdtraj.load("out.xtc", top="out.pdb")     # GROMACS-written XTC → MDTraj
+u = mda.Universe("out.pdb", "out.xtc")        # the same file → MDAnalysis, independently
+t.n_atoms, t.n_frames, t.unitcell_lengths[0]  # 648, 6, 1.8621 nm — and the two agree on an O-H distance
 ```
 
 One task: GROMACS produces the trajectory, both readers parse it in the same container. The XTC handoff is the point, so routing it through S3 would add a boot for no scientific gain — the input (spc216 water) is bundled in the gromacs package, so nothing is staged.
@@ -66,10 +66,10 @@ Same `md` image as [gromacs](../gromacs/README.md).
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/mdtraj/01-read.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/mdtraj/r1/
+make run RECIPE=mdtraj
+make ls RECIPE=mdtraj
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

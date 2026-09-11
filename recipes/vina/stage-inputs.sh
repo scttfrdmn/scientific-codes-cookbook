@@ -9,7 +9,7 @@
 # published result (top pose -13.234 kcal/mol).
 set -euo pipefail
 
-BUCKET="s3://scicookbook-942542972736-us-east-1"
+BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 BASE="https://raw.githubusercontent.com/ccsb-scripps/AutoDock-Vina/v1.2.7/example/basic_docking/solution"
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT

@@ -3,6 +3,7 @@ tool: macs2
 tool_version: 2.2.9.1
 image: quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # MACS2 — ChIP-seq peak calling
 
@@ -40,13 +41,13 @@ MACS2 `callpeak -t CTCF -c input -f BAM -g hs` on chr20 calls **1390** peaks —
 | **peaks** | exactly 1390 (CTCF chr20 vs input; bit-identical local + Graviton) | 1390 |
 | enrichment real | ≥ 1000 (not the degenerate 0-peak WGS case) | yes |
 
-**Pins.** Image `quay.io/aarchbio/macs2@sha256:ca577fd2e650…` (2.2.9.1, cosign-verified, `linux/arm64`). Treatment: ENCODE **ENCFF933NSJ** (CTCF ChIP, HCT116, GRCh38) chr20 subset (`sha256:32db48ec…`, 864,347 reads); control: ENCODE **ENCFF768XTH** (matched input) chr20 subset (`sha256:a33c376a…`, 1,297,910 reads). Both range-subset to chr20 and sha256-pinned — a reusable matched pair for any peak-caller comparison.
+**Pins** (data tier: ENCODE on AWS Open Data — `s3://encode-public`, immutable). Image `quay.io/aarchbio/macs2@sha256:ca577fd2e650…` (2.2.9.1, cosign-verified, `linux/arm64`). Treatment: ENCODE **ENCFF933NSJ** (CTCF ChIP, HCT116, GRCh38) chr20 subset (`sha256:0522950d…`, 864,347 reads); control: ENCODE **ENCFF768XTH** (matched input) chr20 subset (`sha256:ddacb169…`, 1,297,910 reads). `make stage RECIPE=macs2` downloads the full BAMs and slices chr20 in the pinned samtools — *derived* from an immutable source. Repinned to that derivation: an earlier samtools serialized the same reads to different bytes, so the read counts (864,347 / 1,297,910, unchanged) are the science check — identical reads in, still exactly 1390 peaks out.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/macs2/01-callpeak.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/macs2/r1/   # expect peaks.narrowPeak, smoke-check.txt
+make run RECIPE=macs2
+make ls RECIPE=macs2   # expect peaks.narrowPeak, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

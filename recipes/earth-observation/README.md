@@ -70,11 +70,11 @@ Six are the STAC-metadata cross-check (exact-or-wrong); the checksum is the pixe
 ### Run + verify
 
 ```sh
-recipes/earth-observation/stage-inputs.sh    # once; fetch + verify + upload B01 (~6 MB)
-spawn task run --spec recipes/earth-observation/01-cog.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/earth-observation/r1/
+make stage RECIPE=earth-observation    # once; fetch + verify + upload B01 (~6 MB)
+make run RECIPE=earth-observation
+make ls RECIPE=earth-observation
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`) — this recipe verifies an input rather than producing a large output. Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect one object (`smoke-check.txt`) — this recipe verifies an input rather than producing a large output. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

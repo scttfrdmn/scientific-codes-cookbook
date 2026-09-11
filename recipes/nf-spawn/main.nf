@@ -13,7 +13,7 @@
 // README.
 nextflow.enable.dsl = 2
 
-params.seqs            = 's3://scicookbook-942542972736-us-east-1/inputs/mafft-muscle/pfam_unaligned.fa'
+params.seqs            = "s3://${System.getenv('COOKBOOK_BUCKET')}/inputs/mafft-muscle/pfam_unaligned.fa"
 params.expect_seqs     = 114
 params.expect_residues = 49098
 
@@ -70,7 +70,7 @@ process TREE {
 // --- join: report the two topologies' RF distance as an OBSERVATION (no assertion) ---
 process OBSERVE_RF {
     container 'quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7'
-    publishDir 's3://scicookbook-942542972736-us-east-1/runs/nf-spawn/r1', mode: 'copy'
+    publishDir "s3://${System.getenv('COOKBOOK_BUCKET')}/runs/nf-spawn/r1", mode: 'copy'
     input:  path 'mafft.treefile'
             path 'muscle.treefile'
     output: path 'rf-observation.txt'

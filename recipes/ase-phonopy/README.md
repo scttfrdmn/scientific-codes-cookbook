@@ -15,9 +15,15 @@ Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmet
 ```python
 from ase.build import bulk
 from phonopy import Phonopy
-# ASE builds bulk Si (Fd-3m) → spglib reduces the 128-atom supercell's displacements
-# to ONE symmetry-unique displacement → phonopy builds force constants → frequencies at Γ
-freqs = phonopy_obj.get_frequencies([0, 0, 0])   # 3 acoustic → 0, 3 optical degenerate
+from phonopy.structure.atoms import PhonopyAtoms
+si = bulk("Si")                                            # ASE builds bulk Si (Fd-3m)
+ph = Phonopy(PhonopyAtoms(si.get_chemical_symbols(), cell=si.cell,
+             scaled_positions=si.get_scaled_positions()),
+             supercell_matrix=[[4, 0, 0], [0, 4, 0], [0, 0, 4]])   # spglib finds the symmetry
+ph.generate_displacements()                                # → ONE symmetry-unique displacement
+# fill ph.forces from a calculator on ph.supercells_with_displacements (LJ here; DFT for real work)
+ph.produce_force_constants()
+freqs = ph.get_frequencies([0, 0, 0])                      # 3 acoustic → 0, 3 optical degenerate
 ```
 
 One task; the chain runs in one container. spglib cutting the displacement set to a single unique displacement is the chain link made visible — a wrong space group there gives wrong force constants and non-vanishing acoustic modes.
@@ -67,10 +73,10 @@ The acoustic band (1e-2 THz) is method-justified — a residual from the 0.03 Å
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/ase-phonopy/01-phonons.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/ase-phonopy/r1/
+make run RECIPE=ase-phonopy
+make ls RECIPE=ase-phonopy
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect one object (`smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

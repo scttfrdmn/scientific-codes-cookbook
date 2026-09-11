@@ -14,7 +14,9 @@ spawn_version: 0.104.0
 ## Run it
 
 ```python
-# pvbatch script
+# pvbatch script. Headless: the recipe starts Xvfb + sets LIBGL_ALWAYS_SOFTWARE=1 first
+# (load-bearing — no GPU, no display; see below), then:
+from paraview.simple import *
 Wavelet()                                    # analytic scalar field, generated in memory
 Contour(Isosurfaces=[150.0])                 # → 3034 points, 5768 cells (deterministic)
 SaveScreenshot("render.png", ImageResolution=[400, 300])   # GLX + llvmpipe, no GPU
@@ -67,10 +69,10 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/paraview/01-render.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/paraview/r1/
+make run RECIPE=paraview
+make ls RECIPE=paraview
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`; the PNG is the artifact worth looking at. Re-run: bump the `-r1` suffix (`pvbatch` overwrites its own output, so no checkpoint guard to defeat).
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects — `render.png`, `smoke-check.txt`, `pvbatch.out`; the PNG is the artifact worth looking at. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

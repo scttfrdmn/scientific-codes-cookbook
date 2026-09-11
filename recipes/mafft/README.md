@@ -48,9 +48,10 @@ No bands — every check is exact. The genuine **cross-code** check (MAFFT vs [M
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/mafft/01-align.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/mafft/r1/   # expect mafft_aln.fa, smoke-check.txt
+make stage RECIPE=mafft          # derive the Pfam family (public)
+make run RECIPE=mafft
+make ls RECIPE=mafft   # expect mafft_aln.fa, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

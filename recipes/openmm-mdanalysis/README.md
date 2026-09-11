@@ -13,10 +13,10 @@ OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysi
 ## Run it
 
 ```python
-# OpenMM: 27-atom argon NVE, 200 steps → top.pdb + traj.dcd
+# OpenMM ran a 27-atom argon NVE (200 steps) and wrote top.pdb + traj.dcd; MDAnalysis reads them back:
 import MDAnalysis as mda
-u = mda.Universe('top.pdb', 'traj.dcd')       # read back what OpenMM wrote
-u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å
+u = mda.Universe("top.pdb", "traj.dcd")
+u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å — exactly what OpenMM wrote
 ```
 
 One task: OpenMM writes the trajectory and MDAnalysis reads it in the same container. The identity is about the *format handoff* (OpenMM's writer ↔ MDAnalysis's reader), not the storage path, so routing through S3 would add a boot for no scientific gain. The system is built in code, so nothing is staged.
@@ -66,10 +66,10 @@ The NVE drift is a physics band (must conserve; 1e-4 is cleared by ~250×), robu
 ### Run + verify
 
 ```sh
-spawn task run --spec recipes/openmm-mdanalysis/01-md-analyze.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/openmm-mdanalysis/r1/
+make run RECIPE=openmm-mdanalysis
+make ls RECIPE=openmm-mdanalysis
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

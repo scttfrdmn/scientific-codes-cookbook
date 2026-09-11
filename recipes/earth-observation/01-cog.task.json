@@ -16,14 +16,14 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/inputs/earth-observation/B01.tif",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/B01.tif",
       "destination": "/tmp/B01.tif"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/earth-observation/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/earth-observation/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

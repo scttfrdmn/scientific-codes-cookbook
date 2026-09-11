@@ -14,7 +14,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The image DIGEST is the authoritative version-of-record; tool_version is a friendly
 # label best resolved accurately from the image (conda list), so it's recommended, not required.
 REQUIRED_FM = ("tool", "image", "spawn_version")
-RECOMMENDED_FM = ("tool_version", "run_date")
+# tool_version is a friendly label. last_verified is a DATE only a real verifying run may set —
+# absent means "not verified since we started tracking," which is true and is the point: the
+# warning is a TODO queue of recipes awaiting a run, never backfilled to silence it. last_updated
+# is NOT frontmatter — it's git-derived and generated into the catalog (git already knows it).
+RECOMMENDED_FM = ("tool_version",)
 BAD_LINK_TEXT = {"here", "click here", "link", "this", "read more"}
 # Contract (see CLAUDE.md "Recipe pages"). Enforced structurally; prose quality is human review.
 RECIPE_LEDE_MAX = 8      # non-blank lines between the H1 and the first `##` before it's a buried-lede smell
@@ -163,6 +167,8 @@ def check(path, needs_fm):
             for k in RECOMMENDED_FM:
                 if k not in keys:
                     warns.append(f"{rel}: frontmatter missing recommended field '{k}' (refresh target fills it)")
+            if "last_verified" not in keys:
+                warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
     for i, m in enumerate(fences):
         if i % 2 == 0 and m.group(1) == "":   # opening fence (even index) with no language; closers are odd
@@ -213,10 +219,57 @@ def check_external():
                     warns.append(f"external link unverified ({code or e}): {u}")
 
 
+def check_portability():
+    """The executable path must run in any account. Task specs reference the bucket only as
+    ${COOKBOOK_BUCKET} (make run substitutes it); stage scripts take it, not a hardcoded one."""
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
+        rel = os.path.relpath(f, ROOT)
+        text = open(f, encoding="utf-8").read()
+        for bucket in {m.group(1) for m in re.finditer(r"s3://([^/\"\s]+)", text)}:
+            if bucket != "${COOKBOOK_BUCKET}":
+                errors.append(f"{rel}: hardcoded bucket 's3://{bucket}' — use s3://${{COOKBOOK_BUCKET}} (portability)")
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "stage-inputs.sh"))):
+        rel = os.path.relpath(f, ROOT)
+        if "942542972736" in open(f, encoding="utf-8").read():
+            errors.append(f"{rel}: hardcoded account bucket — default to $COOKBOOK_BUCKET or require the arg (portability)")
+    # READMEs: no hardcoded bucket, and the run path is `make run`, not a raw spec (locks in the sweep).
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md")) +
+                    glob.glob(os.path.join(ROOT, "*.md"))):
+        rel = os.path.relpath(f, ROOT)
+        text = open(f, encoding="utf-8").read()
+        if "scicookbook-942542972736" in text:
+            errors.append(f"{rel}: hardcoded account bucket in a page — use $COOKBOOK_BUCKET / make ls (portability)")
+        if re.search(r"spawn task run --spec recipes/", text):
+            errors.append(f"{rel}: raw 'spawn task run --spec recipes/…' — the runnable path is `make run RECIPE=…` (portability)")
+
+
+def check_staging_coverage():
+    """Every recipe's inputs must be reachable in a clean account: built by a stage script
+    (its own or a sibling's), reused from a sibling recipe's run, or build-in-task (no inputs).
+    An `inputs/<p>/` a reader can't build is the un-buildable-fixture bug (the 30x-reads case)."""
+    built = set()  # inputs/<prefix>/ that some stage script produces
+    for f in glob.glob(os.path.join(ROOT, "recipes", "*", "stage-inputs.sh")):
+        for m in re.finditer(r"inputs/([\w.-]+)", open(f, encoding="utf-8").read()):
+            built.add(m.group(1))
+    recipes = {os.path.basename(os.path.dirname(p))
+               for p in glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))}
+    for spec in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
+        rel = os.path.relpath(spec, ROOT)
+        text = open(spec, encoding="utf-8").read()
+        for prefix in {m.group(1) for m in re.finditer(r'"source":\s*"s3://[^/]+/inputs/([\w.-]+)/', text)}:
+            if prefix not in built:
+                errors.append(f"{rel}: reads inputs/{prefix}/ but no stage script builds it — un-buildable in a clean account (staging)")
+        for src in {m.group(1) for m in re.finditer(r'"source":\s*"s3://[^/]+/runs/([\w.-]+)/', text)}:
+            if src not in recipes:
+                errors.append(f"{rel}: reuses runs/{src}/ but no such recipe (staging)")
+
+
 def main():
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
+    check_portability()
+    check_staging_coverage()
     if "--external" in sys.argv:
         check_external()
     for w in warns:

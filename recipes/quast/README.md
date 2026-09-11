@@ -3,6 +3,7 @@ tool: quast
 tool_version: 5.3.0
 image: quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # QUAST — assembly quality metrics
 
@@ -35,7 +36,7 @@ Two assemblers on the same reads produce **different** contig sets by design —
 
 | metric (from `report.tsv`) | SPAdes | MEGAHIT |
 |---|---|---|
-| `# contigs (>= 0 bp)` raw | 237 | 2 |
+| `# contigs (>= 0 bp)` raw | 237 | 1 |
 | `# contigs` (≥500 bp) | 78 | 1 |
 | N50 | 33380 | 400429 |
 | Total length | 399846 | 400429 |
@@ -46,9 +47,10 @@ Exact-or-wrong — a deterministic function of two deterministic assemblies, mea
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/quast/01-evaluate.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/quast/r1/   # expect report.tsv, smoke-check.txt
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # quast evaluates their assemblies
+make run RECIPE=quast
+make ls RECIPE=quast   # expect report.tsv, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

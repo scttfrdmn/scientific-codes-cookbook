@@ -63,10 +63,10 @@ Most of the smoke check is arithmetic, not observation, so it costs nothing and 
 
 **Run + verify.**
 ```sh
-recipes/iqtree/stage-inputs.sh          # once, if the shared alignment isn't staged
-spawn task run --spec recipes/raxml-ng/01-search.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/raxml-ng/r1/   # expect six objects
+make stage RECIPE=iqtree          # once, if the shared alignment isn't staged
+make run RECIPE=raxml-ng
+make ls RECIPE=raxml-ng   # expect six objects
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). `--redo` is in the command, so a re-run doesn't trip the checkpoint guard. Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). `--redo` is in the command, so a re-run doesn't trip the checkpoint guard. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

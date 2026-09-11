@@ -42,13 +42,13 @@ Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The
 
 freebayes emits a large QUAL~0 tail by design, hence the wide total band; the confident count is the meaningful one.
 
-**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `recipes/bcftools/stage-inputs.sh`.
+**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `make stage RECIPE=bcftools`.
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/freebayes/01-call.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/freebayes/r1/   # expect freebayes.vcf, smoke-check.txt
+make run RECIPE=freebayes
+make ls RECIPE=freebayes   # expect freebayes.vcf, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

@@ -114,12 +114,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   **A cross-code check's tolerance is set by the shared problem's precision, not by how
   closely the codes happen to agree** — and stating *why* is what separates it from a
   fudge. RAxML-NG/IQ-TREE can assert 1e-8 because the ML optimum is defined to that
-  precision. PySCF and Psi4 on H2 RHF/STO-3G agree only to 2.4e-5 Ha, and that is *correct*:
-  STO-3G's contraction coefficients aren't standardized across packages, so two right HF
-  codes must differ at the 5th decimal on a minimal basis — the check asserts agreement to
-  chemical accuracy (<1 mHa), which still catches a broken integral/SCF (those diverge by
-  mHa–Ha) while a 1e-8 band would fail for a reason unrelated to correctness. Same technique,
-  different justified tolerance; the basis sets it, not the noise.
+  precision. PySCF and Psi4 on H2 RHF/STO-3G, **both run with exact integrals**, agree to
+  3e-7 Ha — and getting there required first matching the *method*: Psi4 defaults to density
+  fitting (DF), and comparing that DF energy against PySCF's exact one made two correct codes
+  look 2.4e-5 Ha apart, a method difference masquerading as a basis limit (the original recipe
+  blamed "unstandardized STO-3G contraction coefficients" — wrong; measured DF−PK = 2.401e-5).
+  Setting `SCF_TYPE PK` makes it like-with-like; then the check asserts <1e-5 (tight enough to
+  be a real cross-validation, loose enough to survive SCF-convergence noise). The integral
+  treatment sets the tolerance, not a basis nuance — and this is the same "match the modes"
+  discipline as the aligners, one env over.
   (A check that only proves a tool is self-consistent, when a stronger one was free; or a
   cross-code tolerance picked to pass rather than justified by the problem.)
 - **A cross-code check must compare like with like — before asserting agreement, verify the
@@ -152,6 +155,22 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   across two local runs, *then* assert the exact number — otherwise assert a band or report it
   as an observation. (An exact identity that's exact one run and different the next: correct
   tool, valid result, flaky check — the subtlest way an assertion goes bad.)
+- **A pin swap is a change to the recipe's input, not a mechanical edit — every assertion
+  downstream of the changed bytes needs re-derivation or re-verification, a re-run, not a
+  hash edit.** An equivalence argument may justify the *sourcing* but never licenses leaving
+  the *assertion* unverified — and that gap is not sloppiness, it's a good argument applied
+  to the wrong question. Repinning macs2's chr20 subset to a new samtools serialization was
+  argued sound because the two BAMs had identical read *counts* — correct for the sourcing,
+  and 1390 peaks did survive. But the same reasoning left the 30x reads' assemblers unverified
+  after their repin, and count doesn't determine an assembly: megahit shipped `2 contigs /
+  400811 bp` as a false green for months (the repinned reads assemble to `1 / 400429`), because
+  read-count equivalence answered a question the assertion didn't ask. The proof that reasoning
+  can't stand in for a run is the audit itself — an end-to-end pass over three unreconfirmed
+  repins found two harmless (spades, macs2) and one not (megahit), and nothing short of running
+  could tell which. So on any repin: re-derive or re-run every downstream assertion and record
+  the command. A repin to reproducible bytes is a *correction* — but only once a run shows the
+  science unchanged. (A verified number silently invalidated by a pin swap nobody re-ran — the
+  subtlest false green, and the project paid Graviton time to learn it.)
 - **When a conda package strips the data a code needs, stage it from the code's own
   version-matched test suite — it usually ships a committed reference alongside, which
   turns "produce a number" into "reproduce a published number" for free.** This is a
@@ -286,8 +305,10 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 ## References
 
 CHARTER.md (why). GitHub project board (state). docs.spore.host and the
-spore-host / aarchbio / aarchsci repo sources (tooling truth). catalog/cookbook.md
-(the ~50-code list this project works through).
+spore-host / aarchbio / aarchsci repo sources (tooling truth). catalog/recipes.md
+(the generated inventory of shipped recipes — `make catalog`, never hand-edited; the
+target list and remaining work live on the board). patterns/execution-shapes.md (the
+conceptual A–G shape map, not an inventory).
 
 **How a recipe is built is these rules plus a worked example, not a separate document.**
 `recipes/salmon/` is the exemplar — copy its section order (caveat-first if the result
@@ -335,8 +356,12 @@ a spawn/staging/instance concept when it's load-bearing.
   human review. Do not trust R7 to cover re-teaching.]
 - **R8 — Cut hard.** Flabby prose under the ceiling still fails the one-minute bar. [human]
 - **Frontmatter** (machine-checkable versions): `tool`, `tool_version`, `image` (full
-  `@sha256:`), `spawn_version`, `run_date`. Pipeline recipes use `images:` (one digest per
-  tool). [auto]
+  `@sha256:`), `spawn_version`, `last_verified`. Pipeline recipes use `images:` (one digest per
+  tool). `last_verified` is a date **only a real verifying run may set** — absent is honest
+  ("not verified since tracking began") and is a TODO queue, never backfilled to silence the
+  warning; that's the false-green trap one layer up. Page freshness (`last_updated`) is *not*
+  frontmatter — it's git-derived and generated into catalog/recipes.md, since git already knows
+  it and a stored copy would be a second source that drifts. [auto]
 
 **Ancillary pages (`patterns/`, `practices/`, README, CHARTER):** lede in the first 2 lines
 (a thesis line/blockquote); one idea, tight sections, no re-teaching of a sibling page; no

@@ -3,7 +3,7 @@
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\n# quast is the independent cross-validator: two assemblers (SPAdes, MEGAHIT) on the\n# same fixed reads, one unrelated tool measuring both. We do NOT assert spades==megahit\n# (different algorithms legitimately produce different contigs -- like-with-like); we\n# assert each assembler's own exact numbers AS QUAST REPORTS THEM. Inputs are the two\n# assemblers' staged outputs (this task runs after both -- a resumable S3 chain).\necho \"== QUAST evaluates both assemblies ==\"\nquast.py spades_contigs.fasta megahit_contigs.fa -o out -t 2 --labels spades,megahit\ncp out/report.tsv report.tsv\n\n# ---- smoke check: parse report.tsv (metric<TAB>spades<TAB>megahit) ----\nq() { awk -F'\\t' -v k=\"$1\" '$1==k{print $2\" \"$3}' report.tsv; }\nread SC0 MC0 <<< \"$(q '# contigs (>= 0 bp)')\"   # raw contig counts\nread SC MC   <<< \"$(q '# contigs')\"             # quast default (>=500 bp)\nread SN MN   <<< \"$(q 'N50')\"\nread ST MT   <<< \"$(q 'Total length')\"\n{\n  echo \"spades:  raw_contigs $SC0 want 237 | ge500 $SC want 78 | N50 $SN want 33380 | total $ST want 399846\"\n  echo \"megahit: raw_contigs $MC0 want 2   | ge500 $MC want 1  | N50 $MN want 400429 | total $MT want 400429\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$SC0\" -eq 237; test \"$SC\" -eq 78; test \"$SN\" -eq 33380; test \"$ST\" -eq 399846\ntest \"$MC0\" -eq 2;   test \"$MC\" -eq 1;  test \"$MN\" -eq 400429; test \"$MT\" -eq 400429\necho \"SMOKE CHECK PASSED\"\n"
+    "set -euo pipefail\ncd /tmp\n\n# quast is the independent cross-validator: two assemblers (SPAdes, MEGAHIT) on the\n# same fixed reads, one unrelated tool measuring both. We do NOT assert spades==megahit\n# (different algorithms legitimately produce different contigs -- like-with-like); we\n# assert each assembler's own exact numbers AS QUAST REPORTS THEM. Inputs are the two\n# assemblers' staged outputs (this task runs after both -- a resumable S3 chain).\necho \"== QUAST evaluates both assemblies ==\"\nquast.py spades_contigs.fasta megahit_contigs.fa -o out -t 2 --labels spades,megahit\ncp out/report.tsv report.tsv\n\n# ---- smoke check: parse report.tsv (metric<TAB>spades<TAB>megahit) ----\nq() { awk -F'\\t' -v k=\"$1\" '$1==k{print $2\" \"$3}' report.tsv; }\nread SC0 MC0 <<< \"$(q '# contigs (>= 0 bp)')\"   # raw contig counts\nread SC MC   <<< \"$(q '# contigs')\"             # quast default (>=500 bp)\nread SN MN   <<< \"$(q 'N50')\"\nread ST MT   <<< \"$(q 'Total length')\"\n{\n  echo \"spades:  raw_contigs $SC0 want 237 | ge500 $SC want 78 | N50 $SN want 33380 | total $ST want 399846\"\n  echo \"megahit: raw_contigs $MC0 want 1   | ge500 $MC want 1  | N50 $MN want 400429 | total $MT want 400429\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$SC0\" -eq 237; test \"$SC\" -eq 78; test \"$SN\" -eq 33380; test \"$ST\" -eq 399846\ntest \"$MC0\" -eq 1;   test \"$MC\" -eq 1;  test \"$MN\" -eq 400429; test \"$MT\" -eq 400429\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692",
   "resources": {
@@ -16,22 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/spades/r1/contigs.fasta",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/contigs.fasta",
       "destination": "/tmp/spades_contigs.fasta"
     },
     {
-      "source": "s3://scicookbook-942542972736-us-east-1/runs/megahit/r1/contigs.fa",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/contigs.fa",
       "destination": "/tmp/megahit_contigs.fa"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/report.tsv",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/quast/r1/report.tsv"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quast/r1/report.tsv"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://scicookbook-942542972736-us-east-1/runs/quast/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quast/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {

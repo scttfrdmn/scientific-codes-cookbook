@@ -14,8 +14,10 @@ spawn_version: 0.104.0
 
 ```python
 import xesmf as xe
-regridder = xe.Regridder(src_grid, dst_grid, "conservative")   # 5°×4° global → 8°×6°
-out = regridder(field)      # a constant 1.0 field must come back 1.0 everywhere
+src = xe.util.grid_global(5, 4)          # 5°×4° global grid
+dst = xe.util.grid_global(8, 6)          # → 8°×6°
+regridder = xe.Regridder(src, dst, "conservative")
+out = regridder(src["lat"] * 0 + 1.0)    # a constant 1.0 field must come back 1.0 everywhere
 ```
 
 One task: the regrid, an `xarray.open_dataset` on a pinned NCEP file, and a MetPy wind-speed calc, in one `python3` invocation. Only the netCDF is staged.
@@ -67,11 +69,11 @@ No thresholds: the mean and wind speed are reference values, the regrid is exact
 ### Run + verify
 
 ```sh
-recipes/climate/stage-inputs.sh       # once; fetch + verify + upload air_temperature.nc (~7 MB)
-spawn task run --spec recipes/climate/01-regrid.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/climate/r1/
+make stage RECIPE=climate       # once; fetch + verify + upload air_temperature.nc (~7 MB)
+make run RECIPE=climate
+make ls RECIPE=climate
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect one object (`smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

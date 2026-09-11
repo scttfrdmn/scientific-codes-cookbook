@@ -4,6 +4,7 @@ tool_version: 4.5.3
 env: r
 image: quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68
 spawn_version: 0.104.0
+last_verified: 2026-09-10
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 
@@ -66,11 +67,13 @@ The ecosystem row proves the env is more than bare r-base: `r-tidyverse`/`data.t
 
 ### Run + verify
 
+`r` builds its input in the task, so there's nothing to stage:
+
 ```sh
-spawn task run --spec recipes/r/01-lm.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/r/r1/
+make run RECIPE=r      # substitutes your COOKBOOK_BUCKET, runs on a Graviton4 box
+make ls  RECIPE=r      # the outputs: fit.txt, smoke-check.txt
 ```
 
-`--wait` exiting 0 does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect two objects (`fit.txt`, `smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs *inside* the task (a bad run fails the task); the bucket listing is the second half — an exit code says the command ran, never that its output is real. A re-run overwrites `runs/r/r1/` — `make run` launches a fresh task each time, no spec edit needed.
 
 </details>

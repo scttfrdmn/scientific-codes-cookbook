@@ -52,9 +52,10 @@ Three identities:
 
 **Run + verify.**
 ```sh
-spawn task run --spec recipes/kallisto/01-quant.task.json --wait
-aws s3 ls s3://scicookbook-942542972736-us-east-1/runs/kallisto/r1/   # expect abundance.tsv, run_info.json, smoke-check.txt
+make stage RECIPE=salmon && make run RECIPE=salmon   # kallisto reuses salmon's inputs + quant.sf
+make run RECIPE=kallisto
+make ls RECIPE=kallisto   # expect abundance.tsv, run_info.json, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

@@ -5,7 +5,7 @@
 # round-trips a self-generated one). pydata/xarray-data air_temperature.nc: NCEP
 # reanalysis, variable "air", (time=2920, lat=25, lon=53). Pinned at a commit + sha256.
 set -euo pipefail
-BUCKET="s3://scicookbook-942542972736-us-east-1"
+BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 COMMIT="2baf0c22d9671a2058415f17e71b3fe06239a3dd"
 SRC="https://raw.githubusercontent.com/pydata/xarray-data/${COMMIT}/air_temperature.nc"
 SHA="c606b89c35970a2983b914b76df4adbb409003ef34aa7cfd7f582e41f307482b"
