@@ -37,7 +37,7 @@ Every recipe runs the same way — `make run RECIPE=<name>`, with `make stage RE
 
 ## Find your code
 
-Browse [`recipes/`](recipes/) — one directory per code, each README a self-contained page: the invocation, what to change for your own work, and all the verification in one place. The catalog spans genomics, molecular dynamics, quantum chemistry, materials, phylogenetics, and geo/EO; every page carries the exact image digest and versions it was run with.
+Scan [the catalog](catalog/recipes.md) for the whole inventory at a glance — what each recipe does, and what a clean account stages or reuses first — or browse [`recipes/`](recipes/) directly, one directory per code. Each README is self-contained: the invocation, what to change for your own work, and all the verification in one place. The catalog spans genomics, molecular dynamics, quantum chemistry, materials, phylogenetics, and geo/EO; every page carries the exact image digest and versions it was run with.
 
 ## Three ideas the recipes lean on
 

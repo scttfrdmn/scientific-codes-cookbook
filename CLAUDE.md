@@ -302,8 +302,10 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 ## References
 
 CHARTER.md (why). GitHub project board (state). docs.spore.host and the
-spore-host / aarchbio / aarchsci repo sources (tooling truth). catalog/cookbook.md
-(the ~50-code list this project works through).
+spore-host / aarchbio / aarchsci repo sources (tooling truth). catalog/recipes.md
+(the generated inventory of shipped recipes — `make catalog`, never hand-edited; the
+target list and remaining work live on the board). patterns/execution-shapes.md (the
+conceptual A–G shape map, not an inventory).
 
 **How a recipe is built is these rules plus a worked example, not a separate document.**
 `recipes/salmon/` is the exemplar — copy its section order (caveat-first if the result
