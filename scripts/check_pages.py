@@ -228,11 +228,33 @@ def check_portability():
             errors.append(f"{rel}: hardcoded account bucket — default to $COOKBOOK_BUCKET or require the arg (portability)")
 
 
+def check_staging_coverage():
+    """Every recipe's inputs must be reachable in a clean account: built by a stage script
+    (its own or a sibling's), reused from a sibling recipe's run, or build-in-task (no inputs).
+    An `inputs/<p>/` a reader can't build is the un-buildable-fixture bug (the 30x-reads case)."""
+    built = set()  # inputs/<prefix>/ that some stage script produces
+    for f in glob.glob(os.path.join(ROOT, "recipes", "*", "stage-inputs.sh")):
+        for m in re.finditer(r"inputs/([\w.-]+)", open(f, encoding="utf-8").read()):
+            built.add(m.group(1))
+    recipes = {os.path.basename(os.path.dirname(p))
+               for p in glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))}
+    for spec in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
+        rel = os.path.relpath(spec, ROOT)
+        text = open(spec, encoding="utf-8").read()
+        for prefix in {m.group(1) for m in re.finditer(r'"source":\s*"s3://[^/]+/inputs/([\w.-]+)/', text)}:
+            if prefix not in built:
+                errors.append(f"{rel}: reads inputs/{prefix}/ but no stage script builds it — un-buildable in a clean account (staging)")
+        for src in {m.group(1) for m in re.finditer(r'"source":\s*"s3://[^/]+/runs/([\w.-]+)/', text)}:
+            if src not in recipes:
+                errors.append(f"{rel}: reuses runs/{src}/ but no such recipe (staging)")
+
+
 def main():
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
     check_portability()
+    check_staging_coverage()
     if "--external" in sys.argv:
         check_external()
     for w in warns:
