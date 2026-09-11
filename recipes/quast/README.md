@@ -35,7 +35,7 @@ Two assemblers on the same reads produce **different** contig sets by design —
 
 | metric (from `report.tsv`) | SPAdes | MEGAHIT |
 |---|---|---|
-| `# contigs (>= 0 bp)` raw | 237 | 2 |
+| `# contigs (>= 0 bp)` raw | 237 | 1 |
 | `# contigs` (≥500 bp) | 78 | 1 |
 | N50 | 33380 | 400429 |
 | Total length | 399846 | 400429 |

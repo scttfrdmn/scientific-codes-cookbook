@@ -21,6 +21,8 @@ All of it is [spore.host](https://docs.spore.host) tooling — the docs cover th
 
 **You need:** the AWS CLI configured with working credentials (`aws sts get-caller-identity` must succeed) and a default region, plus this repo cloned. Everything runs in **your** AWS account, in a bucket you create.
 
+Two recipes stage their inputs by subsetting large public BAMs in a pinned container, so their `make stage` step — `RECIPE=bcftools` (the reads the assembly chain assembles) and `RECIPE=macs2` — also needs a local **Docker** with `linux/arm64` support. Every other recipe stages with the AWS CLI alone, and **no** recipe needs Docker to *run* — only those two stage steps do.
+
 ```sh
 brew install spore-host/tap/truffle spore-host/tap/spawn
 make bootstrap            # create your cookbook bucket (once — leaves an S3 bucket in your account)
