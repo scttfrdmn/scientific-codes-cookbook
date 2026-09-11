@@ -48,6 +48,7 @@ Threshold confirmed from the real run: a local spades build measured 0.9952, the
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # sourmash compares their assemblies
 make run RECIPE=sourmash
 make ls RECIPE=sourmash   # expect compare.csv, smoke-check.txt
 ```

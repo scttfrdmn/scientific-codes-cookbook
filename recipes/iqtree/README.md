@@ -47,6 +47,7 @@ Shape assertions are exact (from the input + Newick); the **log-likelihood band 
 
 **Run + verify.**
 ```sh
+make stage RECIPE=iqtree         # derive the Pfam alignment (public)
 make run RECIPE=iqtree
 make ls RECIPE=iqtree
 ```

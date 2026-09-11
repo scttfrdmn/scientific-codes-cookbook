@@ -46,6 +46,7 @@ Exact-or-wrong — a deterministic function of two deterministic assemblies, mea
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # quast evaluates their assemblies
 make run RECIPE=quast
 make ls RECIPE=quast   # expect report.tsv, smoke-check.txt
 ```

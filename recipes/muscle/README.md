@@ -46,6 +46,7 @@ The MAFFT↔MUSCLE cross-code question *is* worth asking, but it's a **downstrea
 
 **Run + verify.**
 ```sh
+make stage RECIPE=mafft          # muscle reuses the shared Pfam family
 make run RECIPE=muscle
 make ls RECIPE=muscle   # expect aln.fa, smoke-check.txt
 ```

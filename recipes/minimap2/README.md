@@ -50,6 +50,7 @@ SAM parsed with `awk` arithmetic flag tests — no samtools/python in the image.
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bwa-samtools && make run RECIPE=bwa-samtools   # minimap2 reuses bwa's inputs + aln.sam
 make run RECIPE=minimap2
 make ls RECIPE=minimap2   # expect mm.sam, smoke-check.txt
 ```

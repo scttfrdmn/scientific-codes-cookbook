@@ -61,6 +61,7 @@ No samtools in this image (one tool per image), so the BAM is checked by size + 
 
 **Run + verify.**
 ```sh
+make stage RECIPE=star           # build the chr20 index inputs (Ensembl/ENA, public)
 make run RECIPE=star
 
 make ls RECIPE=star

@@ -50,6 +50,7 @@ Counts are banded not because the run is nondeterministic (it isn't) but because
 
 **Run + verify.**
 ```sh
+make stage RECIPE=hmmer          # build models + proteome from Pfam/Ensembl (public)
 make run RECIPE=hmmer
 make ls RECIPE=hmmer
 ```

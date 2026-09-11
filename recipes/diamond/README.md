@@ -49,6 +49,7 @@ Queries are the first 20 DB records (blast's design, reused byte-for-byte), so e
 
 **Run + verify.**
 ```sh
+make stage RECIPE=blast && make run RECIPE=blast     # diamond reuses blast's DB + hits.tsv
 make run RECIPE=diamond
 make ls RECIPE=diamond   # expect dmnd_hits.tsv, smoke-check.txt
 ```

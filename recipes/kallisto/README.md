@@ -52,6 +52,7 @@ Three identities:
 
 **Run + verify.**
 ```sh
+make stage RECIPE=salmon && make run RECIPE=salmon   # kallisto reuses salmon's inputs + quant.sf
 make run RECIPE=kallisto
 make ls RECIPE=kallisto   # expect abundance.tsv, run_info.json, smoke-check.txt
 ```

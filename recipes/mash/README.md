@@ -50,6 +50,7 @@ The threshold is confirmed-from-the-real-run, not shaved: a local spades build (
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # mash compares their assemblies
 make run RECIPE=mash
 make ls RECIPE=mash   # expect mash-dist.txt, smoke-check.txt
 ```

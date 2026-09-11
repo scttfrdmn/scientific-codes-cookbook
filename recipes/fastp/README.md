@@ -47,6 +47,7 @@ Components (folded into the sum): passed 748116, low_quality 51656, too_many_N 2
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bwa-samtools   # fastp reuses bwa's reads
 make run RECIPE=fastp
 make ls RECIPE=fastp   # expect out_1.fq.gz, out_2.fq.gz, fastp.json, smoke-check.txt
 ```

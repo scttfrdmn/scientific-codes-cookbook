@@ -48,6 +48,7 @@ Bowtie 2 is deterministic, so counts reproduce exactly; bands exist only to surv
 
 **Run + verify.**
 ```sh
+make stage RECIPE=bwa-samtools && make run RECIPE=bwa-samtools   # bowtie2 reuses bwa's inputs + aln.sam
 make run RECIPE=bowtie2
 make ls RECIPE=bowtie2   # expect smoke-check.txt, align.log, build.log
 ```

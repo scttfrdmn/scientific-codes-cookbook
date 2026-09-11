@@ -48,6 +48,7 @@ No bands — every check is exact. The genuine **cross-code** check (MAFFT vs [M
 
 **Run + verify.**
 ```sh
+make stage RECIPE=mafft          # derive the Pfam family (public)
 make run RECIPE=mafft
 make ls RECIPE=mafft   # expect mafft_aln.fa, smoke-check.txt
 ```

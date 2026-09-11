@@ -52,6 +52,7 @@ Only the row count is banded (the `-max_target_seqs 20` cap; a query with fewer 
 
 **Run + verify.**
 ```sh
+make stage RECIPE=blast          # build DB + queries from Ensembl (public)
 make run RECIPE=blast
 make ls RECIPE=blast
 ```
