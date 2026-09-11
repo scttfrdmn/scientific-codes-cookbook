@@ -36,6 +36,8 @@ Kraken2 is deterministic, so the classification is exact-or-wrong. The SARS-CoV-
 
 The DB is genome-idx's `viral_20240605`, a *real* RefSeq viral DB — not a toy that classifies nothing. At 0.66 GB it fits copy-per-task (staged as one tar, untarred on the box: 633 MB tar + ~660 MB DB + query ≈ 1.3 GB in `/tmp`, within budget), so it needs **no EFS**. That's deliberate: a 0.66 GB DB doesn't justify the mount, and introducing EFS here would be smuggling a Round-Two lever in as a side effect of an oversized DB.
 
+**The DB pin is a moving artifact ([tier 3](../../practices/what-this-does-not-cover.md)).** genome-idx repacks its prebuilt DBs, so `make stage RECIPE=kraken2` may fetch a `.tar` whose bytes differ from the recorded sha256 — the pin records the version we ran, not a promise the next fetch matches. When it drifted, we re-ran the recipe against the current DB and the assertion held (SARS-CoV-2 → **2697049**), then repinned: **the recipe tests the classification, not the bytes**, which is exactly why a moving pin is acceptable here and wouldn't be for a derived fixture.
+
 | observable | assertion | observed |
 |---|---|---|
 | status | `C` (classified) | C |
