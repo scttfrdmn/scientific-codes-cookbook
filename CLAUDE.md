@@ -152,6 +152,22 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   across two local runs, *then* assert the exact number — otherwise assert a band or report it
   as an observation. (An exact identity that's exact one run and different the next: correct
   tool, valid result, flaky check — the subtlest way an assertion goes bad.)
+- **A pin swap is a change to the recipe's input, not a mechanical edit — every assertion
+  downstream of the changed bytes needs re-derivation or re-verification, a re-run, not a
+  hash edit.** An equivalence argument may justify the *sourcing* but never licenses leaving
+  the *assertion* unverified — and that gap is not sloppiness, it's a good argument applied
+  to the wrong question. Repinning macs2's chr20 subset to a new samtools serialization was
+  argued sound because the two BAMs had identical read *counts* — correct for the sourcing,
+  and 1390 peaks did survive. But the same reasoning left the 30x reads' assemblers unverified
+  after their repin, and count doesn't determine an assembly: megahit shipped `2 contigs /
+  400811 bp` as a false green for months (the repinned reads assemble to `1 / 400429`), because
+  read-count equivalence answered a question the assertion didn't ask. The proof that reasoning
+  can't stand in for a run is the audit itself — an end-to-end pass over three unreconfirmed
+  repins found two harmless (spades, macs2) and one not (megahit), and nothing short of running
+  could tell which. So on any repin: re-derive or re-run every downstream assertion and record
+  the command. A repin to reproducible bytes is a *correction* — but only once a run shows the
+  science unchanged. (A verified number silently invalidated by a pin swap nobody re-ran — the
+  subtlest false green, and the project paid Graviton time to learn it.)
 - **When a conda package strips the data a code needs, stage it from the code's own
   version-matched test suite — it usually ships a committed reference alongside, which
   turns "produce a number" into "reproduce a published number" for free.** This is a
