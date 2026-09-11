@@ -9,6 +9,7 @@ Knowing where a promise stops is what keeps it from turning into a disappointmen
 - **arm64 first; GPU is Round Two.** These run on Graviton4 (arm64). GPU-bound codes wait for an x86 pass — the only Graviton GPU is too small to be representative. Nothing here is emulated; a missing arm64 image is recorded as a gap, not worked around.
 - **Ephemeral and self-terminating.** Every run is TTL-capped and turns itself off; there is no standing infrastructure and no pre-baked AMI. If a recipe needs shared reference data, it's mounted read-only and torn down (or needs nothing torn down at all) — not left running.
 - **Pinned by digest, not durable forever.** A digest pin is *reproducibility-of-record* — you can say exactly what ran. It is not a guarantee the image pulls years from now; for that, mirror it. (A registry can garbage-collect an untagged manifest; a transient `401` is not a missing image.)
+- **A pinned input is only as reproducible as how it's made — and the two ways fail differently.** An input *derived from an immutable source* (the recorded command re-run on a fixed 1000G CRAM slice, a Pfam release path) reproduces byte-for-byte **forever** — anyone reruns it and the sha256 matches. An input *fetched from a published artifact* (a dated prebuilt DB tar, a GitHub release asset) reproduces only as long as the **publisher** keeps that exact file. Both are legitimate pins; the page says which, because a stage script that *derives* survives its source moving and one that *fetches* does not.
 
 ## Physical limits — measured, and not ours to beat
 
