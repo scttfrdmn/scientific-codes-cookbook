@@ -226,6 +226,15 @@ def check_portability():
         rel = os.path.relpath(f, ROOT)
         if "942542972736" in open(f, encoding="utf-8").read():
             errors.append(f"{rel}: hardcoded account bucket — default to $COOKBOOK_BUCKET or require the arg (portability)")
+    # READMEs: no hardcoded bucket, and the run path is `make run`, not a raw spec (locks in the sweep).
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md")) +
+                    glob.glob(os.path.join(ROOT, "*.md"))):
+        rel = os.path.relpath(f, ROOT)
+        text = open(f, encoding="utf-8").read()
+        if "scicookbook-942542972736" in text:
+            errors.append(f"{rel}: hardcoded account bucket in a page — use $COOKBOOK_BUCKET / make ls (portability)")
+        if re.search(r"spawn task run --spec recipes/", text):
+            errors.append(f"{rel}: raw 'spawn task run --spec recipes/…' — the runnable path is `make run RECIPE=…` (portability)")
 
 
 def check_staging_coverage():
