@@ -49,6 +49,6 @@ freebayes emits a large QUAL~0 tail by design, hence the wide total band; the co
 make run RECIPE=freebayes
 make ls RECIPE=freebayes   # expect freebayes.vcf, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

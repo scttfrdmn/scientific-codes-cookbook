@@ -48,6 +48,6 @@ Exact-or-wrong: a deterministic function of fixed reads + fixed threads.
 make run RECIPE=spades
 make ls RECIPE=spades   # expect contigs.fasta, smoke-check.txt
 ```
-[QUAST](../quast/README.md) reads `contigs.fasta` from this prefix. Re-running: bump the `-r1` suffix.
+[QUAST](../quast/README.md) reads `contigs.fasta` from this prefix. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

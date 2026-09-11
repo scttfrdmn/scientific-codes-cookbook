@@ -54,6 +54,6 @@ make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit 
 make run RECIPE=mash
 make ls RECIPE=mash   # expect mash-dist.txt, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

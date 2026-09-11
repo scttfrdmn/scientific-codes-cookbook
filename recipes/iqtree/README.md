@@ -51,6 +51,6 @@ make stage RECIPE=iqtree         # derive the Pfam alignment (public)
 make run RECIPE=iqtree
 make ls RECIPE=iqtree
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). `-redo` is in the command, so a re-run doesn't trip the checkpoint guard. Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). `-redo` is in the command, so a re-run doesn't trip the checkpoint guard. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

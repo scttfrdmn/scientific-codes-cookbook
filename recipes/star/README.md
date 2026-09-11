@@ -66,6 +66,6 @@ make run RECIPE=star
 
 make ls RECIPE=star
 ```
-Task 2 must **not** `rm` the staged index tar — the container can't unlink a staged input it doesn't own (`EPERM`), and `rm -f` doesn't suppress that ([the container path](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Task 2 must **not** `rm` the staged index tar — the container can't unlink a staged input it doesn't own (`EPERM`), and `rm -f` doesn't suppress that ([the container path](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

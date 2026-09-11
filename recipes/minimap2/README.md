@@ -54,6 +54,6 @@ make stage RECIPE=bwa-samtools && make run RECIPE=bwa-samtools   # minimap2 reus
 make run RECIPE=minimap2
 make ls RECIPE=minimap2   # expect mm.sam, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

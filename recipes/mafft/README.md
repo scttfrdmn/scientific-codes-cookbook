@@ -52,6 +52,6 @@ make stage RECIPE=mafft          # derive the Pfam family (public)
 make run RECIPE=mafft
 make ls RECIPE=mafft   # expect mafft_aln.fa, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

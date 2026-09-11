@@ -49,6 +49,6 @@ The check is a **conservation identity**, not two coincidental numbers: the `cat
 make run RECIPE=seqkit
 make ls RECIPE=seqkit   # expect stats.tsv, smoke-check.txt
 ```
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix in `task_id` and the output prefix.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

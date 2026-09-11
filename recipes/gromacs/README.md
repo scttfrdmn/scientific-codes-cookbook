@@ -62,6 +62,6 @@ The `md` env carries both engines; [lammps](../lammps/README.md) runs the other 
 make run RECIPE=gromacs
 make ls RECIPE=gromacs
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

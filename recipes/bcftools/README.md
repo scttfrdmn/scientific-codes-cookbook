@@ -49,6 +49,6 @@ make run RECIPE=freebayes   # cross-check counterpart, first
 make run RECIPE=bcftools
 make ls RECIPE=bcftools   # expect bcftools.vcf.gz, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix in `task_id` and the output prefix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

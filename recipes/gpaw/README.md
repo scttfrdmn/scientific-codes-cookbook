@@ -63,6 +63,6 @@ Same `dft` image as [nwchem](../nwchem/README.md); [siesta](../siesta/README.md)
 make run RECIPE=gpaw
 make ls RECIPE=gpaw
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

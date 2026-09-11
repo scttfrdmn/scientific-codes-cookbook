@@ -46,6 +46,6 @@ MEGAHIT (`-t 1 --min-count 2`) is **deterministic at a fixed single thread** —
 make run RECIPE=megahit
 make ls RECIPE=megahit   # expect contigs.fa, smoke-check.txt
 ```
-[QUAST](../quast/README.md) reads `contigs.fa` from this prefix. Re-running: bump the `-r1` suffix.
+[QUAST](../quast/README.md) reads `contigs.fa` from this prefix. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

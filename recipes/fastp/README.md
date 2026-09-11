@@ -51,6 +51,6 @@ make stage RECIPE=bwa-samtools   # fastp reuses bwa's reads
 make run RECIPE=fastp
 make ls RECIPE=fastp   # expect out_1.fq.gz, out_2.fq.gz, fastp.json, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

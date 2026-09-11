@@ -53,6 +53,6 @@ make stage RECIPE=blast && make run RECIPE=blast     # diamond reuses blast's DB
 make run RECIPE=diamond
 make ls RECIPE=diamond   # expect dmnd_hits.tsv, smoke-check.txt
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

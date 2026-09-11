@@ -69,6 +69,6 @@ make run RECIPE=ambertools
 make ls RECIPE=ambertools
 ```
 
-a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`md.out`, `tleap.log`, `smoke-check.txt`). Re-run: bump the `-r1` suffix in `task_id` and the output prefix to keep both records.
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect three objects (`md.out`, `tleap.log`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

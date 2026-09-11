@@ -57,6 +57,6 @@ Two BED files (half-open coordinates): `a.bed` = `[0,100] [50,150] [200,300]`, `
 make run RECIPE=bedtools
 make ls RECIPE=bedtools   # expect merge/intersect/subtract/genomecov + smoke-check.txt
 ```
-Smoke check runs inside the task; the bucket listing is the second half. Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; the bucket listing is the second half. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

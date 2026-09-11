@@ -30,10 +30,12 @@ stage: ## build a recipe's inputs into your bucket from public sources: make sta
 run: ## run a recipe against your bucket: make run RECIPE=r
 	@test -n "$(RECIPE)" || { echo "usage: make run RECIPE=<name>"; exit 1; }
 	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'make bootstrap' first"; exit 1; }
-	@for spec in recipes/$(RECIPE)/*.task.json; do \
+	@nonce="$$(date +%Y%m%d%H%M%S)"; \
+	for spec in recipes/$(RECIPE)/*.task.json; do \
 	  out="$$(mktemp -t cookbook.XXXXXX)"; \
-	  sed 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' "$$spec" > "$$out"; \
-	  echo "== $$spec  →  s3://$(COOKBOOK_BUCKET) =="; \
+	  sed -e 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' \
+	      -e 's|\("task_id": "[^"]*\)"|\1-'"$$nonce"'"|' "$$spec" > "$$out"; \
+	  echo "== $$spec  →  s3://$(COOKBOOK_BUCKET) (run $$nonce) =="; \
 	  spawn task run --spec "$$out" --wait; \
 	done
 

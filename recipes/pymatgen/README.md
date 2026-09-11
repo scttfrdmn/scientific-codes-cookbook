@@ -72,6 +72,6 @@ make run RECIPE=pymatgen
 make ls RECIPE=pymatgen
 ```
 
-The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect one object (`smoke-check.txt`). Re-run: bump the `-r1` suffix.
+The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect one object (`smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

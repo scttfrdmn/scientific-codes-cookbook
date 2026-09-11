@@ -73,6 +73,6 @@ make run RECIPE=r      # substitutes your COOKBOOK_BUCKET, runs on a Graviton4 b
 make ls  RECIPE=r      # the outputs: fit.txt, smoke-check.txt
 ```
 
-The smoke check runs *inside* the task (a bad run fails the task); the bucket listing is the second half — an exit code says the command ran, never that its output is real. A re-run overwrites `runs/r/r1/`; bump the `-r1` in the spec's `task_id` to keep both.
+The smoke check runs *inside* the task (a bad run fails the task); the bucket listing is the second half — an exit code says the command ran, never that its output is real. A re-run overwrites `runs/r/r1/` — `make run` launches a fresh task each time, no spec edit needed.
 
 </details>

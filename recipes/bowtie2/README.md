@@ -52,6 +52,6 @@ make stage RECIPE=bwa-samtools && make run RECIPE=bwa-samtools   # bowtie2 reuse
 make run RECIPE=bowtie2
 make ls RECIPE=bowtie2   # expect smoke-check.txt, align.log, build.log
 ```
-Re-running: bump the `-r1` suffix.
+Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

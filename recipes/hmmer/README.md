@@ -54,6 +54,6 @@ make stage RECIPE=hmmer          # build models + proteome from Pfam/Ensembl (pu
 make run RECIPE=hmmer
 make ls RECIPE=hmmer
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

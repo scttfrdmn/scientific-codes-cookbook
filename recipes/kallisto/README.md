@@ -56,6 +56,6 @@ make stage RECIPE=salmon && make run RECIPE=salmon   # kallisto reuses salmon's 
 make run RECIPE=kallisto
 make ls RECIPE=kallisto   # expect abundance.tsv, run_info.json, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

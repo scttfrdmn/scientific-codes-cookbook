@@ -84,6 +84,6 @@ make run RECIPE=relion
 make ls RECIPE=relion
 ```
 
-a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect six objects, two of them 340,737,024 B. Re-run: bump the `-r1` suffix. (The `EPERM`-on-unlinking-a-staged-input trap that bit earlier recipes is closed as of spawn 0.103.1 — the wrapper now runs as the caller's uid and chowns staged paths — but this recipe deletes nothing regardless, at 1.6 GiB of ~6.1 GiB.)
+a completed run does **not** prove the outputs exist — an exit code says the command ran, never that its output is real; the smoke check runs *inside* the task, and the bucket listing is the second half of it. Expect six objects, two of them 340,737,024 B. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed. (The `EPERM`-on-unlinking-a-staged-input trap that bit earlier recipes is closed as of spawn 0.103.1 — the wrapper now runs as the caller's uid and chowns staged paths — but this recipe deletes nothing regardless, at 1.6 GiB of ~6.1 GiB.)
 
 </details>

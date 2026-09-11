@@ -51,6 +51,6 @@ The DB is genome-idx's `viral_20240605`, a *real* RefSeq viral DB — not a toy 
 make run RECIPE=kraken2
 make ls RECIPE=kraken2   # expect out.report, smoke-check.txt
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-running: bump the `-r1` suffix.
+Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>
