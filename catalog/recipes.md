@@ -4,39 +4,39 @@
 
 Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **52 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run any with `make run RECIPE=<name>`.
 
-**Inputs** — what a clean-account reader does first: **build-in-task** (nothing to stage), **stage** (`make stage RECIPE=<name>`), or **reuse: X** (stage/run recipe X first — its output is this recipe's input).
+**Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
 ## aarchbio
 
 | Recipe | What it does | Env | Inputs |
 |---|---|---|---|
-| [bcftools](../recipes/bcftools/README.md) | The workhorse germline caller: pile up the reads, call the variants, get a VCF. | aarchbio | reuse: bwa-samtools, freebayes |
+| [bcftools](../recipes/bcftools/README.md) | The workhorse germline caller: pile up the reads, call the variants, get a VCF. | aarchbio | stage: bcftools, bwa-samtools · run: freebayes |
 | [bedtools](../recipes/bedtools/README.md) | Merge, intersect, subtract, and cover intervals — the set algebra every genomics pipeline leans on. | aarchbio | build-in-task |
 | [blast](../recipes/blast/README.md) | Build a protein database, search sequences against it — the canonical homology search. | aarchbio | stage |
-| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | reuse: bwa-samtools |
+| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools |
 | [bwa-samtools](../recipes/bwa-samtools/README.md) | Align paired-end reads to a reference genome and get back a sorted, indexed BAM. | aarchbio | stage |
-| [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | reuse: blast |
-| [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | reuse: bwa-samtools |
+| [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | run: blast |
+| [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage |
-| [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | reuse: bcftools, bwa-samtools |
+| [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage |
-| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | reuse: salmon |
+| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon |
 | [kraken2](../recipes/kraken2/README.md) | Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass. | aarchbio | stage |
 | [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage |
 | [mafft](../recipes/mafft/README.md) | Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment. | aarchbio | stage |
-| [mash](../recipes/mash/README.md) | Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes. | aarchbio | reuse: megahit, spades |
-| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | reuse: bcftools |
-| [minimap2](../recipes/minimap2/README.md) | The versatile aligner — here in its short-read mode, checked against bwa on identical reads. | aarchbio | reuse: bwa-samtools |
-| [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../mafft/README.md). | aarchbio | reuse: mafft |
-| [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | reuse: bcftools |
-| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | reuse: megahit, spades |
-| [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | reuse: iqtree |
+| [mash](../recipes/mash/README.md) | Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes. | aarchbio | run: megahit, spades |
+| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools |
+| [minimap2](../recipes/minimap2/README.md) | The versatile aligner — here in its short-read mode, checked against bwa on identical reads. | aarchbio | run: bwa-samtools |
+| [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../mafft/README.md). | aarchbio | stage: mafft |
+| [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | stage: bcftools |
+| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades |
+| [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage |
 | [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../kallisto/README.md). | aarchbio | stage |
-| [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | reuse: bcftools |
-| [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | reuse: megahit, spades |
-| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | reuse: bcftools |
+| [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools |
+| [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades |
+| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools |
 | [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage |
 
 ## climate

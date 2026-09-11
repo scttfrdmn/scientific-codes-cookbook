@@ -1,4 +1,4 @@
-.PHONY: check check-links bootstrap stage run ls print-bucket
+.PHONY: check check-links catalog bootstrap stage run ls print-bucket
 
 # Your cookbook bucket — holds staged inputs and run outputs, in YOUR account.
 # Override with `make run COOKBOOK_BUCKET=my-bucket` if you want a different name.

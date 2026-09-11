@@ -86,25 +86,36 @@ def main():
         prefixes, runs = spec_inputs(d)
         has_own_stage = os.path.exists(os.path.join(d, "stage-inputs.sh"))
 
-        # deps: siblings this recipe needs staged/run first
-        deps = set(x for x in runs if x != name)
-        for p in prefixes:
-            b = builder.get(p)
-            if b and b != name:
-                deps.add(b)
+        # Two dependency KINDS, because they mean different reader actions — the actionable
+        # distinction item 4 exists for, not the mere fact of a dependency:
+        #   stage-dep: reads a sibling's *staged input*  -> `make stage RECIPE=<sib>`
+        #   run-dep:   reads a sibling's *run output*     -> `make run RECIPE=<sib>` and wait
+        stage_deps = {builder[p] for p in prefixes if builder.get(p) and builder[p] != name}
+        run_deps = {x for x in runs if x != name}
 
-        # explicit depends_on frontmatter (item 4) overrides the inference
+        # Inference is the default; `depends_on` overrides only where it's wrong or can't see
+        # the dependency (e.g. a pure ordering dep). Syntax: `depends_on: stage:bwa-samtools,
+        # run:freebayes` — a bare token defaults to a stage-dep. Not required anywhere today.
         if fm.get("depends_on"):
-            deps = {x.strip() for x in re.split(r"[,\[\]\s]+", fm["depends_on"]) if x.strip()}
+            stage_deps, run_deps = set(), set()
+            for tok in re.split(r"[,\s]+", fm["depends_on"]):
+                kind, _, rec = tok.partition(":")
+                if not (rec or kind):
+                    continue
+                (run_deps if (rec and kind == "run") else stage_deps).add(rec or kind)
 
-        if deps:
-            inputs = "reuse: " + ", ".join(sorted(deps))
-        elif has_own_stage:
-            inputs = "stage"
-        elif not prefixes and not runs:
-            inputs = "build-in-task"
-        else:
-            inputs = "stage"  # reads a prefix its own stage builds
+        # A sibling needed as both a stage-dep and a run-dep collapses to the stronger action:
+        # `make run RECIPE=X` already requires X staged, so listing both would be redundant
+        # (the cross-validation recipes — bowtie2/diamond/kallisto — reuse a sibling both ways).
+        stage_targets = (({name} if has_own_stage else set()) | stage_deps) - run_deps
+        segs = []
+        if stage_targets == {name}:
+            segs.append("stage")                                    # `make stage RECIPE=<this>`
+        elif stage_targets:
+            segs.append("stage: " + ", ".join(sorted(stage_targets)))
+        if run_deps:
+            segs.append("run: " + ", ".join(sorted(run_deps)))
+        inputs = " · ".join(segs) if segs else ("build-in-task" if not (prefixes or runs) else "stage")
         rows.append((domain, name, lede(text), env, inputs))
 
     # group by domain, alphabetical within
@@ -114,9 +125,11 @@ def main():
            f"— **{len(rows)} working examples**, generated from the recipes themselves so this "
            f"list is always what actually ships. Each links to its page; run any with "
            f"`make run RECIPE=<name>`.", "",
-           "**Inputs** — what a clean-account reader does first: **build-in-task** (nothing to "
-           "stage), **stage** (`make stage RECIPE=<name>`), or **reuse: X** (stage/run recipe X "
-           "first — its output is this recipe's input).", ""]
+           "**Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds "
+           "are different actions: **build-in-task** (nothing to stage) · **stage** "
+           "(`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe "
+           "reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe "
+           "reads X's run output).", ""]
     for dom in domains:
         drows = [r for r in rows if r[0] == dom]
         out.append(f"## {dom}")
