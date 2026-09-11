@@ -14,10 +14,10 @@ GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads t
 ## Run it
 
 ```python
-import mdtraj
-t = mdtraj.load('out.xtc', top='out.pdb')     # GROMACS-written XTC
-t.n_atoms, t.n_frames, t.unitcell_lengths[0]   # 648, 6, 1.8621 nm
-# then MDAnalysis reads the same out.xtc and computes the same O-H distance
+import mdtraj, MDAnalysis as mda
+t = mdtraj.load("out.xtc", top="out.pdb")     # GROMACS-written XTC → MDTraj
+u = mda.Universe("out.pdb", "out.xtc")        # the same file → MDAnalysis, independently
+t.n_atoms, t.n_frames, t.unitcell_lengths[0]  # 648, 6, 1.8621 nm — and the two agree on an O-H distance
 ```
 
 One task: GROMACS produces the trajectory, both readers parse it in the same container. The XTC handoff is the point, so routing it through S3 would add a boot for no scientific gain — the input (spc216 water) is bundled in the gromacs package, so nothing is staged.

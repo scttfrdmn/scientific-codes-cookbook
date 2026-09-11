@@ -14,8 +14,10 @@ spawn_version: 0.104.0
 
 ```python
 import xesmf as xe
-regridder = xe.Regridder(src_grid, dst_grid, "conservative")   # 5°×4° global → 8°×6°
-out = regridder(field)      # a constant 1.0 field must come back 1.0 everywhere
+src = xe.util.grid_global(5, 4)          # 5°×4° global grid
+dst = xe.util.grid_global(8, 6)          # → 8°×6°
+regridder = xe.Regridder(src, dst, "conservative")
+out = regridder(src["lat"] * 0 + 1.0)    # a constant 1.0 field must come back 1.0 everywhere
 ```
 
 One task: the regrid, an `xarray.open_dataset` on a pinned NCEP file, and a MetPy wind-speed calc, in one `python3` invocation. Only the netCDF is staged.

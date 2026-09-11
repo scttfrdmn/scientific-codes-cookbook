@@ -13,7 +13,9 @@ The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) comp
 ## Run it
 
 ```python
-import geopandas, libpysal, sklearn.linear_model, statsmodels.api as sm
+import geopandas as gpd
+import libpysal
+# points, squares, lattice are built in code (the recipe constructs them); the core ops:
 gpd.sjoin(points, squares, predicate="within")     # → 3 points inside
 squares.to_crs(32611).area                          # → 1,000,000 m² (1 km square)
 libpysal.weights.Rook.from_dataframe(lattice)       # → n=9, s0=24

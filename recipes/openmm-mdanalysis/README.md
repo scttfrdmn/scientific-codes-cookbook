@@ -13,10 +13,10 @@ OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysi
 ## Run it
 
 ```python
-# OpenMM: 27-atom argon NVE, 200 steps → top.pdb + traj.dcd
+# OpenMM ran a 27-atom argon NVE (200 steps) and wrote top.pdb + traj.dcd; MDAnalysis reads them back:
 import MDAnalysis as mda
-u = mda.Universe('top.pdb', 'traj.dcd')       # read back what OpenMM wrote
-u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å
+u = mda.Universe("top.pdb", "traj.dcd")
+u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å — exactly what OpenMM wrote
 ```
 
 One task: OpenMM writes the trajectory and MDAnalysis reads it in the same container. The identity is about the *format handoff* (OpenMM's writer ↔ MDAnalysis's reader), not the storage path, so routing through S3 would add a boot for no scientific gain. The system is built in code, so nothing is staged.

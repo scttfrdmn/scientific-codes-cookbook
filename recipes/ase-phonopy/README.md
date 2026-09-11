@@ -15,9 +15,15 @@ Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmet
 ```python
 from ase.build import bulk
 from phonopy import Phonopy
-# ASE builds bulk Si (Fd-3m) → spglib reduces the 128-atom supercell's displacements
-# to ONE symmetry-unique displacement → phonopy builds force constants → frequencies at Γ
-freqs = phonopy_obj.get_frequencies([0, 0, 0])   # 3 acoustic → 0, 3 optical degenerate
+from phonopy.structure.atoms import PhonopyAtoms
+si = bulk("Si")                                            # ASE builds bulk Si (Fd-3m)
+ph = Phonopy(PhonopyAtoms(si.get_chemical_symbols(), cell=si.cell,
+             scaled_positions=si.get_scaled_positions()),
+             supercell_matrix=[[4, 0, 0], [0, 4, 0], [0, 0, 4]])   # spglib finds the symmetry
+ph.generate_displacements()                                # → ONE symmetry-unique displacement
+# fill ph.forces from a calculator on ph.supercells_with_displacements (LJ here; DFT for real work)
+ph.produce_force_constants()
+freqs = ph.get_frequencies([0, 0, 0])                      # 3 acoustic → 0, 3 optical degenerate
 ```
 
 One task; the chain runs in one container. spglib cutting the displacement set to a single unique displacement is the chain link made visible — a wrong space group there gives wrong force constants and non-vanishing acoustic modes.
