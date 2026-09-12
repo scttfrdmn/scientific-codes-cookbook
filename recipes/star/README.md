@@ -39,7 +39,7 @@ STAR alignment is deterministic given the index — no seed. The index is a dire
 
 Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/what-this-does-not-cover.md).
 
-**The scale-it:** a full human index is ~30 GiB, built **in `/tmp` (a tmpfs ≈ ½ RAM)** — so it's sized by *RAM*, not disk: an `r8g.4xlarge` (128 GiB → ~64 GiB `/tmp`) holds it, and `disk_gib` wouldn't help (it grows the container root, which the build doesn't use).
+**The scale-it, measured.** For a full GRCh38 index the box turns on one choice — **where the index gets written.** Measured on `r8g.4xlarge`, deliberately oversized so STAR was never the bottleneck (*not* the recommendation): the build's working set is **~40 GiB**, the hard floor you pay either way. The ~29 GiB index it emits has nowhere to go but `/tmp` — tmpfs ≈ ½ RAM, because the image runs non-root — so build *pressure* climbs to **~68 GiB**. Written there, it forces `r8g.4xlarge` (128 GiB) and strands ~60 GiB and 8 of 16 cores. Written to **EFS or a mounted volume** instead, the build fits its ~40 GiB floor on a 64 GiB `r8g.2xlarge`, whose 8 cores match the ~8 the build averages. A 64 GiB box *without* that move OOMs — the folkloric "STAR needs ~30 GB" sends you straight there. And **aligning isn't the cheap pass it is for bwa**: STAR loads the index resident, **~30 GiB per align job**, so align boxes are memory-bound too.
 
 <details>
 <summary>As shipped: the chr20 caveat mechanics, the checks, pins</summary>

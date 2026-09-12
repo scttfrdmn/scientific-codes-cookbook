@@ -22,11 +22,13 @@ The recipe marks duplicates in the shared 30× fixture BAM and asserts its **exa
 |---|---|---|
 | the 30× fixture BAM (chr20:2.0–2.4 Mb) | your own coordinate-sorted BAM | reused from [bcftools](../bcftools/README.md)/[freebayes](../freebayes/README.md) — nothing new to stage. Input must be coordinate-sorted. |
 
-Duplicate status is a function of alignment coordinates + flags, not run order, so MarkDuplicates is deterministic — **nothing here is determinism scaffolding**. **Leave the fixture:** a small BAM makes every metric exact-or-wrong and exercises Picard's JVM on Graviton; a full-genome dedup isn't only a longer run: MarkDuplicates holds read-ends in the JVM heap, so at genome scale the heap — `-Xmx`, and the box behind it — is the sizing question this small BAM doesn't pose. The fixture is for legibility, not sizing. Leave-it.
+Duplicate status is a function of alignment coordinates + flags, not run order, so MarkDuplicates is deterministic — **nothing here is determinism scaffolding**. **Leave the fixture:** a small BAM makes every metric exact-or-wrong and exercises Picard's JVM on Graviton; a full-genome dedup is a longer run and a bigger heap (the sizing question, measured below), not a more legible one. Leave-it.
 
 ## Shape, size, cost
 
 One task, **~2 s** (JVM start dominates the compute). `c8g.large`, ~$0.02, **~76s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
+
+**The scale-it, measured.** MarkDuplicates' size question is the JVM heap. On a chr1 100 Mb 30× slice (measured with a generous `-Xmx12g` so the heap wasn't the limit — *not* the recommendation) it **needed ~6.1 GiB** of live heap but the JVM **held ~11.9 GiB** (it commits toward `-Xmx`), running at **~1.2 cores**. Size from the *need*, not the RSS: take the 11.9 GiB at face value and you buy ~2× the memory **and** cores that sit idle — stranding both from one misread number. So `-Xmx` a few GiB over the live set on a low-core `m8g`-class box, not a big compute one. (Live heap grows with read count, so a full genome wants its own `-Xmx`; the held-vs-need gap is what transfers.)
 
 <details>
 <summary>As shipped: the exact metrics identity, pins, smoke check</summary>

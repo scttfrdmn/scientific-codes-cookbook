@@ -30,6 +30,8 @@ The recipe assembles a ~400 kb region and asserts the exact contig set; [QUAST](
 
 One task, ~74 s assembly. `c8g.xlarge`, ~$0.02, **~113s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). First in a chain: run SPAdes + [MEGAHIT](../megahit/README.md) before [QUAST](../quast/README.md).
 
+**The scale-it, measured.** On a real bacterial genome (~100× *E. coli*, measured on `m8g.2xlarge` (8 vCPU / 32 GiB) — oversized so SPAdes wasn't the bottleneck, *not* the recommendation) SPAdes holds a **~4.4 GiB** working set and averages **3.4 of 8 cores**, peaking briefly at 8. So `c8g.xlarge` (4 vCPU / 8 GiB) fits — 8 GiB clears the floor, 4 cores match the average; the measurement box stranded ~28 GiB and ~5 cores, and the 8-core peak would tempt you to strand more. On the *same reads* **MEGAHIT assembles in ~0.4 GiB — ~11× leaner** ([why](../megahit/README.md)); the succinct de Bruijn graph is the memory win. **Neither needs a memory (`r`) box at this scale** — the choice is leaner-vs-heavier, not a family jump. (Both climb with genome size; this is bacterial-scale.)
+
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>
 
