@@ -12,7 +12,7 @@ Align paired-end reads to a reference genome and get back a sorted, indexed BAM.
 
 ```bash
 bwa index ref.fa
-bwa mem -t 8 -R "@RG\tID:run1\tSM:mysample\tPL:ILLUMINA\tLB:lib1" \
+bwa mem -t 8 -R "@RG\tID:smoke\tSM:HG00096\tPL:ILLUMINA\tLB:SRR062634" \
   ref.fa reads_1.fq.gz reads_2.fq.gz > aln.sam
 samtools sort -@ 2 -o mysample.bam aln.sam
 samtools index mysample.bam
@@ -63,7 +63,7 @@ The task path gets an 8 GiB root disk (~6.1 GB free) — no room for RODA's 5.63
 | check | threshold | observed | catches |
 |---|---|---|---|
 | `samtools quickcheck -v` | clean | clean | truncated / corrupt BGZF |
-| `@SQ` lines / `SN:chr20` | exactly 1 / present | 1 / present | wrong or merged reference |
+| `@SQ` lines / `SN:chr20 LN:64444167` | exactly 1 / name+length present | 1 / present | wrong or merged reference |
 | primary records (`-F 0x900`) | exactly **800000** | 800000 | reads lost/duplicated (conservation) |
 | mapped primary (`-F 0x904`) | 150000–350000 | 233036 | aligned nothing / everything |
 | MAPQ ≥ 30 (`-q 30`) | 20000–150000 | 61160 | all low-confidence noise |

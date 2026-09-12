@@ -15,7 +15,8 @@ GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED comput
 
 ```bash
 export PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so   # REQUIRED first, or mdrun aborts ("plumed not available")
-gmx_mpi mdrun -deffnm md -plumed plumed.dat              # GROMACS integrates, PLUMED reads coords every step
+gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o t.tpr -maxwarn 5
+gmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat    # GROMACS integrates, PLUMED reads coords every step
 ```
 
 `plumed.dat` computes an O-H distance and an H-O-H angle and prints them to `COLVAR`. One task; GROMACS hands its coordinates to PLUMED in the same container. The input (spc216 water) is bundled in the gromacs package, so nothing is staged.

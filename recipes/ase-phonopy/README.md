@@ -13,15 +13,16 @@ Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmet
 ## Run it
 
 ```python
+import numpy as np
 from ase.build import bulk
 from phonopy import Phonopy
 from phonopy.structure.atoms import PhonopyAtoms
-si = bulk("Si")                                            # ASE builds bulk Si (Fd-3m)
-ph = Phonopy(PhonopyAtoms(si.get_chemical_symbols(), cell=si.cell,
-             scaled_positions=si.get_scaled_positions()),
-             supercell_matrix=[[4, 0, 0], [0, 4, 0], [0, 0, 4]])   # spglib finds the symmetry
-ph.generate_displacements()                                # → ONE symmetry-unique displacement
-# fill ph.forces from a calculator on ph.supercells_with_displacements (LJ here; DFT for real work)
+si = bulk("Si", "diamond", a=5.43)                         # ASE builds bulk Si (Fd-3m)
+unit = PhonopyAtoms(symbols=si.get_chemical_symbols(), cell=si.cell[:],
+                    scaled_positions=si.get_scaled_positions())
+ph = Phonopy(unit, supercell_matrix=np.eye(3) * 2)         # 2×2×2 supercell; spglib finds the symmetry
+ph.generate_displacements(distance=0.03)                   # → ONE symmetry-unique displacement
+# fill ph.forces from a LennardJones calculator on ph.supercells_with_displacements (DFT for real work)
 ph.produce_force_constants()
 freqs = ph.get_frequencies([0, 0, 0])                      # 3 acoustic → 0, 3 optical degenerate
 ```

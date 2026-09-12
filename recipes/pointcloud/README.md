@@ -13,7 +13,8 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
-pdal info autzen.laz --stats     # count 10,653,336; bounds; mean Z 434.1025 over all points
+pdal info --summary autzen.laz               # count 10,653,336; bounds
+pdal info --stats --dimensions Z autzen.laz  # mean Z 434.1025 over all points
 ```
 
 One task. The cloud is staged from PDAL's own data repo and pinned.

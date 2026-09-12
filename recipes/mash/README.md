@@ -35,7 +35,7 @@ One task, sub-second. `c8g.large`, ~$0.02, **~43s** wall — boot and image pull
 <details>
 <summary>As shipped: the near-zero identity, the honest cross-tool note, pins, smoke check</summary>
 
-spades (23 contigs) and megahit (2 contigs) assemble the **identical** 51,933 read pairs — different layouts of the same ~400 kb, so k-mer content nearly coincides and the distance sits near zero: **0.000239895** (990/1000 shared hashes). Asserted **< 0.001** — set by "two assemblies of one sequence share nearly all k-mers," not shaved to the observed value; a broken sketch or mismatched pair gives ≫ 0.1. That also makes it a free cross-check on both assemblers.
+spades (237 contigs) and megahit (1 contig) assemble the **identical** 51,933 read pairs — different layouts of the same ~400 kb, so k-mer content nearly coincides and the distance sits near zero: **0.000239895** (990/1000 shared hashes). Asserted **< 0.001** — set by "two assemblies of one sequence share nearly all k-mers," not shaved to the observed value; a broken sketch or mismatched pair gives ≫ 0.1. That also makes it a free cross-check on both assemblers.
 
 **Cross-tool, stated honestly (see [sourmash](../sourmash/README.md)).** Mash uses **bottom-sketch MinHash**; sourmash uses **FracMinHash (scaled)** — different algorithms, so their numbers aren't the same quantity (Mash distance ≈ 0.0002 vs sourmash Jaccard ≈ 0.995). They agree **qualitatively** — both call this pair near-identical — which is the honest cross-code claim; asserting `mash_distance == sourmash_jaccard` would be comparing different statistics.
 
@@ -46,7 +46,7 @@ spades (23 contigs) and megahit (2 contigs) assemble the **identical** 51,933 re
 
 The threshold is confirmed-from-the-real-run, not shaved: a local spades build (no `--isolate`, fewer contigs) measured 0.000168, the shipped one 0.000239895 — the value shifts with fragmentation, the k-mer distance barely does, which is why "same underlying sequence" sets the bound.
 
-**Pins.** Image `quay.io/aarchbio/mash@sha256:abad0c5f4d33…` (cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/spades_contigs.fa` + `runs/megahit/r1/megahit_contigs.fa` (derived — sibling recipe outputs, no `stage-inputs.sh`).
+**Pins.** Image `quay.io/aarchbio/mash@sha256:abad0c5f4d33…` (cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/contigs.fasta` + `runs/megahit/r1/contigs.fa` (derived — sibling recipe outputs, staged locally as `spades_contigs.fa` / `megahit_contigs.fa`; no `stage-inputs.sh`).
 
 **Run + verify.**
 ```sh

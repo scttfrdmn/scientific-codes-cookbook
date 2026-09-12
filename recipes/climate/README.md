@@ -16,7 +16,7 @@ spawn_version: 0.104.0
 import xesmf as xe
 src = xe.util.grid_global(5, 4)          # 5°×4° global grid
 dst = xe.util.grid_global(8, 6)          # → 8°×6°
-regridder = xe.Regridder(src, dst, "conservative")
+regridder = xe.Regridder(src, dst, "conservative", periodic=True)   # periodic: global grids wrap
 out = regridder(src["lat"] * 0 + 1.0)    # a constant 1.0 field must come back 1.0 everywhere
 ```
 

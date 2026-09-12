@@ -14,7 +14,7 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
-mpirun -n 2 siesta < si.fdf     # bulk-Si DFT, 2 ranks → siesta: Total = -214.377236 eV
+mpiexec -n 2 siesta < si.fdf     # bulk-Si DFT, 2 ranks → siesta: Total = -214.377236 eV
 ```
 
 One task. The `.fdf` input is a few lines of config generated inline; only the pseudopotential is data, and only it is staged.

@@ -14,17 +14,17 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
-lmp_mpi -in in.lj                    # serial
-mpiexec -n 2 lmp_mpi -in in.lj       # 2 ranks — same trajectory, independently decomposed
+lmp_mpi -in in.melt                    # serial
+mpiexec -n 2 lmp_mpi -in in.melt       # 2 ranks — same trajectory, independently decomposed
 ```
 
-One task, run twice. `in.lj` is LAMMPS's own `bench/in.lj` (a 4×4×4 fcc lattice, 256 atoms, fixed velocity seed, 50 NVE steps), embedded inline — the conda package ships binaries but not the `bench/` tree, and the LJ potential is closed-form, so nothing is staged.
+One task, run twice. `in.melt` holds LAMMPS's own `bench/in.lj` melt (a 4×4×4 fcc lattice, 256 atoms, fixed velocity seed, 50 NVE steps), embedded inline — the conda package ships binaries but not the `bench/` tree, and the LJ potential is closed-form, so nothing is staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `in.lj` — 256-atom LJ melt | your own input script + data file | the melt needs no data file (analytic `lj/cut`); a real system stages a `read_data` file through S3. |
+| `in.melt` — 256-atom LJ melt | your own input script + data file | the melt needs no data file (analytic `lj/cut`); a real system stages a `read_data` file through S3. |
 | `velocity ... 87287` (fixed seed) | your run's seed | fixed so the serial and 2-rank runs are the *same* trajectory to compare; change it freely for production. |
 | `mpiexec -n 2` | scale ranks to your box | the *result* is decomposition-invariant (below), so scale ranks purely for speed → [sizing](../../patterns/sizing.md). |
 

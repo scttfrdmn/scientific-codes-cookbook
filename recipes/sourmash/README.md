@@ -44,7 +44,7 @@ spades and megahit assemble the **identical** 51,933 read pairs, so their k-mers
 
 Threshold confirmed from the real run: a local spades build measured 0.9952, the shipped one 0.99282 — the value shifts with fragmentation, the k-mer Jaccard barely does, so "shared sequence" sets the bound.
 
-**Pins.** Image `quay.io/aarchbio/sourmash@sha256:29733e7ac937…` (cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/spades_contigs.fa` + `runs/megahit/r1/megahit_contigs.fa` (derived — sibling outputs, no `stage-inputs.sh`).
+**Pins.** Image `quay.io/aarchbio/sourmash@sha256:29733e7ac937…` (cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/contigs.fasta` + `runs/megahit/r1/contigs.fa` (derived — sibling outputs, staged locally as `spades_contigs.fa` / `megahit_contigs.fa`; no `stage-inputs.sh`).
 
 **Run + verify.**
 ```sh

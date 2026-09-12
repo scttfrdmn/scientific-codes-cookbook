@@ -15,7 +15,7 @@ Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBF
 ```bash
 obabel -:"CC(=O)Oc1ccccc1C(=O)O" -osdf | obabel -isdf -oinchikey   # perception → InChIKey
 pdbfixer input.pdb --add-atoms=all --add-residues --ph=7.0         # repair the peptide
-obabel fixed.pdb -osmi                                             # read the repair back
+# then Open Babel reads fixed.pdb back and counts the 12 H PDBFixer added — the repair cross-check
 ```
 
 One task, two tools. The aspirin SMILES and an ALA-ALA heavy-atom PDB are inline, so nothing is staged.

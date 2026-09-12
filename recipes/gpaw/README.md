@@ -15,11 +15,11 @@ Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch
 ```python
 from ase.build import bulk
 from gpaw import GPAW, PW
-si = bulk("Si"); si.calc = GPAW(mode=PW(200), kpts=(2, 2, 2), xc="LDA")
+si = bulk("Si", "diamond", a=5.43); si.calc = GPAW(mode=PW(200), kpts=(2, 2, 2), xc="LDA")
 si.get_potential_energy()          # -11.703689 eV — run serially and under `mpiexec -n 2`
 ```
 
-One task, run twice (serial, then `mpiexec -n 2 gpaw python`). ASE builds the cell and the PAW datasets ship in the image, so nothing is staged.
+One task, run twice (serial `python3`, then `mpiexec -n 2 python3`). ASE builds the cell and the PAW datasets ship in the image, so nothing is staged.
 
 ## Make it yours
 

@@ -15,7 +15,7 @@ spawn_version: 0.104.0
 
 ```bash
 nwchem h2o.nw                     # serial RHF/STO-3G
-mpirun -n 2 nwchem h2o.nw         # 2 ranks — same SCF energy
+mpiexec -n 2 nwchem h2o.nw         # 2 ranks — same SCF energy
 ```
 
 One task, run twice. The H₂O geometry and RHF/STO-3G directives are an inline input deck; the STO-3G basis ships in the env, so nothing is staged.
@@ -25,7 +25,7 @@ One task, run twice. The H₂O geometry and RHF/STO-3G directives are an inline 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | H₂O at experimental geometry (inline `.nw`) | your own molecule + method | RHF/STO-3G on H₂O is a completely-determined reference number; scale the theory freely. |
-| `mpirun -n 2` | more ranks / multi-node | NWChem's parallelism is over integral evaluation (not a reducing SCF), so the energy is rank-independent — scale for speed. |
+| `mpiexec -n 2` | more ranks / multi-node | NWChem's parallelism is over integral evaluation (not a reducing SCF), so the energy is rank-independent — scale for speed. |
 
 RHF is deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the reference energy is exact-or-wrong at any basis, and a bigger molecule is a longer run, not a more legible one. Leave-it.
 
@@ -56,7 +56,7 @@ aarch.science ran exactly this when it verified NWChem into the `dft` env (`dft.
 | observable | assertion | observed | catches |
 |---|---|---|---|
 | **serial SCF energy** | −74.963023 ± 1e-5 Ha (`dft` D3 reference) | **−74.963023128766** | broken integral/SCF |
-| MPI ranks (2-rank leg) | exactly 2 (NWChem's `nproc`) | 2 | serial build under `mpirun` |
+| MPI ranks (2-rank leg) | exactly 2 (NWChem's `nproc`) | 2 | serial build under `mpiexec` |
 | serial ranks | exactly 1 | 1 | wrong launch |
 | **serial == 2-rank** | \|serial − parallel\| < 1e-6 | **identical** | MPI computes wrong |
 

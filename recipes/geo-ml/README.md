@@ -14,11 +14,12 @@ The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) comp
 
 ```python
 import geopandas as gpd
-import libpysal
-# points, squares, lattice are built in code (the recipe constructs them); the core ops:
-gpd.sjoin(points, squares, predicate="within")     # → 3 points inside
-squares.to_crs(32611).area                          # → 1,000,000 m² (1 km square)
-libpysal.weights.Rook.from_dataframe(lattice)       # → n=9, s0=24
+from shapely.geometry import box
+from libpysal.weights import lat2W
+# points, squares, a 3×3 lattice are built in code (the recipe constructs them); the core ops:
+gpd.sjoin(points, squares, predicate="within")                  # → 3 points inside
+gpd.GeoSeries([box(0, 0, 1000, 1000)], crs="EPSG:32611").area   # → 1,000,000 m² (1 km square)
+lat2W(3, 3, rook=True)                                          # rook contiguity → n=9, s0=24
 ```
 
 One task, one `python3` invocation. Every input is constructed in code, so nothing is staged.

@@ -12,7 +12,7 @@ The accelerator you reach for when BLAST+ is too slow — same job, heuristic sp
 
 ```bash
 diamond makedb --in proteome.fa -d db
-diamond blastp -q queries.fa -d db --very-sensitive -o hits.tsv
+diamond blastp -q queries.fa -d db --very-sensitive --outfmt 6 --max-target-seqs 20 -o hits.tsv
 ```
 
 The recipe searches the same 20 queries against the same Ensembl 116 human proteome as [blast](../blast/README.md), then checks that the accelerator and the reference recover the same self-hits on the same bytes.

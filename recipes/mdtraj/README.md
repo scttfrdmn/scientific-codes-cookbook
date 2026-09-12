@@ -15,8 +15,8 @@ GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads t
 
 ```python
 import mdtraj, MDAnalysis as mda
-t = mdtraj.load("out.xtc", top="out.pdb")     # GROMACS-written XTC → MDTraj
-u = mda.Universe("out.pdb", "out.xtc")        # the same file → MDAnalysis, independently
+t = mdtraj.load("out.xtc", top="spc216.gro")  # GROMACS-written XTC + its topology → MDTraj
+u = mda.Universe("spc216.gro", "out.xtc")     # the same files → MDAnalysis, independently
 t.n_atoms, t.n_frames, t.unitcell_lengths[0]  # 648, 6, 1.8621 nm — and the two agree on an O-H distance
 ```
 
