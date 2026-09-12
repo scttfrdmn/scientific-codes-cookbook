@@ -21,7 +21,7 @@ That's the recipe. seqkit is deterministic, so on a fixed input every number is 
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 51,933-pair fixture reads (the shared 30× set) | your own FASTQ/FASTA, any size | `seqkit stats` doesn't care about size or format — point it at anything FASTX. |
+| the 51,933-pair fixture reads (the shared 30× set) | your own FASTQ/FASTA, any size | `seqkit stats` streams, so it doesn't care about input size or format — point it at anything FASTX. (Staging does care: the file lands in `/tmp`, tmpfs ≈ ½ the box's RAM, so a very large input needs a bigger box to stage — not more `disk_gib`.) |
 | `stats` | `seq`, `grep`, `rmdup`, `fx2tab`, … | it's the same binary; this recipe just exercises the read path with a checkable output. |
 
 Nothing here is determinism scaffolding — `seqkit stats` has no seed and no thread-order effect. **Leave the fixture small.** It's legible at any size and the numbers don't mislead; a 52k-pair set teaches exactly what a 52M-pair one would, faster and cheaper. Scaling it would prove nothing new.

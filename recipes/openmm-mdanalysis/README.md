@@ -25,7 +25,7 @@ One task: OpenMM writes the trajectory and MDAnalysis reads it in the same conta
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| 27-atom argon lattice (built in code) | your own system + force field | argon on a Lennard-Jones potential is a hand-checkable NVE test; the readers don't care about the force field. |
+| 27-atom argon lattice (built in code) | your own system + force field | argon on a Lennard-Jones potential is a hand-checkable NVE test; the readers don't care about the force field. This fixture runs OpenMM's **CPU** platform for the proof — production OpenMM MD is GPU-bound (a Round Two concern), a different sizing story. |
 | NVE, no thermostat | a thermostat / barostat | NVE is what makes energy conservation an *exact* check — add a thermostat and you check temperature control instead. |
 
 Deterministic on fixed input — **nothing is determinism scaffolding**. **Leave the fixture:** the decode identities are exact-or-wrong at any trajectory length, and a short run keeps the check fast. Leave-it.

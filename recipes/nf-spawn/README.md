@@ -45,7 +45,7 @@ The trees pin `-T 4` + a fixed seed (iqtree's determinism scaffolding — [why](
 
 ## Shape, size, cost
 
-Shape F costs **per rule × job count**, not one flat instance: five instances here (3× `c8g.large`, 2× `c8g.xlarge` for the trees), **~$0.12 worst case** — each pays boot + pull overhead separately. **These timings are not compute cost**; see [data movement](../../patterns/data-movement.md) for when per-rule boots and S3 handoffs beat one bigger box.
+Shape F costs **per rule × job count**, not one flat instance: five instances here (3× `c8g.large`, 2× `c8g.xlarge` for the trees — each process keeps the instance type from its standalone recipe, [iqtree](../iqtree/README.md)'s `c8g.xlarge` sized for its `-T 4`), **~$0.12 worst case** — each pays boot + pull overhead separately. **These timings are not compute cost**; see [data movement](../../patterns/data-movement.md) for when per-rule boots and S3 handoffs beat one bigger box.
 
 <details>
 <summary>As shipped: per-stage identities, the RF observation, the executor findings, install, run + verify</summary>

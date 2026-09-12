@@ -28,7 +28,7 @@ One task. The scene is staged from AWS Open Data and its expected header values 
 | the pinned scene `S2B_11SKA_20240704_0_L2A` B01 (1830² uint16 COG) | your own scene / band | one 60 m band is enough to prove the decode path; the identities come from the *scene's* STAC item, so a different scene needs its own declared metadata. |
 | the STAC-declared header values (asserted) | your scene's STAC item | **load-bearing** — the reference is the exact scene's own STAC metadata, so a different scene needs its own declared values, not a guess. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** a single real band already exercises COG decode and gives a real-data identity; a full scene or mosaic is a longer run, not a more legible one. Leave-it.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** a single real band already exercises COG decode and gives a real-data identity; a bigger single band is a longer run, not a more legible one. (At real EO scale — mosaics, time series — the bottleneck is moving bytes, not decode; [size that on data movement](../../patterns/data-movement.md).) Leave-it.
 
 ## Shape, size, cost
 

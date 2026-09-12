@@ -29,7 +29,7 @@ One task: GROMACS produces the trajectory, both readers parse it in the same con
 | GROMACS-written spc216 `.xtc` | your own trajectory + topology | MDTraj reads many formats; XTC is chosen because it's the compressed format neither MDAnalysis recipe covered. |
 | the O-H distance as the agreed quantity | any geometry your analysis needs | counts + box can survive a handoff that still mangles coordinates; an agreed *distance* is what proves the coordinates round-tripped. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** two readers agreeing on the same bytes is exact-or-wrong at any trajectory length, and a short trajectory keeps the check fast. Leave-it.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** two readers agreeing on the same bytes is exact-or-wrong at any trajectory length, and a short trajectory keeps the check fast. (Real trajectory analysis is a different sizing problem — a large trajectory is memory- or I/O-bound, not this ~1 s decode.) Leave-it.
 
 ## Shape, size, cost
 

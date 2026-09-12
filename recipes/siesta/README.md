@@ -25,7 +25,7 @@ One task. The `.fdf` input is a few lines of config generated inline; only the p
 |---|---|---|
 | `Si.psf` from SIESTA's test suite at tag **5.4.2** | your element's pseudopotential | **load-bearing:** conda-forge `siesta` ships *no* pseudopotentials, so one must be staged; the version match to the container is what makes the run reproduce a committed reference (a psf from another version is a different number). |
 | the 2-atom Si cell + 3×3×3 k-grid (inline `.fdf`) | your own system | the small cell reproduces a *published* number — that's the point, not a limit. |
-| `mpirun -n 2` | more ranks | the energy is rank-independent (serial == 2-rank, measured); scale for speed. |
+| `mpirun -n 2` | more ranks | the energy is rank-independent (serial == 2-rank, measured), so more ranks don't change the answer — but the speed-up isn't measured here (SIESTA does scale multi-node; that's a separate run). |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** reproducing SIESTA's own committed energy is the strongest check available, and it's exact at this cell size. Leave-it.
 

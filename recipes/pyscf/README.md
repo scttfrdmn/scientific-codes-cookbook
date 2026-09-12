@@ -25,7 +25,7 @@ One task, one SCF. The molecule is three lines of inline geometry, so nothing is
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| H₂ at 0.74 Å (inline) | your own molecule + method | the minimal case is chosen because a second code ([psi4](../psi4/README.md)) fixes the same number to cross-check against. |
+| H₂ at 0.74 Å (inline) | your own molecule + method | the minimal case is chosen because a second code ([psi4](../psi4/README.md)) fixes the same number to cross-check against; scaling to a real molecule or basis shifts the constraint to memory (integral storage grows steeply with basis size), which H₂ doesn't exercise. |
 | the cross-check tolerance (< 1e-5 Ha) | keep it — it's method-justified | **load-bearing:** both codes run *exact* integrals (Psi4 with `SCF_TYPE PK`), agreeing to 3e-7 Ha; Psi4's density-fitting default would differ by 2.4e-5 — [match the modes](../../practices/cross-checks.md). |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the cross-code identity holds at any molecule size, and H₂ makes it hand-checkable. Leave-it.

@@ -28,7 +28,7 @@ One task, one `psi4.energy` call. The molecule (H₂ at 0.74 Å) is three lines 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | H₂ at 0.74 Å (inline) | your own molecule + method | RHF/STO-3G on H₂ has a textbook value that doesn't depend on this run — that's what makes it a reference check, not a self-consistent band. |
-| `scf/sto-3g` | a correlated method / larger basis | scale the theory freely; the recipe pins the minimal case because its answer is externally known. |
+| `scf/sto-3g` | a correlated method / larger basis | scale the theory freely — though a correlated method or larger basis shifts the binding constraint to memory (integral storage grows steeply with basis size), which STO-3G on H₂ doesn't exercise; the recipe pins the minimal case because its answer is externally known. |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the reference identity is exact-or-wrong at any size, and H₂ makes it hand-checkable against every quantum-chemistry course. Leave-it.
 

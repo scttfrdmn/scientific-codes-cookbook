@@ -28,7 +28,7 @@ The recipe scores the first 200 Pfam 38.2 models against all 382,428 Ensembl 116
 
 ## Shape, size, cost
 
-One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work **3m12s** on 4 threads; memory stays ~1–2 GiB, so the box is sized for cores, not footprint. Boot + pull still dominate ([why](../../practices/what-this-does-not-cover.md)).
+One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work **3m12s**; memory stays ~1–2 GiB, so the box is sized for cores, not footprint. Boot + pull still dominate ([why](../../practices/what-this-does-not-cover.md)).
 
 <details>
 <summary>As shipped: the completion sentinel, pins, smoke check</summary>

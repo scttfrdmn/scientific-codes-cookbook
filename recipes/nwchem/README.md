@@ -25,7 +25,7 @@ One task, run twice. The H₂O geometry and RHF/STO-3G directives are an inline 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | H₂O at experimental geometry (inline `.nw`) | your own molecule + method | RHF/STO-3G on H₂O is a completely-determined reference number; scale the theory freely. |
-| `mpiexec -n 2` | more ranks / multi-node | NWChem's parallelism is over integral evaluation (not a reducing SCF), so the energy is rank-independent — scale for speed. |
+| `mpiexec -n 2` | more ranks / multi-node | NWChem's parallelism is over integral evaluation (not a reducing SCF), so the energy is rank-independent; the real multi-node speed-up is the case this single-node 2-rank demo doesn't measure (see the caveat above). |
 
 RHF is deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the reference energy is exact-or-wrong at any basis, and a bigger molecule is a longer run, not a more legible one. Leave-it.
 

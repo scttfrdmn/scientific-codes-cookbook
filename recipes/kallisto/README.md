@@ -22,7 +22,7 @@ The recipe indexes the Ensembl-116 human transcriptome and quantifies the **same
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the Ensembl-116 transcriptome + 200k ERR188026 pairs | your own transcriptome + reads | reused byte-for-byte from [salmon](../salmon/README.md) so the cross-check is valid — nothing re-staged. |
-| the **`r8g.large` (16 GiB)** box | size *up* for a bigger transcriptome | **the load-bearing sizing fact, and the catalog's first memory-bound recipe.** kallisto 0.52's index build OOM-kills at 7.75 GiB on the human transcriptome (147M k-mers) — so it's sized memory-bound on salmon's proven 16 GiB figure for identical bytes, **not** compute-bound like every prior recipe. If you scale the reference, RAM is the constraint to watch, [not disk_gib](../../practices/what-this-does-not-cover.md). |
+| the **`r8g.large` (16 GiB)** box | size *up* for a bigger transcriptome | **the load-bearing sizing fact, and the catalog's first memory-bound recipe.** kallisto 0.52's index build OOM-kills at 7.75 GiB on the human transcriptome (147M k-mers) — so `r8g.large` (16 GiB) is the next box up that clears it — confirmed by the clean run below — **not** compute-bound like every prior recipe. If you scale the reference, RAM is the constraint to watch, [not disk_gib](../../practices/what-this-does-not-cover.md). |
 
 **Leave the fixture:** a small sample against a *real* human transcriptome is enough to exercise the index build (the OOM-prone step) and produce a real cross-code agreement; a full-depth sample is a longer run, not a more legible one. Leave-it.
 
@@ -46,7 +46,7 @@ Three identities:
 | pct pseudoaligned | 88..96 | 92.1 |
 | **Spearman vs salmon** | ≥ 0.85 (both-expressed) | 0.9120 |
 
-**Sizing.** The salmon-anchored 16 GiB held — the run completed on `r8g.large` with no OOM, confirming kallisto 0.52's index fits comfortably in 16 GiB on identical bytes. TTL retightened from that first real run: 30m → 15m, cap $0.06 → $0.04. Had it needed more it would have OOM'd and been retightened *up* to `r8g.xlarge` (the cost cap bounds that miss) — it didn't.
+**Sizing.** The 16 GiB held — the run completed on `r8g.large` with no OOM, confirming kallisto 0.52's index fits comfortably above its 7.75 GiB OOM point on identical bytes. TTL retightened from that first real run: 30m → 15m, cap $0.06 → $0.04. Had it needed more it would have OOM'd and been retightened *up* to `r8g.xlarge` (the cost cap bounds that miss) — it didn't.
 
 **Pins.** Image `quay.io/aarchbio/kallisto@sha256:b8f0e24c8a01…` (0.52.0, cosign-verified, `linux/arm64`). Transcriptome: Ensembl release-116 `Homo_sapiens.GRCh38.cdna.all.fa.gz` (`sha256:683eb193…`, 184 MB); reads: ENA `ERR188026` first 200k pairs; salmon reference `runs/salmon/r1/quant.sf`. All reused from [salmon](../salmon/README.md) — run its `stage-inputs.sh` first.
 

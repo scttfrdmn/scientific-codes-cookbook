@@ -22,7 +22,7 @@ The recipe marks duplicates in the shared 30× fixture BAM and asserts its **exa
 |---|---|---|
 | the 30× fixture BAM (chr20:2.0–2.4 Mb) | your own coordinate-sorted BAM | reused from [bcftools](../bcftools/README.md)/[freebayes](../freebayes/README.md) — nothing new to stage. Input must be coordinate-sorted. |
 
-Duplicate status is a function of alignment coordinates + flags, not run order, so MarkDuplicates is deterministic — **nothing here is determinism scaffolding**. **Leave the fixture:** a small BAM makes every metric exact-or-wrong and exercises Picard's JVM on Graviton; a full-genome dedup is a longer run, not a more legible one. Leave-it.
+Duplicate status is a function of alignment coordinates + flags, not run order, so MarkDuplicates is deterministic — **nothing here is determinism scaffolding**. **Leave the fixture:** a small BAM makes every metric exact-or-wrong and exercises Picard's JVM on Graviton; a full-genome dedup isn't only a longer run: MarkDuplicates holds read-ends in the JVM heap, so at genome scale the heap — `-Xmx`, and the box behind it — is the sizing question this small BAM doesn't pose. The fixture is for legibility, not sizing. Leave-it.
 
 ## Shape, size, cost
 

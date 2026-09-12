@@ -24,7 +24,7 @@ One task, two tools. The aspirin SMILES and an ALA-ALA heavy-atom PDB are inline
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| aspirin SMILES + ALA-ALA heavy-atom PDB (inline) | your own molecule / structure | small hand-checkable inputs; Open Babel and PDBFixer don't care about size. |
+| aspirin SMILES + ALA-ALA heavy-atom PDB (inline) | your own molecule / structure | small hand-checkable inputs; for inputs like these, Open Babel and PDBFixer are sub-second — large-molecule prep (out of scope here; see the caveat) is where size begins to matter. |
 | InChIKey as the cross-check metric | keep it — don't use canonical SMILES | **load-bearing:** InChIKey is an IUPAC standard, so two engines *must* agree; canonical SMILES is algorithm-specific and the two engines produce different strings ([compare like with like](../../practices/cross-checks.md)). |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the identities are exact-or-wrong for any molecule, and a small one keeps every count hand-auditable. Leave-it.
