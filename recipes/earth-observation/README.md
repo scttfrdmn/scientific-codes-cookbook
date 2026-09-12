@@ -14,7 +14,7 @@ spawn_version: 0.104.0
 
 ```python
 import rasterio
-with rasterio.open("S2B_11SKA_20240704_0_L2A_B01.tif") as ds:
+with rasterio.open("B01.tif") as ds:
     ds.crs, ds.dtypes[0], ds.shape, ds.transform, ds.nodata   # must equal the STAC item
     ds.read(1)                                                 # decodes to GDAL checksum 55297
 ```

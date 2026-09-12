@@ -44,7 +44,7 @@ The DB is genome-idx's `viral_20240605`, a *real* RefSeq viral DB — not a toy 
 | **assigned taxid** | exactly 2697049 (SARS-CoV-2) | 2697049 |
 | classified / unclassified seqs | 1 / 0 | 1 / 0 |
 
-**Pins.** Image `quay.io/aarchbio/kraken2@sha256:fc6dd9becb7f…` (2.17.1, cosign-verified, `linux/arm64`). DB: genome-idx `viral_20240605` (`sha256:bca063e6…`, 633 MB) — date-versioned, but a date in the name is **not** a guarantee the bytes are stable, so the sha256 is the real pin. Query: SARS-CoV-2 `NC_045512.2` (`sha256:0891c00c…`, 29,903 bp). Both hashes re-verified on the box before classifying.
+**Pins.** Image `quay.io/aarchbio/kraken2@sha256:fc6dd9becb7f…` (2.17.1, cosign-verified, `linux/arm64`). DB: genome-idx `viral_20240605` (`sha256:9cbf9ddc…`, 633 MB) — date-versioned, but a date in the name is **not** a guarantee the bytes are stable, so the sha256 is the real pin. Query: SARS-CoV-2 `NC_045512.2` (`sha256:0891c00c…`, 29,903 bp). Both hashes re-verified on the box before classifying.
 
 **Run + verify.**
 ```sh

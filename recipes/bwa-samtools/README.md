@@ -12,7 +12,7 @@ Align paired-end reads to a reference genome and get back a sorted, indexed BAM.
 
 ```bash
 bwa index ref.fa
-bwa mem -t 8 -R "@RG\tID:run1\tSM:mysample\tPL:ILLUMINA\tLB:lib1" \
+bwa mem -t 8 -R "@RG\tID:smoke\tSM:HG00096\tPL:ILLUMINA\tLB:SRR062634" \
   ref.fa reads_1.fq.gz reads_2.fq.gz > aln.sam
 samtools sort -@ 2 -o mysample.bam aln.sam
 samtools index mysample.bam
@@ -57,13 +57,13 @@ Both tasks are `on_complete: terminate`; each reads inputs from and writes outpu
 Both images are cosign-verified and `linux/arm64`-only. `stage-inputs.sh` pre-materialises the three derived objects and the align task re-checks their sha256 on the box.
 
 ### Why chr20, and the whole-genome number it stands in for
-The task path gets an 8 GiB root disk (~6.1 GB free) — no room for RODA's 5.63 GB whole-genome index. chr20 (62 MB) indexes in under a minute; against it, paralogous/repetitive reads from elsewhere land on chr20, which is why 29% map. The honest rate: 10M HG00096 pairs against the whole GRCh38 index map **99.76%**, `bwa mem` dominating ~8.4:1 compute-to-overhead. Two constraints the fixture hides — staging is a **tmpfs ≈ ½ RAM, not `disk_gib`** (the 8.9 GB index overran a 16 GiB box's `/tmp`; an `r8g.2xlarge` held it), and a cohort should **share one read-only index** rather than re-stage 8.9 GB per sample ([data movement](../../patterns/data-movement.md)).
+The task path gets an 8 GiB root disk (~6.1 GB free) — no room for RODA's 5.63 GB whole-genome index. chr20 (62 MB) indexes in under a minute; against it, paralogous/repetitive reads from elsewhere land on chr20, which is why 29% map. The honest rate: 10M HG00096 pairs against the whole GRCh38 index map **99.76%**, `bwa mem` dominating ~8.4:1 compute-to-overhead. Two constraints the fixture hides — staging is a **tmpfs ≈ ½ RAM**, [not `disk_gib`](../../practices/what-this-does-not-cover.md) (the 8.9 GB index overran a 16 GiB box's `/tmp`; an `r8g.2xlarge` held it), and a cohort should **share one read-only index** rather than re-stage 8.9 GB per sample ([data movement](../../patterns/data-movement.md)).
 
 ### Smoke check (inside task 2 — fails the task if the BAM isn't real)
 | check | threshold | observed | catches |
 |---|---|---|---|
 | `samtools quickcheck -v` | clean | clean | truncated / corrupt BGZF |
-| `@SQ` lines / `SN:chr20` | exactly 1 / present | 1 / present | wrong or merged reference |
+| `@SQ` lines / `SN:chr20 LN:64444167` | exactly 1 / name+length present | 1 / present | wrong or merged reference |
 | primary records (`-F 0x900`) | exactly **800000** | 800000 | reads lost/duplicated (conservation) |
 | mapped primary (`-F 0x904`) | 150000–350000 | 233036 | aligned nothing / everything |
 | MAPQ ≥ 30 (`-q 30`) | 20000–150000 | 61160 | all low-confidence noise |

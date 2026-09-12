@@ -12,7 +12,7 @@ Build a protein database, search sequences against it — the canonical homology
 
 ```bash
 makeblastdb -in proteome.fa -dbtype prot -out db
-blastp -query queries.fa -db db -outfmt 6 -max_target_seqs 20 -num_threads 4
+blastp -query queries.fa -db db -outfmt 6 -max_target_seqs 20 -num_threads 8
 ```
 
 The recipe builds a database from all 382,428 Ensembl 116 human proteins and searches 20 queries against it. `makeblastdb` and `blastp` are the same BLAST+ image, so it's one task.

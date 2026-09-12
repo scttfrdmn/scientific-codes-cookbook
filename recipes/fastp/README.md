@@ -11,7 +11,7 @@ Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON re
 ## Run it
 
 ```bash
-fastp -i reads_1.fq.gz -I reads_2.fq.gz -o out_1.fq.gz -O out_2.fq.gz
+fastp -i reads_1.fq.gz -I reads_2.fq.gz -o out_1.fq.gz -O out_2.fq.gz -j fastp.json
 ```
 
 The recipe QCs the **same 400k read pairs [bwa](../bwa-samtools/README.md) aligned** and verifies a **conservation identity** — every input read is accounted for as passed or filtered, mates stay paired, output count matches passed count.

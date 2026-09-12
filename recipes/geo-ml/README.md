@@ -14,11 +14,12 @@ The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) comp
 
 ```python
 import geopandas as gpd
-import libpysal
-# points, squares, lattice are built in code (the recipe constructs them); the core ops:
-gpd.sjoin(points, squares, predicate="within")     # → 3 points inside
-squares.to_crs(32611).area                          # → 1,000,000 m² (1 km square)
-libpysal.weights.Rook.from_dataframe(lattice)       # → n=9, s0=24
+from shapely.geometry import box
+from libpysal.weights import lat2W
+# points, squares, a 3×3 lattice are built in code (the recipe constructs them); the core ops:
+gpd.sjoin(points, squares, predicate="within")                  # → 3 points inside
+gpd.GeoSeries([box(0, 0, 1000, 1000)], crs="EPSG:32611").area   # → 1,000,000 m² (1 km square)
+lat2W(3, 3, rook=True)                                          # rook contiguity → n=9, s0=24
 ```
 
 One task, one `python3` invocation. Every input is constructed in code, so nothing is staged.
@@ -51,7 +52,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, sin
 | **projected area** | exactly 1,000,000 m² (1 km square in EPSG:32611) | 1000000.000000 |
 | **PySAL rook links** | n = 9, s0 = 24 (3×3 lattice, rook contiguity) | n=9, s0=24 |
 
-The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices/cross-checks.md): two independent OLS implementations (normal-equations/SVD vs statsmodels) agreeing to machine precision on the same fit is far stronger than either alone — the cross-validation move applied to regression. The rest are closed-form or exact graph/geometry properties: a 3×3 lattice has 12 shared edges → 24 directed neighbor links; a 1 km square in a metric CRS has area exactly 1e6 m² (the GEOS + projection path); the `within` predicate puts exactly 3 of 5 points inside.
+The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices/cross-checks.md): two independent OLS implementations (normal-equations/SVD vs statsmodels) agreeing to machine precision on the same fit, stronger than either engine's self-report. The rest are closed-form or exact graph/geometry properties: a 3×3 lattice has 12 shared edges → 24 directed neighbor links; a 1 km square in a metric CRS has area exactly 1e6 m² (the GEOS + projection path); the `within` predicate puts exactly 3 of 5 points inside.
 
 ### Pins (data tier: synthetic / in-task)
 

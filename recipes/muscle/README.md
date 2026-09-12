@@ -40,7 +40,7 @@ Two aligners on the same sequences produce **different alignments by design**, s
 | **residue conservation** | ungap(row) == input for all; total == 49098 | 49098 |
 | determinism | re-run byte-identical | identical |
 
-The MAFFT↔MUSCLE cross-code question *is* worth asking, but it's a **downstream** one: both alignments → same tree-builder → same topology (Robinson-Foulds = 0). That check lives in the [nf-spawn](../nf-spawn/README.md) Shape-F pipeline on these same input bytes.
+The MAFFT↔MUSCLE cross-code question *is* worth asking, but it's a **downstream** one — and an *observation, not an assertion*. The two alignments feed the same tree-builder in the [nf-spawn](../nf-spawn/README.md) Shape-F pipeline, which **reports** their Robinson-Foulds distance (≈26) rather than asserting it: RF confounds the alignment-method difference with the tree search's own stochasticity, so it's a number to look at, not a check to pass.
 
 **Pins.** Image `quay.io/aarchbio/muscle@sha256:ecfe0f7405a5…` (5.3, cosign-verified, `linux/arm64`). Input: 114 Pfam seed proteins with gaps stripped (`sha256:3adadccd…`, 49,098 residues) — *derived* from [IQ-TREE](../iqtree/README.md)'s alignment, the same bytes [MAFFT](../mafft/README.md) aligns.
 

@@ -14,8 +14,8 @@ Run a short MD integration and land on the potential energy aarch.science publis
 ## Run it
 
 ```bash
-gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o md.tpr
-gmx_mpi mdrun  -s md.tpr -ntomp 2          # → potential energy -9627.87 kJ/mol
+gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o t.tpr -maxwarn 5
+gmx_mpi mdrun  -s t.tpr -deffnm out -ntomp 2 -nsteps 20     # → potential energy -9627.87 kJ/mol
 ```
 
 One task: `grompp` builds the run input, `mdrun` integrates. `spc216.gro` and the force field ship inside the gromacs package, so nothing is staged.

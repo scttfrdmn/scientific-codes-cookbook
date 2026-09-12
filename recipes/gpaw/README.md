@@ -15,11 +15,11 @@ Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch
 ```python
 from ase.build import bulk
 from gpaw import GPAW, PW
-si = bulk("Si"); si.calc = GPAW(mode=PW(200), kpts=(2, 2, 2), xc="LDA")
+si = bulk("Si", "diamond", a=5.43); si.calc = GPAW(mode=PW(200), kpts=(2, 2, 2), xc="LDA")
 si.get_potential_energy()          # -11.703689 eV — run serially and under `mpiexec -n 2`
 ```
 
-One task, run twice (serial, then `mpiexec -n 2 gpaw python`). ASE builds the cell and the PAW datasets ship in the image, so nothing is staged.
+One task, run twice (serial `python3`, then `mpiexec -n 2 python3`). ASE builds the cell and the PAW datasets ship in the image, so nothing is staged.
 
 ## Make it yours
 
@@ -38,7 +38,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), 
 <details>
 <summary>As shipped: the published reference, the rank guard, the scaling wall, pins, smoke check, run + verify</summary>
 
-**A published reference plus a cross-validation.** This is the `dft` env's own D3 calculation, so the run reproduces aarch.science's figure exactly: **−11.703689 eV** ([reproduce a published number](../../practices/reference-from-tests.md)). The 2-rank leg must give the same energy (a cross-validation) **and** assert `gpaw.mpi.world.size == 2` — the [rank-count guard](../../practices/mpi-rank-count.md) aarch.science added after GPAW was one resolver tie from silently shipping a serial build that passes a naive "parallel == serial" check vacuously.
+**A published reference plus a cross-validation.** This is the `dft` env's own D3 calculation, so the run reproduces aarch.science's figure exactly: **−11.703689 eV** ([reproduce a published number](../../practices/reference-from-tests.md)). The 2-rank leg must give the same energy (a cross-validation) **and** assert `gpaw.mpi.world.size == 2`: a serial build would pass "parallel == serial" for free, so the recipe checks the rank count directly — the [rank-count guard](../../practices/mpi-rank-count.md).
 
 | observable | assertion | observed |
 |---|---|---|
