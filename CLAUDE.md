@@ -177,7 +177,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   assertions. The megahit `-t 1` fix (2 contigs → 1) was reconfirmed on megahit's own page but
   left mash and sourmash citing "megahit (2 contigs)" — a page that quotes another recipe's
   number is asserting it too, so after any value change grep for who *cites* it, not only who
-  *asserts* it. (2) "Make `## Run it` runnable" is a running task, not a writing task:
+  *asserts* it. But the sharper question is *what depended on the dimension that moved*, not
+  *what consumed the value* — the naive version re-runs every consumer. mash and sourmash also
+  *consume* megahit's assembly, yet their MinHash distance and Jaccard were unchanged: fragmenting
+  an assembly differently moves the contig *count* but not which k-mers are present, and a sketch
+  reads k-mer content. So the citation was stale and the assertion was not. Ask which dimension
+  changed and trace only its dependents. (2) "Make `## Run it` runnable" is a running task, not a writing task:
   reconstructing a complete invocation from inference put divergences on five of seven edited
   pages (a wrong topology filename, an omitted `periodic=True`, a 4×4×4 supercell where the spec
   runs 2×2×2, a missing `grompp` step) — each looked right, none ran. The fix for "make it
