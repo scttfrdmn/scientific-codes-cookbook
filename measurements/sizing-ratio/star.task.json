@@ -1,0 +1,54 @@
+{
+  "task_id": "sizing-ratio-star-r1",
+  "command": [
+    "bash",
+    "-c",
+    "RATE=0.9426\nINSTANCE=r8g.4xlarge\nset -euo pipefail\ncd /tmp\n# ---- ratio instrument (inlined into each measurement script by build-specs.py;\n#      single authoring copy so the four can't drift; NOT sourced at runtime) ----\nCG=/sys/fs/cgroup\n[ -r \"$CG/cpu.stat\" ] || echo \"WARN: cgroup v2 unreadable -- cores-used degraded\"\ncapture_topo(){ {\n  echo \"== box ==\"\n  echo \"instance=${INSTANCE:-?}  rate_usd_hr=${RATE:-?}  vcpus=$(nproc)\"\n  if command -v lscpu >/dev/null 2>&1; then\n    lscpu | grep -E 'Architecture|Model name|^CPU\\(s\\)|Thread\\(s\\) per core|Core\\(s\\) per socket|Socket\\(s\\)|NUMA'\n  else\n    echo \"lscpu unavailable\"\n    echo \"online_cpus=$(ls -d /sys/devices/system/cpu/cpu[0-9]* 2>/dev/null | wc -l)\"\n    echo \"numa_nodes=$(ls -d /sys/devices/system/node/node[0-9]* 2>/dev/null | wc -l)\"\n  fi\n  echo \"# threads/core=1 => no SMT (vCPU==core, e.g. Graviton); =2 => SMT (vCPU==half a core)\"\n} > /tmp/topo.txt; }\nusnap(){ printf '%s %s\\n' \"$(date +%s%N)\" \\\n  \"$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null)\"; }\nmon_start(){ SF=\"/tmp/samples-$1.tsv\"; : > \"$SF\"\n  usnap > \"/tmp/snap0-$1\"                        # before-snapshot: avg_cores survives a dead sampler\n  ( while :; do printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s.%N)\" \\\n      \"$(cat $CG/memory.current 2>/dev/null)\" \\\n      \"$(awk '/^anon /{print $2}' $CG/memory.stat 2>/dev/null)\" \\\n      \"$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null)\"; sleep 1\n    done ) >> \"$SF\" & echo $! > \"/tmp/mon-$1.pid\"; }\nmon_stop(){ usnap > \"/tmp/snap1-$1\"; kill \"$(cat /tmp/mon-$1.pid 2>/dev/null)\" 2>/dev/null || true; }\n# report TAG: avg_cores/wall/cost from the sampler-INDEPENDENT before/after snapshot;\n#   peak_rss/anon_max/peak_cores from the 1 Hz sampler; sampler_ticks makes a dead\n#   sampler explicit (sane avg + ticks<=1 => sampler died, peak_* unreliable, not \"idle\").\nreport(){\n  read -r w0 u0 < \"/tmp/snap0-$1\"; read -r w1 u1 < \"/tmp/snap1-$1\"\n  local WALL AVG\n  WALL=$(awk -v a=\"$w0\" -v b=\"$w1\" 'BEGIN{printf \"%.1f\",(b-a)/1e9}')\n  AVG=$(awk -v du=\"$(( ${u1:-0} - ${u0:-0} ))\" -v dwns=\"$(( ${w1:-0} - ${w0:-0} ))\" \\\n        'BEGIN{dw=dwns/1000; printf \"%.2f\",(dw>0? du/dw:0)}')\n  awk -F'\\t' -v tag=\"$1\" -v rate=\"${RATE:-0}\" -v wall=\"$WALL\" -v avg=\"$AVG\" '\n    {ticks++; if($2>pm)pm=$2; if($3>am)am=$3;\n     if(NR>1){dt=$1-pt; if(dt>0){c=($4-pu)/(dt*1e6); if(c>pc)pc=c}}\n     pt=$1; pu=$4}\n    END{printf \"%-6s peak_rss=%.0f anon_max=%.0f wall_s=%.1f avg_cores=%s peak_cores=%.2f sampler_ticks=%d cost_usd=%.4f\\n\",\n        tag, pm+0, am+0, wall, avg, pc+0, ticks+0, rate*wall/3600}' \"/tmp/samples-$1.tsv\"; }\n# --------------------------------------------------------------------------------\ncapture_topo; RUN_T0=$(date +%s)\necho \"== inputs (shape check) ==\"\ntest -s GRCh38.fa.gz && test -s GRCh38.gtf.gz && test -s r1.fq.gz && test -s r2.fq.gz\ngzip -dc GRCh38.fa.gz > genome.fa\ngzip -dc GRCh38.gtf.gz > anno.gtf\necho \"genome bytes (uncompressed): $(wc -c < genome.fa)\"\n\necho \"== PHASE 1: genomeGenerate (the build) ==\"\nmkdir -p /tmp/idx\nmon_start build\nSTAR --runMode genomeGenerate --genomeDir /tmp/idx \\\n     --genomeFastaFiles genome.fa --sjdbGTFfile anno.gtf --sjdbOverhang 100 \\\n     --runThreadN 16 --limitGenomeGenerateRAM 31000000000\nmon_stop build\nIDX_BYTES=$(du -sb /tmp/idx | cut -f1)\n{\n  cat /tmp/topo.txt\n  echo \"== measurement ==\"\n  report build\n  echo \"index_tmpfs_bytes=$IDX_BYTES\"\n} > measure.txt\n\nrm -f genome.fa   # our own file; frees ~3.1 GB tmpfs before align (never rm staged inputs)\n\necho \"== PHASE 2: align against the full-genome index ==\"\nmon_start align\nSTAR --genomeDir /tmp/idx --readFilesIn r1.fq.gz r2.fq.gz --readFilesCommand zcat \\\n     --runThreadN 16 --outSAMtype BAM Unsorted --outFileNamePrefix /tmp/aln.\nmon_stop align\nRUN_WALL=$(( $(date +%s) - RUN_T0 ))\n{\n  report align\n  echo \"cgroup_memory_peak=$(cat /sys/fs/cgroup/memory.peak 2>/dev/null)\"\n  echo \"run_compute_wall_s=$RUN_WALL run_compute_cost_usd=$(awk -v r=$RATE -v w=$RUN_WALL 'BEGIN{printf \"%.4f\",r*w/3600}')  # excludes boot/pull\"\n  echo \"# INTERPRETATION (two components, kept separate):\"\n  echo \"#  build anon_max    = STAR's HARD build-RAM floor (a reader always pays this)\"\n  echo \"#  index_tmpfs_bytes = WRITE-PATH ARTIFACT: index lands in /tmp (tmpfs=1/2 RAM) only\"\n  echo \"#                      because the image is non-root; EFS / a mounted volume removes it\"\n  echo \"#  align anon_max    = index resident in RAM to align (align is ALSO ~index-sized for\"\n  echo \"#                      STAR -- inverts the bwa 'align is cheap' intuition)\"\n} >> measure.txt\ncat measure.txt\necho \"MEASURE DONE\"\n"
+  ],
+  "container": "quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sizing/GRCh38.primary_assembly.fa.gz",
+      "destination": "/tmp/GRCh38.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sizing/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.gtf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sizing/ERR188026_R1.fq.gz",
+      "destination": "/tmp/r1.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sizing/ERR188026_R2.fq.gz",
+      "destination": "/tmp/r2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/measure.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sizing/star/measure.txt"
+    },
+    {
+      "source": "/tmp/samples-build.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sizing/star/samples-build.tsv"
+    },
+    {
+      "source": "/tmp/samples-align.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sizing/star/samples-align.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.45
+  }
+}
