@@ -52,7 +52,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, sin
 | **projected area** | exactly 1,000,000 m² (1 km square in EPSG:32611) | 1000000.000000 |
 | **PySAL rook links** | n = 9, s0 = 24 (3×3 lattice, rook contiguity) | n=9, s0=24 |
 
-The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices/cross-checks.md): two independent OLS implementations (normal-equations/SVD vs statsmodels) agreeing to machine precision on the same fit is far stronger than either alone — the cross-validation move applied to regression. The rest are closed-form or exact graph/geometry properties: a 3×3 lattice has 12 shared edges → 24 directed neighbor links; a 1 km square in a metric CRS has area exactly 1e6 m² (the GEOS + projection path); the `within` predicate puts exactly 3 of 5 points inside.
+The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices/cross-checks.md): two independent OLS implementations (normal-equations/SVD vs statsmodels) agreeing to machine precision on the same fit, stronger than either engine's self-report. The rest are closed-form or exact graph/geometry properties: a 3×3 lattice has 12 shared edges → 24 directed neighbor links; a 1 km square in a metric CRS has area exactly 1e6 m² (the GEOS + projection path); the `within` predicate puts exactly 3 of 5 points inside.
 
 ### Pins (data tier: synthetic / in-task)
 

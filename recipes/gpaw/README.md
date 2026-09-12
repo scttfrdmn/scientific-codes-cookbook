@@ -38,7 +38,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), 
 <details>
 <summary>As shipped: the published reference, the rank guard, the scaling wall, pins, smoke check, run + verify</summary>
 
-**A published reference plus a cross-validation.** This is the `dft` env's own D3 calculation, so the run reproduces aarch.science's figure exactly: **−11.703689 eV** ([reproduce a published number](../../practices/reference-from-tests.md)). The 2-rank leg must give the same energy (a cross-validation) **and** assert `gpaw.mpi.world.size == 2` — the [rank-count guard](../../practices/mpi-rank-count.md) aarch.science added after GPAW was one resolver tie from silently shipping a serial build that passes a naive "parallel == serial" check vacuously.
+**A published reference plus a cross-validation.** This is the `dft` env's own D3 calculation, so the run reproduces aarch.science's figure exactly: **−11.703689 eV** ([reproduce a published number](../../practices/reference-from-tests.md)). The 2-rank leg must give the same energy (a cross-validation) **and** assert `gpaw.mpi.world.size == 2`: a serial build would pass "parallel == serial" for free, so the recipe checks the rank count directly — the [rank-count guard](../../practices/mpi-rank-count.md).
 
 | observable | assertion | observed |
 |---|---|---|

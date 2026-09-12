@@ -33,7 +33,7 @@ One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image
 <details>
 <summary>As shipped: the like-with-like cross-code check, pins, smoke check</summary>
 
-bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF diff would compare methods, not correctness ([compare like with like](../../practices/cross-checks.md)). Made apples-to-apples: **normalise** both (`bcftools norm -m-`), restrict to **confident SNVs** (`QUAL ≥ 20`; the models represent indels differently even after norm), assert **Jaccard(POS:REF:ALT) ≥ 0.85** — observed **0.9103** (609/669). The 0.85 floor is what two correct germline callers reach at 30× (literature 0.85–0.95), not a shaved value.
+bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF diff would compare methods, not correctness ([compare like with like](../../practices/cross-checks.md)). To compare like with like: **normalise** both (`bcftools norm -m-`), restrict to **confident SNVs** (`QUAL ≥ 20`; the models represent indels differently even after norm), assert **Jaccard(POS:REF:ALT) ≥ 0.85** — observed **0.9103** (609/669). The 0.85 floor is what two correct germline callers reach at 30× (literature 0.85–0.95), not a shaved value.
 
 | observable | assertion | observed |
 |---|---|---|

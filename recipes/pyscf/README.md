@@ -26,7 +26,7 @@ One task, one SCF. The molecule is three lines of inline geometry, so nothing is
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | H₂ at 0.74 Å (inline) | your own molecule + method | the minimal case is chosen because a second code ([psi4](../psi4/README.md)) fixes the same number to cross-check against. |
-| the cross-check tolerance (< 1e-5 Ha) | keep it — it's method-justified | **load-bearing:** both codes run *exact* integrals (Psi4 with `SCF_TYPE PK`), so they agree to 3e-7 Ha. Psi4's density-fitting *default* would differ by 2.4e-5 — match the integral treatment or you measure the approximation, not the agreement ([match the modes](../../practices/cross-checks.md)). |
+| the cross-check tolerance (< 1e-5 Ha) | keep it — it's method-justified | **load-bearing:** both codes run *exact* integrals (Psi4 with `SCF_TYPE PK`), agreeing to 3e-7 Ha; Psi4's density-fitting default would differ by 2.4e-5 — [match the modes](../../practices/cross-checks.md). |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the cross-code identity holds at any molecule size, and H₂ makes it hand-checkable. Leave-it.
 
@@ -39,7 +39,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF is ~1 s. Reco
 
 ### The check — a matched-method cross-code identity
 
-PySCF is a third independent SCF kernel in the catalog (after [psi4](../psi4/README.md) and [nwchem](../nwchem/README.md)), sharing no integral or SCF code. Both run H₂ at 0.74 Å, RHF/STO-3G, with **exact integrals** — Psi4 with `SCF_TYPE PK` — and agree to **3e-7 Ha**, near SCF-convergence precision. Matching the integral treatment is what makes that meaningful: Psi4 *defaults* to density fitting (DF), which gives −1.116783 Ha, **2.4e-5 above** the exact −1.116759; comparing that DF value against PySCF's exact one would measure Psi4's approximation, not the two codes' agreement — a method mismatch, not a basis limit ([match the modes](../../practices/cross-checks.md)). So the recipe sets PK and asserts **< 1e-5 Ha**: tight enough to be a real cross-validation (the [raxml-ng](../raxml-ng/README.md)/IQ-TREE move), loose enough to survive convergence noise. The full reasoning is on the [cross-checks page](../../practices/cross-checks.md).
+PySCF is a third independent SCF kernel in the catalog (after [psi4](../psi4/README.md) and [nwchem](../nwchem/README.md)), sharing no integral or SCF code. Both run H₂ at 0.74 Å, RHF/STO-3G, with **exact integrals** (Psi4 with `SCF_TYPE PK`) and agree to **3e-7 Ha** — a real cross-validation (the [raxml-ng](../raxml-ng/README.md)/IQ-TREE move). Psi4's density-fitting *default* would instead differ by 2.4e-5 (−1.116783 vs the exact −1.116759); [why matching the integral treatment matters](../../practices/cross-checks.md) is the like-with-like discipline, not a basis limit. The asserted **< 1e-5 Ha** is set to survive SCF-convergence noise.
 
 ### Pins (data tier: none / in-task)
 

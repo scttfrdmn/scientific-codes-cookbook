@@ -16,10 +16,12 @@ spawn_version: 0.104.0
 ```python
 # pvbatch script. Headless: the recipe starts Xvfb + sets LIBGL_ALWAYS_SOFTWARE=1 first
 # (load-bearing — no GPU, no display; see below), then:
-from paraview.simple import *
-Wavelet()                                    # analytic scalar field, generated in memory
-Contour(Isosurfaces=[150.0])                 # → 3034 points, 5768 cells (deterministic)
-SaveScreenshot("render.png", ImageResolution=[400, 300])   # GLX + llvmpipe, no GPU
+from paraview.simple import Wavelet, Contour, GetActiveViewOrCreate, Show, Render, SaveScreenshot
+wavelet = Wavelet()                                                       # analytic scalar field, in memory
+contour = Contour(Input=wavelet, ContourBy=["POINTS", "RTData"], Isosurfaces=[150.0])  # → 3034 points, 5768 cells
+view = GetActiveViewOrCreate("RenderView"); view.ViewSize = [400, 300]
+Show(contour, view); Render()
+SaveScreenshot("render.png", view)                                        # GLX + llvmpipe, no GPU
 ```
 
 One `pvbatch` invocation in one task. The dataset is synthetic, so nothing is staged — but the render path is not trivial (below).

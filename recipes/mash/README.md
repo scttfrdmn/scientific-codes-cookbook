@@ -35,7 +35,7 @@ One task, sub-second. `c8g.large`, ~$0.02, **~43s** wall — boot and image pull
 <details>
 <summary>As shipped: the near-zero identity, the honest cross-tool note, pins, smoke check</summary>
 
-spades (237 contigs) and megahit (1 contig) assemble the **identical** 51,933 read pairs — different layouts of the same ~400 kb, so k-mer content nearly coincides and the distance sits near zero: **0.000239895** (990/1000 shared hashes). Asserted **< 0.001** — set by "two assemblies of one sequence share nearly all k-mers," not shaved to the observed value; a broken sketch or mismatched pair gives ≫ 0.1. That also makes it a free cross-check on both assemblers.
+spades (237 contigs) and megahit (1 contig) assemble the **identical** 51,933 read pairs — different layouts of the same ~400 kb, so k-mer content nearly coincides and the distance sits near zero: **0.000239895** (990/1000 shared hashes). Asserted **< 0.001** — set by "two assemblies of one sequence share nearly all k-mers"; a broken sketch or mismatched pair gives ≫ 0.1. That also makes it a free cross-check on both assemblers.
 
 **Cross-tool, stated honestly (see [sourmash](../sourmash/README.md)).** Mash uses **bottom-sketch MinHash**; sourmash uses **FracMinHash (scaled)** — different algorithms, so their numbers aren't the same quantity (Mash distance ≈ 0.0002 vs sourmash Jaccard ≈ 0.995). They agree **qualitatively** — both call this pair near-identical — which is the honest cross-code claim; asserting `mash_distance == sourmash_jaccard` would be comparing different statistics.
 
