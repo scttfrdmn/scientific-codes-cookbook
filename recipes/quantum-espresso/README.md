@@ -4,6 +4,7 @@ tool_version: 7.5
 env: dft
 image: quay.io/aarchsci/dft@sha256:7574f6b15d6b0ec2d1bc27ebaabf97298e1ac619711754eb10da8b1f54600d03
 spawn_version: 0.104.0
+last_verified: 2026-09-12
 ---
 # Quantum ESPRESSO — the silicon lattice constant, cross-checked against GPAW
 
@@ -32,7 +33,7 @@ The recipe drives five such SCFs across lattice constants (through ASE, so QE an
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 8m, cap $0.04. Each QE SCF is ~3 s; the ten EOS points (five per code) are ~1 min. Boot and the 1.25 GB `dft` image pull are the rest. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 6m, cap $0.04. Each QE SCF is ~3 s; the ten EOS points (five per code) are ~1 min. Recorded command window **3m21s** — boot and the 1.25 GB `dft` image pull are the rest. **These timings are not compute cost.**
 
 **Sizing:** the 2-atom cell is CPU-light; a real cell scales with atoms × k-points, and QE's plane-wave SCF is MPI-parallel — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real system on its cell, not this one.
 
@@ -47,6 +48,8 @@ QE and GPAW both do plane-wave PBE DFT, but their **total energies are not compa
 
 - **QE reproduces a published reference** — its own leg, checkable alone: a₀(QE) = **5.4697 Å** against the all-electron PBE reference **5.468 Å** (the Δ-project value the SSSP protocol validates against) — a **0.0017 Å** deviation, B₀ = 88.9 GPa vs 88.8. The band (0.015 Å) is what the SSSP-efficiency Si pseudopotential's own verified EOS supports. [reproduce a published number](../../practices/reference-from-tests.md).
 - **QE agrees with GPAW** — the cross-code check: |a₀(QE) − a₀(GPAW)| = **0.0059 Å** (GPAW 5.4756 Å). This band (0.02 Å) comes from the *shared problem's* precision — the ultrasoft-vs-PAW formalism difference plus finite cutoff and k-mesh — and is deliberately looser than the reproduction band above; the two justify differently, and the looser one is not the precision of the tighter. The published reference is what guards against both codes converging to the same wrong place by a shared choice.
+
+Both a₀ and B₀ came back **bit-identical on local arm64 and Graviton4** (5.4697 / 5.4756 Å to four figures), so the fitted observables are deterministic across machines, not merely close.
 
 ### QE's own identities
 
