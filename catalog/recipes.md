@@ -45,7 +45,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | — | — |
+| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-09-12 | 2026-09-12 |
 
 ## climate
 
