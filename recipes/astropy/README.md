@@ -4,6 +4,7 @@ tool_version: 8.0.1
 env: astro
 image: quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # Astropy — units, WCS, coordinates, time, and FITS on Graviton
 
@@ -36,7 +37,7 @@ That WCS round-trip is the headline; the recipe adds a coordinate transform, a t
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 6m, cap $0.03. The compute is **~1 s**; boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The compute is **~1 s**; recorded command window **93 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
 
 **Sizing:** no family question — the checks are CPU-light and definitional. A real workload (large FITS mosaics, healpix maps, catalog cross-matches) sizes by data volume and shifts to RAM; size it on the dataset, not this.
 
@@ -51,6 +52,8 @@ Nothing here is a band on an observed value — every check is exact, algorithmi
 - **Algorithmic** (the [BLAST self-hit](../blast/README.md) shape): a TAN-projection WCS round-trip, pixel→world→pixel, returns the input to **8.3e-11 px** — exact up to floating point, no tolerance earned.
 - **Reproduce a published constant** ([reproduce a published number](../../practices/reference-from-tests.md)): the Galactic north pole (`b = +90°`) transforms to ICRS **RA 192.85948°, Dec +27.12825°** — the IAU-defining values for the Galactic frame.
 - **Decode statistic** (the sixth format after BAM/PDAL/COG/…): a FITS write→read returns the array **bit-identical**, exercising the real encoder/decoder, not just a header.
+
+All six reproduced bit-identically on the Graviton verifying run — expected, since each is exact, algorithmic, or definitional rather than a measured value, but confirmed rather than assumed.
 
 ### Pins (data tier: synthetic / in-code)
 
