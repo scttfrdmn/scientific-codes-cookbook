@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-openfoam-cavity-r1",
+  "command": [
+    "bash",
+    "-c",
+    "source /usr/lib/openfoam/openfoam2412/etc/bashrc\nset -eo pipefail\ncd /tmp\ncp -r \"$FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity\" /tmp/cavity\ncd /tmp/cavity\nblockMesh > log.blockMesh 2>&1\nicoFoam   > log.icoFoam   2>&1\npostProcess -func \"fieldMinMax(U,p)\" -latestTime > log.postProcess 2>&1 || true\nFMM=$(find postProcessing -name fieldMinMax.dat | head -1)\nset +e\nawk -v fmm=\"$FMM\" '\nfunction chk(label,ok,detail){printf \"%-22s %s  [%s]\\n\",label,detail,(ok?\"ok\":\"FAIL\"); if(!ok)fail++}\n/^End$/{ended=1}\n/continuity errors/{ if(match($0,/cumulative = [-0-9.eE+]+/)){s=substr($0,RSTART+13);cum=s+0} }\n/Courant Number/{ if(match($0,/max: [0-9.eE+]+/)){s=substr($0,RSTART+5);cour=s+0} }\nEND{\n  chk(\"solver_completed\", ended==1, \"End reached=\"ended)\n  a=(cum<0)?-cum:cum\n  chk(\"mass_continuity\", a<1e-6, sprintf(\"|cumulative|=%.3e want <1e-6\",a))\n  chk(\"courant_stable\", cour>0 && cour<1.0, sprintf(\"maxCo=%.4f want 0<Co<1\",cour))\n  while((getline line < fmm)>0){ if(line !~ /^#/){n=split(line,f,\"\\t\"); for(i=1;i<=n;i++){gsub(/^[ \\t]+|[ \\t]+$/,\"\",f[i])} if(f[2]==\"mag(U)\"){umax=f[5]+0} if(f[2]==\"p\"){pmin=f[3]+0;pmax=f[5]+0} } }\n  chk(\"lid_bc_respected\", umax>0.99 && umax<1.01, sprintf(\"max|U|=%.5f want ~1.0 (lid)\",umax))\n  chk(\"vortex_developed\", pmax>1.0 && pmin<-1.0, sprintf(\"p=[%.3f,%.3f] want span past +/-1\",pmin,pmax))\n  print (fail==0)?\"SMOKE CHECK PASSED\":\"SMOKE CHECK FAILED (\"fail\")\"\n}' log.icoFoam > /tmp/smoke-check.txt\ngrep -q \"SMOKE CHECK PASSED\" /tmp/smoke-check.txt; RC=$?\nset -e\ncat /tmp/smoke-check.txt\ncp /tmp/cavity/log.icoFoam /tmp/log.icoFoam\ntar -cf /tmp/cavity-solution.tar -C /tmp cavity\nls -la /tmp/cavity-solution.tar /tmp/log.icoFoam /tmp/smoke-check.txt\n[ $RC -eq 0 ] || { echo \"smoke check did not pass\"; exit 1; }\necho \"TASK OK\"\n"
+  ],
+  "container": "docker.io/opencfd/openfoam-default@sha256:b8b674f7d634a7b272efa00beabfe13eefdfe9d83b28281522544d06d47a17e4",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openfoam/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/log.icoFoam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openfoam/r1/log.icoFoam"
+    },
+    {
+      "source": "/tmp/cavity-solution.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openfoam/r1/cavity-solution.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}

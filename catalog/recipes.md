@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **52 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **53 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -23,7 +23,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-12 | — |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-12 | — |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |
-| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-11 | — |
+| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-12 | — |
 | [kraken2](../recipes/kraken2/README.md) | Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass. | aarchbio | stage | 2026-09-12 | — |
 | [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-09-12 | 2026-09-10 |
 | [mafft](../recipes/mafft/README.md) | Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment. | aarchbio | stage | 2026-09-12 | — |
@@ -35,11 +35,17 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-12 | 2026-09-10 |
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree | 2026-09-10 | — |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-09-11 | — |
-| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../recipes/kallisto/README.md). | aarchbio | stage | 2026-09-11 | — |
+| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../recipes/kallisto/README.md). | aarchbio | stage | 2026-09-12 | — |
 | [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-12 | — |
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
 | [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage | 2026-09-12 | — |
+
+## cfd
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | — | — |
 
 ## climate
 
@@ -100,7 +106,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-11 | — |
+| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-12 | — |
 
 ## pointcloud
 
