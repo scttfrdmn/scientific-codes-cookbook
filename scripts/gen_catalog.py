@@ -44,6 +44,27 @@ def lede(text):
     return ""
 
 
+CATALOG_DIR = os.path.join(ROOT, "catalog")
+
+
+def retarget_links(text, recipe_dir):
+    """Rewrite a lede's relative links so they resolve from catalog/recipes.md, not from the
+    recipe dir the lede was written in: `../mafft/README.md` (correct from recipes/muscle/)
+    becomes `../recipes/mafft/README.md`. Ledes are copied verbatim, so without this the one
+    artifact nobody hand-edits is the one that carries broken links."""
+    def repl(m):
+        label, target = m.group(1), m.group(2)
+        url = target.split()[0]
+        if url.startswith(("http://", "https://", "mailto:", "#")):
+            return m.group(0)
+        path, _, anchor = url.partition("#")
+        if not path:
+            return m.group(0)
+        newrel = os.path.relpath(os.path.normpath(os.path.join(recipe_dir, path)), CATALOG_DIR)
+        return f"[{label}]({newrel}{'#' + anchor if anchor else ''})"
+    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", repl, text)
+
+
 def stage_builds(recipe_dir):
     """Which inputs/<prefix>/ this recipe's stage script uploads to."""
     sh = os.path.join(recipe_dir, "stage-inputs.sh")
@@ -128,7 +149,7 @@ def main():
         if run_deps:
             segs.append("run: " + ", ".join(sorted(run_deps)))
         inputs = " · ".join(segs) if segs else ("build-in-task" if not (prefixes or runs) else "stage")
-        rows.append((domain, name, lede(text), env, inputs,
+        rows.append((domain, name, retarget_links(lede(text), d), env, inputs,
                      git_updated(os.path.relpath(d, ROOT)), fm.get("last_verified", "—")))
 
     # group by domain, alphabetical within
@@ -136,8 +157,9 @@ def main():
     out = [BANNER, "", "# The recipe catalog", "",
            f"Every recipe here runs one tool on a Graviton4 box, verified, self-terminating "
            f"— **{len(rows)} working examples**, generated from the recipes themselves so this "
-           f"list is always what actually ships. Each links to its page; run any with "
-           f"`make run RECIPE=<name>`.", "",
+           f"list is always what actually ships. Each links to its page; run most with "
+           f"`make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through "
+           f"its own workflow engine instead, as its page shows, not `make run`.", "",
            "**Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds "
            "are different actions: **build-in-task** (nothing to stage) · **stage** "
            "(`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe "

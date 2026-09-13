@@ -2,6 +2,7 @@
 tool: nf-spawn
 tool_version: 0.10.1
 shape: pipeline
+depends_on: stage:mafft
 images:
   mafft: quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9
   muscle: quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4
@@ -40,8 +41,6 @@ Five process tasks → five ephemeral instances. The `nextflow` head process run
 | the 5-task fan-out+join DAG (2 aligners → 2 trees → join) | your own `main.nf` processes | the DAG *shape* is the fixture — it exercises concurrent dispatch and a multi-input join, which a chain wouldn't. |
 | the `nf-spawn` executor, **installed from a release zip** | keep the zip install | **load-bearing:** the plugin is *not* in the Nextflow registry ([`#90`](https://github.com/spore-host/nf-spawn/issues/90)), so `nextflow run` won't fetch it — install it first (below), or every process fails to launch. |
 | the pinned mafft/muscle/iqtree images | your tools' images | reused byte-for-byte from [mafft](../mafft/README.md)/[muscle](../muscle/README.md)/[iqtree](../iqtree/README.md); each process names its own single-tool image. |
-
-The trees pin `-T 4` + a fixed seed (iqtree's determinism scaffolding — [why](../iqtree/README.md)); the RF *observation* between the two is deliberately **not** asserted (below).
 
 ## Shape, size, cost
 

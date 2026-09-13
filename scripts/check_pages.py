@@ -149,6 +149,22 @@ def frontmatter_keys(text):
     return {m.group(1) for m in re.finditer(r"^([a-z_]+):", text[4:end], re.M)}
 
 
+def check_internal_links(text, path):
+    """Link text + internal-link existence for one file, relative to its own dir. Factored out
+    so the generated catalog and the landing docs get the same check the recipe pages do."""
+    rel = os.path.relpath(path, ROOT)
+    for m in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", text):
+        txt, target = m.group(1).strip().lower(), m.group(2).strip()
+        if txt in BAD_LINK_TEXT:
+            warns.append(f"{rel}: non-descriptive link text '{txt}'")
+        url = target.split()[0].split("#")[0]
+        if not url or url.startswith(("http://", "https://", "mailto:")):
+            continue
+        dest = os.path.normpath(os.path.join(os.path.dirname(path), url))
+        if not os.path.exists(dest):
+            errors.append(f"{rel}: broken internal link -> {target}")
+
+
 def check(path, needs_fm):
     rel = os.path.relpath(path, ROOT)
     text = open(path, encoding="utf-8").read()
@@ -182,16 +198,7 @@ def check(path, needs_fm):
         if b > a + 1:
             warns.append(f"{rel}: heading level skips h{a}->h{b}")
             break
-    for m in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", text):
-        txt, target = m.group(1).strip().lower(), m.group(2).strip()
-        if txt in BAD_LINK_TEXT:
-            warns.append(f"{rel}: non-descriptive link text '{txt}'")
-        url = target.split()[0].split("#")[0]
-        if not url or url.startswith(("http://", "https://", "mailto:")):
-            continue
-        dest = os.path.normpath(os.path.join(os.path.dirname(path), url))
-        if not os.path.exists(dest):
-            errors.append(f"{rel}: broken internal link -> {target}")
+    check_internal_links(text, path)
     if needs_fm:
         check_recipe_contract(text, rel)
     else:
@@ -268,6 +275,13 @@ def main():
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
+    # The generated catalog and the landing docs carry internal links too — and the catalog is the
+    # one artifact nobody hand-edits, so it's exactly where a generator bug hides (the copied-lede
+    # links). Link-check them with the same pass, so the gate covers what it produces.
+    for extra in ("catalog/recipes.md", "README.md", "CHARTER.md"):
+        p = os.path.join(ROOT, extra)
+        if os.path.exists(p):
+            check_internal_links(open(p, encoding="utf-8").read(), p)
     check_portability()
     check_staging_coverage()
     if "--external" in sys.argv:
