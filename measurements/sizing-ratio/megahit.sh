@@ -1,4 +1,4 @@
-set -euo pipefail
+set -eo pipefail   # no -u: biocontainers' conda-activate env script trips nounset
 cd /tmp
 __INSTRUMENT__
 capture_topo; RUN_T0=$(date +%s)

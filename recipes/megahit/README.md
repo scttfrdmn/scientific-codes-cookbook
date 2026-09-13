@@ -30,7 +30,7 @@ The recipe assembles the **same reads [SPAdes](../spades/README.md) uses** and a
 
 One task, ~10 s assembly. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Run before [QUAST](../quast/README.md).
 
-**The scale-it, measured.** MEGAHIT is the lean end of this pair: on ~100× *E. coli* it holds just **~0.4 GiB** — **~11× less than SPAdes on the same reads** — while averaging 6.4 cores, so it's the compute-leaning, memory-light choice where SPAdes is the reverse (the comparison and both box picks live on [SPAdes](../spades/README.md)). A small `c8g` covers the memory; give it the cores. Neither needs an `r` box at this scale.
+**The scale-it, measured.** MEGAHIT is the lean end of this pair: on ~100× *E. coli* it holds just **~0.4 GiB** — **~11× less than SPAdes on the same reads** — while averaging 6.4 cores, so it's the compute-leaning, memory-light choice where SPAdes is the reverse (the comparison and both box picks live on [SPAdes](../spades/README.md)). A small `c8g` covers the memory; give it the cores. Neither needs an `r` box at this scale. Measured across five instance families for $/result: [which family's cores are cheapest](../../patterns/cost-per-result.md).
 
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>

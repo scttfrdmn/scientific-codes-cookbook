@@ -4,21 +4,26 @@ CG=/sys/fs/cgroup
 [ -r "$CG/cpu.stat" ] || echo "WARN: cgroup v2 unreadable -- cores-used degraded"
 capture_topo(){ {
   echo "== box =="
-  echo "instance=${INSTANCE:-?}  rate_usd_hr=${RATE:-?}  vcpus=$(nproc)"
+  echo "instance=${INSTANCE:-?}  rate_usd_hr=${RATE:-?}  arch=$(uname -m)  vcpus=$(nproc)"
   if command -v lscpu >/dev/null 2>&1; then
     lscpu | grep -E 'Architecture|Model name|^CPU\(s\)|Thread\(s\) per core|Core\(s\) per socket|Socket\(s\)|NUMA'
   else
-    echo "lscpu unavailable"
-    echo "online_cpus=$(ls -d /sys/devices/system/cpu/cpu[0-9]* 2>/dev/null | wc -l)"
+    # lscpu absent (biocontainers): derive threads/core from /proc/cpuinfo
+    sib=$(awk -F: '/^siblings/{gsub(/ /,"",$2);print $2;exit}' /proc/cpuinfo); sib=${sib:-0}
+    cor=$(awk -F: '/^cpu cores/{gsub(/ /,"",$2);print $2;exit}' /proc/cpuinfo); cor=${cor:-0}
+    echo "model=$(awk -F: '/^model name/{sub(/^ /,"",$2);print $2;exit}' /proc/cpuinfo)"
+    echo "siblings=$sib cpu_cores=$cor threads_per_core=$(( cor>0 ? sib/cor : 1 ))"
     echo "numa_nodes=$(ls -d /sys/devices/system/node/node[0-9]* 2>/dev/null | wc -l)"
   fi
-  echo "# threads/core=1 => no SMT (vCPU==core, e.g. Graviton); =2 => SMT (vCPU==half a core)"
+  echo "# threads/core=1 => no SMT (Graviton/AMD here); =2 => SMT (Intel c8i: 8 vCPU=4 cores)"
 } > /tmp/topo.txt; }
-usnap(){ printf '%s %s\n' "$(date +%s%N)" \
+# wall clock from /proc/uptime (seconds, 2-decimal) -- portable; biocontainers' date
+# lacks +%N and yields "<s>%N", which then reads as modulo-N in bash arithmetic.
+usnap(){ printf '%s %s\n' "$(awk '{print $1}' /proc/uptime)" \
   "$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null)"; }
 mon_start(){ SF="/tmp/samples-$1.tsv"; : > "$SF"
   usnap > "/tmp/snap0-$1"                        # before-snapshot: avg_cores survives a dead sampler
-  ( while :; do printf '%s\t%s\t%s\t%s\n' "$(date +%s.%N)" \
+  ( while :; do printf '%s\t%s\t%s\t%s\n' "$(awk '{print $1}' /proc/uptime)" \
       "$(cat $CG/memory.current 2>/dev/null)" \
       "$(awk '/^anon /{print $2}' $CG/memory.stat 2>/dev/null)" \
       "$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null)"; sleep 1
@@ -30,9 +35,9 @@ mon_stop(){ usnap > "/tmp/snap1-$1"; kill "$(cat /tmp/mon-$1.pid 2>/dev/null)" 2
 report(){
   read -r w0 u0 < "/tmp/snap0-$1"; read -r w1 u1 < "/tmp/snap1-$1"
   local WALL AVG
-  WALL=$(awk -v a="$w0" -v b="$w1" 'BEGIN{printf "%.1f",(b-a)/1e9}')
-  AVG=$(awk -v du="$(( ${u1:-0} - ${u0:-0} ))" -v dwns="$(( ${w1:-0} - ${w0:-0} ))" \
-        'BEGIN{dw=dwns/1000; printf "%.2f",(dw>0? du/dw:0)}')
+  WALL=$(awk -v a="$w0" -v b="$w1" 'BEGIN{printf "%.1f", b-a}')
+  AVG=$(awk -v du="$(( ${u1:-0} - ${u0:-0} ))" -v w="$WALL" \
+        'BEGIN{printf "%.2f",(w>0? du/(w*1e6):0)}')
   awk -F'\t' -v tag="$1" -v rate="${RATE:-0}" -v wall="$WALL" -v avg="$AVG" '
     {ticks++; if($2>pm)pm=$2; if($3>am)am=$3;
      if(NR>1){dt=$1-pt; if(dt>0){c=($4-pu)/(dt*1e6); if(c>pc)pc=c}}
