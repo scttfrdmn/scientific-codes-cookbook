@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-quantum-espresso-si-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\ncd /tmp\necho '== QE + GPAW plane-wave PBE EOS on bulk Si; SSSP pseudo in-env, cell built in-code =='\ncat > recipe.py <<'PYEOF'\nimport numpy as np, re, sys\nfrom ase.build import bulk\nfrom ase.eos import EquationOfState\nfrom ase.calculators.espresso import Espresso, EspressoProfile\nfrom gpaw import GPAW, PW\n\nKPTS=(8,8,8); STRAINS=[0.98,0.99,1.00,1.01,1.02]; A0=5.47\nREF_A0=5.468; REF_B0=88.8            # all-electron PBE Si (Delta-project / SSSP reference)\nREPRO_BAND=0.015; XCODE_BAND=0.02    # two bands, two justifications (see README)\n\nqe_profile=EspressoProfile(command='mpirun --allow-run-as-root -n 2 pw.x',\n                           pseudo_dir='/opt/conda/share/sssp/efficiency')\nqe_in={'system':{'ecutwfc':40,'ecutrho':320},'electrons':{'conv_thr':1e-8},'control':{'tprnfor':True}}\ndef qe_E(a):\n    a.calc=Espresso(profile=qe_profile,pseudopotentials={'Si':'Si.pbe-n-rrkjus_psl.1.0.0.UPF'},\n                    input_data=qe_in,kpts=KPTS); return a.get_potential_energy(),a\ndef gp_E(a):\n    a.calc=GPAW(mode=PW(400),kpts=KPTS,xc='PBE',txt=None); return a.get_potential_energy(),a\ndef eos(ef):\n    vols,es,last=[],[],None\n    for s in STRAINS:\n        si=bulk('Si','diamond',a=A0*s); e,at=ef(si); vols.append(si.get_volume()); es.append(e); last=at\n    v0,e0,B=EquationOfState(vols,es).fit(); return (4*v0)**(1/3.), B*160.21766, last\n\naq,Bq,last_qe=eos(qe_E); ag,Bg,_=eos(gp_E)\npwo=open('espresso.pwo').read()\nm=re.search(r'running on\\s+(\\d+)\\s+processor',pwo); ranks=int(m.group(1)) if m else 0\nfmax=float(np.abs(last_qe.get_forces()).max())\n\nfail=[]\ndef chk(label,ok,detail):\n    print(f\"{label:26s} {detail}  [{'ok' if ok else 'FAIL'}]\")\n    if not ok: fail.append(label)\nchk(\"qe_mpi_ranks\", ranks==2, f\"{ranks} want 2 (parallel pw.x)\")\nchk(\"qe_zero_force_symmetry\", fmax<1e-3, f\"maxF={fmax:.1e} eV/A want <1e-3 (diamond symmetry)\")\nchk(\"qe_a0_reproduces_ref\", abs(aq-REF_A0)<REPRO_BAND, f\"a0(QE)={aq:.4f} vs AE-PBE {REF_A0}={abs(aq-REF_A0):.4f}A want <{REPRO_BAND}\")\nchk(\"qe_B0_reproduces_ref\", 80<Bq<95, f\"B0(QE)={Bq:.1f}GPa (ref {REF_B0}) want 80..95\")\nchk(\"qe_gpaw_a0_agree\", abs(aq-ag)<XCODE_BAND, f\"|a0(QE)-a0(GPAW)|={abs(aq-ag):.4f}A want <{XCODE_BAND}\")\nchk(\"gpaw_a0_sane\", abs(ag-REF_A0)<0.03, f\"a0(GPAW)={ag:.4f} vs {REF_A0}\")\nwith open('smoke-check.txt','w') as f:\n    f.write(f\"a0(QE)  ={aq:.4f} A  B0={Bq:.1f} GPa   [SSSP PBE ultrasoft]\\n\")\n    f.write(f\"a0(GPAW)={ag:.4f} A  B0={Bg:.1f} GPa   [PAW PBE]\\n\")\n    f.write(f\"reproduction: QE a0 vs all-electron PBE ref {REF_A0} A = {abs(aq-REF_A0):.4f} A (band {REPRO_BAND})\\n\")\n    f.write(f\"cross-code:   |a0(QE)-a0(GPAW)| = {abs(aq-ag):.4f} A (band {XCODE_BAND})\\n\")\n    f.write(f\"qe_mpi_ranks={ranks}  qe_max_force={fmax:.1e} eV/A\\n\")\nprint(\"----\"); print(open('smoke-check.txt').read())\nprint(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\nsys.exit(1 if fail else 0)\n\nPYEOF\npython3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:7574f6b15d6b0ec2d1bc27ebaabf97298e1ac619711754eb10da8b1f54600d03",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/espresso.pwo",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso/r1/espresso.pwo"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8m",
+    "on_complete": "terminate",
+    "cost_limit": 0.04
+  }
+}
