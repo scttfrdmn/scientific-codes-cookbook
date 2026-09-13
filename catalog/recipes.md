@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **55 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **56 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -41,6 +41,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
 | [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage | 2026-09-12 | — |
+
+## astro
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | — | — |
 
 ## cfd
 

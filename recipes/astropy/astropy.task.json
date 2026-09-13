@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-astropy-identities-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho '== astropy: units, WCS, coordinates, time, FITS -- each an exact/definitional identity =='\ncat > recipe.py <<'PYEOF'\nimport numpy as np, sys\nfrom astropy import units as u\nfrom astropy.constants import c\nfrom astropy.wcs import WCS\nfrom astropy.coordinates import SkyCoord\nfrom astropy.time import Time\nfrom astropy.io import fits\nimport astropy\n\nlines=[f\"astropy {astropy.__version__}  (all identities exact/algorithmic/definitional)\"]\nfail=[]\ndef chk(label, ok, detail):\n    line=f\"{label:16s} {detail}  [{'ok' if ok else 'FAIL'}]\"; print(line); lines.append(line)\n    if not ok: fail.append(label)\n\ncval=c.to('m/s').value\nchk(\"speed_of_light\", cval==299792458.0, f\"c={cval} m/s want exactly 299792458 (SI definition)\")\n\nw=WCS(naxis=2); w.wcs.crpix=[256.5,256.5]; w.wcs.cdelt=[-0.000277778,0.000277778]\nw.wcs.crval=[150.0,2.0]; w.wcs.ctype=['RA---TAN','DEC--TAN']\npx=np.array([[10.,20.],[100.,300.],[500.5,7.25],[256.5,256.5]])\nerr=float(np.abs(px-w.wcs_world2pix(w.wcs_pix2world(px,0),0)).max())\nchk(\"wcs_roundtrip\", err<1e-9, f\"max|pix-rt|={err:.2e} px want <1e-9 (TAN pix->world->pix)\")\n\nngp=SkyCoord(l=0*u.deg,b=90*u.deg,frame='galactic').icrs\nchk(\"ngp_ra\",  abs(ngp.ra.deg-192.85948)<1e-4, f\"NGP RA={ngp.ra.deg:.6f} deg want 192.85948 (IAU)\")\nchk(\"ngp_dec\", abs(ngp.dec.deg-27.12825)<1e-4, f\"NGP Dec={ngp.dec.deg:.6f} deg want 27.12825 (IAU)\")\n\ndt=(Time('2026-01-01T00:00:00',scale='tai')-Time('2026-01-01T00:00:00',scale='tt')).sec\nchk(\"tt_minus_tai\", abs(dt-32.184)<1e-6, f\"TT-TAI={dt:.6f} s want 32.184 (definitional)\")\n\ndata=(np.arange(256*256,dtype=np.float32).reshape(256,256)*1.5-100.0)\nfits.PrimaryHDU(data=data,header=w.to_header()).writeto('astro.fits',overwrite=True)\nchk(\"fits_roundtrip\", np.array_equal(fits.getdata('astro.fits'),data), f\"FITS data bit-identical, shape {data.shape}\")\n\nlines.append(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\nopen('smoke-check.txt','w').write(\"\\n\".join(lines)+\"\\n\")\nprint(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED\")\nsys.exit(1 if fail else 0)\n\nPYEOF\npython3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/astro.fits",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy/r1/astro.fits"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}
