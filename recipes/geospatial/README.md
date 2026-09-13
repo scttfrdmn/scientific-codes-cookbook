@@ -34,6 +34,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **60s** — the shortest in the cookbook, thanks to the ~0.37 GB `geospatial` image (the smallest env); boot, Docker install, and that pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no family question — the GDAL/PROJ/GEOS core operations are sub-second; a large real raster shifts the constraint to I/O (→ [data movement](../../patterns/data-movement.md)), not this synthetic fixture's compute. Any 8g box fits the core.
+
 <details>
 <summary>As shipped: four kinds of identity, the interop cross-check, pins, smoke check, run + verify</summary>
 

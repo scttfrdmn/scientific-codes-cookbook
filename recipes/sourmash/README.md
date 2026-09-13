@@ -31,6 +31,8 @@ Deterministic — no seed. **Leave the fixtures small.** A real distance between
 
 One task, sub-second. `c8g.large`, ~$0.02, **~59s** wall — boot and image pull dominate. Depends on [spades](../spades/README.md) + [megahit](../megahit/README.md) (S3 chain — run those first).
 
+**Sizing:** no family question — like Mash, FracMinHash sketch density (`scaled`), not genome size, bounds the footprint; a larger pair sketches in the same memory. Any 8g box fits.
+
 <details>
 <summary>As shipped: the ≈1 identity, the honest cross-tool note, pins, smoke check</summary>
 

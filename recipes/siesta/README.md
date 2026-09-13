@@ -33,6 +33,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB — sized for the 2 ranks), TTL 5m, cap $0.02. The SCF takes ~2 s on 2 ranks. Recorded command window **93s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** single-node 2-rank correctness proof; SIESTA's real sizing question is multi-node scaling (EFA), out of scope here. The energy is rank-independent, so scale ranks for speed — but this fixture doesn't measure the multi-node curve.
+
 <details>
 <summary>As shipped: the pseudopotential sourcing, the reference reproduction, the rank guard, pins, smoke check, run + verify</summary>
 

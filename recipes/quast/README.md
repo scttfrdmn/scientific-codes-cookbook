@@ -29,6 +29,8 @@ QUAST is deterministic — **nothing here is determinism scaffolding**. **Leave 
 
 One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). The join of a chain: run [SPAdes](../spades/README.md) + [MEGAHIT](../megahit/README.md) first.
 
+**Sizing:** no family question — QUAST's metrics are light on any assembly; a larger assembly is a longer run, not a heavier box. Any 8g box fits.
+
 <details>
 <summary>As shipped: why QUAST rather than assembler-vs-assembler, pins, smoke check</summary>
 

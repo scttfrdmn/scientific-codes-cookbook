@@ -31,6 +31,8 @@ BLAST is deterministic, but ties break **arbitrarily**: assert "nothing beats th
 
 One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s**. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
 
+**Sizing:** compute-bound `c8g`; BLAST memory-maps the DB, so RAM stays modest even for a large reference — the dial for speed is core count ([sizing](../../patterns/sizing.md)), and a big DB (nr/nt) is a *staging* question ([data movement](../../patterns/data-movement.md)), not RAM.
+
 <details>
 <summary>As shipped: the self-hit identity, the flaky-check lesson, pins, smoke check</summary>
 

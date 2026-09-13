@@ -30,6 +30,8 @@ Bowtie 2 is deterministic — **nothing here is determinism scaffolding**. **Lea
 
 One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~114s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs — run that first.
 
+**Sizing:** compute-bound `c8g`, but Bowtie 2 loads the FM-index into RAM — ~3.5 GiB for a human genome, so size RAM to your reference (chr20 here is tiny). Cores scale to your knee ([sizing](../../patterns/sizing.md)).
+
 <details>
 <summary>As shipped: the like-with-like cross-check, pins, smoke check</summary>
 

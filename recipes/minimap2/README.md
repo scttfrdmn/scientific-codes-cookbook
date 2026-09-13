@@ -29,6 +29,8 @@ minimap2 is deterministic on fixed input — **nothing here is determinism scaff
 
 One task, ~12 s of alignment. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). Reuses [bwa](../bwa-samtools/README.md)'s staged inputs and output — run that first.
 
+**Sizing:** compute-bound `c8g`; minimap2 loads its minimizer index into RAM (several GiB for a human genome; `-I` splits very large ones), so size RAM to your reference. Cores scale to your knee ([sizing](../../patterns/sizing.md)).
+
 <details>
 <summary>As shipped: the confident-concordance cross-check, pins, smoke check</summary>
 

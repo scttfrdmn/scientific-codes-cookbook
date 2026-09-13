@@ -38,6 +38,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **87s** — boot, Docker install, and the ~0.80 GB `geo-ml` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no family question for these constructed ops (sub-second); the env's heavier learners (xgboost/lightgbm, not exercised here) scale with your data — that's their question, not this fixture's. Any 8g box fits the core.
+
 <details>
 <summary>As shipped: six identities, the two-engine cross-check, pins, run + verify</summary>
 

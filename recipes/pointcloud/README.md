@@ -32,6 +32,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Decoding 10.6M points and computing stats is ~4 s. Recorded command window **80s** — boot, Docker install, the ~0.64 GB `pointcloud` image pull, and staging the ~56 MB cloud are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** (The ~56 MB cloud stages into `/tmp`, a tmpfs sized to ½ the instance RAM, not the root disk — trivial at this size.)
 
+**Sizing:** decode is compute-light; large clouds and tiled/streaming workflows are I/O- and staging-bound (tmpfs ≈ ½ RAM) — size on [data movement](../../patterns/data-movement.md), not cores.
+
 <details>
 <summary>As shipped: the header-vs-decode identity, pins, smoke check, run + verify</summary>
 

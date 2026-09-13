@@ -33,11 +33,13 @@ One `pvbatch` invocation in one task. The dataset is synthetic, so nothing is st
 | the built-in `Wavelet` source | your own dataset (`.vtu`, `.vti`, …) | staged through S3; the analytic Wavelet field is what gives the render a *deterministic* contour to assert (3034 points), which a real mesh won't. |
 | the headless GLX + `llvmpipe` render path | leave it | **load-bearing, baked into the image** — conda-forge ParaView on Graviton has no OSMesa and no GPU for EGL, so the only path that works is GLX against `Xvfb` with `LIBGL_ALWAYS_SOFTWARE=1`. The recipe starts `Xvfb` for exactly this reason. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the contour counts are an exact invariant of the analytic field and the render is CPU-bound at any size; a large mesh is a longer run, not a more legible one. Leave-it. (A GPU render would be Round Two, but Graviton has no GPU to want here.)
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the contour counts are an exact invariant of the analytic field and the render is CPU-bound here; a large mesh is a longer run *and* more memory (see below), not a more legible one. Leave-it. (A GPU render would be Round Two, but Graviton has no GPU to want here.)
 
 ## Shape, size, cost
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The render is ~1 s on the CPU rasteriser; there is no GPU to want. Recorded command window **89s** — boot, Docker install, and the 0.84 GB `viz` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+
+**Sizing:** the synthetic fixture is trivial, but rendering memory scales with the mesh you load — a large real mesh shifts the constraint to RAM (and a GPU render is Round Two, which Graviton lacks). No family question for the fixture; size a real workload on its mesh.
 
 <details>
 <summary>As shipped: why the render path is hard, the two checks, pins, smoke check, run + verify</summary>

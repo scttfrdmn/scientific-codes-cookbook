@@ -33,6 +33,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Parsing and descriptors are sub-second. Recorded command window **81s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no family question — per-molecule perception is sub-second and single-threaded; fingerprinting a large library (scoped out) is a different workload, but the core is light. Any 8g box fits.
+
 <details>
 <summary>As shipped: the identities, pins, smoke check, run + verify</summary>
 

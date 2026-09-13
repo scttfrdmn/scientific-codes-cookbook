@@ -34,6 +34,8 @@ One task, run twice. `in.melt` holds LAMMPS's own `bench/in.lj` melt (a 4×4×4 
 
 One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks, not throughput), TTL 5m, cap $0.02. Both runs together take ~3 s. Recorded command window **106s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** a single-node 2-rank proof, not LAMMPS's real question — production is multi-node domain decomposition (EFA). The result is decomposition-invariant, so scale ranks for speed and size the node count/interconnect to your system ([sizing](../../patterns/sizing.md)); this fixture doesn't measure that curve.
+
 <details>
 <summary>As shipped: the serial-vs-2-rank cross-validation, the rank-count guard, pins, smoke check, run + verify</summary>
 

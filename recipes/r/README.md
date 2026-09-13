@@ -33,6 +33,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The fit is ~1 s. Recorded command window **83s** — boot, Docker install, and the R image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). The `r` env is the catalog's largest, **~0.86 GB compressed → ~3.5 GB extracted** (R's compiler toolchain for `Rcpp`), still well within the ~6.1 GiB root; the extraction did not inflate the window. **These timings are not compute cost.**
 
+**Sizing:** no family question — an OLS fit is LAPACK on a small matrix; a bigger model is a longer run on the same box, memory-light. Any 8g box fits.
+
 <details>
 <summary>As shipped: the reference identity, the internal cross-validation, pins, smoke check, run + verify</summary>
 

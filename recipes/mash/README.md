@@ -32,6 +32,8 @@ Deterministic — no seed to pin. **Leave the fixtures small.** The point is a r
 
 One task, sub-second. `c8g.large`, ~$0.02, **~43s** wall — boot and image pull dominate. Depends on [spades](../spades/README.md) + [megahit](../megahit/README.md) (an S3 chain — run those first).
 
+**Sizing:** no family question — sketch size (default 1000), not genome size, bounds the footprint, so a larger genome pair sketches in the same memory; any 8g box fits.
+
 <details>
 <summary>As shipped: the near-zero identity, the honest cross-tool note, pins, smoke check</summary>
 

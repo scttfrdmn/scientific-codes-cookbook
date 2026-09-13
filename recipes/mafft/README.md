@@ -29,6 +29,8 @@ The recipe aligns a 114-protein Pfam family (FFT-NS-2) and verifies **residue co
 
 One task, **~1 s** align. `c8g.large`, ~$0.02, **~50s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
+**Sizing:** the progressive mode here (FFT-NS-2) is memory-light and compute-scales with cores ([sizing](../../patterns/sizing.md)); accuracy modes (L-INS-i) on a large family grow memory sharply — a mode-and-N question the 114-protein fixture can't reveal by measurement.
+
 <details>
 <summary>As shipped: why residue conservation not a column comparison, pins, smoke check</summary>
 

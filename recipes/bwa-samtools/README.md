@@ -36,6 +36,8 @@ Two tasks — `bwa` in one image, `samtools` in the next, the SAM handed between
 
 One alignment is one task; a cohort is the same task [fanned out](../../patterns/job-arrays.md). `c8g.2xlarge` to align (`-t 8` ran 32 s wall / 247 s CPU, ~7.7×), `c8g.large` to sort. First run **$0.024**, both boxes self-terminated — but 78 s of work sat inside 6m40s billed, so read that as "a short task is mostly overhead," [not what BWA costs](../../practices/what-this-does-not-cover.md).
 
+**Sizing:** chr20's index is tiny, but a whole-genome index is **8.9 GB** and staging is tmpfs ≈ ½ RAM — so it's sized by *RAM* (an `r8g.2xlarge` held it; a 16 GiB box's `/tmp` overran), and a cohort shares one read-only index rather than re-staging it ([data movement](../../patterns/data-movement.md)). RAM, not cores, is the dial for a real reference.
+
 <details id="as-shipped">
 <summary>As shipped: exact commands, pins, why chr20, the whole-genome measurement, smoke check</summary>
 

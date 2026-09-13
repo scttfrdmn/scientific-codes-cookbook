@@ -35,6 +35,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. MD + both reads take ~1 s. Recorded command window **100s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no question here (two reads of a short trajectory, ~1 s, any box); a large trajectory is memory-/I-O-bound — flagged in *Make it yours*.
+
 <details>
 <summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>
 

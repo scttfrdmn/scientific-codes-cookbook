@@ -30,6 +30,8 @@ Nothing here is determinism scaffolding — `seqkit stats` has no seed and no th
 
 One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — nearly all of it boot and image pull, not seqkit; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
 
+**Sizing:** no family question — seqkit streams; the only limit is staging (the input lands in `/tmp`, tmpfs ≈ ½ RAM), flagged in *Make it yours*. Any 8g box fits for the compute.
+
 <details>
 <summary>As shipped: exact identities, pins, smoke check</summary>
 

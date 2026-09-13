@@ -35,6 +35,8 @@ One task, docked twice for the determinism check. The `vina` package ships no ex
 
 One task, `c8g.large`, TTL 10m, cap $0.02. Two docks at exhaustiveness 32 ≈ **300 s of real compute** — the batch's heaviest, so here compute is a real share of the 351s window, not just boot. Vina parallelises over the CPUs; see [sizing](../../patterns/sizing.md) for a screening run.
 
+**Sizing:** compute-bound `c8g`, memory light — `--exhaustiveness` is the compute dial, and a ligand library is a fan-out ([job arrays](../../patterns/job-arrays.md)), not a bigger box. Scale cores/exhaustiveness to your knee ([sizing](../../patterns/sizing.md)).
+
 <details>
 <summary>As shipped: the reference reproduction, the seed check, pins, smoke check, run + verify</summary>
 

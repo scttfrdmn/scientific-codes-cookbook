@@ -28,6 +28,8 @@ MUSCLE v5 is deterministic on this input (verified: byte-identical on rerun) —
 
 One task, **~17 s** align — MUSCLE v5 is heavier than MAFFT but comfortable in 4 GiB. `c8g.large`, ~$0.02, **~115s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
+**Sizing:** MUSCLE v5 is memory-heavier than MAFFT (comfortable in 4 GiB here); a large family grows both memory and time — size to your sequence count, not this 114-protein fixture.
+
 <details>
 <summary>As shipped: why residue conservation not a column comparison, pins, smoke check</summary>
 

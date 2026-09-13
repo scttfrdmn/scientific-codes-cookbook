@@ -33,6 +33,8 @@ Nothing is determinism scaffolding. **Leave the fixture small.** Hand-sized inte
 
 One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull, not bedtools ([a short task is mostly overhead](../../practices/what-this-does-not-cover.md)).
 
+**Sizing:** no family question — interval set-algebra streams, so a real annotation set is more intervals through the same ops, not a heavier box; any 8g box fits.
+
 <details>
 <summary>As shipped: the hand-derived answers, the conservation identity, pins, smoke check</summary>
 

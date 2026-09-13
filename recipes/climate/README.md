@@ -36,6 +36,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from the first real run (10m → 5m, $0.03 → $0.02). Reader + regrid + calc take ~2 s. Recorded command window **74s** — boot, Docker install, the ~0.57 GB `climate` image pull, and staging the ~7 MB netCDF are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no family question for this fixture; a real reanalysis is I/O-bound (large netCDF/GRIB at scale), not compute — size on [data movement](../../patterns/data-movement.md).
+
 <details>
 <summary>As shipped: three kinds of check, pins, smoke check, run + verify</summary>
 

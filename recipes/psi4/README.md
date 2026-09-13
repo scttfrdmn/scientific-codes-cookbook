@@ -36,6 +36,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. Recorded command window **85s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no question at this scale (a minimal-basis SCF is sub-second on any box); at real scale the constraint shifts to memory with basis size — see *Make it yours*.
+
 <details>
 <summary>As shipped: the reference identity, the env note, pins, smoke check, run + verify</summary>
 

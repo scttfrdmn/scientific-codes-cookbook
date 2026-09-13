@@ -27,7 +27,9 @@ The recipe classifies the SARS-CoV-2 reference genome against a real prebuilt **
 
 ## Shape, size, cost
 
-One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/what-this-does-not-cover.md)). Not memory-bound: Kraken2 loaded the hash and ran clean within a 2 GiB cap locally.
+One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/what-this-does-not-cover.md)).
+
+**Sizing:** RAM ≈ DB size — Kraken2 loads the whole DB into memory. The viral DB (0.66 GB) runs in ~2 GiB (`c8g`); a standard DB (8+ GB) needs a memory box sized to *your* DB. A stated requirement, not a fixture measurement.
 
 <details>
 <summary>As shipped: the known-answer identity, why not EFS, pins, smoke check</summary>

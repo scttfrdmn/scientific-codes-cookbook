@@ -31,6 +31,8 @@ The recipe calls peaks from a CTCF ChIP-seq treatment **against its matched inpu
 
 One task, seconds of compute on ~2.2M chr20 reads. `c8g.large`, ~$0.02, **~80s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
+**Sizing:** no family question — MACS2's pileup model is memory-modest even genome-wide; a whole-genome ChIP is a longer run on the same `c`-family box. Any 8g box fits.
+
 <details>
 <summary>As shipped: the exact peak count (and why it's exact not a band), pins, smoke check</summary>
 

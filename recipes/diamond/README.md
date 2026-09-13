@@ -31,6 +31,8 @@ DIAMOND is deterministic — **nothing here is determinism scaffolding** (tie or
 
 One task. `c8g.xlarge` (4 vCPU), ~$0.02, **~63s** wall. Local work: `makedb` 15 s, `blastp --very-sensitive` 11 s — DIAMOND is lean (270 MB DB, no memory pressure). Boot + pull dominate ([why](../../practices/what-this-does-not-cover.md)). Inputs come from [blast](../blast/README.md) — stage those first.
 
+**Sizing:** compute-bound `c8g`; DIAMOND's memory is set by the `-b` block size (the DB streams in blocks), so RAM stays modest and tunable — a large DB (nr) is a *staging* question ([data movement](../../patterns/data-movement.md)), not RAM. Cores scale to your knee ([sizing](../../patterns/sizing.md)).
+
 <details>
 <summary>As shipped: the self-hit identity, the like-with-like cross-code metric, pins, smoke check</summary>
 

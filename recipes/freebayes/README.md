@@ -29,6 +29,8 @@ The recipe calls the same 30× human region as [bcftools](../bcftools/README.md)
 
 One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/what-this-does-not-cover.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
 
+**Sizing:** ~5 s and memory-modest on this single-sample region; freebayes grows memory with **depth × sample count** — deep WGS or joint multi-sample calling wants an `r` box, so size to those, not this fixture.
+
 <details>
 <summary>As shipped: the cross-code concordance, pins, smoke check</summary>
 

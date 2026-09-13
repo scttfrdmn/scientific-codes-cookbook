@@ -42,6 +42,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + phonons is sub-second. Recorded command window **94s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** phonopy's own work (displacements, force constants) is light on any box; the cost of real phonons is the DFT force evaluation per displacement — size that on the DFT code ([gpaw](../gpaw/README.md)), not phonopy.
+
 <details>
 <summary>As shipped: the physical identities, pins, smoke-check table, run + verify</summary>
 

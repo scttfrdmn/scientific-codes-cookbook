@@ -33,6 +33,8 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Conversions + repair are sub-second. Recorded command window **65s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
 
+**Sizing:** no question for these inline molecules (sub-second on any box); large-molecule prep — out of scope, flagged in *Make it yours* — is where size would start to matter.
+
 <details>
 <summary>As shipped: the two flows, pins, smoke-check table, run + verify</summary>
 

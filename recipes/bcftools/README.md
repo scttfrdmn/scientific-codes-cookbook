@@ -30,6 +30,8 @@ The recipe calls a 30× human region and cross-checks it against [freebayes](../
 
 One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image pull, not bcftools ([why](../../practices/what-this-does-not-cover.md)). Depends on [freebayes](../freebayes/README.md) for the cross-check (an S3 chain — run it first).
 
+**Sizing:** the region call is ~1 s and memory-modest; pileup calling stays `c`-family even genome-wide — size up (RAM) only for very large multi-sample cohorts, not for depth alone.
+
 <details>
 <summary>As shipped: the like-with-like cross-code check, pins, smoke check</summary>
 

@@ -29,6 +29,8 @@ fastp is deterministic on fixed input — **nothing here is determinism scaffold
 
 One task, **~2 s** QC. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
 
+**Sizing:** no family question — fastp streams reads with a bounded footprint; a bigger sample is a longer run, not a heavier box. Any 8g box fits.
+
 <details>
 <summary>As shipped: why a conservation identity not a cross-check, pins, smoke check</summary>
 

@@ -31,7 +31,9 @@ One task, two subcommands of the same suite. The ff14SB force field ships inside
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. `tleap` + `sander` take ~1 s on 22 atoms; `sander` is serial, so cores and memory don't bear on correctness. Recorded command window **116s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** See [sizing](../../patterns/sizing.md) for real MD.
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. `tleap` + `sander` take ~1 s on 22 atoms; `sander` is serial, so cores and memory don't bear on correctness. Recorded command window **116s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+
+**Sizing:** `sander` here is serial on 22 atoms, so cores and memory don't bind; real MD is compute-bound (the fast `pmemd` engine is licence-gated and absent) — size it on [sizing](../../patterns/sizing.md), not this fixture.
 
 <details>
 <summary>As shipped: the conservation check, pins, smoke-check table, run + verify</summary>
