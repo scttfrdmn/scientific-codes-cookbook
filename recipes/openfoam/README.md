@@ -42,11 +42,11 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.03. The solve is **0.03 s
 **Sizing:** the tutorial is trivial and CPU-bound on one core; a real case scales with mesh — cells drive RAM and cores, and `decomposePar` splits the domain for MPI, where the [scaling knee](../../patterns/sizing.md) lives. No family question for the fixture; size a real mesh on its cell count.
 
 <details>
-<summary>As shipped: the conservation identity, pins, smoke check, run + verify</summary>
+<summary>As shipped: what the check proves, pins, smoke check, run + verify</summary>
 
-### Why mass continuity is the right check
+### What the check proves — and where its power lives
 
-icoFoam solves incompressible Navier–Stokes, so **mass is conserved exactly** — the solver reports a cumulative continuity error each step, and on a correct run it sits at machine-noise (~1e-18), not a tuned band. That is the CFD conservation identity, the [same class as](../../practices/cross-checks.md) salmon's TPM sum: it must hold for the solve to be physical at all, so it needs no headroom and can't go flaky. The lid boundary condition gives a second exact check — max |U| equals the imposed lid speed 1.0 — and a developed vortex shows in the pressure range.
+icoFoam solves incompressible Navier–Stokes, so it reports a cumulative continuity error each step, and on a correct run it sits at machine-noise (~1e-18), not a tuned band. But read that as **one check of several, not the proof** — an incompressible solver drives continuity to solver tolerance every step *by construction* (the pressure correction), so ~1e-18 mostly confirms the pressure equation converged; a wrong mesh or wrong BC would still show it tiny. The discrimination lives in the **suite**: the lid-BC identity (max |U| = 1.0, exact from the boundary condition), the developed-vortex pressure range, Courant < 1, the `End` completion sentinel, and the cross-arch bit-identity below. No single line here carries the recipe; together they do.
 
 Every observed value below was **bit-identical on Apple arm64 (local) and Graviton4 (the verifying run)** — the continuity error to the digit — so these are exact invariants of the pinned solve, not per-box bands.
 
