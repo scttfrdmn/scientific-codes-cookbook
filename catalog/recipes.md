@@ -92,7 +92,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | build-in-task | — | — |
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | build-in-task | 2026-09-13 | 2026-09-13 |
 
 ## geo-ml
 

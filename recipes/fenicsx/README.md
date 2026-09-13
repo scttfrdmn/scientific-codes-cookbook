@@ -4,6 +4,7 @@ tool_version: 0.11.0
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:492db4d9c166467715d87012a15d3a41ce4ec2f29fa8d5fc8bbd562f60a500be
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # FEniCSx — a Poisson solve verified by patch test and convergence order
 
@@ -39,7 +40,7 @@ The recipe wraps this in the method of manufactured solutions: pick an exact `u`
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 8m, cap $0.04. The solves are sub-second; dolfinx **JIT-compiles the variational forms at runtime** (the env's gcc), so the first solve includes compilation. Boot and the 0.67 GB pull are the rest. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 5m, cap $0.04. Measured on the box: **38 s** Docker install + **66 s** image pull (0.67 GB) dominate; the entire dolfinx exec — Python import, JIT form-compilation, and all five solves — was **6 s**. dolfinx JIT-compiles the variational forms at runtime (the env's gcc), which is the FEM timing wildcard in general, but for these simple Poisson forms it's cheap and lives inside that 6 s — the pull is the cost, as always. **These timings are not compute cost.**
 
 **Sizing:** the unit-square mesh is tiny; a real problem scales with degrees of freedom (mesh × element order) and moves to a Krylov solver across ranks, where the [scaling knee](../../patterns/sizing.md) lives. Size a real model on its DOF count.
 
@@ -51,6 +52,8 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), 
 - **Patch test — exact** (the FEM analogue of BLAST's self-hit): a degree-*p* element space represents any polynomial of degree ≤ *p* exactly, so with a manufactured **quadratic** solution the P2 L2 error is machine zero — **1.07e-13**. No band, no tolerance; a wrong assembly, quadrature, or solve breaks it at once.
 - **Convergence order — fixed by theory** (conservation-class): with a manufactured `sin(πx)sin(πy)` — *not* representable in the element space — the L2 error falls as h^(p+1). For P2 the rate is **3**, observed **3.00** at every step of an N = 8→16→32→64 refinement. The rate is set by the mathematics, not the fixture, so it is exact-or-wrong: a bug converges at the wrong order, or not at all. **Asserting the rate across a refinement sequence beats asserting the error at one resolution** — the latter needs a justified band, the former is theory-fixed. Same reason the lattice constant beat total energy for [Quantum ESPRESSO](../quantum-espresso/README.md).
 - **MPI**: dolfinx partitions the mesh across ranks; the recipe runs on 2 and asserts `MPI.COMM_WORLD.size == 2`, so a serial fallback can't masquerade as parallel ([rank-count guard](../../practices/mpi-rank-count.md)).
+
+On the Graviton verifying run the L2 errors and rates came back **bit-identical to local** (5.4806e-04 → 1.0753e-06, rates 3.00); only the patch-test residual moved a last digit (1.06e-13 vs 1.07e-13), the machine-zero LU noise floor — exact where theory demands it, deterministic where the mathematics fixes it.
 
 ### Pins (data tier: synthetic / in-code)
 
