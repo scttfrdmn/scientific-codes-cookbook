@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-gatk4-concordance-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho \"== normalise all three callers identically, confident SNVs (QUAL>=20), compare on POS:REF:ALT ==\"\nfor f in gatk:gatk.vcf.gz bcftools:bcftools.vcf.gz freebayes:freebayes.vcf; do\n  n=${f%%:*}; v=${f##*:}\n  bcftools norm -f chr20.fa -m- \"$v\" -Oz -o $n.norm.vcf.gz 2>/dev/null\n  bcftools view -H -v snps -i 'QUAL>=20' $n.norm.vcf.gz 2>/dev/null | awk '{print $2\":\"$4\":\"$5}' | sort -u > $n.snv\ndone\njac(){ i=$(comm -12 \"$1\" \"$2\"|wc -l|tr -d ' '); u=$(cat \"$1\" \"$2\"|sort -u|wc -l|tr -d ' '); awk -v i=$i -v u=$u 'BEGIN{printf \"%.4f\",(u>0)?i/u:0}'; }\nGB=$(jac gatk.snv bcftools.snv); GF=$(jac gatk.snv freebayes.snv); BF=$(jac bcftools.snv freebayes.snv)\nI3=$(comm -12 gatk.snv bcftools.snv | comm -12 - freebayes.snv | wc -l|tr -d ' ')\nU3=$(cat gatk.snv bcftools.snv freebayes.snv | sort -u | wc -l|tr -d ' ')\nJ3=$(awk -v i=$I3 -v u=$U3 'BEGIN{printf \"%.4f\",(u>0)?i/u:0}')\n{\n  echo \"gatk<->bcftools_jaccard  $GB  want >=0.90  (observed 0.9704)\"\n  echo \"gatk<->freebayes_jaccard $GF  want >=0.85  (observed 0.9100)\"\n  echo \"bcftools<->freebayes_jac $BF  want >=0.85  (observed 0.9103, the pair's own value)\"\n  echo \"three_way_all_agree      $J3  want >=0.82  (observed 0.8963; $I3 of $U3 union SNVs called by all three)\"\n} > concordance.txt\ncat concordance.txt\nawk -v j=$GB 'BEGIN{exit !(j>=0.90)}'\nawk -v j=$GF 'BEGIN{exit !(j>=0.85)}'\nawk -v j=$BF 'BEGIN{exit !(j>=0.85)}'\nawk -v j=$J3 'BEGIN{exit !(j>=0.82)}'\necho \"SMOKE CHECK PASSED\""
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/gatk.vcf.gz",
+      "destination": "/tmp/gatk.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/bcftools.vcf.gz",
+      "destination": "/tmp/bcftools.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/freebayes.vcf",
+      "destination": "/tmp/freebayes.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/concordance.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/concordance.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}

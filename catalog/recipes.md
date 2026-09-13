@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **53 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **54 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -21,6 +21,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-12 | — |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
 | [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-12 | — |
+| [gatk4](../recipes/gatk4/README.md) | GATK4's HaplotypeCaller calls variants on the shared 30× fixture, then a three-way concordance shows it agrees with bcftools and freebayes on identical bytes. For anyone whose pipeline runs GATK and wants it on Graviton. | aarchbio | stage: bwa-samtools, gatk4 · run: bcftools, freebayes | — | — |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-12 | — |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |
 | [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-12 | — |
