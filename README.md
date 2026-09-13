@@ -53,10 +53,13 @@ The pages lean on a small house vocabulary, defined once here:
 | **leave-it / scale-it** | the fixture verdict: keep the small input (the check holds at any size), or enlarge it (only where small misrepresents the tool) |
 | **build-in-task / stage: X / run: X** | how a recipe gets its input (the [catalog](catalog/recipes.md)'s column): built in code with nothing to stage, or do `make stage RECIPE=X` / `make run RECIPE=X` first |
 
-## Three ideas the recipes lean on
+## It all serves one number: cost per result
+
+The rate card and the vCPU count both mislead; what a run costs is rate × wall. Four ways the recipes move it:
 
 - **Right-size, don't max-size** — more cores stop paying past a knee. → [sizing](patterns/sizing.md)
 - **Scale out, not up** — a cohort is the same task fanned out, not a bigger box. → [job arrays](patterns/job-arrays.md)
+- **Newer isn't pricier per result** — a box that costs more per hour can finish enough faster to cost *less* per result (measured, c8g → c9g). → [cost per result](patterns/cost-per-result.md)
 - **Pay for the bytes you touch** — copy, mount, or share by what the job reuses. → [copy, mount, or share?](patterns/data-movement.md)
 
 ## What this doesn't cover
