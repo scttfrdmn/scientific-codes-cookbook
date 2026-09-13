@@ -11,6 +11,16 @@ Knowing where a promise stops is what keeps it from turning into a disappointmen
 - **Pinned by digest, not durable forever.** A digest pin is *reproducibility-of-record* — you can say exactly what ran. It is not a guarantee the image pulls years from now; for that, mirror it. (A registry can garbage-collect an untagged manifest; a transient `401` is not a missing image.)
 - **A pinned input is only as reproducible as how it's made — and there are three tiers, failing differently.** The page says which, because a reader sizing their own reproducibility needs to know what they've got: **(1) derived from an immutable source** (the recorded command re-run on a fixed 1000G CRAM slice, a Pfam release path) reproduces byte-for-byte **forever** — anyone reruns it and the sha256 matches. **(2) fetched from a tagged release** (a GitHub tag's blob, an immutable versioned artifact) reproduces **while that tag exists** — the publisher could delete it, but can't silently change it. **(3) fetched from a moving artifact** (a dated prebuilt database whose publisher *repacks* it) is the weakest: the **science** reproduces — the DB still classifies the same genome to the same taxon — but the **bytes** don't, so a future stage produces a different sha256 with the same result. The pin records what we ran; it is not a promise the next fetch matches. Anyone pinning a prebuilt database is in tier 3.
 
+## Specific codes we leave out — three different reasons
+
+If you look for VASP or DeepVariant and find nothing, the absence isn't a verdict on the code's importance — and the three reasons are worth telling apart, because two of them are doors we'd open:
+
+- **Architecture-blocked.** DeepVariant (maintainers state aarch64 is unsupported), Cell Ranger (Intel/AMD, needs AVX), the source-built HPC engines with no arm64 container. Not a scope judgment — deferred to the same Round Two x86/GPU lane as the GPU codes.
+- **License-gated.** VASP, Gaussian, cryoSPARC, the commercial CFD/FEA codes. Their redistribution and reproducibility model is fundamentally different from an open, pinnable image — that's what keeps them out, not their importance.
+- **No arm64 build yet.** CP2K, OpenFOAM where still blocked — waiting on upstream feedstock work, which this project files requests for. These move to *shipped* the moment the build lands.
+
+**If you hold a license for one of these, or you're the vendor, we'd like to work with you on a recipe.** The machinery already supports bring-your-own-license — pinned images, a smoke check, `make run` — and it pairs with the request-a-code issue template. It costs nothing to try and might produce a real contribution.
+
 ## Physical limits — measured, and not ours to beat
 
 - **Boot and image pull floor every short run.** Booting the box, installing Docker, and pulling a GB-scale image are most of a short task; the science can be seconds. [Job arrays](../patterns/job-arrays.md) amortize that overhead across a cohort — nothing removes it, so a single short run is mostly overhead by construction.

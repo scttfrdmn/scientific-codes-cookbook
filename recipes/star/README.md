@@ -68,4 +68,6 @@ make ls RECIPE=star
 ```
 Task 2 must **not** `rm` the staged index tar — the container can't unlink a staged input it doesn't own (`EPERM`), and `rm -f` doesn't suppress that ([the container path](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
+**Fan out across samples.** One alignment is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample sharing the one read-only index, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when the shared index or spot capacity pushes back.
+
 </details>

@@ -73,4 +73,6 @@ The task path gets an 8 GiB root disk (~6.1 GB free) — no room for RODA's 5.63
 
 `flagstat.txt`, `idxstats.txt`, `smoke-check.txt` stage back for inspection. The three container-path behaviours this leans on (flat `/tmp`, exit-code-isn't-proof, one-tool-per-image) live in [the container path](../../practices/container-path.md). Outputs under `runs/bwa-samtools/r1/`; re-running bumps the `-r1` suffix.
 
+**Fan out across samples.** One alignment is one task; a cohort fans out as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* one instance per sample keyed by `$JOB_ARRAY_INDEX`, sharing the one read-only index (above) rather than re-staging 8.9 GB per sample. `spawn array status` / `collect` / `retry --failed` manage the set; `--max-concurrent-auto` throttles the shared-index reads.
+
 </details>

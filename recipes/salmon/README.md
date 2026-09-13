@@ -65,4 +65,6 @@ make ls    RECIPE=salmon   # the outputs: quant.sf, smoke-check.txt
 ```
 `make run` substitutes your `COOKBOOK_BUCKET` into each spec and runs the tasks in order. The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)).
 
+**Fan out across samples.** One quantification is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample sharing the one read-only index, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when the shared index or spot capacity pushes back.
+
 </details>
