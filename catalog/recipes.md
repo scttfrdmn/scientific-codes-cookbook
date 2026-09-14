@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **57 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **58 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -58,6 +58,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
+| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | — | — |
 | [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-09-12 | — |
 
 ## comp-chem
