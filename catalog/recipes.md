@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **60 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **61 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -55,6 +55,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-09-12 | 2026-09-12 |
+
+## cfd-fv
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | — | — |
 
 ## climate
 
