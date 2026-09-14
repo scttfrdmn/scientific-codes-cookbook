@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-healpy-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho '== healpy: exact HEALPix combinatorial + geometric identities =='\ncat > recipe.py <<'PYEOF'\nimport numpy as np, sys, healpy as hp\n\nlines=[f\"healpy {hp.__version__}  (exact HEALPix identities -- zero band, not tolerance)\"]\nfail=[]\ndef chk(label,ok,detail):\n    l=f\"{label:22s} {detail}  [{'ok' if ok else 'FAIL'}]\"; print(l); lines.append(l)\n    if not ok: fail.append(label)\n\n# 1. combinatorial: npix = 12 nside^2, exact integer\nok_npix=all(hp.nside2npix(ns)==12*ns*ns for ns in (1,2,4,16,64,256,1024))\nchk(\"npix_12_nside2\", ok_npix, \"npix==12*nside^2 exact for nside 1..1024 (integer identity)\")\n\n# 2. equal-area tiling: sum of pixel areas == 4*pi, BIT-EXACT\nnside=64; npix=hp.nside2npix(nside); total=hp.nside2pixarea(nside)*npix\nchk(\"area_sum_4pi\", total==4*np.pi, f\"sum(areas)={total!r} == 4pi (bit-exact, rel_err={abs(total-4*np.pi)/(4*np.pi):.1e})\")\n\n# 3. nested<->ring bijection, EXHAUSTIVE over every pixel\nipix=np.arange(npix)\nrt=hp.ring2nest(nside, hp.nest2ring(nside, ipix))\nchk(\"nest_ring_bijection\", np.array_equal(rt,ipix), f\"nest->ring->nest identity over ALL {npix} pixels (exhaustive, not sampled)\")\n\n# 4. geometric round-trip: pix->ang->pix identity, all pixels\nth,ph=hp.pix2ang(nside,ipix)\nchk(\"pix_ang_roundtrip\", np.array_equal(hp.ang2pix(nside,th,ph),ipix), f\"pix->ang->pix identity over all {npix} pixels\")\n\nlines.append(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\nopen('smoke-check.txt','w').write(\"\\n\".join(lines)+\"\\n\")\nprint(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED\")\nsys.exit(1 if fail else 0)\n\nPYEOF\npython3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}
