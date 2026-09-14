@@ -4,6 +4,7 @@ tool_version: 8.5.0
 env: cfd-fv
 image: quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # SU2 — finite-volume Euler flow, verified by free-stream preservation
 
@@ -32,7 +33,7 @@ The recipe writes the config and a distorted channel mesh, runs both legs, and c
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 8m, cap $0.05. Two Euler solves (250 iterations each, serial + 2-rank) on a ~288-cell mesh run in seconds; boot and the 0.29 GB `cfd-fv` image pull are the rest. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 4m, cap $0.05. Two Euler solves (250 iterations each, serial + 2-rank) on a ~288-cell mesh run in seconds; recorded command window **73 s** — boot and the 0.29 GB `cfd-fv` image pull are the rest. **These timings are not compute cost.**
 
 **Sizing:** the channel mesh is tiny; a real case scales with cell count and moves to a Krylov solver across ranks (SU2 is MPI-parallel via ParMETIS) — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real model on its mesh.
 
@@ -41,7 +42,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), 
 
 ### Why free-stream preservation, on a *distorted* mesh
 
-Uniform flow (constant Mach 0.5) is an exact solution of the Euler equations, so a correct finite-volume scheme must hold it unchanged — the RMS density residual falls to machine zero. The test only means something on a **non-orthogonal** mesh: *any* scheme preserves freestream on an axis-aligned grid, but a scheme with wrong metric/geometric terms drifts on skewed cells. So the recipe sinusoidally distorts the interior nodes (boundaries stay straight, so the four markers are unchanged) and asserts the final RMS density residual reaches **log10 ≤ −12** — observed **−14.46** serial, **−14.43** on 2 ranks. It's the finite-volume analog of a patch test: exact-or-wrong, and the distortion is what makes it a real check of the metric terms.
+Uniform flow (constant Mach 0.5) is an exact solution of the Euler equations, so a correct finite-volume scheme must hold it unchanged — the RMS density residual falls to machine zero. The test only means something on a **non-orthogonal** mesh: *any* scheme preserves freestream on an axis-aligned grid, but a scheme with wrong metric/geometric terms drifts on skewed cells. So the recipe sinusoidally distorts the interior nodes (boundaries stay straight, so the four markers are unchanged) and asserts the final RMS density residual reaches **log10 ≤ −12** — observed **−14.46** serial, **−14.43** on 2 ranks. It's the finite-volume analog of a patch test: exact-or-wrong, and the distortion is what makes it a real check of the metric terms. On the Graviton verifying run both residuals came back **bit-identical to local** (−14.463453 / −14.430081) — the solve is deterministic across arm64, more than the `≤ −12` threshold asks.
 
 ### MPI decomposition — real, not nominal
 

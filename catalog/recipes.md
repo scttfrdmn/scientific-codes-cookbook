@@ -60,7 +60,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | — | — |
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-09-13 | 2026-09-13 |
 
 ## climate
 
