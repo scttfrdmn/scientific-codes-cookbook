@@ -4,6 +4,7 @@ tool_version: 2.6.1
 env: climate
 image: quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7963c1418b87a7f30767b5fe
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # CDO + NCO — netCDF operators, one toolchain checking the other
 
@@ -31,7 +32,7 @@ CDO produces the field and its statistics; NCO reads the same file and recompute
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.03. The operators run in **seconds**; boot and the 0.65 GB `climate` image pull are the whole task. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The operators run in **seconds**; recorded command window **97 s** — boot and the 0.65 GB `climate` image pull are the whole task. **These timings are not compute cost.**
 
 **Sizing:** no family question — these are serial CLI operators on a small grid. Real work (high-resolution reanalysis, long time series) sizes by file volume and shifts to RAM; size it on the dataset, not this.
 
@@ -42,7 +43,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.03. The operators run in 
 
 CDO builds the ETOPO field and reports its extrema (**max 5761 m, min −8979 m** on this grid); NCO reads the same file and computes the same extrema independently — **exact agreement**, and equal to the deterministic ETOPO-on-2° values (so the check is a fixed known value, not merely "the two agree", which could pass vacuously if both shared a decode bug).
 
-Extrema are used deliberately, not the field mean: `cdo fldmean` is **area-weighted** and `nco`'s default average is not, so comparing means would compare two *methods* and fail by design — the [compare like with like](../../practices/cross-checks.md) trap. Max and min are weighting-independent, so they cross-validate two tools cleanly.
+Extrema are used deliberately, not the field mean: `cdo fldmean` is **area-weighted** and `nco`'s default average is not, so comparing means would compare two *methods* and fail by design — the [compare like with like](../../practices/cross-checks.md) trap. Max and min are weighting-independent, so they cross-validate two tools cleanly. On the Graviton verifying run every value reproduced bit-identically to local (5761 / −8979 / 288 / 300), and `topo.nc` reads back as valid netCDF in a re-read.
 
 ### Exact conservation and arithmetic (constructed field)
 
