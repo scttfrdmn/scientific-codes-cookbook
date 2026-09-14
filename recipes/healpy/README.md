@@ -4,6 +4,7 @@ tool_version: 1.20.0
 env: astro
 image: quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # healpy — HEALPix sky pixelization, exact identities on Graviton
 
@@ -34,7 +35,7 @@ The recipe asserts four properties of this pixelization that hold exactly, by HE
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **74 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
 
 **Sizing:** no family question — pure combinatorics and coordinate math, CPU-light. A real workload (high-nside maps, spherical harmonic transforms) sizes by map size and shifts to RAM; size it on the data.
 
@@ -49,6 +50,8 @@ None of these is a tolerance; each is exact-or-wrong, from a distinct mathematic
 - **Equal-area — Σ(pixel areas) = 4π, bit-exact.** The sum of all pixel areas equals 4π to relative error **exactly 0.00e+00** — and that zero is the *point*, not a rounded or truncated display. HEALPix pixels are equal-area by construction (`nside2pixarea` returns 4π/npix), so 4π/npix summed npix times returns to 4π bit-for-bit in IEEE-754 double at these nside. "Bit-exact" is a stronger claim than "within tolerance," and it's the one the number is making.
 - **Exhaustive bijection — nested↔ring.** The two pixel orderings round-trip to the identity over **all 49152 pixels** (nside 64) — verified *exhaustively, not sampled*. A permutation is right or it isn't, and this checks every pixel, not a spot-check; the distinction is the same one as verifying versus spot-checking.
 - **Geometric round-trip — pix→ang→pix.** Each pixel maps to its centre angles and back to itself, over all 49152 pixels — closing the pixel-centre geometry.
+
+All four held **bit-identically on the Graviton verifying run**, including `Σ(areas)` = `12.566370614359172` (rel_err 0.0e+00) to the bit — confirming that the equal-area sum is IEEE-754-deterministic across arm64, not merely reproducible to tolerance.
 
 ### Pins (data tier: synthetic / in-code)
 
