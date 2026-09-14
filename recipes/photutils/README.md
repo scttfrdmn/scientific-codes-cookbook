@@ -4,6 +4,7 @@ tool_version: 3.0.0
 env: astro
 image: quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82
 spawn_version: 0.104.0
+last_verified: 2026-09-13
 ---
 # photutils — aperture photometry, source detection, background on Graviton
 
@@ -33,7 +34,7 @@ The recipe wraps three such operations — aperture photometry, `DAOStarFinder` 
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The compute is **~1 s**; boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **79 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
 
 **Sizing:** no family question — small synthetic images, CPU-light. Real work (large mosaics, deep source catalogs, PSF fitting) sizes by image dimensions and source count, shifting to RAM; size it on the data.
 
@@ -47,6 +48,8 @@ photutils and astropy are one ecosystem, so their agreement is self-report, not 
 - **Aperture flux vs the analytic integral.** A 2D Gaussian has total flux 2πAσ²; within radius R the analytic fraction is 1 − e^(−R²/2σ²). photutils' exact-aperture sum at R = 5σ reproduces that to **6.5e-8** relative — the band is the *construction's* precision (analytic integral + sampling of a well-resolved σ=8 source), not a fitted tolerance.
 - **Detection count and positions.** Five Gaussians injected at known positions → **5 detected** (exact-or-wrong on the count), each centroid within **< 0.1 px** of truth — the position band is `DAOStarFinder`'s centroiding accuracy, justified by the method, not the fixture.
 - **Background of a constant field.** A constant 123.5 → `Background2D` recovers **123.5 exactly** (max deviation 0) — exact for a pure constant, no band.
+
+All four reproduced **bit-identically on the Graviton verifying run** — including the one numerical check (aperture rel_err 6.46e-08 to three figures), so even it is deterministic across machines, not merely within tolerance.
 
 ### Pins (data tier: synthetic / in-code)
 

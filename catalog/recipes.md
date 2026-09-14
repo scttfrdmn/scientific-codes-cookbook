@@ -47,7 +47,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-09-13 | 2026-09-13 |
-| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | — | — |
+| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-09-13 | 2026-09-13 |
 
 ## cfd
 
