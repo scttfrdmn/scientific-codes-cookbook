@@ -17,7 +17,7 @@ If you look for VASP or DeepVariant and find nothing, the absence isn't a verdic
 
 - **Architecture-blocked.** DeepVariant (maintainers state aarch64 is unsupported), Cell Ranger (Intel/AMD, needs AVX), the source-built HPC engines with no arm64 container. Not a scope judgment — deferred to the same Round Two x86/GPU lane as the GPU codes.
 - **License-gated.** VASP, Gaussian, cryoSPARC, the commercial CFD/FEA codes. Their redistribution and reproducibility model is fundamentally different from an open, pinnable image — that's what keeps them out, not their importance.
-- **No arm64 build yet.** CP2K, OpenFOAM where still blocked — waiting on upstream feedstock work, which this project files requests for. These move to *shipped* the moment the build lands.
+- **No arm64 build yet.** CP2K (no conda-forge `linux-aarch64` build), and source-built engines like WRF with no arm64 container — waiting on upstream feedstock or a packaged build, which this project files requests for. These move to *shipped* the moment the build lands.
 
 **If you hold a license for one of these, or you're the vendor, we'd like to work with you on a recipe.** The machinery already supports bring-your-own-license — pinned images, a smoke check, `make run` — and it pairs with the request-a-code issue template. It costs nothing to try and might produce a real contribution.
 

@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-photutils-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho '== photutils: aperture photometry / source detection / background, each vs constructed truth =='\ncat > recipe.py <<'PYEOF'\nimport numpy as np, sys, photutils\nfrom photutils.aperture import CircularAperture, aperture_photometry\nfrom photutils.detection import DAOStarFinder\nfrom photutils.background import Background2D, MedianBackground\n\ndef gauss(shape,x0,y0,A,sig):\n    y,x=np.mgrid[0:shape[0],0:shape[1]]\n    return A*np.exp(-((x-x0)**2+(y-y0)**2)/(2*sig**2))\n\nlines=[f\"photutils {photutils.__version__}  (reproduction vs constructed truth; SEP absent -> no independent 2nd implementation)\"]\nfail=[]\ndef chk(label,ok,detail):\n    l=f\"{label:18s} {detail}  [{'ok' if ok else 'FAIL'}]\"; print(l); lines.append(l)\n    if not ok: fail.append(label)\n\n# 1. aperture photometry reproduces the analytic within-aperture Gaussian flux\nNg=201; A=10.0; sig=8.0; x0=y0=100.0; R=5*sig\nim=gauss((Ng,Ng),x0,y0,A,sig)\nwithin=2*np.pi*A*sig**2*(1-np.exp(-R**2/(2*sig**2)))\nmeas=float(aperture_photometry(im,CircularAperture([(x0,y0)],r=R),method='exact')['aperture_sum'][0])\nrel=abs(meas-within)/within\nchk(\"aperture_flux\", rel<1e-6, f\"meas={meas:.4f} vs analytic-within-R {within:.4f} rel_err={rel:.2e} want<1e-6\")\n\n# 2. detection: N injected -> N detected, positions within sub-pixel\nB=50.0; im2=np.full((256,256),B); truth=[(60.,70.),(180.,90.),(120.,200.),(205.,215.),(40.,180.)]\nfor (px,py) in truth: im2+=gauss((256,256),px,py,300.0,3.0)\ns=DAOStarFinder(fwhm=3.0*2.3548,threshold=20.0)(im2-B)\nn=0 if s is None else len(s)\nchk(\"detect_count\", n==len(truth), f\"{n} detected want {len(truth)} (exact-or-wrong)\")\nmaxd=max(min(np.hypot(sx-tx,sy-ty) for sx,sy in zip(s['xcentroid'],s['ycentroid'])) for (tx,ty) in truth) if n else 9.9\nchk(\"detect_positions\", maxd<0.1, f\"max centroid error {maxd:.4f} px want<0.1 (centroiding)\")\n\n# 3. background recovers a known constant field\nval=123.5; imc=np.full((128,128),val)\nbkg=Background2D(imc,(32,32),filter_size=3,bkg_estimator=MedianBackground())\ndev=float(np.abs(bkg.background-val).max())\nchk(\"background_const\", dev<1e-9, f\"median={bkg.background_median} recovered {val} max_dev={dev:.1e}\")\n\nlines.append(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\nopen('smoke-check.txt','w').write(\"\\n\".join(lines)+\"\\n\")\nprint(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED\")\nsys.exit(1 if fail else 0)\n\nPYEOF\npython3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}

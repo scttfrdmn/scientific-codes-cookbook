@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **52 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **61 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -21,9 +21,10 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-12 | — |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
 | [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-12 | — |
+| [gatk4](../recipes/gatk4/README.md) | GATK4's HaplotypeCaller calls variants on the shared 30× fixture, then a three-way concordance shows it agrees with bcftools and freebayes on identical bytes. For anyone whose pipeline runs GATK and wants it on Graviton. | aarchbio | stage: bwa-samtools, gatk4 · run: bcftools, freebayes | 2026-09-12 | 2026-09-12 |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-12 | — |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |
-| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-11 | — |
+| [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-12 | — |
 | [kraken2](../recipes/kraken2/README.md) | Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass. | aarchbio | stage | 2026-09-12 | — |
 | [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-09-12 | 2026-09-10 |
 | [mafft](../recipes/mafft/README.md) | Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment. | aarchbio | stage | 2026-09-12 | — |
@@ -35,16 +36,37 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-12 | 2026-09-10 |
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree | 2026-09-10 | — |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-09-11 | — |
-| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../recipes/kallisto/README.md). | aarchbio | stage | 2026-09-11 | — |
+| [salmon](../recipes/salmon/README.md) | Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../recipes/kallisto/README.md). | aarchbio | stage | 2026-09-12 | — |
 | [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-12 | — |
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
 | [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage | 2026-09-12 | — |
 
+## astro
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-09-13 | 2026-09-13 |
+| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-09-13 | 2026-09-13 |
+| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-09-13 | 2026-09-13 |
+
+## cfd
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-09-12 | 2026-09-12 |
+
+## cfd-fv
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-09-13 | 2026-09-13 |
+
 ## climate
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
+| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-09-13 | 2026-09-13 |
 | [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-09-12 | — |
 
 ## comp-chem
@@ -66,6 +88,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [nwchem](../recipes/nwchem/README.md) | `nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env. | dft | build-in-task | 2026-09-12 | — |
 | [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-09-12 | 2026-09-10 |
 | [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-09-12 | — |
+| [quantum-espresso](../recipes/quantum-espresso/README.md) | Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a plane-wave PBE equation of state, and it agrees with GPAW — an independent plane-wave code in the same env — on the identical system. For anyone who runs QE and wants it on Graviton. | dft | build-in-task | 2026-09-12 | 2026-09-12 |
 | [siesta](../recipes/siesta/README.md) | `siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method. | dft | stage | 2026-09-12 | — |
 
 ## earth-observation
@@ -73,6 +96,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [earth-observation](../recipes/earth-observation/README.md) | `rasterio` / `rioxarray` / GDAL open and decode a real Sentinel-2 scene — the read path underneath any earth-observation analysis. | earth-observation | stage | 2026-09-12 | — |
+
+## fem-cfd
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | build-in-task | 2026-09-13 | 2026-09-13 |
 
 ## geo-ml
 
@@ -100,7 +129,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-11 | — |
+| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-12 | — |
 
 ## pointcloud
 

@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-su2-freestream-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho '== SU2 Euler free-stream preservation on a distorted mesh, serial + 2-rank =='\ncat > recipe.py <<'PYEOF'\nimport math, os, re, shutil, struct, subprocess, sys, tempfile\nfrom pathlib import Path\n\nEULER_CFG = \"\"\"SOLVER= EULER\nMATH_PROBLEM= DIRECT\nRESTART_SOL= NO\nMACH_NUMBER= 0.5\nAOA= 0.0\nFREESTREAM_PRESSURE= 101325.0\nFREESTREAM_TEMPERATURE= 288.15\nREF_DIMENSIONALIZATION= DIMENSIONAL\nMARKER_EULER= ( lower, upper )\nMARKER_FAR= ( inlet, outlet )\nNUM_METHOD_GRAD= GREEN_GAUSS\nCFL_NUMBER= 5.0\nITER= 250\nCONV_NUM_METHOD_FLOW= JST\nTIME_DISCRE_FLOW= EULER_IMPLICIT\nLINEAR_SOLVER= FGMRES\nLINEAR_SOLVER_PREC= ILU\nLINEAR_SOLVER_ITER= 5\nCONV_FIELD= RMS_DENSITY\nCONV_RESIDUAL_MINVAL= -13\nMESH_FILENAME= mesh.su2\nMESH_FORMAT= SU2\nSCREEN_OUTPUT= (INNER_ITER, RMS_DENSITY, RMS_MOMENTUM-X)\nOUTPUT_FILES= (RESTART)\n\"\"\"\nNX,NY,LX,LY = 24,12,3.0,1.0\ndef write_mesh(path):\n    idx=lambda i,j:j*(NX+1)+i\n    pts=[]\n    for j in range(NY+1):\n        for i in range(NX+1):\n            x,y=LX*i/NX,LY*j/NY\n            if 0<i<NX and 0<j<NY:\n                x+=0.35*(LX/NX)*math.sin(3*math.pi*y/LY); y+=0.35*(LY/NY)*math.sin(2*math.pi*x/LX)\n            pts.append((x,y))\n    with open(path,\"w\") as f:\n        f.write(\"NDIME= 2\\n\"); f.write(f\"NPOIN= {(NX+1)*(NY+1)}\\n\")\n        for k,(x,y) in enumerate(pts): f.write(f\"{x:.6f} {y:.6f} {k}\\n\")\n        f.write(f\"NELEM= {NX*NY}\\n\"); e=0\n        for j in range(NY):\n            for i in range(NX):\n                f.write(f\"9 {idx(i,j)} {idx(i+1,j)} {idx(i+1,j+1)} {idx(i,j+1)} {e}\\n\"); e+=1\n        f.write(\"NMARK= 4\\n\")\n        f.write(\"MARKER_TAG= inlet\\n\");  f.write(f\"MARKER_ELEMS= {NY}\\n\")\n        for j in range(NY): f.write(f\"3 {idx(0,j)} {idx(0,j+1)}\\n\")\n        f.write(\"MARKER_TAG= outlet\\n\"); f.write(f\"MARKER_ELEMS= {NY}\\n\")\n        for j in range(NY): f.write(f\"3 {idx(NX,j)} {idx(NX,j+1)}\\n\")\n        f.write(\"MARKER_TAG= lower\\n\");  f.write(f\"MARKER_ELEMS= {NX}\\n\")\n        for i in range(NX): f.write(f\"3 {idx(i,0)} {idx(i+1,0)}\\n\")\n        f.write(\"MARKER_TAG= upper\\n\");  f.write(f\"MARKER_ELEMS= {NX}\\n\")\n        for i in range(NX): f.write(f\"3 {idx(i,NY)} {idx(i+1,NY)}\\n\")\ndef mpi_env():\n    e=dict(os.environ)\n    e.update(OMPI_ALLOW_RUN_AS_ROOT=\"1\",OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=\"1\",\n             OMPI_MCA_rmaps_base_oversubscribe=\"yes\",OMPI_MCA_osc=\"^ucx\",OMP_NUM_THREADS=\"1\")\n    return e\ndef run_su2(argv):\n    d=Path(tempfile.mkdtemp()); (d/\"euler.cfg\").write_text(EULER_CFG); write_mesh(d/\"mesh.su2\")\n    p=subprocess.run(argv+[\"euler.cfg\"],cwd=str(d),capture_output=True,text=True,env=mpi_env(),timeout=900)\n    return p.returncode,p.stdout+p.stderr\ndef final_rms(out):\n    v=re.findall(r\"^\\|\\s*\\d+\\|\\s*(-?\\d+\\.\\d+)\\|\",out,re.M); return float(v[-1]) if v else 1.0\ndef elf_machine(path):\n    h=open(path,\"rb\").read(20)\n    return None if h[:4]!=b\"\\x7fELF\" else struct.unpack(\"<H\" if h[5]==1 else \">H\",h[18:20])[0]\n\nif __name__==\"__main__\":\n    lines=[\"SU2 finite-volume CFD -- free-stream preservation on a distorted mesh\"]; fail=[]\n    def chk(l,ok,d):\n        s=f\"{l:22s} {d}  [{'ok' if ok else 'FAIL'}]\"; print(s); lines.append(s)\n        if not ok: fail.append(l)\n    su2=shutil.which(\"SU2_CFD\")\n    chk(\"su2_aarch64\", elf_machine(os.path.realpath(su2))==183, f\"SU2_CFD ELF e_machine {elf_machine(os.path.realpath(su2))} want 183 (AArch64)\")\n    rc_s,out_s=run_su2([su2]); rms_s=final_rms(out_s)\n    chk(\"serial_freestream\", rc_s==0 and rms_s<=-12, f\"serial final log10(rms rho)={rms_s} want <=-12 (uniform flow preserved to ~machine zero on a skewed mesh)\")\n    rc_p,out_p=run_su2([\"mpirun\",\"-n\",\"2\",su2]); rms_p=final_rms(out_p)\n    chk(\"mpi2_freestream\", rc_p==0 and rms_p<=-12, f\"2-rank final log10(rms rho)={rms_p} want <=-12\")\n    par_dec=(\"Calling ParMETIS\" in out_p) and (\"partitioning complete\" in out_p)\n    ser_dec=(\"ParMETIS\" in out_s)\n    chk(\"mpi2_decomposed\", par_dec and not ser_dec, f\"2-rank ran ParMETIS graph partitioning={par_dec}; serial did NOT={not ser_dec} (real decomposition, MPI-only)\")\n    lines.append(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\n    open(\"smoke-check.txt\",\"w\").write(\"\\n\".join(lines)+\"\\n\")\n    print(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED\")\n    sys.exit(1 if fail else 0)\n\nPYEOF\npython3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/su2/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

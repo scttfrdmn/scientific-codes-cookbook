@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-fenicsx-poisson-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1 HOME=/tmp XDG_CACHE_HOME=/tmp\ncd /tmp\necho '== FEniCSx Poisson MMS: patch test + convergence order, 2 MPI ranks =='\ncat > recipe.py <<'PYEOF'\nfrom mpi4py import MPI\nimport numpy as np, ufl, dolfinx, sys\nfrom dolfinx import mesh, fem\nfrom dolfinx.fem.petsc import LinearProblem\ncomm = MPI.COMM_WORLD\n\ndef solve(N, degree, exact_fn):\n    dom = mesh.create_unit_square(comm, N, N)\n    V = fem.functionspace(dom, (\"Lagrange\", degree))\n    x = ufl.SpatialCoordinate(dom)\n    ue = exact_fn(x)\n    f = -ufl.div(ufl.grad(ue))\n    uD = fem.Function(V)\n    uD.interpolate(fem.Expression(ue, V.element.interpolation_points))\n    td = dom.topology.dim\n    dom.topology.create_connectivity(td-1, td)\n    facets = mesh.exterior_facet_indices(dom.topology)\n    dofs = fem.locate_dofs_topological(V, td-1, facets)\n    bc = fem.dirichletbc(uD, dofs)\n    u, v = ufl.TrialFunction(V), ufl.TestFunction(V)\n    a = ufl.inner(ufl.grad(u), ufl.grad(v))*ufl.dx\n    L = f*v*ufl.dx\n    uh = LinearProblem(a, L, bcs=[bc], petsc_options_prefix=\"mms_\",\n        petsc_options={\"ksp_type\":\"preonly\",\"pc_type\":\"lu\"}).solve()\n    err = fem.form(ufl.inner(uh-ue, uh-ue)*ufl.dx)\n    return np.sqrt(comm.allreduce(fem.assemble_scalar(err), op=MPI.SUM))\n\nquad = lambda x: 1 + x[0] + 2*x[1] + 3*x[0]**2 + 4*x[0]*x[1] + 5*x[1]**2\ne_patch = solve(16, 2, quad)\nsinsol = lambda x: ufl.sin(ufl.pi*x[0])*ufl.sin(ufl.pi*x[1])\nNs=[8,16,32,64]; errs=[solve(N,2,sinsol) for N in Ns]\nrates=[float(np.log(errs[i-1]/errs[i])/np.log(2)) for i in range(1,len(errs))]\n\nif comm.rank==0:\n    lines=[f\"dolfinx {dolfinx.__version__}  |  P2 Lagrange, Poisson via method of manufactured solutions\"]\n    fail=[]\n    def chk(label,ok,detail):\n        line=f\"{label:22s} {detail}  [{'ok' if ok else 'FAIL'}]\"; print(line); lines.append(line)\n        if not ok: fail.append(label)\n    chk(\"mpi_ranks\", comm.size==2, f\"{comm.size} want 2 (parallel dolfinx)\")\n    chk(\"patch_test_exact\", e_patch<1e-10, f\"L2={e_patch:.2e} want <1e-10 (P2 reproduces a quadratic exactly)\")\n    chk(\"convergence_rate\", all(2.7<r<3.3 for r in rates), f\"rates={[round(r,2) for r in rates]} want ~3.0 (L2 ~ h^(p+1), p=2)\")\n    chk(\"error_decreases\", errs[-1]<errs[0]<1e-2, f\"L2 {errs[0]:.2e} -> {errs[-1]:.2e} over N {Ns[0]}..{Ns[-1]}\")\n    lines.append(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED \"+str(fail))\n    for N,e in zip(Ns,errs): lines.append(f\"  N={N:3d}  L2={e:.4e}\")\n    open('smoke-check.txt','w').write(\"\\n\".join(lines)+\"\\n\")\n    print(\"SMOKE CHECK PASSED\" if not fail else \"SMOKE CHECK FAILED\")\n    sys.exit(1 if fail else 0)\n\nPYEOF\nmpirun --allow-run-as-root -n 2 python3 recipe.py\n"
+  ],
+  "container": "quay.io/aarchsci/fem-cfd@sha256:492db4d9c166467715d87012a15d3a41ce4ec2f29fa8d5fc8bbd562f60a500be",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fenicsx/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5m",
+    "on_complete": "terminate",
+    "cost_limit": 0.04
+  }
+}

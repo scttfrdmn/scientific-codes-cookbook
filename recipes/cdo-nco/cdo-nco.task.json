@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-cdo-nco-etopo-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho \"== cdo builds an ETOPO field + a constructed constant field; nco independently verifies ==\"\ncdo -f nc -topo,global_2 topo.nc 2>/dev/null\nCMAX=$(cdo -s output -fldmax topo.nc 2>/dev/null | tr -d ' ')\nCMIN=$(cdo -s output -fldmin topo.nc 2>/dev/null | tr -d ' ')\nncwa -O -y max -v topo topo.nc nmax.nc 2>/dev/null; NMAX=$(ncks -s '%g' -H -C -v topo nmax.nc 2>/dev/null | tr -d ' \\n')\nncwa -O -y min -v topo topo.nc nmin.nc 2>/dev/null; NMIN=$(ncks -s '%g' -H -C -v topo nmin.nc 2>/dev/null | tr -d ' \\n')\ncdo -f nc -const,288,global_2 c.nc 2>/dev/null\nMO=$(cdo -s output -fldmean c.nc 2>/dev/null | tr -d ' ')\ncdo -s remapbil,global_5 c.nc cr.nc 2>/dev/null\nMR=$(cdo -s output -fldmean cr.nc 2>/dev/null | tr -d ' ')\ncdo -s -addc,12 c.nc c12.nc 2>/dev/null\nMA=$(cdo -s output -fldmean c12.nc 2>/dev/null | tr -d ' ')\n\nfail=0\nrow(){ printf \"%-26s %s  [%s]\\n\" \"$1\" \"$2\" \"$3\"; if [ \"$3\" = FAIL ]; then fail=1; fi; }\neq(){ awk -v a=\"$1\" -v b=\"$2\" -v t=\"$3\" 'BEGIN{d=a-b;d=d<0?-d:d; exit !(d<=t)}' && echo ok || echo FAIL; }\n{\nrow \"cross_tool_max\"   \"cdo=$CMAX nco=$NMAX want 5761 (ETOPO/2deg)\"      \"$(eq \"$CMAX\" \"$NMAX\" 0.5; )\"\nrow \"cross_tool_max_val\" \"$CMAX vs known 5761\"                          \"$(eq \"$CMAX\" 5761 0.5)\"\nrow \"cross_tool_min\"   \"cdo=$CMIN nco=$NMIN want -8979\"                  \"$(eq \"$CMIN\" \"$NMIN\" 0.5)\"\nrow \"cross_tool_min_val\" \"$CMIN vs known -8979\"                         \"$(eq \"$CMIN\" -8979 0.5)\"\nrow \"conservation_regrid\" \"const fldmean $MO -> $MR (want 288)\"          \"$(eq \"$MR\" 288 1e-6)\"\nrow \"exact_arithmetic\" \"const+12 fldmean=$MA (want 300)\"                 \"$(eq \"$MA\" 300 1e-6)\"\n} | tee smoke-check.txt\ngrep -q FAIL smoke-check.txt && { echo \"SMOKE CHECK FAILED\" | tee -a smoke-check.txt; exit 1; }\necho \"SMOKE CHECK PASSED\" | tee -a smoke-check.txt\n"
+  ],
+  "container": "quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7963c1418b87a7f30767b5fe",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/topo.nc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco/r1/topo.nc"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}
