@@ -55,12 +55,13 @@ The pages lean on a small house vocabulary, defined once here:
 
 ## It all serves one number: cost per result
 
-The rate card and the vCPU count both mislead; what a run costs is rate × wall. Four ways the recipes move it:
+The rate card and the vCPU count both mislead; what a run costs is rate × wall. Five ways the recipes move it:
 
 - **Right-size, don't max-size** — more cores stop paying past a knee. → [sizing](patterns/sizing.md)
 - **Scale out, not up** — a cohort is the same task fanned out, not a bigger box. → [job arrays](patterns/job-arrays.md)
 - **Newer isn't pricier per result** — a box that costs more per hour can finish enough faster to cost *less* per result (measured, c8g → c9g). → [cost per result](patterns/cost-per-result.md)
 - **Pay for the bytes you touch** — copy, mount, or share by what the job reuses. → [copy, mount, or share?](patterns/data-movement.md)
+- **Fill the accelerator before buying a bigger one** — a GPU sells compute and memory in a fixed ratio; match it, and check utilization before capability (measured, L4 beats L40S per result). → [GPU tradeoff](patterns/gpu-tradeoff.md)
 
 ## What this doesn't cover
 
