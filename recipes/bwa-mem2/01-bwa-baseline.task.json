@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-bwa-mem2-baseline-r1",
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\nprintf \"%s  %s\\n\" 61eba5b05ef7d9ae5310e756c1143fa48072de3856d36871bb14e57aa2435ff3 chr20.fa > pins.sha256\nprintf \"%s  %s\\n\" 4bd24cdfa4486964f070e69b5dd109b6e1e78561783d48c4e62cc6fae3536a00 HG00096_chr20smoke_1.fq.gz >> pins.sha256\nprintf \"%s  %s\\n\" ebd1ad56bc572a4bf157ba21d1ad8ef074ea25f02eb2d982d9f0089180d82a04 HG00096_chr20smoke_2.fq.gz >> pins.sha256\nsha256sum -c pins.sha256\n\necho \"== bwa index (same reference bytes the bwa-samtools recipe uses) ==\"\nbwa index -p bwaidx chr20.fa\n\necho \"== bwa mem -t 8 (baseline alignment; identical flags to the bwa-mem2 leg) ==\"\nbwa mem -t 8 -R \"@RG\\tID:smoke\\tSM:HG00096\\tPL:ILLUMINA\\tLB:SRR062634\" bwaidx HG00096_chr20smoke_1.fq.gz HG00096_chr20smoke_2.fq.gz > aln_bwa.sam\n\necho \"== baseline record count ==\"\ngrep -c '^[^@]' aln_bwa.sam > bwa_records.txt\ncat bwa_records.txt\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln_bwa.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-mem2/r1/aln_bwa.sam"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
