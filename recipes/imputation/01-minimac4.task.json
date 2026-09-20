@@ -1,0 +1,44 @@
+{
+  "task_id": "cookbook-imputation-minimac4-r1",
+  "container": "quay.io/aarchbio/minimac4@sha256:cea08321a8ab3632633b2ba0f2b68c98d7e6fcfb1c9c624f9b790a61a0e4b3c2",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== build an LD-structured fixture: 8 founders, mosaic haplotypes ==\"\ncat > gen.awk <<'AWKEOF'\nBEGIN{\n  srand(42);\n  M=400; K=8; NR_REF=150; NT=20; SWITCH=0.01; MASKEVERY=5;\n  for(k=1;k<=K;k++) for(m=1;m<=M;m++) F[k,m]=(rand()<0.35)?1:0;   # founder haplotypes\n  # header\n  hdr=\"##fileformat=VCFv4.2\\n##contig=<ID=1,length=500000>\\n##FORMAT=<ID=GT,Number=1,Type=String,Description=\\\"Genotype\\\">\";\n  print hdr > \"ref.vcf\"; print hdr > \"target.vcf\";\n  line=\"#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO\\tFORMAT\";\n  rl=line; for(s=1;s<=NR_REF;s++) rl=rl \"\\tR\" s; print rl > \"ref.vcf\";\n  tl=line; for(s=1;s<=NT;s++) tl=tl \"\\tT\" s; print tl > \"target.vcf\";\n  # mosaic haplotypes: walk founders, switching occasionally -> LD blocks\n  for(s=1;s<=NR_REF;s++) for(h=1;h<=2;h++){ f=int(rand()*K)+1;\n    for(m=1;m<=M;m++){ if(rand()<SWITCH) f=int(rand()*K)+1; RH[s,h,m]=F[f,m]; } }\n  for(s=1;s<=NT;s++) for(h=1;h<=2;h++){ f=int(rand()*K)+1;\n    for(m=1;m<=M;m++){ if(rand()<SWITCH) f=int(rand()*K)+1; TH[s,h,m]=F[f,m]; } }\n  nmask=0;\n  for(m=1;m<=M;m++){\n    pos=m*1000; id=\"snp\" m;\n    r=sprintf(\"1\\t%d\\t%s\\tA\\tG\\t.\\tPASS\\t.\\tGT\",pos,id);\n    for(s=1;s<=NR_REF;s++) r=r sprintf(\"\\t%d|%d\",RH[s,1,m],RH[s,2,m]);\n    print r > \"ref.vcf\";\n    t=sprintf(\"1\\t%d\\t%s\\tA\\tG\\t.\\tPASS\\t.\\tGT\",pos,id);\n    masked=(m%MASKEVERY==0);\n    for(s=1;s<=NT;s++){\n      g=TH[s,1,m]+TH[s,2,m];\n      if(masked){ t=t \"\\t./.\"; printf \"%s\\tT%d\\t%d\\n\", id, s, g > \"truth.txt\"; nmask++ }\n      else { t=t sprintf(\"\\t%d/%d\",TH[s,1,m],TH[s,2,m]) }\n    }\n    print t > \"target.vcf\";\n  }\n  printf \"snps %d ref_samples %d target_samples %d masked_genotypes %d\\n\", M, NR_REF, NT, nmask;\n}\nAWKEOF\nawk -f gen.awk\n\necho \"== minimac4 needs a bgzipped+tabixed target and an msav reference ==\"\nbgzip -f -c target.vcf > target.vcf.gz\ntabix -f -p vcf target.vcf.gz\nminimac4 --compress-reference ref.vcf -o ref.msav > compress.log 2>&1\nminimac4 ref.msav target.vcf.gz -o mm4.vcf.gz -f GT --threads 2 > mm4.log 2>&1\ngunzip -f -c mm4.vcf.gz > mm4.vcf\nawk 'BEGIN{n=0} /^1\\t/{n++} END{print \"minimac4_sites\", n}' mm4.vcf\nminimac4 --version > mm4ver.txt 2>&1 || true\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/ref.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/ref.vcf"
+    },
+    {
+      "source": "/tmp/target.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/target.vcf"
+    },
+    {
+      "source": "/tmp/truth.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/truth.txt"
+    },
+    {
+      "source": "/tmp/mm4.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/mm4.vcf"
+    },
+    {
+      "source": "/tmp/mm4ver.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/mm4ver.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

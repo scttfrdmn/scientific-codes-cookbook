@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-imputation-beagle-compare-r1",
+  "container": "quay.io/aarchbio/beagle@sha256:7a22203b34a80d9b832ea84c3c46d9fdf83f4f679b6e53fcf1baebeeba06ce63",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== Beagle on the same fixture bytes ==\"\nbeagle gt=target.vcf ref=ref.vcf out=imputed nthreads=2 > beagle.log 2>&1\ngunzip -f imputed.vcf.gz\n\necho \"== score both against the hidden truth, and against each other ==\"\ncat > final.awk <<'AWKEOF'\n# args: truth.txt target.vcf beagle.vcf mm4.vcf\nFILENAME ~ /truth/ { truth[$1\"\\t\"$2]=$3; next }\nFILENAME ~ /target/ && /^#CHROM/ { for(i=10;i<=NF;i++) tn[i]=$i; next }\nFILENAME ~ /target/ && !/^#/ { for(i=10;i<=NF;i++){ g=$i; if(g!=\"./.\") { gsub(/\\|/,\"/\",g); split(g,a,\"/\"); obs[$3\"\\t\"tn[i]]=a[1]+a[2] } } next }\nFILENAME ~ /imputed/ && /^#CHROM/ { for(i=10;i<=NF;i++) bn[i]=$i; next }\nFILENAME ~ /imputed/ && !/^#/ { for(i=10;i<=NF;i++){ split($i,f,\":\"); g=f[1]; gsub(/\\|/,\"/\",g); split(g,a,\"/\"); if(a[1]!=\".\") B[$3\"\\t\"bn[i]]=a[1]+a[2] } next }\nFILENAME ~ /mm4/ && /^#CHROM/ { for(i=10;i<=NF;i++) mn[i]=$i; next }\nFILENAME ~ /mm4/ && !/^#/ { for(i=10;i<=NF;i++){ split($i,f,\":\"); g=f[1]; gsub(/\\|/,\"/\",g); split(g,a,\"/\"); if(a[1]!=\".\") M[$3\"\\t\"mn[i]]=a[1]+a[2] } next }\nEND{\n  for(k in truth){\n    nm++\n    if(k in B){ bfill++; if(B[k]==truth[k]) bok++ }\n    if(k in M){ mfill++; if(M[k]==truth[k]) mok++ }\n    if((k in B) && (k in M)){ agr_n++; if(B[k]==M[k]) agr++; if(B[k]!=truth[k] && M[k]!=truth[k]) both_wrong++ }\n  }\n  for(k in obs){ no++; if((k in B) && B[k]!=obs[k]) bchg++; if((k in M) && M[k]!=obs[k]) mchg++ }\n  printf \"masked_total %d\\n\", nm\n  printf \"beagle_filled %d  beagle_concordance %.4f\\n\", bfill, (bfill?bok/bfill:0)\n  printf \"minimac4_filled %d  minimac4_concordance %.4f\\n\", mfill, (mfill?mok/mfill:0)\n  printf \"tool_agreement %.4f on %d shared\\n\", (agr_n?agr/agr_n:0), agr_n\n  printf \"both_wrong %d  (shared misses => data-limited, not implementation)\\n\", both_wrong+0\n  printf \"observed_total %d  beagle_changed %d  minimac4_changed %d\\n\", no, bchg+0, mchg+0\n}\nAWKEOF\nawk -f final.awk truth.txt target.vcf imputed.vcf mm4.vcf > scores.txt\ncat scores.txt\n\nMT=$(awk '/^masked_total/{print $2}' scores.txt)\nBF=$(awk '/^beagle_filled/{print $2}' scores.txt)\nBC=$(awk '/^beagle_filled/{print $4}' scores.txt)\nMF=$(awk '/^minimac4_filled/{print $2}' scores.txt)\nMC=$(awk '/^minimac4_filled/{print $4}' scores.txt)\nAG=$(awk '/^tool_agreement/{print $2}' scores.txt)\nBW=$(awk '/^both_wrong/{print $2}' scores.txt)\nOT=$(awk '/^observed_total/{print $2}' scores.txt)\nBCH=$(awk '/^observed_total/{print $4}' scores.txt)\nMCH=$(awk '/^observed_total/{print $6}' scores.txt)\n\n{\n  echo \"Genotype imputation -- two tools, one fixture, truth we deleted ourselves\"\n  echo \"beagle_version        5.5 (27Feb25.75f)\"\n  echo \"minimac4_version      $(awk 'NR==1{print $NF}' mm4ver.txt 2>/dev/null)\"\n  echo \"masked_genotypes      $MT   (hidden from both tools)\"\n  echo \"beagle_filled         $BF of $MT   (assert all -- EXACT, no holes left)\"\n  echo \"minimac4_filled       $MF of $MT   (assert all -- EXACT)\"\n  echo \"beagle_concordance    $BC   (assert >= 0.95)\"\n  echo \"minimac4_concordance  $MC   (assert >= 0.95)\"\n  echo \"tool_agreement        $AG   (assert >= 0.98 -- cross-validation)\"\n  echo \"shared_misses         $BW   of the errors are made by BOTH => data-limited, not implementation\"\n  echo \"observed_genotypes    $OT\"\n  echo \"beagle_changed        $BCH   (assert 0 -- EXACT: Beagle preserves what you typed)\"\n  echo \"minimac4_changed      $MCH   (observation, NOT a failure: minimac4 re-estimates typed markers)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$BF\" -eq \"$MT\"\ntest \"$MF\" -eq \"$MT\"\ntest \"$BCH\" -eq 0\nawk -v x=\"$BC\" 'BEGIN{exit !(x>=0.95)}'\nawk -v x=\"$MC\" 'BEGIN{exit !(x>=0.95)}'\nawk -v x=\"$AG\" 'BEGIN{exit !(x>=0.98)}'\nawk -v c=\"$MCH\" -v t=\"$OT\" 'BEGIN{exit !(c/t < 0.01)}'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/ref.vcf",
+      "destination": "/tmp/ref.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/target.vcf",
+      "destination": "/tmp/target.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/truth.txt",
+      "destination": "/tmp/truth.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/mm4.vcf",
+      "destination": "/tmp/mm4.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/mm4ver.txt",
+      "destination": "/tmp/mm4ver.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
