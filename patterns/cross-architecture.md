@@ -15,6 +15,7 @@ A cross-arch cost number is only as trustworthy as its conditions, and these thr
 | **bwa mem** | **true microarch rate** — same `0.7.19-r1273` build path, matched **1.99 cores** both, identical output | arm64 **1.14× faster** | **arm64 1.34× cheaper** | arm64 1.17× cheaper |
 | **OpenFOAM** | **control** — one upstream image, two digests, *no* build-channel confound | x86 **1.25× faster** | x86 1.07× cheaper | arm64 1.03× cheaper |
 | **gatk4 HC** | **observation, not a rate** (caveat below) | x86 **~1.4× faster** | x86 1.20× cheaper | arm64 1.04× cheaper |
+| **bwa-mem2** | **observation, not a rate** — hand-tuned x86 SIMD (`avx512bw`) vs a portable arm64 build; *equal work verified* (808505 records, 800000 primaries, identical index bytes on all three) | AMD **1.88× faster** than Graviton, Intel 1.26× | AMD 1.39× cheaper; **Intel only 1.07× cheaper** | — |
 
 **gatk4's caveat, inline not footnoted:** its x86 speedup is real but *not* a clean per-core rate. It comes from the native **Intel GKL** pairHMM (arm64 falls back to the Java implementation) *plus* arch-dependent JVM threading (GC, async I/O), so `avg_cores` differs — **1.47 arm64 vs 1.92 x86** — even at matched pairHMM threads. Pinning to one core would measure a GATK nobody runs. The usable fact: **x86 wins where a hand-tuned native library exists** — the Intel GKL is worth something specific for GATK at scale, and it's why an arm64 GATK's numbers differ.
 
@@ -24,6 +25,20 @@ They answer different questions, so both are reported:
 
 - **Compute-only $/result** is the architecture *rate* — the tool's own compute time × the hourly, boot and image-pull excluded. It **splits by code**: bwa (integer/SSE alignment) favors Graviton, OpenFOAM (FP pressure solve) and gatk4 (native pairHMM) favor x86. **There is no blanket winner** — it depends on what the code stresses.
 - **Billed $/result** is what you actually pay — the whole instance lifetime × the hourly, overhead included. Here **arm64 is cheaper or level on all three**: `c8i` costs ~17% more per hour, and with fixed boot/pull overhead diluting x86's compute edge (compute was ~55% of the billed window here, not 95%), the Graviton box wins or ties on the bill even where x86 computes faster.
+
+## Three vendors, one code: the AMD dimension
+
+Batch 1 paired Graviton against Intel only. Adding AMD to [bwa-mem2](../recipes/bwa-mem2/README.md) — same generation, same 8 vCPU, same version, equal work verified — changes the ranking and the reason for it:
+
+| 8 vCPU, `c8*.2xlarge` | physical cores | SIMD path | align | $/align |
+|---|---|---|--:|--:|
+| c8g Graviton4 | **8** | portable, no dispatch | 22.6 s | $0.00200 |
+| c8i Intel Xeon 6975P-C | **4** + SMT | `avx512bw` | 18.0 s | $0.00187 |
+| c8a AMD EPYC 9R45 | **8** | `avx512bw` | **12.0 s** | **$0.00144** |
+
+**AMD wins on both axes** — 8 real Zen5 cores plus the hand-tuned path. But the result worth pausing on is second place: **Graviton4 is within 7% of Intel on $/result while running a build with no SIMD dispatch at all**, against Intel's `avx512bw`. What you rent differs too — at "8 vCPU" Graviton and AMD give 8 physical cores, Intel gives 4 plus SMT ([sizing](sizing.md)).
+
+The same run carries its own control: `bwa-mem2 index` is nearly arch-neutral (14.0–16.0 s, a 1.14× spread) while `align` spreads 1.88×. Same tool, same boxes — so the spread belongs to the SIMD-heavy phase, not to the machines in general. And `avg_cores` sits at 4.8–6.1 despite `-t 8`, *lower on the faster chips*: at this problem size the phase is partly serial-bound, so more cores would not pay proportionally.
 
 ## The build-confound, carried forward
 
