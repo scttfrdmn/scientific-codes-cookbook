@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-deeptools-coverage-r1",
+  "container": "quay.io/aarchbio/deeptools@sha256:91c028a26e85579dde0eadb0efd06c662bcdcb52956e48c941cdeea6c3016ca8",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== bamCoverage: per-base, unnormalised ==\"\nbamCoverage -b reads.bam -o cov.bedgraph --outFileFormat bedgraph --binSize 1 --normalizeUsing None -p 1 > bc.log 2>&1\n\nawk '$4>0{printf \"%d\\t%d\\t%d\\n\", $2, $3, $4}' cov.bedgraph > got_cov.txt\nINTEGRAL=$(awk '{s += ($3-$2)*$4} END{print s+0}' cov.bedgraph)\nMAXD=$(awk '{if($4>m)m=$4} END{print m+0}' cov.bedgraph)\nNINT=$(wc -l < got_cov.txt | tr -d ' ')\nALIGNED=$(awk '/aligned_bases/{for(i=1;i<=NF;i++) if($i==\"aligned_bases\") print $(i+1)}' fixture.txt)\nPROFILE_OK=no; cmp -s expected_cov.txt got_cov.txt && PROFILE_OK=yes\n\n{\n  echo \"deepTools bamCoverage -- a coverage track checked against a constructed profile\"\n  echo \"deeptools_version     $(bamCoverage --version 2>&1 | awk '{print $NF; exit}')\"\n  echo \"aligned_bases         $ALIGNED   (10 reads x 100 bp)\"\n  echo \"coverage_integral     $INTEGRAL   (assert == $ALIGNED -- CONSERVATION: every aligned base appears once)\"\n  echo \"max_depth             $MAXD   (assert 5 -- the planted stack)\"\n  echo \"nonzero_intervals     $NINT   (assert 5)\"\n  echo \"profile_identical     $PROFILE_OK   (assert yes -- EXACT, whole track compared byte for byte)\"\n  echo \"overlap_check         the 2049-2099 interval must read depth 4 (2+2), proving overlapping reads SUM rather than max-ing\"\n  grep -E '^2049' got_cov.txt | awk '{print \"observed_overlap      \" $0}'\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$INTEGRAL\" -eq \"$ALIGNED\"\ntest \"$MAXD\" -eq 5\ntest \"$NINT\" -eq 5\ntest \"$PROFILE_OK\" = yes\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/reads.bam",
+      "destination": "/tmp/reads.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/reads.bam.bai",
+      "destination": "/tmp/reads.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/expected_cov.txt",
+      "destination": "/tmp/expected_cov.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/fixture.txt",
+      "destination": "/tmp/fixture.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

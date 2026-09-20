@@ -1,0 +1,40 @@
+{
+  "task_id": "cookbook-deeptools-bam-r1",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== build a staircase-coverage fixture (with a deliberate overlap) ==\" \ncat > gen.awk <<'AWKEOF'\nBEGIN{\n  L=100\n  print \"@HD\\tVN:1.6\\tSO:unsorted\"            > \"reads.sam\"\n  print \"@SQ\\tSN:chr1\\tLN:20000\"              > \"reads.sam\"\n  seq=\"\"; qual=\"\"\n  for(i=0;i<L;i++){ seq=seq \"A\"; qual=qual \"I\" }\n  # a deliberate staircase with an overlap, so summation is exercised\n  # 5 reads at 1000; 2 reads at 2000 and 2 at 2050 (overlap -> depth 4 in the middle); 1 read at 5000\n  n=0\n  for(j=1;j<=5;j++){ n++; printf \"r%d\\t0\\tchr1\\t%d\\t60\\t%dM\\t*\\t0\\t0\\t%s\\t%s\\n\", n,1000,L,seq,qual > \"reads.sam\" }\n  for(j=1;j<=2;j++){ n++; printf \"r%d\\t0\\tchr1\\t%d\\t60\\t%dM\\t*\\t0\\t0\\t%s\\t%s\\n\", n,2000,L,seq,qual > \"reads.sam\" }\n  for(j=1;j<=2;j++){ n++; printf \"r%d\\t0\\tchr1\\t%d\\t60\\t%dM\\t*\\t0\\t0\\t%s\\t%s\\n\", n,2050,L,seq,qual > \"reads.sam\" }\n  n++; printf \"r%d\\t0\\tchr1\\t%d\\t60\\t%dM\\t*\\t0\\t0\\t%s\\t%s\\n\", n,5000,L,seq,qual > \"reads.sam\"\n  printf \"reads %d  read_len %d  aligned_bases %d  expected_max_depth 5\\n\", n, L, n*L\n}\nAWKEOF\nawk -f gen.awk | tee fixture.txt\n\necho \"== sort + index with samtools (deepTools reads BAM, and cannot make one) ==\"\nsamtools sort -o reads.bam reads.sam\nsamtools index reads.bam\nsamtools view -c reads.bam | awk '{print \"bam_records\", $1}'\n\necho \"== the coverage profile this fixture MUST produce (0-based, bedgraph) ==\"\nprintf '999\\t1099\\t5\\n1999\\t2049\\t2\\n2049\\t2099\\t4\\n2099\\t2149\\t2\\n4999\\t5099\\t1\\n' > expected_cov.txt\ncat expected_cov.txt\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/reads.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/reads.bam"
+    },
+    {
+      "source": "/tmp/reads.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/reads.bam.bai"
+    },
+    {
+      "source": "/tmp/expected_cov.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/expected_cov.txt"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/deeptools/r1/fixture.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
