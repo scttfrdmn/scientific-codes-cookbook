@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-dada2-r1",
+  "container": "quay.io/aarchbio/bioconductor-dada2@sha256:1dbe837ab143941ae1864da332632f2fca92b1c191a1c8f8644c6a2267148478",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\nexport PATH=/opt/conda/bin:$PATH\n# R needs a writable TMPDIR/HOME or it dies with \"cannot create R_TempDir\"\nexport TMPDIR=/tmp HOME=/tmp\n\ncat > dada.R <<'RSCRIPT'\nset.seed(42)\nsuppressMessages(library(dada2))\n# three distinct \"ASV\" templates (the truth we will require DADA2 to recover exactly)\nbases <- c(\"A\",\"C\",\"G\",\"T\")\nmk <- function(n) paste(sample(bases, n, replace=TRUE), collapse=\"\")\ntmpl <- c(mk(250), mk(250), mk(250))\nabund <- c(4000, 2500, 1500)               # reads per template\nerr <- 0.004                                # per-base substitution rate\n# quality must VARY or learnErrors has a single bin and cannot fit the model\nlines <- character(0); i <- 0\nfor (t in seq_along(tmpl)) for (k in seq_len(abund[t])) {\n  s <- strsplit(tmpl[t], \"\")[[1]]\n  hit <- which(runif(250) < err)\n  if (length(hit)) s[hit] <- sapply(s[hit], function(b) sample(setdiff(bases,b),1))\n  q <- pmax(12, pmin(40, round(rnorm(250, mean=36 - (seq_len(250)/250)*8, sd=3))))\n  i <- i+1\n  lines <- c(lines, sprintf(\"@r%d\", i), paste(s, collapse=\"\"), \"+\",\n             paste(sapply(q, function(x) intToUtf8(x+33)), collapse=\"\"))\n}\nwriteLines(lines, \"reads.fastq\")\ncat(\"wrote\", i, \"reads from\", length(tmpl), \"templates\\n\")\nfilterAndTrim(\"reads.fastq\",\"filt.fastq\", truncQ=2, maxN=0, maxEE=2, multithread=FALSE, verbose=FALSE)\ne <- learnErrors(\"filt.fastq\", multithread=FALSE, verbose=FALSE)\nd <- dada(\"filt.fastq\", err=e, multithread=FALSE, verbose=FALSE)\nasv <- getSequences(makeSequenceTable(d))\ncat(\"ASVs inferred:\", length(asv), \"\\n\")\ncat(\"exact matches to planted templates:\", sum(asv %in% tmpl), \"of\", length(tmpl), \"\\n\")\ncat(\"spurious ASVs (not planted):\", sum(!(asv %in% tmpl)), \"\\n\")\ntab <- makeSequenceTable(d)\ncat(\"abundances:\", paste(as.integer(tab[1,]), collapse=\",\"), \" planted:\", paste(abund, collapse=\",\"), \"\\n\")\n\n# ---- assertions: all four are exact-or-wrong, no bands ----\nstopifnot(length(asv) == length(tmpl))                       # no over/under-splitting\nstopifnot(all(asv %in% tmpl))                                # exact sequence identity\nstopifnot(sum(!(asv %in% tmpl)) == 0)                        # no spurious (error-derived) ASVs\ngot <- as.integer(tab[1, ]); names(got) <- NULL\nstopifnot(identical(sort(got), sort(as.integer(abund))))     # every read assigned to its true template\nlines <- c(\"DADA2 -- exact sequence variants recovered from reads with known truth\",\n  sprintf(\"dada2_version       %s\", as.character(packageVersion(\"dada2\"))),\n  sprintf(\"reads               %d from %d planted templates (250 bp, ~0.4%% substitution)\", i, length(tmpl)),\n  sprintf(\"asvs_inferred       %d   (assert == %d, EXACT)\", length(asv), length(tmpl)),\n  sprintf(\"exact_seq_matches   %d of %d   (assert all, EXACT string equality)\", sum(asv %in% tmpl), length(tmpl)),\n  sprintf(\"spurious_asvs       %d   (assert 0 -- error variants must collapse)\", sum(!(asv %in% tmpl))),\n  sprintf(\"abundances_observed %s\", paste(sort(got, decreasing=TRUE), collapse=\",\")),\n  sprintf(\"abundances_planted  %s   (assert identical -- every read placed correctly)\", paste(sort(as.integer(abund), decreasing=TRUE), collapse=\",\")),\n  \"note  quality scores must VARY or learnErrors has one bin and cannot fit the model\")\nwriteLines(lines, \"smoke-check.txt\"); cat(paste(lines, collapse=\"\\n\"), \"\\n\")\ncat(\"SMOKE CHECK PASSED\\n\")\nRSCRIPT\nRscript dada.R\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/dada2/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
