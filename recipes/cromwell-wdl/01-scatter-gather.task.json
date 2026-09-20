@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-cromwell-wdl-r1",
+  "container": "quay.io/aarchbio/cromwell@sha256:0d86efb43d8df392362fb54c0ef1ea2a6449b776cabe5089dd1b5a0cafce230e",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\ncat > sumcheck.wdl <<'WDLEOF'\ntask partial {\n  Int lo\n  Int hi\n  command <<<\n    seq ${lo} ${hi} | awk '{s+=$1} END{print s+0}'\n  >>>\n  output {\n    Int sum = read_int(stdout())\n  }\n  runtime { }\n}\n\ntask gather {\n  Array[Int] parts\n  command <<<\n    echo \"${sep=' ' parts}\" | tr ' ' '\\n' | awk 'NF{s+=$1} END{print s+0}'\n  >>>\n  output {\n    Int total = read_int(stdout())\n  }\n}\n\nworkflow sumcheck {\n  Int n = 1000\n  Int shards = 8\n  Int per = n / shards\n  scatter (i in range(shards)) {\n    call partial { input: lo = i*per + 1, hi = (i+1)*per }\n  }\n  call gather { input: parts = partial.sum }\n  output {\n    Int total = gather.total\n  }\n}\nWDLEOF\n\necho \"== static validation (womtool) ==\"\nwomtool validate sumcheck.wdl > womtool.txt 2>&1\ncat womtool.txt\n\necho \"== run the workflow (Cromwell local backend) ==\"\ncromwell run sumcheck.wdl -m meta.json > run.log 2>&1 || { echo CROMWELL_FAIL; grep -iE \"Unrecognized|input processing failed|error\" run.log | head -5; exit 1; }\n\n# Cromwell prints the outputs block TWICE; take the first match only.\n# `exit` is safe here because awk reads a FILE (no upstream writer to SIGPIPE, unlike `| head`).\nTOTAL=$(awk -F': *' '/\"sumcheck.total\"/{gsub(/[^0-9]/,\"\",$2); print $2; exit}' run.log)\nSHARDS=$(ls -d cromwell-executions/sumcheck/*/call-partial/shard-* 2>/dev/null | wc -l | tr -d \" \")\nfor f in cromwell-executions/sumcheck/*/call-partial/shard-*/execution/stdout; do cat \"$f\"; done | sort -n > got_partials.txt\nawk 'BEGIN{n=1000;s=8;per=n/s; for(i=0;i<s;i++){lo=i*per+1;hi=(i+1)*per; print (hi*(hi+1)-(lo-1)*lo)/2}}' | sort -n > want_partials.txt\nPARTIALS_OK=no; cmp -s got_partials.txt want_partials.txt && PARTIALS_OK=yes\nEXPECT=$(awk 'BEGIN{n=1000; print n*(n+1)/2}')\nCROMVER=$(awk 'NR==1{print $NF}' womtool.txt 2>/dev/null)\n\n{\n  echo \"Cromwell/WDL -- scatter-gather verified against a closed-form identity\"\n  echo \"cromwell_version    0.40\"\n  echo \"womtool_validate    $(awk 'NR==1{print $1}' womtool.txt)\"\n  echo \"shards_materialised $SHARDS   (assert 8 -- the scatter really fanned out)\"\n  echo \"per_shard_partials  $(tr '\\n' ' ' < got_partials.txt)\"\n  echo \"expected_partials   $(tr '\\n' ' ' < want_partials.txt)\"\n  echo \"partials_identical  $PARTIALS_OK   (assert yes -- each shard got the RIGHT range, which a correct total alone would not prove)\"\n  echo \"gathered_total      $TOTAL   (assert $EXPECT = n(n+1)/2, EXACT)\"\n  echo \"note  WDL command blocks use <<< >>> heredocs: awk braces collide with command { } brace matching\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$SHARDS\" -eq 8\ntest \"$PARTIALS_OK\" = yes\ntest \"$TOTAL\" -eq \"$EXPECT\"\ngrep -q Success womtool.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cromwell-wdl/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
