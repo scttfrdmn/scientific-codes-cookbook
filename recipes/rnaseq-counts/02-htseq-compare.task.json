@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-rnaseq-counts-htseq-r1",
+  "container": "quay.io/aarchbio/htseq@sha256:a578d1c21dffe43dfc0075ade4f1862881ec825eab61b67197993bb609aa9811",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== htseq-count on the SAME fixture bytes (-s no matches featureCounts' default) ==\"\nhtseq-count -f sam -t exon -i gene_id -s no reads.sam genes.gtf > hts.txt 2>hts.log\ngrep -v '^__' hts.txt > hts_counts.txt\ncat hts_counts.txt\necho \"-- htseq's own accounting --\"; grep '^__' hts.txt\n\nTOTAL=$(awk '!/^@/{n++} END{print n+0}' reads.sam)\nPLANTED=$(awk '{s+=$2} END{print s+0}' truth.txt)\nNOFEAT=$(awk '/^__no_feature/{print $2}' hts.txt)\nFC_OK=no; cmp -s <(sort truth.txt) <(sort fc_counts.txt) && FC_OK=yes\nHT_OK=no; cmp -s <(sort truth.txt) <(sort hts_counts.txt) && HT_OK=yes\nAGREE=no; cmp -s <(sort fc_counts.txt) <(sort hts_counts.txt) && AGREE=yes\nHT_SUM=$(awk '{s+=$2} END{print s+0}' hts.txt)\n\n{\n  echo \"RNA-seq read counting -- two tools, one fixture, counts known by construction\"\n  echo \"featurecounts_version v2.1.1 (subread image tag 2.1.1; featureCounts is not installed in the htseq image)\"\n  echo \"htseq_version         $(htseq-count --version 2>&1 | awk 'NR==1{print $NF}')\"\n  echo \"reads_total           $TOTAL   (of which $PLANTED planted in genes, rest intergenic)\"\n  echo \"featurecounts_matches_truth $FC_OK   (assert yes -- EXACT integer counts)\"\n  echo \"htseq_matches_truth         $HT_OK   (assert yes -- EXACT)\"\n  echo \"tools_agree                 $AGREE   (assert yes -- cross-validation on identical bytes)\"\n  echo \"htseq_no_feature      $NOFEAT   (assert == intergenic reads -- non-genic reads excluded, not absorbed)\"\n  echo \"htseq_accounting_sum  $HT_SUM of $TOTAL   (assert equal -- conservation: every read accounted for)\"\n  echo \"note  agreement here is not a stranding artifact: all reads are forward-strand on + genes, so htseq's -s yes default gives the same counts (verified)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$FC_OK\" = yes\ntest \"$HT_OK\" = yes\ntest \"$AGREE\" = yes\ntest \"$NOFEAT\" -eq $((TOTAL - PLANTED))\ntest \"$HT_SUM\" -eq \"$TOTAL\"\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts/r1/genes.gtf",
+      "destination": "/tmp/genes.gtf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts/r1/reads.sam",
+      "destination": "/tmp/reads.sam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts/r1/truth.txt",
+      "destination": "/tmp/truth.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts/r1/fc_counts.txt",
+      "destination": "/tmp/fc_counts.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
