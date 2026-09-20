@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-rnaseq-de-deseq2-r1",
+  "container": "quay.io/aarchbio/bioconductor-deseq2@sha256:6d87efaf6ff4691c2adfd1416c2a40444709d870408ca0ef9cced378cff042a3",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\nexport PATH=/opt/conda/bin:$PATH\n# R needs a writable TMPDIR/HOME or it dies with \"cannot create R_TempDir\"\nexport TMPDIR=/tmp HOME=/tmp\n\ncat > gen.R <<'RSCRIPT'\nset.seed(42)\nG <- 2000; N <- 4                      # genes; samples per group\nnDE <- 200; lfc <- 2                   # planted differential genes, |log2FC|\nbase <- rnbinom(G, mu = 200, size = 5) + 10\ngrp  <- factor(rep(c(\"ctrl\",\"trt\"), each = N))\nde   <- sort(sample(G, nDE))\ndir  <- rep(c(1,-1), length.out = nDE)  # half up, half down\nmu   <- matrix(rep(base, 2*N), nrow = G)\nmu[cbind(de, rep(N+1, nDE))] -> ignore\nfor (j in (N+1):(2*N)) mu[de, j] <- base[de] * 2^(lfc*dir)\ncounts <- matrix(rnbinom(G*2*N, mu = as.vector(mu), size = 8), nrow = G,\n                 dimnames = list(paste0(\"g\", seq_len(G)), paste0(\"s\", seq_len(2*N))))\nwrite.table(counts, \"counts.tsv\", sep=\"\\t\", quote=FALSE)\nwrite.table(data.frame(gene=paste0(\"g\", de), dir=dir), \"truth.tsv\", sep=\"\\t\", row.names=FALSE, quote=FALSE)\ncat(\"planted\", nDE, \"of\", G, \"genes at |log2FC| =\", lfc, \"\\n\")\n\nsuppressMessages(library(DESeq2))\ndds <- DESeqDataSetFromMatrix(counts, data.frame(grp), ~ grp)\nres <- results(DESeq(dds, quiet=TRUE))\nout <- data.frame(gene=rownames(res), lfc=res$log2FoldChange, padj=res$padj)\nwrite.table(out, \"res_deseq2.tsv\", sep=\"\\t\", row.names=FALSE, quote=FALSE)\nsig <- subset(out, !is.na(padj) & padj < 0.05)\ncat(\"DESeq2 significant:\", nrow(sig), \" recovered planted:\",\n    sum(paste0(\"g\", de) %in% sig$gene), \"of\", nDE, \"\\n\")\nRSCRIPT\nRscript gen.R\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/counts.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/counts.tsv"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/res_deseq2.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/res_deseq2.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}

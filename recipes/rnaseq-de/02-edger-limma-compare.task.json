@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-rnaseq-de-compare-r1",
+  "container": "quay.io/aarchbio/bioconductor-edger@sha256:09169b359eedcda2bd9f83366d993c2024dc40ac15441cdf68cf34f32befdd02",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\ncd /tmp\nexport PATH=/opt/conda/bin:$PATH\n# R needs a writable TMPDIR/HOME or it dies with \"cannot create R_TempDir\"\nexport TMPDIR=/tmp HOME=/tmp\n\ncat > edger.R <<'RSCRIPT'\nsuppressMessages(library(edgeR))\ncounts <- as.matrix(read.delim(\"counts.tsv\", row.names=1, check.names=FALSE))\ngrp <- factor(rep(c(\"ctrl\",\"trt\"), each=ncol(counts)/2))\ny <- DGEList(counts, group=grp); y <- calcNormFactors(y)\nd <- model.matrix(~grp); y <- estimateDisp(y, d)\ntt <- topTags(glmQLFTest(glmQLFit(y, d), coef=2), n=Inf)$table\nout <- data.frame(gene=rownames(tt), lfc=tt$logFC, padj=tt$FDR)\nwrite.table(out, \"res_edger.tsv\", sep=\"\\t\", row.names=FALSE, quote=FALSE)\ntr <- read.delim(\"truth.tsv\"); sig <- subset(out, padj < 0.05)\ncat(\"edgeR significant:\", nrow(sig), \" recovered planted:\", sum(tr$gene %in% sig$gene), \"of\", nrow(tr), \"\\n\")\nRSCRIPT\nRscript edger.R\ncat > cmp.R <<'RSCRIPT'\nsuppressMessages({library(limma); library(edgeR)})\ncounts <- as.matrix(read.delim(\"counts.tsv\", row.names=1, check.names=FALSE))\ngrp <- factor(rep(c(\"ctrl\",\"trt\"), each=ncol(counts)/2))\nd <- model.matrix(~grp)\nv <- voom(calcNormFactors(DGEList(counts, group=grp)), d)\ntt <- topTable(eBayes(lmFit(v, d)), coef=2, number=Inf)\nout <- data.frame(gene=rownames(tt), lfc=tt$logFC, padj=tt$adj.P.Val)\nwrite.table(out, \"res_limma.tsv\", sep=\"\\t\", row.names=FALSE, quote=FALSE)\n\ntr <- read.delim(\"truth.tsv\")\nR <- list(deseq2=read.delim(\"res_deseq2.tsv\"), edger=read.delim(\"res_edger.tsv\"), limma=out)\nsig <- lapply(R, function(x) { x <- x[!is.na(x$padj),]; x$gene[x$padj < 0.05] })\nrec <- sapply(sig, function(s) sum(tr$gene %in% s))\ncat(\"=== recovery of\", nrow(tr), \"planted genes ===\\n\"); print(rec)\ncat(\"=== total significant ===\\n\"); print(sapply(sig, length))\n\n# EXACT check 1: planted direction must be recovered by every method\ndirok <- sapply(names(R), function(m) {\n  x <- R[[m]]; mm <- merge(tr, x, by=\"gene\")\n  sum(sign(mm$lfc) == sign(mm$dir))\n})\ncat(\"=== planted genes with CORRECT direction (of\", nrow(tr), \") ===\\n\"); print(dirok)\n\n# EXACT check 2: on genes all three call significant, all three must agree on sign\ncommon <- Reduce(intersect, sig)\nlf <- Reduce(function(a,b) merge(a,b,by=\"gene\"),\n             lapply(names(R), function(m) setNames(R[[m]][,c(\"gene\",\"lfc\")], c(\"gene\", m))))\nlfc <- lf[lf$gene %in% common, ]\nagree <- sum(sign(lfc$deseq2)==sign(lfc$edger) & sign(lfc$edger)==sign(lfc$limma))\ncat(\"=== triple-significant genes:\", length(common), \" sign-agreement:\", agree, \"\\n\")\n\n# BAND: rank concordance (different models => rank, not raw)\nsp <- c(de_ed=cor(lf$deseq2, lf$edger, method=\"spearman\"),\n        de_li=cor(lf$deseq2, lf$limma, method=\"spearman\"),\n        ed_li=cor(lf$edger, lf$limma, method=\"spearman\"))\ncat(\"=== Spearman on log2FC, all\", nrow(lf), \"genes ===\\n\"); print(round(sp,4))\n\n# ---- assertions: two exact, two justified bands ----\nstopifnot(all(dirok == nrow(tr)))                 # EXACT: every planted direction recovered, all methods\nstopifnot(agree == length(common))                # EXACT: sign agreement on triple-significant genes\nstopifnot(all(rec >= 195))                        # band: strong planted effect must be recovered at high power\nstopifnot(all(sp >= 0.95))                        # band: rank concordance (different models => rank, not raw)\nlines <- c(\"RNA-seq differential expression -- three methods, one synthetic matrix with planted truth\",\n  sprintf(\"planted_genes        %d of %d at |log2FC| = 2\", nrow(tr), nrow(R$deseq2)),\n  sprintf(\"recovery             deseq2=%d edger=%d limma=%d  (assert >= 195)\", rec[1], rec[2], rec[3]),\n  sprintf(\"total_significant    deseq2=%d edger=%d limma=%d\", length(sig$deseq2), length(sig$edger), length(sig$limma)),\n  sprintf(\"planted_direction    deseq2=%d edger=%d limma=%d of %d  (assert == %d, EXACT)\", dirok[1], dirok[2], dirok[3], nrow(tr), nrow(tr)),\n  sprintf(\"triple_significant   %d   sign_agreement %d  (assert equal, EXACT)\", length(common), agree),\n  sprintf(\"spearman_log2fc      de-ed=%.4f de-li=%.4f ed-li=%.4f  (assert >= 0.95)\", sp[1], sp[2], sp[3]),\n  \"note  limma-voom runs in the edgeR image because voom requires edgeR; a real dependency, not a shortcut\")\nwriteLines(lines, \"smoke-check.txt\"); cat(paste(lines, collapse=\"\\n\"), \"\\n\")\ncat(\"SMOKE CHECK PASSED\\n\")\nRSCRIPT\nRscript cmp.R\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/counts.tsv",
+      "destination": "/tmp/counts.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/res_deseq2.tsv",
+      "destination": "/tmp/res_deseq2.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-de/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}
