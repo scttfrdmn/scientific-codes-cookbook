@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-plink-r1",
+  "container": "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== plink version (tag says 1.90b7.7; the binary self-reports) ==\"\n# NEVER pipe into head under `set -o pipefail`: the writer gets SIGPIPE and aborts the script (exit 141)\nplink --version > plinkver.txt 2>&1 || true\nPVER=$(awk 'NR==1{print $2}' plinkver.txt)\necho \"plink $PVER\"\n\necho \"== arm64 from inside: ELF e_machine must be 183 (AArch64) ==\"\nEM=$(od -An -tu1 -j18 -N2 \"$(command -v plink)\" | awk '{print $1 + $2*256}')\necho \"e_machine $EM\"; test \"$EM\" -eq 183\n\necho \"== synthetic cohort: 300 samples, 1000 SNPs, 2% missing, seed 42 ==\"\nplink --dummy 300 1000 0.02 0 acgt --seed 42 --make-bed --out data >/dev/null\nplink --bfile data --freq counts --seed 42 --out pcount >/dev/null\nplink --bfile data --recode A --seed 42 --out raw >/dev/null\n\necho \"== CHECK 1 (exact, integer): PLINK allele counts vs an independent hand count ==\"\nawk 'NR==1{for(i=7;i<=NF;i++) nm[i]=$i; next}\n     {for(i=7;i<=NF;i++) if($i!=\"NA\") c[i]+=$i}\n     END{for(i=7;i<=NF;i++) print nm[i], c[i]+0}' raw.raw | sort > handc.txt\nawk 'NR>1{print $2\"_\"$3, $5}' pcount.frq.counts | sort > plinkc.txt\nMISMATCH=$(join handc.txt plinkc.txt | awk '{if($2!=$3) b++} END{print b+0}')\nNSNP=$(wc -l < plinkc.txt | tr -d \" \")\necho \"allele_count_mismatches $MISMATCH of $NSNP\"\n\necho \"== CHECK 2 (constructed truth): plant a causal SNP, require it to rank first ==\"\nCAUSAL=snp500\nawk -v c=\"$CAUSAL\" 'NR==1{for(i=7;i<=NF;i++) if($i ~ \"^\"c\"_\"){col=i}; next}\n  {g=(col&&$col!=\"NA\")?$col:1; srand(NR); print $1, $2, 10 + 3*g + (rand()-0.5)}' raw.raw > pheno.txt\nplink --bfile data --pheno pheno.txt --assoc --allow-no-sex --seed 42 --out as >/dev/null\nawk 'NR>1 && $9!=\"NA\"{print $9, $2}' as.qassoc | sort -g > ranked.txt\nTOP=$(awk 'NR==1{print $2}' ranked.txt)\nTOPP=$(awk 'NR==1{print $1}' ranked.txt)\nNEXTP=$(awk 'NR==2{print $1}' ranked.txt)\n\n{\n  echo \"PLINK 1.9 -- allele-count identity and planted-association recovery\"\n  echo \"plink_version         $PVER\"\n  echo \"cohort                300 samples x 1000 SNPs, 2% missing, --seed 42\"\n  echo \"allele_count_mismatch $MISMATCH of $NSNP   (assert 0 -- exact integer identity)\"\n  echo \"planted_causal        $CAUSAL\"\n  echo \"top_hit               $TOP   p=$TOPP\"\n  echo \"runner_up_p           $NEXTP\"\n  echo \"note  allele counts are integers, so this identity needs no tolerance; --freq (not counts) prints only 4 s.f. and would force a band\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$MISMATCH\" -eq 0\ntest \"$NSNP\" -eq 1000\ntest \"$TOP\" = \"$CAUSAL\"\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
