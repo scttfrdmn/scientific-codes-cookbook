@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-single-cell-fry-r1",
+  "container": "quay.io/aarchbio/alevin-fry@sha256:a786a69ea67e2234f6d2a600314bd1ba79b4647958d419025a1dfa9a37cefd79",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\ntar -xf rad.tar\n\necho \"== A: --min-reads 1 -- every planted cell must survive ==\"\nalevin-fry generate-permit-list -d fw -i rad -o qdA --unfiltered-pl barcodes.txt --min-reads 1 > gpA.log 2>&1\nalevin-fry collate -i qdA -r rad -t 2 > colA.log 2>&1\nalevin-fry quant -i qdA -o resA -m t2g.tsv -r cr-like -t 2 > qA.log 2>&1\n\necho \"== B: DEFAULT --min-reads -- demonstrates the silent low-count-cell drop ==\"\nalevin-fry generate-permit-list -d fw -i rad -o qdB --unfiltered-pl barcodes.txt > gpB.log 2>&1\nalevin-fry collate -i qdB -r rad -t 2 > colB.log 2>&1\nalevin-fry quant -i qdB -o resB -m t2g.tsv -r cr-like -t 2 > qB.log 2>&1\n\n# rebuild the (barcode, gene, count) triples from the MatrixMarket output\nmk() { awk 'NR==FNR{r[FNR]=$1; next} FNR==1{next} FNR==2{next} FNR==3{next} {print r[$1]\"\\tg\"$2\"\\t\"$3}' \\\n        \"$1/alevin/quants_mat_rows.txt\" \"$1/alevin/quants_mat.mtx\" | sort; }\nmk resA > gotA.tsv; mk resB > gotB.tsv\necho \"--- A (min-reads 1) ---\"; cat gotA.tsv\necho \"--- B (default) ---\";     cat gotB.tsv\n\nCELLS_A=$(wc -l < resA/alevin/quants_mat_rows.txt | tr -d ' ')\nCELLS_B=$(wc -l < resB/alevin/quants_mat_rows.txt | tr -d ' ')\nSUM_A=$(awk '{s+=$3} END{print s+0}' gotA.tsv)\nREADS=$(awk '/reads/{for(i=1;i<=NF;i++) if($i==\"reads\") print $(i+1)}' fixture.txt)\nEXACT_A=no; cmp -s truth.tsv gotA.tsv && EXACT_A=yes\nDROPPED=$(comm -23 <(cut -f1 truth.tsv | sort -u) <(cut -f1 gotB.tsv | sort -u) | tr '\\n' ' ')\n\n{\n  echo \"Single-cell quantification -- piscem + alevin-fry against a planted count matrix\"\n  echo \"piscem                0.23.0 (map-sc)   alevin-fry 0.9.0\"\n  echo \"reads                 $READS   (every read carries a UNIQUE UMI, so counts == reads)\"\n  echo \"cells_min_reads_1     $CELLS_A   (assert 3 -- all planted cells retained)\"\n  echo \"matrix_exact          $EXACT_A   (assert yes -- EXACT: every (cell,gene,count) triple equals the planted value)\"\n  echo \"count_sum             $SUM_A of $READS   (assert equal -- CONSERVATION: one unique UMI becomes exactly one count)\"\n  echo \"cells_default_minreads $CELLS_B   (assert 2 -- see below)\"\n  echo \"dropped_by_default    $DROPPED  (the 8-read cell: alevin-fry's --unfiltered-pl defaults to --min-reads 10 and drops it SILENTLY)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$CELLS_A\" -eq 3\ntest \"$EXACT_A\" = yes\ntest \"$SUM_A\" -eq \"$READS\"\ntest \"$CELLS_B\" -eq 2\ntest -n \"$DROPPED\"\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/rad.tar",
+      "destination": "/tmp/rad.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/txome.fa",
+      "destination": "/tmp/txome.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/t2g.tsv",
+      "destination": "/tmp/t2g.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/barcodes.txt",
+      "destination": "/tmp/barcodes.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/fixture.txt",
+      "destination": "/tmp/fixture.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
