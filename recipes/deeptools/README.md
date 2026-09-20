@@ -53,7 +53,7 @@ Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. The co
 
 **The whole track is compared, not sampled.** The expected bedgraph is written out before deepTools runs and then `cmp`-ed against the output:
 
-```
+```text
 999  1099  5     <- five stacked reads (bedgraph is 0-based; SAM pos 1000)
 1999 2049  2
 2049 2099  4     <- the overlap
