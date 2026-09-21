@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-bismark-methyldackel-r1",
+  "container": "quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== MethylDackel extract on the SAME alignments Bismark produced ==\"\nMethylDackel extract --mergeContext chrS.fa sorted.bam -o md > md.log 2>&1\ngrep -v '^track' md_CpG.bedGraph | sort -k2,2n > md_raw.txt\ncat md_raw.txt\n\n# COORDINATE NORMALISATION: MethylDackel's --mergeContext bedGraph is 0-based half-open over the\n# CpG (start=199 for the C at 1-based 200); Bismark's .cov is the 1-based C position. Compare\n# counts only after aligning the conventions, or two agreeing tools look like they disagree.\nawk '{printf \"%s\\t%d\\t%d\\t%d\\n\", $1, $2+1, $5, $6}' md_raw.txt | sort -k2,2n > md_calls.tsv\n\necho \"--- truth / bismark / methyldackel (chrom pos nMeth nUnmeth) ---\"\npaste truth.tsv bismark_calls.tsv md_calls.tsv | sed 's/\\t/  /g'\n\nMD_SITES=$(wc -l < md_calls.tsv | tr -d ' ')\nMD_EXACT=no; cmp -s truth.tsv md_calls.tsv && MD_EXACT=yes\nBM_EXACT=no; cmp -s truth.tsv bismark_calls.tsv && BM_EXACT=yes\nAGREE=no;    cmp -s bismark_calls.tsv md_calls.tsv && AGREE=yes\nMD_CALLS=$(awk '{s+=$3+$4} END{print s+0}' md_calls.tsv)\nREADS=$(awk '/reads/{for(i=1;i<=NF;i++) if($i==\"reads\") print $(i+1)}' fixture.txt)\nRAW_MATCH=no; cmp -s <(cut -f1,2 truth.tsv) <(cut -f1,2 md_raw.txt) && RAW_MATCH=yes\n\n{\n  echo \"Methylation -- two independent callers on one set of bisulfite alignments\"\n  echo \"methyldackel_version  $(MethylDackel --version 2>&1 | awk 'NR==1{print $1}')\"\n  echo \"sites_methyldackel    $MD_SITES   (assert 3)\"\n  echo \"bismark_exact         $BM_EXACT   (assert yes -- EXACT vs planted truth)\"\n  echo \"methyldackel_exact    $MD_EXACT   (assert yes -- EXACT vs planted truth)\"\n  echo \"callers_agree         $AGREE   (assert yes -- cross-validation on identical alignments)\"\n  echo \"methyldackel_calls    $MD_CALLS of $READS reads   (assert equal -- CONSERVATION)\"\n  echo \"raw_coords_match      $RAW_MATCH   (expect NO: MethylDackel is 0-based half-open over the CpG, Bismark is the 1-based C)\"\n  echo \"note  the two callers agree on every count; only the COORDINATE CONVENTION differs, so a naive diff would report a disagreement that does not exist\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$MD_SITES\" -eq 3\ntest \"$BM_EXACT\" = yes\ntest \"$MD_EXACT\" = yes\ntest \"$AGREE\" = yes\ntest \"$MD_CALLS\" -eq \"$READS\"\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/sorted.bam",
+      "destination": "/tmp/sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/sorted.bam.bai",
+      "destination": "/tmp/sorted.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/chrS.fa",
+      "destination": "/tmp/chrS.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/chrS.fa.fai",
+      "destination": "/tmp/chrS.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bismark_calls.tsv",
+      "destination": "/tmp/bismark_calls.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/fixture.txt",
+      "destination": "/tmp/fixture.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
