@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-sv-depth-r1",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nsamtools sort -o sample.bam aln.sam 2> sort.log\nsamtools index sample.bam\nsamtools faidx ref.fa\nsamtools view -c sample.bam | awk '{print \"bam_records\", $1}'\n\necho \"== the deletion located from COVERAGE alone -- no SV caller involved ==\"\nsamtools depth -a -J sample.bam > depth.txt\nawk '$3==0{ if(!i){st=$2; i=1}; en=$2 }\n     $3>0 { if(i){ L=en-st+1; if(L>bL){bL=L;bS=st;bE=en}; i=0 } }\n     END  { if(i){ L=en-st+1; if(L>bL){bL=L;bS=st;bE=en} }\n            printf \"%d\\t%d\\t%d\\n\", bS, bE, bL }' depth.txt > depth_interval.txt\nread -r DS DE DL < depth_interval.txt\nNRUNS=$(awk '$3==0{if(!i){n++;i=1}} $3>0{i=0} END{print n+0}' depth.txt)\n\nTS=$(awk -F'\\t' '$1==\"del_start\"{print $2}' truth.tsv)\nTE=$(awk -F'\\t' '$1==\"del_end\"{print $2}'   truth.tsv)\nTL=$(awk -F'\\t' '$1==\"del_len\"{print $2}'   truth.tsv)\n\n# EXACT: across 20 kb there is one and only one gap, and it lies inside the planted deletion\ntest \"$NRUNS\" = \"1\"       || { echo \"expected exactly 1 zero-coverage run, found $NRUNS\"; exit 1; }\ntest \"$DS\" -ge \"$TS\"      || { echo \"gap starts before the planted deletion ($DS < $TS)\"; exit 1; }\ntest \"$DE\" -le \"$TE\"      || { echo \"gap ends after the planted deletion ($DE > $TE)\"; exit 1; }\n# SOFT, with a mechanism: alignments extend a few bp into the deletion where the flanks\n# share micro-homology, so coverage cannot resolve the breakpoint to the base.\nPCT=$(awk -v d=\"$DL\" -v t=\"$TL\" 'BEGIN{printf \"%.1f\", 100*d/t}')\nawk -v d=\"$DL\" -v t=\"$TL\" 'BEGIN{ if (d < 0.98*t) { printf \"coverage gap recovered only %d of %d bp\\n\", d, t; exit 1 } }'\n\n{\nprintf 'Deletion located from COVERAGE alone (an independent signal from any SV caller)\\n'\nprintf 'zero_cov_runs\\t%s   (assert 1 -- EXACT: one gap in 20 kb, no spurious gaps)\\n' \"$NRUNS\"\nprintf 'zero_cov_interval\\t%s-%s (%s bp)\\n' \"$DS\" \"$DE\" \"$DL\"\nprintf 'planted_deletion\\t%s-%s (%s bp)\\n' \"$TS\" \"$TE\" \"$TL\"\nprintf 'contained_in_planted\\tyes   (assert yes -- EXACT containment)\\n'\nprintf 'bases_recovered\\t%s of %s (%s%%)   (assert >=98%% -- NOT exact by construction, see note)\\n' \"$DL\" \"$TL\" \"$PCT\"\nprintf 'note\\tcoverage cannot resolve the breakpoint to the base: where the flanks share a few bp of\\n'\nprintf 'note\\tmicro-homology with the deletion edges, bwa extends alignments into the deleted interval.\\n'\nprintf 'note\\tThat is why the cross-check below is CONTAINMENT, not equality.\\n'\n} | tee smoke-check-depth.txt\necho \"DEPTH CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa",
+      "destination": "/tmp/ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/aln.sam",
+      "destination": "/tmp/aln.sam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/sample.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam"
+    },
+    {
+      "source": "/tmp/sample.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam.bai"
+    },
+    {
+      "source": "/tmp/ref.fa.fai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa.fai"
+    },
+    {
+      "source": "/tmp/depth_interval.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/depth_interval.txt"
+    },
+    {
+      "source": "/tmp/smoke-check-depth.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/smoke-check-depth.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

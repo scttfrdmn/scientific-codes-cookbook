@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **72 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **73 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -140,7 +140,8 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [rnaseq-counts](../recipes/rnaseq-counts/README.md) | featureCounts and HTSeq each count the same aligned reads against the same annotation on Graviton4, checked against counts that were planted rather than measured. The step that produces the matrix [differential expression](../recipes/rnaseq-de/README.md) consumes. | pipeline | stage | 2026-09-19 | 2026-09-20 |
 | [rnaseq-de](../recipes/rnaseq-de/README.md) | DESeq2, edgeR and limma-voom each test the same count matrix for differential expression on Graviton4, and are checked against genes whose answer is known by construction. For anyone doing bulk RNA-seq who wants to see the three standard methods agree. | pipeline | stage | 2026-09-19 | 2026-09-20 |
 | [single-cell](../recipes/single-cell/README.md) | piscem maps single-cell reads and alevin-fry turns them into a cell × gene count matrix on Graviton4, checked against the matrix the fixture was built from. The catalog's first single-cell recipe, for anyone quantifying scRNA-seq without Cell Ranger. | pipeline | stage | 2026-09-19 | 2026-09-20 |
-| [variant-annotation](../recipes/variant-annotation/README.md) | snpEff and `bcftools csq` annotate the same VCF against the same reference and GFF on Graviton4, both checked against consequences that were chosen before the variants existed. The catalog's first annotation recipe, for anyone downstream of a variant caller. | pipeline | stage | — | 2026-09-22 |
+| [structural-variants](../recipes/structural-variants/README.md) | delly calls a 1 kb deletion from paired-end and split-read evidence on Graviton4, against a deletion that was removed from the sample before any read existed. The catalog's first SV recipe, for anyone calling CNVs or rearrangements from short reads. | pipeline | stage | — | 2026-09-22 |
+| [variant-annotation](../recipes/variant-annotation/README.md) | snpEff and `bcftools csq` annotate the same VCF against the same reference and GFF on Graviton4, both checked against consequences that were chosen before the variants existed. The catalog's first annotation recipe, for anyone downstream of a variant caller. | pipeline | stage | 2026-09-22 | 2026-09-22 |
 
 ## pointcloud
 

@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-sv-report-r1",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nBV=$(bcftools --version 2>&1 | awk 'NR==1{print $2}')\nTS=$(awk -F'\\t' '$1==\"del_start\"{print $2}' truth.tsv)\nTE=$(awk -F'\\t' '$1==\"del_end\"{print $2}'   truth.tsv)\nTL=$(awk -F'\\t' '$1==\"del_len\"{print $2}'   truth.tsv)\nread -r DS DE DL < depth_interval.txt\n\necho \"== read delly's call (its own image ships no bcftools) ==\"\nbcftools query -f '%CHROM\\t%POS\\t%FILTER\\t%INFO/SVTYPE\\t%INFO/END\\t%INFO/SVLEN\\t%INFO/PRECISE\\t%INFO/PE\\t%INFO/SR\\t[%GT]\\n' sv.bcf > sv.tsv\ncat sv.tsv\nNREC=$(awk 'END{print NR+0}' sv.tsv)\ntest \"$NREC\" = \"1\" || { echo \"expected exactly 1 SV call across 20 kb, got $NREC\"; exit 1; }\nread -r CH POS FIL TYPE END SVLEN PREC PE SR GT < sv.tsv\n\n# delly's VCF convention: POS is the base BEFORE the deletion, END the base AFTER it.\n# So the DELETED interval is POS+1 .. END-1 -- and that is what must match the truth.\nCALLS=$(( POS + 1 ))\nCALLE=$(( END - 1 ))\ntest \"$TYPE\" = \"DEL\"  || { echo \"SVTYPE is $TYPE, not DEL\"; exit 1; }\ntest \"$FIL\"  = \"PASS\" || { echo \"call did not PASS: $FIL\"; exit 1; }\ntest \"$PREC\" = \"1\"    || { echo \"call is IMPRECISE -- an exact breakpoint claim is not licensed\"; exit 1; }\ntest \"$CALLS\" = \"$TS\" || { echo \"called start $CALLS != planted $TS\"; exit 1; }\ntest \"$CALLE\" = \"$TE\" || { echo \"called end $CALLE != planted $TE\"; exit 1; }\n\n# The proxy that LOOKS right and is not: |SVLEN| is END-POS, one more than the deleted length.\nABSLEN=${SVLEN#-}\nNAIVE=no; [ \"$ABSLEN\" = \"$TL\" ] && NAIVE=yes\ntest \"$ABSLEN\" = \"$(( TL + 1 ))\" || { echo \"SVLEN convention changed: |SVLEN|=$ABSLEN, expected $(( TL + 1 ))\"; exit 1; }\n\n# Two independent signals, cross-checked the only way they can be: containment.\nCONT=no; [ \"$DS\" -ge \"$CALLS\" ] && [ \"$DE\" -le \"$CALLE\" ] && CONT=yes\ntest \"$CONT\" = yes || { echo \"coverage gap $DS-$DE is not inside delly's call $CALLS-$CALLE\"; exit 1; }\n\n{\nprintf 'Structural variants -- a planted deletion found by two independent signals\\n'\nprintf 'bcftools_version\\t%s\\n' \"$BV\"\nprintf 'sv_calls\\t%s   (assert 1 -- EXACT: one call in 20 kb, no false positives)\\n' \"$NREC\"\nprintf 'svtype_filter_precise\\t%s / %s / PRECISE   (assert DEL / PASS / PRECISE)\\n' \"$TYPE\" \"$FIL\"\nprintf 'evidence\\tPE=%s split-reads=%s  GT=%s\\n' \"$PE\" \"$SR\" \"$GT\"\nprintf 'delly_breakpoints\\t%s-%s   (POS+1 .. END-1, from POS=%s END=%s)\\n' \"$CALLS\" \"$CALLE\" \"$POS\" \"$END\"\nprintf 'planted_deletion\\t%s-%s (%s bp)\\n' \"$TS\" \"$TE\" \"$TL\"\nprintf 'breakpoints_exact\\tyes   (assert yes -- EXACT to the base, licensed by PRECISE)\\n'\nprintf 'svlen_reported\\t%s   (assert |SVLEN| = %s = del_len+1 -- delly reports END-POS, NOT the deleted length)\\n' \"$SVLEN\" \"$(( TL + 1 ))\"\nprintf 'naive_svlen_check\\t%s   (a reader asserting |SVLEN|==%s FAILS on this correct call -- that is the point)\\n' \"$NAIVE\" \"$TL\"\nprintf 'coverage_gap\\t%s-%s (%s bp)\\n' \"$DS\" \"$DE\" \"$DL\"\nprintf 'signals_agree\\t%s   (assert yes -- coverage gap CONTAINED in delly call; equality is not available,\\n' \"$CONT\"\nprintf 'signals_agree\\t     because split reads resolve the breakpoint to the base and coverage cannot)\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.bcf",
+      "destination": "/tmp/sv.bcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.bcf.csi",
+      "destination": "/tmp/sv.bcf.csi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/depth_interval.txt",
+      "destination": "/tmp/depth_interval.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/sv.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

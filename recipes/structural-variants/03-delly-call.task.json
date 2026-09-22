@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-sv-delly-r1",
+  "container": "quay.io/aarchbio/delly@sha256:c1d0492cb7d52d56f0a01e790dd1434ba9ddbb47cc5c95cf90dc12c20d5aaeb5",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\ndelly --version > dellyver.txt 2>&1\nDV=$(awk '/Delly version/{print $3}' dellyver.txt)\n\necho \"== delly 2.6.0: the subcommand is 'sr', NOT 'call' ==\"\ndelly sr -g ref.fa -o sv.bcf sample.bam > delly.log 2>&1 || { tail -20 delly.log; exit 1; }\ngrep 'Sample:' delly.log | tee delly-stats.txt\n\ntest -s sv.bcf || { echo \"delly produced no BCF\"; exit 1; }\nMAD=$(sed -n 's/.*MAD=\\([0-9]*\\).*/\\1/p' delly-stats.txt)\nUDP=$(sed -n 's/.*UniqueDiscordantPairs=\\([0-9]*\\).*/\\1/p' delly-stats.txt)\nRS=$(sed -n 's/.*ReadSize=\\([0-9]*\\).*/\\1/p' delly-stats.txt)\n# delly's image ships no bcftools, so the CALL is asserted in the next task. What IS\n# assertable here is that delly saw the evidence at all -- a library it cannot model\n# (MAD=0) or with no discordant pairs would yield a green run and an empty call set.\ntest \"$MAD\" -gt 0 || { echo \"delly measured MAD=0 -- no insert-size distribution to model\"; exit 1; }\ntest \"$UDP\" -gt 0 || { echo \"delly found no discordant pairs -- nothing to call from\"; exit 1; }\n{\nprintf 'delly_version\\t%s\\n' \"$DV\"\nprintf 'read_size\\t%s\\n' \"$RS\"\nprintf 'insert_mad\\t%s   (assert >0 -- a fixed fragment length gives MAD=0, which delly cannot model)\\n' \"$MAD\"\nprintf 'unique_discordant_pairs\\t%s   (assert >0 -- the paired-end signal delly calls from)\\n' \"$UDP\"\n} | tee -a delly-stats.txt\necho \"DELLY RAN\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa",
+      "destination": "/tmp/ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa.fai",
+      "destination": "/tmp/ref.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam",
+      "destination": "/tmp/sample.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam.bai",
+      "destination": "/tmp/sample.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/sv.bcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.bcf"
+    },
+    {
+      "source": "/tmp/sv.bcf.csi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.bcf.csi"
+    },
+    {
+      "source": "/tmp/delly-stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/delly-stats.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

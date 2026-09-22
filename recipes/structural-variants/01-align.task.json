@@ -1,0 +1,40 @@
+{
+  "task_id": "cookbook-sv-align-r1",
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== 20 kb reference; the SAMPLE carries a 1000 bp deletion of ref[8001..9000] ==\"\nawk 'BEGIN{srand(13); b=\"ACGT\"; s=\"\"\n  for(i=0;i<20000;i++) s=s substr(b,int(rand()*4)+1,1)\n  print \">chrS\"; for(i=1;i<=length(s);i+=60) print substr(s,i,60) }' > ref.fa\nREF=$(awk '!/^>/{printf \"%s\",$0}' ref.fa)\nSAMPLE=\"${REF:0:8000}${REF:9000}\"\nprintf 'del_start\\t8001\\ndel_end\\t9000\\ndel_len\\t1000\\nref_len\\t%s\\nsample_len\\t%s\\n' \"${#REF}\" \"${#SAMPLE}\" > truth.tsv\ncat truth.tsv\n\necho \"== fixture identity: the sample must be shorter by exactly the deleted length ==\"\ntest \"${#REF}\"    = 20000 || { echo \"FIXTURE: reference is not 20000 bp\"; exit 1; }\ntest \"${#SAMPLE}\" = 19000 || { echo \"FIXTURE: sample is not 19000 bp\"; exit 1; }\ntest $(( ${#REF} - ${#SAMPLE} )) = 1000 || { echo \"FIXTURE: length difference is not the deletion\"; exit 1; }\necho \"fixture_lengths\tref 20000 - sample 19000 = 1000 = the planted deletion\"\n\necho \"== paired reads FROM THE SAMPLE: 100 bp, fragments 360-440 (median 400, nonzero MAD) ==\"\nawk -v s=\"$SAMPLE\" 'BEGIN{\n  RL=100; STRIDE=6; n=0\n  nf = split(\"360 380 400 420 440\", FL, \" \")\n  q=\"\"; for(i=0;i<RL;i++) q=q \"I\"\n  for(p=1; p+440-1<=length(s); p+=STRIDE){\n    n++; FR=FL[(n%nf)+1]\n    r1=substr(s,p,RL); r2=substr(s,p+FR-RL,RL); rc=\"\"\n    for(j=length(r2);j>=1;j--){ c=substr(r2,j,1)\n      rc = rc (c==\"A\"?\"T\":(c==\"T\"?\"A\":(c==\"C\"?\"G\":(c==\"G\"?\"C\":\"N\")))) }\n    printf \"@f%d/1\\n%s\\n+\\n%s\\n\", n, r1, q > \"R1.fq\"\n    printf \"@f%d/2\\n%s\\n+\\n%s\\n\", n, rc, q > \"R2.fq\"\n  }\n  # one last fragment anchored at the end, so the ONLY coverage gap is the deletion\n  p=length(s)-440+1; n++; FR=440\n  r1=substr(s,p,RL); r2=substr(s,p+FR-RL,RL); rc=\"\"\n  for(j=length(r2);j>=1;j--){ c=substr(r2,j,1)\n    rc = rc (c==\"A\"?\"T\":(c==\"T\"?\"A\":(c==\"C\"?\"G\":(c==\"G\"?\"C\":\"N\")))) }\n  printf \"@f%d/1\\n%s\\n+\\n%s\\n\", n, r1, q > \"R1.fq\"\n  printf \"@f%d/2\\n%s\\n+\\n%s\\n\", n, rc, q > \"R2.fq\"\n  printf \"fixture_reads\\t%d fragments / %.1fx / fragment lengths 360-440\\n\", n, n*2*RL/19000\n}' | tee fixture.txt\n\necho \"== align the sample's reads back to the REFERENCE, so the deletion must be inferred ==\"\nbwa index ref.fa 2> bwaindex.log\nbwa mem -t 1 -R '@RG\\tID:s1\\tSM:sample1\\tPL:ILLUMINA' ref.fa R1.fq R2.fq > aln.sam 2> bwamem.log\nNREC=$(awk '!/^@/{n++} END{print n+0}' aln.sam)\nNSA=$(awk '/SA:Z:/{n++} END{print n+0}' aln.sam)\nNRG=$(awk '/^@RG/{n++} END{print n+0}' aln.sam)\ntest \"$NRG\" -ge 1  || { echo \"no @RG in the BAM header -- delly requires a read group with SM\"; exit 1; }\ntest \"$NSA\" -gt 0  || { echo \"no SA:Z split alignments -- delly could only call an IMPRECISE breakpoint\"; exit 1; }\n{\nprintf 'sam_records\\t%s\\n' \"$NREC\"\nprintf 'split_alignments\\t%s   (assert >0 -- split reads are what make an EXACT breakpoint possible)\\n' \"$NSA\"\nprintf 'read_groups\\t%s   (assert >=1 -- delly refuses a BAM with no @RG SM)\\n' \"$NRG\"\n} | tee -a fixture.txt\necho \"ALIGN OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/ref.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa"
+    },
+    {
+      "source": "/tmp/aln.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/aln.sam"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/fixture.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
