@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-varann-bcsq-r1",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nbcftools --version > bcfver.txt 2>&1\nBV=$(awk 'NR==1{print $2}' bcfver.txt)\nPROT=$(awk 'NR==1{print $1}' protein.txt)\n\necho \"== second annotator, same reference, same GFF, same VCF ==\"\nbgzip -c genes.gff > genes.gff.gz\nbcftools csq -f chrA.fa -g genes.gff.gz -l -Ov variants.vcf > csq.vcf 2> csq.log\ngrep -v '^##' csq.vcf | cut -f3,8\nNC=$(awk '!/^#/{n++} END{print n+0}' csq.vcf)\ntest \"$NC\" = \"5\" || { echo \"expected 5 records, got $NC\"; cat csq.log; exit 1; }\nNB=$(awk '!/^#/ && $8 ~ /BCSQ=/ {n++} END{print n+0}' csq.vcf)\ntest \"$NB\" = \"5\" || { echo \"only $NB of 5 records carry a BCSQ consequence -- the GFF was not indexed\"; cat csq.log; exit 1; }\n\necho \"== normalise bcftools' spelling into the same five columns ==\"\ncat > norm-bcsq.awk <<'AWKEOF'\nBEGIN{FS=\"\\t\"; OFS=\"\\t\"}\n!/^#/{\n  b=\"\"; n=split($8,parts,\";\")\n  for(i=1;i<=n;i++) if (parts[i] ~ /^BCSQ=/) b=substr(parts[i],6)\n  split(b,f,\"|\")\n  csq=f[1]; sub(/&.*/,\"\",csq); gsub(/^[^A-Za-z]+/,\"\",csq)\n  aa=f[6]; pos=\".\"; r=\".\"; a=\".\"\n  if (aa ~ /^[0-9]+[A-Z*]>[0-9]+[A-Z*]$/) {\n    split(aa,s,\">\"); pos=s[1]; gsub(/[^0-9]/,\"\",pos)\n    r=s[1]; gsub(/[0-9]/,\"\",r); a=s[2]; gsub(/[0-9]/,\"\",a)\n  } else if (aa ~ /^[0-9]+[A-Z*]$/) {                # synonymous: one token, no '>'\n    pos=aa; gsub(/[^0-9]/,\"\",pos); r=aa; gsub(/[0-9]/,\"\",r); a=r\n  }\n  print $3, csq, pos, r, a\n}\nAWKEOF\nawk -f norm-bcsq.awk csq.vcf | sort > bcsq.norm\ncat bcsq.norm\n\necho \"== vs the planted truth, and vs snpEff on identical bytes ==\"\nif diff -q truth.tsv bcsq.norm  >/dev/null; then BEXACT=yes; else BEXACT=no; diff truth.tsv bcsq.norm  || true; fi\nif diff -q snpeff.norm bcsq.norm >/dev/null; then AGREE=yes;  else AGREE=no;  diff snpeff.norm bcsq.norm || true; fi\ntest \"$BEXACT\" = yes\ntest \"$AGREE\"  = yes\n\necho \"== the frameshift: bcftools spells out the new reading frame, so the OLD one is assertable ==\"\nRAWFS=$(awk -F'\\t' '$3==\"v4_fs\"{split($8,p,\"BCSQ=\"); split(p[2],f,\"|\"); print f[6]}' csq.vcf)\nREFPEP=${RAWFS%%>*}; REFPEP=${REFPEP##[0-9]}; REFPEP=${REFPEP##[0-9]}\nEXPPEP=${PROT:32}\necho \"bcftools ref peptide from codon 33: $REFPEP   designed protein tail: $EXPPEP\"\nif [ \"$REFPEP\" = \"$EXPPEP\" ]; then FSPEP=yes; else FSPEP=no; fi\ntest \"$FSPEP\" = yes\n\necho \"== the raw spellings, side by side (observation, not assertion) ==\"\n{\nprintf 'variant\\tsnpEff\\tbcftools csq\\n'\nfor v in v1_syn v2_mis v3_non v4_fs v5_spl; do\n  S=$(awk -F'\\t' -v v=\"$v\" '$3==v{split($8,p,\"ANN=\"); split(p[2],f,\"|\"); printf \"%s / %s\", f[2], (f[11]==\"\"?\"-\":f[11])}' ann.vcf)\n  B=$(awk -F'\\t' -v v=\"$v\" '$3==v{split($8,p,\"BCSQ=\"); split(p[2],f,\"|\"); printf \"%s / %s\", f[1], (f[6]==\"\"?\"-\":f[6])}' csq.vcf)\n  printf '%s\\t%s\\t%s\\n' \"$v\" \"$S\" \"$B\"\ndone\n} | tee conventions.txt\n\n{\nprintf 'Variant annotation -- two annotators on one reference, one GFF, one VCF\\n'\nprintf 'bcftools_version\\t%s\\n' \"$BV\"\nprintf 'records_with_consequence\\t%s of 5   (assert 5 -- a mis-parsed GFF yields records with no BCSQ at all)\\n' \"$NB\"\nprintf 'bcftools_exact\\t%s   (assert yes -- EXACT vs planted consequences)\\n' \"$BEXACT\"\nprintf 'annotators_agree\\t%s   (assert yes -- cross-validation after normalising the two spellings)\\n' \"$AGREE\"\nprintf 'frameshift_ref_frame\\t%s   (assert yes -- bcftools ref peptide from codon 33 equals the designed protein tail %s)\\n' \"$FSPEP\" \"$EXPPEP\"\nprintf 'note\\tthe two agree on every consequence; the RAW strings share almost no notation -- see conventions.txt\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/chrA.fa",
+      "destination": "/tmp/chrA.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/genes.gff",
+      "destination": "/tmp/genes.gff"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/variants.vcf",
+      "destination": "/tmp/variants.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/protein.txt",
+      "destination": "/tmp/protein.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/snpeff.norm",
+      "destination": "/tmp/snpeff.norm"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/ann.vcf",
+      "destination": "/tmp/ann.vcf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/csq.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/csq.vcf"
+    },
+    {
+      "source": "/tmp/bcsq.norm",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/bcsq.norm"
+    },
+    {
+      "source": "/tmp/conventions.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/conventions.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

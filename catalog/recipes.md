@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **61 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **72 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -17,6 +17,8 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [blast](../recipes/blast/README.md) | Build a protein database, search sequences against it — the canonical homology search. | aarchbio | stage | 2026-09-12 | — |
 | [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-09-12 | — |
 | [bwa-samtools](../recipes/bwa-samtools/README.md) | Align paired-end reads to a reference genome and get back a sorted, indexed BAM. | aarchbio | stage | 2026-09-12 | — |
+| [cromwell-wdl](../recipes/cromwell-wdl/README.md) | Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked against a closed-form arithmetic result. For anyone whose pipelines are written in WDL — including GATK's published best-practice workflows. | aarchbio | build-in-task | 2026-09-19 | 2026-09-20 |
+| [dada2](../recipes/dada2/README.md) | DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked against the three templates the reads were generated from. The catalog's first 16S/amplicon recipe, for anyone doing microbial community profiling. | aarchbio | build-in-task | 2026-09-19 | 2026-09-20 |
 | [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | run: blast | 2026-09-12 | — |
 | [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-12 | — |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
@@ -33,6 +35,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [minimap2](../recipes/minimap2/README.md) | The versatile aligner — here in its short-read mode, checked against bwa on identical reads. | aarchbio | run: bwa-samtools | 2026-09-12 | — |
 | [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../recipes/mafft/README.md). | aarchbio | stage: mafft | 2026-09-12 | — |
 | [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | stage: bcftools | 2026-09-12 | — |
+| [plink](../recipes/plink/README.md) | PLINK 1.9 computes allele frequencies and runs a quantitative association scan on Graviton4, checked against integer arithmetic and against a variant whose effect was planted. The catalog's first statistical-genomics recipe, for anyone doing GWAS-style work. | aarchbio | build-in-task | 2026-09-19 | 2026-09-20 |
 | [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-12 | 2026-09-10 |
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree | 2026-09-10 | — |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-09-11 | — |
@@ -129,7 +132,15 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
+| [bismark](../recipes/bismark/README.md) | Bismark aligns bisulfite reads and calls CpG methylation on Graviton4; MethylDackel then calls the *same* alignments independently, and both are checked against methylation that was chosen before the reads existed. The catalog's first methylation recipe, for anyone doing WGBS or RRBS. | pipeline | stage | 2026-09-20 | 2026-09-20 |
+| [bwa-mem2](../recipes/bwa-mem2/README.md) | bwa-mem2 aligns the same paired reads as [bwa](../recipes/bwa-samtools/README.md) with a re-engineered implementation, on Graviton4. For anyone already running `bwa mem` who wants the speedup without changing their answer. | pipeline | stage: bwa-samtools | 2026-09-19 | 2026-09-19 |
+| [deeptools](../recipes/deeptools/README.md) | `bamCoverage` turns aligned reads into a coverage track on Graviton4, verified against a coverage profile that was constructed rather than observed. For anyone doing ChIP-seq, ATAC-seq or any coverage-based analysis. | pipeline | stage | 2026-09-19 | 2026-09-20 |
+| [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-09-19 | 2026-09-20 |
 | [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-12 | — |
+| [rnaseq-counts](../recipes/rnaseq-counts/README.md) | featureCounts and HTSeq each count the same aligned reads against the same annotation on Graviton4, checked against counts that were planted rather than measured. The step that produces the matrix [differential expression](../recipes/rnaseq-de/README.md) consumes. | pipeline | stage | 2026-09-19 | 2026-09-20 |
+| [rnaseq-de](../recipes/rnaseq-de/README.md) | DESeq2, edgeR and limma-voom each test the same count matrix for differential expression on Graviton4, and are checked against genes whose answer is known by construction. For anyone doing bulk RNA-seq who wants to see the three standard methods agree. | pipeline | stage | 2026-09-19 | 2026-09-20 |
+| [single-cell](../recipes/single-cell/README.md) | piscem maps single-cell reads and alevin-fry turns them into a cell × gene count matrix on Graviton4, checked against the matrix the fixture was built from. The catalog's first single-cell recipe, for anyone quantifying scRNA-seq without Cell Ranger. | pipeline | stage | 2026-09-19 | 2026-09-20 |
+| [variant-annotation](../recipes/variant-annotation/README.md) | snpEff and `bcftools csq` annotate the same VCF against the same reference and GFF on Graviton4, both checked against consequences that were chosen before the variants existed. The catalog's first annotation recipe, for anyone downstream of a variant caller. | pipeline | stage | — | 2026-09-22 |
 
 ## pointcloud
 

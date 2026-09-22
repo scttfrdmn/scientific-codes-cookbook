@@ -1,0 +1,60 @@
+{
+  "task_id": "cookbook-varann-snpeff-r1",
+  "container": "quay.io/aarchbio/snpeff@sha256:2183d4c0c4a11d58aa6c4cc5939ca26359fa07ba8e444ac4b9de297257eccf3a",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== construct a gene: 40 codons in 2 exons, CODON 20 SPANNING THE SPLICE JUNCTION ==\"\nCDS='ATGGCTCTGGAAAAGTTCGGTCACATCAACCCGCAGCGTAGCACCGTGTGGTACGATTGCGCACTCGAGAAATTTGGACATATTAATCCACAACGAAGTACAGTTTGTTATGACGGCTAA'\nPROT='MALEKFGHINPQRSTVWYDCALEKFGHINPQRSTVCYDG*'\nE1=${CDS:0:59}; E2=${CDS:59:61}\nprintf '%s\\n' \"$PROT\" > protein.txt\nawk -v e1=\"$E1\" -v e2=\"$E2\" 'BEGIN{\n  srand(7); b=\"ACGT\"\n  r=\"\"; for(i=0;i<99;i++)  r=r substr(b,int(rand()*4)+1,1)\n  n=\"\"; for(i=0;i<96;i++)  n=n substr(b,int(rand()*4)+1,1)\n  t=\"\"; for(i=0;i<681;i++) t=t substr(b,int(rand()*4)+1,1)\n  seq = r e1 \"GT\" n \"AG\" e2 t\n  print \">chrA\"\n  for(i=1;i<=length(seq);i+=60) print substr(seq,i,60)\n}' > chrA.fa\nprintf '>transcript:GENEA.1\\n%s\\n' \"$CDS\" > cds.fa\n\nSEQ=$(awk '!/^>/{printf \"%s\",$0}' chrA.fa)\nat() { printf '%s' \"$SEQ\" | cut -c\"$1\"; }\n\necho \"== fixture self-checks: this must be a valid gene before any tool sees it ==\"\nawk -v c=\"$CDS\" -v p=\"$PROT\" 'BEGIN{\n  if (length(c)!=120)         {print \"FIXTURE: CDS is not 120 bp\"; exit 1}\n  if (length(p)!=40)          {print \"FIXTURE: designed protein is not 40 residues\"; exit 1}\n  if (substr(c,1,3)!=\"ATG\")   {print \"FIXTURE: no start codon\"; exit 1}\n  if (substr(c,118,3)!=\"TAA\") {print \"FIXTURE: no terminal stop codon\"; exit 1}\n  for(i=1;i<=117;i+=3){ k=substr(c,i,3)\n    if(k==\"TAA\"||k==\"TAG\"||k==\"TGA\"){printf \"FIXTURE: internal stop at codon %d\\n\",(i+2)/3; exit 1} }\n  print \"fixture_cds\\t120 bp / 40 codons / ATG..TAA / no internal stop\"\n  print \"fixture_exons\\t59 bp + 61 bp -- codon 20 spans the junction, so exon2 CDS phase is 1\"\n}' | tee fixture.txt\ntest \"$(at 159)$(at 160)\" = GT || { echo \"FIXTURE: donor is not GT\"; exit 1; }\ntest \"$(at 257)$(at 258)\" = AG || { echo \"FIXTURE: acceptor is not AG\"; exit 1; }\nprintf 'fixture_splice\\tcanonical GT..AG intron at 159-258\\n' | tee -a fixture.txt\n\necho \"== GFF3 that BOTH annotators accept (Ensembl-style ID prefixes) ==\"\n{\nprintf '##gff-version 3\\n##sequence-region chrA 1 1000\\n'\nprintf 'chrA\\ttoy\\tgene\\t100\\t319\\t.\\t+\\t.\\tID=gene:GENEA;Name=GENEA;biotype=protein_coding\\n'\nprintf 'chrA\\ttoy\\tmRNA\\t100\\t319\\t.\\t+\\t.\\tID=transcript:GENEA.1;Parent=gene:GENEA;Name=GENEA.1;biotype=protein_coding\\n'\nprintf 'chrA\\ttoy\\texon\\t100\\t158\\t.\\t+\\t.\\tParent=transcript:GENEA.1\\n'\nprintf 'chrA\\ttoy\\texon\\t259\\t319\\t.\\t+\\t.\\tParent=transcript:GENEA.1\\n'\nprintf 'chrA\\ttoy\\tCDS\\t100\\t158\\t.\\t+\\t0\\tID=CDS:GENEA.1;Parent=transcript:GENEA.1\\n'\nprintf 'chrA\\ttoy\\tCDS\\t259\\t319\\t.\\t+\\t1\\tID=CDS:GENEA.1;Parent=transcript:GENEA.1\\n'\n} > genes.gff\n\necho \"== five variants, coordinate order; every REF base read from the fasta ==\"\n{\nprintf '##fileformat=VCFv4.2\\n##contig=<ID=chrA,length=1000>\\n'\nprintf '#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO\\n'\nprintf 'chrA\\t108\\tv1_syn\\t%s\\tA\\t.\\t.\\t.\\n'   \"$(at 108)\"\nprintf 'chrA\\t121\\tv2_mis\\t%s\\tT\\t.\\t.\\t.\\n'   \"$(at 121)\"\nprintf 'chrA\\t160\\tv5_spl\\t%s\\tA\\t.\\t.\\t.\\n'   \"$(at 160)\"\nprintf 'chrA\\t269\\tv3_non\\t%s\\tT\\t.\\t.\\t.\\n'   \"$(at 269)\"\nprintf 'chrA\\t298\\tv4_fs\\t%s%s\\t%s\\t.\\t.\\t.\\n' \"$(at 298)\" \"$(at 299)\" \"$(at 298)\"\n} > variants.vcf\ngrep -v '^##' variants.vcf\n\necho \"== planted truth: read off the codons the fixture was BUILT from, not off any tool ==\"\n{ printf 'v1_syn\\tsynonymous\\t3\\tL\\tL\\n'\n  printf 'v2_mis\\tmissense\\t8\\tH\\tY\\n'\n  printf 'v3_non\\tstop_gained\\t24\\tK\\t*\\n'\n  printf 'v4_fs\\tframeshift\\t.\\t.\\t.\\n'\n  printf 'v5_spl\\tsplice_donor\\t.\\t.\\t.\\n'; } | sort > truth.tsv\nawk -F'\\t' -v p=\"$PROT\" '$3!=\".\" { r=substr(p,$3,1)\n  if (r != $4) { printf \"TRUTH/DESIGN mismatch at codon %s: designed %s, truth says %s\\n\",$3,r,$4; exit 1 } }\n  END{ print \"truth_vs_design\\tevery truth ref-AA matches the designed protein\" }' truth.tsv | tee -a fixture.txt\n\necho \"== build the snpEff database from that GFF, checked against the constructed CDS ==\"\nmkdir -p data/chrA\ncp chrA.fa data/chrA/sequences.fa; cp genes.gff data/chrA/genes.gff; cp cds.fa data/chrA/cds.fa\nprintf 'data.dir = ./data\\nchrA.genome : ToyGene\\nchrA.chromosomes : chrA\\n' > snpEff.config\nsnpEff -version > snpeffver.txt 2>&1\nSEV=$(awk 'NR==1{print $2}' snpeffver.txt)\nsnpEff build -c snpEff.config -gff3 -noCheckProtein -v chrA > build.log 2>&1 || { tail -40 build.log; exit 1; }\ngrep 'CDS check:' build.log\nread -r CDSOK CDSERR <<<\"$(awk -F'\\t' '/CDS check:/{for(i=1;i<=NF;i++){if($i ~ /^OK: /)o=$i; if($i ~ /^Errors: /)e=$i}\n  gsub(/[^0-9]/,\"\",o); gsub(/[^0-9]/,\"\",e); print o, e; exit}' build.log)\"\ntest \"$CDSOK\" = \"1\"  || { echo \"snpEff did not check the CDS -- GFF/transcript-id mismatch\"; exit 1; }\ntest \"$CDSERR\" = \"0\" || { echo \"snpEff CDS check found $CDSERR errors -- GFF coordinates or phase are wrong\"; exit 1; }\n\necho \"== annotate ==\"\nsnpEff ann -c snpEff.config -noStats -hgvs1LetterAa -no-downstream -no-upstream -no-intergenic \\\n  chrA variants.vcf > ann.vcf 2> ann.log\nNANN=$(awk '!/^#/{n++} END{print n+0}' ann.vcf)\ntest \"$NANN\" = \"5\" || { echo \"expected 5 annotated records, got $NANN\"; exit 1; }\nif grep -q 'ERROR_' ann.vcf; then echo \"snpEff emitted ERROR_ codes:\"; grep -o 'ERROR_[A-Z_]*' ann.vcf | sort -u; exit 1; fi\ngrep -v '^##' ann.vcf | cut -f3,8\n\necho \"== normalise snpEff's spelling, then compare to the planted truth ==\"\ncat > norm-snpeff.awk <<'AWKEOF'\nBEGIN{FS=\"\\t\"; OFS=\"\\t\"}\n!/^#/{\n  ann=\"\"; n=split($8,parts,\";\")\n  for(i=1;i<=n;i++) if (parts[i] ~ /^ANN=/) ann=substr(parts[i],5)\n  split(ann,f,\"|\")\n  csq=f[2]; sub(/&.*/,\"\",csq); sub(/_variant$/,\"\",csq)\n  p=f[11]; pos=\".\"; r=\".\"; a=\".\"\n  if (p ~ /^p\\.[A-Z*][0-9]+[A-Z*]$/) { t=substr(p,3); r=substr(t,1,1); a=substr(t,length(t),1); pos=substr(t,2,length(t)-2) }\n  print $3, csq, pos, r, a\n}\nAWKEOF\nawk -f norm-snpeff.awk ann.vcf | sort > snpeff.norm\ncat snpeff.norm\nif diff -q truth.tsv snpeff.norm >/dev/null; then SNPEXACT=yes; else SNPEXACT=no; diff truth.tsv snpeff.norm || true; fi\ntest \"$SNPEXACT\" = yes\n\n{\nprintf 'snpEff annotation -- five constructed variants vs the consequences the fixture was built from\\n'\nprintf 'snpeff_version\\t%s\\n' \"$SEV\"\nprintf 'cds_check\\tOK %s / Errors %s   (assert 1 / 0 -- snpEff extraction from the GFF equals the constructed CDS, phase and junction included)\\n' \"$CDSOK\" \"$CDSERR\"\nprintf 'variants_annotated\\t%s   (assert 5)\\n' \"$NANN\"\nprintf 'snpeff_error_codes\\tnone   (assert none)\\n'\nprintf 'snpeff_exact\\t%s   (assert yes -- EXACT vs planted consequences)\\n' \"$SNPEXACT\"\n} | tee smoke-check-snpeff.txt\necho \"SNPEFF CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/chrA.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/chrA.fa"
+    },
+    {
+      "source": "/tmp/genes.gff",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/genes.gff"
+    },
+    {
+      "source": "/tmp/variants.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/variants.vcf"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/protein.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/protein.txt"
+    },
+    {
+      "source": "/tmp/snpeff.norm",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/snpeff.norm"
+    },
+    {
+      "source": "/tmp/ann.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/ann.vcf"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/fixture.txt"
+    },
+    {
+      "source": "/tmp/smoke-check-snpeff.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/smoke-check-snpeff.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
