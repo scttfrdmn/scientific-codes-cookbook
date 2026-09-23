@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-bismark-bwameth-r1",
+  "container": "quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nBV=$(bwameth.py --version 2>&1 | awk 'NR==1{print $2}')\necho \"== a SECOND bisulfite aligner on the SAME reads ==\"\n# bwa-meth aligns to a C->T converted copy of the reference and restores the real bases after.\ncp chrS.fa bwm.fa\nbwameth.py index bwm.fa > idx.log 2>&1 || { tail -15 idx.log; exit 1; }\ntest -s bwm.fa.bwameth.c2t || { echo \"no C->T converted index -- bwameth.py index did not run\"; exit 1; }\nbwameth.py --reference bwm.fa reads.fq > bwm.sam 2> aln.log || { tail -15 aln.log; exit 1; }\n\nNREC=$(awk '!/^@/{n++} END{print n+0}' bwm.sam)\nNMAP=$(awk '!/^@/ && $3!=\"*\"{n++} END{print n+0}' bwm.sam)\ntest \"$NREC\" = \"30\" || { echo \"expected 30 records, got $NREC\"; exit 1; }\ntest \"$NMAP\" = \"30\" || { echo \"only $NMAP of 30 reads mapped\"; exit 1; }\n\necho \"== the tags each aligner writes -- this is why the comparison can only run one way ==\"\nBWMTAGS=$(awk '!/^@/{for(i=12;i<=NF;i++) printf \"%s \", substr($i,1,4); exit}' bwm.sam)\nNXM=$(awk '!/^@/ && /XM:Z:/{n++} END{print n+0}' bwm.sam)\n# bismark_methylation_extractor parses XM:Z:, which bwa-meth does not write -- so the caller\n# cannot be swapped in the other direction. MethylDackel reads plain alignments, so it pivots.\ntest \"$NXM\" = \"0\" || { echo \"NOTE: bwa-meth now writes XM tags ($NXM reads) -- the constraint changed\"; exit 1; }\n\nsamtools sort -o bwm.bam bwm.sam 2> sort.log\nsamtools index bwm.bam\nsamtools view -c bwm.bam | awk '{print \"bam_records\", $1}'\n\n{\nprintf 'bwa-meth -- a second bisulfite aligner on the same reads\\n'\nprintf 'bwameth_version\\t%s\\n' \"$BV\"\nprintf 'c2t_index\\tpresent   (assert -- bwa-meth aligns to a C->T CONVERTED reference)\\n'\nprintf 'reads_mapped\\t%s of %s   (assert all)\\n' \"$NMAP\" \"$NREC\"\nprintf 'bwameth_tags\\t%s  (no XM)\\n' \"$BWMTAGS\"\nprintf 'xm_tagged_reads\\t%s   (assert 0 -- bismark_methylation_extractor parses XM:Z:, so it CANNOT\\n' \"$NXM\"\nprintf 'xm_tagged_reads\\t     read a bwa-meth BAM; MethylDackel reads plain alignments and can read both)\\n'\n} | tee smoke-check-bwameth.txt\necho \"BWAMETH OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/chrS.fa",
+      "destination": "/tmp/chrS.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/reads.fq",
+      "destination": "/tmp/reads.fq"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/bwm.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bwm.bam"
+    },
+    {
+      "source": "/tmp/bwm.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bwm.bam.bai"
+    },
+    {
+      "source": "/tmp/smoke-check-bwameth.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/smoke-check-bwameth.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

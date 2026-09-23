@@ -1,18 +1,19 @@
 ---
-tool: bismark-methyldackel
-tool_version: "Bismark 3.1.0 / MethylDackel 0.6.1"
+tool: bismark-bwameth-methyldackel
+tool_version: "Bismark 3.1.0 / bwa-meth 0.2.10 / MethylDackel 0.6.1"
 images:
   - quay.io/aarchbio/bismark@sha256:1bdd5895c5b9b458f8f4c1a19fd1b177f3ffab951262c37c543f2ce767150302
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586
+  - quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa
 spawn_version: 0.111.1
-last_verified: 2026-09-20
+last_verified: 2026-09-22
 ---
-# Methylation — two callers, and cytosines we methylated ourselves
+# Methylation — two callers, two aligners, and cytosines we methylated ourselves
 
-Bismark aligns bisulfite reads and calls CpG methylation on Graviton4; MethylDackel then calls the *same* alignments independently, and both are checked against methylation that was chosen before the reads existed. The catalog's first methylation recipe, for anyone doing WGBS or RRBS.
+Bismark and bwa-meth align the same bisulfite reads on Graviton4 and MethylDackel calls both, so the caller and the aligner are each varied with the other held fixed — all checked against methylation chosen before the reads existed. The catalog's methylation recipe, for anyone doing WGBS or RRBS.
 
-> **What this covers.** A 1 kb reference containing exactly three CpGs, 30 directional single-end reads, methylation planted at 100% / 50% / 0%. Index preparation, alignment, and two independent extractions. Not RRBS trimming, paired-end, non-CpG contexts, deduplication, or real coverage.
+> **What this covers.** A 1 kb reference containing exactly three CpGs, 30 directional single-end reads, methylation planted at 100% / 50% / 0%. Two bisulfite aligners, two callers, and the three comparisons that are possible between them. Not RRBS trimming, paired-end, non-CpG contexts, deduplication, or real coverage.
 
 ## Run it
 
@@ -23,9 +24,12 @@ bismark extract -s --bedGraph --comprehensive reads_bismark_bt2.bam
 
 samtools sort -o sorted.bam reads_bismark_bt2.bam && samtools index sorted.bam
 MethylDackel extract --mergeContext chrS.fa sorted.bam -o md   # the second, independent caller
+
+bwameth.py index bwm.fa && bwameth.py --reference bwm.fa reads.fq > bwm.sam   # the second aligner
+MethylDackel extract --mergeContext chrS.fa bwm.bam -o bwm     # same caller, other alignments
 ```
 
-Three tasks: Bismark builds the fixture and calls methylation, samtools sorts and indexes, then MethylDackel calls the same alignments and the two are compared.
+Five tasks: Bismark builds the fixture and calls, samtools sorts, MethylDackel re-calls the same alignments, then bwa-meth re-aligns the same reads and MethylDackel calls those too.
 
 ## Make it yours
 
@@ -35,15 +39,16 @@ Three tasks: Bismark builds the fixture and calls methylation, samtools sorts an
 | reads converted in-code | your WGBS FASTQs (after `trim_galore`) | real libraries need adapter/quality trimming first, and RRBS needs `--rrbs`; neither changes the shape below. |
 | directional (default) | `--non_directional` | get this wrong and reads align poorly for reasons that look like bad data. |
 | both callers | either one alone | they agree here, so pick on ergonomics — but see the coordinate note before you diff their outputs. |
+| both aligners | either one alone | they also agree here. bwa-meth is a thin wrapper over bwa on a C→T converted reference, so it is faster to run and easier to slot into an existing bwa pipeline. |
 
 **Leave the fixture:** 30 reads over three sites make every methylation count hand-checkable, which is what turns this into an exact assertion. **Scale it** to a real genome — `prepare` on a mammalian reference is hours and tens of gigabytes, not seconds.
 
 ## Shape, size, cost
 
-Three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12–15m each, caps $0.05 each. Bismark's prepare → align → extract chain runs in about a minute at this size; the other two tasks are seconds of work inside an image pull. **These timings are not compute cost.**
+Five tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12–15m each, caps $0.05 each. Bismark's prepare → align → extract chain runs in about a minute at this size; the rest are seconds of work inside an image pull. **These timings are not compute cost.**
 
 <details>
-<summary>As shipped: exact per-site counts, two-caller agreement, the coordinate trap, why the 0% site matters, pins</summary>
+<summary>As shipped: exact per-site counts, the 2×2 that cannot be completed, the coordinate trap, why the 0% site matters, pins</summary>
 
 ### The checks
 
@@ -55,6 +60,9 @@ Three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12–15m each, caps $0.05 each.
 | Bismark vs planted | per-site methylated/unmethylated **equal** the planted values | **exact** |
 | MethylDackel vs planted | same | **exact** |
 | the two callers | identical counts at every site | **agree** |
+| bwa-meth mapping | all reads mapped to the C→T index | **30 of 30** |
+| bwa-meth vs planted | per-site counts equal the planted values | **exact** |
+| the two **aligners** | identical counts at every site | **agree** |
 | conservation | Σ calls == read count | **30 of 30** |
 
 Recovered by both, exactly:
@@ -84,11 +92,37 @@ In bisulfite sequencing an unmethylated cytosine is read as **T**. A caller that
 
 **Stripping the incidental CpGs** is what makes "no spurious calls" a claim rather than a coincidence: a random 1 kb sequence contains many `CG` dinucleotides, so the fixture removes them all and plants three.
 
+### The 2×2 that cannot be completed
+
+Two aligners and two callers is four combinations, and only three can be run:
+
+| | Bismark caller | MethylDackel |
+|---|---|---|
+| **Bismark aligner** | ✓ exact vs planted | ✓ exact vs planted |
+| **bwa-meth aligner** | **impossible** | ✓ exact vs planted |
+
+That layout is what makes each comparison attributable. Holding the *aligner* fixed and swapping the caller isolates the caller; holding the *caller* fixed and swapping the aligner isolates the aligner. A difference in either cell would point at exactly one component.
+
+There is no difference in either: **all three cells return the identical per-site counts**, so on these reads neither the aligner nor the caller moves a single number.
+
+**The fourth cell is impossible, not skipped**, and the reason is visible in the SAM tags:
+
+```text
+Bismark writes   NM:i  MD:Z  XM:Z  XR:Z  XG:Z
+bwa-meth writes  NM:i  MD:Z  AS:i  XS:i  RG:Z  YC:Z  YD:Z      <- no XM
+```
+
+`bismark_methylation_extractor` parses the **`XM:Z:`** methylation-call string that Bismark's aligner writes; bwa-meth writes `YC`/`YD` instead and no `XM` at all. So Bismark's caller cannot read a bwa-meth BAM, while MethylDackel — which reads the plain alignment against the reference and works out the calls itself — reads either. **MethylDackel is therefore the only possible fixed pivot**, which is why the aligner comparison runs through it. The recipe asserts `XM`-tagged reads == 0 in the bwa-meth output, so that structural claim stays true rather than becoming stale prose.
+
+**bwa-meth's mechanism, in one line:** it C→T converts the *reference* (`bwm.fa.bwameth.c2t`), aligns with plain `bwa mem`, then restores the real bases and records the conversion state in `YD`. That is why it slots into an existing bwa pipeline, and the recipe asserts the converted index exists rather than assuming `index` ran.
+
 ### This is Bismark 3.x — the Rust rewrite
 
 `bismark --version` reports *"Bismark Rust suite"*: **one binary with subcommands** (`prepare`, `align`, `extract`, `dedup`, …), with the classic script names kept as aliases. Older guides' flags may not exist — read `bismark <subcommand> --help` rather than assuming the Perl interface.
 
-**Why three images.** Neither the Bismark image nor the MethylDackel image ships `samtools`, and MethylDackel requires a **coordinate-sorted, indexed** BAM while Bismark writes read-order output. So sorting is its own task in the samtools image — the [one tool per image](../../patterns/execution-shapes.md) model, with the BAM handed along through S3.
+**Why four images and five tasks.** Neither the Bismark image nor the MethylDackel image ships `samtools`, and MethylDackel requires a **coordinate-sorted, indexed** BAM while Bismark writes read-order output. So sorting is its own task — the [one tool per image](../../patterns/execution-shapes.md) model, with the BAM handed along through S3.
+
+The bwa-meth side is the exception that shows what the model actually means: its image bundles **`bwa` and `samtools` as well**, because those are `bwameth`'s own conda dependencies rather than tools mulled in beside it. So align, sort and index all fit in one task. "One tool per image" is one *requested* tool — a package's dependency closure comes with it, and here that saved a hop.
 
 ### Pins (data tier: synthetic / in-code)
 
@@ -96,7 +130,8 @@ In bisulfite sequencing an unmethylated cytosine is read as **T**. A caller that
 |---|---|
 | Bismark | `quay.io/aarchbio/bismark@sha256:1bdd5895…` (3.1.0, bundling bowtie2) |
 | samtools | `quay.io/aarchbio/samtools@sha256:11917396…` — the same pin [bwa-samtools](../bwa-samtools/README.md) uses |
-| MethylDackel | `quay.io/aarchbio/methyldackel@sha256:c75367a1…` (0.6.1, HTSlib 1.21) |
+| MethylDackel | `quay.io/aarchbio/methyldackel@sha256:c75367a1…` (0.6.1, HTSlib 1.21) — **one pin, used on both aligners' BAMs**, which is what makes the aligner comparison attributable |
+| bwa-meth | `quay.io/aarchbio/bwameth@sha256:00689db6…` (0.2.10, bundling bwa + samtools) |
 | input | none — reference, planted methylation state and bisulfite-converted reads are generated in-task by awk from `srand(5)` |
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before any of these tools is callable.
@@ -108,6 +143,6 @@ make run RECIPE=bismark
 make ls  RECIPE=bismark
 ```
 
-Assertions are `test` calls inside tasks 1 and 3 ([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt` with `callers_agree yes`, both `*_exact yes`, and `raw_coords_match no`.
+Assertions are `test` calls inside tasks 1, 3, 4 and 5 ([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt` with `callers_agree yes` and `raw_coords_match no`, and `smoke-check-aligners.txt` with `aligners_agree yes`, `bwameth_exact yes` and `xm_tagged_reads 0`.
 
 </details>

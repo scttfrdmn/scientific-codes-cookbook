@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-bismark-aligners-r1",
+  "container": "quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# --version prints \"0.6.1 (using HTSlib version 1.21)\" -- the tool version is field 1\nMV=$(MethylDackel --version 2>&1 | awk 'NR==1{print $1}')\necho \"== the SAME caller, on the other aligner's BAM ==\"\nMethylDackel extract --mergeContext chrS.fa bwm.bam -o bwm 2> md.log || { tail -10 md.log; exit 1; }\ncat bwm_CpG.bedGraph\n\n# MethylDackel is 0-based half-open over the CpG; normalise to the 1-based C (see the page)\nawk 'NR>1{printf \"%s\\t%d\\t%d\\t%d\\n\", $1, $2+1, $5, $6}' bwm_CpG.bedGraph | sort -k2,2n > bwameth_calls.tsv\nsort -k2,2n -o truth.tsv truth.tsv\nsort -k2,2n -o bismark_calls.tsv bismark_calls.tsv\necho \"planted        bismark+MD     bwameth+MD\"\npaste truth.tsv bismark_calls.tsv bwameth_calls.tsv\n\nNSITES=$(awk 'END{print NR+0}' bwameth_calls.tsv)\ntest \"$NSITES\" = \"3\" || { echo \"expected 3 sites, got $NSITES\"; exit 1; }\n\nVT=no; VB=no\ndiff -q truth.tsv         bwameth_calls.tsv >/dev/null && VT=yes || diff truth.tsv         bwameth_calls.tsv || true\ndiff -q bismark_calls.tsv bwameth_calls.tsv >/dev/null && VB=yes || diff bismark_calls.tsv bwameth_calls.tsv || true\ntest \"$VT\" = yes && test \"$VB\" = yes\n\nTOT=$(awk '{n+=$3+$4} END{print n}' bwameth_calls.tsv)\ntest \"$TOT\" = \"30\" || { echo \"calls total $TOT, expected 30\"; exit 1; }\n\n{\nprintf 'Methylation -- two ALIGNERS, one caller: does the aligner change the calls?\\n'\nprintf 'methyldackel_version\\t%s   (the SAME pin used on the Bismark alignments)\\n' \"$MV\"\nprintf 'sites\\t%s   (assert 3)\\n' \"$NSITES\"\nprintf 'bwameth_exact\\t%s   (assert yes -- EXACT vs the planted truth)\\n' \"$VT\"\nprintf 'aligners_agree\\t%s   (assert yes -- bwa-meth and Bismark alignments give IDENTICAL calls)\\n' \"$VB\"\nprintf 'calls_total\\t%s of 30 reads   (assert equal -- CONSERVATION)\\n' \"$TOT\"\nprintf 'note\\tthe earlier check varied the CALLER with the aligner fixed; this varies the ALIGNER\\n'\nprintf 'note\\twith the caller fixed, so a difference here would be attributable to alignment alone.\\n'\nprintf 'note\\tThere is none: on these reads the choice of bisulfite aligner does not move a single count.\\n'\nprintf 'note\\tThe fourth cell of the 2x2 is impossible, not skipped -- bismark_methylation_extractor\\n'\nprintf 'note\\tparses XM:Z: tags that bwa-meth does not write, so MethylDackel is the only caller that\\n'\nprintf 'note\\tcan serve as the fixed pivot.\\n'\n} | tee smoke-check-aligners.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/chrS.fa",
+      "destination": "/tmp/chrS.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/chrS.fa.fai",
+      "destination": "/tmp/chrS.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bwm.bam",
+      "destination": "/tmp/bwm.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bwm.bam.bai",
+      "destination": "/tmp/bwm.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bismark_calls.tsv",
+      "destination": "/tmp/bismark_calls.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/bwameth_calls.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/bwameth_calls.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check-aligners.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark/r1/smoke-check-aligners.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
