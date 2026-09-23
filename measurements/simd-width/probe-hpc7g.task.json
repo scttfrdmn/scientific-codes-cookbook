@@ -1,0 +1,28 @@
+{
+  "task_id": "simd-probe-hpc7g",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "export GEN=hpc7g\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nGEN=\"${GEN:-unknown}\"\n{\nprintf '== %s ==\\n' \"$GEN\"\nprintf 'uname\\t%s\\n' \"$(uname -m)\"\nprintf 'nproc\\t%s\\n' \"$(nproc)\"\n# CPU identity: implementer 0x41 = ARM; part 0xd0c=Neoverse-N1(Gv2) 0xd40=V1(Gv3) 0xd4f=V2(Gv4)\nprintf 'cpu_implementer\\t%s\\n' \"$(awk -F': *' '/CPU implementer/{print $2; exit}' /proc/cpuinfo)\"\nprintf 'cpu_part\\t%s\\n'        \"$(awk -F': *' '/CPU part/{print $2; exit}' /proc/cpuinfo)\"\nprintf 'cpu_variant\\t%s\\n'     \"$(awk -F': *' '/CPU variant/{print $2; exit}' /proc/cpuinfo)\"\nFEAT=$(awk -F': *' '/^Features/{print $2; exit}' /proc/cpuinfo)\nprintf 'features\\t%s\\n' \"$FEAT\"\n# the two that matter for the SVE question\nfor f in asimd sve sve2 i8mm bf16 svebf16 svei8mm; do\n  case \" $FEAT \" in *\" $f \"*) printf 'has_%s\\tyes\\n' \"$f\";; *) printf 'has_%s\\tno\\n' \"$f\";; esac\ndone\n# SVE vector length in BITS, if the kernel exposes it (bytes * 8)\nif [ -r /proc/sys/abi/sve_default_vector_length ]; then\n  printf 'sve_vector_bits\\t%s\\n' \"$(( $(cat /proc/sys/abi/sve_default_vector_length) * 8 ))\"\nelse\n  printf 'sve_vector_bits\\tn/a (no SVE)\\n'\nfi\nprintf 'neon_vector_bits\\t128   (architectural, every AArch64)\\n'\nprintf 'caches\\t%s\\n' \"$(lscpu 2>/dev/null | awk -F': *' '/cache/{printf \"%s=%s \", $1, $2}')\"\nprintf 'numa_nodes\\t%s\\n' \"$(lscpu 2>/dev/null | awk -F': *' '/NUMA node\\(s\\)/{print $2; exit}')\"\n} | tee \"simd-$GEN.txt\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "hpc7g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/simd-hpc7g.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/simd-width/simd-hpc7g.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "10m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
