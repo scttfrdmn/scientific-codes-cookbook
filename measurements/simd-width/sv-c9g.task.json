@@ -1,0 +1,34 @@
+{
+  "task_id": "sv-c9g",
+  "container": "quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=c9g\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nLBL=\"${LBL:-unknown}\"\nN=$(nproc)\nprintf '%s  stream.c\\n' a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b > s.sha\nsha256sum -c s.sha\n\nCC=\"\"\nfor c in aarch64-conda-linux-gnu-gcc gcc cc; do command -v $c >/dev/null 2>&1 && { CC=$c; break; }; done\ntest -n \"$CC\" || { echo \"no C compiler in this image\"; exit 1; }\n\nFEAT=$(awk -F': *' '/^Features/{print $2; exit}' /proc/cpuinfo)\nhas(){ case \" $FEAT \" in *\" $1 \"*) return 0;; *) return 1;; esac; }\nSVEBITS=$([ -r /proc/sys/abi/sve_default_vector_length ] && echo $(( $(cat /proc/sys/abi/sve_default_vector_length) * 8 )) || echo 0)\n\n# the generation-appropriate \"best\" target, per AWS's own guidance\nif has sve; then TVB=\"-mcpu=neoverse-512tvb\"; else TVB=\"-mcpu=neoverse-n1\"; fi\n\n{\nprintf 'label\\t%s\\n' \"$LBL\"\nprintf 'compiler\\t%s (%s)\\n' \"$CC\" \"$($CC -dumpversion 2>/dev/null)\"\nprintf 'nproc\\t%s\\n' \"$N\"\nprintf 'cpu_part\\t%s\\n' \"$(awk -F': *' '/CPU part/{print $2; exit}' /proc/cpuinfo)\"\nprintf 'sve_bits\\t%s\\n' \"$SVEBITS\"\nprintf 'mem_total_gib\\t%s\\n' \"$(awk '/MemTotal/{printf \"%.0f\", $2/1048576}' /proc/meminfo)\"\nprintf 'llc\\t%s\\n' \"$(lscpu 2>/dev/null | awk -F': *' '/L3 cache/{print $2; exit}')\"\n} | tee \"sv-$LBL.txt\"\n\n# ---------- 1. STREAM: memory bandwidth vs thread count (arrays >> LLC) ----------\necho \"== STREAM (official source, array 320 MB each) ==\"\n$CC -O3 -fopenmp -DSTREAM_ARRAY_SIZE=40000000 -DNTIMES=20 $TVB stream.c -o stream -lm 2> cc1.log \\\n  || { echo \"compile failed with $TVB, retrying baseline\"; $CC -O3 -fopenmp -DSTREAM_ARRAY_SIZE=40000000 -DNTIMES=20 stream.c -o stream -lm; }\nSWEEP=\"1 2 4 8 16\"; [ \"$N\" -ge 32 ] && SWEEP=\"$SWEEP 32\"; [ \"$N\" -ge 64 ] && SWEEP=\"$SWEEP 64\"\nfor T in $SWEEP; do\n  [ \"$T\" -gt \"$N\" ] && continue\n  BW=$(OMP_NUM_THREADS=$T OMP_PROC_BIND=close OMP_PLACES=cores ./stream 2>/dev/null | awk '/^Triad:/{print $2}')\n  printf 'stream_triad_t%s_MBs\\t%s\\n' \"$T\" \"$BW\" | tee -a \"sv-$LBL.txt\"\ndone\nBWMAX=$(awk -F'\\t' '/^stream_triad_/{gsub(/[^0-9.]/,\"\",$2); if($2+0>m) m=$2+0} END{printf \"%.0f\", m}' \"sv-$LBL.txt\")\nprintf 'stream_peak_MBs\\t%s\\nstream_peak_per_core_MBs\\t%s\\n' \"$BWMAX\" \\\n  \"$(awk -v b=\"$BWMAX\" -v n=\"$N\" 'BEGIN{printf \"%.0f\", b/n}')\" | tee -a \"sv-$LBL.txt\"\n\n# ---------- 2. compute-bound FP kernel, built three ways ----------\ncat > kern.c <<'EOF'\n#include <stdio.h>\n#include <stdlib.h>\n#include <time.h>\n#define N 4096            /* 32 KB per array: L1/L2 resident, so this is COMPUTE bound */\n#define REP 200000\nstatic double a[N], b[N];\nint main(void){\n  for (long i=0;i<N;i++){ a[i]=1.0+i*1e-6; b[i]=2.0-i*1e-6; }\n  double s=0; struct timespec t0,t1;\n  clock_gettime(CLOCK_MONOTONIC,&t0);\n  for (long r=0;r<REP;r++){ double p=0; for (long i=0;i<N;i++) p += a[i]*b[i]; s+=p; }\n  clock_gettime(CLOCK_MONOTONIC,&t1);\n  double dt=(t1.tv_sec-t0.tv_sec)+(t1.tv_nsec-t0.tv_nsec)/1e9;\n  printf(\"%.2f %.6e\\n\", (2.0*N*REP)/dt/1e9, s);   /* GFLOP/s, and the sum so it cannot be optimised away */\n  return 0;\n}\nEOF\necho \"== compute kernel: does enabling SVE change anything? ==\"\nbuild_run(){ # name flags\n  if $CC -O3 -ffast-math $2 kern.c -o \"k_$1\" 2>> cc2.log; then\n    R=$(./\"k_$1\" 2>/dev/null | awk '{print $1}')\n    [ -n \"$R\" ] && printf 'kernel_%s_GFLOPs\\t%s\\n' \"$1\" \"$R\" || printf 'kernel_%s_GFLOPs\\tSIGILL/failed-to-run\\n' \"$1\"\n  else\n    printf 'kernel_%s_GFLOPs\\tdid-not-compile\\n' \"$1\"\n  fi\n}\n{\nbuild_run neon_armv8a  \"-march=armv8-a\"\nbuild_run aws_tvb      \"$TVB\"\nif has sve;  then build_run sve  \"-march=armv8.2-a+sve\";  else printf 'kernel_sve_GFLOPs\\tno-sve-on-this-chip\\n'; fi\nif has sve2; then build_run sve2 \"-march=armv9-a+sve2\";   else printf 'kernel_sve2_GFLOPs\\tno-sve2-on-this-chip\\n'; fi\n} | tee -a \"sv-$LBL.txt\"\n\n# did the compiler actually emit SVE instructions where asked?\nif command -v objdump >/dev/null 2>&1 && [ -f k_sve ]; then\n  printf 'sve_insns_in_k_sve\\t%s\\n' \"$(objdump -d k_sve 2>/dev/null | grep -cE '\\bz[0-9]+\\.[bhsd]|ptrue|whilelo')\" | tee -a \"sv-$LBL.txt\"\n  printf 'sve_insns_in_k_neon\\t%s\\n' \"$(objdump -d k_neon_armv8a 2>/dev/null | grep -cE '\\bz[0-9]+\\.[bhsd]|ptrue|whilelo')\" | tee -a \"sv-$LBL.txt\"\nfi\necho \"STREAM+SVE OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c9g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/stream/stream.c",
+      "destination": "/tmp/stream.c"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/sv-c9g.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/simd-width/sv-c9g.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.8
+  }
+}

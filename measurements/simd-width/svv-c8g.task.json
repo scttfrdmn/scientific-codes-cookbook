@@ -1,0 +1,29 @@
+{
+  "task_id": "svv-c8g",
+  "container": "quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=c8g\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nLBL=\"${LBL:-unknown}\"\nprintf '%s  stream.c\\n' a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b > s.sha\nsha256sum -c s.sha\nCC=aarch64-conda-linux-gnu-gcc\n$CC -O3 -fopenmp -DSTREAM_ARRAY_SIZE=40000000 -DNTIMES=20 -mcpu=neoverse-512tvb stream.c -o stream -lm\necho \"##### FULL STREAM OUTPUT, 1 thread #####\"\nOMP_NUM_THREADS=1 OMP_PROC_BIND=close OMP_PLACES=cores ./stream 2>&1\necho \"##### FULL STREAM OUTPUT, all $(nproc) threads #####\"\nOMP_NUM_THREADS=$(nproc) OMP_PROC_BIND=close OMP_PLACES=cores ./stream 2>&1\necho \"##### how many threads did OpenMP actually use? #####\"\ncat > t.c <<'EOF'\n#include <omp.h>\n#include <stdio.h>\nint main(void){ int n=0; \n#pragma omp parallel\n { \n#pragma omp master\n   n=omp_get_num_threads(); }\n printf(\"%d\\n\", n); return 0; }\nEOF\n$CC -O3 -fopenmp t.c -o t\nprintf 'omp_threads_at_1\\t%s\\n'  \"$(OMP_NUM_THREADS=1 ./t)\"\nprintf 'omp_threads_at_16\\t%s\\n' \"$(OMP_NUM_THREADS=16 ./t)\"\nprintf 'omp_threads_default\\t%s\\n' \"$(./t)\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/stream/stream.c",
+      "destination": "/tmp/stream.c"
+    }
+  ],
+  "outputs": [],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

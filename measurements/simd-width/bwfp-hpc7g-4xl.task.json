@@ -1,0 +1,28 @@
+{
+  "task_id": "bwfp-hpc7g-4xl",
+  "container": "quay.io/aarchbio/scanpy@sha256:bdca78f7a92ad4cfeb6b13a06542e9b9637050cd145c3ca8d0a0a8225d0aa533",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=hpc7g-4xl\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nLBL=\"${LBL:-unknown}\"\nN=$(nproc)\n\ncat > triad.py <<'PY'\n# STREAM-like triad on arrays far larger than any cache: a = b + s*c\n# numpy elementwise is single-threaded, so ONE process = one core's worth of bandwidth.\nimport numpy as np, time, sys\nMB = 64\nn = MB*1024*1024//8                       # float64 elements per array\nb = np.ones(n); c = np.ones(n); a = np.empty(n); s = 3.0\nfor _ in range(2): a[:] = b + s*c         # warm\nbest = 0.0\nfor _ in range(5):\n    t0 = time.perf_counter(); a[:] = b + s*c; dt = time.perf_counter() - t0\n    gb = (3*n*8)/1e9                      # 2 reads + 1 write\n    best = max(best, gb/dt)\nprint(f\"{best:.3f}\")\nPY\n\ncat > dgemm.py <<'PY'\n# Compute-bound FP: threaded OpenBLAS dgemm. Matrices sized to stay in-core-ish.\nimport numpy as np, time, os\nm = 3000\nA = np.random.rand(m,m); B = np.random.rand(m,m)\nA @ B                                      # warm\nbest = 0.0\nfor _ in range(3):\n    t0 = time.perf_counter(); A @ B; dt = time.perf_counter() - t0\n    best = max(best, (2.0*m**3)/dt/1e9)    # GFLOP/s\nprint(f\"{best:.2f}\")\nPY\n\necho \"== identity ==\"\n{\nprintf 'label\\t%s\\n' \"$LBL\"\nprintf 'nproc\\t%s\\n' \"$N\"\nprintf 'cpu_part\\t%s\\n' \"$(awk -F': *' '/CPU part/{print $2; exit}' /proc/cpuinfo)\"\nprintf 'sve_bits\\t%s\\n' \"$([ -r /proc/sys/abi/sve_default_vector_length ] && echo $(( $(cat /proc/sys/abi/sve_default_vector_length) * 8 )) || echo none)\"\nprintf 'mem_total_gib\\t%s\\n' \"$(awk '/MemTotal/{printf \"%.0f\", $2/1048576}' /proc/meminfo)\"\nprintf 'gib_per_core\\t%s\\n' \"$(awk -v n=\"$N\" '/MemTotal/{printf \"%.2f\", $2/1048576/n}' /proc/meminfo)\"\nprintf 'numpy_blas\\t%s\\n' \"$(python -c \"\nimport numpy as np\ntry:\n    import numpy.__config__ as c\n    d = getattr(c,'CONFIG',None)\n    print((d or {}).get('Build Dependencies',{}).get('blas',{}).get('name','?') if d else '?')\nexcept Exception: print('?')\" 2>/dev/null)\"\n} | tee \"bwfp-$LBL.txt\"\n\necho \"== aggregate memory bandwidth: N single-threaded triads in parallel ==\"\nexport OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1\n# 1 process = per-core bandwidth; N processes = what the socket actually delivers\npython triad.py > bw1.txt\nfor i in $(seq 1 \"$N\"); do python triad.py > \"bwp_$i.txt\" & done\nwait\nAGG=$(cat bwp_*.txt | awk '{s+=$1} END{printf \"%.1f\", s}')\nONE=$(cat bw1.txt)\n{\nprintf 'triad_1proc_GBs\\t%s\\n' \"$ONE\"\nprintf 'triad_%sproc_agg_GBs\\t%s\\n' \"$N\" \"$AGG\"\nprintf 'triad_per_core_GBs\\t%s\\n' \"$(awk -v a=\"$AGG\" -v n=\"$N\" 'BEGIN{printf \"%.2f\", a/n}')\"\n} | tee -a \"bwfp-$LBL.txt\"\n\necho \"== compute-bound FP: threaded dgemm ==\"\nexport OPENBLAS_NUM_THREADS=\"$N\" OMP_NUM_THREADS=\"$N\"\nG=$(python dgemm.py)\n{\nprintf 'dgemm_%sthread_GFLOPs\\t%s\\n' \"$N\" \"$G\"\nprintf 'dgemm_per_core_GFLOPs\\t%s\\n' \"$(awk -v g=\"$G\" -v n=\"$N\" 'BEGIN{printf \"%.2f\", g/n}')\"\n} | tee -a \"bwfp-$LBL.txt\"\necho \"BWFP OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "hpc7g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/bwfp-hpc7g-4xl.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/simd-width/bwfp-hpc7g-4xl.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}
