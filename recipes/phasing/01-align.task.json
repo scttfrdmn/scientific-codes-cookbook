@@ -1,0 +1,48 @@
+{
+  "task_id": "cookbook-phasing-align-r1",
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== a diploid sample: two haplotypes differing at exactly 6 chosen sites ==\"\nawk 'BEGIN{srand(29); b=\"ACGT\"; s=\"\"\n  for(i=0;i<10000;i++) s=s substr(b,int(rand()*4)+1,1)\n  print \">chrH\"; for(i=1;i<=length(s);i+=60) print substr(s,i,60) }' > ref.fa\nREF=$(awk '!/^>/{printf \"%s\",$0}' ref.fa)\nPOS=\"5000 5040 5080 5120 5160 5200\"\nrot(){ case \"$1\" in A) echo C;; C) echo G;; G) echo T;; T) echo A;; esac; }\nH1=\"$REF\"; H2=\"$REF\"; i=0\n: > truth.tsv\nfor p in $POS; do\n  i=$((i+1)); R=${REF:$((p-1)):1}; A=$(rot \"$R\")\n  if [ $((i % 2)) = 1 ]; then H1=\"${H1:0:$((p-1))}$A${H1:$p}\"; GT=\"1|0\"\n  else                        H2=\"${H2:0:$((p-1))}$A${H2:$p}\"; GT=\"0|1\"; fi\n  printf '%s\\t%s\\t%s\\t%s\\n' \"$p\" \"$R\" \"$A\" \"$GT\" >> truth.tsv\ndone\ncat truth.tsv\n\necho \"== fixture identity: the haplotypes differ at the planted sites and NOWHERE else ==\"\nNDIFF=$(awk -v a=\"$H1\" -v b=\"$H2\" 'BEGIN{ n=0\n  for(i=1;i<=length(a);i++) if (substr(a,i,1)!=substr(b,i,1)) n++\n  print n }')\ntest \"${#H1}\" = 10000 || { echo \"FIXTURE: hap1 wrong length\"; exit 1; }\ntest \"${#H2}\" = 10000 || { echo \"FIXTURE: hap2 wrong length\"; exit 1; }\ntest \"$NDIFF\" = 6     || { echo \"FIXTURE: haplotypes differ at $NDIFF sites, expected 6\"; exit 1; }\nprintf 'fixture_haplotypes\\t2 x 10000 bp differing at exactly %s sites\\n' \"$NDIFF\" | tee fixture.txt\n\necho \"== reads alternating between haplotypes; 100 bp, stride 5, spacing 40 bp between sites ==\"\nawk -v h1=\"$H1\" -v h2=\"$H2\" 'BEGIN{\n  RL=100; q=\"\"; for(i=0;i<RL;i++) q=q \"I\"; n=0\n  for(p=1; p+RL-1<=length(h1); p+=5){\n    n++; printf \"@r%d_h1\\n%s\\n+\\n%s\\n\", n, substr(h1,p,RL), q > \"reads.fq\"\n    n++; printf \"@r%d_h2\\n%s\\n+\\n%s\\n\", n, substr(h2,p,RL), q > \"reads.fq\"\n  }\n  printf \"fixture_reads\\t%d reads / %.1fx total / %.1fx per haplotype / read 100 bp spans 2-3 sites\\n\",\n    n, n*RL/10000, n*RL/20000 }' | tee -a fixture.txt\n\necho \"== the VCF whatshap is asked to phase: het, and UNPHASED (0/1) ==\"\n{ printf '##fileformat=VCFv4.2\\n##contig=<ID=chrH,length=10000>\\n'\n  printf '##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\\n'\n  printf '#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO\\tFORMAT\\tsample1\\n'\n  awk -F'\\t' '{printf \"chrH\\t%s\\tv%d\\t%s\\t%s\\t100\\tPASS\\t.\\tGT\\t0/1\\n\", $1, NR, $2, $3}' truth.tsv\n} > variants.vcf\necho \"== the same sites with the PLANTED phase, for whatshap compare to score against ==\"\n{ printf '##fileformat=VCFv4.2\\n##contig=<ID=chrH,length=10000>\\n'\n  printf '##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\\n'\n  printf '##FORMAT=<ID=PS,Number=1,Type=Integer,Description=\"Phase set\">\\n'\n  printf '#CHROM\\tPOS\\tID\\tREF\\tALT\\tQUAL\\tFILTER\\tINFO\\tFORMAT\\tsample1\\n'\n  awk -F'\\t' '{printf \"chrH\\t%s\\tv%d\\t%s\\t%s\\t100\\tPASS\\t.\\tGT:PS\\t%s:1\\n\", $1, NR, $2, $3, $4}' truth.tsv\n} > truth.vcf\ngrep -v '^##' variants.vcf\n\necho \"== align to the reference; whatshap reads phase from the reads themselves ==\"\nbwa index ref.fa 2> bwaindex.log\nbwa mem -t 1 -R '@RG\\tID:s1\\tSM:sample1\\tPL:ILLUMINA' ref.fa reads.fq > aln.sam 2> bwamem.log\nNREC=$(awk '!/^@/{n++} END{print n+0}' aln.sam)\nNRG=$(awk '/^@RG/{n++} END{print n+0}' aln.sam)\ntest \"$NRG\" -ge 1 || { echo \"no @RG SM -- whatshap matches the BAM sample to the VCF sample\"; exit 1; }\nprintf 'sam_records\\t%s\\nread_groups\\t%s   (assert >=1 -- whatshap matches @RG SM to the VCF sample column)\\n' \"$NREC\" \"$NRG\" | tee -a fixture.txt\necho \"ALIGN OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/ref.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/ref.fa"
+    },
+    {
+      "source": "/tmp/aln.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/aln.sam"
+    },
+    {
+      "source": "/tmp/variants.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/variants.vcf"
+    },
+    {
+      "source": "/tmp/truth.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/truth.vcf"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/fixture.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

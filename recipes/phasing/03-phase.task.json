@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-phasing-phase-r1",
+  "container": "quay.io/aarchbio/whatshap@sha256:2cfeba1f120ca6ef706d244cac8f4957a6952e78d859e497e6da64eac9a0fa4a",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nWV=$(whatshap --version 2>&1 | awk 'NR==1{print $1}')\n\necho \"== phase: whatshap reads haplotype linkage off reads that span MORE THAN ONE variant ==\"\nwhatshap phase -o phased.vcf --reference ref.fa variants.vcf sample.bam > phase.log 2>&1 || { tail -20 phase.log; exit 1; }\ngrep -E 'reads covering|cover at least two|Largest block' phase.log\nCOVER=$(sed -n 's/.*Kept \\([0-9]*\\) reads that cover at least two variants.*/\\1/p' phase.log)\ntest -n \"$COVER\" && test \"$COVER\" -gt 0 || { echo \"no read spans two variants -- phasing is impossible, not merely poor\"; exit 1; }\n\necho \"== one block, all six variants, one phase set ==\"\ngrep -v '^#' phased.vcf | awk '{print $2, $10}'\nNV=$(awk '!/^#/{n++} END{print n+0}' phased.vcf)\nNPH=$(awk '!/^#/ && $10 ~ /\\|/ {n++} END{print n+0}' phased.vcf)\nNPS=$(awk '!/^#/{split($10,a,\":\"); if(a[2]!=\"\")print a[2]}' phased.vcf | sort -u | awk 'END{print NR+0}')\ntest \"$NV\"  = \"6\" || { echo \"expected 6 records, got $NV\"; exit 1; }\ntest \"$NPH\" = \"6\" || { echo \"only $NPH of 6 variants were phased\"; exit 1; }\ntest \"$NPS\" = \"1\" || { echo \"$NPS phase sets -- the variants did not link into one block\"; exit 1; }\n\necho \"== score against the PLANTED phase using whatshap's own comparison ==\"\nwhatshap compare --names truth,whatshap truth.vcf phased.vcf > cmp.txt 2>&1\ngrep -E 'switch errors:|switch/flip decomposition:|Block-wise Hamming distance:|Different genotypes:' cmp.txt | head -4\nSW=$(awk '/switch errors:/{print $NF; exit}' cmp.txt)\nHD=$(awk '/Block-wise Hamming distance:/{print $NF; exit}' cmp.txt)\nDG=$(awk '/Different genotypes:/{print $NF; exit}' cmp.txt)\ntest \"$SW\" = \"0\" || { echo \"$SW switch errors against the planted haplotypes\"; exit 1; }\ntest \"$HD\" = \"0\" || { echo \"Hamming distance $HD against the planted haplotypes\"; exit 1; }\ntest \"$DG\" = \"0\" || { echo \"$DG genotypes disagree with the fixture\"; exit 1; }\n\necho \"== phase is defined only UP TO A GLOBAL FLIP -- so flip it and score again ==\"\nawk 'BEGIN{FS=OFS=\"\\t\"} /^#/{print;next}\n  { if($10 ~ /^1\\|0/) sub(/^1\\|0/,\"0|1\",$10); else if($10 ~ /^0\\|1/) sub(/^0\\|1/,\"1|0\",$10); print }' \\\n  phased.vcf > flipped.vcf\nwhatshap compare --names truth,flipped truth.vcf flipped.vcf > cmpflip.txt 2>&1\nSWF=$(awk '/switch errors:/{print $NF; exit}' cmpflip.txt)\nHDF=$(awk '/Block-wise Hamming distance:/{print $NF; exit}' cmpflip.txt)\ntest \"$SWF\" = \"0\" || { echo \"flipped phasing scored $SWF switch errors -- the metric is NOT flip-invariant\"; exit 1; }\ntest \"$HDF\" = \"0\" || { echo \"flipped phasing scored Hamming $HDF -- the metric is NOT flip-invariant\"; exit 1; }\n# and the naive comparison, for contrast: it calls the flipped (correct) phasing wrong everywhere\nNAIVE_OK=$(awk '!/^#/{split($10,a,\":\"); print $2\"\\t\"a[1]}' phased.vcf  | sort > /tmp/a.txt\n           awk '!/^#/{split($10,a,\":\"); print $2\"\\t\"a[1]}' truth.vcf   | sort > /tmp/t.txt\n           comm -12 /tmp/a.txt /tmp/t.txt | awk 'END{print NR+0}')\nNAIVE_FLIP=$(awk '!/^#/{split($10,a,\":\"); print $2\"\\t\"a[1]}' flipped.vcf | sort > /tmp/f.txt\n           comm -12 /tmp/f.txt /tmp/t.txt | awk 'END{print NR+0}')\n\n{\nprintf 'Phasing -- haplotypes assigned from reads, scored against haplotypes we built\\n'\nprintf 'whatshap_version\\t%s\\n' \"$WV\"\nprintf 'reads_spanning_2plus\\t%s   (assert >0 -- a read covering ONE variant carries no phase information at all)\\n' \"$COVER\"\nprintf 'variants_phased\\t%s of %s   (assert all)\\n' \"$NPH\" \"$NV\"\nprintf 'phase_sets\\t%s   (assert 1 -- all six linked into a single block)\\n' \"$NPS\"\nprintf 'switch_errors\\t%s   (assert 0 -- vs the PLANTED haplotypes)\\n' \"$SW\"\nprintf 'hamming_distance\\t%s   (assert 0)\\n' \"$HD\"\nprintf 'different_genotypes\\t%s   (assert 0)\\n' \"$DG\"\nprintf 'flipped_switch_errors\\t%s   (assert 0 -- the COMPLEMENT of a correct phasing is equally correct)\\n' \"$SWF\"\nprintf 'naive_gt_match_as_emitted\\t%s of 6\\n' \"$NAIVE_OK\"\nprintf 'naive_gt_match_flipped\\t%s of 6   (a raw GT diff calls the flipped -- correct -- phasing wrong everywhere)\\n' \"$NAIVE_FLIP\"\nprintf 'note\\thaplotype LABELS are arbitrary: which block is 1| and which is |0 carries no meaning.\\n'\nprintf 'note\\tThat is why the score is switch errors between adjacent pairs, not equality of GT strings.\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/ref.fa",
+      "destination": "/tmp/ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/ref.fa.fai",
+      "destination": "/tmp/ref.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/sample.bam",
+      "destination": "/tmp/sample.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/sample.bam.bai",
+      "destination": "/tmp/sample.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/variants.vcf",
+      "destination": "/tmp/variants.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/truth.vcf",
+      "destination": "/tmp/truth.vcf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/phased.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/phased.vcf"
+    },
+    {
+      "source": "/tmp/flipped.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/flipped.vcf"
+    },
+    {
+      "source": "/tmp/cmp.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/cmp.txt"
+    },
+    {
+      "source": "/tmp/cmpflip.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/cmpflip.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
