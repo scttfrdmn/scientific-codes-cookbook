@@ -1,0 +1,52 @@
+{
+  "task_id": "cookbook-ta-align-r1",
+  "container": "quay.io/aarchbio/hisat2@sha256:5a967484d6a941ddaba4b57f88ff892a579e0a18cd8c305b45cf9f49bacf10e8",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== chrT 12 kb; one gene, 3 exons, canonical GT..AG introns ==\"\nawk 'BEGIN{srand(41); b=\"ACGT\"; s=\"\"\n  for(i=0;i<12000;i++) s=s substr(b,int(rand()*4)+1,1)\n  s = substr(s,1,1300) \"GT\" substr(s,1303,1196) \"AG\" substr(s,2501)\n  s = substr(s,1,2700) \"GT\" substr(s,2703,1296) \"AG\" substr(s,4001)\n  print \">chrT\"; for(i=1;i<=length(s);i+=60) print substr(s,i,60) }' > genome.fa\nG=$(awk '!/^>/{printf \"%s\",$0}' genome.fa)\ntest \"${#G}\"       = 12000 || { echo \"FIXTURE: genome is ${#G} bp\"; exit 1; }\ntest \"${G:1300:2}\" = GT    || { echo \"FIXTURE: intron1 donor is not GT\"; exit 1; }\ntest \"${G:2498:2}\" = AG    || { echo \"FIXTURE: intron1 acceptor is not AG\"; exit 1; }\ntest \"${G:2700:2}\" = GT    || { echo \"FIXTURE: intron2 donor is not GT\"; exit 1; }\ntest \"${G:3998:2}\" = AG    || { echo \"FIXTURE: intron2 acceptor is not AG\"; exit 1; }\nE1=\"${G:1000:300}\"; E2=\"${G:2500:200}\"; E3=\"${G:4000:400}\"\nMRNA=\"$E1$E2$E3\"\ntest \"${#MRNA}\" = 900 || { echo \"FIXTURE: mRNA is ${#MRNA} bp\"; exit 1; }\n{ printf 'fixture_gene\\texons 1001-1300 / 2501-2700 / 4001-4400 = 900 bp mRNA\\n'\n  printf 'fixture_splice\\tintrons 1301-2500 and 2701-4000, both canonical GT..AG\\n'; } | tee fixture.txt\n\necho \"== the planted annotation, and the introns it implies ==\"\n{ printf 'chrT\\tplanted\\texon\\t1001\\t1300\\t.\\t+\\t.\\tgene_id \"G1\"; transcript_id \"G1.1\";\\n'\n  printf 'chrT\\tplanted\\texon\\t2501\\t2700\\t.\\t+\\t.\\tgene_id \"G1\"; transcript_id \"G1.1\";\\n'\n  printf 'chrT\\tplanted\\texon\\t4001\\t4400\\t.\\t+\\t.\\tgene_id \"G1\"; transcript_id \"G1.1\";\\n'; } > truth.gtf\nprintf '1301\\t2500\\n2701\\t4000\\n' > truth_introns.tsv\nprintf '1001\\t1300\\n2501\\t2700\\n4001\\t4400\\n' > truth_exons.tsv\n\necho \"== 100 bp reads FROM THE mRNA, so mapping them to the genome requires splicing ==\"\nawk -v m=\"$MRNA\" 'BEGIN{ RL=100; q=\"\"; for(i=0;i<RL;i++) q=q \"I\"; n=0\n  for(p=1;p+RL-1<=length(m);p+=3){ n++; printf \"@t%d\\n%s\\n+\\n%s\\n\", n, substr(m,p,RL), q > \"reads.fq\" }\n  p=length(m)-RL+1; n++; printf \"@t%d\\n%s\\n+\\n%s\\n\", n, substr(m,p,RL), q > \"reads.fq\"\n  printf \"fixture_reads\\t%d reads / %.1fx over the mRNA\\n\", n, n*RL/length(m) }' | tee -a fixture.txt\n\necho \"== hisat2: spliced alignment, with NO annotation supplied ==\"\nhisat2-build -p 2 genome.fa idx > hisat2build.log 2>&1\nhisat2 -p 2 -x idx -U reads.fq -S aln.sam --rg-id s1 --rg SM:sample1 2> hisat2.log\ncat hisat2.log\nRATE=$(sed -n 's/^\\([0-9.]*\\)% overall alignment rate/\\1/p' hisat2.log)\nNSPL=$(awk '!/^@/ && $6 ~ /N/ {n++} END{print n+0}' aln.sam)\ntest \"$NSPL\" -gt 0 || { echo \"no spliced alignment -- hisat2 did not cross a junction\"; exit 1; }\n\necho \"== the introns hisat2 actually found, read off the CIGARs ==\"\nawk '!/^@/ && $6 ~ /N/ { g=$4; c=$6\n  while (match(c,/^[0-9]+[MIDNSHP=X]/)) { L=substr(c,1,RLENGTH-1)+0; O=substr(c,RLENGTH,1)\n    if (O==\"N\") print g\"\\t\"(g+L-1)\n    if (O==\"M\"||O==\"D\"||O==\"N\"||O==\"=\"||O==\"X\") g+=L\n    c=substr(c,RLENGTH+1) } }' aln.sam | sort -u > found_introns.tsv\ncat found_introns.tsv\ndiff -q truth_introns.tsv found_introns.tsv > /dev/null \\\n  || { echo \"hisat2's introns are not the planted ones:\"; diff truth_introns.tsv found_introns.tsv; exit 1; }\n{ printf 'alignment_rate\\t%s%%\\n' \"$RATE\"\n  printf 'spliced_alignments\\t%s   (assert >0)\\n' \"$NSPL\"\n  printf 'hisat2_introns_exact\\tyes   (assert yes -- EXACT: the junctions hisat2 found ARE the planted ones)\\n'; } | tee -a fixture.txt\necho \"ALIGN OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/genome.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/genome.fa"
+    },
+    {
+      "source": "/tmp/aln.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/aln.sam"
+    },
+    {
+      "source": "/tmp/truth.gtf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth.gtf"
+    },
+    {
+      "source": "/tmp/truth_introns.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth_introns.tsv"
+    },
+    {
+      "source": "/tmp/truth_exons.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth_exons.tsv"
+    },
+    {
+      "source": "/tmp/found_introns.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/found_introns.tsv"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/fixture.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

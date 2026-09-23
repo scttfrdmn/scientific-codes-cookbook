@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-ta-stringtie-r1",
+  "container": "quay.io/aarchbio/stringtie@sha256:e0eb6ef15f2c8d329c3b24381b7614b80e97f056dece5fbd2f4ec2f6121b6964",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nSV=$(stringtie --version 2>&1 | awk 'NR==1{print $1}')\necho \"== assemble de novo: NO reference annotation is given to StringTie ==\"\nstringtie -o assembled.gtf -l ASM sample.bam > st.log 2>&1 || { cat st.log; exit 1; }\nawk -F'\\t' '$3==\"exon\" || $3==\"transcript\"' assembled.gtf | cut -f3,4,5,7\n\nNTR=$(awk -F'\\t' '$3==\"transcript\"{n++} END{print n+0}' assembled.gtf)\ntest \"$NTR\" = \"1\" || { echo \"expected 1 assembled transcript, got $NTR\"; exit 1; }\nawk -F'\\t' '$3==\"exon\"{print $4\"\\t\"$5}' assembled.gtf | sort -k1,1n > asm_exons.tsv\nNEX=$(awk 'END{print NR+0}' asm_exons.tsv)\ntest \"$NEX\" = \"3\" || { echo \"expected 3 exons, got $NEX\"; exit 1; }\n\necho \"== the intron chain StringTie built, and the one that was planted ==\"\nawk 'NR>1{print prev+1\"\\t\"$1-1} {prev=$2}' asm_exons.tsv > asm_introns.tsv\npaste truth_introns.tsv asm_introns.tsv\ndiff -q truth_introns.tsv asm_introns.tsv > /dev/null \\\n  || { echo \"intron chain differs from the planted one:\"; diff truth_introns.tsv asm_introns.tsv; exit 1; }\n\necho \"== boundaries: internal exons and the 3' end exact; the 5' terminus is TRIMMED inward ==\"\nread -r A1S A1E < <(awk 'NR==1' asm_exons.tsv)\nread -r A2S A2E < <(awk 'NR==2' asm_exons.tsv)\nread -r A3S A3E < <(awk 'NR==3' asm_exons.tsv)\nread -r T1S T1E < <(awk 'NR==1' truth_exons.tsv)\nread -r T2S T2E < <(awk 'NR==2' truth_exons.tsv)\nread -r T3S T3E < <(awk 'NR==3' truth_exons.tsv)\ntest \"$A2S\" = \"$T2S\" && test \"$A2E\" = \"$T2E\" || { echo \"internal exon is not exact\"; exit 1; }\ntest \"$A1E\" = \"$T1E\" || { echo \"exon1 3' boundary (a splice site) is not exact\"; exit 1; }\ntest \"$A3S\" = \"$T3S\" || { echo \"exon3 5' boundary (a splice site) is not exact\"; exit 1; }\ntest \"$A3E\" = \"$T3E\" || { echo \"exon3 3' end is not exact\"; exit 1; }\n# directional: a terminus may be trimmed INWARD but never extended past the truth\ntest \"$A1S\" -ge \"$T1S\" || { echo \"exon1 extends beyond the planted gene ($A1S < $T1S)\"; exit 1; }\nTRIM=$(( A1S - T1S ))\nASMLEN=$(awk '{n += $2-$1+1} END{print n}' asm_exons.tsv)\n\n{\nprintf 'Transcript assembly -- a 3-exon gene reassembled from spliced reads\\n'\nprintf 'stringtie_version\\t%s\\n' \"$SV\"\nprintf 'transcripts\\t%s   (assert 1)\\n' \"$NTR\"\nprintf 'exons\\t%s   (assert 3)\\n' \"$NEX\"\nprintf 'intron_chain_exact\\tyes   (assert yes -- EXACT: 1301-2500 and 2701-4000)\\n'\nprintf 'internal_exon_exact\\tyes   (assert yes -- %s-%s)\\n' \"$A2S\" \"$A2E\"\nprintf 'splice_boundaries_exact\\tyes   (assert yes -- every exon edge that is a SPLICE SITE)\\n'\nprintf 'three_prime_end_exact\\tyes   (assert yes -- %s)\\n' \"$A3E\"\nprintf 'five_prime_trim\\t%s bp   (assembled %s vs planted %s -- trimmed INWARD, asserted never outward)\\n' \"$TRIM\" \"$A1S\" \"$T1S\"\nprintf 'assembled_exonic_len\\t%s of 900 bp\\n' \"$ASMLEN\"\nprintf 'note\\tassembly determines the INTRON CHAIN precisely and the transcript TERMINI only\\n'\nprintf 'note\\tapproximately: coverage ramps up at the 5-prime end, so StringTie trims where it drops.\\n'\nprintf 'note\\tThat is why the assertion is the intron chain plus DIRECTIONAL containment at the ends.\\n'\n} | tee smoke-check-stringtie.txt\necho \"ASSEMBLY CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/sample.bam",
+      "destination": "/tmp/sample.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/sample.bam.bai",
+      "destination": "/tmp/sample.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth_introns.tsv",
+      "destination": "/tmp/truth_introns.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth_exons.tsv",
+      "destination": "/tmp/truth_exons.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/assembled.gtf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/assembled.gtf"
+    },
+    {
+      "source": "/tmp/asm_exons.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/asm_exons.tsv"
+    },
+    {
+      "source": "/tmp/asm_introns.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/asm_introns.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check-stringtie.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/smoke-check-stringtie.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-ta-gffcompare-r1",
+  "container": "quay.io/aarchbio/gffcompare@sha256:9674f300816f52f289453f514c14ebcc8dd6ab1361b2f29ac1c1b283e66e3547",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nGV=$(gffcompare --version 2>&1 | awk 'NR==1{print $2}')\necho \"== score the assembly against the planted annotation with gffcompare ==\"\ngffcompare -r truth.gtf -o gffcmp assembled.gtf > gffcmp.log 2>&1\nsed -n '1,30p' gffcmp.stats\n\nlvl(){ awk -v k=\"$1\" -F'[:|]' '$0 ~ k {gsub(/ /,\"\",$2); gsub(/ /,\"\",$3); print $2\" \"$3; exit}' gffcmp.stats; }\nread -r BS BP  < <(lvl 'Base level')\nread -r ES EP  < <(lvl 'Exon level')\nread -r IS IP  < <(lvl 'Intron level')\nread -r CS CP  < <(lvl 'Intron chain level')\nMIC=$(awk '/Matching intron chains:/{print $NF}' gffcmp.stats)\nnum(){ awk -v k=\"$1\" '$0 ~ k { for(i=1;i<=NF;i++) if($i ~ /^[0-9]+\\/[0-9]+$/){ split($i,a,\"/\"); print a[1]; exit } }' gffcmp.stats; }\nMISI=$(num 'Missed introns:')\nNOVI=$(num 'Novel introns:')\nCC=$(awk -F'\\t' 'NR>1{print $3; exit}' gffcmp.assembled.gtf.tmap)\nQLEN=$(awk -F'\\t' 'NR>1{print $10; exit}' gffcmp.assembled.gtf.tmap)\nRLEN=$(awk -F'\\t' 'NR>1{print $12; exit}' gffcmp.assembled.gtf.tmap)\n\n# structure must be perfect in BOTH directions -- nothing missed, nothing invented\ntest \"$IS\" = \"100.0\" && test \"$IP\" = \"100.0\" || { echo \"intron level $IS/$IP, expected 100.0/100.0\"; exit 1; }\ntest \"$CS\" = \"100.0\" && test \"$CP\" = \"100.0\" || { echo \"intron chain level $CS/$CP\"; exit 1; }\ntest \"$ES\" = \"100.0\" && test \"$EP\" = \"100.0\" || { echo \"exon level $ES/$EP\"; exit 1; }\ntest \"$MIC\"  = \"1\" || { echo \"matching intron chains $MIC\"; exit 1; }\ntest \"$MISI\" = \"0\" || { echo \"$MISI missed introns\"; exit 1; }\ntest \"$NOVI\" = \"0\" || { echo \"$NOVI novel introns\"; exit 1; }\ntest \"$CC\"   = \"=\" || { echo \"class code $CC, expected '=' (complete intron-chain match)\"; exit 1; }\n# precision 100 everywhere means StringTie invented nothing; base sensitivity is the ONE\n# number that should be below 100, and it is exactly the trimmed length.\ntest \"$BP\" = \"100.0\" || { echo \"base precision $BP -- StringTie assembled bases outside the gene\"; exit 1; }\nEXP=$(awk -v q=\"$QLEN\" -v r=\"$RLEN\" 'BEGIN{printf \"%.1f\", 100*q/r}')\ntest \"$BS\" = \"$EXP\" || { echo \"base sensitivity $BS != 100*$QLEN/$RLEN = $EXP\"; exit 1; }\n\n{\nprintf 'Transcript assembly scored against the planted annotation (gffcompare)\\n'\nprintf 'gffcompare_version\\t%s\\n' \"$GV\"\nprintf 'intron_level\\t%s / %s   (assert 100.0 / 100.0 -- EXACT, both directions)\\n' \"$IS\" \"$IP\"\nprintf 'intron_chain_level\\t%s / %s   (assert 100.0 / 100.0)\\n' \"$CS\" \"$CP\"\nprintf 'exon_level\\t%s / %s   (assert 100.0 / 100.0)\\n' \"$ES\" \"$EP\"\nprintf 'matching_intron_chains\\t%s   (assert 1)\\n' \"$MIC\"\nprintf 'missed_introns\\t%s   (assert 0)\\n' \"$MISI\"\nprintf 'novel_introns\\t%s   (assert 0 -- nothing invented)\\n' \"$NOVI\"\nprintf 'class_code\\t%s   (assert \"=\" -- complete intron-chain match)\\n' \"$CC\"\nprintf 'base_precision\\t%s   (assert 100.0 -- no assembled base lies outside the gene)\\n' \"$BP\"\nprintf 'base_sensitivity\\t%s   (the ONLY metric below 100, and it EQUALS 100*%s/%s)\\n' \"$BS\" \"$QLEN\" \"$RLEN\"\nprintf 'note\\tevery STRUCTURAL metric is 100%%; the single shortfall is %s bp of 5-prime terminus,\\n' \"$(( RLEN - QLEN ))\"\nprintf 'note\\tso base sensitivity is not a defect to chase -- it is the trim, measured.\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/assembled.gtf",
+      "destination": "/tmp/assembled.gtf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/truth.gtf",
+      "destination": "/tmp/truth.gtf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/gffcmp.stats",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/gffcmp.stats"
+    },
+    {
+      "source": "/tmp/gffcmp.assembled.gtf.tmap",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/gffcmp.assembled.gtf.tmap"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
