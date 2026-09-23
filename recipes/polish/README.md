@@ -38,7 +38,7 @@ Two tasks: minimap2 builds the fixture and aligns the reads to the draft, racon 
 Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. Alignment and polishing are each about a second at this size; the windows are almost entirely image pull. **These timings are not compute cost.**
 
 <details>
-<summary>As shipped: exact recovery, why 780 is not an error count, racon crashes on Apple Silicon and not on Graviton, pins</summary>
+<summary>As shipped: exact recovery, why 780 is not an error count, pins</summary>
 
 ### The checks
 
@@ -74,23 +74,6 @@ Three of those errors are **deletions**, the first at position 9000. Everything 
 
 **Positional mismatch counting is meaningless across an indel.** It is reported here because the *ratio* is informative and because the arithmetic explains itself, but the assertion is `cmp` — exact byte equality — precisely so that it cannot be fooled by a frameshift in either direction. Anything looser would need a real alignment to be meaningful, which is a second tool for a question byte-identity already answers.
 
-### racon crashes on Apple Silicon and runs fine on Graviton4
-
-While developing this, `racon` died with **`Illegal instruction`** (SIGILL) under Docker Desktop on Apple Silicon — after `racon --version` printed normally, so the binary loads and fails inside the compute kernel. On Graviton4 the identical image, digest and input **complete cleanly and produce a byte-identical consensus**.
-
-The CPU feature lists explain it:
-
-```text
-Graviton4       … sve sve2 sveaes svepmull svebitperm svesha3 svei8mm svebf16 i8mm bf16 …
-Apple Silicon   asimd fphp
-```
-
-racon's alignment kernel (SPOA) is SIMD-accelerated, and the `linux-aarch64` build uses instructions **Apple Silicon does not implement**. So the crash is a host-feature mismatch, not a broken package — and nothing about it is filable upstream, because the target platform works.
-
-The reason this matters beyond racon: the project already knows that [local Docker on macOS cannot prove uid or permission behaviour](../../practices/container-path.md). **CPU instruction set is a third dimension of the same trap**, alongside memory — a cgroup limit does not change `/proc/meminfo`, and an Apple Silicon host does not advertise SVE. A green local run proves the logic; it does not prove the binary will execute, fit, or be permitted on the real host. Here the failure was loud and pointed the wrong way: *away* from a tool that works.
-
-Because a SIGILL produces no output at all, the racon task writes its version and the host's CPU features **before** polishing and copies racon's log to a flat path on exit, so a crash still delivers the evidence needed to tell a build problem from a host problem.
-
 ### Pins (data tier: synthetic / in-code)
 
 | | |
@@ -99,7 +82,7 @@ Because a SIGILL produces no output at all, the racon task writes its version an
 | racon | `quay.io/aarchbio/racon@sha256:75020311…` (1.5.0) |
 | input | none — truth, draft and reads are generated in-task by awk from `srand(89)` |
 
-racon takes the PAF, the reads and the draft as three plain files and writes FASTA to stdout, so nothing here needs a directory staged. `awk` defines its helper functions at top level rather than inside `BEGIN`, because not every `awk` accepts the latter.
+racon takes the PAF, the reads and the draft as three plain files and writes FASTA to stdout, so nothing here needs a directory staged. Its SIMD alignment kernel uses instructions Graviton has and some development laptops do not, so if you try it locally first and get `Illegal instruction`, that says nothing about the target — run it on the box. `awk` defines its helper functions at top level rather than inside `BEGIN`, because not every `awk` accepts the latter.
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in both tasks.
 
