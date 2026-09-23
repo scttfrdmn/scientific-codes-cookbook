@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-sv-manta-r1",
+  "container": "quay.io/aarchbio/manta@sha256:0cae7f334d4a0929f985dfdbf24801de50c421e29fc529d71ba35f342ea1e0d5",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nMV=$(configManta.py --version 2>&1 | awk 'NR==1{print $1}')\nTS=$(awk -F'\\t' '$1==\"del_start\"{print $2}' truth.tsv)\nTE=$(awk -F'\\t' '$1==\"del_end\"{print $2}'   truth.tsv)\nTL=$(awk -F'\\t' '$1==\"del_len\"{print $2}'   truth.tsv)\n\n# diagnostics written BEFORE anything can fail, so a failure still delivers evidence\n{ printf 'manta_version\\t%s\\n' \"$MV\"\n  printf 'mem_total_kb\\t%s   (pyflow sizes its tasks from THIS, not from a cgroup limit)\\n' \\\n    \"$(awk '/MemTotal/{print $2}' /proc/meminfo)\"\n  printf 'nproc\\t%s\\n' \"$(nproc)\"; } > manta-diag.txt\ncat manta-diag.txt\ncleanup(){ cp -f wf.log manta-wf.log 2>/dev/null || :; cp -f cfg.log manta-cfg.log 2>/dev/null || :; }\ntrap cleanup EXIT\n\necho \"== a SECOND caller on the SAME BAM: manta assembles candidate breakends ==\"\nrm -rf mrun\nconfigManta.py --bam sample.bam --referenceFasta ref.fa --runDir mrun > cfg.log 2>&1 \\\n  || { tail -20 cfg.log; exit 1; }\n# -g is load-bearing: manta's merge task asks for 4 GiB, and pyflow refuses to schedule a\n# task larger than the memory it detects. Without a box that has it, the workflow aborts.\nmrun/runWorkflow.py -m local -j 2 -g 6 > wf.log 2>&1 || { tail -30 wf.log; exit 1; }\n# manta writes a runDir; a directory output cannot be staged, so flatten the VCF\ngzip -dc mrun/results/variants/diploidSV.vcf.gz > manta.vcf\ngrep -v '^##' manta.vcf | cut -f1-8\n\nNM=$(awk '!/^#/{n++} END{print n+0}' manta.vcf)\ntest \"$NM\" = \"1\" || { echo \"expected exactly 1 manta call, got $NM\"; exit 1; }\nread -r MPOS MFIL MTYPE MEND MLEN < <(awk -F'\\t' '!/^#/{\n  t=\"\"; e=\"\"; l=\"\"\n  n=split($8,a,\";\")\n  for(i=1;i<=n;i++){ split(a[i],kv,\"=\"); if(kv[1]==\"SVTYPE\")t=kv[2]; if(kv[1]==\"END\")e=kv[2]; if(kv[1]==\"SVLEN\")l=kv[2] }\n  print $2, $7, t, e, l; exit }' manta.vcf)\ntest \"$MTYPE\" = \"DEL\"  || { echo \"manta SVTYPE $MTYPE\"; exit 1; }\ntest \"$MFIL\"  = \"PASS\" || { echo \"manta FILTER $MFIL\"; exit 1; }\n\necho \"== manta END is the LAST DELETED BASE (VCF spec): deleted = POS+1 .. END ==\"\nMS=$(( MPOS + 1 )); ME=$MEND\ntest \"$MS\" = \"$TS\" || { echo \"manta start $MS != planted $TS\"; exit 1; }\ntest \"$ME\" = \"$TE\" || { echo \"manta end $ME != planted $TE\"; exit 1; }\nMABS=${MLEN#-}\ntest \"$MABS\" = \"$TL\" || { echo \"manta |SVLEN| $MABS != deleted length $TL\"; exit 1; }\n\necho \"== delly END is the base AFTER the deletion: deleted = POS+1 .. END-1 ==\"\nread -r DCH DPOS DFIL DTYPE DEND DLEN REST < sv.tsv\nDS=$(( DPOS + 1 )); DE=$(( DEND - 1 )); DABS=${DLEN#-}\n\n# THE SCIENCE AGREES: both callers place the same deleted interval, exactly.\ntest \"$DS\" = \"$MS\" || { echo \"callers disagree on the start: delly $DS vs manta $MS\"; exit 1; }\ntest \"$DE\" = \"$ME\" || { echo \"callers disagree on the end: delly $DE vs manta $ME\"; exit 1; }\n\n# THE FIELDS DO NOT: a probe, so a future convention change surfaces as a failure here\ntest \"$DEND\" -ne \"$MEND\" || { echo \"NOTE: delly and manta now report the SAME END -- conventions converged\"; exit 1; }\ntest $(( DEND - MEND )) = 1 || { echo \"END offset is $(( DEND - MEND )), expected exactly 1\"; exit 1; }\ntest $(( DABS - MABS )) = 1 || { echo \"SVLEN offset is $(( DABS - MABS )), expected exactly 1\"; exit 1; }\n\n{\nprintf 'Structural variants -- two independent CALLERS on one BAM\\n'\nprintf 'manta_version\\t%s\\n' \"$MV\"\nprintf 'manta_calls\\t%s   (assert 1 -- no false positives)\\n' \"$NM\"\nprintf 'manta_type_filter\\t%s / %s   (assert DEL / PASS)\\n' \"$MTYPE\" \"$MFIL\"\nprintf 'planted_deletion\\t%s-%s (%s bp)\\n' \"$TS\" \"$TE\" \"$TL\"\nprintf 'manta_deleted_interval\\t%s-%s   (POS+1 .. END)     assert EXACT vs planted\\n' \"$MS\" \"$ME\"\nprintf 'delly_deleted_interval\\t%s-%s   (POS+1 .. END-1)   assert EXACT vs planted\\n' \"$DS\" \"$DE\"\nprintf 'callers_agree\\tyes   (assert yes -- CROSS-VALIDATION: identical deleted interval, different algorithms)\\n'\nprintf 'raw_END\\tdelly %s vs manta %s   (differ by exactly 1 -- asserted, as a convention probe)\\n' \"$DEND\" \"$MEND\"\nprintf 'raw_SVLEN\\tdelly %s vs manta %s   (differ by exactly 1)\\n' \"$DLEN\" \"$MLEN\"\nprintf 'note\\tmanta follows the VCF spec: END is the LAST DELETED BASE and |SVLEN| is the deleted\\n'\nprintf 'note\\tlength. delly END is the base AFTER the deletion and |SVLEN| = END-POS. Both are\\n'\nprintf 'note\\tself-consistent and both recover the deletion exactly -- but ONE arithmetic cannot\\n'\nprintf 'note\\tread both. Merge them with a single formula and every delly deletion is 1 bp long\\n'\nprintf 'note\\tand fails to match its manta twin.\\n'\n} | tee smoke-check-manta.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa",
+      "destination": "/tmp/ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/ref.fa.fai",
+      "destination": "/tmp/ref.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam",
+      "destination": "/tmp/sample.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sample.bam.bai",
+      "destination": "/tmp/sample.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/sv.tsv",
+      "destination": "/tmp/sv.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/manta.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/manta.vcf"
+    },
+    {
+      "source": "/tmp/smoke-check-manta.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/smoke-check-manta.txt"
+    },
+    {
+      "source": "/tmp/manta-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/manta-diag.txt"
+    },
+    {
+      "source": "/tmp/manta-wf.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants/r1/manta-wf.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
