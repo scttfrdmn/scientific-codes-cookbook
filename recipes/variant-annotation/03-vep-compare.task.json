@@ -1,0 +1,75 @@
+{
+  "task_id": "cookbook-varann-vep-r1",
+  "container": "quay.io/aarchbio/ensembl-vep@sha256:48593f3f9f40cd15c77adcf68f83fb7ee00d7fa35849d449cece48a504c76e01",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nVV=$(vep 2>&1 | awk '/ensembl  *:/{print $3; exit}')\n\necho \"== a THIRD annotator on the same reference, GFF and VCF ==\"\n# VEP --gff wants the GFF sorted by position, bgzipped and tabix-indexed. The Ensembl-style\n# ID=gene:/ID=transcript: prefixes it needs are the same ones bcftools csq needs.\nsort -k1,1 -k4,4n genes.gff | bgzip -c > genes.sorted.gff.gz\ntabix -p gff genes.sorted.gff.gz\nvep -i variants.vcf --gff genes.sorted.gff.gz --fasta chrA.fa --vcf \\\n    -o vep.vcf --no_stats --force_overwrite --species custom > vep.log 2>&1 || { tail -20 vep.log; exit 1; }\ngrep -v '^##' vep.vcf | cut -f3,8\n\nNV=$(awk '!/^#/{n++} END{print n+0}' vep.vcf)\nNCSQ=$(awk '!/^#/ && $8 ~ /CSQ=/{n++} END{print n+0}' vep.vcf)\ntest \"$NV\"   = \"5\" || { echo \"expected 5 records, got $NV\"; exit 1; }\ntest \"$NCSQ\" = \"5\" || { echo \"only $NCSQ of 5 records carry a CSQ -- VEP did not read the GFF\"; exit 1; }\n\necho \"== normalise VEP into the same five columns as the other two ==\"\ncat > norm-vep.awk <<'AWKEOF'\nBEGIN{FS=\"\\t\"; OFS=\"\\t\"}\n!/^#/{\n  c=\"\"; n=split($8,parts,\";\")\n  for(i=1;i<=n;i++) if (parts[i] ~ /^CSQ=/) c=substr(parts[i],5)\n  split(c,f,\"|\")\n  csq=f[2]; sub(/&.*/,\"\",csq); sub(/_variant$/,\"\",csq)\n  pp=f[15]; aa=f[16]; pos=\".\"; r=\".\"; a=\".\"\n  # VEP writes X for a frameshifted residue -- \"unknown\", not an amino acid, so nothing to compare\n  if (aa ~ /^[A-Z]\\/[A-Z*]$/ && aa !~ /\\/X$/ && pp ~ /^[0-9]+$/) { split(aa,s,\"/\"); r=s[1]; a=s[2]; pos=pp }\n  else if (aa ~ /^[A-Z*]$/ && pp ~ /^[0-9]+$/)                   { r=aa; a=aa; pos=pp }\n  print $3, csq, pos, r, a\n}\nAWKEOF\nawk -f norm-vep.awk vep.vcf | sort > vep.norm\ncat vep.norm\n\necho \"== VEP vs the planted truth, and vs both other annotators ==\"\nsort -o truth.tsv truth.tsv; sort -o snpeff.norm snpeff.norm; sort -o bcsq.norm bcsq.norm\nVT=no; VS=no; VB=no\ndiff -q truth.tsv   vep.norm >/dev/null && VT=yes || diff truth.tsv   vep.norm || true\ndiff -q snpeff.norm vep.norm >/dev/null && VS=yes || diff snpeff.norm vep.norm || true\ndiff -q bcsq.norm   vep.norm >/dev/null && VB=yes || diff bcsq.norm   vep.norm || true\ntest \"$VT\" = yes && test \"$VS\" = yes && test \"$VB\" = yes\n\necho \"== the frameshift codon: which tool is the outlier ==\"\nSNPFS=$(awk -F'\\t' '$3==\"v4_fs\"{split($8,p,\"ANN=\"); split(p[2],g,\"|\"); h=g[11]; gsub(/[^0-9]/,\"\",h); print h; exit}' ann.vcf)\nBCFFS=$(awk -F'\\t' '$3==\"v4_fs\"{split($8,p,\"BCSQ=\"); split(p[2],g,\"|\"); h=g[6]; sub(/[^0-9].*/,\"\",h); print h; exit}' csq.vcf)\nVEPFS=$(awk -F'\\t' '$3==\"v4_fs\"{split($8,p,\"CSQ=\"); split(p[2],g,\"|\"); print g[15]; exit}' vep.vcf)\nprintf 'snpEff %s   VEP %s   bcftools %s\\n' \"$SNPFS\" \"$VEPFS\" \"$BCFFS\"\ntest \"$VEPFS\" = \"$SNPFS\" || { echo \"VEP and snpEff no longer agree on the frameshift codon\"; exit 1; }\ntest \"$BCFFS\" != \"$VEPFS\" || { echo \"NOTE: bcftools now agrees too -- conventions converged\"; exit 1; }\n\necho \"== the three raw spellings, side by side (observation) ==\"\n{\nprintf 'variant\\tsnpEff\\tbcftools csq\\tVEP\\n'\nfor v in v1_syn v2_mis v3_non v4_fs v5_spl; do\n  S=$(awk -F'\\t' -v v=\"$v\" '$3==v{split($8,p,\"ANN=\"); split(p[2],g,\"|\"); printf \"%s / %s\", g[2], (g[11]==\"\"?\"-\":g[11])}' ann.vcf)\n  B=$(awk -F'\\t' -v v=\"$v\" '$3==v{split($8,p,\"BCSQ=\"); split(p[2],g,\"|\"); printf \"%s / %s\", g[1], (g[6]==\"\"?\"-\":g[6])}' csq.vcf)\n  P=$(awk -F'\\t' -v v=\"$v\" '$3==v{split($8,p,\"CSQ=\"); split(p[2],g,\"|\"); printf \"%s / %s\", g[2], (g[16]==\"\"?\"-\":g[15]\":\"g[16])}' vep.vcf)\n  printf '%s\\t%s\\t%s\\t%s\\n' \"$v\" \"$S\" \"$B\" \"$P\"\ndone\n} | tee conventions3.txt\n\n{\nprintf 'Variant annotation -- THREE annotators on one reference, one GFF, one VCF\\n'\nprintf 'vep_version\\t%s\\n' \"$VV\"\nprintf 'records_with_csq\\t%s of 5   (assert 5 -- a GFF VEP cannot read yields records with no CSQ)\\n' \"$NCSQ\"\nprintf 'vep_exact\\t%s   (assert yes -- EXACT vs planted consequences)\\n' \"$VT\"\nprintf 'vep_vs_snpeff\\t%s   (assert yes)\\n' \"$VS\"\nprintf 'vep_vs_bcftools\\t%s   (assert yes)\\n' \"$VB\"\nprintf 'three_way_agreement\\tyes   (assert yes -- all three, after normalising three different notations)\\n'\nprintf 'frameshift_codon\\tsnpEff %s / VEP %s / bcftools %s   (assert VEP == snpEff, bcftools differs)\\n' \"$SNPFS\" \"$VEPFS\" \"$BCFFS\"\nprintf 'note\\tthe earlier two-tool page could only say the frameshift positions were irreconcilable.\\n'\nprintf 'note\\tA third annotator settles WHICH is unusual: snpEff and VEP both name the first\\n'\nprintf 'note\\taffected codon (34); bcftools starts at the last intact one (33) and spells out the\\n'\nprintf 'note\\tretranslated tail. Majority is not correctness, but it tells you which convention to\\n'\nprintf 'note\\texpect and which to special-case.\\n'\nprintf 'note\\tVEP writes X for a frameshifted residue -- unknown, not an amino acid -- so it is\\n'\nprintf 'note\\texcluded from the comparison rather than matched against a letter.\\n'\n} | tee smoke-check-vep.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/chrA.fa",
+      "destination": "/tmp/chrA.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/genes.gff",
+      "destination": "/tmp/genes.gff"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/variants.vcf",
+      "destination": "/tmp/variants.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/snpeff.norm",
+      "destination": "/tmp/snpeff.norm"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/ann.vcf",
+      "destination": "/tmp/ann.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/csq.vcf",
+      "destination": "/tmp/csq.vcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/bcsq.norm",
+      "destination": "/tmp/bcsq.norm"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/vep.vcf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/vep.vcf"
+    },
+    {
+      "source": "/tmp/vep.norm",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/vep.norm"
+    },
+    {
+      "source": "/tmp/conventions3.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/conventions3.txt"
+    },
+    {
+      "source": "/tmp/smoke-check-vep.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation/r1/smoke-check-vep.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.06
+  }
+}
