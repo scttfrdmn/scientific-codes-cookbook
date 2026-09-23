@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-polish-racon-r1",
+  "container": "quay.io/aarchbio/racon@sha256:75020311bdb6a635ee67718984db28029e95ee2272e32de9d0def8a9826ed4ee",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# Diagnostics written BEFORE racon runs: it SIGILLs on Apple Silicon (no SVE), and whether\n# that is a build problem or a host-feature problem can only be answered on real hardware.\n{ printf 'racon_version\\t%s\\n' \"$(racon --version 2>&1 | head -1)\"\n  printf 'uname\\t%s\\n' \"$(uname -m)\"\n  printf 'cpu_features\\t%s\\n' \"$(grep -m1 Features /proc/cpuinfo 2>/dev/null | cut -d: -f2- | tr -s ' ')\"\n} > polish-diag.txt\ncat polish-diag.txt\ncleanup(){ cp -f racon.log polish-racon.log 2>/dev/null || :; }\ntrap cleanup EXIT\n\necho \"== polish ==\"\nracon -t 2 reads.fq ov.paf draft.fa > polished.fa 2> racon.log || { echo \"racon FAILED:\"; tail -15 racon.log; exit 1; }\ntest -s polished.fa || { echo \"racon produced no output\"; exit 1; }\n\nawk '!/^>/{printf \"%s\", $0} END{print \"\"}' truth.fa    > t.seq\nawk '!/^>/{printf \"%s\", $0} END{print \"\"}' draft.fa    > d.seq\nawk '!/^>/{printf \"%s\", $0} END{print \"\"}' polished.fa > p.seq\nTL=$(awk '{print length($0)}' t.seq); DL=$(awk '{print length($0)}' d.seq); PL=$(awk '{print length($0)}' p.seq)\n\nEXACT=no; cmp -s t.seq p.seq && EXACT=yes\n# residual differences where lengths allow a positional comparison\nMM=$(awk 'NR==FNR{a=$0; next} { b=$0; n=0; L=(length(a)<length(b)?length(a):length(b))\n  for(i=1;i<=L;i++) if (substr(a,i,1)!=substr(b,i,1)) n++; print n }' t.seq p.seq)\nDMM=$(awk 'NR==FNR{a=$0; next} { b=$0; n=0; L=(length(a)<length(b)?length(a):length(b))\n  for(i=1;i<=L;i++) if (substr(a,i,1)!=substr(b,i,1)) n++; print n }' t.seq d.seq)\n\nPSUB=$(awk -F'\\t' '$1==\"planted_substitutions\"{print $2}' truth.tsv)\nPDEL=$(awk -F'\\t' '$1==\"planted_deletions\"{print $2}'     truth.tsv)\n\n# The claim: polishing must move the draft TOWARD the truth. Exact recovery is asserted if\n# achieved; otherwise the directional claim is the honest one and is asserted instead.\ntest \"$PL\" = \"$TL\" || { echo \"polished length $PL != truth $TL\"; exit 1; }\ntest \"$EXACT\" = yes || { echo \"polished is not byte-identical to the truth ($MM positional mismatches)\"; exit 1; }\n\n{\nprintf 'racon -- a draft with planted errors, polished back against reads from the truth\\n'\nprintf 'racon_version\\t%s\\n' \"$(racon --version 2>&1 | head -1)\"\nprintf 'planted_errors\\t%s substitutions + %s deletions\\n' \"$PSUB\" \"$PDEL\"\nprintf 'lengths\\ttruth %s / draft %s / polished %s   (assert polished == truth)\\n' \"$TL\" \"$DL\" \"$PL\"\nprintf 'draft_vs_truth\\t%s positional mismatches before polishing\\n' \"$DMM\"\nprintf 'polished_vs_truth\\t%s positional mismatches   (assert 0)\\n' \"$MM\"\nprintf 'byte_identical\\t%s   (assert yes -- EXACT: the polished consensus IS the true sequence)\\n' \"$EXACT\"\nprintf 'note\\tthe reads carry no errors, so the truth is fully recoverable and exact equality is\\n'\nprintf 'note\\tthe right assertion. On real noisy reads the honest claim is DIRECTIONAL -- fewer\\n'\nprintf 'note\\tdifferences after polishing than before -- because a consensus cannot beat its evidence.\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/truth.fa",
+      "destination": "/tmp/truth.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/draft.fa",
+      "destination": "/tmp/draft.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/reads.fq",
+      "destination": "/tmp/reads.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/ov.paf",
+      "destination": "/tmp/ov.paf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/polished.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/polished.fa"
+    },
+    {
+      "source": "/tmp/polish-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/polish-diag.txt"
+    },
+    {
+      "source": "/tmp/polish-racon.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/polish-racon.log"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
