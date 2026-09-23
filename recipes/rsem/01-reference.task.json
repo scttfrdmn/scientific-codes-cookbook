@@ -1,0 +1,64 @@
+{
+  "task_id": "cookbook-rsem-reference-r1",
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nRV=$(rsem-calculate-expression --version 2>&1 | awk 'NR==1{print $NF}')\necho \"== two transcripts sharing an 800 bp block, with unique regions of very different length ==\"\nawk 'function r(n,  s,i){ s=\"\"; for(i=0;i<n;i++) s=s substr(B,int(rand()*4)+1,1); return s }\nBEGIN{ srand(67); B=\"ACGT\"\n  S=r(800); uA=r(100); uB=r(800)\n  printf \">txA\\n%s\\n>txB\\n%s\\n\", uA S, uB S > \"txome.fa\"\n}'\nawk '/^>/{n=substr($0,2); next} {printf \"fixture_%s\\t%d bp\\n\", n, length($0)}' txome.fa | tee fixture.txt\nLA=$(awk '/^>txA/{getline; print length($0)}' txome.fa)\nLB=$(awk '/^>txB/{getline; print length($0)}' txome.fa)\ntest \"$LA\" = \"900\"  || { echo \"txA is $LA bp, expected 900\"; exit 1; }\ntest \"$LB\" = \"1600\" || { echo \"txB is $LB bp, expected 1600\"; exit 1; }\n\necho \"== 1500 reads from txA and 500 from txB: a planted READ ratio of exactly 3 ==\"\nawk 'BEGIN{\n  while ((getline l < \"txome.fa\") > 0) { if (l ~ /^>/) nm=substr(l,2); else seq[nm]=l }\n  RL=100; q=\"\"; for(i=0;i<RL;i++) q=q \"I\"\n  split(\"txA 1500 txB 500\", a, \" \")\n  n=0\n  for(k=1;k<=3;k+=2){\n    t=a[k]; N=a[k+1]+0; L=length(seq[t]); starts=L-RL+1\n    for(i=0;i<N;i++){ p = 1 + (i*3) % starts\n      n++; printf \"@%s_r%d\\n%s\\n+\\n%s\\n\", t, i+1, substr(seq[t],p,RL), q > \"reads.fq\" }\n    printf \"%s\\t%d\\n\", t, N > \"truth.tsv\"\n  }\n  printf \"fixture_reads\\t%d total\\n\", n\n}' | tee -a fixture.txt\nNR_=$(awk 'END{print NR/4}' reads.fq)\nPT=$(awk '{n+=$2} END{print n}' truth.tsv)\ntest \"$NR_\" = \"$PT\" || { echo \"wrote $NR_ reads, planted $PT\"; exit 1; }\nPA=$(awk '$1==\"txA\"{print $2}' truth.tsv); PB=$(awk '$1==\"txB\"{print $2}' truth.tsv)\nawk -v a=\"$PA\" -v b=\"$PB\" 'BEGIN{ r=a/b; if (r < 2.999 || r > 3.001) { printf \"planted ratio %.4f, expected 3\\n\", r; exit 1 }\n  printf \"planted_ratio\\t%.1f  (txA:txB by READ COUNT)\\n\", r }' | tee -a fixture.txt\n\necho \"== RSEM reference (no aligner needed for this step) ==\"\nrsem-prepare-reference txome.fa idx > prep.log 2>&1 || { tail -15 prep.log; exit 1; }\nls idx.* | tr '\\n' ' '; echo\nNSEQ=$(awk '/^>/{n++} END{print n+0}' idx.transcripts.fa)\ntest \"$NSEQ\" = \"2\" || { echo \"reference has $NSEQ transcripts, expected 2\"; exit 1; }\n{ printf 'rsem_version\\t%s\\n' \"$RV\"\n  printf 'reference_transcripts\\t%s   (assert 2)\\n' \"$NSEQ\"; } | tee -a fixture.txt\necho \"REFERENCE OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/txome.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/txome.fa"
+    },
+    {
+      "source": "/tmp/reads.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/reads.fq"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/fixture.txt"
+    },
+    {
+      "source": "/tmp/idx.grp",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.grp"
+    },
+    {
+      "source": "/tmp/idx.ti",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.ti"
+    },
+    {
+      "source": "/tmp/idx.seq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.seq"
+    },
+    {
+      "source": "/tmp/idx.transcripts.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.transcripts.fa"
+    },
+    {
+      "source": "/tmp/idx.idx.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.idx.fa"
+    },
+    {
+      "source": "/tmp/idx.n2g.idx.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.n2g.idx.fa"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

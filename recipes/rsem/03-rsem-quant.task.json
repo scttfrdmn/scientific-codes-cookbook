@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-rsem-quant-r1",
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nRV=$(rsem-calculate-expression --version 2>&1 | awk 'NR==1{print $NF}')\necho \"== EM over every alignment, not just the unambiguous ones ==\"\nsamtools view -bS aln.sam > aln.bam            # bowtie2's image has no samtools; this one does\ntest -s aln.bam || { echo \"conversion produced an empty BAM\"; exit 1; }\nrsem-calculate-expression --alignments --no-bam-output -p 2 aln.bam idx out > calc.log 2>&1 \\\n  || { tail -20 calc.log; exit 1; }\ncat out.isoforms.results\n\nread -r CA EA TA < <(awk -F'\\t' '$1==\"txA\"{print $5, $4, $6}' out.isoforms.results)\nread -r CB EB TB < <(awk -F'\\t' '$1==\"txB\"{print $5, $4, $6}' out.isoforms.results)\nPA=$(awk '$1==\"txA\"{print $2}' truth.tsv); PB=$(awk '$1==\"txB\"{print $2}' truth.tsv)\nNREADS=$(awk -v a=\"$PA\" -v b=\"$PB\" 'BEGIN{print a+b}')\n\necho \"== identity 1: EM redistributes reads, so the counts must sum to the reads ==\"\nawk -v a=\"$CA\" -v b=\"$CB\" -v n=\"$NREADS\" 'BEGIN{ s=a+b\n  if (s-n > 0.01 || n-s > 0.01) { printf \"sum(expected_count)=%.2f != %d reads\\n\", s, n; exit 1 }\n  printf \"  sum expected_count = %.2f == %d reads\\n\", s, n }'\n\necho \"== identity 2: TPM is a per-million share, so it must sum to 1e6 ==\"\nawk -v a=\"$TA\" -v b=\"$TB\" 'BEGIN{ s=a+b\n  if (s-1000000 > 1 || 1000000-s > 1) { printf \"sum(TPM)=%.2f != 1e6\\n\", s; exit 1 }\n  printf \"  sum TPM = %.2f\\n\", s }'\n\necho \"== the recovered read ratio, against the planted one ==\"\nRATIO=$(awk -v a=\"$CA\" -v b=\"$CB\" 'BEGIN{printf \"%.4f\", a/b}')\nPRATIO=$(awk -v a=\"$PA\" -v b=\"$PB\" 'BEGIN{printf \"%.4f\", a/b}')\nawk -v r=\"$RATIO\" -v p=\"$PRATIO\" 'BEGIN{ d=(r>p)?r-p:p-r\n  if (d/p > 0.02) { printf \"recovered ratio %.4f differs from planted %.4f by more than 2%%\\n\", r, p; exit 1 }\n  printf \"  recovered %.4f vs planted %.4f\\n\", r, p }'\n\necho \"== identity 3: why the TPM ratio is NOT the read ratio ==\"\nTRATIO=$(awk -v a=\"$TA\" -v b=\"$TB\" 'BEGIN{printf \"%.4f\", a/b}')\nPRED=$(awk -v r=\"$RATIO\" -v ea=\"$EA\" -v eb=\"$EB\" 'BEGIN{printf \"%.4f\", r*(eb/ea)}')\nawk -v t=\"$TRATIO\" -v p=\"$PRED\" 'BEGIN{ d=(t>p)?t-p:p-t\n  if (d > 0.005) { printf \"TPM ratio %.4f != count ratio x eff-length ratio %.4f\\n\", t, p; exit 1 }\n  printf \"  TPM ratio %.4f == count ratio x (effB/effA) = %.4f  -- EXACT\\n\", t, p }'\n\necho \"== the naive method, for contrast ==\"\nNA=$(awk '$1==\"txA\"{print $2}' naive_unique.tsv); NB=$(awk '$1==\"txB\"{print $2}' naive_unique.tsv)\nNRATIO=$(awk -v a=\"$NA\" -v b=\"$NB\" 'BEGIN{printf \"%.4f\", a/b}')\n# The planted answer says txA is the more abundant. The naive answer must put it BELOW txB --\n# not merely off, but on the wrong side of 1. That is the claim worth asserting.\nawk -v n=\"$NRATIO\" -v p=\"$PRATIO\" 'BEGIN{\n  if (!(p > 1 && n < 1)) { printf \"naive ratio %.4f and planted %.4f are on the same side of 1\\n\", n, p; exit 1 }\n  printf \"  naive %.4f < 1 < %.4f planted -- the ORDER is inverted\\n\", n, p }'\n\n{\nprintf 'RSEM -- EM over multi-mapping reads, and what unique-only counting does instead\\n'\nprintf 'rsem_version\\t%s\\n' \"$RV\"\nprintf 'planted\\ttxA %s / txB %s reads   ratio %s\\n' \"$PA\" \"$PB\" \"$PRATIO\"\nprintf 'expected_count\\ttxA %s / txB %s   ratio %s   (assert within 2%% of planted)\\n' \"$CA\" \"$CB\" \"$RATIO\"\nprintf 'count_conservation\\t%s   (assert == %s reads -- EM redistributes, it does not create)\\n' \"$(awk -v a=\"$CA\" -v b=\"$CB\" 'BEGIN{printf \"%.2f\", a+b}')\" \"$NREADS\"\nprintf 'tpm_conservation\\t%s   (assert == 1000000 -- EXACT)\\n' \"$(awk -v a=\"$TA\" -v b=\"$TB\" 'BEGIN{printf \"%.2f\", a+b}')\"\nprintf 'tpm_ratio\\t%s   (NOT the read ratio -- it equals count_ratio x effB/effA = %s, EXACT)\\n' \"$TRATIO\" \"$PRED\"\nprintf 'effective_lengths\\ttxA %s / txB %s   (from lengths 900 / 1600)\\n' \"$EA\" \"$EB\"\nprintf 'naive_unique_only\\ttxA %s / txB %s   ratio %s   (assert < 1 while planted > 1)\\n' \"$NA\" \"$NB\" \"$NRATIO\"\nprintf 'note\\tunique-only counting does not merely mis-estimate here -- it INVERTS the order,\\n'\nprintf 'note\\treporting txB as the more abundant when txA has three times the reads. txB has 800 bp\\n'\nprintf 'note\\tof uniquely-mappable sequence against txAs 100 bp, so it collects unique reads far\\n'\nprintf 'note\\tout of proportion to its abundance. That bias is what EM exists to remove.\\n'\nprintf 'note\\tAnd comparing TPM against a planted READ ratio would look like a 5.7-vs-3.0 failure:\\n'\nprintf 'note\\tTPM is length-normalised, so the two differ by exactly the effective-length ratio.\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/aln.sam",
+      "destination": "/tmp/aln.sam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/naive_unique.tsv",
+      "destination": "/tmp/naive_unique.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.grp",
+      "destination": "/tmp/idx.grp"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.ti",
+      "destination": "/tmp/idx.ti"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.seq",
+      "destination": "/tmp/idx.seq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.transcripts.fa",
+      "destination": "/tmp/idx.transcripts.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.idx.fa",
+      "destination": "/tmp/idx.idx.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/idx.n2g.idx.fa",
+      "destination": "/tmp/idx.n2g.idx.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out.isoforms.results",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/out.isoforms.results"
+    },
+    {
+      "source": "/tmp/out.genes.results",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/out.genes.results"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
