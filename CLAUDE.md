@@ -7,6 +7,13 @@ on spore.host. **Round One builds working examples** — does each code run clea
 on a Graviton4 box, producing real output. Not benchmarks. Cost measurement is a
 later phase and is out of scope now.
 
+**Every recipe runs the application on AWS, through the spore.host tools.** That is
+the subject and the whole point: `truffle` sizes the box, `spawn` runs the pinned
+container on it under a TTL and a cost cap, `lagotto` handles capacity, and the
+instance self-terminates. Graviton4 (`c8g`/`m8g`/`r8g`) is the target now; other
+instance types — x86, GPU — come later. A recipe that has not run on AWS is not a
+recipe yet, whatever it does anywhere else.
+
 The recipe is the product. Read CHARTER.md for the why. State and progress live on
 the GitHub project board — this file holds only standing rules.
 
@@ -60,12 +67,20 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   Budget for holding the staged copy instead. `rm -rf` on a directory the task built
   is fine. (A task that dies after its inputs verify, for a reason unrelated to the
   science.)
-- **Local Docker on macOS cannot prove uid/permission behaviour.** Bind mounts there
-  don't enforce sticky-bit ownership, so a dry run passes where the real Linux host
-  fails — that is exactly how the `rm` above got through seven green dry runs. When
-  the question is *permissions*, test it on a real Linux filesystem: create the file
-  as root in a `1777` dir inside the container's own fs, then `setpriv --reuid` to the
-  image's user. (False confidence from a green local run.)
+- **The local machine is a scratch pad, not a target. The AWS run is the only verdict.**
+  Local Docker is for fast iteration on shell syntax and awk logic, and for nothing else.
+  **Neither a local pass nor a local failure is evidence about the instance**, so don't
+  treat a green local run as a gate, and don't spend time diagnosing a local-only failure
+  or write it up as a finding — push it to the box and read the answer there. Measured,
+  three ways, all on macOS Docker: bind mounts don't enforce sticky-bit ownership, so the
+  `rm`/`EPERM` bug above survived seven green dry runs; a `--memory 3g` cgroup limit
+  doesn't change `/proc/meminfo`, so manta's pyflow believed it had the host's RAM and
+  only failed on a real 4 GiB box; and racon `SIGILL`s on Apple Silicon, which lacks SVE,
+  while running cleanly on Graviton4 — a *loud local failure pointing away from a tool
+  that works*. The first is false confidence, the third is false alarm, and both waste the
+  same thing. When the question is about the *platform* — permissions, memory, CPU
+  features, anything the host decides — the local answer is not an answer.
+  (Time spent debugging a machine nobody ships on.)
 - **Boot dominates; say so in the README.** First recipe: 46.6s of `bwa index` and
   32s of `bwa mem` inside 6m40s billed. Boot, Docker install and image pull are
   most of every task, and the ratio worsens with each task added. Irrelevant to
