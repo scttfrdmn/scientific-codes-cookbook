@@ -1,0 +1,56 @@
+{
+  "task_id": "cookbook-qc-fastqc-r1",
+  "container": "quay.io/aarchbio/fastqc@sha256:a4a8edb4754d731a0fd513cb4594a14766d662d5156c4e93299bdd57ef4b2fc3",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== four samples whose FastQC metrics are fixed by construction ==\"\ngen(){ # name nreads readlen gcpct ndup\n  awk -v out=\"$1.fastq\" -v N=\"$2\" -v L=\"$3\" -v GC=\"$4\" -v NDUP=\"$5\" 'BEGIN{\n    srand(53); nGC = L*GC/100\n    if (nGC != int(nGC)) { print \"FIXTURE: GC pct not exact at this read length\" > \"/dev/stderr\"; exit 1 }\n    q=\"\"; for(i=0;i<L;i++) q=q \"I\"\n    for(i=1;i<=L;i++) slot[i] = (i<=nGC) ? \"GC\" : \"AT\"\n    for(i=L;i>1;i--){ j=int(rand()*i)+1; t=slot[i]; slot[i]=slot[j]; slot[j]=t }\n    dup=\"\"\n    for(i=1;i<=L;i++) dup = dup ( slot[i]==\"GC\" ? (rand()<0.5?\"G\":\"C\") : (rand()<0.5?\"A\":\"T\") )\n    n=0\n    for(r=1;r<=N;r++){\n      n++\n      if (r <= NDUP) { s = dup }\n      else {\n        for(i=1;i<=L;i++) slot[i] = (i<=nGC) ? \"GC\" : \"AT\"\n        for(i=L;i>1;i--){ j=int(rand()*i)+1; t=slot[i]; slot[i]=slot[j]; slot[j]=t }\n        s=\"\"\n        for(i=1;i<=L;i++) s = s ( slot[i]==\"GC\" ? (rand()<0.5?\"G\":\"C\") : (rand()<0.5?\"A\":\"T\") )\n      }\n      printf \"@%s_read%d\\n%s\\n+\\n%s\\n\", out, r, s, q > out\n    }\n    # planted truth: sample, reads, length, GC pct, and the EXACT dedup pct 100*(N-NDUP+1)/N\n    dd = (NDUP>0) ? 100*(N-NDUP+1)/N : 100\n    printf \"%s\\t%d\\t%d\\t%d\\t%.1f\\n\", substr(out,1,length(out)-6), n, L, GC, dd\n  }'\n}\n: > truth.tsv\ngen sampleA 1000 100 50   0 >> truth.tsv\ngen sampleB 1000 100 25   0 >> truth.tsv\ngen sampleC  800  50 50   0 >> truth.tsv\ngen sampleD 1000 100 50 500 >> truth.tsv\nprintf 'sample\\treads\\tlen\\tGC\\tdedup\\n'; cat truth.tsv\n\necho \"== verify the fixture by counting bases, independently of the generator ==\"\nwhile IFS=$'\\t' read -r s n l g d; do\n  OBS=$(awk 'NR%4==2{ tot+=length($0); gc+=gsub(/[GCgc]/,\"\") } END{ printf \"%.4f\", 100*gc/tot }' \"$s.fastq\")\n  awk -v o=\"$OBS\" -v e=\"$g\" -v s=\"$s\" 'BEGIN{ if (o+0 != e+0) { printf \"FIXTURE: %s GC is %s, planted %s\\n\", s, o, e; exit 1 } }'\n  printf 'fixture_%s\\t%s reads x %s bp, GC %s%% (counted %s%%), dedup %s%%\\n' \"$s\" \"$n\" \"$l\" \"$g\" \"$OBS\" \"$d\"\ndone < truth.tsv | tee fixture.txt\n\necho \"== FastQC ==\"\nfastqc --version > fqver.txt 2>&1\nFV=$(awk 'NR==1{print $2}' fqver.txt)\nfastqc -t 2 --extract -o . sampleA.fastq sampleB.fastq sampleC.fastq sampleD.fastq > fq.log 2>&1 \\\n  || { tail -15 fq.log; exit 1; }\n\necho \"== FastQC's own numbers, pulled from fastqc_data.txt ==\"\n: > fastqc_values.tsv\nwhile IFS=$'\\t' read -r s n l g d; do\n  awk -F'\\t' -v s=\"$s\" '/^Total Sequences/{ts=$2} /^Sequence length/{sl=$2} /^%GC/{gc=$2}\n    /^#Total Deduplicated Percentage/{dd=$2}\n    END{ printf \"%s\\t%s\\t%s\\t%s\\t%s\\n\", s, ts, sl, gc, dd }' \"${s}_fastqc/fastqc_data.txt\" >> fastqc_values.tsv\ndone < truth.tsv\nprintf 'sample\\treads\\tlen\\tGC\\tdedup\\n'; cat fastqc_values.tsv\n\necho \"== every FastQC metric must equal the planted value ==\"\npaste truth.tsv fastqc_values.tsv | awk -F'\\t' '{\n  if ($6 != $1)                { printf \"sample name mismatch: %s vs %s\\n\", $1, $6; bad=1 }\n  if ($7+0 != $2+0)            { printf \"%s total sequences %s, planted %s\\n\", $1, $7, $2; bad=1 }\n  if ($8+0 != $3+0)            { printf \"%s read length %s, planted %s\\n\", $1, $8, $3; bad=1 }\n  if ($9+0 != $4+0)            { printf \"%s GC %s, planted %s\\n\", $1, $9, $4; bad=1 }\n  if ($10+0 != $5+0)           { printf \"%s dedup %s, planted %s\\n\", $1, $10, $5; bad=1 }\n} END{ if (bad) exit 1; print \"all four samples exact\" }'\n\nTOTREADS=$(awk -F'\\t' '{n+=$2} END{print n}' truth.tsv)\n{\nprintf 'FastQC -- four samples whose metrics are fixed by construction\\n'\nprintf 'fastqc_version\\t%s\\n' \"$FV\"\nprintf 'samples\\t4   (assert 4 reports)\\n'\nprintf 'total_sequences_exact\\tyes   (assert yes -- EXACT per sample)\\n'\nprintf 'read_length_exact\\tyes   (assert yes -- EXACT)\\n'\nprintf 'gc_exact\\tyes   (assert yes -- EXACT: each read carries a fixed count of G/C bases)\\n'\nprintf 'dedup_exact\\tyes   (assert yes -- EXACT: 500 copies of one read + 500 unique = 501/1000 = 50.1%%)\\n'\nprintf 'cohort_reads\\t%s   (the conservation total the aggregator must reproduce)\\n' \"$TOTREADS\"\n} | tee smoke-check-fastqc.txt\necho \"FASTQC CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/sampleA_fastqc.zip",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleA_fastqc.zip"
+    },
+    {
+      "source": "/tmp/sampleB_fastqc.zip",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleB_fastqc.zip"
+    },
+    {
+      "source": "/tmp/sampleC_fastqc.zip",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleC_fastqc.zip"
+    },
+    {
+      "source": "/tmp/sampleD_fastqc.zip",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleD_fastqc.zip"
+    },
+    {
+      "source": "/tmp/truth.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/truth.tsv"
+    },
+    {
+      "source": "/tmp/fastqc_values.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/fastqc_values.tsv"
+    },
+    {
+      "source": "/tmp/fixture.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/fixture.txt"
+    },
+    {
+      "source": "/tmp/smoke-check-fastqc.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/smoke-check-fastqc.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

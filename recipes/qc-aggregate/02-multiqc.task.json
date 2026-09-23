@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-qc-multiqc-r1",
+  "container": "quay.io/aarchbio/multiqc@sha256:69df62f478fd50e624ab0c9af81fc23f36afd8c049fd7b3221f8d444cb0c9ffc",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\nMV=$(multiqc --version 2>&1 | awk 'NR==1{print $3}')\nNEXP=$(awk 'END{print NR}' fastqc_values.tsv)\nmkdir -p zips && cp ./*_fastqc.zip zips/\n\necho \"== aggregate the whole cohort ==\"\nmultiqc -f -o mqc zips > mq.log 2>&1 || { tail -20 mq.log; exit 1; }\ngrep -E 'Found [0-9]+ reports' mq.log || true\ncp mqc/multiqc_data/multiqc_fastqc.txt       ./multiqc_fastqc.txt\ncp mqc/multiqc_data/multiqc_general_stats.txt ./multiqc_general_stats.txt\n\necho \"== the aggregated table ==\"\npython3 - <<'PY' > mqc_values.tsv\nrows=[l.rstrip('\\n').split('\\t') for l in open('multiqc_fastqc.txt')]\nh=rows[0]\ni={k:h.index(k) for k in (\"Sample\",\"Total Sequences\",\"Sequence length\",\"%GC\",\"total_deduplicated_percentage\")}\nfor r in rows[1:]:\n    print('\\t'.join(r[i[k]] for k in (\"Sample\",\"Total Sequences\",\"Sequence length\",\"%GC\",\"total_deduplicated_percentage\")))\nPY\nsort -o mqc_values.tsv mqc_values.tsv\nsort -o fastqc_values.tsv fastqc_values.tsv\npaste fastqc_values.tsv mqc_values.tsv\n\nNROW=$(awk 'END{print NR+0}' mqc_values.tsv)\ntest \"$NROW\" = \"$NEXP\" || { echo \"cohort report has $NROW rows, expected $NEXP -- a sample is missing\"; exit 1; }\n\necho \"== NUMERIC comparison: the aggregator must be lossless ==\"\npaste fastqc_values.tsv mqc_values.tsv | awk -F'\\t' '{\n  if ($6 != $1)      { printf \"sample mismatch %s vs %s\\n\", $1, $6; bad=1 }\n  if ($7+0 != $2+0)  { printf \"%s total %s vs %s\\n\", $1, $2, $7; bad=1 }\n  if ($8+0 != $3+0)  { printf \"%s len %s vs %s\\n\",   $1, $3, $8; bad=1 }\n  if ($9+0 != $4+0)  { printf \"%s GC %s vs %s\\n\",    $1, $4, $9; bad=1 }\n  if ($10+0 != $5+0) { printf \"%s dedup %s vs %s\\n\", $1, $5, $10; bad=1 }\n} END{ if (bad) exit 1; print \"every value round-trips exactly\" }'\n\necho \"== conservation: the cohort total the aggregator reports ==\"\nSUMFQ=$(awk -F'\\t' '{n+=$2} END{print n}' fastqc_values.tsv)\nSUMMQ=$(awk -F'\\t' '{n+=$2} END{printf \"%d\", n}' mqc_values.tsv)\ntest \"$SUMFQ\" = \"$SUMMQ\" || { echo \"read totals differ: FastQC $SUMFQ vs MultiQC $SUMMQ\"; exit 1; }\n\necho \"== the same comparison done TEXTUALLY, for contrast (observation, not assertion) ==\"\n# NB: awk compares two numeric-looking strings NUMERICALLY, so \"1000\"==\"1000.0\" is true.\n# Concatenating \"\" forces the string comparison this observation is actually about.\nSTRMATCH=$(paste fastqc_values.tsv mqc_values.tsv | awk -F'\\t' \\\n  '($2 \"\")==($7 \"\") && ($3 \"\")==($8 \"\") && ($4 \"\")==($9 \"\") {n++} END{print n+0}')\n\necho \"== a MISSING sample is silent: withhold one and see what the aggregator does ==\"\nmkdir -p partial && cp zips/sampleA_fastqc.zip zips/sampleB_fastqc.zip zips/sampleD_fastqc.zip partial/\nset +e\nmultiqc -f -o mqcp partial > mqp.log 2>&1\nPEXIT=$?\nset -e\nPROW=$(awk -F'\\t' 'NR>1{n++} END{print n+0}' mqcp/multiqc_data/multiqc_fastqc.txt)\nPWARN=$(grep -icE 'warn|error' mqcp/multiqc_data/multiqc.log || true)\ntest \"$PEXIT\" = \"0\"    || { echo \"multiqc exited $PEXIT with a sample missing -- it is NOT silent after all\"; exit 1; }\ntest \"$PROW\" = \"3\"     || { echo \"partial cohort has $PROW rows, expected 3\"; exit 1; }\n\n{\nprintf 'MultiQC -- aggregating a cohort, and the two ways that goes wrong quietly\\n'\nprintf 'multiqc_version\\t%s\\n' \"$MV\"\nprintf 'rows_in_report\\t%s of %s   (assert equal -- the aggregator must not drop a sample)\\n' \"$NROW\" \"$NEXP\"\nprintf 'values_round_trip\\tyes   (assert yes -- EXACT, numerically, for every sample and metric)\\n'\nprintf 'cohort_reads\\tFastQC %s == MultiQC %s   (assert equal -- CONSERVATION across the aggregation)\\n' \"$SUMFQ\" \"$SUMMQ\"\nprintf 'string_equal_rows\\t%s of %s   (observation: MultiQC writes 1000.0 where FastQC wrote 1000,\\n' \"$STRMATCH\" \"$NEXP\"\nprintf 'string_equal_rows\\t     so a TEXTUAL comparison of identical numbers disagrees on every row)\\n'\nprintf 'missing_sample_exit\\t%s   (assert 0 -- dropping a cohort member is NOT an error to MultiQC)\\n' \"$PEXIT\"\nprintf 'missing_sample_rows\\t%s   (assert 3 -- the report is silently one sample short)\\n' \"$PROW\"\nprintf 'missing_sample_warnings\\t%s   (nothing in the log names the absent sample)\\n' \"$PWARN\"\nprintf 'note\\tan aggregator reports what it FINDS. If one fan-out task failed, or its output never\\n'\nprintf 'note\\tlanded, the cohort report is simply smaller and still exits 0 -- so the row count has\\n'\nprintf 'note\\tto be asserted against the expected N somewhere outside MultiQC.\\n'\n} | tee smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleA_fastqc.zip",
+      "destination": "/tmp/sampleA_fastqc.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleB_fastqc.zip",
+      "destination": "/tmp/sampleB_fastqc.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleC_fastqc.zip",
+      "destination": "/tmp/sampleC_fastqc.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/sampleD_fastqc.zip",
+      "destination": "/tmp/sampleD_fastqc.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/fastqc_values.tsv",
+      "destination": "/tmp/fastqc_values.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/multiqc_fastqc.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/multiqc_fastqc.txt"
+    },
+    {
+      "source": "/tmp/multiqc_general_stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/multiqc_general_stats.txt"
+    },
+    {
+      "source": "/tmp/mqc_values.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/mqc_values.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
