@@ -1,0 +1,66 @@
+{
+  "task_id": "bwareal-c7g-16t",
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=c7g-16t THREADS=16\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nLBL=\"${LBL:-unknown}\"; THREADS=\"${THREADS:-$(nproc)}\"\nREF=GRCh38_full_analysis_set_plus_decoy_hla.fa\n\nbwa > ver.txt 2>&1 || true          # no pipe: bwa's usage goes to a file, then awk reads it\nBWAVER=$(awk '/^Version/{v=$2} END{print v}' ver.txt)\n\necho \"== staged inputs ==\"\nls -l $REF.* SRR062634_*.gz | awk '{printf \"  %-52s %s bytes\\n\", $9, $5}'\nfor f in $REF.bwt $REF.sa $REF.pac SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz; do\n  test -s \"$f\" || { echo \"missing input $f\"; exit 1; }\ndone\n\n# ---- 1 Hz cgroup sampler (the measurements/sizing-ratio instrument, inline) ----\nCG=/sys/fs/cgroup\nsample(){ : > /tmp/samp.tsv\n  while :; do\n    m=$(cat $CG/memory.current 2>/dev/null || echo 0)\n    a=$(awk '/^anon /{print $2}' $CG/memory.stat 2>/dev/null || echo 0)\n    u=$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null || echo 0)\n    printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \"$m\" \"$a\" \"$u\" >> /tmp/samp.tsv\n    sleep 1\n  done; }\nsample & SP=$!\ntrap 'kill $SP 2>/dev/null || true' EXIT\n\necho \"== how much data is this really? ==\"\n# ONE pass, and NO early exit anywhere in the pipeline. `awk ... exit` after line 2 of a\n# 1.8 GiB gzip SIGPIPEs zcat, and under `set -o pipefail` the task dies with 141 -- the same\n# failure as `| head`, wearing a different costume. Any reader that stops early does this.\nread -r NP RL < <(zcat SRR062634_1.filt.fastq.gz | awk 'NR==2{l=length($0)} END{print NR/4, l}')\nprintf 'read_pairs\\t%s\\nread_len\\t%s\\ntotal_bases\\t%s\\n' \"$NP\" \"$RL\" \\\n  \"$(awk -v p=\"$NP\" -v l=\"$RL\" 'BEGIN{printf \"%.2f Gbp\", 2*p*l/1e9}')\" | tee \"size-$LBL.txt\"\n\necho \"== bwa mem -t $THREADS on the full GRCh38 index ==\"\nT0=$(date +%s)\n# ONE awk that reads the stream to EOF: counts, and saves the first lines to a file.\n# Do NOT pipe to `head` here -- head exits early, SIGPIPEs bwa, and under `set -o pipefail`\n# the task dies with exit 141 having done all the work. (Hit that here; third time in this\n# project, hence the note.)\nbwa mem -t \"$THREADS\" -R '@RG\\tID:SRR062634\\tSM:HG00096\\tPL:ILLUMINA' \\\n    \"$REF\" SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz 2> bwa.log \\\n  | awk 'NR<=5000 { print > \"/tmp/sam_head.txt\" }\n         !/^@/ { n++; if ($3!=\"*\") m++ }\n         END { printf \"%d\\t%d\\n\", n, m }' > counts.tsv\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\nread -r NREC NMAP < counts.tsv\nkill $SP 2>/dev/null || true\n\nPEAK=$(awk -F'\\t' '{if($2+0>m)m=$2+0} END{printf \"%.2f\", m/1073741824}' /tmp/samp.tsv)\nANON=$(awk -F'\\t' '{if($3+0>m)m=$3+0} END{printf \"%.2f\", m/1073741824}' /tmp/samp.tsv)\nCORES=$(awk -F'\\t' 'NR==1{u0=$4;t0=$1} END{printf \"%.2f\", ($4-u0)/1e6/($1-t0)}' /tmp/samp.tsv)\n{\nprintf 'label\\t%s\\n' \"$LBL\"\nprintf 'threads\\t%s\\n' \"$THREADS\"\nprintf 'nproc\\t%s\\n' \"$(nproc)\"\nprintf 'bwa_version\\t%s\\n' \"$BWAVER\"\nprintf 'bwa_wall_s\\t%s\\n' \"$WALL\"\nprintf 'sam_records\\t%s\\n' \"$NREC\"\nprintf 'mapped_records\\t%s\\n' \"$NMAP\"\nprintf 'pct_mapped\\t%s\\n' \"$(awk -v m=\"$NMAP\" -v n=\"$NREC\" 'BEGIN{printf \"%.2f\", 100*m/n}')\"\nprintf 'reads_per_sec\\t%s\\n' \"$(awk -v n=\"$NREC\" -v w=\"$WALL\" 'BEGIN{printf \"%.0f\", n/w}')\"\nprintf 'peak_rss_gib\\t%s\\n' \"$PEAK\"\nprintf 'anon_max_gib\\t%s\\n' \"$ANON\"\nprintf 'avg_cores\\t%s\\n' \"$CORES\"\nprintf 'core_efficiency\\t%s\\n' \"$(awk -v c=\"$CORES\" -v t=\"$THREADS\" 'BEGIN{printf \"%.0f%%\", 100*c/t}')\"\n} | tee -a \"size-$LBL.txt\"\nawk '/Real time|CPU/{last2=prev; prev=$0} END{if(last2)print last2; if(prev)print prev}' bwa.log | tee -a \"size-$LBL.txt\"\ntest \"$NREC\" -gt 1000000 || { echo \"only $NREC records -- not a real workload\"; exit 1; }\necho \"ALIGN OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c7g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_2.filt.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/size-c7g-16t.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/size-c7g-16t.txt"
+    },
+    {
+      "source": "/tmp/bwa.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/bwa-c7g-16t.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
