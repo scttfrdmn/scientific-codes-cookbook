@@ -1,70 +1,117 @@
 ---
 tool: salmon
+tool_version: "2.7.0"
 image: quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e
-spawn_version: 0.104.0
+spawn_version: 0.111.1
+last_verified: 2026-09-25
 ---
-# salmon — RNA-seq transcript quantification
+# salmon — a complete RNA-seq run against the whole human transcriptome
 
-Quantify transcript abundance from RNA-seq reads against the human transcriptome — a mapping-based quantifier, cross-checked against [kallisto](../kallisto/README.md).
+Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq.
+
+> **Scope.** One complete run (`ERR188026`) and the entire Ensembl 116 cDNA set. Quantification only — no DE testing, no transcript assembly, no single-cell.
 
 ## Run it
 
 ```bash
-salmon index -t transcriptome.fa.gz -i idx
-salmon quant -i idx -l A -1 reads_1.fq.gz -2 reads_2.fq.gz -o out
+make stage RECIPE=salmon   # once: Ensembl 116 cDNA + the full ERR188026 run
+make run   RECIPE=salmon   # index 50 s, then quant ~1 min; self-terminating
+make ls    RECIPE=salmon   # quant.sf + smoke-check.txt
 ```
 
-Two tasks: `salmon index` builds a 1.6 GiB index over the Ensembl-116 human transcriptome; `salmon quant` maps 200k read pairs against it. Split because the index is the expensive, reusable artifact — [one tool per image](../../practices/container-path.md) makes each its own task, and the split lets `quant` re-run without rebuilding.
+```bash
+salmon index -t ensembl116_cdna.fa.gz -i sidx -p 16 --ramLimit 8
+salmon quant -i sidx -l A -1 ERR188026_1.fastq.gz -2 ERR188026_2.fastq.gz -o squant -p 16
+```
+
+## Which box — measured (same image, same bytes, 16 threads)
+
+| generation | instance | quant wall | $/hr | compute $ | **billed $/result** | overhead |
+|---|---|---|---|---|---|---|
+| Graviton2 | `c6g.4xlarge` | 116 s | 0.5440 | 0.0175 | 0.0287 | 74 s |
+| Graviton3 | `c7g.4xlarge` | 83 s | 0.5800 | 0.0134 | 0.0259 | 78 s |
+| Graviton4 | `c8g.4xlarge` | 74 s | 0.6381 | 0.0131 | 0.0222 | 51 s |
+| **Graviton5** | `c9g.4xlarge` | **57 s** | 0.6955 | **0.0110** | **0.0193** | **43 s** |
+
+**Take the newest generation — it wins twice:** Graviton5 is **2.0× faster** than Graviton2, **33% cheaper per result billed**, and it *stages* faster too (overhead 74 s → 43 s, more network for the same 3.7 GB). But note **this job is overhead-dominated** — 43–78 s of boot and staging against 57–116 s of compute, so **40% of the bill is not salmon**, the opposite of [bwa](../bwa-samtools/README.md) at 89% compute. More cores buys nothing here; only a shorter data path does.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| Ensembl-116 transcriptome + 200k ERR188026 pairs | your transcriptome + reads | the index task is reusable — every sample against Ensembl-116 wants the same index, which is why it's split out. |
-| `-l A` (auto-detect library type) | an explicit `-l` (e.g. `ISR`) | `A` infers strandedness; pin it if you know it. |
-| the 200k-pair subsample | your full-depth reads | subsampled for a fast demo, not because salmon wants small input. |
+| `ERR188026` | your FASTQs — edit `stage-inputs.sh` | one sample per task; a cohort is this task [fanned out](../../patterns/job-arrays.md) against one shared index. |
+| Ensembl 116 cDNA | your transcriptome / a different release | the index is **built once and reused** — 50 s, 1.68 GB. Rebuild only when the annotation changes. |
+| `-p 16` | fewer cores | quant is ~1 minute at 16; the box is already faster than the data path, so more cores buys nothing. |
 
-Nothing is determinism scaffolding — salmon reports this config `deterministic` and reproduced every count across runs. **Leave the fixture:** a real transcriptome with a small sample exercises the index build and gives a real cross-code agreement with [kallisto](../kallisto/README.md); full depth is a longer run, not a more legible one. Leave-it.
-
-## Shape, size, cost
-
-Two tasks, `c8g.2xlarge` (index peak 2.3 GB RSS — compute-family, not memory-bound), TTL 20m, cap $0.13. Index 2m53s, quant 9.6s. **These timings are not compute cost** — boot and image pull dominate ([why](../../practices/what-this-does-not-cover.md)).
+**Leave the workload** — a complete run against a complete transcriptome, so these numbers transfer to your samples. **Scale it** by fanning out samples against the one index, not by growing the box.
 
 <details>
-<summary>As shipped: the conservation identities, the tar workaround, pins, smoke check, run + verify</summary>
+<summary>As shipped: the exact identities at full scale, why overhead dominates, pins</summary>
 
-**Conservation identities** (exact, so they can't go flaky): TPM sums to exactly **1,000,000**, and `sum(NumReads)` equals the mapped count (189,012) — an internal-consistency check that catches a `quant.sf` truncated on a zero-count tail, which a row count alone would miss.
-
-**The index travels as a tar, not an S3 prefix.** A salmon index is a directory of nine files, and spawn can't stage a directory *output*: output parents aren't `mkdir`-ed, so dockerd creates them as root and the container can't write there (spawn#564). So `index` tars it to one flat `/tmp` file and `quant` untars it.
-
-**Pins** (data tier: stable public — Ensembl `release-116/` is an immutable path):
-
-| | |
-|---|---|
-| image | `quay.io/aarchbio/salmon@sha256:7134f5…` (tag `2.7.0--hb05d258_0`, cosign-signed, `linux/arm64`) |
-| transcriptome | Ensembl release-116 `Homo_sapiens.GRCh38.cdna.all.fa.gz` — `sha256:683eb193…` (453,553 transcripts) |
-| reads | ENA `ERR188026` first 200,000 pairs — `sha256:1198ed07…` / `6104ee46…` |
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| fragments processed | exactly 200000 | 200000 |
-| `quant.sf` rows | exactly 453553 | 453553 |
-| TPM sum | exactly 1000000 | 1000000 |
-| `sum(NumReads)` | == num_mapped | 189012 = 189012 |
-| percent mapped | 85–99 | 94.506 |
-| expressed transcripts (TPM>0) | 8000–30000 | 17731 |
-| *index:* references / files | 453553 / ≥8 | 453553 / 9 |
+| `sum(TPM)` | **exactly 1,000,000** — TPM is a per-million share | **1000000.00** on all four generations |
+| `sum(NumReads)` | == `num_mapped` from salmon's own `meta_info.json` | **14,913,565** |
+| reads processed | > 5M (a real run, not a slice) | **15,800,127** |
+| mapping rate | recorded | **94.39%** |
+| transcripts quantified | the whole annotation | **453,553** |
 
-**`quant` holds the staged tar, doesn't delete it** — under sticky `/tmp` the container gets `EPERM` unlinking a staged input it doesn't own, and `rm -f` doesn't suppress `EPERM` ([the container path](../../practices/container-path.md)).
+Both identities are **exact and cost nothing**. `sum(TPM) == 1e6` is true by construction, so a
+`quant.sf` truncated on a zero-count tail fails it even though a row count would pass —
+[the identity beats the band](../../practices/cross-checks.md). And `sum(NumReads)` equalling
+salmon's independently-reported mapped count catches a mismatch between the table and the run
+that produced it. Both held identically on Graviton 2, 3, 4 and 5 — the numerics are
+generation-independent, which is what makes the timing comparison meaningful.
 
-**Run + verify.** Stage the inputs into your bucket from public sources, then run both tasks:
+Peak RSS was **6.46–6.59 GiB** across all four generations: footprint is the index, not the chip.
+
+### Why this job is overhead-dominated, and what that changes
+
+Staging is **3.7 GB** — a 1.68 GB index tar plus 2.06 GB of reads — against 57–116 s of
+compute. So the fixed cost is 40% of the bill, and two things follow:
+
+- **More cores is not the lever.** At 16 threads salmon already finishes in about a minute. The
+  [knee](../../patterns/sizing.md) is irrelevant; the data path is the whole story, which is the
+  case [copy, mount, or share?](../../patterns/data-movement.md) exists for.
+- **The generation still wins** — and partly *because* of the overhead, not despite it: newer
+  instances have more network, so the same 3.7 GB stages in 43 s instead of 74. A generation
+  step buys compute *and* bandwidth.
+
+Contrast with [bwa](../bwa-samtools/README.md) on the same platform: there compute is 89% of
+the bill and the recommendation is about cores. Same measurement method, opposite conclusion —
+which is why each recipe carries its own table instead of inheriting a rule of thumb.
+
+### The index is a separate task on purpose
+
+`salmon index` takes **50 s** and produces a **1.68 GB** index; `salmon quant` consumes it. They
+are two tasks because the index is built once and reused by every sample, so it should not be
+rebuilt per run — and because a salmon index is a *directory*, which
+[cannot be staged as such](../../practices/container-path.md), it travels as a flat
+`salmon-index.tar` and is untarred by the consumer.
+
+### Pins
+
+| | data tier |
+|---|---|
+| salmon | `quay.io/aarchbio/salmon@sha256:7134f511…` (2.7.0) |
+| transcriptome | Ensembl 116 `Homo_sapiens.GRCh38.cdna.all.fa.gz` — versioned release, copied byte for byte |
+| reads | ENA `ERR188026_{1,2}.fastq.gz` — the complete run, 1.03 GiB per side |
+
+Also, two things this image does **not** have, both of which cost a run to learn: no
+`python3` and no `jq`, so `meta_info.json` is parsed with `awk`. And nothing in the pipeline may
+stop reading early — a `sed … | head -1` on a small file usually wins the race and SIGPIPEs on a
+large one, which is worse than failing outright, so there is no pipe there at all.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=salmon   # builds the Ensembl-116 transcriptome + reads into your bucket
-make run   RECIPE=salmon   # 01-index then 02-quant, against your bucket
-make ls    RECIPE=salmon   # the outputs: quant.sf, smoke-check.txt
+make run RECIPE=salmon
+make ls  RECIPE=salmon
 ```
-`make run` substitutes your `COOKBOOK_BUCKET` into each spec and runs the tasks in order. The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)).
 
-**Fan out across samples.** One quantification is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample sharing the one read-only index, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when the shared index or spot capacity pushes back.
+Expect `smoke-check.txt` with `tpm_sum 1000000.00`, `numreads_sum 14913565`, and
+`reads_processed 15800127`.
 
 </details>

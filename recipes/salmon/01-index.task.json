@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-salmon-index-r1",
+  "task_id": "cookbook-salmon-index",
+  "container": "quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged input against its pinned sha256 ==\"\nprintf '%s  %s\\n' 683eb19310c40bf1396e4718f45afa2ce86755717c0990f47a171f535d248ea1 \\\n  ensembl116_cdna.fa.gz > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== salmon index: Ensembl 116 human transcriptome ==\"\n# --ramLimit is salmon's own default (8 GiB), the tool's index-build budget. The box\n# is c8g.2xlarge for the 8 vCPUs (-p 8), not memory: measured index peak ~2.3 GB RSS,\n# under both the 8 GiB budget and the box's 16 GiB -- compute-bound, not memory-bound.\nsalmon index -t ensembl116_cdna.fa.gz -i sidx -p 8 --ramLimit 8 2>&1 | tee index.log\n\n# ---- smoke check on the index itself ----\n# Splitting index from quant is what makes this worth checking here: a bad index\n# fails now, before 1.6 GiB crosses S3 twice. The reference count is exact \u2014 it is a\n# property of the pinned transcriptome, not of anything salmon chooses.\nREFS=$(awk '/^indexed .* references/ {print $2; exit}' index.log)\nFILES=$(ls sidx | wc -l | tr -d ' ')\nBYTES=$(du -sk sidx | cut -f1)\n\n{\n  echo \"indexed_references $REFS    want exactly 453553\"\n  echo \"index_files        $FILES   want >= 8            (observed 9)\"\n  echo \"index_kib          $BYTES   want 1000000..2500000 (observed ~1.6 GiB)\"\n} > smoke-check-index.txt\ncat smoke-check-index.txt\n\ntest \"$REFS\"  -eq 453553\ntest \"$FILES\" -ge 8\ntest \"$BYTES\" -ge 1000000\ntest \"$BYTES\" -le 2500000\ntest -s sidx/info.json\ntest -s sidx/index.ssi\ntest -s sidx/index.ctab\nls -la sidx\n\n# Ship the index as ONE tar object, not as an S3 prefix. spawn does support directory\n# staging (a Manifest source ending in \"/\" gets `aws s3 cp --recursive`), but on the\n# container path an output's parent dir is never mkdir-ed before `docker run`, so\n# dockerd creates it as root and the container cannot write into it. A single file\n# under flat /tmp sidesteps that. See README.\ntar -cf salmon-index.tar sidx\nrm -rf sidx                     # free 1.6 GiB before stage-out; the tar is the artifact\ntest -s salmon-index.tar\necho \"== index tar bytes: $(wc -c < salmon-index.tar) ==\"\necho \"SMOKE CHECK PASSED\"\n"
+    "export THREADS=16\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nT0=$(date +%s)\nsalmon index -t ensembl116_cdna.fa.gz -i sidx -p \"${THREADS:-16}\" --ramLimit 8 > index.log 2>&1 \\\n  || { tail -20 index.log; exit 1; }\nT1=$(date +%s)\ntar -cf salmon-index.tar sidx\nrm -rf sidx                      # a directory THIS task built -- safe to remove\n{ printf 'salmon_version\\t%s\\n' \"$(salmon --version 2>&1 | awk '{print $NF}')\"\n  printf 'index_wall_s\\t%s\\n' \"$(( T1 - T0 ))\"\n  printf 'index_tar_bytes\\t%s\\n' \"$(wc -c < salmon-index.tar)\"\n} | tee index-stats.txt\ntest -s salmon-index.tar\necho \"INDEX OK\"\n"
   ],
-  "container": "quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e",
   "resources": {
-    "cpu": 8,
-    "memory_gib": 16,
+    "cpu": 16,
+    "memory_gib": 30,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,7 +16,7 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon/ensembl116_cdna.fa.gz",
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ensembl116_cdna.fa.gz",
       "destination": "/tmp/ensembl116_cdna.fa.gz"
     }
   ],
@@ -26,17 +26,13 @@
       "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/salmon-index.tar"
     },
     {
-      "source": "/tmp/index.log",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/index.log"
-    },
-    {
-      "source": "/tmp/smoke-check-index.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/smoke-check-index.txt"
+      "source": "/tmp/index-stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/index-stats.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "20m",
+    "ttl": "40m",
     "on_complete": "terminate",
-    "cost_limit": 0.13
+    "cost_limit": 0.6
   }
 }

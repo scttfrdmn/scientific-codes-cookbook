@@ -52,3 +52,17 @@ aws s3 cp r2.fq.gz   "s3://$BUCKET/$PREFIX/ERR188026_sub_2.fq.gz" --only-show-er
 echo "--- pins (record these in README.md):"
 sha256sum cdna.fa.gz r1.fq.gz r2.fq.gz
 echo "--- transcript count: $TX"
+
+# ---------------------------------------------------------------------------
+# The REAL workload: the COMPLETE ERR188026 run (not a 200k-pair slice) plus the
+# full Ensembl 116 cDNA set. ~2.2 GiB total, fetched once into your own bucket.
+# ---------------------------------------------------------------------------
+echo "== stage the full transcriptome + the complete ERR188026 run =="
+E=https://ftp.ensembl.org/pub/release-116
+curl -fsSL "$E/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz" -o cdna.fa.gz
+aws s3 cp cdna.fa.gz "s3://$BUCKET/inputs/salmon-real/ensembl116_cdna.fa.gz" --only-show-errors
+for r in 1 2; do
+  curl -fsSL "https://ftp.sra.ebi.ac.uk/vol1/fastq/ERR188/ERR188026/ERR188026_${r}.fastq.gz" -o "ERR188026_${r}.fastq.gz"
+  aws s3 cp "ERR188026_${r}.fastq.gz" "s3://$BUCKET/inputs/salmon-real/" --only-show-errors
+done
+echo "staged inputs/salmon-real/ -- transcriptome + both read files"

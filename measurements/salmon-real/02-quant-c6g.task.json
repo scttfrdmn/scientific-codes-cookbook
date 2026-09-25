@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-salmon-quant-c6g-v2",
+  "container": "quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=c6g-16t THREADS=16\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nLBL=\"${LBL:-unknown}\"; THREADS=\"${THREADS:-16}\"\ntar -xf salmon-index.tar\n\nCG=/sys/fs/cgroup\nsample(){ : > /tmp/samp.tsv\n  while :; do printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \\\n    \"$(cat $CG/memory.current 2>/dev/null || echo 0)\" \\\n    \"$(awk '/^anon /{print $2}' $CG/memory.stat 2>/dev/null || echo 0)\" \\\n    \"$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null || echo 0)\" >> /tmp/samp.tsv\n    sleep 1; done; }\nsample & SP=$!; trap 'kill $SP 2>/dev/null || true' EXIT\n\necho \"== salmon quant: the COMPLETE ERR188026 run, library type inferred ==\"\nT0=$(date +%s)\nsalmon quant -i sidx -l A -1 ERR188026_1.fastq.gz -2 ERR188026_2.fastq.gz -o squant -p \"$THREADS\" > quant.log 2>&1 \\\n  || { tail -25 quant.log; exit 1; }\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nkill $SP 2>/dev/null || true\ncp squant/quant.sf quant.sf\ncp squant/aux_info/meta_info.json meta_info.json\n\nNTX=$(awk 'NR>1{n++} END{print n+0}' quant.sf)\nTPMSUM=$(awk 'NR>1{s+=$4} END{printf \"%.2f\", s}' quant.sf)\nNREADSUM=$(awk 'NR>1{s+=$5} END{printf \"%.0f\", s}' quant.sf)\n# This image has no python and no jq -- parse the JSON with sed, which it does have.\n# One awk, no pipe: reads to EOF and keeps the FIRST match. `sed ... | head -1` here\n# would usually win the race on a small file and SIGPIPE on a big one; racy beats broken\n# only in the sense of being harder to catch, so there is no pipe at all.\njnum(){ awk -v k=\"$1\" 'index($0, \"\\\"\" k \"\\\"\") && v==\"\" { s=$0; sub(/^.*:[ \\t]*/,\"\",s); sub(/[^0-9.].*$/,\"\",s); v=s } END{ print v }' meta_info.json; }\nMAPPED=$(jnum num_mapped)\nTOTREADS=$(jnum num_processed)\nRATE=$(jnum percent_mapped)\nPEAK=$(awk -F'\\t' '{if($2+0>m)m=$2+0} END{printf \"%.2f\", m/1073741824}' /tmp/samp.tsv)\nCORES=$(awk -F'\\t' 'NR==1{u=$4;t=$1} END{printf \"%.2f\", ($4-u)/1e6/($1-t)}' /tmp/samp.tsv)\n\n{\nprintf 'label\\t%s\\n' \"$LBL\"\nprintf 'salmon_version\\t%s\\n' \"$(salmon --version 2>&1 | awk '{print $NF}')\"\nprintf 'threads\\t%s\\n' \"$THREADS\"\nprintf 'quant_wall_s\\t%s\\n' \"$WALL\"\nprintf 'reads_processed\\t%s\\n' \"$TOTREADS\"\nprintf 'reads_mapped\\t%s\\n' \"$MAPPED\"\nprintf 'percent_mapped\\t%s\\n' \"$RATE\"\nprintf 'transcripts\\t%s\\n' \"$NTX\"\nprintf 'tpm_sum\\t%s   (assert 1000000.00 -- EXACT, TPM is a per-million share)\\n' \"$TPMSUM\"\nprintf 'numreads_sum\\t%s   (assert == reads_mapped -- CONSERVATION)\\n' \"$NREADSUM\"\nprintf 'reads_per_sec\\t%s\\n' \"$(awk -v n=\"$TOTREADS\" -v w=\"$WALL\" 'BEGIN{printf \"%.0f\", n/w}')\"\nprintf 'peak_rss_gib\\t%s\\n' \"$PEAK\"\nprintf 'avg_cores\\t%s\\n' \"$CORES\"\n} | tee \"size-$LBL.txt\"\n\nawk -v s=\"$TPMSUM\" 'BEGIN{ d=s-1000000; if (d<0) d=-d; if (d>1.0) { printf \"TPM sums to %s, not 1e6\\n\", s; exit 1 } }'\ntest \"$NREADSUM\" = \"$MAPPED\" || { echo \"sum(NumReads)=$NREADSUM != num_mapped=$MAPPED\"; exit 1; }\ntest \"$TOTREADS\" -gt 5000000 || { echo \"only $TOTREADS reads -- not a full run\"; exit 1; }\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 24,
+    "architecture": "arm64",
+    "families": [
+      "c6g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/salmon-index.tar",
+      "destination": "/tmp/salmon-index.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/size-c6g-16t.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/size-c6g-16t.txt"
+    },
+    {
+      "source": "/tmp/quant.sf",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/quant-c6g-16t.sf"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
