@@ -46,3 +46,25 @@ aws s3 cp chr20.fa "s3://$BUCKET/$PREFIX/chr20.fa"
 aws s3 cp r1.fq.gz "s3://$BUCKET/$PREFIX/HG00096_chr20smoke_1.fq.gz"
 aws s3 cp r2.fq.gz "s3://$BUCKET/$PREFIX/HG00096_chr20smoke_2.fq.gz"
 sha256sum chr20.fa r1.fq.gz r2.fq.gz
+
+# ---------------------------------------------------------------------------
+# The REAL workload's inputs: the *published* GRCh38 bwa index and one complete
+# sequencing run, cached from the 1000genomes RODA bucket into your own bucket so
+# every run stages same-region. Byte-identical to upstream -- a cache, not a derived
+# copy. Signed reads work against this public bucket (no requester-pays).
+#
+# bwa mem reads <prefix>.amb/.ann/.bwt/.pac/.sa only, so the 3.0 GiB .fa is skipped:
+# staging is 8.9 GiB instead of 12.
+# ---------------------------------------------------------------------------
+echo "== cache the published GRCh38 bwa index + SRR062634 (8.9 GiB, one time) =="
+RODA_REF="technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+RODA_FQ="phase3/data/HG00096/sequence_read"
+for e in amb ann bwt pac sa fai; do
+  aws s3 cp "s3://1000genomes/$RODA_REF.$e" \
+            "s3://$BUCKET/inputs/bwa-real/$(basename "$RODA_REF").$e" --only-show-errors
+done
+for r in 1 2; do
+  aws s3 cp "s3://1000genomes/$RODA_FQ/SRR062634_${r}.filt.fastq.gz" \
+            "s3://$BUCKET/inputs/bwa-real/SRR062634_${r}.filt.fastq.gz" --only-show-errors
+done
+echo "staged inputs/bwa-real/ -- 6 index files + 2 fastq"
