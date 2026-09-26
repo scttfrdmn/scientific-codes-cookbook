@@ -59,7 +59,8 @@ sha256sum chr20.fa r1.fq.gz r2.fq.gz
 echo "== cache the published GRCh38 bwa index + SRR062634 (8.9 GiB, one time) =="
 RODA_REF="technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa"
 RODA_FQ="phase3/data/HG00096/sequence_read"
-for e in amb ann bwt pac sa fai; do
+# .alt is LOAD-BEARING: without it bwa is not ALT-aware and emits ~425k fewer records.
+for e in alt amb ann bwt pac sa fai; do
   aws s3 cp "s3://1000genomes/$RODA_REF.$e" \
             "s3://$BUCKET/inputs/bwa-real/$(basename "$RODA_REF").$e" --only-show-errors
 done

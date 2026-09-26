@@ -38,7 +38,11 @@ rises. So:
 **Both runs exited 0. Both record counts look plausible.** Nothing flagged the difference; it
 surfaced only because the same workload ran both ways on the same box. A recipe that asserted
 "48,392,167 records" — as [bwa-samtools](../../recipes/bwa-samtools/README.md) currently does —
-would have locked in the less correct answer as its exact identity.
+would have locked in the less correct answer as its exact identity. **It did, and it has since
+been fixed**: `.alt` is now staged, the recipe asserts `ALT contigs read > 0` (observed **3171**),
+and a fresh ALT-aware run on the recipe's own path returned **48,817,006** — the identical count
+this mount produced, from a completely different data path. The number is now cross-validated
+rather than single-sourced.
 
 To be fair to copying: this was **my** error, not a law of physics. A careful person copies
 `.alt` too. But that is the point worth taking:

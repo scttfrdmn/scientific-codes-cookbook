@@ -9,7 +9,7 @@ last_verified: 2026-09-25
 
 Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Graviton, with cost per result measured across four Graviton generations. For anyone aligning short reads and choosing a box.
 
-> **Scope.** One 1000 Genomes run (`SRR062634`, HG00096) against the *published* GRCh38 index — no index build. Alignment only; sorting and calling are downstream.
+> **Scope.** One 1000 Genomes run (`SRR062634`, HG00096) against the *published* GRCh38 index, ALT-aware — no index build. Alignment only.
 
 ## Run it
 
@@ -25,7 +25,7 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
   SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz | gzip -1 > aln.sam.gz
 ```
 
-## Which box — measured (same image, same bytes, 16 threads)
+## Which box — measured (same image, same bytes, 16 threads, pre-`.alt` so all rows are comparable; ALT-aware adds ~4.6%)
 
 | generation | instance | wall | reads/s | $/hr | **billed $/result** |
 |---|---|---|---|---|---|
@@ -42,8 +42,8 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 |---|---|---|
 | `SRR062634` (HG00096) | your FASTQs — edit `stage-inputs.sh` | one run per task; a cohort is this task [fanned out](../../patterns/job-arrays.md), each sized at 16 cores. |
 | published GRCh38 index | your own reference | `bwa index` on a human genome is ~1 h and is **not** needed here: RODA ships one. Build only for a non-model organism. |
-| `-t 16` | `-t 32/48/64` | faster and *more* expensive per result — see above. Memory grows ~0.21 GiB per thread above 16 (8.7 GiB → 18.7 GiB at 64). |
-| `\| gzip -1` | `-o aln.sam` | compression costs ~9% wall and takes the intermediate from ~14 GiB to 5.0 GiB. Worth it: the trip through S3 is what the next task pays for. |
+| `-t 16` | `-t 32/48/64` | faster, *more* expensive per result. Memory grows ~0.21 GiB/thread above 16 (8.7 → 18.7 GiB at 64). |
+| `\| gzip -1` | `-o aln.sam` | ~9% wall, takes the intermediate from ~14 GiB to 5.8 GiB — the next task pays for that trip. |
 
 **Leave the workload** — a real run against a real genome, so the numbers above transfer to your data at the same depth. **Scale it** by fanning out samples, not by growing the box.
 
@@ -54,14 +54,32 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 
 | observable | assertion | observed |
 |---|---|---|
-| SAM records | **exactly 48,392,167** — deterministic for this input + bwa version | **48,392,167** |
+| **ALT contigs read** | **> 0** — the analysis-set reference must be used ALT-aware | **3171** |
+| SAM records | **exactly 48,817,006** | **48,817,006** |
 | mapped | ≥ 99.9% | **99.91%** |
-| `aln.sam.gz` | passes `gzip -t`, > 1 GB | **5,347,045,543 bytes** |
-| reproducibility | record count identical across two independent runs on different boxes | **identical** |
+| `aln.sam.gz` | passes `gzip -t`, > 1 GB | **5,820,842,885 bytes** |
+| reproducibility | same count from two independent **data paths** | **identical** |
 
-The record count is an exact assertion rather than a band because bwa is deterministic for a
-fixed input, reference and thread-independent output ordering — it reproduced to the digit on
-`r8g.4xlarge` and `c8g.4xlarge`. If it moves, the input or the version changed.
+### The assertion this recipe got wrong first, and how
+
+The first version of this page asserted **48,392,167** records. That number was real,
+reproducible on two boxes — and **wrong**, because the staging step copied five index files and
+omitted the 476 KB `GRCh38_full_analysis_set_plus_decoy_hla.fa.alt`. Without it `bwa mem` logs
+`read 0 ALT contigs`, skips ALT-aware mapping, and emits **424,839 fewer records**. Exit 0, a
+plausible count, an exact-looking assertion, and no warning anywhere.
+
+It surfaced only when the same workload ran against a [lith mount of the published
+prefix](../../measurements/lith-vs-copy/README.md), which exposes the directory *as deposited* —
+`.alt` included — and returned a different number. So the fix was not a hash edit: `.alt` is now
+staged, the recipe **asserts `ALT contigs read > 0`**, and the count was re-derived from a fresh
+ALT-aware run rather than copied from the mount ([the pin-swap
+rule](../../practices/cross-checks.md) — a changed input means a re-run).
+
+**48,817,006 is now cross-validated by two independent data paths** — a lith mount and a local
+copy including `.alt`, on different instances. The lesson generalises past bwa: **copying makes
+you enumerate a dataset, and the file you omit is the one you did not know mattered.** The
+ALT-contig assertion is the cheap guard, because it checks the *mechanism* rather than the
+output.
 
 ### The knee, in full — and why compute-only misleads
 
