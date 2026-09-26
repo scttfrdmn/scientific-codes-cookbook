@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-gatk4-canary",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\nR=chr20:1000000-3000000\necho \"== HaplotypeCaller on 2 Mb at 1 thread, then at 8 -- does threading do anything on arm64? ==\"\nT0=$(date +%s)\ngatk HaplotypeCaller -R chr20.fa -I NA12878.chr20.30x.bam -L $R --native-pair-hmm-threads 1 -O t1.vcf.gz > hc1.log 2>&1\nT1=$(date +%s)\ngatk HaplotypeCaller -R chr20.fa -I NA12878.chr20.30x.bam -L $R --native-pair-hmm-threads 8 -O t8.vcf.gz > hc8.log 2>&1\nT2=$(date +%s)\nS1=$(( T1 - T0 )); S8=$(( T2 - T1 ))\nN1=$(zcat t1.vcf.gz | grep -vc '^#' || true)\nN8=$(zcat t8.vcf.gz | grep -vc '^#' || true)\nGKL=$(grep -c 'LOGLESS_CACHING' hc1.log || true)\nNATIVE=$(grep -ci 'AVX.*not supported\\|libgkl\\|Intel GKL' hc1.log || true)\n{\n  echo \"region              $R  (2,000,001 bp at ~33x)\"\n  echo \"threads1_s          $S1\"\n  echo \"threads8_s          $S8\"\n  echo \"variants_1t         $N1\"\n  echo \"variants_8t         $N8  (must equal variants_1t -- threads change speed, never the answer)\"\n  echo \"mb_per_min_1t       $(awk -v s=$S1 'BEGIN{if(s>0)printf \\\"%.2f\\\", 2.0/(s/60)}')\"\n  echo \"arm64_java_pairhmm  $GKL  (>=1 => Intel GKL AVX .so did not load, Java fallback in use)\"\n  echo \"gkl_mentions        $NATIVE\"\n  echo \"chr20_full_estimate_min  $(awk -v s=$S1 'BEGIN{printf \\\"%.0f\\\", (s/2.0)*64.444/60}')  (extrapolated at the 1-thread rate)\"\n} > canary.txt\ncat canary.txt\necho '--- GKL / PairHMM lines from the log ---'\ngrep -iE 'pairhmm|gkl|avx|intel' hc1.log | head -12 | tee -a canary.txt\ntest \"$N1\" -eq \"$N8\"\ntest \"$N1\" -gt 100\necho 'CANARY DONE'"
+  ],
+  "container": "quay.io/aarchbio/gatk4@sha256:92065598dde922a2223eb57863606c4bf8558b11af938ada9637efb9d0d8d0fc",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.dict",
+      "destination": "/tmp/chr20.dict"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/canary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/gatk4-real/canary.txt"
+    },
+    {
+      "source": "/tmp/hc1.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/gatk4-real/hc1.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

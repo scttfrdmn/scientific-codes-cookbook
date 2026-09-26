@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-gatk4-call-r1",
+  "task_id": "cookbook-gatk4-call-chr20",
   "command": [
     "bash",
     "-c",
-    "set -eo pipefail\ncd /tmp\nprintf '%s  %s\\n' 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a HG00096.chr20_2.0-2.4Mb.30x.bam > b.sha256\nsha256sum -c b.sha256\necho \"== HaplotypeCaller (reference + its staged .fai/.dict already present) ==\"\ngatk HaplotypeCaller -R chr20.fa -I HG00096.chr20_2.0-2.4Mb.30x.bam -L chr20:2000000-2400000 --native-pair-hmm-threads 1 -O gatk.vcf.gz > hc.log 2>&1\nzcat gatk.vcf.gz > gatk.vcf\nTOTAL=$(grep -vc '^#' gatk.vcf || true)\nSNV=$(awk '!/^#/ && length($4)==1 && length($5)==1' gatk.vcf | wc -l | tr -d ' ')\nNONCHR20=$(awk '!/^#/ && $1!=\"chr20\"' gatk.vcf | wc -l | tr -d ' ')\nSAMPLE=$(awk '/^#CHROM/{print NF-9; exit}' gatk.vcf)\nGKL=$(grep -c 'LOGLESS_CACHING' hc.log || true)\n{\n  echo \"variants_total     $TOTAL  want 700..900  (observed 802)\"\n  echo \"snv_count          $SNV  want 560..760  (observed 661)\"\n  echo \"all_on_chr20       $NONCHR20  want 0\"\n  echo \"sample_column      $SAMPLE  want 1\"\n  echo \"arm64_java_pairhmm $GKL  want >=1 (Intel GKL AVX .so cannot load on AArch64 -> LOGLESS_CACHING)\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$TOTAL\" -ge 700; test \"$TOTAL\" -le 900\ntest \"$SNV\" -ge 560; test \"$SNV\" -le 760\ntest \"$NONCHR20\" -eq 0; test \"$SAMPLE\" -eq 1; test \"$GKL\" -ge 1\necho \"SMOKE CHECK PASSED\""
+    "set -eo pipefail\ncd /tmp\necho '== HaplotypeCaller, the whole of chr20, NA12878 at 36x =='\n# --native-pair-hmm-threads is pinned to 1 because on AArch64 it is inert: the Intel GKL\n# native .so is x86-64 only, so the Java PairHMM runs single-threaded whatever you pass.\n# Measured on a 2 Mb slice: 77 s at 1 thread, 78 s at 8, identical 4093 variants.\nT0=$(date +%s)\ngatk HaplotypeCaller -R chr20.fa -I NA12878.chr20.30x.bam -L chr20 --native-pair-hmm-threads 1 -O gatk.vcf.gz > hc.log 2>&1\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\nzcat gatk.vcf.gz > gatk.vcf\nTOTAL=$(grep -vc '^#' gatk.vcf || true)\nSNV=$(awk '!/^#/ && length($4)==1 && length($5)==1' gatk.vcf | wc -l | tr -d ' ')\nNONCHR20=$(awk '!/^#/ && $1!=\"chr20\"' gatk.vcf | wc -l | tr -d ' ')\nSAMPLE=$(awk '/^#CHROM/{print NF-9; exit}' gatk.vcf)\nSM=$(awk '/^#CHROM/{print $10; exit}' gatk.vcf)\nGKL=$(grep -c 'LOGLESS_CACHING' hc.log || true)\nHASTBI=0; [ -s gatk.vcf.gz.tbi ] && HASTBI=1\n{\n  echo \"wall_s             $WALL  (HaplotypeCaller only, boot and staging excluded)\"\n  echo \"variants_total     $TOTAL\"\n  echo \"snv_count          $SNV\"\n  echo \"sample             $SM  want NA12878\"\n  echo \"all_on_chr20       $NONCHR20  want 0\"\n  echo \"sample_column      $SAMPLE  want 1\"\n  echo \"vcf_index          $HASTBI  want 1 (the concordance task needs it)\"\n  echo \"arm64_java_pairhmm $GKL  want >=1 (Intel GKL AVX .so cannot load on AArch64 -> Java LOGLESS_CACHING)\"\n  echo \"\"\n  echo \"The correctness bar for this recipe is NOT the count above -- it is the precision/recall\"\n  echo \"against the GIAB HG001 v4.2.1 truth set, asserted in task 2. These are structural checks:\"\n  echo \"a VCF that is single-sample, entirely on chr20, indexed, and produced by a genuinely\"\n  echo \"AArch64 GATK.\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$NONCHR20\" -eq 0\ntest \"$SAMPLE\" -eq 1\ntest \"$SM\" = 'NA12878'\ntest \"$HASTBI\" -eq 1\ntest \"$GKL\" -ge 1\ntest \"$TOTAL\" -gt 50000\nrm -f gatk.vcf\necho 'SMOKE CHECK PASSED'"
   ],
   "container": "quay.io/aarchbio/gatk4@sha256:92065598dde922a2223eb57863606c4bf8558b11af938ada9637efb9d0d8d0fc",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 4,
+    "memory_gib": 8,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -28,12 +28,12 @@
       "destination": "/tmp/chr20.dict"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
-      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
-      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam.bai"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
     }
   ],
   "outputs": [
@@ -42,13 +42,21 @@
       "destination": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/gatk.vcf.gz"
     },
     {
+      "source": "/tmp/gatk.vcf.gz.tbi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/gatk.vcf.gz.tbi"
+    },
+    {
       "source": "/tmp/smoke-check.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/hc.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/hc.log"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "150m",
     "on_complete": "terminate",
-    "cost_limit": 0.03
+    "cost_limit": 0.45
   }
 }

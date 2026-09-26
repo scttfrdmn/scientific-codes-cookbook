@@ -1,0 +1,21 @@
+region              chr20:1000000-3000000  (2,000,001 bp at ~33x)
+threads1_s          77
+threads8_s          78
+variants_1t         4093
+variants_8t         4093  (must equal variants_1t -- threads change speed, never the answer)
+mb_per_min_1t       
+arm64_java_pairhmm  1  (>=1 => Intel GKL AVX .so did not load, Java fallback in use)
+gkl_mentions        15
+chr20_full_estimate_min    (extrapolated at the 1-thread rate)
+14:32:55.254 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+WARNING: java.lang.System::load has been called by com.intel.gkl.NativeLibraryLoader in an unnamed module (file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar)
+14:32:55.264 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression404615514702926480.so: /tmp/libgkl_compression404615514702926480.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+14:32:55.267 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+14:32:55.270 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression9988333091563876711.so: /tmp/libgkl_compression9988333091563876711.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+14:32:55.367 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:32:55.369 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:32:55.440 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so
+14:32:55.440 WARN  NativeLibraryLoader - Unable to load libgkl_utils.so from native/libgkl_utils.so (/tmp/libgkl_utils7653085640268638688.so: /tmp/libgkl_utils7653085640268638688.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+14:32:55.440 WARN  IntelSmithWaterman - Intel GKL Utils not loaded
+14:32:55.440 INFO  SmithWatermanAligner - AVX accelerated SmithWaterman implementation is not supported, falling back to the Java implementation
+14:32:55.448 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so

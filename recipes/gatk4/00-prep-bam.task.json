@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-gatk4-prep-bam",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nCRAM=https://s3.amazonaws.com/1000genomes/1000G_2504_high_coverage/data/ERR3239334/NA12878.final.cram\necho '== chr20 out of the published 30x CRAM, decoded against chr20.fa =='\n# Only chr20 records are touched, and our chr20.fa has the same M5 the CRAM was\n# compressed against (b18e6c531b0bd70e949a7fc20859cb01), so a chr20-only reference decodes it.\nsamtools view -T chr20.fa -b -@ 8 -o raw.bam \"$CRAM\" chr20\nRAWB=$(stat -c%s raw.bam)\necho \"raw_bam_bytes $RAWB\"\ntest \"$RAWB\" -gt 300000000\necho '== restrict the header to chr20, through SAM text =='\n# The CRAM header carries 3366 contigs; GATK requires the reads' sequence dictionary to match\n# the reference's, and this reference is chr20 alone. But a BAM record stores a NUMERIC index\n# into the @SQ list, so `samtools reheader` with @SQ lines removed leaves every read pointing at\n# the wrong contig -- measured: `samtools index` then dies with \"Numerical result out of range\".\n# SAM text stores the contig NAME, so a text round-trip makes samtools re-resolve tids against\n# the new header. Read groups (12, SM:NA12878) and SO:coordinate survive; HaplotypeCaller needs both.\nsamtools view -h raw.bam | awk '$1!=\"@SQ\" || $2==\"SN:chr20\"' | samtools view -b -@ 8 -o NA12878.chr20.30x.bam -\nsamtools index -@ 8 NA12878.chr20.30x.bam\nSQN=$(samtools view -H NA12878.chr20.30x.bam | grep -c '^@SQ')\nRGN=$(samtools view -H NA12878.chr20.30x.bam | grep -c '^@RG')\nSORT=$(samtools view -H NA12878.chr20.30x.bam | awk '/^@HD/ && /SO:coordinate/{print \"SO:coordinate\"}')\nNREC=$(samtools view -c -@ 8 NA12878.chr20.30x.bam)\nsamtools coverage -r chr20 NA12878.chr20.30x.bam > cov.txt\nDEPTH=$(awk 'NR==2{print $7}' cov.txt)\nCOVPCT=$(awk 'NR==2{print $6}' cov.txt)\nBAMB=$(stat -c%s NA12878.chr20.30x.bam)\nSHA=$(sha256sum NA12878.chr20.30x.bam | cut -d' ' -f1)\n{\n  echo \"sq_lines        $SQN  want 1 (chr20 only, to match the reference)\"\n  echo \"read_groups     $RGN  want 12 (HaplotypeCaller requires >=1)\"\n  echo \"sort_order      $SORT  want SO:coordinate\"\n  echo \"records         $NREC\"\n  echo \"mean_depth      $DEPTH  want >=25 (a real 30x sample)\"\n  echo \"pct_covered     $COVPCT  want >=99\"\n  echo \"bam_bytes       $BAMB\"\n  echo \"bam_sha256      $SHA\"\n} > prep-check.txt\ncat prep-check.txt\ncat cov.txt\ntest \"$SQN\" -eq 1\ntest \"$RGN\" -ge 1\ntest \"$SORT\" = 'SO:coordinate'\nawk -v d=\"$DEPTH\" 'BEGIN{exit !(d>=25)}'\nawk -v c=\"$COVPCT\" 'BEGIN{exit !(c>=99)}'\ntest \"$BAMB\" -gt 300000000\nrm -f raw.bam\necho 'PREP CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/NA12878.chr20.30x.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "/tmp/NA12878.chr20.30x.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai"
+    },
+    {
+      "source": "/tmp/prep-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/prep-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.14
+  }
+}
