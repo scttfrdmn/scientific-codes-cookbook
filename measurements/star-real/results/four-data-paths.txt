@@ -1,0 +1,119 @@
+instance_type	
+nproc	32
+mem_total_gib	124
+index_bytes_on_s3	30684669716
+lith_sha	verified
+star_image	pulled
+reads_local	2204634930
+== ROUTE D: lith FUSE mount, index read in place from S3 ==
+lith_index_s	0
+lith_index_bytes	1080
+lith_mount_s	0
+lith_setup_bytes_moved	1080
+lith_files_visible	16
+lith_cold_align_rc	0
+lith_cold_align_s	89
+lith_cold_load_s	see_log
+lith_cold_phase	Sep 26 07:17:34 ..... loading genome
+lith_cold_phase	Sep 26 07:18:02 ..... started mapping
+lith_cold_phase	Sep 26 07:19:00 ..... finished mapping
+lith_cold_phase	Sep 26 07:19:01 ..... finished successfully
+lith_cold_input_reads	15800127
+lith_cold_pct_unique	92.47
+lith_cold_bam_bytes	2864083451
+lith_warm_align_rc	0
+lith_warm_align_s	75
+lith_warm_load_s	see_log
+lith_warm_phase	Sep 26 07:19:06 ..... loading genome
+lith_warm_phase	Sep 26 07:19:21 ..... started mapping
+lith_warm_phase	Sep 26 07:20:17 ..... finished mapping
+lith_warm_phase	Sep 26 07:20:19 ..... finished successfully
+lith_warm_input_reads	15800127
+lith_warm_pct_unique	92.47
+lith_warm_bam_bytes	2864064512
+== ROUTE A: aws s3 cp the whole index to local disk ==
+local_disk_avail_gib	149
+copy_rc	0
+copy_s	118
+copy_bytes_moved	30684686100
+copy_mib_s	248
+copy_cold_align_rc	0
+copy_cold_align_s	293
+copy_cold_load_s	see_log
+copy_cold_phase	Sep 26 07:24:34 ..... loading genome
+copy_cold_phase	Sep 26 07:28:25 ..... started mapping
+copy_cold_phase	Sep 26 07:29:23 ..... finished mapping
+copy_cold_phase	Sep 26 07:29:25 ..... finished successfully
+copy_cold_input_reads	15800127
+copy_cold_pct_unique	92.47
+copy_cold_bam_bytes	2864069139
+copy_warm_align_rc	0
+copy_warm_align_s	292
+copy_warm_load_s	see_log
+copy_warm_phase	Sep 26 07:29:28 ..... loading genome
+copy_warm_phase	Sep 26 07:33:19 ..... started mapping
+copy_warm_phase	Sep 26 07:34:17 ..... finished mapping
+copy_warm_phase	Sep 26 07:34:19 ..... finished successfully
+copy_warm_input_reads	15800127
+copy_warm_pct_unique	92.47
+copy_warm_bam_bytes	2864099200
+== ROUTE B: EFS -- hydrate from S3 once, then read over NFS ==
+efs_mounted	yes	fs-0aa777ab5e040ca30.efs.us-west-2.amazonaws.com:/
+efs_hydrate_rc	0
+efs_hydrate_s	86
+efs_hydrate_bytes	30684675860
+efs_hydrate_mib_s	340
+efs_cold_align_rc	0
+efs_cold_align_s	117
+efs_cold_load_s	see_log
+efs_cold_phase	Sep 26 07:35:49 ..... loading genome
+efs_cold_phase	Sep 26 07:36:46 ..... started mapping
+efs_cold_phase	Sep 26 07:37:43 ..... finished mapping
+efs_cold_phase	Sep 26 07:37:45 ..... finished successfully
+efs_cold_input_reads	15800127
+efs_cold_pct_unique	92.47
+efs_cold_bam_bytes	2864083673
+efs_warm_align_rc	0
+efs_warm_align_s	118
+efs_warm_load_s	see_log
+efs_warm_phase	Sep 26 07:37:48 ..... loading genome
+efs_warm_phase	Sep 26 07:38:45 ..... started mapping
+efs_warm_phase	Sep 26 07:39:43 ..... finished mapping
+efs_warm_phase	Sep 26 07:39:44 ..... finished successfully
+efs_warm_input_reads	15800127
+efs_warm_pct_unique	92.47
+efs_warm_bam_bytes	2864078831
+== ROUTE C: FSx for Lustre linked to S3 -- metadata imported, bytes lazy-load on first read ==
+fsx_mounted	yes	172.31.53.58@tcp:/mszmnb4v  1.2T
+fsx_tree	/fsx/staridx/chrName.txt /fsx/staridx/Genome /fsx/staridx/chrLength.txt 
+fsx_index_dir	/fsx/staridx
+fsx_files_visible	16
+fsx_stat_all_s	0
+fsx_cold_align_rc	0
+fsx_cold_align_s	233
+fsx_cold_load_s	see_log
+fsx_cold_phase	Sep 26 07:39:48 ..... loading genome
+fsx_cold_phase	Sep 26 07:42:42 ..... started mapping
+fsx_cold_phase	Sep 26 07:43:38 ..... finished mapping
+fsx_cold_phase	Sep 26 07:43:40 ..... finished successfully
+fsx_cold_input_reads	15800127
+fsx_cold_pct_unique	92.47
+fsx_cold_bam_bytes	2864078928
+fsx_warm_align_rc	0
+fsx_warm_align_s	117
+fsx_warm_load_s	see_log
+fsx_warm_phase	Sep 26 07:43:47 ..... loading genome
+fsx_warm_phase	Sep 26 07:44:44 ..... started mapping
+fsx_warm_phase	Sep 26 07:45:41 ..... finished mapping
+fsx_warm_phase	Sep 26 07:45:43 ..... finished successfully
+fsx_warm_input_reads	15800127
+fsx_warm_pct_unique	92.47
+fsx_warm_bam_bytes	2864064569
+== leftovers each route wants cleaned up ==
+local_copy_gib	29G
+Filesystem                                          Size  Used Avail Use% Mounted on
+/dev/nvme0n1p1                                      160G   56G  105G  35% /
+fs-0aa777ab5e040ca30.efs.us-west-2.amazonaws.com:/  8.0E     0  8.0E   0% /efs
+172.31.53.58@tcp:/mszmnb4v                          1.2T   28G  1.1T   3% /fsx
+s3://cookbook-942542972736-us-west-2                 29G   29G     0 100% /mnt/lithidx
+FOUR_PATHS_DONE

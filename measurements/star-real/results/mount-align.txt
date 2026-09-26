@@ -1,0 +1,35 @@
+instance_type	
+nproc	32
+mem_total_gib	62
+lith_sha	verified
+star_image	pulled
+== index the published prefix (metadata only) and mount it ==
+lith_index_s	0
+lith_index_bytes	1080
+mount_ok	yes
+index_files_visible	16
+index_bytes_on_s3	30684669716
+== copy just the reads (2 GB) -- the per-sample data, which is small ==
+reads_copy_s	5
+== STAR align, genome read straight off the mount ==
+mount_align_s	18
+input_reads	NA
+pct_unique	NA
+bam_bytes	0
+DONE
+== RETRY: align off the mount, container-writable output dir ==
+container_uid	57439
+mount_files	16
+docker_rc	0
+mount_align_s	75
+input_reads	15800127
+pct_unique	92.47
+bam_bytes	2864062815
+--- star.log tail ---
+	STAR version: 2.7.11b   compiled: 2025-11-14T12:04:05+0000 :/opt/conda/conda-bld/star_1763121697488/work/source
+Sep 26 07:00:55 ..... started STAR run
+Sep 26 07:00:55 ..... loading genome
+Sep 26 07:01:23 ..... started mapping
+Sep 26 07:02:06 ..... finished mapping
+Sep 26 07:02:07 ..... finished successfully
+RETRY_DONE

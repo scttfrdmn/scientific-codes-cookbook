@@ -1,10 +1,10 @@
 {
-  "task_id": "starreal-build-publish",
+  "task_id": "starreal-build-publish2",
   "container": "quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae",
   "command": [
     "bash",
     "-c",
-    "export THREADS=32\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nB=cookbook-942542972736-us-west-2\nTHREADS=\"${THREADS:-32}\"\ngunzip -c GRCh38.primary_assembly.fa.gz > genome.fa\ngunzip -c GRCh38.116.gtf.gz            > genes.gtf\necho \"== build the full human index once ==\"\nT0=$(date +%s)\nSTAR --runMode genomeGenerate --runThreadN \"$THREADS\" --genomeDir idx \\\n     --genomeFastaFiles genome.fa --sjdbGTFfile genes.gtf --sjdbOverhang 100 \\\n     --outFileNamePrefix gg_ > gg.log 2>&1 || { tail -20 gg.log Log.out 2>/dev/null; exit 1; }\nT1=$(date +%s)\nIDXB=$(du -sb idx | awk '{print $1}')\n# Publish the index as INDIVIDUAL FILES under a prefix, not a tar: that is what makes it\n# mountable later. A tar would have to be copied and unpacked by every consumer.\necho \"== publish it so every later align can mount it instead of rebuilding ==\"\nT2=$(date +%s)\naws s3 cp idx/ \"s3://$B/inputs/star-index-GRCh38-116/\" --recursive --only-show-errors\nT3=$(date +%s)\n{ printf 'star_version\\t%s\\n' \"$(STAR --version)\"\n  printf 'threads\\t%s\\n' \"$THREADS\"\n  printf 'index_wall_s\\t%s\\n' \"$(( T1 - T0 ))\"\n  printf 'index_bytes\\t%s\\n' \"$IDXB\"\n  printf 'publish_wall_s\\t%s\\n' \"$(( T3 - T2 ))\"\n  printf 'index_files\\t%s\\n' \"$(ls idx | wc -l)\"\n} | tee index-stats.txt\nls -l idx | awk 'NR>1{printf \"  %-28s %s\\n\", $9, $5}'\necho \"PUBLISH OK\"\n"
+    "export THREADS=32\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nTHREADS=\"${THREADS:-32}\"\ngunzip -c GRCh38.primary_assembly.fa.gz > genome.fa\ngunzip -c GRCh38.116.gtf.gz            > genes.gtf\necho \"== build the full human index once ==\"\nT0=$(date +%s)\nSTAR --runMode genomeGenerate --runThreadN \"$THREADS\" --genomeDir idx \\\n     --genomeFastaFiles genome.fa --sjdbGTFfile genes.gtf --sjdbOverhang 100 \\\n     --outFileNamePrefix gg_ > gg.log 2>&1 || { tail -20 gg.log Log.out 2>/dev/null; exit 1; }\nT1=$(date +%s)\n# Flatten into /tmp so each file can be a declared spawn output. This image has neither aws\n# nor python3, so the upload MUST be spawn's stage-out, not a CLI call inside the container.\nfor f in idx/*; do cp \"$f\" \"/tmp/idx_$(basename \"$f\")\"; done\n{ printf 'star_version\\t%s\\n' \"$(STAR --version)\"\n  printf 'threads\\t%s\\n' \"$THREADS\"\n  printf 'index_wall_s\\t%s\\n' \"$(( T1 - T0 ))\"\n  printf 'index_bytes\\t%s\\n' \"$(du -sb idx | awk '{print $1}')\"\n  printf 'index_files\\t%s\\n' \"$(ls idx | wc -l)\"\n} | tee index-stats.txt\nls -l idx | awk 'NR>1{printf \"  %-28s %s\\n\", $9, $5}'\necho \"BUILD OK -- spawn stages the index out\"\n"
   ],
   "resources": {
     "cpu": 32,
@@ -25,6 +25,70 @@
     }
   ],
   "outputs": [
+    {
+      "source": "/tmp/idx_chrLength.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/chrLength.txt"
+    },
+    {
+      "source": "/tmp/idx_chrNameLength.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/chrNameLength.txt"
+    },
+    {
+      "source": "/tmp/idx_chrName.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/chrName.txt"
+    },
+    {
+      "source": "/tmp/idx_chrStart.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/chrStart.txt"
+    },
+    {
+      "source": "/tmp/idx_exonGeTrInfo.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/exonGeTrInfo.tab"
+    },
+    {
+      "source": "/tmp/idx_exonInfo.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/exonInfo.tab"
+    },
+    {
+      "source": "/tmp/idx_geneInfo.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/geneInfo.tab"
+    },
+    {
+      "source": "/tmp/idx_Genome",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/Genome"
+    },
+    {
+      "source": "/tmp/idx_genomeParameters.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/genomeParameters.txt"
+    },
+    {
+      "source": "/tmp/idx_SA",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/SA"
+    },
+    {
+      "source": "/tmp/idx_SAindex",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/SAindex"
+    },
+    {
+      "source": "/tmp/idx_sjdbInfo.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/sjdbInfo.txt"
+    },
+    {
+      "source": "/tmp/idx_sjdbList.fromGTF.out.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/sjdbList.fromGTF.out.tab"
+    },
+    {
+      "source": "/tmp/idx_sjdbList.out.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/sjdbList.out.tab"
+    },
+    {
+      "source": "/tmp/idx_transcriptInfo.tab",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/transcriptInfo.tab"
+    },
+    {
+      "source": "/tmp/idx_Log.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/Log.out"
+    },
     {
       "source": "/tmp/index-stats.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/measurements/star-real/index-stats.txt"

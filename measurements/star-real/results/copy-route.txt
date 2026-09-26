@@ -1,0 +1,28 @@
+== ROUTE A: aws s3 cp the 28.6 GiB index, same box that mounted it in 75 s ==
+mem_total_gib	61
+root_avail_gib	13
+tmpfs_size_gib	31
+-- root disk is too small for a 28.6 GiB index; tmpfs is the only space that fits, and it IS RAM --
+copy_rc	0
+copy_s	69
+copied_bytes	30684670076
+tmpfs_used_after_copy	29G of 31G
+mem_available_gib_after_copy	14
+-- STAR needs ~30 GiB for this genome. The copy already holds 29 GiB of the same RAM. --
+copy_align_rc	137
+copy_align_s	19
+input_reads	
+pct_unique	
+bam_bytes	0
+--- star.log tail ---
+	STAR --runThreadN 32 --genomeDir /idx --readFilesIn ERR188026_1.fastq.gz ERR188026_2.fastq.gz --readFilesCommand zcat --outSAMtype BAM Unsorted --outFileNamePrefix a_
+	STAR version: 2.7.11b   compiled: 2025-11-14T12:04:05+0000 :/opt/conda/conda-bld/star_1763121697488/work/source
+Sep 26 07:07:25 ..... started STAR run
+Sep 26 07:07:25 ..... loading genome
+Sep 26 07:07:34 ..... started mapping
+--- kernel oom evidence ---
+6
+[ 1582.694895] gzip invoked oom-killer: gfp_mask=0x500cc2(GFP_HIGHUSER|__GFP_ACCOUNT), order=0, oom_score_adj=0
+[ 1582.806043] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=docker-8d9948c9798d011e51d09a43cfcfabc8fa8d9e00ccb859bee0de9870047e9a74.scope,mems_allowed=0,global_oom,task_memcg=/system.slice/docker-8d9948c9798d011e51d09a43cfcfabc8fa8d9e00ccb859bee0de9870047e9a74.scope,task=STAR,pid=34623,uid=57439
+[ 1582.809772] Out of memory: Killed process 34623 (STAR) total-vm:36833440kB, anon-rss:33656832kB, file-rss:0kB, shmem-rss:0kB, UID:57439 pgtables:66432kB oom_score_adj:0
+COPY_DONE

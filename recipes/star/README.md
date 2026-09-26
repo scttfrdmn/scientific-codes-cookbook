@@ -86,24 +86,31 @@ Three consequences worth acting on:
 
 ### Sharing 28.6 GiB — the lever this page actually has
 
-The index is immutable, and every sample reads the same bytes. That makes it the textbook case
-for **not copying**:
+The index is immutable and every sample reads the same bytes, so the only question is how it
+reaches the aligner. **Measured on one `c8g.8xlarge` (32 vCPU, 62 GiB), same index, same reads:**
 
-| approach | what each align pays |
-|---|---|
-| rebuild per sample | **1047 s** + a 72 GiB box |
-| `aws s3 cp` the index | 28.6 GiB staged; on the task path `/tmp` is **tmpfs at half of RAM**, so ~57 GiB of RAM exists only to hold the copy |
-| **mount it** | metadata only — the bytes stream as STAR touches them |
+| approach | setup | align | outcome |
+|---|---|---|---|
+| rebuild per sample | — | 1047 s + 49 s | needs a 72 GiB box |
+| `aws s3 cp` the index | **69 s** to move 30,684,670,076 bytes | died at 19 s | **OOM-killed** |
+| **mount it** (lith over S3) | **0 s**, a 1,080-byte index | **75 s** | 15,800,127 reads, 92.47% unique |
 
-The copy row is the trap: staging a 28.6 GiB index does not just take time, it *sets the
-instance size*, because the copy has to live in RAM-backed `/tmp`. Mounting removes both the
-time and the requirement — [measured for bwa](../../measurements/lith-vs-copy/README.md), where
-a mount matched a local copy to within 1% of wall time while moving 3,368 bytes instead of
-8.9 GiB. STAR is the stronger case simply because its index is 3× larger and its alignment is
-20× shorter, so the ratio of data-path cost to real work is far worse.
+**The copy route does not run on the box where the mount route finished in 75 seconds.** The
+28.6 GiB copy has nowhere to go but `/tmp` — a [tmpfs at half of RAM](../../practices/container-path.md) —
+where it held 29 of the 31 GiB available, and the kernel then killed STAR reaching for its own
+~32 GiB: `Out of memory: Killed process STAR ... anon-rss:33656832kB`. So the data path does not
+merely cost time here, it **sets the instance**: copying needs ~28.6 GiB of staging *plus* ~32 GiB
+of genome in the same RAM, which is the next size up, permanently, on every alignment. Mounting
+needs only the genome.
 
-*(The published-index-plus-mount path is being measured now; this page will carry the numbers
-rather than the argument once it lands.)*
+The 75 s splits as **28 s of genome load** (the whole 28.6 GiB streamed from S3 on demand) and
+**43 s of mapping** — so reading straight off S3 costs about 26 s more than a warm local copy and
+saves the 69 s copy, the RAM, and the bigger box. Same conclusion as
+[bwa](../../measurements/lith-vs-copy/README.md) at 8.9 GiB, where the two routes tied on wall
+time; STAR is the sharper case because the index is 3× larger and the alignment 20× shorter.
+
+Four data paths — copy, EFS, FSx for Lustre, mount — are compared on one box in
+[measurements/star-real](../../measurements/star-real/README.md).
 
 ### Pins
 
