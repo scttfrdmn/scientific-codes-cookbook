@@ -104,12 +104,12 @@ of genome in the same RAM, which is the next size up, permanently, on every alig
 needs only the genome.
 
 The 75 s splits as **28 s of genome load** (the whole 28.6 GiB streamed from S3 on demand) and
-**43 s of mapping** — so reading straight off S3 costs about 26 s more than a warm local copy and
-saves the 69 s copy, the RAM, and the bigger box. Same conclusion as
-[bwa](../../measurements/lith-vs-copy/README.md) at 8.9 GiB, where the two routes tied on wall
-time; STAR is the sharper case because the index is 3× larger and the alignment 20× shorter.
-
-Four data paths — copy, EFS, FSx for Lustre, mount — are compared on one box in
+**43 s of mapping**. That 28 s is the number to hold onto: on a box with room for every route,
+loading this index took **9 s from tmpfs, 28 s from S3, 57 s from EFS, 174 s from FSx Lustre, and
+231 s from the local EBS disk it had just been copied to** — so the reflex of copying to disk
+first makes the read *slower*, not faster, and `aws s3 cp` to EBS is the worst of five paths on a
+first read. Copying pays off only when one box aligns ~3+ samples, and then only into tmpfs. All
+five, with the crossover and the per-route costs:
 [measurements/star-real](../../measurements/star-real/README.md).
 
 ### Pins
