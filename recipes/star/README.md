@@ -1,73 +1,132 @@
 ---
 tool: star
-tool_version: 2.7.11b
+tool_version: "2.7.11b"
 image: quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
-spawn_version: 0.104.0
+spawn_version: 0.111.1
 ---
-# STAR — spliced RNA-seq alignment
+# STAR — a complete RNA-seq run against the whole human genome
 
-Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene.
+Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for.
 
-> **Read before reusing this.** The index is **chromosome 20 only**, so only **6.67% of reads map** (92.7% are "unmapped: too short") — the correct result for a whole-transcriptome library against one chromosome, but it proves *STAR runs and makes a real BAM*, **not** that these alignments are right. Index the whole genome for real work (below).
+> **Scope.** Whole primary assembly (3.15 GB) + the whole annotation (4.66 GB uncompressed), one complete run (`ERR188026`). Alignment only — no quantification, no two-pass, no fusion calling.
 
 ## Run it
 
 ```bash
-# 1. build the splice-aware index (reusable across every sample)
-STAR --runMode genomeGenerate --genomeDir idx --genomeFastaFiles ref.fa \
-     --sjdbGTFfile genes.gtf --sjdbOverhang 74 --genomeSAindexNbases 11
-
-# 2. align a sample and count reads per gene
-STAR --genomeDir idx --readFilesIn r1.fq.gz r2.fq.gz --readFilesCommand zcat \
-     --quantMode GeneCounts --outSAMtype BAM SortedByCoordinate
+make stage RECIPE=star   # once: Ensembl 116 primary assembly + GTF + the full run
+make run   RECIPE=star   # index ~17 min then align ~1 min; self-terminating
+make ls    RECIPE=star   # Aligned.out.bam + smoke-check.txt
 ```
 
-Two tasks, because **the index is the expensive, reusable artifact** — it doesn't depend on the reads, so task 2 re-runs against it for every new sample without rebuilding.
+```bash
+STAR --runMode genomeGenerate --runThreadN 32 --genomeDir idx \
+     --genomeFastaFiles genome.fa --sjdbGTFfile genes.gtf --sjdbOverhang 100
+STAR --runThreadN 32 --genomeDir idx --readFilesIn R1.fq.gz R2.fq.gz \
+     --readFilesCommand zcat --outSAMtype BAM Unsorted
+```
+
+## The number that decides everything here
+
+| phase | wall | peak RSS | output |
+|---|---|---|---|
+| `genomeGenerate` | **1047 s** | **71.63 GiB** | 28.6 GiB index |
+| align 15.8M reads | **49 s** | ~30 GiB | 2.86 GB BAM |
+
+**The index costs 21× the alignment it enables**, forces the box (~72 GiB to build, ~30 to align), and parallelises poorly — 11.4 of 32 cores average. So the question for STAR is not "how many cores" but **"are you rebuilding this index?"** Build once and publish, and every later alignment is a one-minute job on a much smaller machine; rebuild per sample and you pay 1047 s and a 72 GiB box for 49 s of science.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| **chr20-only index** | the whole-genome index | **the load-bearing limit** — chr20 is why only 6.67% map; a whole-genome index gives realistic rates and aligns *faster* (STAR stops exhaustively failing reads with no chr20 home). |
-| `--genomeSAindexNbases 11` | `min(14, log2(genomeLen)/2 − 1)` | **must change with the reference** — 11 is right for chr20's 64 Mb; the default 14 is sized for a whole genome. Wrong value wastes memory and STAR warns. |
-| `--sjdbOverhang 74` | `readLength − 1` | these reads are 75 bp (checked). Set it to your read length minus one. |
-| the 200k-pair ERR188026 slice | your reads | same slice [salmon](../salmon/README.md) uses, so the two RNA-seq recipes are directly comparable. |
+| `ERR188026` | your FASTQs — edit `stage-inputs.sh` | one sample per align; a cohort is the align [fanned out](../../patterns/job-arrays.md) against one shared index. |
+| build the index | **a published index** | the single biggest lever on this page. See below — the index is 28.6 GiB, so *how* you share it decides the cost. |
+| `--sjdbOverhang 100` | read length − 1 | it is baked into the index, so changing it means rebuilding. |
+| `--outSAMtype BAM Unsorted` | `SortedByCoordinate` | sorting inside STAR needs extra RAM; sorting downstream with samtools is usually the cheaper split. |
 
-STAR alignment is deterministic given the index — no seed. The index is a directory, so it travels between tasks as a **tar** ([why directory outputs don't work on the container path](../../practices/container-path.md)).
-
-## Shape, size, cost
-
-Two tasks: `01-index` (`c8g.2xlarge`, ~25 s work) → `02-align` (`c8g.2xlarge`, ~4m37s). A cohort of samples reuses the one index and fans out the align step → [job arrays](../../patterns/job-arrays.md). Caps $0.13 / $0.18. Timings are dominated by boot + pull, [not compute](../../practices/what-this-does-not-cover.md).
-
-**The scale-it, measured.** For a full GRCh38 index the box turns on one choice — **where the index gets written.** Measured on `r8g.4xlarge`, deliberately oversized so STAR was never the bottleneck (*not* the recommendation): the build's working set is **~40 GiB**, the hard floor you pay either way. The ~29 GiB index it emits has nowhere to go but `/tmp` — tmpfs ≈ ½ RAM, because the image runs non-root — so build *pressure* climbs to **~68 GiB**. Written there, it forces `r8g.4xlarge` (128 GiB) and strands ~60 GiB and 8 of 16 cores. Written to **EFS or a mounted volume** instead, the build fits its ~40 GiB floor on a 64 GiB `r8g.2xlarge`, whose 8 cores match the ~8 the build averages. A 64 GiB box *without* that move OOMs — the folkloric "STAR needs ~30 GB" sends you straight there. And **aligning isn't the cheap pass it is for bwa**: STAR loads the index resident, **~30 GiB per align job**, so align boxes are memory-bound too.
+**Leave the workload** — a real run against a real genome and annotation. **Scale it** by sharing one index across samples, not by buying more cores.
 
 <details>
-<summary>As shipped: the chr20 caveat mechanics, the checks, pins</summary>
+<summary>As shipped: the measured phases, why the index dominates, sharing 28.6 GiB, pins</summary>
 
-**Why chr20, honestly:** `too short` is STAR's catch-all for a read failing the minimum-mapped-length filter, not a statement about read length — 92.7% of a whole-transcriptome library simply has no chr20 home. Not a broken run, not tunable away honestly. The mapping bands below are wide because the rate is a property of this reference/library mismatch; still tight enough that a broken index or empty BAM fails.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| input reads | exactly 200000 | 200000 |
-| uniquely mapped % | 2.0–20.0 | **6.67** (the caveat) |
-| splices annotated | > 500 | 2139 (proves `--sjdbGTFfile` was used — impossible if ignored) |
-| BAM magic bytes | `1f8b0804` | `1f8b0804` |
-| ReadsPerGene rows | 1900–2100 | 1976 (= 4 header + 1972 chr20 genes) |
-| index: chromosomes / name / length | 1 / `20` / 64444167 | matches |
+| input reads | > 5M (a real run) | **15,800,127** |
+| uniquely mapped | ≥ 85% | **92.47%** |
+| BAM | > 500 MB | **2,864,076,884 bytes** |
+| index | built and non-empty | **28.6 GiB, 15 files** |
 
-No samtools in this image (one tool per image), so the BAM is checked by size + BGZF magic `1f8b0804` rather than `flagstat` — STAR's own `Log.final.out` already reports the numbers a flagstat would. `genomeGenerate` ignores `--outFileNamePrefix` and writes `Log.out` into the genome dir; the check reads it there.
+`--outSAMtype BAM Unsorted` keeps output order input-driven, so the record count is stable for
+a fixed input; uniquely-mapped percentage is the assertion that actually catches a broken index
+or a wrong `--sjdbOverhang`, because both show up as reads falling to "too short" rather than as
+a crash.
 
-**Pins.** Image `quay.io/aarchbio/star@sha256:90331f64bd73…` (2.7.11b, cosign-signed, `linux/arm64` only). Reference: Ensembl `release-116` chr20 fasta (`sha256:1b8cd336…`); annotation: chr20 records of the release-116 GTF (`sha256:2ca5f412…`, 1972 genes; `stage-inputs.sh` verifies every kept record is chr20 and Ensembl names it `20`, not `chr20`); reads: ENA `ERR188026` first 200k pairs (`sha256:1198ed07…`/`6104ee46…`), the salmon slice. `release-116/` is immutable (pinnable); `current_*` isn't.
+### Why index-vs-align is the whole story
 
-**Run + verify.**
-```sh
-make stage RECIPE=star           # build the chr20 index inputs (Ensembl/ENA, public)
-make run RECIPE=star
+Measured on `r8g.8xlarge`, 32 threads, billed 1176 s (**$0.616**):
 
-make ls RECIPE=star
+```text
+genomeGenerate   1047 s   71.63 GiB peak   11.40 of 32 cores   -> 28.6 GiB index
+align            49 s     ~30 GiB          15.8M reads         -> 2.86 GB BAM
 ```
-Task 2 must **not** `rm` the staged index tar — the container can't unlink a staged input it doesn't own (`EPERM`), and `rm -f` doesn't suppress that ([the container path](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One alignment is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample sharing the one read-only index, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when the shared index or spot capacity pushes back.
+Three consequences worth acting on:
+
+- **The build sets the instance, not the aligner.** 71.63 GiB peak means a 128 GiB box at
+  minimum; the alignment alone would fit comfortably in 64 GiB. If you are not building, do not
+  rent the build's machine.
+- **Cores are half-wasted during the build.** 11.4 of 32 average means `genomeGenerate` has long
+  serial stretches (the GTF parse and the suffix-array sort). Paying for 32 cores buys less than
+  the core count suggests — this is the shape [sizing](../../patterns/sizing.md) calls *the cost
+  climbs*, arriving from the serial fraction rather than from communication.
+- **Index and align live in one task here on purpose.** A 28.6 GiB index moved between two
+  tasks through S3 would cost more than rebuilding it — so the recipe does both in one image,
+  which is also the only shape that works if you insist on `aws s3 cp`.
+
+### Sharing 28.6 GiB — the lever this page actually has
+
+The index is immutable, and every sample reads the same bytes. That makes it the textbook case
+for **not copying**:
+
+| approach | what each align pays |
+|---|---|
+| rebuild per sample | **1047 s** + a 72 GiB box |
+| `aws s3 cp` the index | 28.6 GiB staged; on the task path `/tmp` is **tmpfs at half of RAM**, so ~57 GiB of RAM exists only to hold the copy |
+| **mount it** | metadata only — the bytes stream as STAR touches them |
+
+The copy row is the trap: staging a 28.6 GiB index does not just take time, it *sets the
+instance size*, because the copy has to live in RAM-backed `/tmp`. Mounting removes both the
+time and the requirement — [measured for bwa](../../measurements/lith-vs-copy/README.md), where
+a mount matched a local copy to within 1% of wall time while moving 3,368 bytes instead of
+8.9 GiB. STAR is the stronger case simply because its index is 3× larger and its alignment is
+20× shorter, so the ratio of data-path cost to real work is far worse.
+
+*(The published-index-plus-mount path is being measured now; this page will carry the numbers
+rather than the argument once it lands.)*
+
+### Pins
+
+| | data tier |
+|---|---|
+| STAR | `quay.io/aarchbio/star@…` (2.7.11b) |
+| genome | Ensembl 116 `Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz` — versioned release |
+| annotation | Ensembl 116 `Homo_sapiens.GRCh38.116.gtf.gz` |
+| reads | ENA `ERR188026_{1,2}.fastq.gz` — the complete run |
+
+**The old chr20 version of this recipe justified itself with a constraint that no longer
+exists** — "the spawn task path gets an 8 GiB root disk, and a full human STAR index is ~30 GiB."
+`resources.disk_gib` has been in-spec since spawn 0.103.0, and staging space is tmpfs sized from
+RAM rather than the root disk ([the container path](../../practices/container-path.md)). A
+constraint recorded as a reason is worth re-checking before it outlives the platform.
+
+### Run + verify
+
+```sh
+make run RECIPE=star
+make ls  RECIPE=star
+```
+
+Expect `smoke-check.txt` with `input_reads 15800127`, `pct_unique 92.47`, and a BAM over 500 MB.
 
 </details>

@@ -1,0 +1,38 @@
+{
+  "task_id": "starreal-build-publish",
+  "container": "quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae",
+  "command": [
+    "bash",
+    "-c",
+    "export THREADS=32\nset -euo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nB=cookbook-942542972736-us-west-2\nTHREADS=\"${THREADS:-32}\"\ngunzip -c GRCh38.primary_assembly.fa.gz > genome.fa\ngunzip -c GRCh38.116.gtf.gz            > genes.gtf\necho \"== build the full human index once ==\"\nT0=$(date +%s)\nSTAR --runMode genomeGenerate --runThreadN \"$THREADS\" --genomeDir idx \\\n     --genomeFastaFiles genome.fa --sjdbGTFfile genes.gtf --sjdbOverhang 100 \\\n     --outFileNamePrefix gg_ > gg.log 2>&1 || { tail -20 gg.log Log.out 2>/dev/null; exit 1; }\nT1=$(date +%s)\nIDXB=$(du -sb idx | awk '{print $1}')\n# Publish the index as INDIVIDUAL FILES under a prefix, not a tar: that is what makes it\n# mountable later. A tar would have to be copied and unpacked by every consumer.\necho \"== publish it so every later align can mount it instead of rebuilding ==\"\nT2=$(date +%s)\naws s3 cp idx/ \"s3://$B/inputs/star-index-GRCh38-116/\" --recursive --only-show-errors\nT3=$(date +%s)\n{ printf 'star_version\\t%s\\n' \"$(STAR --version)\"\n  printf 'threads\\t%s\\n' \"$THREADS\"\n  printf 'index_wall_s\\t%s\\n' \"$(( T1 - T0 ))\"\n  printf 'index_bytes\\t%s\\n' \"$IDXB\"\n  printf 'publish_wall_s\\t%s\\n' \"$(( T3 - T2 ))\"\n  printf 'index_files\\t%s\\n' \"$(ls idx | wc -l)\"\n} | tee index-stats.txt\nls -l idx | awk 'NR>1{printf \"  %-28s %s\\n\", $9, $5}'\necho \"PUBLISH OK\"\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 240,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.primary_assembly.fa.gz",
+      "destination": "/tmp/GRCh38.primary_assembly.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.116.gtf.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/index-stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/star-real/index-stats.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 3.5
+  }
+}

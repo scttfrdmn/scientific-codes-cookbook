@@ -39,11 +39,11 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-12 | 2026-09-10 |
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data. | aarchbio | stage: iqtree | 2026-09-10 | — |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-09-11 | — |
-| [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage · run: salmon-real | 2026-09-12 | 2026-09-25 |
+| [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage | 2026-09-25 | 2026-09-25 |
 | [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-12 | — |
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
-| [star](../recipes/star/README.md) | Build a splice-aware index, align RNA-seq reads across exon junctions, count per gene. | aarchbio | stage | 2026-09-12 | — |
+| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: salmon, star | 2026-09-12 | — |
 
 ## astro
 

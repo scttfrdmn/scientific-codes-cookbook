@@ -65,3 +65,16 @@ aws s3 cp r2.fq.gz      "s3://$BUCKET/$PREFIX/ERR188026_sub_2.fq.gz" --only-show
 echo "--- pins (record these in README.md):"
 sha256sum chr20.fa.gz chr20.gtf.gz r1.fq.gz r2.fq.gz
 echo "--- chr20 bases: $BASES   genes: $GENES   exons: $EXONS   read pairs: $READS"
+
+# ---------------------------------------------------------------------------
+# The REAL workload: the WHOLE primary assembly + WHOLE annotation, not chr20.
+# The old chr20 justification ("the task path gets an 8 GiB root disk") no longer
+# holds: resources.disk_gib is in-spec, and staging space is tmpfs sized from RAM.
+# ---------------------------------------------------------------------------
+echo "== stage the full Ensembl 116 genome + annotation (~975 MiB) =="
+E=https://ftp.ensembl.org/pub/release-116
+curl -fsSL "$E/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz" -o genome.fa.gz
+curl -fsSL "$E/gtf/homo_sapiens/Homo_sapiens.GRCh38.116.gtf.gz" -o genes.gtf.gz
+aws s3 cp genome.fa.gz "s3://$BUCKET/inputs/star-real/GRCh38.primary_assembly.fa.gz" --only-show-errors
+aws s3 cp genes.gtf.gz "s3://$BUCKET/inputs/star-real/GRCh38.116.gtf.gz" --only-show-errors
+echo "reads come from inputs/salmon-real/ (the same complete ERR188026 run)"
