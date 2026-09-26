@@ -23,7 +23,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-12 | — |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
 | [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-12 | — |
-| [gatk4](../recipes/gatk4/README.md) | GATK4's HaplotypeCaller calls variants on the shared 30× fixture, then a three-way concordance shows it agrees with bcftools and freebayes on identical bytes. For anyone whose pipeline runs GATK and wants it on Graviton. | aarchbio | stage: bwa-samtools, gatk4 · run: bcftools, freebayes | 2026-09-12 | 2026-09-12 |
+| [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-09-26 | 2026-09-26 |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-12 | — |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |
 | [kallisto](../recipes/kallisto/README.md) | Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon. | aarchbio | run: salmon | 2026-09-12 | — |
@@ -43,7 +43,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-12 | — |
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
-| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: salmon, star | 2026-09-12 | — |
+| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: salmon, star | 2026-09-26 | — |
 
 ## astro
 

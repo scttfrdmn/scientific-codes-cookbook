@@ -1,0 +1,18 @@
+== GATK4 HaplotypeCaller vs GIAB HG001 v4.2.1, chr20, high-confidence regions ==
+benchmark_bases     56000154
+snv_tp              68895
+snv_fp              696
+snv_fn              315
+snv_precision       0.99000  want >=0.98 (unfiltered calls -- see note)
+snv_recall          0.99545  want >=0.99
+snv_f1              0.99272  want >=0.985
+indel_precision     0.99419  OBSERVATION only -- see note
+indel_recall        0.99372  OBSERVATION only
+indel_f1            0.99395  OBSERVATION only
+
+Indels are reported, not asserted: POS:REF:ALT equality after left-alignment still
+counts two correct spellings of the same indel as FP+FN, which hap.py's haplotype
+comparison would credit. The SNV numbers do not have that failure mode, so they are
+the assertion; the indel numbers are a floor on indel performance, not a measure of it.
+
+TP+FN = 69,210 is the truth-side SNV count inside the BED, which is what a local identity\n  test (truth compared against itself) also reported -- so both sides use the same denominator.

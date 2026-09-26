@@ -61,7 +61,41 @@ time differs.
 Overhead falls with generation too (104 s → 62 s), because most of it is staging a 921 MB BAM
 and newer instances have more network — the same secondary effect salmon showed.
 
-## 3. Why the sweep uses 2 Mb when the recipe runs 64 Mb
+## 3. The whole chromosome, and the accuracy it buys
+
+One `c8g.xlarge`, whole chr20, one thread:
+
+```text
+HaplotypeCaller   7929 s (2h 12m)    131,730 variants   109,467 SNVs
+billed window     7982 s             overhead 53 s  ->  99.3% compute, $0.354
+```
+
+Scored against GIAB HG001 v4.2.1 inside its 56,000,154 high-confidence bases, SNVs at QUAL>=30:
+
+| | TP | FP | FN | precision | recall | F1 |
+|---|---|---|---|---|---|---|
+| **SNVs** (asserted) | 68,895 | 696 | 315 | **0.99000** | **0.99545** | **0.99272** |
+| indels (observation) | — | — | — | 0.99419 | 0.99372 | 0.99395 |
+
+Two things about the floors, both about not shipping a check that teaches people to ignore
+failures. The asserted floor on precision is **0.98**, looser than the 0.990 observed, because
+this recipe applies no variant filtering and precision is therefore a property of the recipe
+rather than of GATK — a 0.99 floor would sit 0.001 away and fail on noise. And **indels are
+reported, not asserted**: `POS:REF:ALT` equality after left-alignment counts two correct
+spellings of one indel as FP *and* FN, which `hap.py` would credit, so asserting it would assert
+a representation difference.
+
+`TP + FN = 69,210` is the truth-side SNV count inside the BED, matching what a local identity
+test (the truth set scored against itself, which returns exactly 1.00000 with zero FP and zero
+FN) reports — so both sides use the same denominator. That identity test was run locally before
+any of this cost a task, alongside a deliberately deficient query that scored 0.99027 precision
+and 0.23676 recall, which is how the metric was shown to respond to both error classes.
+
+Note the contrast with the sweep: at 2 Mb the billed window is ~50% fixed overhead, while at
+whole-chromosome scale it is 0.7%. Same tool, same box — the workload decides whether the data
+path matters at all.
+
+## 4. Why the sweep uses 2 Mb when the recipe runs 64 Mb
 
 Because **HaplotypeCaller's rate on chr20 varies about 50× with local complexity**, and three
 attempts to size a run got that wrong in three different ways. This is the expensive lesson of
@@ -87,11 +121,10 @@ Cost of learning this: about **$1.65** of Graviton time across five abandoned ru
 export AWS_PROFILE=aws COOKBOOK_BUCKET=<your bucket>
 
 # once: reference index + GIAB truth slice, then build the 36x chr20 BAM on the box
-bash ../../recipes/gatk4/stage-inputs.sh "$COOKBOOK_BUCKET"
-spawn task run --spec ../../recipes/gatk4/00-prep-bam.task.json
+make stage RECIPE=gatk4     # index + truth slice + the 36x chr20 BAM
 
 # the threading question, settled in one task
-spawn task run --spec canary.task.json --wait
+spawn task run --spec measurements/gatk4-real/canary.task.json --wait
 
 # the generation sweep (four tasks, ~4 min each, each self-terminating)
 bash sweep.sh

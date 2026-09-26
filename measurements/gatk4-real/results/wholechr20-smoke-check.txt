@@ -1,0 +1,13 @@
+wall_s             7929  (HaplotypeCaller only, boot and staging excluded)
+variants_total     131730
+snv_count          109467
+sample             NA12878  want NA12878
+all_on_chr20       0  want 0
+sample_column      1  want 1
+vcf_index          1  want 1 (the concordance task needs it)
+arm64_java_pairhmm 1  want >=1 (Intel GKL AVX .so cannot load on AArch64 -> Java LOGLESS_CACHING)
+
+The correctness bar for this recipe is NOT the count above -- it is the precision/recall
+against the GIAB HG001 v4.2.1 truth set, asserted in task 2. These are structural checks:
+a VCF that is single-sample, entirely on chr20, indexed, and produced by a genuinely
+AArch64 GATK.
