@@ -247,7 +247,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   ran RAxML-NG's search 2.17x faster than Docker Desktop (7m39s vs 16m35s), so the TTL
   sized from the local measurement came down 35m → 20m and the cap $0.19 → $0.11 on
   identical work. A local run is the right *first* move because it is free, not because
-  it is accurate. (Overspend, and a band that was never observed.)
+  it is accurate. **And a measured sample is not the same as a *representative* one: an
+  average over a heterogeneous workload does not license sizing from a sub-window of it.**
+  GATK4 HaplotypeCaller's rate along chr20 varies ~50x with local complexity (~9,480
+  regions/min on the p-arm, **168** in pericentromeric 30-31 Mb — 1.07 Mb in 35.4 min), so a
+  2 Mb canary said 41 min for a job that takes 132, a mid-run linear extrapolation said 112,
+  and an interval chosen from a genuine 0.54 Mb/min average turned out to be the worst one
+  available. Three TTL deaths and ~$1.65 before the rule landed: **sweep only what has been
+  clocked end to end, and take the whole-workload number from a whole-workload run.**
+  (Overspend, and a band that was never observed.)
 - **Never trust an exit code as evidence the outputs are real.** The correctness bar is
   a smoke check that runs **inside** the task (so it can fail the task) *plus* a
   confirmation that the objects are actually in the bucket afterwards. This is stronger
