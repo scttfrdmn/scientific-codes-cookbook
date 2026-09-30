@@ -1,44 +1,38 @@
 {
-  "task_id": "cookbook-gromacs-md-r1",
+  "task_id": "cookbook-gromacs-benchmem-r3",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== bundled inputs ship in the gromacs package (zero staging) ==\"\nGRO=/opt/conda/share/gromacs/top/spc216.gro\ntest -f \"$GRO\"\ntest -d /opt/conda/share/gromacs/top/amber99sb-ildn.ff\n\ncat > topol.top <<'EOF'\n#include \"amber99sb-ildn.ff/forcefield.itp\"\n#include \"amber99sb-ildn.ff/tip3p.itp\"\n[ system ]\nwater\n[ molecules ]\nSOL 216\nEOF\ncat > md.mdp <<'EOF'\nintegrator = md\nnsteps = 20\ndt = 0.002\ncutoff-scheme = Verlet\ncoulombtype = cut-off\nrvdw = 0.9\nrcoulomb = 0.9\nconstraints = h-bonds\nEOF\n\necho \"== grompp + mdrun: 216 SPC waters, 20 steps ==\"\ngmx_mpi grompp -f md.mdp -c \"$GRO\" -p topol.top -o t.tpr -maxwarn 5 > grompp.log 2>&1\ngmx_mpi mdrun -s t.tpr -deffnm out -ntomp \"${GMX_NTOMP:-2}\" -nsteps 20 > mdrun.log 2>&1\nprintf 'Potential\\nTotal-Energy\\n' | gmx_mpi energy -f out.edr -o e.xvg > energy.log 2>&1\n\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys\nfail=[]\ndef check(label, ok, detail):\n    print(f\"{label:24s} {detail}\")\n    if not ok: fail.append(label)\n\nenergy=open(\"energy.log\").read()\nmdrun=open(\"mdrun.log\").read()\nnatoms=int(open(\"out.gro\").read().splitlines()[1].strip())\n\n# shape, straight from the structure mdrun wrote -- exact\ncheck(\"atoms_in_system\", natoms==648, f\"{natoms}  want exactly 648 (216 SPC x 3)\")\n\n# potential energy: reproduction of aarch.science's published D3 figure on this pinned\n# image. bit-stable across ntomp 1/2/4 (measured), so the band is tight.\npe=re.search(r\"^Potential\\s+(-?\\d+\\.?\\d*)\", energy, re.M)\npe_val=float(pe.group(1)) if pe else 0.0\ncheck(\"potential_energy\", -9629.0 < pe_val < -9626.0,\n      f\"{pe_val}  want -9629..-9626 (published D3 -9627.9; observed -9627.87)\")\ncheck(\"per_water_energy\", -46.0 < pe_val/216.0 < -43.0,\n      f\"{pe_val/216.0:.3f}  want -46..-43 kJ/mol/water (physical cohesion)\")\n\nte=re.search(r\"^Total Energy\\s+(-?\\d+\\.?\\d*)\", energy, re.M)\ncheck(\"total_energy_readable\", te is not None, f\"{te.group(1) if te else 'MISSING'}  want a value (exercises .edr reader)\")\n\n# completion sentinel: GROMACS prints the Performance: summary only on clean finish\ncheck(\"mdrun_completed\", \"Performance:\" in mdrun, f\"{'yes' if 'Performance:' in mdrun else 'NO'}  want the Performance: summary\")\n\nif fail:\n    print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\ntest -s out.gro; test -s e.xvg\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nRANKS=${GMX_RANKS:-16}\nOMP=${GMX_OMP:-1}\necho \"== benchMEM: 81,743 atoms, PME, Berendsen NPT, 10,000 steps (20 ps) ==\"\ngmx_mpi --version 2>/dev/null | grep -E \"^GROMACS version|^SIMD instructions\" || true\nT0=$(date +%s)\nmpiexec -n \"$RANKS\" --allow-run-as-root --oversubscribe \\\n  gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp \"$OMP\" -nb cpu -pin off > mdrun.out 2>&1\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\n\n# GROMACS reports the decomposition it ACTUALLY used. conda-forge ships nompi builds at higher\n# build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that\n# under `mpiexec -n 4` runs four independent rank-0 simulations -- each printing plausible\n# physics. Reading the rank count back is what proves the parallelism happened.\nGOTRANKS=$(awk '/Using .* MPI process/{print $2; exit}' bm.log)\nGOTOMP=$(awk '/Using .* OpenMP thread/{print $2; exit}' bm.log)\nSIMD=$(awk -F: '/SIMD instructions/{gsub(/^ +| +$/,\"\",$2); print $2; exit}' bm.log)\nNSDAY=$(awk '/^Performance:/{print $2; exit}' bm.log)\nSTEPS=$(awk '/statistics over/{print $3; exit}' bm.log)\n[ -z \"$STEPS\" ] && STEPS=$(awk '/Statistics over/{print $3; exit}' bm.log)\nTEMP=$(awk '/Conserved En\\./ && /Temperature/{getline; print $4; exit}' bm.log)\nEPOT=$(awk '/Coul\\. recip\\./ && /Potential/{getline; print $5; exit}' bm.log)\nNATOMS=$(head -2 bm.gro | tail -1 | tr -d ' ')\n{\n  echo \"system            benchMEM (81,743 atoms, PME, Berendsen NPT)\"\n  echo \"steps             $STEPS  want 10001 (the tpr's own 10,000 steps)\"\n  echo \"ranks_requested   $RANKS\"\n  echo \"ranks_used        $GOTRANKS  want $RANKS  (proves MPI, not a nompi fallback)\"\n  echo \"omp_per_rank      $GOTOMP  want $OMP\"\n  echo \"simd              $SIMD\"\n  echo \"ns_per_day        $NSDAY\"\n  echo \"wall_s            $WALL  (mdrun only)\"\n  echo \"mean_temperature  $TEMP K  want 280..330\"\n  echo \"mean_potential    $EPOT kJ/mol  (decomposition-invariant; see the sweep)\"\n  echo \"confout_atoms     $NATOMS  want 81743 (no atoms lost)\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$GOTRANKS\" = \"$RANKS\"\ntest \"$GOTOMP\" = \"$OMP\"\ntest \"$NATOMS\" = '81743'\nawk -v n=\"$NSDAY\" 'BEGIN{exit !(n>0)}'\n# physically sane temperature for a 300 K membrane system; a broken run lands nowhere near\nawk -v t=\"$TEMP\" 'BEGIN{exit !(t>280 && t<330)}'\necho 'SMOKE CHECK PASSED'\n"
   ],
   "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 16,
+    "memory_gib": 30,
     "architecture": "arm64",
     "families": [
       "c8g"
     ]
   },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gromacs/benchMEM.tpr",
+      "destination": "/tmp/benchMEM.tpr"
+    }
+  ],
   "outputs": [
-    {
-      "source": "/tmp/out.gro",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/out.gro"
-    },
-    {
-      "source": "/tmp/e.xvg",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/e.xvg"
-    },
-    {
-      "source": "/tmp/mdrun.log",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/mdrun.log"
-    },
-    {
-      "source": "/tmp/grompp.log",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/grompp.log"
-    },
     {
       "source": "/tmp/smoke-check.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/bm.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gromacs/r1/bm.log"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "25m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.12
   }
 }

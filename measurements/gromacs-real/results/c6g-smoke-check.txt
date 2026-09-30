@@ -1,0 +1,11 @@
+system            benchMEM (81,743 atoms, PME, Berendsen NPT)
+steps             10001  want 10001 (the tpr's own 10,000 steps)
+ranks_requested   16
+ranks_used        16  want 16  (proves MPI, not a nompi fallback)
+omp_per_rank      1  want 1
+simd              ARM_NEON_ASIMD
+ns_per_day        14.691
+wall_s            121  (mdrun only)
+mean_temperature  3.01998e+02 K  want 280..330
+mean_potential    -1.28782e+06 kJ/mol  (decomposition-invariant; see the sweep)
+confout_atoms     81743  want 81743 (no atoms lost)

@@ -3,65 +3,123 @@ tool: gromacs
 tool_version: 2026.3
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# GROMACS — molecular dynamics of a 216-water box, reproducing a published energy
+# GROMACS — benchMEM at 82k atoms, in ns/day across four Graviton generations
 
-Run a short MD integration and land on the potential energy aarch.science published for this image — proof GROMACS 2026.3 is numerically correct on Graviton4.
+Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM.
 
-> **What this covers.** 216 SPC waters, 40 fs (20 steps), on data GROMACS ships. Not a benchmark; no PME, membrane/protein, or multi-node. The binary is a NEON build (no SVE on Graviton, a conda-forge choice), so no timing here is GROMACS's ceiling on ARM.
+> **Graviton5 is 2.43× Graviton2 on this system and 47% cheaper per nanosecond** — the biggest generational gain measured anywhere in this catalog, on a NEON build with no SVE.
 
 ## Run it
 
 ```bash
-gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o t.tpr -maxwarn 5
-gmx_mpi mdrun  -s t.tpr -deffnm out -ntomp 2 -nsteps 20     # → potential energy -9627.87 kJ/mol
+make stage RECIPE=gromacs   # once: the pinned benchMEM.tpr
+make run   RECIPE=gromacs   # 10,000 steps (20 ps), ~70 s, self-terminating
+make ls    RECIPE=gromacs   # smoke-check.txt + bm.log
+
+mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 ```
 
-One task: `grompp` builds the run input, `mdrun` integrates. `spc216.gro` and the force field ship inside the gromacs package, so nothing is staged.
+## Which box — measured (same tpr, same digest, 16 cores, 16×1)
+
+| generation | instance | **ns/day** | mdrun wall | $/hr | **$/ns** |
+|---|---|---|---|---|---|
+| Graviton2 | `c6g.4xlarge` | 14.691 | 121 s | 0.5440 | 0.8887 |
+| Graviton3 | `c7g.4xlarge` | 23.052 | 78 s | 0.5800 | 0.6039 |
+| Graviton4 | `c8g.4xlarge` | 25.983 | 69 s | 0.6381 | 0.5894 |
+| **Graviton5** | `c9g.4xlarge` | **35.741** | **50 s** | 0.6955 | **0.4670** |
+
+**Take the newest generation** — every step is faster *and* cheaper per nanosecond, and the ladder is uneven: Graviton3→4 buys 12.7%, **Graviton4→5 buys 37.6%**. For contrast the integer-heavy genomics recipes gain 1.84–2.0× across these same chips against MD's 2.43×: one data point that FP-heavy codes benefit more, not yet a rule.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `spc216.gro` (216 SPC waters, bundled) | your own `.gro` + topology | staged through S3 for a real system; the bundled box is used because aarch.science published *its* energy to reproduce. |
-| the 6-line `.mdp` (20 steps, no velocity generation) | your run parameters | with no velocities generated the run is deterministic and bit-stable across thread counts — which is why the energy is asserted exactly. |
-| `-ntomp 2` | scale threads to your cores | a single-point energy is decomposition-invariant, so scale freely for speed; [assert the rank count](../../practices/mpi-rank-count.md) if you claim MPI. |
+| benchMEM (82k atoms) | your own `.tpr` | a `.tpr` is self-contained, so nothing else needs staging; GROMACS 2026.3 still reads benchMEM's 2015-era file. |
+| `-n 16 -ntomp 1` | any rank×thread split | **barely matters here** — five splits of 16 cores spanned 9.6%. Don't tune it before you measure it. |
+| 16 cores | more cores, or `benchRIB` (2M atoms) | 82k atoms is small enough that PME limits scaling; a bigger system is how you use a bigger box. |
 
-Nothing is determinism scaffolding (deterministic without velocity generation). **Leave the fixture:** 216 waters reproduces a published cohesive energy exactly and *is* the correctness proof; a bigger system is a longer run, not a more legible one, and sizing lives on the [sizing page](../../patterns/sizing.md). Leave-it.
-
-## Shape, size, cost
-
-One task, `c8g.large` (2 vCPU / 4 GiB — the MD is sub-second, so cores and memory don't bind correctness), TTL 5m, cap $0.02. Recorded command window 103s. **These timings are not compute cost** — boot and the 1.19 GB image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)).
+**Leave the workload** — benchMEM as shipped is what makes ns/day comparable to published numbers. **Scale it** by moving to a larger benchmark before adding cores.
 
 <details>
-<summary>As shipped: the published-energy reproduction, sizing, pins, smoke check, run + verify</summary>
+<summary>As shipped: the checks, why MD gets no exact assertion, the decomposition sweep, pins</summary>
 
-**A reproduction, not a plausible number.** aarch.science's `md.smoke.py` reported **−9627.9 kJ/mol** (−44.6/water) for 216 SPC waters on its build host; Graviton4 gives **−9627.87** — the same deterministic code on two hosts agreeing to five significant figures ([reproduce a published number](../../practices/reference-from-tests.md)). The ±1.5 kJ/mol band is only because the published figure was rounded; the run is bit-stable across `-ntomp` 1/2/4. Per-water energy (~−44 kJ/mol) is a physics floor a mis-built topology can't hit; `mdrun`'s `Performance:` summary prints only on clean completion.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| atoms | exactly 648 (216×3) | 648 |
-| **potential energy** | −9629 … −9626 kJ/mol (published −9627.9) | −9627.87 |
-| per-water energy | −46 … −43 kJ/mol | −44.573 |
-| mdrun completed | `Performance:` summary present | yes |
+| steps completed | 10001 (the tpr's own 10,000) | **10001** |
+| **MPI ranks used** | **== ranks launched (16)** | **16** |
+| OpenMP threads per rank | == requested (1) | **1** |
+| SIMD path | recorded | **ARM_NEON_ASIMD** |
+| mean temperature | 280–330 K | **301.998 K** |
+| atoms in `confout.gro` | 81,743 — none lost | **81,743** |
+| ns/day | > 0, recorded | **25.983** |
 
-**Sizing is a separate question from correctness.** Measured on benchMEM (81,743 atoms, 8→192 cores) on the [sizing page](../../patterns/sizing.md): the *launch* dominates — `mpirun`'s default binding pins all threads to one core (a **7× loss**) before any ranks-vs-threads tuning matters; it scales to 192 cores (11× throughput) but cost-per-result rises past the NUMA knee. The single-point energy never moves with core count, unlike an [assembler](../flye/README.md).
+**The rank-count assertion is the load-bearing one.** conda-forge ships nompi GROMACS builds at
+higher build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that
+under `mpiexec -n 16` runs sixteen independent rank-0 simulations — each printing plausible physics
+and a plausible ns/day. Reading back `Using 16 MPI processes` from GROMACS' own log is what proves
+the parallelism happened ([the practice](../../practices/mpi-rank-count.md)).
 
-**Pins** (data tier: bundled — the input ships in the pinned gromacs package):
+### Why there is no exact energy assertion
 
-| | |
+The old version of this recipe asserted a potential energy exactly, which worked because it ran 20
+steps of 216 waters with no velocity generation. That does not survive contact with a real system:
+**two runs of this tpr at the same 16×1 decomposition gave mean temperatures of 300.127 K and
+301.998 K**, and potentials 0.28% apart. MD at 82k atoms with PME and a Berendsen thermostat is not
+bit-reproducible run to run, so an exact assertion would be flaky — the
+[stochastic-search rule](../../practices/cross-checks.md) one domain over. What is asserted instead
+is a physically meaningful band on temperature plus the structural invariants above.
+
+### The decomposition sweep — measured, and it barely matters
+
+All five splits of 16 cores, one `c8g.4xlarge`, one task, so instance variance cannot contaminate
+the comparison:
+
+| ranks × threads | ns/day |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941…` (tag `2026.09.04`, GROMACS 2026.3-conda_forge, ARM_NEON_ASIMD, cosign-signed, `linux/arm64`) |
-| input | `spc216.gro` + `amber99sb-ildn.ff`, bundled — nothing staged |
+| **16 × 1** | **25.538** |
+| 1 × 16 | 25.432 |
+| 8 × 2 | 24.860 |
+| 4 × 4 | 24.168 |
+| 2 × 8 | 23.292 |
 
-The `md` env carries both engines; [lammps](../lammps/README.md) runs the other in the same image.
+**9.6% from best to worst, and all five work.** Pure MPI and pure OpenMP land within 0.4% of each
+other. So on a single node at this size, decomposition is not the lever it is often assumed to be —
+which is worth knowing before spending an afternoon on `-npme` and pinning. That conclusion is
+scoped to one node and 82k atoms; a system big enough to need several nodes, where PME and
+communication start to dominate, is a different question this recipe does not answer.
 
-**Run + verify.**
+### Pins
+
+| | data tier |
+|---|---|
+| GROMACS | `quay.io/aarchsci/md@sha256:1ee94166…` (2026.3-conda_forge, `linux/arm64`, NEON build) |
+| benchMEM | `https://www.mpinat.mpg.de/benchMEM` — zip sha256 `3c1c8cd4f274…`, tpr sha256 `5099268bf3a3…` |
+
+The benchmark set is published by the Dept. of Theoretical and Computational Biophysics, Max Planck
+Institute for Multidisciplinary Sciences, Göttingen, under CC-BY 4.0, and is the set used in
+[Kutzner et al.](https://doi.org/10.1002/jcc.24030) — which is why ns/day here is comparable to a
+large published literature. The download is a zip despite its `.tpr` name; the pinned hash covers
+both.
+
+**The binary is a NEON build** — `ARM_NEON_ASIMD`, read back from the run rather than assumed. So
+these numbers are what the packaged build delivers, which is what a cookbook owes, and not
+necessarily GROMACS' ceiling on ARM. Before assuming an SVE build would help, see
+[the SIMD-width measurements](../../measurements/simd-width/README.md): on these cores SVE and NEON
+issue the same bits per cycle, and the win comes from `-mcpu`, not from selecting SVE.
+
+### Run + verify
+
 ```sh
 make run RECIPE=gromacs
-make ls RECIPE=gromacs
+make ls  RECIPE=gromacs
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `ranks_used 16`, `simd ARM_NEON_ASIMD`, `confout_atoms 81743` and
+`ns_per_day` near 26 on `c8g.4xlarge`.
 
 </details>
