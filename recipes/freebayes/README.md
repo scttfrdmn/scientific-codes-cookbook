@@ -63,24 +63,13 @@ and normalised identically:
 
 The unfiltered row is the reason this page leads with a warning rather than a number.
 
-**Asserted:** `QUAL≥30` SNV precision ≥ 0.98 — freebayes' actual strength — plus recall ≥ 0.94,
-which is a floor on *its own* defaults rather than a cross-caller bar. Recall is **reported**, not
-held to the 0.95 floor the other two clear, because a shared recall floor cannot rank callers whose
-defaults differ this much: tuned to admit freebayes it is a fudge, tuned to exclude it it fails a
-correctly-working tool. The comparison lives in the three-way measurement, where both metrics are
-computed identically for all three.
+**Asserted:** `QUAL≥30` SNV precision ≥ 0.98 — freebayes' strength — plus recall ≥ 0.94, a floor on
+its own defaults rather than a cross-caller bar. A shared recall floor cannot rank callers whose
+defaults differ this much, so recall is reported here and compared, identically for all three, in
+[the three-way measurement](../../measurements/callers-real/README.md).
 
 **Indels are reported, never asserted** — `POS:REF:ALT` equality after left-alignment counts two
 correct spellings of one indel as FP *and* FN.
-
-### The diagnosis that was wrong
-
-When the first scoring pass showed recall 0.95534 at `QUAL≥30`, the natural conclusion was that a
-shared threshold was cutting genuine freebayes calls, since QUAL is not calibrated across callers.
-Re-running with no filter disproved it: unfiltered recall is 0.95953, so the threshold costs 0.4
-points, not 4. The tidier explanation was the wrong one, and only running it both ways settled it —
-[recorded in full](../../measurements/callers-real/README.md) because the mistake is more
-instructive than the result.
 
 ### Pins
 

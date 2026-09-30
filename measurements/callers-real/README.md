@@ -60,18 +60,10 @@ Indels:
   **146,290 false positives** — precision 0.312 — and one `QUAL>=30` removes 146,088 of them to
   leave the best precision of the three (0.99695). Nobody should ship raw freebayes output; that
   is a property of its defaults, not a defect.
-
-### The metric mistake this measurement made first
-
-The first scoring pass applied `QUAL>=30` to all three and asserted recall ≥ 0.99. freebayes
-failed at 0.95534, and the conclusion drawn was "the shared threshold is cutting genuine
-freebayes calls" — a tidy story about QUAL calibration. **The unfiltered run disproved it:**
-freebayes' recall is 0.95953 even with no filter at all, so the threshold costs it 0.4 points,
-not 4. Its recall deficit is real, and belongs to its default settings (tuned for pooled and
-population calling), not to the metric.
-
-Worth recording because the wrong explanation was the more sophisticated one. The fix was to run
-the comparison both ways rather than to reason about which was fairer.
+- **freebayes' lower recall is real, not a threshold artifact**, which is what the unfiltered
+  column settles: it reaches only 0.95953 with no filter at all, so `QUAL>=30` costs 0.4 points
+  while ~4 belong to defaults that assume you may be calling a pool. Tune
+  `--min-alternate-fraction` and `--min-alternate-count` before judging the tool.
 
 ### What is asserted, and what is only reported
 
@@ -99,9 +91,8 @@ make run   RECIPE=gatk4                               # ~2h 12m, single-threaded
 spawn task run --spec measurements/callers-real/three-way.task.json --wait
 ```
 
-The two canaries (`bcftools-canary.task.json`, `freebayes-canary.task.json`) clock each caller on
-`chr20:1,000,000-3,000,000` — 6 s and 14 s against HaplotypeCaller's 77 s — which is how the
-whole-chromosome TTLs were sized rather than guessed.
+The two canaries clock each caller on `chr20:1,000,000-3,000,000` — 6 s and 14 s against
+HaplotypeCaller's 77 s — which is where whole-chromosome TTLs come from.
 
 ## Caveats
 

@@ -75,16 +75,16 @@ sample or depth, and they hold identically for all three callers so the pages ar
 correct spellings of one indel as FP *and* FN, which `hap.py`'s haplotype comparison would credit.
 Asserting it would assert a representation difference.
 
-**QUAL is not comparable across callers**, which is why both rows exist rather than one. Applying a
-single threshold to three tools and ranking their recall is the mistake
-[the three-way measurement made first](../../measurements/callers-real/README.md) and corrected.
+**QUAL is not comparable across callers**, which is why both rows exist rather than one: a single
+threshold applied to three tools ranks their calibration, not their accuracy. All three are scored
+both ways in [the three-way measurement](../../measurements/callers-real/README.md).
 
 ### Why this is fast, and stays predictable
 
-A pileup's cost tracks **depth × bases**, not local complexity. Measured: whole chr20 took 228 s
-against 193 s extrapolated linearly from a 2 Mb canary — a 1.2× miss. GATK's equivalent
-extrapolation was off by 3.2× because local re-assembly explodes in repeats, which is why its TTLs
-took three attempts to size. Same input, different cost model.
+A pileup's cost tracks **depth × bases**, not local complexity, so runtime scales with the
+interval and TTLs are easy to size: whole chr20 took 228 s against 193 s extrapolated linearly
+from a 2 Mb slice, a 1.2× miss. A local-assembly caller on the same input is off by 3.2×, because
+its cost tracks repeat complexity instead — [measured](../../measurements/gatk4-real/README.md).
 
 ### Pins
 

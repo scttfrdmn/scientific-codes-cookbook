@@ -97,23 +97,25 @@ path matters at all.
 
 ## 4. Why the sweep uses 2 Mb when the recipe runs 64 Mb
 
-Because **HaplotypeCaller's rate on chr20 varies about 50× with local complexity**, and three
-attempts to size a run got that wrong in three different ways. This is the expensive lesson of
-this measurement, so it is written down rather than smoothed over:
+**HaplotypeCaller's rate along chr20 varies about 50× with local complexity**, so an interval is
+not interchangeable with a chromosome and a per-Mb rate is not a constant:
 
-| attempt | reasoning | what happened |
-|---|---|---|
-| whole chr20, TTL 70m | 2 Mb canary ran at 1.56 Mb/min → 64 Mb ≈ 41 min | all four died at TTL. The canary sits on the p-arm and opens on a telomere; it is fast, not typical |
-| whole chr20, TTL 150m | mid-run: 29.4 Mb at 51.3 min → linear → 112 min | died again. The linear extrapolation *over*-estimated the remaining work, because the slow centromere was already behind it — and still under-estimated the total |
-| chr20:30-40 Mb, TTL 55m | 0.54 Mb/min measured over 31.0→48.7 Mb | advanced **1.07 Mb in 35.4 minutes** (168 regions/min vs ~9,480 on the p-arm). 30–31 Mb is pericentromeric heterochromatin: repeat-rich, so local assembly explodes |
+| region | rate |
+|---|---|
+| p-arm (chr20:1–20 Mb) | ~9,480 regions/min |
+| pericentromeric (chr20:30–31 Mb) | **168 regions/min** — 1.07 Mb in 35.4 min |
 
-The rule that falls out is sharper than "measure, don't guess", which was already being followed:
-**an average over a heterogeneous region does not license picking a sub-window of it.** The
-0.54 Mb/min figure was a real measurement and it still pointed at the worst available interval.
-So the sweep runs the *only* interval with a completed end-to-end timing, and the whole-chromosome
-number comes from a whole-chromosome run.
+Repeat-rich sequence makes local re-assembly produce huge active regions with many candidate
+haplotypes, and the centromere is the worst of it. Two practical consequences:
 
-Cost of learning this: about **$1.65** of Graviton time across five abandoned runs.
+- **Size a whole-chromosome TTL from a whole-chromosome run**, not from a slice, and not by
+  extrapolating a partial run linearly — an average over a heterogeneous region does not
+  transfer to a sub-window of it, in either direction.
+- **Scatter on intervals of similar complexity** if you are splitting work, or one shard lands on
+  the centromere and becomes the critical path.
+
+The sweep therefore runs `chr20:1,000,000-3,000,000`, clocked end to end at 77 s on c8g, and the
+whole-chromosome number comes from the whole-chromosome run in §3.
 
 ## Run it
 
