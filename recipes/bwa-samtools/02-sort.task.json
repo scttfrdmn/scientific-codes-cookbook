@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-samtools-sort-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho \"== tmpfs is the constraint here: samtools sort's temp files land in /tmp, which is RAM ==\"\ndf -m /tmp | awk 'NR==2{print \"tmpfs_total_mb\", $2; print \"tmpfs_used_before_mb\", $3}'\nawk '/MemTotal/{printf \"mem_total_gib %.0f\\n\", $2/1048576}' /proc/meminfo\n\n# Sample tmpfs high-water while the sort runs. The whole point: on the task path `sort -T /tmp`\n# spends RAM, not disk, and nothing warns you.\n( MAX=0\n  while :; do\n    U=$(df -m /tmp | awk 'NR==2{print $3}')\n    [ \"$U\" -gt \"$MAX\" ] && { MAX=$U; echo \"$MAX\" > /tmp/.peak; }\n    sleep 2\n  done ) & SAMPLER=$!\n\necho \"== samtools sort, 48.8M records ==\"\nT0=$(date +%s)\nsamtools sort -@ 16 -m 1G -T /tmp/sorttmp -o aln.sorted.bam aln.sam.gz 2> sort.log\nT1=$(date +%s)\nSORT_S=$(( T1 - T0 ))\nkill \"$SAMPLER\" 2>/dev/null || true\nPEAK_MB=$(cat /tmp/.peak 2>/dev/null || echo 0)\n\necho \"== samtools index ==\"\nT2=$(date +%s)\nsamtools index -@ 16 aln.sorted.bam\nT3=$(date +%s)\nIDX_S=$(( T3 - T2 ))\n\necho \"== checks ==\"\n# BGZF/gzip magic: a BAM starts 1f8b0804. Cheap, exact, cannot go flaky.\nMAGIC=$(od -An -tx1 -N4 aln.sorted.bam | tr -d ' \\n')\n# quickcheck verifies the EOF block is present, which is what catches a truncated BAM.\nQC=0; samtools quickcheck -v aln.sorted.bam 2>/dev/null && QC=1\nSORTED=$(samtools view -H aln.sorted.bam | awk '/^@HD/ && /SO:coordinate/{print \"yes\"}')\nNREC=$(samtools view -c -@ 16 aln.sorted.bam)\nMAPPED_PCT=$(samtools flagstat -@ 16 aln.sorted.bam | awk '/mapped \\(/{gsub(/[(%]/,\"\",$5); print $5; exit}')\nsamtools flagstat -@ 16 aln.sorted.bam > flagstat.txt\nBAMB=$(stat -c%s aln.sorted.bam)\nHASIDX=0; [ -s aln.sorted.bam.bai ] && HASIDX=1\n\n{\n  echo \"sort_wall_s          $SORT_S\"\n  echo \"index_wall_s         $IDX_S\"\n  echo \"tmpfs_total_mb       $(df -m /tmp | awk 'NR==2{print $2}')\"\n  echo \"tmpfs_peak_used_mb   $PEAK_MB  <- samtools sort temp + staged input + output, all in RAM\"\n  echo \"bam_magic            $MAGIC  want 1f8b0804\"\n  echo \"quickcheck           $QC  want 1 (EOF block present, so not truncated)\"\n  echo \"sort_order           $SORTED  want yes\"\n  echo \"records              $NREC  want exactly 48817006 (sorting is a permutation)\"\n  echo \"pct_mapped           $MAPPED_PCT  want ~99.91, as bwa reported\"\n  echo \"bam_index            $HASIDX  want 1\"\n  echo \"bam_bytes            $BAMB\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$MAGIC\" = '1f8b0804'\ntest \"$QC\" -eq 1\ntest \"$SORTED\" = 'yes'\ntest \"$HASIDX\" -eq 1\n# Conservation: sort and index must not create or lose a single record. Exact, and free.\ntest \"$NREC\" = '48817006'\necho 'SMOKE CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sam.gz",
+      "destination": "/tmp/aln.sam.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln.sorted.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam"
+    },
+    {
+      "source": "/tmp/aln.sorted.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam.bai"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/sort-smoke-check.txt"
+    },
+    {
+      "source": "/tmp/flagstat.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/flagstat.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.35
+  }
+}

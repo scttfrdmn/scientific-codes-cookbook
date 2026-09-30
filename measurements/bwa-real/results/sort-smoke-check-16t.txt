@@ -1,0 +1,11 @@
+sort_wall_s          65
+index_wall_s         3
+tmpfs_total_mb       31566
+tmpfs_peak_used_mb   9786  <- samtools sort temp + staged input + output, all in RAM
+bam_magic            1f8b0804  want 1f8b0804
+quickcheck           1  want 1 (EOF block present, so not truncated)
+sort_order           yes  want yes
+records              48817006  want exactly 48817006 (sorting is a permutation)
+pct_mapped           99.77  want ~99.91, as bwa reported
+bam_index            1  want 1
+bam_bytes            4568357482

@@ -15,8 +15,8 @@ Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Gr
 
 ```bash
 make stage RECIPE=bwa-samtools   # once — caches the RODA index + reads into your bucket
-make run   RECIPE=bwa-samtools   # 14 min on c8g.4xlarge, self-terminating
-make ls    RECIPE=bwa-samtools   # aln.sam.gz (5.0 GiB) + smoke-check.txt
+make run   RECIPE=bwa-samtools   # align (~13 min) then sort+index (~1 min), self-terminating
+make ls    RECIPE=bwa-samtools   # aln.sam.gz, aln.sorted.bam + .bai, smoke checks
 ```
 
 ```bash
@@ -127,12 +127,35 @@ Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin
 exported. And nothing in the pipeline may stop reading early — `| head` or `awk … exit` would
 SIGPIPE bwa and, under `set -o pipefail`, kill the task after 13 minutes of completed work.
 
-### Not shipped yet
+### The sort step, and the RAM it spends twice
 
-**The sort/index step.** This recipe now ends at `aln.sam.gz`; the chr20-scale
-`samtools sort` task it used to carry was removed with the toy fixture rather than rewritten
-for 5 GiB of input. Sorting that is a real task with a real cost (temp space in a tmpfs `/tmp`
-is the constraint) and it has not been measured, so it is absent rather than guessed at.
+`samtools sort` turns the 5.4 GiB `aln.sam.gz` into a coordinate-sorted, indexed
+**4,568,357,482-byte BAM** — the form every downstream caller actually wants. Measured:
+
+| box | threads | sort | index | tmpfs peak | billed | $ |
+|---|---|---|---|---|---|---|
+| `m8g.4xlarge` (64 GiB) | 16 | **65 s** | 3 s | 9,786 / 31,566 MB | 125 s | **0.0249** |
+| `m8g.2xlarge` (32 GiB) | 8 | 87 s | 4 s | **12,419 / 15,746 MB** | 165 s | **0.0165** |
+
+The sorting itself is cheap. The constraint is that on the task path `sort -T /tmp` writes its
+temp files into **tmpfs, which is RAM** ([the container path](../../practices/container-path.md)) —
+so the step spends the same pool twice, on `-m` × `-@` of sort buffers *and* on temp files. That
+inverts the obvious economy: **shrinking the box raised the tmpfs peak**, from 9.8 GiB to 12.4 GiB,
+because 8 threads buffer 8 GiB where 16 buffer 16, and whatever does not fit in buffers spills to
+temp. At 79% of tmpfs, 32 GiB is the practical floor for a whole-genome BAM; 64 GiB is comfortable.
+
+The checks are a conservation identity and two structural ones, all exact and none able to go
+flaky: the record count must survive sorting (**48,817,006**, unchanged — sorting is a
+permutation), a BAM begins `1f8b0804`, and `samtools quickcheck` verifies the EOF block so a
+truncated file cannot pass. The BAM is *not* byte-identical across thread counts — 4,568,357,482
+at 16 threads against 4,568,357,483 at 8 — which is BGZF block packing, and the reason the
+assertion is on records rather than bytes.
+
+**Two mapped percentages appear in this catalog and both are right.** The align task counts
+`$3 != "*"` (a reference name is set) and reports **99.91%**; `samtools flagstat` counts the 0x4
+flag unset and reports **99.77%**. The gap is 48,774,176 − 48,703,954 = **70,222**, exactly
+flagstat's singleton count: unmapped mates placed at their partner's coordinates carry a reference
+name while still being flagged unmapped. Different questions, not a discrepancy.
 
 ### Run + verify
 
