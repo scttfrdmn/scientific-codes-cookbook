@@ -1,42 +1,66 @@
 {
-  "task_id": "cookbook-bwa-mem2-baseline-r1",
-  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "task_id": "cookbook-bwamem2-bwa-leg-r2",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\nprintf \"%s  %s\\n\" 61eba5b05ef7d9ae5310e756c1143fa48072de3856d36871bb14e57aa2435ff3 chr20.fa > pins.sha256\nprintf \"%s  %s\\n\" 4bd24cdfa4486964f070e69b5dd109b6e1e78561783d48c4e62cc6fae3536a00 HG00096_chr20smoke_1.fq.gz >> pins.sha256\nprintf \"%s  %s\\n\" ebd1ad56bc572a4bf157ba21d1ad8ef074ea25f02eb2d982d9f0089180d82a04 HG00096_chr20smoke_2.fq.gz >> pins.sha256\nsha256sum -c pins.sha256\n\necho \"== bwa index (same reference bytes the bwa-samtools recipe uses) ==\"\nbwa index -p bwaidx chr20.fa\n\necho \"== bwa mem -t 8 (baseline alignment; identical flags to the bwa-mem2 leg) ==\"\nbwa mem -t 8 -R \"@RG\\tID:smoke\\tSM:HG00096\\tPL:ILLUMINA\\tLB:SRR062634\" bwaidx HG00096_chr20smoke_1.fq.gz HG00096_chr20smoke_2.fq.gz > aln_bwa.sam\n\necho \"== baseline record count ==\"\ngrep -c '^[^@]' aln_bwa.sam > bwa_records.txt\ncat bwa_records.txt\n"
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nT0=$(date +%s)\nbwa mem -t 16 -R '@RG\\tID:SRR062634\\tSM:HG00096\\tPL:ILLUMINA' GRCh38_full_analysis_set_plus_decoy_hla.fa SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz 2> run.log | gzip -1 > aln.sam.gz\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\nALTN=$(awk 'tolower($0) ~ /read [0-9]+ alt contigs/{for(i=1;i<=NF;i++) if(tolower($i)==\"read\"){print $(i+1); exit}}' run.log)\nNREC=$(zcat aln.sam.gz | awk '!/^@/{n++} END{print n+0}')\nGZOK=0; zcat aln.sam.gz > /dev/null 2>&1 && GZOK=1\nBYTES=$(stat -c%s aln.sam.gz)\n{ echo \"tool              bwa\"\n  echo \"wall_s            $WALL  (the aligner only)\"\n  echo \"threads           16\"\n  echo \"alt_contigs_read  $ALTN  want >0 (the analysis set must be used ALT-aware)\"\n  echo \"sam_records       $NREC  want exactly 48817006\"\n  echo \"gzip_ok           $GZOK  want 1\"\n  echo \"aln_sam_gz_bytes  $BYTES\"\n  echo \"reads_per_s       $(( 48297986 / WALL ))\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$GZOK\" -eq 1\ntest \"$ALTN\" -gt 0\n# bwa-mem2 documents output identical to bwa mem, so this is an exact cross-implementation\n# identity on identical bytes, not a band. A mismatch is a finding, so print the delta first.\nif [ \"$NREC\" != \"48817006\" ]; then echo \"DELTA vs bwa: $(( NREC - 48817006 )) records\"; fi\ntest \"$NREC\" = '48817006'\necho 'SMOKE CHECK PASSED'"
   ],
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
   "resources": {
-    "cpu": 8,
-    "memory_gib": 16,
+    "cpu": 16,
+    "memory_gib": 124,
     "architecture": "arm64",
     "families": [
-      "c8g"
+      "r8g"
     ]
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
-      "destination": "/tmp/chr20.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
-      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
-      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.alt",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.alt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_2.filt.fastq.gz"
     }
   ],
   "outputs": [
     {
-      "source": "/tmp/aln_bwa.sam",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-mem2/r1/aln_bwa.sam"
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-mem2-real/bwa/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/run.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-mem2-real/bwa/run.log"
     }
   ],
   "lifecycle": {
-    "ttl": "20m",
+    "ttl": "60m",
     "on_complete": "terminate",
-    "cost_limit": 0.1
+    "cost_limit": 0.55
   }
 }

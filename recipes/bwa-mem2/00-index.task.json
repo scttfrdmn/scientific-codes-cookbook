@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-bwamem2-index",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho '== arm64 from inside: ELF e_machine must be 183 (AArch64) =='\nEM=$(od -An -tu1 -j18 -N2 \"$(command -v bwa-mem2)\" | awk '{print $1 + $2*256}')\necho \"e_machine $EM\"\ntest \"$EM\" -eq 183\nbwa-mem2 version\necho '== which SIMD kernel did this build ship? =='\n# bwa-mem2 dispatches on CPU features at runtime and names the binary it picked. On x86 that\n# is avx512bw/avx2/sse41; on AArch64 there is no AVX at all, so record what it actually uses.\nls /opt/conda/bin/ | grep -i 'bwa-mem2' > kernels.txt || true\ncat kernels.txt\necho '== build the index for the whole GRCh38 analysis set =='\nT0=$(date +%s)\n/usr/bin/time -v bwa-mem2 index GRCh38_full_analysis_set_plus_decoy_hla.fa > idx.log 2>&1 || bwa-mem2 index GRCh38_full_analysis_set_plus_decoy_hla.fa > idx.log 2>&1\nT1=$(date +%s)\nPEAK=$(awk '/Maximum resident set size/{print $6}' idx.log 2>/dev/null || echo NA)\necho \"index_wall_s $(( T1 - T0 ))\"\nls -l GRCh38_full_analysis_set_plus_decoy_hla.fa.* | awk '{print $5, $9}'\nMEM2B=$(du -cb GRCh38_full_analysis_set_plus_decoy_hla.fa.0123 GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt.2bit.64 GRCh38_full_analysis_set_plus_decoy_hla.fa.amb GRCh38_full_analysis_set_plus_decoy_hla.fa.ann GRCh38_full_analysis_set_plus_decoy_hla.fa.pac 2>/dev/null | awk 'END{print $1}')\ntar -cf mem2-index.tar GRCh38_full_analysis_set_plus_decoy_hla.fa.0123 GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt.2bit.64 GRCh38_full_analysis_set_plus_decoy_hla.fa.amb GRCh38_full_analysis_set_plus_decoy_hla.fa.ann GRCh38_full_analysis_set_plus_decoy_hla.fa.pac\nTARB=$(stat -c%s mem2-index.tar)\n{ echo \"index_wall_s      $(( T1 - T0 ))\"\n  echo \"peak_rss_kb       $PEAK\"\n  echo \"mem2_index_bytes  $MEM2B\"\n  echo \"tar_bytes         $TARB\"\n  echo \"bwa_index_bytes   5644394452  (.amb+.ann+.bwt+.pac+.sa, for comparison)\"\n  echo \"simd_kernels      $(tr '\\n' ' ' < kernels.txt)\"\n} > index-check.txt\ncat index-check.txt\ntail -20 idx.log\ntest \"$TARB\" -gt 8000000000\necho 'INDEX BUILD OK'"
+  ],
+  "container": "quay.io/aarchbio/bwa-mem2@sha256:f9759b09a39aab57d879babbcb5a876a9ed4a55a698eb10b476f70a9cec81c15",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/mem2-index.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2/mem2-index.tar"
+    },
+    {
+      "source": "/tmp/index-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2/index-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "150m",
+    "on_complete": "terminate",
+    "cost_limit": 1.9
+  }
+}
