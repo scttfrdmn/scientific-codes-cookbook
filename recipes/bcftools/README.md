@@ -2,57 +2,112 @@
 tool: bcftools
 tool_version: "1.24"
 image: quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# bcftools — call variants from a pileup
+# bcftools — call a whole chromosome at 36×, scored against the GIAB truth set
 
-The workhorse germline caller: pile up the reads, call the variants, get a VCF.
+Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone choosing a germline caller and what to pay for it.
+
+> **This is the cheap one, and on SNVs it is not a downgrade.** 228 s against GATK's 7,929 s on identical bytes, for a marginally *better* SNV F1. GATK earns its 28× cost on indels, not SNVs.
 
 ## Run it
 
 ```bash
-bcftools mpileup -f ref.fa aln.bam | bcftools call -mv -Oz -o calls.vcf.gz
+make stage RECIPE=gatk4     # shared: reference, GIAB truth slice, the 36x chr20 BAM
+make run   RECIPE=bcftools  # call + score, ~5 min, self-terminating
+make ls    RECIPE=bcftools  # bcftools.vcf.gz + concordance.txt
+
+bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
+  | bcftools call -mv -Oz -o bcftools.vcf.gz
 ```
 
-The recipe calls a 30× human region and cross-checks it against [freebayes](../freebayes/README.md) where both callers are confident.
+## What it costs, next to the alternatives
+
+| caller | wall | $/result | SNV F1 | indel recall |
+|---|---|---|---|---|
+| **bcftools** | **228 s** | **0.0126** | **0.99395** | 0.97077 |
+| freebayes | 644 s | 0.0310 | 0.97570 | 0.92146 |
+| [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99272 | **0.99372** |
+
+**SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)).
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 30× region BAM (chr20:2.0–2.4 Mb, HG00096) | your own aligned BAM | `mpileup` auto-builds the `.fai`; no separate samtools step. |
-| chr20 reference slice | your reference | one `-f` fasta; bcftools indexes it for you. |
-| **30× coverage** | keep real coverage | **load-bearing** — a first ~0.3× subsample collapsed confident calling (concordance 0.34); germline calling needs real depth. |
+| NA12878 chr20 at 36× | your BAM + `-r` region | `mpileup` auto-builds the `.fai`; no separate samtools step, and no read-group or sort-order demands ([unlike GATK](../gatk4/README.md)). |
+| whole chr20 in one task | your regions | cost tracks depth × bases, so it scales predictably — unlike local-assembly callers. |
+| no filtering beyond `QUAL` | `bcftools filter` expressions | the numbers above are out-of-the-box behaviour, not the tool's ceiling. |
 
-`bcftools call` is deterministic — **nothing here is determinism scaffolding**. The one scale-it that earned it is the depth above: a ~0.3× fixture misrepresented the tool, settled at 30×.
+**Leave the workload** — real depth over a whole chromosome against a published truth set, so the accuracy transfers. **Scale it** by regions in parallel; memory is modest and pileup calling stays `c`-family even genome-wide.
 
 ## Shape, size, cost
 
-One task, ~1 s of calling. `c8g.large`, ~$0.02, **~49s** wall — boot and image pull, not bcftools ([why](../../practices/what-this-does-not-cover.md)). Depends on [freebayes](../freebayes/README.md) for the cross-check (an S3 chain — run it first).
-
-**Sizing:** the region call is ~1 s and memory-modest; pileup calling stays `c`-family even genome-wide — size up (RAM) only for very large multi-sample cohorts, not for depth alone.
+One task on `c8g.xlarge`: **228 s of calling inside a 285 s billed window** — 80% compute, **$0.0126**. Cheap enough that the data path, not the chip, is what you would optimise next.
 
 <details>
-<summary>As shipped: the like-with-like cross-code check, pins, smoke check</summary>
+<summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>
 
-bcftools uses a **pileup** model, freebayes a **haplotype** model, so a raw VCF diff would compare methods, not correctness ([compare like with like](../../practices/cross-checks.md)). To compare like with like: **normalise** both (`bcftools norm -m-`), restrict to **confident SNVs** (`QUAL ≥ 20`; the models represent indels differently even after norm), assert **Jaccard(POS:REF:ALT) ≥ 0.85** — observed **0.9103** (609/669). The 0.85 floor is what two correct germline callers reach at 30× (literature 0.85–0.95), not a shaved value.
+### Accuracy against a published truth set
 
-| observable | assertion | observed |
-|---|---|---|
-| variants total | 650–950 | 806 |
-| confident (QUAL ≥ 20) | 710–880 | 797 |
-| SNV concordance vs freebayes | Jaccard ≥ 0.85 | 0.9103 |
+NA12878 is GIAB **HG001**, so NIST publishes both the benchmark variants and the BED of regions
+where that benchmark is confident — which turns "produce a plausible VCF" into "reproduce a
+published accuracy" ([why that is stronger](../../practices/cross-checks.md)). Both sides
+restricted to the **56,000,154 high-confidence bases** of chr20 and normalised identically
+(split multiallelics, left-aligned against the same `chr20.fa`):
 
-**Pins.** Image `quay.io/aarchbio/bcftools@sha256:8171fe744646…` (1.24, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`, 1000G NYGC high-coverage slice — provenance + re-stage via `make stage RECIPE=bcftools`; reference `inputs/bwa-samtools/chr20.fa` (reused); freebayes VCF from `runs/freebayes/r1/`.
+| | TP | FP | FN | precision | recall | F1 |
+|---|---|---|---|---|---|---|
+| **SNVs**, unfiltered | 68,858 | 580 | 352 | 0.99165 | **0.99491** | 0.99328 |
+| **SNVs**, `QUAL≥30` | 68,701 | 328 | 509 | **0.99525** | 0.99265 | **0.99395** |
+| indels, unfiltered | 10,290 | 86 | 214 | 0.99171 | 0.97963 | 0.98563 |
+| indels, `QUAL≥30` | 10,197 | 60 | 307 | 0.99415 | 0.97077 | 0.98232 |
 
-**Run + verify.**
+127,616 variants called across chr20.
+
+**Asserted:** unfiltered SNV recall ≥ 0.95 (the caller detects the truth variants at all) and
+`QUAL≥30` SNV precision ≥ 0.98 (it *can* be filtered to high precision). Both floors are claims
+any working caller must meet, not shaved observations — they fail loudly on a wrong reference,
+sample or depth, and they hold identically for all three callers so the pages are comparable.
+
+**Indels are reported, never asserted.** `POS:REF:ALT` equality after left-alignment counts two
+correct spellings of one indel as FP *and* FN, which `hap.py`'s haplotype comparison would credit.
+Asserting it would assert a representation difference.
+
+**QUAL is not comparable across callers**, which is why both rows exist rather than one. Applying a
+single threshold to three tools and ranking their recall is the mistake
+[the three-way measurement made first](../../measurements/callers-real/README.md) and corrected.
+
+### Why this is fast, and stays predictable
+
+A pileup's cost tracks **depth × bases**, not local complexity. Measured: whole chr20 took 228 s
+against 193 s extrapolated linearly from a 2 Mb canary — a 1.2× miss. GATK's equivalent
+extrapolation was off by 3.2× because local re-assembly explodes in repeats, which is why its TTLs
+took three attempts to size. Same input, different cost model.
+
+### Pins
+
+| | data tier |
+|---|---|
+| bcftools | `quay.io/aarchbio/bcftools@sha256:8171fe74…` (1.24, cosign-verified, `linux/arm64`) |
+| reads | `s3://1000genomes/1000G_2504_high_coverage/data/ERR3239334/NA12878.final.cram` — published NYGC 30× |
+| truth | `s3://giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/` — benchmark VCF + high-confidence BED |
+| reference | `chr20.fa` staged by [bwa-samtools](../bwa-samtools/README.md) |
+
+The 36× chr20 BAM is built once by `gatk4`'s prep task and shared by all three callers — a second
+copy would be a second thing to keep true, and the comparison only means something on identical
+bytes. BAM sha256 `0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c`.
+
+### Run + verify
+
 ```sh
-make run RECIPE=freebayes   # cross-check counterpart, first
 make run RECIPE=bcftools
-make ls RECIPE=bcftools   # expect bcftools.vcf.gz, smoke-check.txt
+make ls  RECIPE=bcftools
 ```
-Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One variant call is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when a shared reference or spot capacity pushes back.
+Expect `concordance.txt` with `snv_precision 0.99525`, `snv_recall 0.99265`, `snv_f1 0.99395`. The
+check runs inside the task; the bucket listing is the second half, because
+[stage-out happens even when a command fails](../../practices/container-path.md).
 
 </details>

@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-callers-three-way-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nzcat freebayes.vcf.gz | bcftools view -Oz -o fb.vcf.gz\nfor v in gatk bcftools fb; do bcftools index -f -t $v.vcf.gz; done\n\n# Truth side, once. GIAB scores only inside the BED it ships.\nbcftools view -R truth.chr20.bed -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o t.vcf.gz\nbcftools index -f t.vcf.gz\n\n# score TOOL TYPE QUALMIN -- QUALMIN 0 means unfiltered.\nscore(){\n  local tool=$1 ty=$2 qm=$3 tag=\"${1}_${2}_q${3}\"\n  bcftools view -R truth.chr20.bed -Ou $tool.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o q_$tag.vcf.gz\n  bcftools index -f q_$tag.vcf.gz\n  if [ \"$qm\" = \"0\" ]; then\n    bcftools view -v \"$ty\" -Oz -o qq_$tag.vcf.gz q_$tag.vcf.gz\n  else\n    bcftools view -v \"$ty\" -i \"QUAL>=$qm\" -Oz -o qq_$tag.vcf.gz q_$tag.vcf.gz\n  fi\n  bcftools view -v \"$ty\" -Oz -o tt_$tag.vcf.gz t.vcf.gz\n  bcftools index -f qq_$tag.vcf.gz\n  bcftools index -f tt_$tag.vcf.gz\n  rm -rf is_$tag\n  bcftools isec -p is_$tag qq_$tag.vcf.gz tt_$tag.vcf.gz\n  local FP FN TP\n  FP=$(grep -vc '^#' is_$tag/0000.vcf || true)\n  FN=$(grep -vc '^#' is_$tag/0001.vcf || true)\n  TP=$(grep -vc '^#' is_$tag/0002.vcf || true)\n  awk -v tag=\"$tag\" -v tp=\"$TP\" -v fp=\"$FP\" -v fn=\"$FN\" 'BEGIN{\n    p=(tp+fp)>0?tp/(tp+fp):0; r=(tp+fn)>0?tp/(tp+fn):0; f=(p+r)>0?2*p*r/(p+r):0;\n    printf \"%s %d %d %d %.5f %.5f %.5f\\n\", tag,tp,fp,fn,p,r,f }'\n}\n\n: > rows.txt\nfor tool in gatk bcftools fb; do\n  for ty in snps indels; do\n    for qm in 0 30; do\n      score $tool $ty $qm >> rows.txt\n    done\n  done\ndone\n\n{\n  echo \"== three callers vs GIAB HG001 v4.2.1, chr20, high-confidence regions ==\"\n  echo \"\"\n  echo \"QUAL is NOT calibrated across callers, so a shared numeric threshold cannot rank them.\"\n  echo \"q0 = the tool's full output (like-with-like by construction); q30 = QUAL>=30 on each.\"\n  echo \"\"\n  printf \"%-22s %8s %7s %7s %10s %10s %10s\\n\" tag TP FP FN precision recall F1\n  while read -r tag tp fp fn p r f; do\n    printf \"%-22s %8s %7s %7s %10s %10s %10s\\n\" \"$tag\" \"$tp\" \"$fp\" \"$fn\" \"$p\" \"$r\" \"$f\"\n  done < rows.txt\n} > three-way.txt\ncat three-way.txt\n\n# Two assertions, both claims every working caller must satisfy, neither shaved to the observed\n# values. (1) UNFILTERED SNV recall >= 0.95: the caller detects the truth variants at all,\n# independent of how it scales QUAL. (2) QUAL>=30 SNV precision >= 0.98: the caller CAN be\n# filtered to high precision. Both fail loudly on a broken reference, sample or depth.\n#\n# What is deliberately NOT asserted is a shared recall floor high enough to separate the three.\n# freebayes reaches only 0.9595 unfiltered at default settings while gatk and bcftools reach\n# 0.995 -- that gap is the finding, and an assertion tuned to admit it would be a fudge, while\n# one tuned to exclude it would fail a correctly-working tool.\nfor tool in gatk bcftools fb; do\n  R0=$(awk -v k=\"${tool}_snps_q0\" '$1==k{print $6}' rows.txt)\n  P30=$(awk -v k=\"${tool}_snps_q30\" '$1==k{print $5}' rows.txt)\n  echo \"$tool: unfiltered SNV recall $R0, QUAL>=30 SNV precision $P30\"\n  awk -v v=\"$R0\"  'BEGIN{exit !(v>=0.95)}'\n  awk -v v=\"$P30\" 'BEGIN{exit !(v>=0.98)}'\ndone\necho 'THREE-WAY CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/gatk4/r1/gatk.vcf.gz",
+      "destination": "/tmp/gatk.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/bcftools.vcf.gz",
+      "destination": "/tmp/bcftools.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/freebayes.vcf.gz",
+      "destination": "/tmp/freebayes.vcf.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/three-way.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/callers-real/three-way.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}

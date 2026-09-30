@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-freebayes-giab-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nzcat freebayes.vcf.gz | bcftools view -Oz -o fb.vcf.gz\nbcftools index -f -t fb.vcf.gz\nNCALL=$(bcftools view -H fb.vcf.gz | wc -l)\nWALL=see_call_task\n\necho '== score against GIAB HG001 v4.2.1, high-confidence regions =='\nbcftools view -R truth.chr20.bed -Ou fb.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o q.vcf.gz\nbcftools view -R truth.chr20.bed -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o t.vcf.gz\nbcftools index -f q.vcf.gz\nbcftools index -f t.vcf.gz\nscore(){\n  local ty=$1\n  bcftools view -v \"$ty\" -i 'QUAL>=30' -Oz -o q.$ty.vcf.gz q.vcf.gz\n  bcftools view -v \"$ty\" -Oz -o t.$ty.vcf.gz t.vcf.gz\n  bcftools index -f q.$ty.vcf.gz\n  bcftools index -f t.$ty.vcf.gz\n  rm -rf is.$ty\n  bcftools isec -p is.$ty q.$ty.vcf.gz t.$ty.vcf.gz\n  local FP FN TP\n  FP=$(grep -vc '^#' is.$ty/0000.vcf || true)\n  FN=$(grep -vc '^#' is.$ty/0001.vcf || true)\n  TP=$(grep -vc '^#' is.$ty/0002.vcf || true)\n  awk -v ty=\"$ty\" -v tp=\"$TP\" -v fp=\"$FP\" -v fn=\"$FN\" 'BEGIN{\n    p=(tp+fp)>0?tp/(tp+fp):0; r=(tp+fn)>0?tp/(tp+fn):0; f=(p+r)>0?2*p*r/(p+r):0;\n    printf \"%s_tp %d\\n%s_fp %d\\n%s_fn %d\\n%s_precision %.5f\\n%s_recall %.5f\\n%s_f1 %.5f\\n\",ty,tp,ty,fp,ty,fn,ty,p,ty,r,ty,f }'\n}\nscore snps > snps.kv\nscore indels > indels.kv\ngetv(){ awk -v k=\"$1\" '$1==k{print $2}' \"$2\"; }\nSP=$(getv snps_precision snps.kv); SR=$(getv snps_recall snps.kv); SF=$(getv snps_f1 snps.kv)\nSTP=$(getv snps_tp snps.kv); SFP=$(getv snps_fp snps.kv); SFN=$(getv snps_fn snps.kv)\nIP=$(getv indels_precision indels.kv); IR=$(getv indels_recall indels.kv); IF1=$(getv indels_f1 indels.kv)\n{\n  echo \"caller              freebayes (haplotype model)\"\n  echo \"wall_s              ${WALL:-NA}  (the caller only, boot and staging excluded)\"\n  echo \"variants_called     ${NCALL:-NA}\"\n  echo \"snv_tp              $STP\"\n  echo \"snv_fp              $SFP\"\n  echo \"snv_fn              $SFN\"\n  echo \"snv_precision       $SP\"\n  echo \"snv_recall          $SR  want >=0.94 (freebayes default settings -- see note)\"\n  echo \"snv_f1              $SF\"\n  echo \"indel_precision     $IP  OBSERVATION only\"\n  echo \"indel_recall        $IR  OBSERVATION only\"\n  echo \"indel_f1            $IF1  OBSERVATION only\"\n} > concordance.txt\ncat concordance.txt\n# Recall is the assertion common to all three callers: a correct 36x call set must find the\n# truth variants. Precision is NOT asserted at a common floor, because these are unfiltered\n# call sets and the three tools differ enormously in how permissive they are unfiltered --\n# which is the finding, not a defect to paper over with a floor each tool happens to clear.\n# freebayes at defaults reaches 0.9595 SNV recall unfiltered on this sample -- genuinely lower\n# than gatk/bcftools (0.995), not an artifact of the QUAL threshold. So this page asserts what\n# freebayes is good at, which is precision once filtered (0.99695, the best of the three), and\n# reports recall. The cross-caller comparison lives in measurements/callers-real.\nawk -v v=\"$SP\" 'BEGIN{exit !(v>=0.98)}'\nawk -v v=\"$SR\" 'BEGIN{exit !(v>=0.94)}'\ntest \"$STP\" -gt 60000\necho 'CONCORDANCE CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/freebayes.vcf.gz",
+      "destination": "/tmp/freebayes.vcf.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/concordance.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/concordance.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.06
+  }
+}

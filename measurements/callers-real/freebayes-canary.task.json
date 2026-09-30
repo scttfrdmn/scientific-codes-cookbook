@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-freebayes-canary",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nR=chr20:1000000-3000000\nT0=$(date +%s)\nfreebayes -f chr20.fa -r $R NA12878.chr20.30x.bam > out.vcf 2> fb.log\nT1=$(date +%s)\nN=$(grep -vc '^#' out.vcf || true)\n{ echo \"tool freebayes\"; echo \"region $R\"; echo \"wall_s $(( T1 - T0 ))\"; echo \"variants $N\"; echo \"mb_per_min $(awk -v s=$(( T1 - T0 )) 'BEGIN{if(s>0)printf \\\"%.2f\\\", 2.0/(s/60)}')\"; echo \"chr20_full_linear_min $(awk -v s=$(( T1 - T0 )) 'BEGIN{printf \\\"%.0f\\\", (s/2.0)*64.444/60}')\"; } > canary.txt\ncat canary.txt\ntail -3 fb.log\ntest \"$N\" -gt 1000\necho CANARY_DONE"
+  ],
+  "container": "quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/canary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/callers-real/freebayes-canary.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.13
+  }
+}

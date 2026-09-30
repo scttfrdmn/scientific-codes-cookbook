@@ -12,7 +12,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [bcftools](../recipes/bcftools/README.md) | The workhorse germline caller: pile up the reads, call the variants, get a VCF. | aarchbio | stage: bcftools, bwa-samtools · run: freebayes | 2026-09-12 | — |
+| [bcftools](../recipes/bcftools/README.md) | Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone choosing a germline caller and what to pay for it. | aarchbio | stage: bcftools, bwa-samtools, gatk4 | 2026-09-12 | 2026-09-30 |
 | [bedtools](../recipes/bedtools/README.md) | Merge, intersect, subtract, and cover intervals — the set algebra every genomics pipeline leans on. | aarchbio | build-in-task | 2026-09-12 | — |
 | [blast](../recipes/blast/README.md) | Build a protein database, search sequences against it — the canonical homology search. | aarchbio | stage | 2026-09-12 | — |
 | [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-09-12 | — |
@@ -22,7 +22,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [diamond](../recipes/diamond/README.md) | The accelerator you reach for when BLAST+ is too slow — same job, heuristic speed. | aarchbio | run: blast | 2026-09-12 | — |
 | [fastp](../recipes/fastp/README.md) | Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report. | aarchbio | stage: bwa-samtools | 2026-09-12 | — |
 | [flye](../recipes/flye/README.md) | Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly. | aarchbio | stage | 2026-09-10 | — |
-| [freebayes](../recipes/freebayes/README.md) | A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them. | aarchbio | stage: bcftools, bwa-samtools | 2026-09-12 | — |
+| [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-09-12 | 2026-09-30 |
 | [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-09-26 | 2026-09-26 |
 | [hmmer](../recipes/hmmer/README.md) | Score profile HMMs against a sequence database — how you find protein families, not just pairwise hits. | aarchbio | stage | 2026-09-12 | — |
 | [iqtree](../recipes/iqtree/README.md) | Infer an ML tree from a multiple-sequence alignment under a chosen substitution model. | aarchbio | stage | 2026-09-10 | — |

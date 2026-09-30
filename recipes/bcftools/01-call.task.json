@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-bcftools-r1",
+  "task_id": "cookbook-bcftools-chr20-giab",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged 30x fixture against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a HG00096.chr20_2.0-2.4Mb.30x.bam > b.sha256\nsha256sum -c b.sha256\n\necho \"== bcftools mpileup+call, region-restricted; mpileup auto-builds chr20.fa.fai (no samtools needed) ==\"\nbcftools mpileup -f chr20.fa -r chr20:2000000-2400000 HG00096.chr20_2.0-2.4Mb.30x.bam -Ou 2> bcf.log | bcftools call -mv -Oz -o bcftools.vcf.gz 2>> bcf.log\nbcftools index -t bcftools.vcf.gz\n\n# ---- per-tool ----\nBTOTAL=$(bcftools view -H bcftools.vcf.gz | wc -l | tr -d ' ')\nBCONF=$(bcftools view -H -i 'QUAL>=20' bcftools.vcf.gz | wc -l | tr -d ' ')\n\n# ---- cross-code, LIKE WITH LIKE ----\n# bcftools (pileup) and freebayes (haplotype) are different models; a raw VCF diff would\n# fail by design. Normalise both (split multiallelics, left-align), restrict to CONFIDENT\n# SNVs (QUAL>=20) -- SNVs because the two callers represent indels differently even after\n# norm, so SNVs are the apples-to-apples set -- and assert Jaccard of POS:REF:ALT. The\n# floor is what two correct callers should reach at 30x, not the observed value shaved.\nbcftools norm -f chr20.fa -m- bcftools.vcf.gz -Oz -o bcf.norm.vcf.gz 2>/dev/null\nbcftools norm -f chr20.fa -m- freebayes.vcf   -Oz -o fb.norm.vcf.gz  2>/dev/null\nbcftools view -H -v snps -i 'QUAL>=20' bcf.norm.vcf.gz | awk '{print $2\":\"$4\":\"$5}' | sort -u > bcf.snv\nbcftools view -H -v snps -i 'QUAL>=20' fb.norm.vcf.gz  | awk '{print $2\":\"$4\":\"$5}' | sort -u > fb.snv\nI=$(comm -12 bcf.snv fb.snv | wc -l | tr -d ' ')\nU=$(cat bcf.snv fb.snv | sort -u | wc -l | tr -d ' ')\nJAC=$(awk -v i=\"$I\" -v u=\"$U\" 'BEGIN{printf \"%.4f\", (u>0)?i/u:0}')\n\n{\n  echo \"variants_total          $BTOTAL  want 650..950   (observed 806)\"\n  echo \"confident_QUAL>=20      $BCONF   want 710..880   (observed 797)\"\n  echo \"snv_concordance_jaccard $JAC   want >= 0.85    (observed 0.9103; confident SNVs vs freebayes, I=$I U=$U)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$BTOTAL\" -ge 650\ntest \"$BTOTAL\" -le 950\ntest \"$BCONF\"  -ge 710\ntest \"$BCONF\"  -le 880\nawk -v j=\"$JAC\" 'BEGIN{ if (j>=0.85) exit 0; print \"snv concordance \" j \" below 0.85\"; exit 1 }'\necho \"SMOKE CHECK PASSED\""
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho '== bcftools mpileup + call, whole chr20, NA12878 at 36x =='\nT0=$(date +%s)\nbcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou 2> bc.log | bcftools call -mv -Oz -o bcftools.vcf.gz 2>> bc.log\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\nbcftools index -f -t bcftools.vcf.gz\nNCALL=$(bcftools view -H bcftools.vcf.gz | wc -l)\n\necho '== score against GIAB HG001 v4.2.1, high-confidence regions =='\nbcftools view -R truth.chr20.bed -Ou bcftools.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o q.vcf.gz\nbcftools view -R truth.chr20.bed -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o t.vcf.gz\nbcftools index -f q.vcf.gz\nbcftools index -f t.vcf.gz\nscore(){\n  local ty=$1\n  bcftools view -v \"$ty\" -i 'QUAL>=30' -Oz -o q.$ty.vcf.gz q.vcf.gz\n  bcftools view -v \"$ty\" -Oz -o t.$ty.vcf.gz t.vcf.gz\n  bcftools index -f q.$ty.vcf.gz\n  bcftools index -f t.$ty.vcf.gz\n  rm -rf is.$ty\n  bcftools isec -p is.$ty q.$ty.vcf.gz t.$ty.vcf.gz\n  local FP FN TP\n  FP=$(grep -vc '^#' is.$ty/0000.vcf || true)\n  FN=$(grep -vc '^#' is.$ty/0001.vcf || true)\n  TP=$(grep -vc '^#' is.$ty/0002.vcf || true)\n  awk -v ty=\"$ty\" -v tp=\"$TP\" -v fp=\"$FP\" -v fn=\"$FN\" 'BEGIN{\n    p=(tp+fp)>0?tp/(tp+fp):0; r=(tp+fn)>0?tp/(tp+fn):0; f=(p+r)>0?2*p*r/(p+r):0;\n    printf \"%s_tp %d\\n%s_fp %d\\n%s_fn %d\\n%s_precision %.5f\\n%s_recall %.5f\\n%s_f1 %.5f\\n\",ty,tp,ty,fp,ty,fn,ty,p,ty,r,ty,f }'\n}\nscore snps > snps.kv\nscore indels > indels.kv\ngetv(){ awk -v k=\"$1\" '$1==k{print $2}' \"$2\"; }\nSP=$(getv snps_precision snps.kv); SR=$(getv snps_recall snps.kv); SF=$(getv snps_f1 snps.kv)\nSTP=$(getv snps_tp snps.kv); SFP=$(getv snps_fp snps.kv); SFN=$(getv snps_fn snps.kv)\nIP=$(getv indels_precision indels.kv); IR=$(getv indels_recall indels.kv); IF1=$(getv indels_f1 indels.kv)\n{\n  echo \"caller              bcftools (pileup model)\"\n  echo \"wall_s              ${WALL:-NA}  (the caller only, boot and staging excluded)\"\n  echo \"variants_called     ${NCALL:-NA}\"\n  echo \"snv_tp              $STP\"\n  echo \"snv_fp              $SFP\"\n  echo \"snv_fn              $SFN\"\n  echo \"snv_precision       $SP\"\n  echo \"snv_recall          $SR  want >=0.99\"\n  echo \"snv_f1              $SF\"\n  echo \"indel_precision     $IP  OBSERVATION only\"\n  echo \"indel_recall        $IR  OBSERVATION only\"\n  echo \"indel_f1            $IF1  OBSERVATION only\"\n} > concordance.txt\ncat concordance.txt\n# Recall is the assertion common to all three callers: a correct 36x call set must find the\n# truth variants. Precision is NOT asserted at a common floor, because these are unfiltered\n# call sets and the three tools differ enormously in how permissive they are unfiltered --\n# which is the finding, not a defect to paper over with a floor each tool happens to clear.\nawk -v v=\"$SR\" 'BEGIN{exit !(v>=0.99)}'\ntest \"$STP\" -gt 60000\necho 'CONCORDANCE CHECK PASSED'\n"
   ],
   "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 4,
+    "memory_gib": 8,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,20 +16,32 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
-      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
-      "destination": "/tmp/HG00096.chr20_2.0-2.4Mb.30x.bam.bai"
-    },
-    {
       "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
       "destination": "/tmp/chr20.fa"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/freebayes/r1/freebayes.vcf",
-      "destination": "/tmp/freebayes.vcf"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
     }
   ],
   "outputs": [
@@ -38,13 +50,17 @@
       "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/bcftools.vcf.gz"
     },
     {
-      "source": "/tmp/smoke-check.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/smoke-check.txt"
+      "source": "/tmp/bcftools.vcf.gz.tbi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/bcftools.vcf.gz.tbi"
+    },
+    {
+      "source": "/tmp/concordance.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools/r1/concordance.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "40m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.11
   }
 }

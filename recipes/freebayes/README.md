@@ -1,58 +1,109 @@
 ---
 tool: freebayes
-tool_version: 1.3.10
+tool_version: "1.3.10"
 image: quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# freebayes — Bayesian haplotype variant calling
+# freebayes — haplotype calling on a whole chromosome at 36×, scored against GIAB
 
-A different model from the pileup callers: freebayes assembles haplotypes and calls variants from them.
+Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands.
+
+> **Filter it or don't ship it.** Raw freebayes output on this sample carries **146,290 false positives** — precision 0.312. One `QUAL>=30` removes 146,088 of them and leaves the *best* precision of the three callers here (0.99695). That is its defaults, not a defect.
 
 ## Run it
 
 ```bash
-freebayes -f ref.fa aln.bam > calls.vcf
+make stage RECIPE=gatk4       # shared: reference, GIAB truth slice, the 36x chr20 BAM
+make run   RECIPE=freebayes   # call (~11 min) then score against GIAB
+make ls    RECIPE=freebayes   # freebayes.vcf.gz + concordance.txt
+
+freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 ```
 
-The recipe calls the same 30× human region as [bcftools](../bcftools/README.md), and its VCF is the counterpart for the confident-SNV concordance the two compute between them.
+## Where it stands against the alternatives
+
+| caller | wall | $/result | SNV precision (`QUAL≥30`) | SNV recall (unfiltered) |
+|---|---|---|---|---|
+| [bcftools](../bcftools/README.md) | 228 s | 0.0126 | 0.99525 | **0.99491** |
+| **freebayes** | 644 s | 0.0310 | **0.99695** | 0.95953 |
+| [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99000 | **0.99545** |
+
+**Most precise once filtered, least sensitive** — ~4% fewer truth SNVs at defaults, real rather than a threshold artifact (recall is 0.95953 even unfiltered). Pick it when precision beats sensitivity, or for pooled samples, which is what it is for ([full three-way](../../measurements/callers-real/README.md)).
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 30× region BAM (chr20:2.0–2.4 Mb, HG00096) | your own aligned BAM | one `-f` reference, one BAM; region-restricted here to the fixture. |
-| **30× coverage** | keep real coverage | **load-bearing** — freebayes's confident calls are dominated by multi-read haplotype support; at the ~0.3× subsample the first attempt used, two correct callers concord at only 0.34. Depth is the point. |
+| NA12878 chr20 at 36× | your BAM + `-r` region | no read-group or sort-order demands, unlike [GATK](../gatk4/README.md). |
+| default sensitivity | `--min-alternate-fraction`, `--min-alternate-count` | these are what cost recall on a single diploid sample; freebayes' defaults assume you may be calling a pool. |
+| `QUAL≥30` post-filter | your own filter expression | **not optional** — the raw output is 3× larger than the other callers' and 69% of it is noise. |
 
-`freebayes` is deterministic on a fixed BAM — **nothing here is determinism scaffolding**. Like bcftools, the depth is a scale-it that earned it (a shallow fixture misrepresented the caller), already settled at 30×.
+**Leave the workload** — real depth over a whole chromosome against a published truth set. **Scale it** by regions in parallel, and tune sensitivity before you tune the box.
 
 ## Shape, size, cost
 
-One task, ~5 s of calling. `c8g.large`, ~$0.02, **~55s** wall — boot and image pull, not freebayes ([why](../../practices/what-this-does-not-cover.md)). **Run this before [bcftools](../bcftools/README.md)** — bcftools reads this VCF for the cross-check (S3 chain).
-
-**Sizing:** ~5 s and memory-modest on this single-sample region; freebayes grows memory with **depth × sample count** — deep WGS or joint multi-sample calling wants an `r` box, so size to those, not this fixture.
+Two tasks on `c8g.xlarge`: **644 s of calling**, then scoring in the bcftools image ([one tool per image](../../practices/container-path.md)). 385,371 variants — 3× the others, which is the QUAL tail above.
 
 <details>
-<summary>As shipped: the cross-code concordance, pins, smoke check</summary>
+<summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>
 
-Per-tool, this recipe just confirms a valid, genotyped, plausibly-sized VCF. The **cross-code** check — pileup vs haplotype, [compared like with like](../../practices/cross-checks.md) — lives in [bcftools](../bcftools/README.md): normalised, confident SNVs (QUAL ≥ 20), Jaccard ≥ 0.85 (observed **0.9103**).
+### Accuracy against a published truth set
 
-| observable | assertion | observed |
-|---|---|---|
-| VCF header + genotyped sample | present | yes |
-| variants total (incl. QUAL~0 tail) | 1400–2200 | 1797 |
-| confident (QUAL ≥ 20) | 680–840 | 757 |
+NA12878 is GIAB **HG001**, so NIST publishes both the benchmark variants and the BED where that
+benchmark is confident. Both sides restricted to the **56,000,154 high-confidence bases** of chr20
+and normalised identically:
 
-freebayes emits a large QUAL~0 tail by design, hence the wide total band; the confident count is the meaningful one.
+| | TP | FP | FN | precision | recall | F1 |
+|---|---|---|---|---|---|---|
+| SNVs, unfiltered | 66,409 | **146,290** | 2,801 | **0.31222** | 0.95953 | 0.47114 |
+| **SNVs**, `QUAL≥30` | 66,119 | 202 | 3,091 | **0.99695** | 0.95534 | **0.97570** |
+| indels, unfiltered | 9,934 | 349 | 570 | 0.96606 | 0.94573 | 0.95579 |
+| indels, `QUAL≥30` | 9,679 | 69 | 825 | 0.99292 | 0.92146 | 0.95586 |
 
-**Pins.** Image `quay.io/aarchbio/freebayes@sha256:033f0f12b3a3…` (1.3.10, cosign-verified, `linux/arm64`). BAM `HG00096.chr20_2.0-2.4Mb.30x.bam` (`sha256:6949939b…`); reference `inputs/bwa-samtools/chr20.fa` (full chr20, matches the BAM header). Provenance/re-stage: `make stage RECIPE=bcftools`.
+The unfiltered row is the reason this page leads with a warning rather than a number.
 
-**Run + verify.**
+**Asserted:** `QUAL≥30` SNV precision ≥ 0.98 — freebayes' actual strength — plus recall ≥ 0.94,
+which is a floor on *its own* defaults rather than a cross-caller bar. Recall is **reported**, not
+held to the 0.95 floor the other two clear, because a shared recall floor cannot rank callers whose
+defaults differ this much: tuned to admit freebayes it is a fudge, tuned to exclude it it fails a
+correctly-working tool. The comparison lives in the three-way measurement, where both metrics are
+computed identically for all three.
+
+**Indels are reported, never asserted** — `POS:REF:ALT` equality after left-alignment counts two
+correct spellings of one indel as FP *and* FN.
+
+### The diagnosis that was wrong
+
+When the first scoring pass showed recall 0.95534 at `QUAL≥30`, the natural conclusion was that a
+shared threshold was cutting genuine freebayes calls, since QUAL is not calibrated across callers.
+Re-running with no filter disproved it: unfiltered recall is 0.95953, so the threshold costs 0.4
+points, not 4. The tidier explanation was the wrong one, and only running it both ways settled it —
+[recorded in full](../../measurements/callers-real/README.md) because the mistake is more
+instructive than the result.
+
+### Pins
+
+| | data tier |
+|---|---|
+| freebayes | `quay.io/aarchbio/freebayes@sha256:033f0f12…` (1.3.10, `linux/arm64`) |
+| bcftools (scoring) | `quay.io/aarchbio/bcftools@sha256:8171fe74…` |
+| reads | `s3://1000genomes/1000G_2504_high_coverage/data/ERR3239334/NA12878.final.cram` |
+| truth | `s3://giab/release/NA12878_HG001/NISTv4.2.1/GRCh38/` |
+| reference | `chr20.fa` staged by [bwa-samtools](../bwa-samtools/README.md) |
+
+The 36× chr20 BAM is built once by `gatk4`'s prep task and shared by all three callers, so the
+comparison is on identical bytes. BAM sha256
+`0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c`.
+
+### Run + verify
+
 ```sh
 make run RECIPE=freebayes
-make ls RECIPE=freebayes   # expect freebayes.vcf, smoke-check.txt
+make ls  RECIPE=freebayes
 ```
-Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One variant call is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when a shared reference or spot capacity pushes back.
+Expect `smoke-check.txt` with 385,371 variants and `sample NA12878`, and `concordance.txt` with
+`snv_precision 0.99695`.
 
 </details>

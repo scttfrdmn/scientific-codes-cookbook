@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-bcftools-canary",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nR=chr20:1000000-3000000\nT0=$(date +%s)\nbcftools mpileup -f chr20.fa -r $R NA12878.chr20.30x.bam -Ou 2> bc.log | bcftools call -mv -Oz -o out.vcf.gz 2>> bc.log\nT1=$(date +%s)\nN=$(bcftools view -H out.vcf.gz | wc -l)\n{ echo \"tool bcftools\"; echo \"region $R\"; echo \"wall_s $(( T1 - T0 ))\"; echo \"variants $N\"; echo \"mb_per_min $(awk -v s=$(( T1 - T0 )) 'BEGIN{if(s>0)printf \\\"%.2f\\\", 2.0/(s/60)}')\"; } > canary.txt\ncat canary.txt\ntest \"$N\" -gt 1000\necho CANARY_DONE"
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/canary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/callers-real/bcftools-canary.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.09
+  }
+}
