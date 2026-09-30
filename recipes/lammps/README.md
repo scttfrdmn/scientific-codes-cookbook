@@ -3,77 +3,125 @@ tool: lammps
 tool_version: 2025.07.22
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# LAMMPS — the Lennard-Jones melt, serial and over 2 MPI ranks
+# LAMMPS — rhodopsin at 128k atoms, in ns/day across four Graviton generations
 
-`lmp_mpi` runs the canonical Lennard-Jones melt twice — once serial, once over two MPI ranks.
+Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM.
 
-> **What this covers.** A tiny MD: 256 LJ atoms for 50 steps on an analytic potential. Proof LAMMPS 2025.07.22 runs correctly on Graviton4 and its MPI build **actually parallelises**. Not a benchmark; 2 ranks on one small box is not domain decomposition at scale, long-range solvers, or multi-node.
+> **Graviton5 is 2.24× Graviton2 here and 43% cheaper per nanosecond.** Close to [GROMACS' 2.43×](../gromacs/README.md) on a comparable system — two MD codes agreeing that this is roughly what MD gains across these chips.
 
 ## Run it
 
 ```bash
-lmp_mpi -in in.melt                    # serial
-mpiexec -n 2 lmp_mpi -in in.melt       # 2 ranks — same trajectory, independently decomposed
+make stage RECIPE=lammps   # once: the pinned data.rhodo (32,000-atom system)
+make run   RECIPE=lammps   # 1000 steps at 128k atoms, ~48 s, self-terminating
+make ls    RECIPE=lammps   # smoke-check.txt + lmp.log
+
+mpiexec -n 16 lmp_mpi -in in.rhodo -log lmp.log     # replicate 2 2 1 → 128k atoms
 ```
 
-One task, run twice. `in.melt` holds LAMMPS's own `bench/in.lj` melt (a 4×4×4 fcc lattice, 256 atoms, fixed velocity seed, 50 NVE steps), embedded inline — the conda package ships binaries but not the `bench/` tree, and the LJ potential is closed-form, so nothing is staged.
+## Which box — measured (same deck, same digest, 16 MPI ranks)
+
+| generation | instance | **ns/day** | loop time | atom-step/s | **$/ns** |
+|---|---|---|---|---|---|
+| Graviton2 | `c6g.4xlarge` | 1.978 | 87.38 s | 1.465 M | 6.601 |
+| Graviton3 | `c7g.4xlarge` | 2.942 | 58.73 s | 2.179 M | 4.731 |
+| Graviton4 | `c8g.4xlarge` | 3.635 | 47.54 s | 2.692 M | 4.213 |
+| **Graviton5** | `c9g.4xlarge` | **4.425** | **39.05 s** | **3.278 M** | **3.772** |
+
+**Take the newest generation** — faster and cheaper per nanosecond at every step. Unlike GROMACS,
+the ladder here is fairly even (49%, 24%, 22%), so there is no single generation that suddenly pays
+for itself.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `in.melt` — 256-atom LJ melt | your own input script + data file | the melt needs no data file (analytic `lj/cut`); a real system stages a `read_data` file through S3. |
-| `velocity ... 87287` (fixed seed) | your run's seed | fixed so the serial and 2-rank runs are the *same* trajectory to compare; change it freely for production. |
-| `mpiexec -n 2` | scale ranks to your box | the *result* is decomposition-invariant (below), so scale ranks purely for speed → [sizing](../../patterns/sizing.md). |
+| rhodopsin, `replicate 2 2 1` | your own data file, or a larger replicate | the deck is LAMMPS' `bench/in.rhodo` with two changes (below); replication is how the benchmark set is meant to be scaled. |
+| `-n 16` pure MPI | fewer ranks, or add OpenMP | LAMMPS' default build here is MPI-only; [assert the rank count](../../practices/mpi-rank-count.md) whatever you choose. |
+| `pppm 1e-4` | your accuracy target | PPPM is the long-range solver and usually the first thing to limit scaling on a small system. |
 
-**Leave the fixture:** the serial-vs-2-rank identity is exact-or-tolerance for a correct MPI build at any size, and 256 atoms make it fast and hand-checkable. A bigger melt is a longer run, not a more legible one. Leave-it.
-
-## Shape, size, cost
-
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs exist for the two ranks, not throughput), TTL 5m, cap $0.02. Both runs together take ~3 s. Recorded command window **106s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** a single-node 2-rank proof, not LAMMPS's real question — production is multi-node domain decomposition (EFA). The result is decomposition-invariant, so scale ranks for speed and size the node count/interconnect to your system ([sizing](../../patterns/sizing.md)); this fixture doesn't measure that curve.
+**Leave the workload** — a real biomolecular system with long-range electrostatics at production
+size, so ns/day transfers. **Scale it** by replicating further before adding cores.
 
 <details>
-<summary>As shipped: the serial-vs-2-rank cross-validation, the rank-count guard, pins, smoke check, run + verify</summary>
+<summary>As shipped: the checks, the two deck changes, what the cross-code comparison does and does not say, pins</summary>
 
-### The check — one code, two decompositions, one answer
+### The checks
 
-The serial and 2-rank runs are two genuinely independent computations of the same trajectory; agreement to floating-point-reordering tolerance means both the kernels and the MPI communication are correct. This is the same class as [raxml-ng](../raxml-ng/README.md)'s two-codes-one-answer, here as one-code-two-decompositions.
+| observable | assertion | observed |
+|---|---|---|
+| atoms | **128,000** — 32,000 replicated 2×2×1 | **128,000** |
+| steps | 1000 | **1000** |
+| **MPI ranks used** | **== ranks launched (16)** | **16** |
+| final temperature | 280–330 K (NPT at 300 K) | **299.73 K** |
+| ns/day | > 0, recorded | **3.635** |
 
-**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** The `md` env pins `lammps=*=cpu_*mpi_openmpi*` and the check reads LAMMPS's own `with 2 MPI task(s)` and asserts 2 — so a silently-serial build (which would print the same energy) can't pass.
+**The rank-count assertion is the load-bearing one.** conda-forge ships nompi builds at higher build
+numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that under
+`mpiexec -n 16` runs sixteen independent single-rank simulations — each printing plausible physics
+*and* a plausible ns/day. Reading `16 MPI tasks` back from LAMMPS' own log is what proves the
+parallelism happened.
 
-### Pins (data tier: bundled / analytic)
+No exact energy is asserted. This is NPT with SHAKE and PPPM at 128k atoms; it is not
+bit-reproducible run to run, so an exact value would be flaky — the same reason the
+[GROMACS recipe](../gromacs/README.md) stopped asserting one when it moved to a real system.
 
-| | |
+One unit trap worth knowing: **LAMMPS switches the atom-step unit with magnitude**, printing
+`katom-step/s` on small systems and `Matom-step/s` here. Capturing the number without its unit is a
+1000× mislabel, so the check records both.
+
+### The deck: `bench/in.rhodo` plus exactly two changes
+
+The input is LAMMPS' own benchmark deck at tag `patch_22Jul2025`, matching the packaged version, with
+two documented deviations:
+
+- `replicate 2 2 1` — 32,000 atoms → **128,000**, so the run is a production-sized system rather
+  than a tuning fixture. Replication is how this benchmark set is designed to be scaled.
+- `run 100` → `run 1000`, so the timed section is ~40–90 s rather than a few seconds, which is what
+  makes the generation comparison mean anything.
+
+Everything else — CHARMM force field, `lj/charmm/coul/long`, `pppm 1e-4`, SHAKE, NPT at 300 K, 2 fs
+timestep — is upstream's. The deck is embedded in the task spec rather than staged, so it lives in
+git where the two changes are visible in diff.
+
+### What the GROMACS comparison does and does not say
+
+LAMMPS gains **2.24×** from Graviton2 to Graviton5; GROMACS gains **2.43×** on benchMEM. Those
+ratios are comparable because each code is measured against *itself* across chips. The absolute
+ns/day figures are **not** comparable — different force fields, different systems, different
+long-range solvers — and reading 4.425 against GROMACS' 35.741 as a performance verdict would be
+meaningless.
+
+What the pair does support is a modest, quantified version of a claim worth being careful about:
+across these four chips the two MD codes gain **2.24–2.43×** while the integer-and-string-heavy
+genomics recipes here gain **1.84–2.00×** ([bwa](../bwa-samtools/README.md),
+[salmon](../salmon/README.md), [gatk4](../gatk4/README.md)). So FP-heavy codes do benefit more, by
+roughly 15–25% — a real effect, and a much smaller one than "FP-heavy codes benefit dramatically
+more" would imply. Two codes per side is not a survey.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` (tag `2026.09.04`, LAMMPS 2025.07.22 `cpu_*mpi_openmpi*`, cosign-signed, `linux/arm64`) |
-| input | LJ melt (`bench/in.lj` content), embedded in the task — nothing staged |
+| LAMMPS | `quay.io/aarchsci/md@sha256:1ee94166…` (2025.07.22, `linux/arm64`) |
+| deck | `bench/in.rhodo` @ `patch_22Jul2025`, sha256 `5599f0388a36…` (upstream, before the two changes) |
+| system | `bench/data.rhodo` @ `patch_22Jul2025`, sha256 `9b14e259b99b…` — verified on the box each run |
 
-Same image as [gromacs](../gromacs/README.md) — the `md` env carries both engines.
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| atoms created | exactly 256 (4×4×4 fcc) | 256 | wrong lattice |
-| MPI ranks | exactly 2 | 2 | serial build under `mpiexec` |
-| final total energy | −4 … −1 reduced units | −2.2990327 | garbage physics |
-| **serial == 2-rank** | \|serial − parallel\| < 1e-2 | **exact (0)** | broken MPI reduction |
-| NVE conserved | drift < 0.05 over 50 steps | 0.0081 | broken integrator |
-| LAMMPS completed | `Total wall time` in both logs | yes | run killed mid-trajectory |
-
-`serial == 2-rank` agreed bit-for-bit here; the check asserts the `1e-2` *tolerance*, not the zero, because a future build could reorder legitimately and still be correct.
+The tag matches the packaged LAMMPS version, which matters because a benchmark deck from another
+release is a different workload. `data.rhodo` is staged (6.3 MB) and its hash re-checked inside the
+task before the run, so a silently changed input fails the task rather than the science.
 
 ### Run + verify
 
 ```sh
 make run RECIPE=lammps
-make ls RECIPE=lammps
+make ls  RECIPE=lammps
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`s.log`, `p.log`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `atoms 128000`, `ranks_used 16`, `final_temp_K` near 300 and
+`ns_per_day` near 3.6 on `c8g.4xlarge`.
 
 </details>

@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-lammps-rhodo-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nRANKS=${LMP_RANKS:-16}\necho '9b14e259b99b8a28ebbfd86715524c415f82cd5912c164c3827991ac32f23863  data.rhodo' > d.sha256\nsha256sum -c d.sha256\ncat > in.rhodo <<'DECK'\nunits           real\nneigh_modify    delay 5 every 1\n\natom_style      full\nbond_style      harmonic\nangle_style     charmm\ndihedral_style  charmm\nimproper_style  harmonic\npair_style      lj/charmm/coul/long 8.0 10.0\npair_modify     mix arithmetic\nkspace_style    pppm 1e-4\n\nread_data       data.rhodo\n\nreplicate       2 2 1\n\nfix             1 all shake 0.0001 5 0 m 1.0 a 232\nfix             2 all npt temp 300.0 300.0 100.0 &\n                z 0.0 0.0 1000.0 mtk no pchain 0 tchain 1\n\nspecial_bonds   charmm\n\nthermo          100\nthermo_style    multi\ntimestep        2.0\n\nrun             1000\nDECK\necho '== rhodopsin: 128,000 atoms, CHARMM, PPPM, SHAKE, NPT 300 K, 1000 steps =='\nT0=$(date +%s)\nmpiexec -n \"$RANKS\" --allow-run-as-root --oversubscribe lmp_mpi -in in.rhodo -log lmp.log > lmp.out 2>&1\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\n# LAMMPS reports the decomposition it actually used. conda-forge ships nompi builds at higher\n# build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that\n# under mpiexec -n 16 runs sixteen independent single-rank simulations, each printing plausible\n# physics. Reading the task count back is what proves the parallelism happened.\nGOTRANKS=$(awk '/MPI tasks/{for(i=1;i<=NF;i++) if($i==\"MPI\"){print $(i-1); exit}}' lmp.log)\nNATOMS=$(awk '$2==\"atoms\" && $1+0>0 {n=$1} END{print n}' lmp.log)\nNSDAY=$(awk '/^Performance:/{print $2; exit}' lmp.log)\nTSPS=$(awk '/^Performance:/{for(i=1;i<=NF;i++) if($i==\"timesteps/s,\"){print $(i-1); exit}}' lmp.log)\nATOMRATE=$(awk '/^Performance:/{print $(NF-1), $NF; exit}' lmp.log)\nLOOP=$(awk '/Loop time of/{print $4; exit}' lmp.log)\nSTEPS=$(awk '/Loop time of/{for(i=1;i<=NF;i++) if($i==\"steps\"){print $(i-1); exit}}' lmp.log)\nTEMP=$(awk '/Temp *=/{t=$NF} END{print t}' lmp.log)\n{\n  echo \"system            rhodopsin, 128,000 atoms, CHARMM + PPPM, NPT\"\n  echo \"atoms             $NATOMS  want 128000 (32,000 replicated 2x2x1)\"\n  echo \"steps             $STEPS  want 1000\"\n  echo \"ranks_requested   $RANKS\"\n  echo \"ranks_used        $GOTRANKS  want $RANKS  (proves MPI, not a nompi fallback)\"\n  echo \"ns_per_day        $NSDAY\"\n  echo \"timesteps_per_s   $TSPS\"\n  echo \"atom_step_rate    $ATOMRATE  (LAMMPS picks katom/Matom by magnitude)\"\n  echo \"loop_time_s       $LOOP\"\n  echo \"wall_s            $WALL  (lmp only)\"\n  echo \"final_temp_K      $TEMP  want 280..330\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$GOTRANKS\" = \"$RANKS\"\ntest \"$NATOMS\" = '128000'\ntest \"$STEPS\" = '1000'\nawk -v n=\"$NSDAY\" 'BEGIN{exit !(n>0)}'\nawk -v t=\"$TEMP\" 'BEGIN{exit !(t>280 && t<330)}'\necho 'SMOKE CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lammps/data.rhodo",
+      "destination": "/tmp/data.rhodo"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lammps/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/lmp.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lammps/r1/lmp.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.16
+  }
+}
