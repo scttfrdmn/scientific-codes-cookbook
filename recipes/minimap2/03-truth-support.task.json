@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-minimap2-truth",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho \"== do the long reads support GIAB's known variants where they were placed? ==\"\n# Truth SNVs inside the high-confidence BED, normalised the same way every other caller page uses.\nbcftools view -R truth.chr20.bed -v snps -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz \\\n  | bcftools norm -f chr20.fa -m -any -Oz -o t.snv.vcf.gz\nbcftools index -f t.snv.vcf.gz\nbcftools view -H t.snv.vcf.gz | awk '{print $1\"\\t\"$2}' > pos.tsv\nNTRUTH=$(wc -l < pos.tsv)\necho \"truth SNV sites: $NTRUTH\"\n# Genotype ONLY at those sites. This measures whether the alignment puts the right reads in the\n# right place -- recall at known sites -- and is deliberately NOT a variant-calling benchmark:\n# precision is not meaningful when you only look where the answer already is.\nT0=$(date +%s)\nbcftools mpileup -f chr20.fa -T pos.tsv -q 20 -Ou hifi.sorted.bam 2> mp.log \\\n  | bcftools call -m -Oz -o q.vcf.gz\nT1=$(date +%s)\nbcftools index -f q.vcf.gz\nbcftools view -v snps -i 'GT=\"alt\"' -Ou q.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o q.snv.vcf.gz\nbcftools index -f q.snv.vcf.gz\nrm -rf is; bcftools isec -p is q.snv.vcf.gz t.snv.vcf.gz\nTP=$(grep -vc '^#' is/0002.vcf || true)\nFN=$(grep -vc '^#' is/0001.vcf || true)\nREC=$(awk -v tp=\"$TP\" -v fn=\"$FN\" 'BEGIN{printf \"%.5f\", tp/(tp+fn)}')\n{\n  echo \"== minimap2 HiFi alignment vs GIAB HG001 v4.2.1 truth SNVs, chr20 ==\"\n  echo \"mpileup_wall_s      $(( T1 - T0 ))\"\n  echo \"truth_snv_sites     $NTRUTH\"\n  echo \"recovered (TP)      $TP\"\n  echo \"missed (FN)         $FN\"\n  echo \"truth_snv_recall    $REC  want >=0.95\"\n  echo \"\"\n  echo \"Recall at known sites only. Precision is not reported because genotyping exclusively\"\n  echo \"where the truth already has a variant cannot measure false positives -- this is a check\"\n  echo \"on whether the alignment places reads correctly, not a variant-calling benchmark.\"\n} > truth-support.txt\ncat truth-support.txt\nawk -v v=\"$REC\" 'BEGIN{exit !(v>=0.95)}'\necho 'TRUTH SUPPORT CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/hifi.sorted.bam",
+      "destination": "/tmp/hifi.sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/hifi.sorted.bam.bai",
+      "destination": "/tmp/hifi.sorted.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/truth-support.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/truth-support.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

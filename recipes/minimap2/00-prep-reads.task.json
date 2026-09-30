@@ -1,0 +1,33 @@
+{
+  "task_id": "cookbook-minimap2-prep-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nURL=https://s3.amazonaws.com/giab/data/NA12878/PacBio_SequelII_CCS_11kb/HG001_GRCh38/HG001_GRCh38.haplotag.RTG.trio.bam\necho \"== pull chr20 PacBio HiFi reads back to FASTQ ==\"\n# -F 0x900 drops secondary and supplementary records, so each read appears exactly once.\n# Going back to FASTQ is the point: minimap2 must do a real alignment, not inherit pbmm2's.\nsamtools view -b -F 0x900 -@ 4 \"$URL\" chr20 > chr20.bam\nsamtools fastq -@ 4 -n chr20.bam | gzip -1 > hifi.chr20.fq.gz\nNREADS=$(( $(zcat hifi.chr20.fq.gz | wc -l) / 4 ))\nBASES=$(zcat hifi.chr20.fq.gz | awk 'NR%4==2{n+=length($0)} END{printf \"%.0f\", n}')\nMEANLEN=$(awk -v b=\"$BASES\" -v r=\"$NREADS\" 'BEGIN{printf \"%.0f\", b/r}')\nBYTES=$(stat -c%s hifi.chr20.fq.gz)\nDEPTH=$(awk -v b=\"$BASES\" 'BEGIN{printf \"%.1f\", b/64444167}')\n{\n  echo \"reads             $NREADS\"\n  echo \"bases             $BASES  (awk %d would clamp this to INT32_MAX)\"\n  echo \"mean_read_len     $MEANLEN  want 8000..20000 (library size-selected ~9-11 kb)\"\n  echo \"depth_on_chr20    ${DEPTH}x  want >=20 (the deposit is ~30x genome-wide)\"\n  echo \"fastq_bytes       $BYTES\"\n} > prep-check.txt\ncat prep-check.txt\ntest \"$NREADS\" -gt 50000\ntest \"$MEANLEN\" -ge 8000\ntest \"$MEANLEN\" -le 20000\nawk -v d=\"$DEPTH\" 'BEGIN{exit !(d>=20)}'\necho 'PREP CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/hifi.chr20.fq.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/hifi.chr20.fq.gz"
+    },
+    {
+      "source": "/tmp/prep-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/prep-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

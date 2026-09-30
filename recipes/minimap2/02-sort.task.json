@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-minimap2-sort",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nT0=$(date +%s)\nsamtools sort -@ 8 -m 1G -T /tmp/st -o hifi.sorted.bam aln.sam.gz 2> sort.log\nT1=$(date +%s)\nsamtools index -@ 8 hifi.sorted.bam\nMAGIC=$(od -An -tx1 -N4 hifi.sorted.bam | tr -d ' \\n')\nQC=0; samtools quickcheck -v hifi.sorted.bam 2>/dev/null && QC=1\nNREC=$(samtools view -c -@ 8 hifi.sorted.bam)\nsamtools coverage -r chr20 hifi.sorted.bam > cov.txt\nDEPTH=$(awk 'NR==2{print $7}' cov.txt)\nCOVPCT=$(awk 'NR==2{print $6}' cov.txt)\n{\n  echo \"sort_wall_s     $(( T1 - T0 ))\"\n  echo \"bam_magic       $MAGIC  want 1f8b0804\"\n  echo \"quickcheck      $QC  want 1\"\n  echo \"records         $NREC\"\n  echo \"mean_depth      $DEPTH  want >=25\"\n  echo \"pct_covered     $COVPCT  want >=98\"\n  echo \"bam_bytes       $(stat -c%s hifi.sorted.bam)\"\n} > sort-check.txt\ncat sort-check.txt; cat cov.txt\ntest \"$MAGIC\" = '1f8b0804'; test \"$QC\" -eq 1\nawk -v d=\"$DEPTH\" 'BEGIN{exit !(d>=25)}'\nawk -v c=\"$COVPCT\" 'BEGIN{exit !(c>=98)}'\necho 'SORT CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/aln.sam.gz",
+      "destination": "/tmp/aln.sam.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/hifi.sorted.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/hifi.sorted.bam"
+    },
+    {
+      "source": "/tmp/hifi.sorted.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/hifi.sorted.bam.bai"
+    },
+    {
+      "source": "/tmp/sort-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/sort-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "35m",
+    "on_complete": "terminate",
+    "cost_limit": 0.22
+  }
+}

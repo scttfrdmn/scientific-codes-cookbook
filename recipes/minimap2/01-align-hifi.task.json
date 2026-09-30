@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-minimap2-hifi-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho \"== minimap2 -ax map-hifi, 217,281 PacBio HiFi reads (2.16 Gbp) vs chr20 ==\"\nminimap2 --version\nT0=$(date +%s)\nminimap2 -ax map-hifi -t 16 --MD chr20.fa hifi.chr20.fq.gz 2> minimap2.log | gzip -1 > aln.sam.gz\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\n\necho \"== stats from the SAM itself ==\"\n# Flag bits by arithmetic, not and(): gawk's and() is not portable across awk builds.\n# All counters are floating point -- 2.16 Gbp overflows awk's %d (int32) at real scale.\nzcat aln.sam.gz | awk '\n  !/^@/ {\n    f=$2\n    if (int(f/256)%2 || int(f/2048)%2) next          # skip secondary (0x100) / supplementary (0x800)\n    prim++\n    if ($3==\"*\") { unmapped++; next }\n    mapped++\n    if ($3!=\"chr20\") offchr++\n    bl=0; n=\"\"\n    for (i=1;i<=length($6);i++) {\n      ch=substr($6,i,1)\n      if (ch ~ /[0-9]/) n=n ch\n      else { v=n+0; n=\"\"; if (ch==\"M\"||ch==\"I\"||ch==\"D\"||ch==\"=\"||ch==\"X\") bl+=v }\n    }\n    nm=-1\n    for (i=12;i<=NF;i++) if ($i ~ /^NM:i:/) { split($i,a,\":\"); nm=a[3]+0 }\n    if (nm>=0 && bl>0) { totbl+=bl; totnm+=nm; idn++ }\n  }\n  END {\n    printf \"primary %.0f\\nmapped %.0f\\nunmapped %.0f\\noffchr %.0f\\n\", prim, mapped, unmapped, offchr\n    printf \"pct_mapped %.3f\\n\", 100*mapped/prim\n    printf \"mean_identity %.4f\\n\", 100*(1 - totnm/totbl)\n    printf \"aln_bases %.0f\\n\", totbl\n  }' > st.txt\ncat st.txt\ng(){ awk -v k=\"$1\" '$1==k{print $2}' st.txt; }\nPRIM=$(g primary); MAPPED=$(g mapped); OFFCHR=$(g offchr)\nPCTMAP=$(g pct_mapped); IDENT=$(g mean_identity); ALNB=$(g aln_bases)\nBYTES=$(stat -c%s aln.sam.gz)\n{\n  echo \"minimap2_preset   map-hifi\"\n  echo \"wall_s            $WALL  (the aligner only)\"\n  echo \"primary_records   $PRIM  want 217281 (one per input read)\"\n  echo \"pct_mapped        $PCTMAP  want >=95 (reads drawn from chr20 alignments)\"\n  echo \"mean_identity     $IDENT %  want >=98 (HiFi vs GRCh38; see note on why not 99)\"\n  echo \"off_chr20         $OFFCHR  want 0\"\n  echo \"aligned_bases     $ALNB\"\n  echo \"aln_sam_gz_bytes  $BYTES\"\n} > smoke-check.txt\ncat smoke-check.txt\n# One primary record per input read is a conservation identity: minimap2 must account for\n# every read exactly once, mapped or not.\ntest \"$PRIM\" = '217281'\ntest \"$OFFCHR\" = '0'\n# Floors justified, not shaved. Identity here is alignment identity against GRCh38, which is\n# NOT the platform's advertised read accuracy: it also absorbs genuine NA12878-vs-reference\n# variation (~1 per 1000 bp) and indel representation. HiFi's \"Q20 / 99%\" is a claim about reads\n# against their true molecule, so asserting 99% here conflates two quantities. 98% is the bar a\n# HiFi alignment must clear -- ONT R9 sits near 92-95%, Illumina near 99.5% -- so it separates\n# \"HiFi aligned correctly\" from wrong data or a broken index, with real margin.\nawk -v v=\"$IDENT\"  'BEGIN{exit !(v>=98)}'\n# Not every read pbmm2 placed on chr20 maps back confidently against chr20 alone: repeat-rich and\n# pericentromeric reads are exactly the ones a different aligner's thresholds will drop. 95% is\n# the bar; a wrong reference or a broken index lands far below.\nawk -v v=\"$PCTMAP\" 'BEGIN{exit !(v>=95)}'\necho 'SMOKE CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/hifi.chr20.fq.gz",
+      "destination": "/tmp/hifi.chr20.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln.sam.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/aln.sam.gz"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/minimap2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/minimap2.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}
