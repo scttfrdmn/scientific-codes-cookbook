@@ -7,7 +7,7 @@ images:
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
 spawn_version: 0.111.4
-last_verified: 2026-09-30
+last_verified: 2026-10-01
 ---
 # minimap2 — 33× PacBio HiFi across a chromosome, checked against the GIAB truth set
 

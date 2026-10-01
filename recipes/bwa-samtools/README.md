@@ -3,7 +3,7 @@ tool: bwa
 tool_version: "0.7.19-r1273"
 image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
 spawn_version: 0.111.1
-last_verified: 2026-09-25
+last_verified: 2026-10-01
 ---
 # bwa mem — a whole sequencing run against GRCh38
 
@@ -164,7 +164,7 @@ make run RECIPE=bwa-samtools
 make ls  RECIPE=bwa-samtools
 ```
 
-Expect `smoke-check.txt` with `sam_records 48392167`, `pct_mapped 99.91`, and
+Expect `smoke-check.txt` with `sam_records 48817006`, `pct_mapped 99.91`, and
 `aln_sam_gz_bytes` above 5 GB.
 
 </details>

@@ -8,6 +8,7 @@ Errors (exit 1): a recipe page missing frontmatter or a required field; a broken
 internal link. Warnings (exit 0): the markdown-a11y nits. Site-level a11y — colour
 contrast, focus order, Atkinson Hyperlegible — is a site-build gate, not this.
 """
+import subprocess
 import os, re, sys, glob, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -308,6 +309,30 @@ def check_output_collisions():
                 seen[dest] = spec
 
 
+def check_verified_freshness():
+    """`last_verified` is a date only a real verifying run may set. If a spec in that recipe was
+    committed on a LATER day, the claim predates the edit and nobody has run what now ships —
+    the "verified number silently invalidated by an edit nobody re-ran" harm. Same-day edits do
+    not fire, because editing and re-running in one sitting is the normal sequence."""
+    for rm in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))):
+        rdir = os.path.dirname(rm)
+        rec = os.path.basename(rdir)
+        m = re.search(r"^last_verified:\s*(\S+)", open(rm, encoding="utf-8").read(), re.M)
+        if not m:
+            continue
+        lv = m.group(1)
+        newest = ""
+        for spec in glob.glob(os.path.join(rdir, "*.task.json")):
+            out = subprocess.run(["git", "log", "-1", "--format=%cs", "--", spec],
+                                 capture_output=True, text=True, cwd=ROOT).stdout.strip()
+            if out > newest:
+                newest = out
+        if newest and newest > lv:
+            errors.append(f"recipes/{rec}/README.md: last_verified {lv} but a spec changed "
+                          f"{newest} — re-run and restamp, or the page claims a run that "
+                          f"never covered what ships")
+
+
 def main():
     ps = pages()
     for path, needs_fm in ps:
@@ -322,6 +347,7 @@ def main():
     check_portability()
     check_staging_coverage()
     check_output_collisions()
+    check_verified_freshness()
     if "--external" in sys.argv:
         check_external()
     for w in warns:
