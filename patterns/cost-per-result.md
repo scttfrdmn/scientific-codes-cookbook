@@ -6,13 +6,34 @@ The shared-cluster instinct is to compare instances by price per hour, or by vCP
 
 ## The trap, first: a cross-arch number compares builds, not just silicon
 
-Run [SPAdes](../recipes/spades/README.md) on the same reads across families and x86 looks **~2.5× faster** than Graviton — an assembly headline waiting to be published. It is wrong, and the tell is in the cores actually used: the arm64 build averages **~3 cores**, the x86 build **~6**. That is not the chip, it is the **build** — arm64 SPAdes (the aarch.bio image) and x86 SPAdes (biocontainers) are different compiles with different threading behaviour, and the ~2.5× gap is mostly that, not the silicon. We know it is a stable build property and not noise because the ~3-core arm64 ceiling reproduced on a different day and different boxes: **3.37 / 3.10 / 3.00 cores here against 3.39 in the earlier sizing run.** [megahit](../recipes/megahit/README.md) hides it — its two builds parallelise alike (~6 cores each) — which is exactly why a single workload can't warn you.
+Run [SPAdes](../recipes/spades/README.md) across families and x86 looks **~2.5× faster** than Graviton — a publishable-looking headline that is wrong. The tell is cores actually used: the arm64 build averages **~3**, the x86 build **~6**. That is the *build*, not the chip — two different compiles with different threading — and it is stable, not noise: the ~3-core arm64 ceiling reproduced at 3.37 / 3.10 / 3.00 against 3.39 in an earlier run. [megahit](../recipes/megahit/README.md) hides it, its two builds parallelising alike, which is why one workload cannot warn you.
 
-So: **within one arch (one image across boxes) is a clean comparison; across arches you compare build channels as much as chips** — [compare like with like](../practices/cross-checks.md), the same rule that governs cross-code checks, applied to hardware. Everything trustworthy below is within-arch. "Graviton is 2.5× slower for assembly" would have been this project's worst claim: plausible, dramatic, and false.
+So: **within one arch is a clean comparison; across arches you compare build channels as much as chips** — [compare like with like](../practices/cross-checks.md) applied to hardware. Everything below is within-arch. "Graviton is 2.5× slower for assembly" would have been this project's worst claim: plausible, dramatic, false.
 
-## The clean result: newer generation, pricier per hour, cheaper per result
+## The ladder, measured: newer is cheaper per result — with one exception
 
-The sharpest within-arch comparison is a generation step — **c9g vs c8g**, same family, same image, same 8 cores, one generation apart. c9g is **+9%/hr** and finishes **~18% faster**, so it lands **~12% cheaper per result**. It holds on both assemblers (megahit −12%, SPAdes −13% compute / −20% billed), so it is a hardware property, not one run's luck. That is the cookbook's opening claim with a 2026-generation number behind it: **the pricier box wins the bill.**
+Seven codes now carry a full Graviton2→5 ladder on identical bytes within one image, so this is a
+shape rather than a single step. **Every one gets cheaper per result across the full ladder — 28% to
+47%** — because the rate card rises ~28% while the wall falls 46–59%. The opening claim holds end to
+end: the pricier box wins the bill.
+
+The *size* of the win is set by the inner loop, not the field. Speedups run from **1.84×**
+([bwa](../recipes/bwa-samtools/README.md), short-read alignment) to **2.43×**
+([GROMACS](../recipes/gromacs/README.md), MD with PME), and the tempting summary — "floating-point
+codes gain more" — dies on [SIESTA](../recipes/siesta/README.md), which is DFT and gains *least*
+(1.86×) because a small localised-basis problem is dense linear algebra on modest matrices, not the
+throughput the newer chips added. Plane-wave DFT sits with the MD codes; localised-basis DFT sits with
+the genomics ones. **Ask what the inner loop is, not what the field is called.** Each recipe's table
+has its own numbers.
+
+### But one rung does not pay, and it is measured twice
+
+Graviton3→Graviton4 is the weak step everywhere — as little as 2.4% cheaper per result on GROMACS —
+and for **both** DFT codes it is cost-negative: [GPAW](../recipes/gpaw/README.md) +1.4% and SIESTA
++0.7%. At n = 1 that is a tie, not a reversal, so the honest reading is **cost-neutral for DFT**, not
+that Graviton3 wins. Either way it changes the advice: on Graviton3 running DFT, the rung worth paying
+for is Graviton5. Why this step is weak is not established here — attributing it would need a
+memory-bandwidth measurement, and a guess would be worse than the gap.
 
 ## The rate card misleads in both directions
 
@@ -80,4 +101,4 @@ Memory was arch-independent on both workloads (~0.42 GiB megahit, ~4.6 GiB SPAde
 
 ## Where this shows up
 
-Any time you choose an instance family, this is the question underneath it. [Sizing](sizing.md) finds *how many cores* a run uses; this page is *which family's cores* are cheapest for the result. Measured on [megahit](../recipes/megahit/README.md) and [spades](../recipes/spades/README.md), which link here rather than restating it.
+Any time you choose an instance family, this is the question underneath it. [Sizing](sizing.md) finds *how many cores* a run uses; this page is *which family's cores* are cheapest for the result. Every recipe with a generation table links here rather than restating it — seven full ladders above, plus the original within-family work on [megahit](../recipes/megahit/README.md) and [spades](../recipes/spades/README.md).
