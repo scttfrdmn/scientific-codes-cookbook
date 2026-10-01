@@ -1,0 +1,33 @@
+{
+  "task_id": "cookbook-gpaw-ptslab",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\nexport OMP_NUM_THREADS=1\ncd /tmp\nRANKS=${GPAW_RANKS:-16}\ncat > slab.py <<'PYEOF'\nimport os, sys, time\nfrom ase.build import fcc111\nfrom gpaw import GPAW, PW\nfrom gpaw.mpi import world\n\n# Pt(111), 3x3 surface cell, 4 layers, 7 A vacuum -- the canonical slab size for adsorption work.\n# ASE builds it from its own lattice constants, so the structure is pinned by the image, not staged.\nslab = fcc111(\"Pt\", size=(3, 3, 4), vacuum=7.0)\nslab.calc = GPAW(mode=PW(400), xc=\"PBE\", kpts=(4, 4, 1),\n                 occupations={\"name\": \"fermi-dirac\", \"width\": 0.05},\n                 txt=\"gpaw.txt\")\nt0 = time.time()\ne = slab.get_potential_energy()\nwall = time.time() - t0\nef = slab.calc.get_fermi_level()\nif world.rank == 0:\n    with open(\"result.tsv\", \"w\") as f:\n        f.write(\"atoms\\t%d\\n\" % len(slab))\n        f.write(\"ranks\\t%d\\n\" % world.size)\n        f.write(\"energy_eV\\t%.6f\\n\" % e)\n        f.write(\"fermi_eV\\t%.6f\\n\" % ef)\n        f.write(\"wall_s\\t%.1f\\n\" % wall)\nPYEOF\npython3 -c 'import gpaw,ase;print(\"gpaw\",gpaw.__version__,\"ase\",ase.__version__)'\necho \"== Pt(111) 3x3x4 = 36 atoms, PW 400 eV, 4x4x1 k-points, PBE ==\"\nmpiexec -n \"$RANKS\" --allow-run-as-root --oversubscribe python3 slab.py\ng(){ awk -v k=\"$1\" -F'\\t' '$1==k{print $2}' result.tsv; }\nNAT=$(g atoms); GOTR=$(g ranks); E=$(g energy_eV); EF=$(g fermi_eV); W=$(g wall_s)\n# GPAW writes 'Converged after N iterations' only on a clean SCF exit -- a run that stops on\n# the iteration limit has a plausible energy and no such line.\nITERS=$(awk '/Converged after/{print $3; exit}' gpaw.txt)\n{\n  echo \"system            Pt(111) 3x3x4 slab, PW 400 eV, 4x4x1 k-points, PBE\"\n  echo \"atoms             $NAT  want 36\"\n  echo \"ranks_used        $GOTR  want $RANKS  (gpaw.mpi.world.size, not a serial fallback)\"\n  echo \"scf_iterations    $ITERS  (present only on a converged exit)\"\n  echo \"energy_eV         $E\"\n  echo \"fermi_eV          $EF\"\n  echo \"wall_s            $W  (SCF only)\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$NAT\" = '36'\ntest \"$GOTR\" = \"$RANKS\"\ntest -n \"$ITERS\"\n# a Pt slab's Fermi level sits a few eV below vacuum; wildly off means a broken setup\nawk -v f=\"$EF\" 'BEGIN{exit !(f>-10 && f<10)}'\nawk -v e=\"$E\" 'BEGIN{exit !(e<0)}'\necho 'SMOKE CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gpaw/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/gpaw.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gpaw/r1/gpaw.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

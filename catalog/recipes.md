@@ -86,7 +86,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-09-12 | — |
-| [gpaw](../recipes/gpaw/README.md) | Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch.science's published figure — proof GPAW computes correctly, and in real parallel, on Graviton4. | dft | build-in-task | 2026-09-11 | — |
+| [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-09-11 | 2026-09-30 |
 | [nwchem](../recipes/nwchem/README.md) | `nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env. | dft | build-in-task | 2026-09-12 | — |
 | [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-09-12 | 2026-09-10 |
 | [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-09-12 | — |
@@ -123,7 +123,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 |---|---|---|---|---|---|
 | [ambertools](../recipes/ambertools/README.md) | `tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path. | md | build-in-task | 2026-09-12 | — |
 | [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-09-30 | 2026-09-30 |
-| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-09-12 | 2026-09-30 |
+| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-09-30 | 2026-09-30 |
 | [mdtraj](../recipes/mdtraj/README.md) | GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format. | md | build-in-task | 2026-09-12 | — |
 | [plumed](../recipes/plumed/README.md) | GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run. | md | build-in-task | 2026-09-12 | — |
 

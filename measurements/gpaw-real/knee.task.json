@@ -1,0 +1,33 @@
+{
+  "task_id": "cookbook-gpaw-knee-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\nexport OMP_NUM_THREADS=1\ncd /tmp\ncat > slab.py <<'PYEOF'\nimport os, sys, time\nfrom ase.build import fcc111\nfrom gpaw import GPAW, PW\nfrom gpaw.mpi import world\n\n# Pt(111), 3x3 surface cell, 4 layers, 7 A vacuum -- the canonical slab size for adsorption work.\n# ASE builds it from its own lattice constants, so the structure is pinned by the image, not staged.\nslab = fcc111(\"Pt\", size=(3, 3, 4), vacuum=7.0)\nslab.calc = GPAW(mode=PW(400), xc=\"PBE\", kpts=(4, 4, 1),\n                 occupations={\"name\": \"fermi-dirac\", \"width\": 0.05},\n                 txt=\"gpaw.txt\")\nt0 = time.time()\ne = slab.get_potential_energy()\nwall = time.time() - t0\nef = slab.calc.get_fermi_level()\nif world.rank == 0:\n    with open(\"result.tsv\", \"w\") as f:\n        f.write(\"atoms\\t%d\\n\" % len(slab))\n        f.write(\"ranks\\t%d\\n\" % world.size)\n        f.write(\"energy_eV\\t%.6f\\n\" % e)\n        f.write(\"fermi_eV\\t%.6f\\n\" % ef)\n        f.write(\"wall_s\\t%.1f\\n\" % wall)\nPYEOF\necho '== same SCF at 4, 8 and 16 ranks on ONE box =='\n# DFT total energy is deterministic, so it must be decomposition-invariant. That makes this a\n# real identity rather than a band -- unlike MD, where chaos rules out an exact assertion.\n: > knee.tsv\nprintf 'ranks\\twall_s\\tenergy_eV\\titers\\n' >> knee.tsv\nfor R in 4 8 16; do\n  echo \"--- $R ranks ---\"\n  mpiexec -n \"$R\" --allow-run-as-root --oversubscribe python3 slab.py\n  E=$(awk -F'\\t' '$1==\"energy_eV\"{print $2}' result.tsv)\n  W=$(awk -F'\\t' '$1==\"wall_s\"{print $2}' result.tsv)\n  GOT=$(awk -F'\\t' '$1==\"ranks\"{print $2}' result.tsv)\n  IT=$(awk '/Converged after/{print $3; exit}' gpaw.txt)\n  test \"$GOT\" = \"$R\"\n  printf '%s\\t%s\\t%s\\t%s\\n' \"$R\" \"$W\" \"$E\" \"$IT\" >> knee.tsv\n  mv gpaw.txt gpaw_$R.txt\ndone\ncat knee.tsv\n# every rank count must land on the same energy to 1e-4 eV -- far tighter than any physical\n# tolerance, because the only difference between these runs is how the work was divided.\nSPREAD=$(awk -F'\\t' 'NR==2{mn=$3; mx=$3} NR>2{if($3<mn)mn=$3; if($3>mx)mx=$3} END{printf \"%.6f\", mx-mn}' knee.tsv)\nBASE=$(awk -F'\\t' 'NR==2{print $2}' knee.tsv)\n{ cat knee.tsv\n  echo \"\"\n  echo \"energy_spread_eV  $SPREAD  want < 0.0001 (decomposition invariance)\"\n  awk -F'\\t' -v b=\"$BASE\" 'NR>1{printf \"speedup_%s_ranks  %.2fx  (vs 4 ranks)\\n\", $1, b/$2}' knee.tsv\n} > knee.txt\ncat knee.txt\nawk -v s=\"$SPREAD\" 'BEGIN{exit !(s<0.0001)}'\necho 'KNEE SWEEP DONE'"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/knee.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/gpaw-real/knee.txt"
+    },
+    {
+      "source": "/tmp/knee.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/gpaw-real/knee.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.95
+  }
+}

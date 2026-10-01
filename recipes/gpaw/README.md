@@ -1,68 +1,109 @@
 ---
 tool: gpaw
+tool_version: 25.7.0
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# GPAW — plane-wave DFT on bulk silicon, serial and over 2 MPI ranks
+# GPAW — a Pt(111) slab in plane-wave DFT, and the same energy from every box
 
-Compute the LDA energy of bulk silicon in a plane-wave basis and reproduce aarch.science's published figure — proof GPAW computes correctly, and in real parallel, on Graviton4.
+Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM.
 
-> **What this covers.** One small plane-wave SCF on a 2-atom Si cell (200 eV cutoff, 2×2×2 k-points), serial and 2-rank. Not a benchmark; no large cell, convergence study, or many-node scaling.
+> **Nine runs, one number: −219.541414 eV in 27 SCF iterations, every time.** Four chips, three rank counts, three instance sizes. DFT is deterministic, so that is an exact identity — not a tolerance.
 
 ## Run it
 
-```python
-from ase.build import bulk
-from gpaw import GPAW, PW
-si = bulk("Si", "diamond", a=5.43); si.calc = GPAW(mode=PW(200), kpts=(2, 2, 2), xc="LDA")
-si.get_potential_energy()          # -11.703689 eV — run serially and under `mpiexec -n 2`
+```bash
+make run RECIPE=gpaw   # ~7.4 min on c8g.4xlarge at 16 ranks, self-terminating
+make ls  RECIPE=gpaw   # smoke-check.txt + gpaw.txt
+
+mpiexec -n 16 python3 slab.py   # ASE builds Pt(111) 3×3×4; PAW datasets ship in the image
 ```
 
-One task, run twice (serial `python3`, then `mpiexec -n 2 python3`). ASE builds the cell and the PAW datasets ship in the image, so nothing is staged.
+## Which box, and how many cores — both measured
+
+| | instance | SCF wall | **$/SCF** |
+|---|---|---|---|
+| Graviton2, 16 ranks | `c6g.4xlarge` | 779.3 s | 0.1178 |
+| Graviton3, 16 ranks | `c7g.4xlarge` | 479.8 s | **0.0773** |
+| Graviton4, 16 ranks | `c8g.4xlarge` | 442.5 s | 0.0784 |
+| **Graviton5, 16 ranks** | `c9g.4xlarge` | **334.6 s** | **0.0646** |
+| Graviton4, 8 ranks | `c8g.2xlarge` | 789.4 s | 0.0699 |
+| Graviton4, 4 ranks | `c8g.xlarge` | 1446.2 s | **0.0641** |
+
+Graviton2→5 is **2.33× faster and 45% cheaper per SCF** — but **Graviton3 and Graviton4 are tied on cost** (1.4% apart, indistinguishable at n = 1), because Graviton4 is 8% faster for 10% more per hour. The only place in this catalog where "newest is always cheaper" fails; Graviton5 still clearly wins.
+
+On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — 82% parallel efficiency, better than DFT's reputation. 4 ranks is cheapest per SCF; 16 is the better buy if wall-clock matters. Each rank row ran on the box you would actually rent for it, which turns out to matter by 18% (below).
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 2-atom Si cell (ASE, in-code) | your own structure | the small cell is used because aarch.science published its energy to reproduce — that's the point, not a limit. |
-| `PW(200)`, `kpts=(2,2,2)`, `LDA` | your cutoff / k-points / functional | standard GPAW knobs; scale them for your system. |
-| serial + `mpiexec -n 2` | more ranks | the energy is rank-independent (below), so scale ranks for speed; [assert the rank count](../../practices/mpi-rank-count.md) so a serial build can't masquerade as parallel. |
+| Pt(111) 3×3×4 | your own ASE structure | built in Python from ASE's lattice constants, so the cell is pinned by the image and nothing is staged. |
+| `PW(400)`, `kpts=(4,4,1)` | your convergence settings | both change the answer — re-converge before comparing to anything. |
 
-Nothing is determinism scaffolding. **Leave the fixture:** it reproduces a published energy exactly and exercises the real PW/PAW kernel and the MPI path; a bigger cell is a longer run, not a more legible one (sizing is on the [sizing page](../../patterns/sizing.md)). Leave-it.
-
-## Shape, size, cost
-
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), TTL 5m, cap $0.02. The two SCFs take ~4 s. Recorded command window 96s. **These timings are not compute cost** — boot and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)).
+**Leave the workload** — a production-sized slab at production settings, so the timings transfer. **Scale it** by cell size or k-points, both of which cost real money, and re-measure.
 
 <details>
-<summary>As shipped: the published reference, the rank guard, the scaling wall, pins, smoke check, run + verify</summary>
+<summary>As shipped: the exact identity, what measuring beat projecting, pins</summary>
 
-**A published reference plus a cross-validation.** This is the `dft` env's own D3 calculation, so the run reproduces aarch.science's figure exactly: **−11.703689 eV** ([reproduce a published number](../../practices/reference-from-tests.md)). The 2-rank leg must give the same energy (a cross-validation) **and** assert `gpaw.mpi.world.size == 2`: a serial build would pass "parallel == serial" for free, so the recipe checks the rank count directly — the [rank-count guard](../../practices/mpi-rank-count.md).
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| **serial energy** | −11.703689 ± 1e-4 eV (D3 reference) | −11.703689 |
-| **MPI world size** | exactly 2 | 2 |
-| serial world size | exactly 1 | 1 |
-| **serial == 2-rank** | \|serial − parallel\| < 1e-5 eV | identical |
+| atoms | 36 | **36** |
+| **MPI ranks used** | **== ranks launched** (`gpaw.mpi.world.size`) | **matches, 4/8/16** |
+| SCF converged | `Converged after N iterations` present | **27 iterations** |
+| total energy | finite, negative | **−219.541414 eV** |
+| Fermi level | −10 to 10 eV | **2.050224 eV** |
+| **energy across rank counts** | **spread < 1e-4 eV** | **0.000000** |
 
-**Scaling: MPI helps until it walls.** Swept on a 64-atom Si supercell across n = 1…48 ranks, wall time fell 618 → 22 s (~58% efficiency at 48) — then at n = 64 it *fails*, not slows: the cell can't decompose further ([sizing](../../patterns/sizing.md)'s "hits a wall" case). The energy is rank-independent (byte-identical −380.305 eV, drifting ~3e-5 eV at the largest counts from summation order), so scale ranks freely for speed; the only ceiling is a hard error, not a wasted bill.
+**The rank-count assertion is load-bearing.** conda-forge ships nompi builds at higher build numbers
+than the openmpi ones, so an unpinned solve can hand back a serial GPAW that under `mpiexec -n 16`
+runs sixteen independent single-rank SCFs — each converging to the right energy and printing a
+plausible wall time. Reading `gpaw.mpi.world.size` back is what proves the parallelism
+([the practice](../../practices/mpi-rank-count.md)).
 
-**Pins** (data tier: bundled — the image digest is the only pin):
+**And the convergence sentinel matters as much.** GPAW writes `Converged after N iterations` only on
+a clean SCF exit; a run that stops on the iteration limit still has a plausible-looking energy and no
+such line. Asserting the line's presence is what separates a converged result from an abandoned one.
 
-| | |
+**Why an exact energy identity is available here and not in MD.** DFT total energy is deterministic
+— the SCF converges to a fixed point — so dividing the work differently must not change it. All nine
+runs agreed to all six printed decimals. The [MD recipes](../gromacs/README.md) cannot assert this
+because trajectories are chaotic; DFT can, and it costs nothing.
+
+### Measuring the knee beat projecting it, by 18%
+
+The three knee rows were run on `xlarge`/`2xlarge`/`4xlarge` — the box you would rent for that rank
+count. Running all three on one 16-core box instead would have been cheaper and wrong: **4 ranks took
+1227.0 s on the 16-core box but 1446.2 s on a 4-core box**, 17.9% slower, because a smaller instance
+gets a smaller share of memory bandwidth and plane-wave DFT is bandwidth-bound. Projecting the
+4-rank cost from the big box gives $0.0544 against the measured $0.0641 — **an 18% understatement of
+the cheapest option**, which is exactly the number a reader would be deciding on.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/dft@sha256:0740fab9…` (tag `2026.09.04`, GPAW ≥25.7 `mpi_openmpi`, cosign-signed, `linux/arm64`) |
-| input | bulk-Si cell (ASE) + PAW datasets (`gpaw-data`), in-code / bundled — nothing staged |
+| GPAW | `quay.io/aarchsci/dft@sha256:0740fab9…` (25.7.0, ASE 3.29.0, `linux/arm64`) |
+| structure | built by `ase.build.fcc111` — ASE's own Pt lattice constant, pinned by the image |
+| PAW datasets | ship inside the image |
 
-Same `dft` image as [nwchem](../nwchem/README.md); [siesta](../siesta/README.md) and [psi4](../psi4/README.md) pin the older `b356499…` — both immutable.
+Nothing is staged, which is why this recipe has no `stage-inputs.sh`: the cell is six lines of
+Python and the datasets are in the container. The trade is that the structure is pinned by the
+*image* rather than by a hash — change the ASE version and the lattice constant could move, which
+would move the energy. That is the tier, recorded.
 
-**Run + verify.**
+### Run + verify
+
 ```sh
 make run RECIPE=gpaw
-make ls RECIPE=gpaw
+make ls  RECIPE=gpaw
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `atoms 36`, `ranks_used 16`, `scf_iterations 27` and
+`energy_eV -219.541414`.
 
 </details>
