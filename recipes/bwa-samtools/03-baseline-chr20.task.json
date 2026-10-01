@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-bwa-chr20-baseline",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\n# This task exists to serve the bowtie2 and minimap2 METHOD comparisons, not to benchmark bwa:\n# both need a bwa alignment of the same small chr20 fixture to compare placements against. It is\n# a declared output of this recipe so the chain is statically checkable -- the previous\n# arrangement had them reading this recipe's main output, which silently broke the moment that\n# moved to the whole genome and became aln.sam.gz.\necho '== bwa baseline on the chr20 smoke fixture (400k pairs) for cross-tool comparisons =='\nbwa index chr20.fa 2> bwaidx.log\nbwa mem -t 4 -R '@RG\\tID:smoke\\tSM:HG00096\\tPL:ILLUMINA' chr20.fa \\\n    HG00096_chr20smoke_1.fq.gz HG00096_chr20smoke_2.fq.gz > aln_chr20smoke.sam 2> bwa.log\nPRIM=$(awk '!/^@/{f=$2; if (int(f/256)%2==0 && int(f/2048)%2==0) n++} END{print n+0}' aln_chr20smoke.sam)\nMAPPED=$(awk '!/^@/{f=$2; if (int(f/256)%2==0 && int(f/2048)%2==0 && int(f/4)%2==0) n++} END{print n+0}' aln_chr20smoke.sam)\n{\n  echo \"purpose          baseline for bowtie2 / minimap2 method comparisons, not a benchmark\"\n  echo \"primary_records  $PRIM  want 800000 (400k pairs, one primary each)\"\n  echo \"mapped_primary   $MAPPED\"\n} > baseline-check.txt\ncat baseline-check.txt\ntest \"$PRIM\" -eq 800000\necho 'BASELINE OK'"
+  ],
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_1.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_1.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/HG00096_chr20smoke_2.fq.gz",
+      "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln_chr20smoke.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln_chr20smoke.sam"
+    },
+    {
+      "source": "/tmp/baseline-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/baseline-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

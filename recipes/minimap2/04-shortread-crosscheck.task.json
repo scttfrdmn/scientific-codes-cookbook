@@ -1,5 +1,5 @@
 {
-  "task_id": "cookbook-minimap2-r1",
+  "task_id": "cookbook-minimap2-sr-r3",
   "command": [
     "bash",
     "-c",
@@ -28,18 +28,18 @@
       "destination": "/tmp/HG00096_chr20smoke_2.fq.gz"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sam",
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln_chr20smoke.sam",
       "destination": "/tmp/bwa_aln.sam"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/mm.sam",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/mm.sam"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/sr-mm.sam"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2/r1/sr-smoke-check.txt"
     }
   ],
   "lifecycle": {

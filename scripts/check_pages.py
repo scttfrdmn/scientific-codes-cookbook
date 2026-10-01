@@ -269,6 +269,43 @@ def check_staging_coverage():
         for src in {m.group(1) for m in re.finditer(r'"source":\s*"s3://[^/]+/runs/([\w.-]+)/', text)}:
             if src not in recipes:
                 errors.append(f"{rel}: reuses runs/{src}/ but no such recipe (staging)")
+        # Naming the right recipe is not enough: the specific object has to be something that
+        # recipe actually emits. A chain that borrows a sibling's run output breaks SILENTLY when
+        # that sibling's workload moves on and renames it -- measured: converting bwa-samtools to
+        # the full genome turned aln.sam into aln.sam.gz and left bowtie2 and minimap2 pointing at
+        # a key that no longer exists, which the recipe-name check above waved through.
+        for m in re.finditer(r'"source":\s*"s3://[^/]+/(runs/([\w.-]+)/[^"]+)"', text):
+            key, src = m.group(1), m.group(2)
+            if src not in recipes:
+                continue
+            produced = set()
+            for sib in glob.glob(os.path.join(ROOT, "recipes", src, "*.task.json")):
+                for d in re.finditer(r'"destination":\s*"s3://[^/]+/(runs/[^"]+)"',
+                                     open(sib, encoding="utf-8").read()):
+                    produced.add(d.group(1))
+            if produced and key not in produced:
+                errors.append(f"{rel}: reads {key} but recipes/{src}/ emits no such output — "
+                              f"a broken cross-recipe chain (staging)")
+
+
+def check_output_collisions():
+    """Two specs in one recipe writing the same destination silently overwrite each other, so
+    whichever ran last defines what `make ls` shows. Measured: minimap2's short-read method check
+    and its HiFi recipe both emitted runs/minimap2/r1/smoke-check.txt, and the method check's
+    numbers stood in for the recipe's headline."""
+    for rdir in sorted(glob.glob(os.path.join(ROOT, "recipes", "*"))):
+        if not os.path.isdir(rdir):
+            continue
+        seen = {}
+        for spec in sorted(glob.glob(os.path.join(rdir, "*.task.json"))):
+            for m in re.finditer(r'"destination":\s*"(s3://[^"]+)"', open(spec, encoding="utf-8").read()):
+                dest = m.group(1)
+                prev = seen.get(dest)
+                if prev and prev != spec:
+                    errors.append(
+                        f"{os.path.relpath(spec, ROOT)}: writes {dest.split('/')[-1]} which "
+                        f"{os.path.basename(prev)} also writes — one silently overwrites the other")
+                seen[dest] = spec
 
 
 def main():
@@ -284,6 +321,7 @@ def main():
             check_internal_links(open(p, encoding="utf-8").read(), p)
     check_portability()
     check_staging_coverage()
+    check_output_collisions()
     if "--external" in sys.argv:
         check_external()
     for w in warns:
