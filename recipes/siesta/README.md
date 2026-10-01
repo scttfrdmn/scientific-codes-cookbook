@@ -3,75 +3,113 @@ tool: siesta
 tool_version: 5.4.2
 env: dft
 image: quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# SIESTA — bulk-silicon DFT, reproducing SIESTA's own committed reference
+# SIESTA — bulk Si equilibrium lattice constant, cross-validated against GPAW
 
-`siesta` runs a self-consistent DFT calculation on bulk silicon over two MPI ranks — LCAO-pseudopotential DFT, the SIESTA method.
+Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's own committed reference energy in the same run. For anyone doing localised-basis DFT on ARM.
 
-> **What this covers.** One SCF on a 2-atom Si cell (single-ζ-polarised basis, 3×3×3 k-grid) — proof SIESTA 5.4.2 runs a real, converged, MPI-parallel DFT calculation on Graviton4 and lands on the published energy. Not a benchmark; no large cell, geometry relaxation, or many-node scaling.
+> **GPAW gets 5.4139 Å on the same problem** — two codes, two basis treatments, **0.0097 Å apart**. That agreement is the check; a total energy from an LCAO code and a plane-wave code cannot be compared at all.
 
 ## Run it
 
 ```bash
-mpiexec -n 2 siesta < si.fdf     # bulk-Si DFT, 2 ranks → siesta: Total = -214.377236 eV
+make stage RECIPE=siesta   # once: Si.psf from the SIESTA 5.4.2 tag
+make run   RECIPE=siesta   # 8 SCFs (1 reference + 7 scan points), ~33 s
+make ls    RECIPE=siesta   # smoke-check.txt + siesta-scan.dat
+
+mpiexec -n 2 siesta < si.fdf   # DZP basis, 6×6×6 k-grid, 200 Ry mesh, LDA
 ```
 
-One task. The `.fdf` input is a few lines of config generated inline; only the pseudopotential is data, and only it is staged.
+## Which box — measured (same inputs, same digest, 2 MPI ranks on a 4-vCPU box)
+
+| generation | instance | 8 SCFs | **$/run** | a₀ |
+|---|---|---|---|---|
+| Graviton2 | `c6g.xlarge` | 52 s | 0.00196 | 5.4042 |
+| Graviton3 | `c7g.xlarge` | 36 s | **0.00145** | 5.4042 |
+| Graviton4 | `c8g.xlarge` | 33 s | 0.00146 | 5.4042 |
+| **Graviton5** | `c9g.xlarge` | **28 s** | **0.00135** | 5.4042 |
+
+Graviton2→5 is **1.86× faster** — the *smallest* gain of the four physics codes here (GROMACS 2.43×, GPAW 2.33×, LAMMPS 2.24×), which is what small dense linear algebra looks like next to plane-wave or particle work. And as in [GPAW](../gpaw/README.md), **Graviton3 and Graviton4 are cost-tied** ($0.00145 vs $0.00146) — two DFT codes now show that step not paying for itself.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `Si.psf` from SIESTA's test suite at tag **5.4.2** | your element's pseudopotential | **load-bearing:** conda-forge `siesta` ships *no* pseudopotentials, so one must be staged; the version match to the container is what makes the run reproduce a committed reference (a psf from another version is a different number). |
-| the 2-atom Si cell + 3×3×3 k-grid (inline `.fdf`) | your own system | the small cell reproduces a *published* number — that's the point, not a limit. |
-| `mpirun -n 2` | more ranks | the energy is rank-independent (serial == 2-rank, measured), so more ranks don't change the answer — but the speed-up isn't measured here (SIESTA does scale multi-node; that's a separate run). |
+| bulk Si + `Si.psf` | your system + its pseudopotential | the psf is the hard part: conda-forge ships none, so this one comes from SIESTA's own version-matched test suite. |
+| `PAO.BasisSize DZP` | `SZP` (faster) or `TZP` (better) | the basis *is* the accuracy knob in SIESTA, and it moves a₀ — the cross-check below only holds at DZP or better. |
+| 7-point scan | denser, or a geometry relaxation | the scan is what turns a total energy into an observable someone else can check. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** reproducing SIESTA's own committed energy is the strongest check available, and it's exact at this cell size. Leave-it.
-
-## Shape, size, cost
-
-One task, `c8g.large` (2 vCPU / 4 GiB — sized for the 2 ranks), TTL 5m, cap $0.02. The SCF takes ~2 s on 2 ranks. Recorded command window **93s** — boot, Docker install, and the 0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** single-node 2-rank correctness proof; SIESTA's real sizing question is multi-node scaling (EFA), out of scope here. The energy is rank-independent, so scale ranks for speed — but this fixture doesn't measure the multi-node curve.
+**Leave the workload** — an equation of state is the smallest thing yielding a comparable observable, and it runs in 33 s. **Scale it** to larger cells or a finer basis; both move a₀, so re-converge first.
 
 <details>
-<summary>As shipped: the pseudopotential sourcing, the reference reproduction, the rank guard, pins, smoke check, run + verify</summary>
+<summary>As shipped: two independent checks, why only a₀ is comparable, pins</summary>
 
-### The pseudopotential problem, and the reference it manufactures
+### The checks
 
-conda-forge `siesta` ships no pseudopotentials, so the recipe stages `Tests/Pseudos/Si.psf` from `siesta-project/siesta` at tag `5.4.2` — the version-matched [reproduction](../../practices/reference-from-tests.md) move: pseudopotential, input, and `Reference/psf.out` all from the same version, so the run matches its `-214.377236 eV`. Staging a pinned file is allowed where build-time constraints forbid bundling; the digest is verified on the box.
+| observable | assertion | observed |
+|---|---|---|
+| reference total energy | **exactly −214.377236 eV** (SIESTA's committed 5.4.2 value) | **−214.377236** |
+| MPI ranks | == launched (`Running on N nodes`) | **2** |
+| SCF converged | `SCF cycle converged` present, every scan point | **yes, 8/8** |
+| a₀ | 5.35–5.46 Å (LDA literature band for Si) | **5.4042 Å** |
+| **a₀ vs GPAW** | **< 0.03 Å** | **0.0097 Å** |
 
-**[Assert the rank count](../../practices/mpi-rank-count.md).** The `dft` env pins `siesta=*=mpi_openmpi*` and the check reads `Running on 2 nodes` — proof the MPI path ran, not a silently-serial build.
+Two genuinely independent checks in one run. The first is a **published-number reproduction**: the
+reference point uses SIESTA's own `Tests/01.PseudoPotentials` case at the matching 5.4.2 tag — SZP
+basis, 3×3×3 k-grid, 150 Ry — so the total energy must land on the value the project committed. That
+is only possible because the pseudopotential is version-matched; a psf from another release is a
+different number ([why staging from a code's own test suite pays](../../practices/cross-checks.md)).
 
-### Pins (data tier: stable public source with a durable id)
+The second is the **cross-code agreement** on a₀, at the production DZP basis. The reference point
+and the scan deliberately use different settings, because the committed reference exists only at the
+SZP settings while a₀ needs a basis good enough to be comparable.
 
-| | |
+### Why only a₀ is comparable, and what sets the tolerance
+
+The two scans look nothing alike:
+
+```text
+a (Å)    SIESTA (eV)     GPAW (eV)
+5.37     -215.630950     -11.882121
+5.43     -215.629867     -11.885148
+```
+
+An LCAO pseudopotential total energy and a PAW plane-wave total energy have **different zeros** —
+they differ by ~204 eV here, which is not an error, it is a different reference for the core
+electrons. So comparing them would be meaningless; only a *structural* observable survives.
+
+Matching the modes is what makes even that fair: both runs use **LDA** (SIESTA's default XC, so GPAW
+was set to match rather than to PBE), the same **6×6×6** k-mesh, and the **same quadratic fit** over
+the same seven lattice constants. The remaining difference is the basis treatment, which is what the
+tolerance budgets: **0.03 Å** is the expected DZP-versus-converged-plane-wave difference for a
+covalent semiconductor, with the k-mesh contributing under 0.005 Å at 6×6×6. The observed 0.0097 Å
+clears it with 3× margin — tight enough to be a real cross-validation of the numerics, loose enough
+not to fail on a basis detail. Full comparison:
+[measurements/dft-crosscheck](../../measurements/dft-crosscheck/README.md).
+
+a₀ came out **identical to four decimals on all four generations**, as it must: DFT converges to a
+fixed point, so the chip cannot move the answer.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049` (tag `2026.09.04`, SIESTA 5.4.2 aarch64 MPI, cosign-signed, `linux/arm64`) |
-| pseudopotential | `Tests/Pseudos/Si.psf` from `siesta-project/siesta` tag **`5.4.2`** — `sha256:0afddde3…` (152,736 B) |
+| SIESTA | `quay.io/aarchsci/dft@sha256:b3564993…` (5.4.2, `linux/arm64`) |
+| pseudopotential | `siesta-project/siesta` @ `5.4.2` → `Tests/Pseudos/Si.psf`, sha256 `0afddde32f30…` |
+| structure | 2-atom diamond cell written inline in the spec |
 
-`stage-inputs.sh` fetches, verifies and uploads it once. [psi4](../psi4/README.md) uses the same image under the same digest.
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| pseudopotential sha256 | matches the pin | OK | wrong/corrupt psf |
-| SCF converged | `SCF cycle converged after N iterations` | yes (4 iters) | hit iteration limit / died mid-cycle |
-| MPI ranks | `Running on 2 nodes` | 2 | serial build under `mpirun` |
-| **total energy** | −214.377236 ± 0.01 eV (5.4.2 committed reference) | **−214.377236** | broken numerics |
-
-The energy reproduces `Tests/01.PseudoPotentials/Reference/psf.out`'s `-214.377236 eV` to six decimals, identical between serial and 2-rank; the ±0.01 band is a cross-host floating-point margin, far tighter than SIESTA's own test tolerance.
+The tag is load-bearing twice over: it matches the packaged SIESTA version, and it is what makes the
+committed reference energy the right number to expect.
 
 ### Run + verify
 
 ```sh
-make stage RECIPE=siesta          # once; fetch + verify + upload Si.psf (~150 KB)
 make run RECIPE=siesta
-make ls RECIPE=siesta
+make ls  RECIPE=siesta
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect two objects (`psf.out`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `ref_energy_eV -214.377236`, `ref_ranks 2` and `a0_Ang 5.4042`.
 
 </details>

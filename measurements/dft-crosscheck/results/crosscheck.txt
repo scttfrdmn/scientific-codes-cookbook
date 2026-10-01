@@ -1,0 +1,12 @@
+== bulk Si equilibrium lattice constant, LDA, 6x6x6 k -- two codes, two basis sets ==
+siesta_a0_Ang     5.4042  (DZP numerical atomic orbitals + Troullier-Martins pseudopotential)
+gpaw_a0_Ang       5.4139  (PW 500 eV + PAW)
+difference_Ang    0.0097
+difference_pct    0.179 %
+tolerance_Ang     0.0300  want difference < this
+
+Total energies are NOT compared: an LCAO pseudopotential total energy and a PAW
+plane-wave total energy have different zeros, so only a structural observable like the
+equilibrium lattice constant is comparable at all. The XC functional (LDA) and the
+k-mesh (6x6x6) are matched, and the same quadratic fit is applied to both scans, so the
+remaining difference is the basis treatment -- which is what sets the tolerance.

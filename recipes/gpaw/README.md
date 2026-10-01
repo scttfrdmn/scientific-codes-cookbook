@@ -46,7 +46,7 @@ On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — 82% parall
 **Leave the workload** — a production-sized slab at production settings, so the timings transfer. **Scale it** by cell size or k-points, both of which cost real money, and re-measure.
 
 <details>
-<summary>As shipped: the exact identity, what measuring beat projecting, pins</summary>
+<summary>As shipped: the exact identity, agreement with SIESTA, what measuring beat projecting, pins</summary>
 
 ### The checks
 
@@ -73,6 +73,25 @@ such line. Asserting the line's presence is what separates a converged result fr
 — the SCF converges to a fixed point — so dividing the work differently must not change it. All nine
 runs agreed to all six printed decimals. The [MD recipes](../gromacs/README.md) cannot assert this
 because trajectories are chaotic; DFT can, and it costs nothing.
+
+### Cross-validated against SIESTA
+
+The Pt slab above has no second code to check it against, so the cross-validation runs on a system
+that does: **bulk Si, LDA, 6×6×6 k-mesh**, scanned over seven lattice constants in both GPAW and
+[SIESTA](../siesta/README.md).
+
+| code | method | a₀ |
+|---|---|---|
+| GPAW | PAW + plane waves, 500 eV | **5.4139 Å** |
+| SIESTA | LCAO + pseudopotential, DZP | **5.4042 Å** |
+| | difference | **0.0097 Å (0.18%)** |
+
+Their *total energies* differ by ~204 eV and are not comparable — a PAW and a pseudopotential total
+energy use different references for the core electrons — so only the structural observable can be
+compared. GPAW was run at **LDA to match SIESTA's default**, not at PBE, because a functional
+difference would have shown up as ~0.03 Å of fake disagreement. Tolerance 0.03 Å, set by the expected
+DZP-versus-converged-plane-wave basis difference. Full write-up:
+[measurements/dft-crosscheck](../../measurements/dft-crosscheck/README.md).
 
 ### Measuring the knee beat projecting it, by 18%
 

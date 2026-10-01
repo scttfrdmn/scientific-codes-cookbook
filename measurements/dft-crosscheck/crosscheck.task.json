@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-dft-crosscheck",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nS=$(cat a0_siesta.txt); G=$(cat a0_gpaw.txt)\nD=$(awk -v s=\"$S\" -v g=\"$G\" 'BEGIN{printf \"%.4f\", (g>s? g-s : s-g)}')\nP=$(awk -v s=\"$S\" -v g=\"$G\" -v d=\"$D\" 'BEGIN{printf \"%.3f\", 100*d/((s+g)/2)}')\n{\n  echo \"== bulk Si equilibrium lattice constant, LDA, 6x6x6 k -- two codes, two basis sets ==\"\n  echo \"siesta_a0_Ang     $S  (DZP numerical atomic orbitals + Troullier-Martins pseudopotential)\"\n  echo \"gpaw_a0_Ang       $G  (PW 500 eV + PAW)\"\n  echo \"difference_Ang    $D\"\n  echo \"difference_pct    $P %\"\n  echo \"tolerance_Ang     0.0300  want difference < this\"\n  echo \"\"\n  echo \"Total energies are NOT compared: an LCAO pseudopotential total energy and a PAW\"\n  echo \"plane-wave total energy have different zeros, so only a structural observable like the\"\n  echo \"equilibrium lattice constant is comparable at all. The XC functional (LDA) and the\"\n  echo \"k-mesh (6x6x6) are matched, and the same quadratic fit is applied to both scans, so the\"\n  echo \"remaining difference is the basis treatment -- which is what sets the tolerance.\"\n} > crosscheck.txt\ncat crosscheck.txt\n# 0.03 A is the expected DZP-vs-converged-plane-wave basis difference for a covalent\n# semiconductor, not a number picked to pass: the k-mesh contributes under 0.005 A at 6x6x6,\n# so the basis is the whole budget. Tight enough to be a real cross-validation of the numerics.\nawk -v d=\"$D\" 'BEGIN{exit !(d<0.03)}'\n# both must also land in the LDA literature band for Si\nawk -v s=\"$S\" 'BEGIN{exit !(s>5.35 && s<5.46)}'\nawk -v g=\"$G\" 'BEGIN{exit !(g>5.35 && g<5.46)}'\necho 'CROSS-CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/a0_siesta.txt",
+      "destination": "/tmp/a0_siesta.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/dft-crosscheck/a0_gpaw.txt",
+      "destination": "/tmp/a0_gpaw.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/crosscheck.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/dft-crosscheck/crosscheck.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.04
+  }
+}

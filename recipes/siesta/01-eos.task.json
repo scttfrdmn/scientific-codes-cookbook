@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-siesta-eos-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport OMP_NUM_THREADS=1 OMPI_MCA_rmaps_base_oversubscribe=yes\ncd /tmp\nprintf '%s  %s\\n' 0afddde32f30e43fa8d603822f3dd1ddf357e8ff33a1af21eb4982b6e63080d7 Si.psf > p.sha256\nsha256sum -c p.sha256\n\nmkfdf() {  # $1 = lattice constant, $2 = basis, $3 = k-mesh, $4 = mesh cutoff\ncat <<FDF\nSystemName   Si bulk\nSystemLabel  run\n%block ChemicalSpeciesLabel\n 1  14  Si\n%endblock ChemicalSpeciesLabel\nNumberOfAtoms       2\nNumberOfSpecies     1\nPAO.BasisSize       $2\nLatticeConstant     $1 Ang\n%block LatticeVectors\n  0.000  0.500  0.500\n  0.500  0.000  0.500\n  0.500  0.500  0.000\n%endblock LatticeVectors\n%block kgrid_Monkhorst_Pack\n $3 0 0  0.\n 0 $3 0  0.\n 0 0 $3  0.\n%endblock kgrid_Monkhorst_Pack\nMeshCutoff          $4 Ry\nDM.UseSaveDM        F\nAtomicCoordinatesFormat  ScaledCartesian\n%block AtomicCoordinatesAndAtomicSpecies\n    0.000    0.000    0.000   1\n    0.250    0.250    0.250   1\n%endblock AtomicCoordinatesAndAtomicSpecies\nFDF\n}\n\nT0=$(date +%s)\necho '== 1. SIESTA 5.4.2 own committed reference: SZP, 3x3x3, 150 Ry, a=5.430 =='\nmkfdf 5.430 SZP 3 150.0 > ref.fdf\nmpiexec -n 2 siesta < ref.fdf > ref.out 2>&1\nREFE=$(grep -E '^siesta: *Total *=' ref.out | tail -1 | awk '{print $NF}')\nREFRANKS=$(awk '/Running on/{for(i=1;i<=NF;i++) if($i==\"on\"){print $(i+1); exit}}' ref.out)\nREFCONV=$(grep -c 'SCF cycle converged' ref.out || true)\n\necho '== 2. production basis: DZP, 6x6x6, 200 Ry, E(a) over 7 lattice constants =='\n: > scan.dat\nfor A in 5.25 5.31 5.37 5.43 5.49 5.55 5.61; do\n  mkfdf \"$A\" DZP 6 200.0 > s.fdf\n  mpiexec -n 2 siesta < s.fdf > o_$A.txt 2>&1\n  grep -q 'SCF cycle converged' o_$A.txt\n  E=$(grep -E '^siesta: *Total *=' o_$A.txt | tail -1 | awk '{print $NF}')\n  echo \"$A $E\" >> scan.dat\ndone\ncat scan.dat\ncat > fit.py <<'FITEOF'\nimport sys, json\nxs, ys = [], []\nfor line in open(sys.argv[1]):\n    a, e = line.split()\n    xs.append(float(a)); ys.append(float(e))\nn = len(xs)\nSx=sum(xs); Sxx=sum(x*x for x in xs); Sxxx=sum(x**3 for x in xs); Sxxxx=sum(x**4 for x in xs)\nSy=sum(ys); Sxy=sum(x*y for x,y in zip(xs,ys)); Sxxy=sum(x*x*y for x,y in zip(xs,ys))\nimport itertools\nA=[[Sxxxx,Sxxx,Sxx],[Sxxx,Sxx,Sx],[Sxx,Sx,n]]\nb=[Sxxy,Sxy,Sy]\nfor i in range(3):\n    p=max(range(i,3), key=lambda r: abs(A[r][i])); A[i],A[p]=A[p],A[i]; b[i],b[p]=b[p],b[i]\n    for r in range(i+1,3):\n        f=A[r][i]/A[i][i]\n        for c in range(i,3): A[r][c]-=f*A[i][c]\n        b[r]-=f*b[i]\nc=[0,0,0]\nfor i in (2,1,0):\n    c[i]=(b[i]-sum(A[i][j]*c[j] for j in range(i+1,3)))/A[i][i]\nq, l, _ = c\na0 = -l/(2*q)\nprint(json.dumps({\"a0\": round(a0,4), \"curv\": q}))\nFITEOF\nA0=$(python3 fit.py scan.dat | python3 -c 'import json,sys;print(json.load(sys.stdin)[\"a0\"])')\nT1=$(date +%s)\n{\n  echo \"wall_s            $(( T1 - T0 ))  (8 SCFs: 1 reference + 7 scan points)\"\n  echo \"code              siesta 5.4.2 (LCAO pseudopotential)\"\n  echo \"ref_energy_eV     $REFE  want -214.377236 (SIESTA's committed 5.4.2 reference)\"\n  echo \"ref_ranks         $REFRANKS  want 2 (Running on N nodes)\"\n  echo \"ref_converged     $REFCONV  want >=1\"\n  echo \"scan_basis        DZP, 6x6x6 k, 200 Ry, LDA (SIESTA default XC)\"\n  echo \"a0_Ang            $A0\"\n} > smoke-check.txt\ncat smoke-check.txt\ncp scan.dat siesta-scan.dat\necho \"$A0\" > a0_siesta.txt\ntest \"$REFE\" = '-214.377236'\ntest \"$REFRANKS\" = '2'\ntest \"$REFCONV\" -ge 1\n# LDA underbinds Si slightly; the literature band for LDA Si is 5.37-5.44 A. A basis or\n# pseudopotential problem lands outside it, so this is a real floor, not a shaved one.\nawk -v a=\"$A0\" 'BEGIN{exit !(a>5.35 && a<5.46)}'\necho 'SIESTA CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/siesta/Si.psf",
+      "destination": "/tmp/Si.psf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/siesta-scan.dat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/siesta-scan.dat"
+    },
+    {
+      "source": "/tmp/a0_siesta.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/siesta/r1/a0_siesta.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}

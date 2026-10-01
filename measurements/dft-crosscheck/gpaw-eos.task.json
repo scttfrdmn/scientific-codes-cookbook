@@ -1,0 +1,37 @@
+{
+  "task_id": "cookbook-gpaw-eos",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\nexport OMP_NUM_THREADS=1\ncd /tmp\ncat > eos.py <<'PYEOF'\nimport sys\nfrom ase.build import bulk\nfrom gpaw import GPAW, PW\nfrom gpaw.mpi import world\nout = []\nfor a in [5.25, 5.31, 5.37, 5.43, 5.49, 5.55, 5.61]:\n    si = bulk(\"Si\", \"diamond\", a=a)\n    si.calc = GPAW(mode=PW(500), xc=\"LDA\", kpts=(6, 6, 6), txt=\"g_%.2f.txt\" % a)\n    e = si.get_potential_energy()\n    if world.rank == 0:\n        out.append(\"%.2f %.6f\" % (a, e))\nif world.rank == 0:\n    open(\"scan.dat\", \"w\").write(\"\\n\".join(out) + \"\\n\")\nPYEOF\ncat > fit.py <<'FITEOF'\nimport sys, json\nxs, ys = [], []\nfor line in open(sys.argv[1]):\n    a, e = line.split()\n    xs.append(float(a)); ys.append(float(e))\nn = len(xs)\nSx=sum(xs); Sxx=sum(x*x for x in xs); Sxxx=sum(x**3 for x in xs); Sxxxx=sum(x**4 for x in xs)\nSy=sum(ys); Sxy=sum(x*y for x,y in zip(xs,ys)); Sxxy=sum(x*x*y for x,y in zip(xs,ys))\nimport itertools\nA=[[Sxxxx,Sxxx,Sxx],[Sxxx,Sxx,Sx],[Sxx,Sx,n]]\nb=[Sxxy,Sxy,Sy]\nfor i in range(3):\n    p=max(range(i,3), key=lambda r: abs(A[r][i])); A[i],A[p]=A[p],A[i]; b[i],b[p]=b[p],b[i]\n    for r in range(i+1,3):\n        f=A[r][i]/A[i][i]\n        for c in range(i,3): A[r][c]-=f*A[i][c]\n        b[r]-=f*b[i]\nc=[0,0,0]\nfor i in (2,1,0):\n    c[i]=(b[i]-sum(A[i][j]*c[j] for j in range(i+1,3)))/A[i][i]\nq, l, _ = c\na0 = -l/(2*q)\nprint(json.dumps({\"a0\": round(a0,4), \"curv\": q}))\nFITEOF\necho '== GPAW: bulk Si, PW 500 eV, 6x6x6 k, LDA -- matched to SIESTA s XC and k-mesh =='\nmpiexec -n 4 --allow-run-as-root --oversubscribe python3 eos.py\ncat scan.dat\nA0=$(python3 fit.py scan.dat | python3 -c 'import json,sys;print(json.load(sys.stdin)[\"a0\"])')\n{\n  echo \"code              gpaw 25.7.0 (PAW plane wave)\"\n  echo \"scan_basis        PW 500 eV, 6x6x6 k, LDA\"\n  echo \"a0_Ang            $A0\"\n} > smoke-check.txt\ncat smoke-check.txt\ncp scan.dat gpaw-scan.dat\necho \"$A0\" > a0_gpaw.txt\nawk -v a=\"$A0\" 'BEGIN{exit !(a>5.35 && a<5.46)}'\necho 'GPAW EOS CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/dft-crosscheck/gpaw-smoke-check.txt"
+    },
+    {
+      "source": "/tmp/gpaw-scan.dat",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/dft-crosscheck/gpaw-scan.dat"
+    },
+    {
+      "source": "/tmp/a0_gpaw.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/dft-crosscheck/a0_gpaw.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
