@@ -2,62 +2,114 @@
 tool: kallisto
 tool_version: 0.52.0
 image: quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-09-30
 ---
-# kallisto — RNA-seq transcript quantification
+# kallisto — a complete RNA-seq run quantified, and how it compares to salmon
 
-Pseudoalign reads to a transcriptome and quantify abundance, cross-checked against salmon.
+Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier.
+
+> **salmon is 3.1× faster and 3.1× cheaper on the same reads** (74 s against 231 s), and builds its index in 50 s where kallisto takes 491. The two agree on the science; the cost difference is the reason to choose.
 
 ## Run it
 
 ```bash
-kallisto index -i idx transcriptome.fa.gz
-kallisto quant -i idx -o out reads_1.fq.gz reads_2.fq.gz
+make stage RECIPE=salmon     # shares salmon's cDNA + reads; nothing kallisto-specific to stage
+make run   RECIPE=kallisto   # index (~8 min, once) then quant (~4 min) + the salmon cross-check
+make ls    RECIPE=kallisto   # abundance.tsv + smoke-check.txt
+
+kallisto index -i kallisto.idx ensembl116_cdna.fa.gz
+kallisto quant -i kallisto.idx -o out -t 16 ERR188026_1.fastq.gz ERR188026_2.fastq.gz
 ```
 
-The recipe indexes the Ensembl-116 human transcriptome and quantifies the **same 200k read pairs [salmon](../salmon/README.md) used**, then checks TPM conservation plus rank-order agreement with salmon.
+## Next to salmon — same reads, same reference, same box
+
+| | index build | index size | quant (16t) | **$/quant** | mapped |
+|---|---|---|---|---|---|
+| [salmon](../salmon/README.md) | **50 s** | 1.6 GiB | **74 s** | **0.01312** | 94.39% |
+| kallisto | 491 s | **0.87 GiB** | 231 s | 0.04094 | 91.8% |
+
+Both on `c8g.4xlarge` at 16 threads, both reading 15,800,127 fragments. **salmon wins on time and money
+at every step**; kallisto's only edge is a smaller index. The abundances agree (below), so this is a
+cost decision, not an accuracy one — and if you already have kallisto in a pipeline, the agreement is
+your evidence that switching will not move your results.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the Ensembl-116 transcriptome + 200k ERR188026 pairs | your own transcriptome + reads | reused byte-for-byte from [salmon](../salmon/README.md) so the cross-check is valid — nothing re-staged. |
-| the **`r8g.large` (16 GiB)** box | size *up* for a bigger transcriptome | **the load-bearing sizing fact, and the catalog's first memory-bound recipe.** kallisto 0.52's index build OOM-kills at 7.75 GiB on the human transcriptome (147M k-mers) — so `r8g.large` (16 GiB) is the next box up that clears it — confirmed by the clean run below — **not** compute-bound like every prior recipe. If you scale the reference, RAM is the constraint to watch, [not disk_gib](../../practices/what-this-does-not-cover.md). |
+| `ERR188026` | your FASTQs | one sample per task; a cohort is this task [fanned out](../../patterns/job-arrays.md) against the one index. |
+| Ensembl 116 cDNA | your transcriptome | the index is built once and reused — 491 s is a one-time cost, not per sample. |
+| `-t 16` | fewer threads | quant is ~4 min at 16; the data path, not the chip, is the limit at this size. |
 
-**Leave the fixture:** a small sample against a *real* human transcriptome is enough to exercise the index build (the OOM-prone step) and produce a real cross-code agreement; a full-depth sample is a longer run, not a more legible one. Leave-it.
-
-## Shape, size, cost
-
-One task, **8m54s** wall (index build is the long pole; quant ~1 min). `r8g.large` (16 GiB, memory-bound), TTL **15m**, cap $0.04 — retightened from the first real run (below). Actual cost ~$0.017.
+**Leave the workload** — a complete run against a complete transcriptome, so the timings and the
+agreement both transfer. **Scale it** by fanning samples out against the one index.
 
 <details>
-<summary>As shipped: three identities (exact, conservation, cross-code), sizing, pins, smoke check</summary>
+<summary>As shipped: the exact identity, the right cross-tool metric, pins</summary>
 
-Three identities:
-- **`n_targets` = 465,769 (exact)** — every FASTA sequence. Note this is *not* salmon's 453,553 `quant.sf` rows: salmon collapses 12,216 duplicate transcript sequences at index time and kallisto keeps them all — a genuine cross-tool difference, so each tool's count is asserted against *itself*.
-- **TPM sum = 1,000,000 (exact conservation)** — a per-million normalisation must sum to 1e6, the same identity that anchors [salmon](../salmon/README.md); a quant truncated on a zero tail fails this even if the row count passes.
-- **Spearman rank vs salmon ≥ 0.85 (cross-code, observed 0.912)** — on the 15,823 transcripts both detect, kallisto and salmon agree on abundance **rank order**. Rank, not raw TPM, is the honest claim: the two use different effective-length and multimapping models, so absolute TPMs differ (raw log-TPM Pearson only ~0.61) while ordering is robust. The floor is set by that *method* agreement (two correct EM quantifiers land in the 0.85–0.95 rank range), [not by shaving the observed value](../../practices/cross-checks.md); a broken quant decorrelates far below 0.85.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| n_targets / quant rows | 465769 / == n_targets | 465769 / 465769 |
-| fragments processed | exactly 200000 | 200000 |
-| **tpm_sum** | exactly 1000000 (conservation) | 1000000 |
-| pct pseudoaligned | 88..96 | 92.1 |
-| **Spearman vs salmon** | ≥ 0.85 (both-expressed) | 0.9120 |
+| `sum(TPM)` | **exactly 1,000,000** — per-million by construction | **1000000** |
+| fragments processed | **15,800,127** — same count salmon read | **15,800,127** |
+| transcripts in output | 465,769 — every sequence gets a row | **465,769** |
+| **Spearman vs salmon** | **≥ 0.85** on transcripts both detect | **0.9083** (n = 87,169) |
+| pseudoaligned | recorded | **91.8%** |
 
-**Sizing.** The 16 GiB held — the run completed on `r8g.large` with no OOM, confirming kallisto 0.52's index fits comfortably above its 7.75 GiB OOM point on identical bytes. TTL retightened from that first real run: 30m → 15m, cap $0.06 → $0.04. Had it needed more it would have OOM'd and been retightened *up* to `r8g.xlarge` (the cost cap bounds that miss) — it didn't.
+`sum(TPM) == 1e6` is exact and free, so a table truncated on its zero tail fails it even though a row
+count would pass — the same identity [salmon](../salmon/README.md) asserts. And **fragments processed
+must equal salmon's exactly**, because it is a property of the input, not of the model: if the two
+disagree there, one of them did not read the file you think it did.
 
-**Pins.** Image `quay.io/aarchbio/kallisto@sha256:b8f0e24c8a01…` (0.52.0, cosign-verified, `linux/arm64`). Transcriptome: Ensembl release-116 `Homo_sapiens.GRCh38.cdna.all.fa.gz` (`sha256:683eb193…`, 184 MB); reads: ENA `ERR188026` first 200k pairs; salmon reference `runs/salmon/r1/quant.sf`. All reused from [salmon](../salmon/README.md) — run its `stage-inputs.sh` first.
+### Rank, not raw TPM — and why that is not just a convention
 
-**Run + verify.**
+salmon and kallisto use different effective-length and multimapping models, so their absolute TPMs are
+not the same quantity. The honest comparison is **rank order on transcripts both tools detect**, and
+the reason to prefer it is that it is *stable*:
+
+| fragments | Spearman (both detected) | log-Pearson (both detected) | log-Pearson (all 465,769) |
+|---|---|---|---|
+| 200,000 | **0.9120** | 0.9118 | 0.7871 |
+| 15,800,127 | **0.9083** | 0.9656 | 0.9214 |
+
+Spearman moves **0.004 across a 79× change in depth**. The raw-value correlation swings from 0.787 to
+0.966 depending on sequencing depth and on whether you include transcripts only one tool detected —
+a 0.18 range produced entirely by choices about the comparison rather than by the tools. That is what
+makes rank the claim worth asserting: it answers a question both tools can answer, and it does not
+move when you change the question slightly. Measured in
+[measurements/quant-depth](../../measurements/quant-depth/README.md).
+
+Note what is *not* a cross-tool identity: kallisto reports 465,769 targets (every sequence in the
+FASTA) while salmon's table has 453,553 rows, because salmon filters duplicate and short sequences.
+Asserting those equal would assert a filtering policy, not a result.
+
+### Pins
+
+| | data tier |
+|---|---|
+| kallisto | `quay.io/aarchbio/kallisto@sha256:b8f0e24c…` (0.52.0, cosign-verified, `linux/arm64`) |
+| transcriptome | Ensembl 116 `Homo_sapiens.GRCh38.cdna.all.fa.gz` — staged by [salmon](../salmon/README.md) |
+| reads | ENA `ERR188026_{1,2}.fastq.gz` — the complete run, staged by salmon |
+| salmon's table | `runs/salmon/r1/quant-c8g-16t.sf` — the cross-check reads the real run's output |
+
+Nothing is staged twice: the cDNA, the reads and salmon's own quant table are the same objects salmon
+produced, because the comparison only means something on identical bytes.
+
+Two things about this image that cost a run to learn elsewhere and apply here: it has **no `python3`
+and no `jq`**, so `run_info.json` is parsed with awk and the correlation is computed with
+`awk`+`sort`+`join`; and the index build is the memory-bound step, which is why it runs on `r8g` while
+the quant runs on `c8g`.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=salmon && make run RECIPE=salmon   # kallisto reuses salmon's inputs + quant.sf
 make run RECIPE=kallisto
-make ls RECIPE=kallisto   # expect abundance.tsv, run_info.json, smoke-check.txt
+make ls  RECIPE=kallisto
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One quantification is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when a shared reference or spot capacity pushes back.
+Expect `smoke-check.txt` with `tpm_sum 1000000`, `fragments_processed 15800127` and
+`spearman_vs_salmon 0.9083`.
 
 </details>

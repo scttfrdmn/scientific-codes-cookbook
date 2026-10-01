@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-kallisto-index",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\nprintf '%s  %s\\n' 29c4b8ff5ba3f5b5e2e2b1c6b0fbd2a0d4a63f0a5b9f4e4a0e2c1f47a171f535d248ea1 x >/dev/null 2>&1 || true\nkallisto version\necho '== kallisto index on the whole Ensembl 116 cDNA -- the memory-bound step =='\nT0=$(date +%s)\nkallisto index -i kallisto.idx ensembl116_cdna.fa.gz 2> index.log\nT1=$(date +%s)\nIDXB=$(stat -c%s kallisto.idx)\n{\n  echo \"index_wall_s   $(( T1 - T0 ))\"\n  echo \"index_bytes    $IDXB\"\n  echo \"salmon_index   1684963328  (1.6 GiB tar, for comparison)\"\n} > index-stats.txt\ncat index-stats.txt\ntail -3 index.log\ntest \"$IDXB\" -gt 500000000\necho 'INDEX OK'"
+  ],
+  "container": "quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ensembl116_cdna.fa.gz",
+      "destination": "/tmp/ensembl116_cdna.fa.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/kallisto.idx",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/kallisto/kallisto.idx"
+    },
+    {
+      "source": "/tmp/index-stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/kallisto/index-stats.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

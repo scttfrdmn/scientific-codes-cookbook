@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-kallisto-quant",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho '== kallisto quant, the complete ERR188026 run, 16 threads (salmon s box and threads) =='\nT0=$(date +%s)\nkallisto quant -i kallisto.idx -o out -t 16 ERR188026_1.fastq.gz ERR188026_2.fastq.gz 2> quant.log\nT1=$(date +%s)\nWALL=$(( T1 - T0 ))\n# Flatten before declaring outputs: a /tmp/out parent would be root-owned by dockerd.\n# Never rm a staged input -- host /tmp is sticky 1777 and stage-in ran as another user,\n# so the container gets EPERM, which rm -f does not suppress.\ncp out/abundance.tsv abundance.tsv\ncp out/run_info.json run_info.json\n\n# no python3 and no jq in this image: parse with awk, correlate with awk+sort+join\njget() { awk -F'[:,]' -v k=\"$1\" '$0 ~ \"\\\"\"k\"\\\"\" {gsub(/[^0-9]/,\"\",$2); print $2; exit}' run_info.json; }\nNTARG=$(jget n_targets); NPROC=$(jget n_processed); NPS=$(jget n_pseudoaligned)\nROWS=$(tail -n +2 abundance.tsv | wc -l | tr -d ' ')\nTPMSUM=$(awk 'NR>1{s+=$5}END{printf \"%.0f\", s}' abundance.tsv)\nPCT=$(awk -v a=\"$NPS\" -v b=\"$NPROC\" 'BEGIN{printf \"%.1f\", 100*a/b}')\n\n# Cross-code vs salmon: SPEARMAN on rank, restricted to transcripts BOTH tools detect.\n# Raw TPM is not comparable -- the two use different effective-length and multimapping\n# models -- so rank order is the question both can answer. Identical metric to the earlier\n# small-fixture run, so the numbers stay comparable.\nawk 'FNR==NR{ if(FNR>1) st[$1]=$4; next }\n     FNR>1 && $5>0 && ($1 in st) && st[$1]>0 { print $1, $5, st[$1] }' salmon_quant.sf abundance.tsv > shared.txt\nNBOTH=$(wc -l < shared.txt | tr -d ' ')\nsort -k2,2g shared.txt | awk '{print $1, NR}' | sort > rk.txt\nsort -k3,3g shared.txt | awk '{print $1, NR}' | sort > rs.txt\nSPEAR=$(join rk.txt rs.txt | awk '{k=$2;s=$3;n++;sk+=k;ss+=s;skk+=k*k;sss+=s*s;sks+=k*s}\n  END{printf \"%.4f\", (n*sks-sk*ss)/sqrt((n*skk-sk*sk)*(n*sss-ss*ss))}')\n# and the raw-value correlation, to show WHY rank is the right metric rather than asserting it\nPEAR=$(awk '{x=log($2+1);y=log($3+1);n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y}\n  END{printf \"%.4f\", (n*sxy-sx*sy)/sqrt((n*sxx-sx*sx)*(n*syy-sy*sy))}' shared.txt)\n\n{\n  echo \"wall_s               $WALL   (kallisto quant only)\"\n  echo \"n_targets            $NTARG   want 465769  (sequences in the Ensembl 116 cDNA)\"\n  echo \"fragments_processed  $NPROC   want 15800127  (the complete run -- same count salmon read)\"\n  echo \"quant_rows           $ROWS   want 465769  (every transcript gets a row)\"\n  echo \"tpm_sum              $TPMSUM   want exactly 1000000  (per-million normalisation)\"\n  echo \"pct_pseudoaligned    $PCT\"\n  echo \"both_detected        $NBOTH   transcripts with TPM>0 in both tools\"\n  echo \"spearman_vs_salmon   $SPEAR   want >= 0.85  (rank order -- the comparable question)\"\n  echo \"log_pearson_raw      $PEAR   reported, NOT asserted -- see note\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$NTARG\"  -eq 465769\ntest \"$NPROC\"  -eq 15800127\ntest \"$ROWS\"   -eq 465769\ntest \"$TPMSUM\" -eq 1000000\nawk -v s=\"$SPEAR\" 'BEGIN{ if (s>=0.85) exit 0; print \"spearman \" s \" below 0.85\"; exit 1 }'\necho 'SMOKE CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto/kallisto.idx",
+      "destination": "/tmp/kallisto.idx"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/quant-c8g-16t.sf",
+      "destination": "/tmp/salmon_quant.sf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/abundance.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/abundance.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "35m",
+    "on_complete": "terminate",
+    "cost_limit": 0.22
+  }
+}

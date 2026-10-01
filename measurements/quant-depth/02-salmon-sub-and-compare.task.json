@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-quantdepth-salmon-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\n# the tar extracts to ./sidx -- searching /tmp for it walks root-owned systemd dirs,\n# whose permission errors make find exit non-zero and kill the task under set -e\ntar -xf salmon-index.tar\nsalmon quant -i sidx -l A -1 sub_1.fq.gz -2 sub_2.fq.gz -o sq -p 16 --validateMappings > s.log 2>&1\ncp sq/quant.sf salmon_sub.sf\n\ncorr() {  # $1 = kallisto table, $2 = salmon table -> \"spearman logpearson n\"\n  awk 'FNR==NR{ if(FNR>1) st[$1]=$4; next }\n       FNR>1 && $5>0 && ($1 in st) && st[$1]>0 { print $1, $5, st[$1] }' \"$2\" \"$1\" > sh.txt\n  NB=$(wc -l < sh.txt | tr -d ' ')\n  sort -k2,2g sh.txt | awk '{print $1, NR}' | sort > a.txt\n  sort -k3,3g sh.txt | awk '{print $1, NR}' | sort > b.txt\n  SP=$(join a.txt b.txt | awk '{k=$2;s=$3;n++;sk+=k;ss+=s;skk+=k*k;sss+=s*s;sks+=k*s}\n       END{printf \"%.4f\", (n*sks-sk*ss)/sqrt((n*skk-sk*sk)*(n*sss-ss*ss))}')\n  PE=$(awk '{x=log($2+1);y=log($3+1);n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y}\n       END{printf \"%.4f\", (n*sxy-sx*sy)/sqrt((n*sxx-sx*sx)*(n*syy-sy*sy))}' sh.txt)\n  echo \"$SP $PE $NB\"\n}\nallcorr() {  # every transcript in the kallisto table, salmon's value 0 where absent\n  awk 'FNR==NR{ if(FNR>1) st[$1]=$4; next }\n       FNR>1 { s=($1 in st)?st[$1]:0; print $1, $5, s }' \"$2\" \"$1\" > al.txt\n  awk '{x=log($2+1);y=log($3+1);n++;sx+=x;sy+=y;sxx+=x*x;syy+=y*y;sxy+=x*y}\n       END{printf \"%.4f %d\", (n*sxy-sx*sy)/sqrt((n*sxx-sx*sx)*(n*syy-sy*sy)), n}' al.txt\n}\nread SP_SUB PE_SUB NB_SUB <<< \"$(corr abundance_sub.tsv salmon_sub.sf)\"\nread SP_FUL PE_FUL NB_FUL <<< \"$(corr abundance_full.tsv salmon_full.sf)\"\nread AP_SUB AN_SUB <<< \"$(allcorr abundance_sub.tsv salmon_sub.sf)\"\nread AP_FUL AN_FUL <<< \"$(allcorr abundance_full.tsv salmon_full.sf)\"\n{\n  echo \"== kallisto vs salmon: does raw-value agreement depend on depth? ==\"\n  echo \"depth is the only variable -- same indices, same tool versions, same metric code\"\n  echo \"\"\n  printf \"%-12s %10s %12s %10s %14s %10s\\n\" fragments spearman log_pearson both_det all_pearson all_n\n  printf \"%-12s %10s %12s %10s %14s %10s\\n\" 200000   \"$SP_SUB\" \"$PE_SUB\" \"$NB_SUB\" \"$AP_SUB\" \"$AN_SUB\"\n  printf \"%-12s %10s %12s %10s %14s %10s\\n\" 15800127 \"$SP_FUL\" \"$PE_FUL\" \"$NB_FUL\" \"$AP_FUL\" \"$AN_FUL\"\n} > depth.txt\ncat depth.txt\n# Spearman must be depth-stable: that is the property that makes rank the robust metric.\nawk -v a=\"$SP_SUB\" -v b=\"$SP_FUL\" 'BEGIN{d=(a>b?a-b:b-a); if(d<0.05) exit 0; print \"spearman moved \"d\" with depth\"; exit 1}'\necho 'DEPTH CHECK DONE'"
+  ],
+  "container": "quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/salmon-index.tar",
+      "destination": "/tmp/salmon-index.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/sub_1.fq.gz",
+      "destination": "/tmp/sub_1.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/sub_2.fq.gz",
+      "destination": "/tmp/sub_2.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/abundance_sub.tsv",
+      "destination": "/tmp/abundance_sub.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto/r1/abundance.tsv",
+      "destination": "/tmp/abundance_full.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/quant-c8g-16t.sf",
+      "destination": "/tmp/salmon_full.sf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/depth.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/depth.txt"
+    },
+    {
+      "source": "/tmp/salmon_sub.sf",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/salmon_sub.sf"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "35m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

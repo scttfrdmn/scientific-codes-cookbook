@@ -145,9 +145,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   evidence of a bug in either tool; it is evidence the comparison was wrong, and a green
   check on the wrong metric is worse than none. The three failure modes, all caught in local
   validation in the first aarch.bio batch: **different models make raw values incomparable —
-  use rank** (kallisto↔salmon TPM: raw log-TPM Pearson 0.61 because the two use different
-  EM/effective-length models, Spearman rank 0.912 once you ask the question they can both
-  answer); **repeat-heavy references make all-mapped concordance meaningless — restrict to
+  use rank, because rank is the stable choice** (kallisto↔salmon TPM, measured at two depths on one
+  dataset: Spearman **0.912 at 200k fragments and 0.908 at 15.8M**, moving 0.004 across a 79× depth
+  change, while raw log-TPM correlation on the *same* data spans **0.787–0.966** depending on depth
+  and on whether transcripts only one tool detected are included — so a raw-value number states a
+  property of your comparison, not of the tools. An earlier recorded 0.61 for this pair does not
+  reproduce under any of those four variants and should not be requoted); **repeat-heavy references make all-mapped concordance meaningless — restrict to
   confident calls** (minimap2↔bwa: naive all-mapped 0.43 on the chr20-only subsample where
   two correct aligners break repeat ties differently, 0.9921 gated on MAPQ≥30 and ≤5 bp —
   "agree where both are sure"); **different alignment modes reject different reads — match the

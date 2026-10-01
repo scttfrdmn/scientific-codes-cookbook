@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-quantdepth-kallisto",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho '== cut the first 200,000 pairs out of the same reads the full run used =='\n# 200000 pairs = 800000 lines. awk, not head: head closes the pipe early and SIGPIPEs zcat,\n# which under pipefail kills the task.\nzcat ERR188026_1.fastq.gz | awk 'NR<=800000' | gzip -1 > sub_1.fq.gz\nzcat ERR188026_2.fastq.gz | awk 'NR<=800000' | gzip -1 > sub_2.fq.gz\nkallisto quant -i kallisto.idx -o out -t 16 sub_1.fq.gz sub_2.fq.gz 2> q.log\ncp out/abundance.tsv abundance_sub.tsv\ncp out/run_info.json run_info.json\nN=$(awk -F'[:,]' '/n_processed/{gsub(/[^0-9]/,\"\",$2);print $2;exit}' run_info.json)\necho \"fragments $N\"\ntest \"$N\" -eq 200000\necho 'SUBSET KALLISTO OK'"
+  ],
+  "container": "quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto/kallisto.idx",
+      "destination": "/tmp/kallisto.idx"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/abundance_sub.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/abundance_sub.tsv"
+    },
+    {
+      "source": "/tmp/sub_1.fq.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/sub_1.fq.gz"
+    },
+    {
+      "source": "/tmp/sub_2.fq.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/quant-depth/sub_2.fq.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.18
+  }
+}

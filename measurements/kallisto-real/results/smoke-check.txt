@@ -1,0 +1,9 @@
+wall_s               231   (kallisto quant only)
+n_targets            465769   want 465769  (sequences in the Ensembl 116 cDNA)
+fragments_processed  15800127   want 15800127  (the complete run -- same count salmon read)
+quant_rows           465769   want 465769  (every transcript gets a row)
+tpm_sum              1000000   want exactly 1000000  (per-million normalisation)
+pct_pseudoaligned    91.8
+both_detected        87169   transcripts with TPM>0 in both tools
+spearman_vs_salmon   0.9083   want >= 0.85  (rank order -- the comparable question)
+log_pearson_raw      0.9656   reported, NOT asserted -- see note
