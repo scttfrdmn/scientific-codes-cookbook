@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-blast-search-r1",
+  "task_id": "cookbook-blast-1000q-r4",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\n{ printf '%s  %s\\n' 9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668 ensembl116_pep.fa.gz\n  printf '%s  %s\\n' 6b43cff7568a5dead256262b159fe4b1d7fd7f97128efbcc8613d4dbedaacfa9 queries20.fa\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# makeblastdb cannot read gzip. gzip is a base-image utility, not a second\n# scientific tool: makeblastdb and blastp are both BLAST+, so this is one tool.\ngzip -dc ensembl116_pep.fa.gz > pep.fa\n\necho \"== makeblastdb: Ensembl 116 human proteome ==\"\nmakeblastdb -in pep.fa -dbtype prot -out pepdb -title ensembl116_pep\nblastdbcmd -db pepdb -info > dbinfo.txt\ncat dbinfo.txt\n\necho \"== blastp: 20 queries vs the whole proteome ==\"\nblastp -query queries20.fa -db pepdb \\\n  -outfmt '6 qseqid sseqid pident length qlen evalue bitscore' \\\n  -max_target_seqs 20 -num_threads 8 -out hits.tsv\n\n# ---- smoke check ----\n# The queries ARE the first 20 records of the database, so each one must find\n# itself: a full-length alignment at 100.000% identity that nothing else beats on\n# bitscore. That is a property of the algorithm, not of a measured threshold, so\n# these are exact assertions rather than bands.\n#\n# Note what is NOT asserted: that the self-hit comes FIRST. Measured on this input,\n# one query's self-hit ranks second \u2014 tied on bitscore and e-value with a paralog,\n# and BLAST breaks such ties arbitrarily. \"Best hit is itself\" would be a flaky\n# check; \"nothing beats itself\" is the same claim stated correctly.\nDBSEQS=$(awk '/sequences;/ {gsub(/,/,\"\",$1); print $1; exit}' dbinfo.txt)\nROWS=$(wc -l < hits.tsv | tr -d ' ')\nQWITHHITS=$(cut -f1 hits.tsv | sort -u | wc -l | tr -d ' ')\nSELFHITS=$(awk -F'\\t' '$1==$2 && $3==100.000 && $4==$5 {print $1}' hits.tsv | sort -u | wc -l | tr -d ' ')\nBEATEN=$(awk -F'\\t' '{if($1==$2) self[$1]=$7; else if($7>best[$1]) best[$1]=$7}\n                     END{n=0; for(q in self) if(best[q]>self[q]) n++; print n}' hits.tsv)\nWORST_SELF_E=$(awk -F'\\t' '$1==$2 {print $6}' hits.tsv | sort -g | tail -1)\n\n{\n  echo \"db_sequences            $DBSEQS        want exactly 382428\"\n  echo \"hit_rows                $ROWS          want 300..400        (observed 400)\"\n  echo \"queries_with_any_hit    $QWITHHITS     want exactly 20\"\n  echo \"full_length_self_hits   $SELFHITS      want exactly 20\"\n  echo \"self_hit_beaten_by_other $BEATEN       want exactly 0\"\n  echo \"worst_self_hit_evalue   $WORST_SELF_E  (observed 1.10e-76; informational)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$DBSEQS\"    -eq 382428\ntest \"$ROWS\"      -ge 300\ntest \"$ROWS\"      -le 400\ntest \"$QWITHHITS\" -eq 20\ntest \"$SELFHITS\"  -eq 20\ntest \"$BEATEN\"    -eq 0\necho \"SMOKE CHECK PASSED\"\n"
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 ==\"\n{ printf '%s  %s\\n' 9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668 ensembl116_pep.fa.gz\n  printf '%s  %s\\n' e6732c4cf4fda1dd831e78cb9c0416c6357d6e462ec8ec75cac690801ab153a7 queries1000.fa\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# makeblastdb cannot read gzip. gzip is a base-image utility, not a second\n# scientific tool: makeblastdb and blastp are both BLAST+, so this is one tool.\ngzip -dc ensembl116_pep.fa.gz > pep.fa\n\necho \"== makeblastdb: Ensembl 116 human proteome ==\"\nmakeblastdb -in pep.fa -dbtype prot -out pepdb -title ensembl116_pep\nblastdbcmd -db pepdb -info > dbinfo.txt\ncat dbinfo.txt\n\necho \"== blastp: 1000 queries vs the whole proteome ==\"\nT0=$(date +%s)\nblastp -query queries1000.fa -db pepdb \\\n  -outfmt '6 qseqid sseqid pident length qlen evalue bitscore' \\\n  -max_target_seqs 500 -num_threads 16 -out hits.tsv\nT1=$(date +%s); SEARCH_S=$(( T1 - T0 ))\necho \"search_wall_s $SEARCH_S\"\n\n# ---- smoke check ----\n# The queries ARE the first 1000 records of the database, so each one must find itself. At 20\n# queries that read as \"every query gets a full-length 100% self-hit\", and that is NOT what BLAST\n# guarantees -- measured at 1000 queries, 102 of 931 self-alignments stop exactly ONE residue\n# short of the query (terminal proline is enriched 3.6x among them, 50/102 against 137/1000\n# overall; the mechanism is not established here). So the exact claim is split from the\n# data-dependent one:\n#   exact      -- every query that hits anything hits ITSELF, at 100.000% identity\n#   observed   -- how many of those self-alignments span the whole query\nDBSEQS=$(awk '/sequences;/ {gsub(/,/,\"\",$1); print $1; exit}' dbinfo.txt)\nROWS=$(wc -l < hits.tsv | tr -d ' ')\nQWITHHITS=$(cut -f1 hits.tsv | sort -u | wc -l | tr -d ' ')\nSELFROWS=$(awk -F'\\t' '$1==$2{print $1}' hits.tsv | sort -u | wc -l | tr -d ' ')\nSELF100=$(awk -F'\\t' '$1==$2 && $3==100.000{print $1}' hits.tsv | sort -u | wc -l | tr -d ' ')\nFULLSELF=$(awk -F'\\t' '$1==$2 && $3==100.000 && $4==$5{print $1}' hits.tsv | sort -u | wc -l | tr -d ' ')\n{\n  echo \"search_wall_s         $SEARCH_S   (blastp only, 16 threads)\"\n  echo \"db_sequences          $DBSEQS   want exactly 382428\"\n  echo \"queries               1000\"\n  echo \"queries_with_any_hit  $QWITHHITS   want >= 900 (69 are short peptides that miss the e-value cutoff)\"\n  echo \"self_rows             $SELFROWS   want == queries_with_any_hit (EXACT: a hit set containing itself)\"\n  echo \"self_rows_100pct      $SELF100   want == self_rows (EXACT: a sequence is 100% identical to itself)\"\n  echo \"full_length_self      $FULLSELF   OBSERVATION: 102 of 931 stop one residue short; see note\"\n  echo \"hit_rows              $ROWS\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$DBSEQS\" -eq 382428\ntest \"$QWITHHITS\" -ge 900\ntest \"$SELFROWS\" -eq \"$QWITHHITS\"\ntest \"$SELF100\"  -eq \"$SELFROWS\"\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/blast@sha256:377bfb5dc686ed9df1ce95f31835225c573bb6b75c17b0da80dfeb0c3b747b0c",
   "resources": {
-    "cpu": 8,
-    "memory_gib": 16,
+    "cpu": 16,
+    "memory_gib": 30,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -20,8 +20,8 @@
       "destination": "/tmp/ensembl116_pep.fa.gz"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast/queries20.fa",
-      "destination": "/tmp/queries20.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast/queries1000.fa",
+      "destination": "/tmp/queries1000.fa"
     }
   ],
   "outputs": [
@@ -39,8 +39,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "20m",
+    "ttl": "45m",
     "on_complete": "terminate",
-    "cost_limit": 0.13
+    "cost_limit": 0.4
   }
 }

@@ -2,62 +2,100 @@
 tool: blast
 tool_version: 2.16.0
 image: quay.io/aarchbio/blast@sha256:377bfb5dc686ed9df1ce95f31835225c573bb6b75c17b0da80dfeb0c3b747b0c
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
-# BLAST+ — protein search against the human proteome
+# BLAST+ — 1000 proteins against the whole human proteome, and the identity that scale broke
 
-Build a protein database, search sequences against it — the canonical homology search.
+Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. For anyone sizing a homology search, or choosing between BLAST+ and DIAMOND.
+
+> **[DIAMOND does the same search in 19 s](../diamond/README.md)** — 8.2× faster for 0.43% of the self-hits. This page is the reference the fast tool is measured against.
 
 ## Run it
 
 ```bash
-makeblastdb -in proteome.fa -dbtype prot -out db
-blastp -query queries.fa -db db -outfmt 6 -max_target_seqs 20 -num_threads 8
+make stage RECIPE=blast   # Ensembl 116 proteome + the first 1000 records as queries
+make run   RECIPE=blast   # makeblastdb then blastp, ~4 min total
+make ls    RECIPE=blast   # hits.tsv + smoke-check.txt
+
+makeblastdb -in pep.fa -dbtype prot -out pepdb
+blastp -query queries1000.fa -db pepdb -max_target_seqs 500 -num_threads 16 \
+  -outfmt '6 qseqid sseqid pident length qlen evalue bitscore' -out hits.tsv
 ```
 
-The recipe builds a database from all 382,428 Ensembl 116 human proteins and searches 20 queries against it. `makeblastdb` and `blastp` are the same BLAST+ image, so it's one task.
+## What it costs
+
+| | search | $/search | hit rows |
+|---|---|---|---|
+| **BLAST+**, 16 threads | **156 s** | **0.0277** | 320,305 |
+| [DIAMOND](../diamond/README.md) `--very-sensitive` | 19 s | 0.0034 | — |
+
+**`-max_target_seqs 500`, not 20** — and that is not a performance choice. At 20 the report is
+truncated before a query's own self-hit for 25 of 931 queries, which silently breaks the check
+below. Raising it to 500 costs **2 seconds** (154 → 156) and restores the identity.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the whole Ensembl 116 human proteome as the DB | your own reference proteome | `makeblastdb` can't read gzip — decompress first (the recipe does). |
-| **queries = the first 20 DB records** | your own queries | **load-bearing** — each query then must find itself at 100% identity, unbeatable: an algorithmic check, not a guessed threshold. Swap it and you lose that. |
-| `-max_target_seqs 20` | scale to your needs | scaffolding that **stays** — 20 is deliberate headroom so a query's self-hit can't be crowded out by paralogs (at 5 it can). |
+| the first 1000 proteome records | your own query FASTA | the queries being records *of the database* is what makes the self-hit identity available; your own queries lose that check. |
+| `-max_target_seqs 500` | higher for deep families | too low silently drops self-hits, as above — it is a correctness knob here, not just a speed one. |
+| 1000 queries | more | cost is near-linear in queries; 1000 is annotation scale and runs in under 3 minutes. |
 
-BLAST is deterministic, but ties break **arbitrarily**: assert "nothing beats the self-hit," never "ranks first." **Leave the DB full-size:** the real proteome is the point (a toy DB wouldn't exercise a real search), and it's shared with [hmmer](../hmmer/README.md) — one pinned release, one fewer thing to sync.
-
-## Shape, size, cost
-
-One task. `c8g.2xlarge` (8 vCPU), TTL 20m, cap $0.13. Measured work: `makeblastdb` **54 s**, `blastp` **2.8 s**. Boot + pull dominate even so; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
-
-**Sizing:** compute-bound `c8g`; BLAST memory-maps the DB, so RAM stays modest even for a large reference — the dial for speed is core count ([sizing](../../patterns/sizing.md)), and a big DB (nr/nt) is a *staging* question ([data movement](../../patterns/data-movement.md)), not RAM.
+**Leave the workload** — a real query set against a real proteome, so the timing and the
+DIAMOND comparison both transfer. **Scale it** by query count, which is the axis that costs money.
 
 <details>
-<summary>As shipped: the self-hit identity, the flaky-check lesson, pins, smoke check</summary>
+<summary>As shipped: the identity scale broke, what replaced it, pins</summary>
 
-**The queries are the first 20 records of the database**, so every one is guaranteed to find itself: a full-length alignment at exactly 100.000% identity that nothing outscores, because no alignment of a sequence beats its alignment to itself. That's *algorithmic*, not empirical — exact assertions, no band, the strongest check in the genomics set.
-
-**A "best hit is itself" check would have been flaky, and measurement caught it:** for one query the self-hit came back *second*, tied with a paralog on bitscore (241) and e-value (1.39e-83) — BLAST breaks ties arbitrarily. Asserting "ranks first" would have failed 19-of-20 for reasons unrelated to correctness. The recipe asserts **"nothing beats itself"** — the same claim, stated correctly. A flaky check is worse than none.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| database sequences | exactly 382428 | 382428 |
-| hit rows | 300–400 (cap = 20×20) | 400 |
-| queries with any hit | exactly 20 | 20 |
-| full-length 100% self-hits | exactly 20 | 20 |
-| self-hit beaten by another | exactly 0 | 0 |
+| database sequences | **exactly 382,428** | **382,428** |
+| queries with any hit | ≥ 900 | **931** |
+| **queries whose hit set contains itself** | **== queries with any hit** | **931** |
+| **self-rows at 100.000% identity** | **== self-rows** | **931** |
+| self-alignments spanning the whole query | observation | **829** |
 
-Only the row count is banded (the `-max_target_seqs 20` cap; a query with fewer homologs in a future release returns fewer rows without anything being wrong).
+### The identity that 20 queries hid
 
-**Pins.** Image `quay.io/aarchbio/blast@sha256:377bfb5dc686…` (2.16.0, cosign-signed, `linux/arm64` only). Database: Ensembl `release-116/Homo_sapiens.GRCh38.pep.all.fa.gz` (`sha256:9b43da92…`, 382,428 proteins) — an *immutable* release path (what makes it pinnable; `pub/current_*` isn't, and UniProt was rejected for the same reason). Queries: first 20 records of that file (`sha256:6b43cff7…`). Shared with [hmmer](../hmmer/README.md).
+The earlier 20-query version of this page asserted that **every** query gets a full-length,
+100%-identity self-hit that nothing outscores. At 1000 queries that is simply false: 931 of 1000
+queries hit anything, and of those only **829** self-alignments span the full query — the other 102
+stop **exactly one residue short**, every time.
 
-**Run + verify.**
+So the claim had to be split, because two different things were bundled in it:
+
+- **Exact and algorithmic:** a sequence is 100% identical to itself, so every reported self-row is
+  at `pident 100.000`. Measured: 931 of 931. This is the assertion.
+- **Data-dependent:** whether the local alignment extends to the final residue. 102 of 931 do not.
+  Terminal proline is enriched 3.6× among them (50 of 102, against 137 of 1000 overall) — a clear
+  signal, but the mechanism is not established here, so it is reported rather than explained.
+
+A fixture of 20 well-behaved proteins made a false claim look exact for months. That is the
+[assert-the-claim-you-mean](../../practices/cross-checks.md) rule failing in the direction that is
+hardest to notice: the check passed.
+
+Also dropped: "nothing outscores a self-hit". With truncated local alignments a paralog can
+legitimately score higher than a one-residue-short self-alignment, so the exact-zero assertion was
+measuring the same artifact.
+
+### Pins
+
+| | data tier |
+|---|---|
+| BLAST+ | `quay.io/aarchbio/blast@sha256:377bfb5d…` (2.16.0, `linux/arm64`) |
+| proteome | Ensembl 116 `Homo_sapiens.GRCh38.pep.all.fa.gz`, sha256 `9b43da9265…` — versioned release |
+| queries | its own first 1000 records, sha256 `e6732c4cf4…` — derived deterministically by the stage script |
+
+### Run + verify
+
 ```sh
-make stage RECIPE=blast          # build DB + queries from Ensembl (public)
 make run RECIPE=blast
-make ls RECIPE=blast
+make ls  RECIPE=blast
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `db_sequences 382428`, `self_rows 931` and `self_rows_100pct 931`.
 
 </details>

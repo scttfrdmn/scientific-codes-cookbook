@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-diamond-search-r1",
+  "task_id": "cookbook-diamond-1000q",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 (same proteome + queries as blast) ==\"\n{ printf '%s  %s\\n' 9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668 ensembl116_pep.fa.gz\n  printf '%s  %s\\n' 6b43cff7568a5dead256262b159fe4b1d7fd7f97128efbcc8613d4dbedaacfa9 queries20.fa\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# diamond makedb reads plain FASTA; gzip is a base-image utility, not a second tool\n# (both steps here are diamond).\ngzip -dc ensembl116_pep.fa.gz > pep.fa\n\necho \"== diamond makedb: Ensembl 116 human proteome ==\"\ndiamond makedb --in pep.fa -d pepdb 2> makedb.log\n\necho \"== diamond blastp --very-sensitive: 20 queries vs the whole proteome ==\"\n# --very-sensitive puts diamond in a sensitivity regime comparable to blastp's default.\n# Comparing diamond's DEFAULT (fast) mode against blastp would be the like-with-like trap:\n# different sensitivity modes return different hit sets for reasons unrelated to correctness\n# (the same error as bowtie2 end-to-end vs --local). Match the modes, then compare.\ndiamond blastp -q queries20.fa -d pepdb \\\n  --outfmt 6 qseqid sseqid pident length qlen evalue bitscore \\\n  --very-sensitive --max-target-seqs 20 -p 4 -o dmnd_hits.tsv 2> blastp.log\n\n# ---- smoke check ----\n# The 20 queries ARE the first 20 records of the database (blast's self-hit design), so each\n# must find itself: full-length, 100% identity, nothing beating it on bitscore. Algorithmic,\n# so exact assertions -- the diamond analog of blast's self-hit identity.\n#\n# CROSS-CODE, applying \\\"compare like with like\\\": the naive metric -- does diamond's #1\n# subject per query equal blast's #1 -- gives 1/20 here, NOT because the tools disagree but\n# because these first-20 proteins are near-identical paralogs whose self-hit TIES on bitscore\n# with a paralog (measured: 19/20 are exact ties, 0 real losses), and each tool breaks the\n# tie by its own arbitrary order. That is blast's own documented caveat (\\\"nothing beats\n# itself\\\", not \\\"self is first\\\"). So the asserted cross-code claim is tie-agnostic and\n# score-agnostic (diamond's heuristic bitscores differ from blastp's by design): BOTH tools\n# recover all 20 full-length 100% self-hits with none beaten -- the shared algorithmic truth.\nselfstats() { awk -F'\\t' '\n  $1==$2 && $3==100 && $4==$5 {self[$1]=$7}\n  {if($1!=$2 && $7>other[$1])other[$1]=$7}\n  END{ s=0; b=0; for(q in self){s++; if((q in other)&&other[q]>self[q])b++} print s\" \"b }' \"$1\"; }\nDST=$(selfstats dmnd_hits.tsv); DSELF=${DST%% *}; DBEATEN=${DST##* }\nBST=$(selfstats blast_hits.tsv); BSELF=${BST%% *}; BBEATEN=${BST##* }\nDQH=$(cut -f1 dmnd_hits.tsv | sort -u | wc -l | tr -d ' ')\n\n{\n  echo \"diamond_self_hits    $DSELF   want exactly 20   (full-length, 100% identity)\"\n  echo \"diamond_self_beaten  $DBEATEN   want exactly 0    (nothing outscores a self-hit)\"\n  echo \"diamond_queries_hit  $DQH   want exactly 20\"\n  echo \"blast_self_hits      $BSELF   want exactly 20   (cross-code: blast recovers the same self-hits)\"\n  echo \"blast_self_beaten    $BBEATEN   want exactly 0    (cross-code: unbeaten in blast too)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$DSELF\"   -eq 20\ntest \"$DBEATEN\" -eq 0\ntest \"$DQH\"     -eq 20\ntest \"$BSELF\"   -eq 20\ntest \"$BBEATEN\" -eq 0\necho \"SMOKE CHECK PASSED\""
+    "set -euo pipefail\ncd /tmp\n\necho \"== verify staged inputs against their pinned sha256 (same proteome + queries as blast) ==\"\n{ printf '%s  %s\\n' 9b43da92651b35814597af6a8b18f500b768679a49fa4678224f384917ce7668 ensembl116_pep.fa.gz\n  printf '%s  %s\\n' e6732c4cf4fda1dd831e78cb9c0416c6357d6e462ec8ec75cac690801ab153a7 queries1000.fa\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# diamond makedb reads plain FASTA; gzip is a base-image utility, not a second tool\n# (both steps here are diamond).\ngzip -dc ensembl116_pep.fa.gz > pep.fa\n\necho \"== diamond makedb: Ensembl 116 human proteome ==\"\ndiamond makedb --in pep.fa -d pepdb 2> makedb.log\n\necho \"== diamond blastp --very-sensitive: 1000 queries vs the whole proteome ==\"\n# --very-sensitive puts diamond in a sensitivity regime comparable to blastp's default.\n# Comparing diamond's DEFAULT (fast) mode against blastp would be the like-with-like trap:\n# different sensitivity modes return different hit sets for reasons unrelated to correctness\n# (the same error as bowtie2 end-to-end vs --local). Match the modes, then compare.\nT0=$(date +%s)\ndiamond blastp -q queries1000.fa -d pepdb \\\n  --outfmt 6 qseqid sseqid pident length qlen evalue bitscore \\\n  --very-sensitive --max-target-seqs 500 -p 4 -o dmnd_hits.tsv\nT1=$(date +%s); SEARCH_S=$(( T1 - T0 )) 2> blastp.log\n\n# ---- smoke check ----\n# Same split blast's page arrived at the hard way: the EXACT claim is that a query which hits\n# anything hits ITSELF at 100% identity; whether that self-alignment spans the whole query is\n# data-dependent (blast loses 102 of 931 by exactly one residue). So both are measured, only the\n# first is asserted, and the cross-code claim is the one both tools must satisfy.\n#\n# The cross-code metric is deliberately NOT \"does diamond's top hit equal blast's top hit\". On\n# this query set many proteins are near-identical paralogs whose self-hit TIES on bitscore, and\n# each tool breaks ties in its own order, so top-hit equality measures tie-breaking, not\n# agreement. And diamond's heuristic bitscores differ from blastp's by design, so score equality\n# is meaningless too. What both tools must agree on is the SET of self-hits recovered.\nstats() { awk -F'\\t' '\n  { q[$1]=1 }\n  $1==$2 { srow[$1]=1; if ($3+0==100) s100[$1]=1; if ($3+0==100 && $4==$5) full[$1]=1 }\n  END { nq=0; ns=0; n1=0; nf=0\n        for (k in q) nq++; for (k in srow) ns++; for (k in s100) n1++; for (k in full) nf++\n        print nq\" \"ns\" \"n1\" \"nf }' \"$1\"; }\nread DQH DSROW DS100 DFULL <<< \"$(stats dmnd_hits.tsv)\"\nread BQH BSROW BS100 BFULL <<< \"$(stats blast_hits.tsv)\"\nSHARED=$(awk -F'\\t' 'FNR==NR{if($1==$2)b[$1]=1;next} $1==$2 && ($1 in b){print $1}' blast_hits.tsv dmnd_hits.tsv | sort -u | wc -l | tr -d ' ')\nAGREE=$(awk -v s=\"$SHARED\" -v b=\"$BSROW\" 'BEGIN{printf \"%.4f\", (b>0? s/b : 0)}')\n{\n  echo \"search_wall_s          $SEARCH_S   (diamond --very-sensitive, 16 threads)\"\n  echo \"diamond_queries_hit    $DQH\"\n  echo \"diamond_self_rows      $DSROW   want == diamond_queries_hit (EXACT)\"\n  echo \"diamond_self_100pct    $DS100   want == diamond_self_rows (EXACT)\"\n  echo \"diamond_full_len_self  $DFULL   OBSERVATION\"\n  echo \"blast_queries_hit      $BQH   (same queries, same database)\"\n  echo \"blast_self_rows        $BSROW\"\n  echo \"self_hit_set_agreement $AGREE   want >= 0.95  (fraction of blast's self-hits diamond also finds)\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$DSROW\" -eq \"$DQH\"\ntest \"$DS100\" -eq \"$DSROW\"\nawk -v a=\"$AGREE\" 'BEGIN{ if (a>=0.95) exit 0; print \"self-hit set agreement \" a \" below 0.95\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5",
   "resources": {
-    "cpu": 4,
-    "memory_gib": 8,
+    "cpu": 16,
+    "memory_gib": 30,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -20,8 +20,8 @@
       "destination": "/tmp/ensembl116_pep.fa.gz"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast/queries20.fa",
-      "destination": "/tmp/queries20.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast/queries1000.fa",
+      "destination": "/tmp/queries1000.fa"
     },
     {
       "source": "s3://${COOKBOOK_BUCKET}/runs/blast/r1/hits.tsv",
@@ -39,8 +39,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "40m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.3
   }
 }

@@ -13,7 +13,7 @@ set -euo pipefail
 
 BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 PEP="https://ftp.ensembl.org/pub/release-116/fasta/homo_sapiens/pep/Homo_sapiens.GRCh38.pep.all.fa.gz"
-QUERIES=20
+QUERIES="${QUERIES:-1000}"   # annotation scale; still the first N records OF the database
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 cd "$WORK"
@@ -31,7 +31,7 @@ GOT=$(grep -c '^>' queries.fa)
 [ "$(grep -vc '^>' queries.fa)" -ge "$QUERIES" ] || { echo "a query has no sequence" >&2; exit 1; }
 
 aws s3 cp pep.fa.gz  "s3://$BUCKET/inputs/blast/ensembl116_pep.fa.gz" --only-show-errors
-aws s3 cp queries.fa "s3://$BUCKET/inputs/blast/queries20.fa" --only-show-errors
+aws s3 cp queries.fa "s3://$BUCKET/inputs/blast/queries${QUERIES}.fa" --only-show-errors
 echo "--- pins (record these in README.md):"
 sha256sum pep.fa.gz queries.fa
 echo "--- db proteins: $PROT   queries: $QUERIES"
