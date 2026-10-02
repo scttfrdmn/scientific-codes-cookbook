@@ -333,6 +333,25 @@ def check_verified_freshness():
                           f"never covered what ships")
 
 
+def check_page_paths_exist():
+    """A page naming a concrete bucket path is describing wiring, and wiring drifts. Measured: after
+    the bowtie2 chain was repaired, its spec read aln_chr20smoke.sam while its prose still said
+    `runs/bwa-samtools/r1/aln.sam` and told readers to get it from a recipe that had moved on to a
+    different workload. The wiring checks could not see that -- they read specs, not sentences."""
+    for rm in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))):
+        rdir = os.path.dirname(rm)
+        rec = os.path.basename(rdir)
+        specs = glob.glob(os.path.join(rdir, "*.task.json"))
+        if not specs:
+            continue
+        blob = " ".join(open(f, encoding="utf-8").read() for f in specs)
+        text = open(rm, encoding="utf-8").read()
+        for path in sorted(set(re.findall(r"(?:runs|inputs)/[\w.\-]+/[\w./\-]+", text))):
+            if path not in blob:
+                errors.append(f"recipes/{rec}/README.md: names {path} but no spec in this recipe "
+                              f"uses it — prose describing wiring that no longer exists")
+
+
 def main():
     ps = pages()
     for path, needs_fm in ps:
@@ -348,6 +367,7 @@ def main():
     check_staging_coverage()
     check_output_collisions()
     check_verified_freshness()
+    check_page_paths_exist()
     if "--external" in sys.argv:
         check_external()
     for w in warns:
