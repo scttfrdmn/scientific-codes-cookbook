@@ -2,64 +2,114 @@
 tool: flye
 tool_version: 2.9.6
 image: quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# Flye — long-read de novo assembly
+# Flye — a closed bacterial genome from a real nanopore run, in five minutes
 
-Assemble long reads into contigs — the catalog's first long-read recipe, run single-threaded for a reproducible assembly.
+Assembles a 65× MinION run of *E. coli* into one circular 4.72 Mb chromosome plus its plasmid. For anyone doing long-read de novo assembly.
 
 ## Run it
 
 ```bash
-flye --nano-hq reads.fastq.gz --out-dir out -t 1     # → 3 contigs, largest 420,910 bp
-```
+make stage RECIPE=flye   # once: ERR10114907, 55,898 reads / 299.5 Mbp
+make run   RECIPE=flye   # 306 s on c8g.2xlarge, self-terminating
+make ls    RECIPE=flye   # assembly.fasta + assembly_info.txt + flye.log
 
-One task. The recipe assembles Flye's own toy dataset (945 long reads over a ~420 kb E. coli region), pinned to the tag matching the image.
+flye --nano-hq ERR10114907.fastq.gz -g 4.6m -t 8 -o out
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| Flye's toy `ecoli_500kb_reads` (pinned to tag 2.9.6) | your long reads | staged from Flye's own test data at the image tag, so the run reproduces the tool's own fixture — long reads are an input class the catalog lacked (reusable for medaka, racon). |
-| **`--nano-hq`** | `--nano-raw`, `--pacbio-hifi`, … for your read type | must match your reads. **The raw modes OOM at 7.75 GiB here** (their error-correction stage is memory-hungry); `--nano-hq` fits. |
-| **`-t 1`** | more threads for a real run | **determinism scaffolding.** Thread count changes the assembly (contig count *wanders* — [sizing](../../patterns/sizing.md)), so `-t 1` is byte-identical across runs and lets the check assert an exact count. On more threads, assert a band, not an exact number. |
-| `m8g.large` (8 GiB) | keep ≥ 8 GiB | Flye's consensus stage runs `samtools sort -@4 -m1G` — a 4 GB reservation, so `c8g.large`'s 4 GiB fails on Graviton (below). |
+| `ERR10114907` (65×) | your ONT reads | `stage-inputs.sh` asks ENA for the path and checks the download against ENA's own read and base counts. |
+| `--nano-hq` | `--nano-raw` / `--nano-corr` | measured in this catalog: the raw modes OOM on inputs where `--nano-hq` fits. |
+| `-g 4.6m` | your genome size estimate | a hint, not a constraint; Flye tolerates being wrong by a factor. |
+| `-t 8` | more cores | **changes which assembly you get** — 8 is what this recipe asserts against. |
 
-**Leave the fixture:** it reproduces Flye's version-matched toy data deterministically and opens the long-read input class; a full genome is a longer run, not a more legible one. Leave-it.
+**Leave the depth** — 65× is what ONT assembly is actually run at: enough to close a chromosome, quick enough to finish in five minutes. **Scale it** by genome size, which moves runtime and the ~4.3 GB footprint together.
 
-## Shape, size, cost
+## Which box — measured, same reads, 8 vCPU throughout
 
-One task, **`m8g.large`** (2 vCPU / 8 GiB — the catalog's first `m8g`; the 8 GiB is for Flye's internal samtools reservation, not cores). TTL 5m, cap $0.02. Assembly is ~40–60 s. Recorded command window 147s. **These timings are not compute cost** — boot and image pull dominate ([why](../../practices/what-this-does-not-cover.md)).
+| generation | instance | Flye | **compute $** | billed $ |
+|---|---|---|---|---|
+| Graviton2 | `c6g.2xlarge` | 511 s | 0.0386 | 0.0543 |
+| Graviton3 | `c7g.2xlarge` | 377 s | 0.0304 | 0.0428 |
+| Graviton4 | `c8g.2xlarge` | 306 s | 0.0271 | 0.0360 |
+| **Graviton5** | `c9g.2xlarge` | **245 s** | **0.0237** | **0.0331** |
+
+**2.09× over four generations, every step paying for itself** (1.36×, 1.23×, 1.25×) — unlike
+[hmmer](../hmmer/README.md), where Graviton4 is 4% *dearer* than Graviton3 on these same two chips, so
+that weak rung belongs to particular inner loops rather than to the step
+([which comparison applies](../../patterns/cost-per-result.md)). **Size by the assembler's working
+set, not by staging:** tmpfs peaks at **768 MB** against Flye's own **~4.3 GB**, so a 16 GiB box is
+the fit — the opposite of [fastp](../fastp/README.md), where staging picked the family.
 
 <details>
-<summary>As shipped: the deterministic identity, the 4 GB reservation trap, the thread-wander sizing, pins, smoke check, run + verify</summary>
+<summary>As shipped: a completion sentinel from the right code path, seven runs of exact agreement, pins</summary>
 
-**Deterministic assembly that recovers the reference.** At `-t 1` the toy data gives exactly **3 contigs, 466,356 bp total**, and the largest (**420,910 bp**) recovers the 419,860 bp reference to within 1,050 bp (asserted "within 25 kb"). **This is not `test_toy.py`'s number:** that test uses the *HiFi* reads with `--pacbio-corr` (expects ~1 contig); this recipe uses the *standard* toy reads with `--nano-hq`, a different path, so 3 is the correct deterministic answer for this input+mode — what's reproduced is Flye's version-matched toy data assembled deterministically, not the test's contig count.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| contigs | exactly 3 (`--nano-hq -t 1`, deterministic) | 3 |
-| total bp | exactly 466356 | 466356 |
-| **largest contig vs reference** | within 25 kb of 419860 | 420910 (Δ 1050) |
+| **completion** | **`INFO: Final assembly:` present** | **yes** |
+| total length | exactly 4,754,056 | **4,754,056** |
+| largest contig | exactly 4,722,868 | **4,722,868** |
+| largest is circular | `Y` | **Y** |
+| contigs | exactly 2 | **2** |
+| circular contigs | exactly 2 | **2** |
 
-**The 4 GB reservation local Docker can't show.** The recipe first ran `c8g.large` (4 GiB) and *failed on Graviton* (`samtools sort: couldn't allocate memory`). Flye hardcodes `samtools sort -@4 -m1G` — a 4 GB up-front reservation, independent of `-t 1` or the tiny data. It ran fine on local Docker at 4/3/2.5 GiB because Docker allows memory *overcommit* (the reservation is lazy); the Graviton box accounts strictly and refuses it. The sharpest case yet of "local Docker can't prove the real box" ([container path](../../practices/container-path.md)) — sized `m8g.large`, passed first try.
+`assembly_info.txt` is the whole result in two lines: `contig_1` 4,722,868 bp circular at 63×, and
+`contig_2` 31,188 bp circular at 29× — a closed chromosome and a plasmid, which is what a good ONT
+assembly of a bacterial isolate looks like.
 
-**Threads change the answer — the sizing dial.** Swept on a real E. coli ONT run (DRR242223) across `-t 1/2/4/8`, the contig count wandered — **10 / 12 / 11 / 14** on identical reads (non-monotonic, so you can't reason about direction, only that thread count moves the result); speed is sublinear (3.2× at 4, 4.8× at 8), knee ~4. Flye is [sizing](../../patterns/sizing.md)'s "the answer moves" case, the reason for pinning `-t 1` — most assemblers behave this way; never assert an exact count on a multi-threaded run.
+**The exact values are asserted because seven runs produced them.** The recipe's own runs plus four
+generation rungs on `c6g`/`c7g`/`c8g`/`c9g` all gave the same three numbers. That matters because this
+catalog's standing rule is that **Flye's thread count changes which assembly the search lands on** —
+measured at `-t 4`, where the contig count moved between runs. What the sweep establishes is narrower
+and more useful: at a *fixed* thread count the chip does not move the answer, so `-t 8` can carry an
+exact assertion. Change `-t` and these numbers are no longer yours to expect.
 
-**Pins** (data tier: the code's own version-matched test data — [reproduce a published fixture](../../practices/reference-from-tests.md)):
+[muscle](../muscle/README.md) is the counter-example from the same batch: two runs with threads
+pinned gave 5,633 then 5,636 columns, so nothing about its output may be asserted. Only running twice
+tells you which kind of tool you have ([the rule](../../practices/cross-checks.md)).
 
-| | |
+### The sentinel came from the wrong code path first
+
+The first version of this check grepped for `INFO: Done`, and returned **0 on a perfect assembly**.
+Flye 2.9.6 does contain `logger.info("Done!")` — at `main.py:443`, inside the standalone
+`flye-polish` path, which `flye --nano-hq … -o out` never takes. The real end-of-pipeline marker is
+`logger.info("Final assembly: %s")` at `main.py:261`, the last line of `JobFinalize`, and
+`JobFinalize` is appended last (`main.py:395`, after `JobPolishing`), so it prints only once polishing
+and scaffolding have finished.
+
+A sentinel that exists in the tool but on a path your invocation skips is worse than a typo: it
+*looks* verified, and a zero match reads as "the tool failed" rather than "I asked the wrong
+question." `flye.log` is uploaded so the evidence is in the bucket rather than dying with the
+instance.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchbio/flye@sha256:d87ccd4e…` (tag `2.9.6--py313h30571f8_1`, cosign-verified, `linux/arm64`) |
-| reads / reference | Flye's toy `ecoli_500kb_reads.fastq.gz` / `.fasta` at tag 2.9.6 — `sha256:65b7cbd9…` / `de2efb0b…` |
+| Flye | `quay.io/aarchbio/flye@sha256:d87ccd4e29f2…` (2.9.6, cosign-verified, `linux/arm64`) |
+| reads | ENA run `ERR10114907` — 55,898 reads / 299,527,299 bases, MinION; sha256 `b9c775431270…` |
 
-`make stage RECIPE=flye` fetches both from the tag and verifies the sha256 — *fetched, not derived*: it reproduces while GitHub keeps the `2.9.6` tag, a weaker guarantee than a derivation ([which and why](../../practices/what-this-does-not-cover.md)).
+The FASTQ path is **not constructed** by `stage-inputs.sh`; ENA's portal API is asked for it, because
+the `vol1/fastq/<prefix>/<subdir>/` layout is not something to guess — an earlier attempt at another
+accession built the path by hand and 404'd. The script then checks the downloaded file's read and base
+counts against ENA's own reported values: a truncated download is still valid gzip and still
+assembles, into a worse genome, silently.
 
-**Run + verify.**
+### Run + verify
+
 ```sh
-make run RECIPE=flye
-make ls RECIPE=flye
+make stage RECIPE=flye
+make run   RECIPE=flye
+make ls    RECIPE=flye
 ```
-Smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `flye_done 1`, `total_length 4754056` and `contigs 2`.
 
 </details>

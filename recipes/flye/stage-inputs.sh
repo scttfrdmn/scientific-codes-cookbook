@@ -1,28 +1,45 @@
 #!/usr/bin/env bash
-# Stage Flye's toy E. coli dataset (reads + reference) for recipes/flye.
+# Stage one real Oxford Nanopore run of Escherichia coli for de novo assembly.
 #
-# FETCHED, not derived: Flye's conda package ships no test data, so the toy set is
-# pulled from Flye's own repo at the tag matching the image (2.9.6). This reproduces
-# only as long as github.com/mikolmogorov/Flye keeps that tag's blobs — a different
-# guarantee than a derived input (see practices/what-this-does-not-cover.md). The
-# sha256 verify below is what makes "fetched" trustworthy: wrong bytes fail loudly.
+# ERR10114907: 55,898 reads / 299,527,299 bases on a MinION. Against E. coli's ~4.6 Mb
+# genome that is ~65x, which is the depth ONT assembly is actually run at -- high enough
+# for a complete single-contig assembly, low enough that Flye finishes in minutes rather
+# than hours.
+#
+# PATH PROVENANCE. The FASTQ path is NOT constructed here. ENA's portal API is asked for it,
+# because the vol1/fastq/<prefix>/<subdir>/ layout is not something to guess: an earlier
+# attempt at a different accession built the path by hand and 404'd. The run accession is the
+# durable id; ENA resolves it to bytes.
+#
+# The downloaded file's read and base counts are checked against ENA's own reported values,
+# which is an independent cross-check on the transfer -- a truncated download would still be
+# a valid gzip and would still assemble, into a worse genome, silently.
 set -euo pipefail
 
 BUCKET="${1:?pass your bucket -- make stage RECIPE=NAME does this}"
-BASE="https://raw.githubusercontent.com/mikolmogorov/Flye/2.9.6/flye/tests/data"
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT; cd "$WORK"
+ACC="ERR10114907"
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+cd "$WORK"
 
-echo "== fetch the toy reads + reference from the Flye 2.9.6 tag =="
-curl -fsSL "$BASE/ecoli_500kb_reads.fastq.gz" -o ecoli_500kb_reads.fastq.gz
-curl -fsSL "$BASE/ecoli_500kb.fasta"          -o ecoli_500kb.fasta
+META=$(curl -sSf "https://www.ebi.ac.uk/ena/portal/api/filereport?accession=${ACC}&result=read_run&fields=fastq_ftp,base_count,read_count&format=tsv" | awk 'NR==2')
+FTP=$(printf '%s' "$META" | cut -f2)
+WANT_BASES=$(printf '%s' "$META" | cut -f3)
+WANT_READS=$(printf '%s' "$META" | cut -f4)
+[ -n "$FTP" ] || { echo "ENA returned no fastq path for $ACC" >&2; exit 1; }
+echo "ENA says: $WANT_READS reads, $WANT_BASES bases, at $FTP"
 
-echo "== verify against pinned sha256 =="
-cat > pins.sha256 <<'EOF'
-65b7cbd9fb7ce90958d821d85c96ea078ee3ed4d446e02a07a9c1d29767dcbe2  ecoli_500kb_reads.fastq.gz
-de2efb0bdf2e880b769b53777fd6d300cf8b65a82dbb42ca6c8a0d279a97aa76  ecoli_500kb.fasta
-EOF
-shasum -a 256 -c pins.sha256 2>/dev/null || sha256sum -c pins.sha256
+curl -sSf -o "$ACC.fastq.gz" "https://$FTP"
 
-aws s3 cp ecoli_500kb_reads.fastq.gz "s3://$BUCKET/inputs/flye/ecoli_500kb_reads.fastq.gz" --only-show-errors
-aws s3 cp ecoli_500kb.fasta          "s3://$BUCKET/inputs/flye/ecoli_500kb.fasta"          --only-show-errors
-echo "staged inputs/flye/ (fetched from the Flye 2.9.6 tag, sha256-verified)"
+# One pass, reading to EOF: an `exit` after the count would SIGPIPE gzip, and under pipefail
+# that is exit 141.
+read -r GOT_READS GOT_BASES <<<"$(gzip -dc "$ACC.fastq.gz" \
+  | awk 'NR%4==2 {r++; b+=length($0)} END{printf "%d %d", r, b}')"
+echo "downloaded: $GOT_READS reads, $GOT_BASES bases"
+[ "$GOT_READS" = "$WANT_READS" ] || { echo "read count $GOT_READS != ENA's $WANT_READS" >&2; exit 1; }
+[ "$GOT_BASES" = "$WANT_BASES" ] || { echo "base count $GOT_BASES != ENA's $WANT_BASES" >&2; exit 1; }
+
+aws s3 cp "$ACC.fastq.gz" "s3://$BUCKET/inputs/flye/$ACC.fastq.gz" --only-show-errors
+echo "--- pin (record in README.md):"
+sha256sum "$ACC.fastq.gz"
+echo "--- $GOT_READS reads, $GOT_BASES bases (~$(( GOT_BASES / 4600000 ))x of a 4.6 Mb genome)"

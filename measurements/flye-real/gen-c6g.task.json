@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-flye-gen-c6g",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho \"== verify the staged nanopore run against its pinned sha256 ==\"\nprintf '%s  %s\\n' b9c7754312707051ee71f72c54feb10f19a0ee6a2f73ec6de20fb60cd8bb5ae4 ERR10114907.fastq.gz > pins.sha256\nsha256sum -c pins.sha256\ndf -m /tmp | awk 'NR==2{print \"tmpfs_total_mb \"$2}'\n( MAX=0; MEM=0; while :; do U=$(df -m /tmp | awk 'NR==2{print $3}')\n    [ \"$U\" -gt \"$MAX\" ] && { MAX=$U; echo \"$MAX\" > /tmp/.peak; }\n    # Flye's own footprint, not the staging area: tmpfs peaked at 769 MB on the first run,\n    # so RAM is set by the assembler's working set and needs its own measurement before the\n    # box can be sized down.\n    M=$(awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf \"%.0f\", (t-a)/1024}' /proc/meminfo)\n    [ \"$M\" -gt \"$MEM\" ] && { MEM=$M; echo \"$MEM\" > /tmp/.mem; }\n    sleep 5; done ) & SAMPLER=$!\n\necho \"== flye --nano-hq: a real MinION run of E. coli, ~65x ==\"\n# --nano-hq, not --nano-raw / --nano-corr: measured elsewhere in this catalog, Flye's raw\n# modes OOM on inputs where --nano-hq fits.\n# -t 8 is what a reader actually runs. Flye's thread count changes WHICH assembly the search\n# lands on, so the exact contig count is NOT asserted below -- only properties any correct\n# assembly of this organism must have. -t 1 is the byte-reproducible setting if you need one.\nT0=$(date +%s)\nflye --nano-hq ERR10114907.fastq.gz -g 4.6m -t 8 -o out > flye.log 2>&1\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nkill \"$SAMPLER\" 2>/dev/null || true\nPEAK=$(cat /tmp/.peak 2>/dev/null || echo 0)\nRSS=$(cat /tmp/.mem 2>/dev/null || echo 0)\ncp out/assembly.fasta assembly.fasta\ncp out/assembly_info.txt assembly_info.txt\n# Never rm a staged input: sticky /tmp, stage-in ran as the instance user, EPERM is not\n# suppressed by `rm -f` and would kill the task under set -e.\n\n# THE SENTINEL IS \"Final assembly:\", NOT \"Done!\". Both strings exist in Flye 2.9.6, but\n# main.py:443's \"Done!\" is inside the standalone flye-polish path, which this invocation never\n# takes -- so grepping for it returned 0 on a perfect assembly. \"Final assembly:\" is\n# main.py:261, the last line of JobFinalize, and JobFinalize is appended last (main.py:395,\n# after JobPolishing), so it is printed only once polishing and scaffolding have finished.\n# A plausible sentinel that lives on a code path your invocation skips looks verified and is not.\nDONE=$(grep -c 'INFO: Final assembly:' flye.log || true)\nN=$(grep -c '^>' assembly.fasta)\nTOT=$(awk '!/^>/{t+=length($0)} END{printf \"%.0f\", t}' assembly.fasta)\nBIG=$(awk '/^>/{if(s>m)m=s; s=0; next}{s+=length($0)} END{if(s>m)m=s; printf \"%.0f\", m}' assembly.fasta)\n# assembly_info.txt: #seq_name length cov. circ. repeat mult. alt_group graph_path\nCIRC=$(awk 'NR>1 && $4==\"Y\"' assembly_info.txt | wc -l | tr -d ' ')\nBIGCOV=$(awk 'NR>1{if($2>m){m=$2; c=$3}} END{print c}' assembly_info.txt)\nBIGCIRC=$(awk 'NR>1{if($2>m){m=$2; c=$4}} END{print c}' assembly_info.txt)\n\n{\n  echo \"flye_done            $DONE   want 1   [completion sentinel: INFO: Final assembly:]\"\n  echo \"total_length         $TOT   want 4400000..5400000 (E. coli is ~4.6 Mb)\"\n  echo \"largest_contig       $BIG   want >= 4000000 (a chromosome, not fragments)\"\n  echo \"largest_is_circular  $BIGCIRC   want Y (a closed bacterial chromosome)\"\n  echo \"largest_contig_cov   ${BIGCOV}x\"\n  echo \"contigs              $N   (observation: thread count moves this)\"\n  echo \"circular_contigs     $CIRC   (observation)\"\n  echo \"wall_s               $WALL\"\n  echo \"tmpfs_peak_used_mb   $PEAK\"\n  echo \"host_mem_peak_mb     $RSS   <- what actually sizes the box\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$DONE\" -ge 1\nawk -v t=\"$TOT\" 'BEGIN{exit !(t>=4400000 && t<=5400000)}'\nawk -v b=\"$BIG\" 'BEGIN{exit !(b>=4000000)}'\ntest \"$BIGCIRC\" = 'Y'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "c6g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/flye/ERR10114907.fastq.gz",
+      "destination": "/tmp/ERR10114907.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/assembly.fasta",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/gen/c6g/assembly.fasta"
+    },
+    {
+      "source": "/tmp/assembly_info.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/gen/c6g/assembly_info.txt"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/gen/c6g/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/flye.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/flye/gen/c6g/flye.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.13
+  }
+}
