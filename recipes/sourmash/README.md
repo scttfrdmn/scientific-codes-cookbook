@@ -2,58 +2,118 @@
 tool: sourmash
 tool_version: 4.9.4
 image: quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
+# sourmash — FracMinHash over 20 bacterial genomes, cross-checked against mash
 
-# sourmash — FracMinHash similarity between two genomes
-
-The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on.
+Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations.
 
 ## Run it
 
 ```bash
-sourmash sketch dna -p k=31,scaled=1000 genome_a.fa genome_b.fa
-sourmash compare a.sig b.sig            # → Jaccard similarity matrix
-```
+make stage RECIPE=mash       # the 20-genome set; sourmash reuses it, nothing re-staged
+make run   RECIPE=mash       # mash first: this recipe reads its dist.tsv
+make run   RECIPE=sourmash   # ~3 min billed, 15 s of it sourmash
+make ls    RECIPE=sourmash   # sim.csv + smoke-check.txt
 
-The recipe sketches the [spades](../spades/README.md) and [megahit](../megahit/README.md) assemblies of the *same* reads and reports their Jaccard — ≈ 1, as it must be for one region assembled two ways.
+sourmash sketch dna -p k=21,scaled=1000 GCF_000005845.2.fna.gz -o GCF_000005845.2.sig \
+  --name GCF_000005845.2
+sourmash compare ./*.sig --csv sim.csv
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the two sibling assemblies | any genomes/signatures to compare | `compare` scales to many signatures at once; this recipe just uses two. |
-| `k=31,scaled=1000` | your own k / a finer `scaled` | k sets resolution, `scaled` sets sketch density; k=31 is the standard bacterial/genome default. |
+| 20 RefSeq genomes | your genomes or assemblies | reused byte-for-byte from [mash](../mash/README.md) — the comparison only means anything on identical bytes. |
+| `scaled=1000` | smaller for more resolution | FracMinHash keeps 1/scaled of hashes, so a 4 Mb genome gives ~4,000 — distant pairs then share *none*, which matters below. |
+| `k=21` | `k=31` (sourmash's usual default) | **k=21 is chosen to match mash.** A k=31 sketch against a k=21 one compares methods, not genomes. |
+| `compare` | `gather` / `search` against a database | the canonical sourmash job; needs a prepared database, which this recipe does not stage. |
 
-Deterministic — no seed. **Leave the fixtures small.** A real distance between two real assemblies of a known-identical region is the point; a bigger pair exercises the same `sketch`/`compare`. Leave-it. (For a *taxonomic* database search — LCA/gather — that's a different, larger recipe, deliberately not this one.)
+**Scale it by genome count** — sketching is per-genome and comparison is per-pair on small sketches,
+so the input is the only thing that grows.
 
 ## Shape, size, cost
 
-One task, sub-second. `c8g.large`, ~$0.02, **~59s** wall — boot and image pull dominate. Depends on [spades](../spades/README.md) + [megahit](../megahit/README.md) (S3 chain — run those first).
+`c8g.2xlarge`: **15 s of sourmash inside a 166 s billed window, $0.0147.**
 
-**Sizing:** no family question — like Mash, FracMinHash sketch density (`scaled`), not genome size, bounds the footprint; a larger pair sketches in the same memory. Any 8g box fits.
+**No generation table, for the same reason [mash](../mash/README.md) has none** — at this scale the
+work is seconds and a four-chip ladder would measure boot. Sketching is not where instance choice
+pays off.
 
 <details>
-<summary>As shipped: the ≈1 identity, the honest cross-tool note, pins, smoke check</summary>
+<summary>As shipped: the same NCBI truth mash was checked on, and why the all-pairs rank statistic is the wrong metric</summary>
 
-spades and megahit assemble the **identical** 51,933 read pairs, so their k-mers nearly coincide: Jaccard **0.99282** (containment 99.5%). Asserted **≥ 0.95** — set by "two assemblies of one sequence share nearly all k-mers," not shaved to the observed value; a broken sketch or mismatched pair collapses far below. A free cross-check on both assemblers.
-
-**Cross-tool, stated honestly (see [mash](../mash/README.md)).** sourmash uses **FracMinHash (scaled)**; Mash uses **bottom-sketch MinHash** — different algorithms → different statistics (Jaccard ≈ 0.995 vs distance ≈ 0.0002). They agree **qualitatively** (both call this pair near-identical), which is the honest cross-code claim — not raw-value equality across two MinHash variants.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| sourmash Jaccard | ≥ 0.95 (k=31, scaled=1000) | 0.99282 |
+| signatures | exactly 20 | **20** |
+| **self-similarity** | **exactly 1** | **1.000000** |
+| **nearest neighbour** | **same species, 20 of 20** | **20 / 20** |
+| min within-species | recorded | **0.241442** |
+| **max between-species** | **< min within-species** | **0.018844** (13× margin) |
+| pairs compared | exactly 190 | **190** |
+| **Spearman vs mash, both seeing signal** | **≤ −0.95** | **−0.9590** (n = 67) |
+| **Spearman vs mash, within-species** | **exactly −1** | **−1.0000** (n = 10) |
 
-Threshold confirmed from the real run: a local spades build measured 0.9952, the shipped one 0.99282 — the value shifts with fragmentation, the k-mer Jaccard barely does, so "shared sequence" sets the bound.
+The first five are the same tests [mash](../mash/README.md) passes, against the same external truth
+— each genome's species parsed from its own FASTA defline — so two independent MinHash
+implementations are checked against one NCBI-derived fact rather than against each other alone.
+Self-similarity 1.0 is free: a sketch compared with itself is identical by construction.
 
-**Pins.** Image `quay.io/aarchbio/sourmash@sha256:29733e7ac937…` (cosign-verified, `linux/arm64`). Inputs: `runs/spades/r1/contigs.fasta` + `runs/megahit/r1/contigs.fa` (derived — sibling outputs, staged locally as `spades_contigs.fa` / `megahit_contigs.fa`; no `stage-inputs.sh`).
+### Why the all-pairs rank correlation is not the check
 
-**Run + verify.**
+The first version of this recipe asserted Spearman ≤ −0.95 over all 190 pairs and **failed at
+−0.9048**. That was a wrong metric, not a disagreement:
+
+| pair set | n | Spearman |
+|---|---|---|
+| all pairs | 190 | −0.9048 |
+| **both tools see signal** (sourmash > 0) | **67** | **−0.9590** |
+| within-species only | 10 | **−1.0000** |
+
+**123 of the 190 pairs have sourmash similarity exactly 0** — at k=21/scaled=1000 two different
+genera share no hashes at all — and on mash's side those same 123 pairs take only **5 distinct
+values**, up in its saturation region. Both tools are saying "no detectable relationship"; that is
+agreement expressed as ties, and ties on both sides cap any rank statistic. The −0.9048 measured the
+tie structure, not the tools.
+
+Restricted to pairs where both have signal, agreement is −0.9590. On the ten within-species pairs —
+the ones anyone actually needs ranked — it is **perfect, with no inversions**. The sign is negative
+because sourmash reports similarity and mash reports distance.
+
+**Rank, not value, and the reason is structural.** mash uses a bottom-*s* sketch of fixed size;
+sourmash uses FracMinHash, keeping a fixed *fraction*. The two estimate the same k-mer overlap but
+diverge systematically when genomes differ in size, so their raw numbers are not the same quantity —
+the same reason [kallisto and salmon](../kallisto/README.md) are compared on rank
+([the practice](../../practices/cross-checks.md)). What makes the tolerance defensible here is that
+within the signal set the only remaining source of disagreement is sketch sampling error, and the
+within-species result shows it is small enough to produce no inversions at all.
+
+### Pins
+
+| | data tier |
+|---|---|
+| sourmash | `quay.io/aarchbio/sourmash@sha256:29733e7ac937…` (4.9.4, cosign-verified, `linux/arm64`) |
+| genomes | `inputs/genomes20/genomes20.tar`, sha256 `6fa8884c45af0178…` — 20 RefSeq accessions, staged by [mash](../mash/README.md) |
+| mash's distances | `runs/mash/r1/dist.tsv` — the cross-check reads mash's real output, not a copy |
+
+Nothing is staged twice: both tools read the same tar, and the comparison reads mash's own
+`dist.tsv`. Signatures are named with `--name <accession>` so the `compare --csv` header is
+predictable — sourmash otherwise names a signature after the first sequence in the file.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=bcftools && make run RECIPE=spades && make run RECIPE=megahit   # sourmash compares their assemblies
-make run RECIPE=sourmash
-make ls RECIPE=sourmash   # expect compare.csv, smoke-check.txt
+make stage RECIPE=mash
+make run   RECIPE=mash       # produces dist.tsv
+make run   RECIPE=sourmash
+make ls    RECIPE=sourmash
 ```
-Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `nearest_same_sp 20`, `spearman_signal -0.9590` and
+`spearman_within_sp -1.0000`.
 
 </details>

@@ -1,0 +1,11 @@
+signatures          20   want exactly 20
+self_similarity     1.000000..1.000000   want exactly 1 (a genome equals itself)
+nearest_same_sp     20   want exactly 20 of 20   (same NCBI truth mash was checked on)
+min_within_species  0.241442
+max_between_species 0.018844   want < min_within_species   [clean separation]
+pairs_compared      190   want exactly 190
+pairs_with_signal   67   (sourmash similarity > 0)
+spearman_all_pairs  -0.9048   OBSERVATION ONLY -- capped by ties, not the check
+spearman_signal     -0.9590   want <= -0.95   [rank agreement where both tools see signal]
+spearman_within_sp  -1.0000   want exactly -1 (no inversions on the 10 same-species pairs)
+wall_s              15

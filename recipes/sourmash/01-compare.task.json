@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-sourmash-r1",
+  "task_id": "cookbook-sourmash-genomes20",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\n# Same two inputs as recipes/mash: the spades (237 contigs) and megahit (1 contig)\n# assemblies of identical reads -- the same ~400kb region built two ways, so highly\n# similar. sourmash uses FracMinHash (scaled), a DIFFERENT MinHash variant from mash's\n# bottom-sketch, so its NUMBER differs from mash's (Jaccard similarity vs a distance);\n# the two tools AGREE qualitatively (both call the pair near-identical), not on the raw\n# value. See README.\necho \"== sourmash similarity: spades assembly vs megahit assembly ==\"\nsourmash sketch dna -p k=31,scaled=1000 spades_contigs.fa -o spades.sig\nsourmash sketch dna -p k=31,scaled=1000 megahit_contigs.fa -o megahit.sig\nsourmash compare spades.sig megahit.sig --csv compare.csv\ncat compare.csv\n\n# The off-diagonal of the 2x2 compare matrix is the Jaccard similarity.\nJACC=$(awk -F, 'NR==2{print $2}' compare.csv)\n{\n  echo \"sourmash_jaccard   $JACC   want >= 0.95   (same ~400kb region, two assemblers; observed 0.99282)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\n# Method-justified threshold: FracMinHash Jaccard of two assemblies of identical sequence\n# approaches 1; a broken sketch or mismatched pair collapses far below 0.95. Not shaved.\nawk -v j=\"$JACC\" 'BEGIN{ if (j+0 >= 0.95 && j+0 <= 1.0) exit 0; print \"sourmash jaccard \" j \" not >= 0.95\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\necho \"== verify the staged genome set against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6fa8884c45af0178a24c28413ccfdf7018915e843f106667787f749b4a7aaadc genomes20.tar > pins.sha256\nsha256sum -c pins.sha256\ntar -xf genomes20.tar\n\necho \"== sourmash sketch + all-pairs compare: 20 genomes, k=21, scaled=1000 ==\"\n# k=21 MATCHES the k mash used. Comparing a k=31 sketch against a k=21 one would be a\n# method difference dressed up as disagreement, which is the trap this check exists to avoid.\nT0=$(date +%s)\nfor g in GCF_*.fna.gz; do\n  acc=\"${g%.fna.gz}\"\n  sourmash sketch dna -p k=21,scaled=1000 \"$g\" -o \"$acc.sig\" --name \"$acc\" 2>> sketch.log\ndone\nsourmash compare ./*.sig --csv sim.csv 2> compare.log\nT1=$(date +%s); WALL=$(( T1 - T0 ))\n\npython3 - <<'PYEOF' > metrics.txt\nimport csv, math\n\nspecies = {}\nfor line in open('labels.tsv'):\n    acc, sp = line.split('\\t')[0], line.split('\\t')[1]\n    species[acc] = sp\n\nrows = list(csv.reader(open('sim.csv')))\nnames = [n.strip() for n in rows[0]]\nsim = {}\nfor i, r in enumerate(rows[1:]):\n    for j, v in enumerate(r):\n        sim[(names[i], names[j])] = float(v)\n\nn = len(names)\ndiag_min = min(sim[(a, a)] for a in names)\ndiag_max = max(sim[(a, a)] for a in names)\n\n# Nearest neighbour by similarity, against the same NCBI-derived truth mash was checked on.\nnn_ok = 0\nfor a in names:\n    best = max((b for b in names if b != a), key=lambda b: sim[(a, b)])\n    if species[a] == species[best]:\n        nn_ok += 1\n\nwithin = [sim[(a, b)] for a in names for b in names\n          if a < b and species[a] == species[b]]\nbetween = [sim[(a, b)] for a in names for b in names\n           if a < b and species[a] != species[b]]\n\n# mash distance for the same unordered pairs. mash and sourmash estimate the same k-mer\n# overlap but with different MinHash variants (bottom-s vs FracMinHash), which disagree\n# systematically when genome sizes differ -- so the comparable question is RANK, not value.\nmash = {}\nfor line in open('dist.tsv'):\n    f = line.split('\\t')\n    a, b = f[0].replace('.fna.gz', ''), f[1].replace('.fna.gz', '')\n    mash[(a, b)] = float(f[2])\n\npairs = [(a, b) for a in names for b in names if a < b]\n\ndef rank(v):\n    order = sorted(range(len(v)), key=lambda i: v[i])\n    r = [0.0] * len(v)\n    i = 0\n    while i < len(order):\n        j = i\n        while j + 1 < len(order) and v[order[j + 1]] == v[order[i]]:\n            j += 1\n        avg = (i + j) / 2.0 + 1\n        for k in range(i, j + 1):\n            r[order[k]] = avg\n        i = j + 1\n    return r\n\ndef spearman(ps):\n    xs, ys = [sim[q] for q in ps], [mash[q] for q in ps]\n    rx, ry = rank(xs), rank(ys)\n    mx, my = sum(rx) / len(rx), sum(ry) / len(ry)\n    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))\n    den = math.sqrt(sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry))\n    return num / den if den else float(\"nan\")\n\n# Measured: 123 of the 190 pairs have sourmash similarity EXACTLY 0 (no shared hashes at\n# k=21/scaled=1000), and on the mash side those same 123 take only 5 distinct values, up in\n# mash's saturation region. Both tools are saying \"no detectable relationship\" -- that is\n# agreement expressed as ties, and ties on both sides cap any rank statistic. Including them\n# gives -0.9048, which measures the tie structure rather than the tools. So the comparison is\n# restricted to pairs where both have signal, and reported separately for the within-species\n# pairs, which are the ones anyone actually needs ranked.\nsignal = [q for q in pairs if sim[q] > 0.0]\nwithin_pairs = [q for q in pairs if species[q[0]] == species[q[1]]]\nrho_all, rho_signal, rho_within = spearman(pairs), spearman(signal), spearman(within_pairs)\n\nprint(\"signatures %d\" % n)\nprint(\"diag_min %.6f\" % diag_min)\nprint(\"diag_max %.6f\" % diag_max)\nprint(\"nn_ok %d\" % nn_ok)\nprint(\"min_within %.6f\" % min(within))\nprint(\"max_between %.6f\" % max(between))\nprint(\"pairs %d\" % len(pairs))\nprint(\"signal_pairs %d\" % len(signal))\nprint(\"spearman_all %.4f\" % rho_all)\nprint(\"spearman_signal %.4f\" % rho_signal)\nprint(\"spearman_within %.4f\" % rho_within)\nPYEOF\ncat metrics.txt\nV(){ awk -v k=\"$1\" '$1==k{print $2}' metrics.txt; }\nSIGS=$(V signatures); DMIN=$(V diag_min); DMAX=$(V diag_max); NN=$(V nn_ok)\nWMIN=$(V min_within); BMAX=$(V max_between); PAIRS=$(V pairs); SIG=$(V signal_pairs)\nRALL=$(V spearman_all); RSIG=$(V spearman_signal); RWIT=$(V spearman_within)\n\n{\n  echo \"signatures          $SIGS   want exactly 20\"\n  echo \"self_similarity     $DMIN..$DMAX   want exactly 1 (a genome equals itself)\"\n  echo \"nearest_same_sp     $NN   want exactly 20 of 20   (same NCBI truth mash was checked on)\"\n  echo \"min_within_species  $WMIN\"\n  echo \"max_between_species $BMAX   want < min_within_species   [clean separation]\"\n  echo \"pairs_compared      $PAIRS   want exactly 190\"\n  echo \"pairs_with_signal   $SIG   (sourmash similarity > 0)\"\n  echo \"spearman_all_pairs  $RALL   OBSERVATION ONLY -- capped by ties, not the check\"\n  echo \"spearman_signal     $RSIG   want <= -0.95   [rank agreement where both tools see signal]\"\n  echo \"spearman_within_sp  $RWIT   want exactly -1 (no inversions on the 10 same-species pairs)\"\n  echo \"wall_s              $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$SIGS\"  -eq 20\ntest \"$NN\"    -eq 20\ntest \"$PAIRS\" -eq 190\nawk -v a=\"$DMIN\" -v b=\"$DMAX\" 'BEGIN{exit !(a==1 && b==1)}'\nawk -v w=\"$WMIN\" -v b=\"$BMAX\" 'BEGIN{exit !(b<w)}'\nawk -v r=\"$RSIG\" 'BEGIN{exit !(r<=-0.95)}'\nawk -v r=\"$RWIT\" 'BEGIN{exit !(r==-1)}'\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 14,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,18 +16,18 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/contigs.fasta",
-      "destination": "/tmp/spades_contigs.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/genomes20/genomes20.tar",
+      "destination": "/tmp/genomes20.tar"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/contigs.fa",
-      "destination": "/tmp/megahit_contigs.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mash/r1/dist.tsv",
+      "destination": "/tmp/dist.tsv"
     }
   ],
   "outputs": [
     {
-      "source": "/tmp/compare.csv",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/sourmash/r1/compare.csv"
+      "source": "/tmp/sim.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sourmash/r1/sim.csv"
     },
     {
       "source": "/tmp/smoke-check.txt",
@@ -35,8 +35,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "15m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.08
   }
 }

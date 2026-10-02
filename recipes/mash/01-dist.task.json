@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-mash-r1",
+  "task_id": "cookbook-mash-genomes20",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\n# The two inputs are the SAME ~400kb region assembled two ways -- spades (237 contigs)\n# and megahit (1 contig) from identical reads. Different assemblers give different\n# contig layouts but the same underlying sequence, so their k-mer content is ~identical\n# and mash distance is near zero. This cross-validates the assembly chain: garbage from\n# either assembler would NOT be near-identical.\necho \"== mash distance: spades assembly vs megahit assembly ==\"\nmash dist spades_contigs.fa megahit_contigs.fa > mash-dist.txt\ncat mash-dist.txt\n\nDIST=$(awk 'NR==1{print $3}' mash-dist.txt)\nSHARED=$(awk 'NR==1{print $5}' mash-dist.txt)\n{\n  echo \"mash_distance   $DIST   want < 0.001   (same ~400kb region, two assemblers; observed 0.000239895)\"\n  echo \"shared_hashes   $SHARED   (observed 990/1000)\"\n} > smoke-check.txt\ncat smoke-check.txt\n\n# Method-justified threshold: two assemblies of identical sequence share nearly all\n# k-mers, so mash (bottom-sketch MinHash) distance sits far below 0.001; a broken sketch\n# or a mismatched pair gives distance >> 0.1. Not a value shaved to pass.\nawk -v d=\"$DIST\" 'BEGIN{ if (d+0 >= 0 && d+0 < 0.001) exit 0; print \"mash distance \" d \" not < 0.001\"; exit 1 }'\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\ncd /tmp\necho \"== verify the staged genome set against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6fa8884c45af0178a24c28413ccfdf7018915e843f106667787f749b4a7aaadc genomes20.tar > pins.sha256\nsha256sum -c pins.sha256\n# A directory of inputs travels as one flat tar on this path. Untarring creates files the\n# container owns, so these -- unlike the staged tar itself -- are safe to remove later.\ntar -xf genomes20.tar\nN=$(ls GCF_*.fna.gz | wc -l | tr -d ' ')\nSPP=$(awk -F'\\t' '{print $2}' labels.tsv | sort -u | wc -l | tr -d ' ')\necho \"genomes $N  species $SPP\"\n\necho \"== mash sketch + all-pairs dist: 20 genomes, k=21, s=10000 ==\"\nT0=$(date +%s)\nmash sketch -p 8 -k 21 -s 10000 -o all GCF_*.fna.gz 2> sketch.log\nmash dist -p 8 all.msh all.msh > dist.tsv\nT1=$(date +%s); WALL=$(( T1 - T0 ))\n\n# mash dist writes: <ref> <query> <distance> <p-value> <shared/total hashes>, one line per\n# ordered pair, so 20x20 = 400 rows of which 20 are self-comparisons.\nROWS=$(awk 'END{print NR}' dist.tsv)\n# A genome's distance to itself is 0 by construction -- an exact identity, not a band.\nSELFMAX=$(awk -F'\\t' '$1==$2{if($3>m)m=$3} END{printf \"%.10f\", m+0}' dist.tsv)\n\n# The truth is NCBI's: labels.tsv came from each genome's own defline. For each genome the\n# nearest of the other 19 must be its own species' second strain -- 20 independent tests.\nNN=$(awk -F'\\t' '\n  NR==FNR { sp[$1\".fna.gz\"]=$2; next }\n  $1!=$2 { if (!($1 in best) || $3 < bestd[$1]) { best[$1]=$2; bestd[$1]=$3 } }\n  END { ok=0; for (g in best) if (sp[g]==sp[best[g]]) ok++; print ok }\n' labels.tsv dist.tsv)\n\n# Stronger than nearest-neighbour: every within-species distance below every between-species\n# one means the 10 clusters are cleanly separated, not merely locally correct.\nread -r WMAX BMIN <<<\"$(awk -F'\\t' '\n  NR==FNR { sp[$1\".fna.gz\"]=$2; next }\n  $1==$2 { next }\n  { if (sp[$1]==sp[$2]) { if ($3>w) w=$3 } else { if (b==\"\" || $3<b) b=$3 } }\n  END { printf \"%.6f %.6f\", w, b }\n' labels.tsv dist.tsv)\"\n\n{\n  echo \"genomes            $N   want exactly 20\"\n  echo \"species            $SPP   want exactly 10 (2 strains each)\"\n  echo \"dist_rows          $ROWS   want exactly 400 (20x20 ordered pairs)\"\n  echo \"max_self_distance  $SELFMAX   want exactly 0 (a genome equals itself)\"\n  echo \"nearest_same_sp    $NN   want exactly 20 of 20\"\n  echo \"max_within_species $WMAX\"\n  echo \"min_between_species $BMIN   want > max_within_species   [clean separation]\"\n  echo \"wall_s             $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"       -eq 20\ntest \"$SPP\"     -eq 10\ntest \"$ROWS\"    -eq 400\ntest \"$NN\"      -eq 20\nawk -v m=\"$SELFMAX\" 'BEGIN{exit !(m==0)}'\nawk -v w=\"$WMAX\" -v b=\"$BMIN\" 'BEGIN{exit !(b>w)}'\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/mash@sha256:abad0c5f4d3365661ffc5533bc6eb5f1bd07d773ea61b1abd1bfc00c1df813fe",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 14,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,18 +16,14 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/spades/r1/contigs.fasta",
-      "destination": "/tmp/spades_contigs.fa"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit/r1/contigs.fa",
-      "destination": "/tmp/megahit_contigs.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/genomes20/genomes20.tar",
+      "destination": "/tmp/genomes20.tar"
     }
   ],
   "outputs": [
     {
-      "source": "/tmp/mash-dist.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/mash/r1/mash-dist.txt"
+      "source": "/tmp/dist.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mash/r1/dist.tsv"
     },
     {
       "source": "/tmp/smoke-check.txt",
@@ -35,8 +31,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "15m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.08
   }
 }
