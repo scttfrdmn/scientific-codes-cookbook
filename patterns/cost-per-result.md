@@ -12,19 +12,18 @@ So: **within one arch is a clean comparison; across arches you compare build cha
 
 ## The ladder, measured: newer is cheaper per result — with one exception
 
-Seven codes now carry a full Graviton2→5 ladder on identical bytes within one image, so this is a
+Eight codes now carry a full Graviton2→5 ladder on identical bytes within one image, so this is a
 shape rather than a single step. **Every one gets cheaper per result across the full ladder — 28% to
 47%** — because the rate card rises ~28% while the wall falls 46–59%. The opening claim holds end to
 end: the pricier box wins the bill.
 
 The *size* of the win is set by the inner loop, not the field. Speedups run from **1.84×**
-([bwa](../recipes/bwa-samtools/README.md), short-read alignment) to **2.43×**
-([GROMACS](../recipes/gromacs/README.md), MD with PME), and the tempting summary — "floating-point
-codes gain more" — dies on [SIESTA](../recipes/siesta/README.md), which is DFT and gains *least*
-(1.86×) because a small localised-basis problem is dense linear algebra on modest matrices, not the
-throughput the newer chips added. Plane-wave DFT sits with the MD codes; localised-basis DFT sits with
-the genomics ones. **Ask what the inner loop is, not what the field is called.** Each recipe's table
-has its own numbers.
+([bwa](../recipes/bwa-samtools/README.md)) to **2.43×** ([GROMACS](../recipes/gromacs/README.md)), and
+"floating-point codes gain more" dies twice: [SIESTA](../recipes/siesta/README.md) is DFT and gains
+*least* (1.86×), a small localised-basis problem being dense linear algebra on modest matrices rather
+than the throughput the newer chips added — while [picard](../recipes/picard/README.md) MarkDuplicates,
+a JVM sort-and-hash with no floating point in its inner loop at all, gains *more* (1.93×).
+**Ask what the inner loop is, not what the field is called.** Each recipe's table has its own numbers.
 
 ### But one rung does not pay, and it is measured twice
 
