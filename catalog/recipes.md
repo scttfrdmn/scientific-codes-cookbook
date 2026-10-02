@@ -75,11 +75,11 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-09-12 | 2026-10-02 |
+| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-02 | 2026-10-02 |
 | [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff. | comp-chem | build-in-task | 2026-09-12 | — |
 | [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-09-12 | 2026-09-10 |
-| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-09-12 | 2026-10-02 |
-| [vina](../recipes/vina/README.md) | `vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target. | comp-chem | stage | 2026-09-12 | — |
+| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-02 | 2026-10-02 |
+| [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-09-12 | 2026-10-02 |
 
 ## dft
 

@@ -3,75 +3,120 @@ tool: vina
 tool_version: 1.2.7
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# AutoDock Vina — dock imatinib into Abl kinase, against the tutorial's own result
+# AutoDock Vina — reproduce the published imatinib/Abl docking result
 
-`vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target.
-
-> **What this covers.** One ligand docked into one receptor at the tutorial's box — proof Vina's scoring and Monte-Carlo search are correct and reproducible on Graviton4 against a known answer. Not a virtual-screening benchmark; no ligand library or flexible-receptor docking.
+Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM.
 
 ## Run it
 
 ```bash
-vina --receptor 1iep_receptor.pdbqt --ligand 1iep_ligand.pdbqt \
-  --center_x 15.190 --center_y 53.903 --center_z 16.917 \
-  --size_x 20 --size_y 20 --size_z 20 --exhaustiveness 32 --seed 42
-```
+make stage RECIPE=vina   # once: the 1iep receptor + ligand from the v1.2.7 tag
+make run   RECIPE=vina   # ~1 min on c8g.large, self-terminating
+make ls    RECIPE=vina   # smoke-check.txt + dock.json
 
-One task, docked twice for the determinism check. The `vina` package ships no example data, so the receptor and ligand are staged.
+python3 -c "
+from vina import Vina
+v = Vina(sf_name='vina', seed=42, cpu=2, verbosity=0)
+v.set_receptor('1iep_receptor.pdbqt'); v.set_ligand_from_file('1iep_ligand.pdbqt')
+v.compute_vina_maps(center=[15.190,53.903,16.917], box_size=[20,20,20])
+v.dock(exhaustiveness=32, n_poses=5); print(v.energies(n_poses=1))"
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| 1IEP receptor + imatinib ligand, from Vina's tutorial at tag **v1.2.7** | your own prepared `.pdbqt` pair | **load-bearing** — match the pair to the tool version or you reproduce a different number; it's what makes this a [published-pose reproduction](../../practices/reference-from-tests.md) (−13.234), not a code check. |
-| the box center + 20³ Å size (the tutorial's, inline) | your own binding-site box | the box is where the search happens; get it wrong and the score is meaningless even if Vina "ran". |
-| **`--seed 42`** | pin *a* seed for a repeatable run | **determinism scaffolding** — the Monte-Carlo search is stochastic, so a fixed seed makes a run repeatable (different seeds spread ~0.05 kcal/mol). |
+| 1iep receptor + imatinib | your target and ligand | the version-matched pair is what makes the published number the right one to expect. |
+| `center` / `box_size` | your binding site | the box is the single biggest determinant of the result; a wrong centre still docks and still scores. |
+| `exhaustiveness=32` | 8 for screening | 32 is the tutorial's careful-single-dock setting; the published value belongs to it. |
+| `cpu=2`, `seed=42` | your own — but pin both | **both**, not just the seed. See below. |
 
-**Leave the fixture:** 1IEP is a real receptor/ligand reproducing a published number, and one docking is the unit — a ligand library is [job arrays](../../patterns/job-arrays.md), not a bigger input here. Leave-it.
+**Leave the target** — it is the one that comes with a published answer. **Scaling this to a virtual
+screen is deliberately not in this recipe**: measured, Vina's cost scales steeply with ligand
+flexibility, and a random ChEMBL slice contains peptides with 20+ rotatable bonds that dominate the
+runtime. A screen needs a drug-likeness filter and its own sizing pass.
 
 ## Shape, size, cost
 
-One task, `c8g.large`, TTL 10m, cap $0.02. Two docks at exhaustiveness 32 ≈ **300 s of real compute** — the batch's heaviest, so here compute is a real share of the 351s window, not just boot. Vina parallelises over the CPUs; see [sizing](../../patterns/sizing.md) for a screening run.
-
-**Sizing:** compute-bound `c8g`, memory light — `--exhaustiveness` is the compute dial, and a ligand library is a fan-out ([job arrays](../../patterns/job-arrays.md)), not a bigger box. Scale cores/exhaustiveness to your knee ([sizing](../../patterns/sizing.md)).
+`c8g.large` (2 vCPU): **~1 min billed, ~$0.01** for two 32-exhaustiveness docks.
 
 <details>
-<summary>As shipped: the reference reproduction, the seed check, pins, smoke check, run + verify</summary>
+<summary>As shipped: a published number, and why the seed alone was not enough</summary>
 
-### The checks — a published reference and a determinism identity
+### The checks
 
-- **Top affinity reproduces the published tutorial result.** Vina's v1.2.7 basic-docking solution records a top pose of **−13.234 kcal/mol** for imatinib in Abl kinase; this run gives −13.207. Monte-Carlo search makes them close rather than bit-identical (~0.05 kcal/mol spread across seeds), so the band is ±0.5 around the reference — wide enough to survive search noise, tight enough that a failed dock (near zero or positive) fails loudly. This is the [reproduce-a-published-number move](../../practices/reference-from-tests.md), manufactured from Vina's own version-matched test data.
-- **A fixed seed is deterministic.** The recipe docks twice at the same seed and requires the two top affinities to agree to < 1e-6 (measured: identical) — proof `--seed` actually controls the RNG.
+| observable | assertion | observed |
+|---|---|---|
+| **top affinity** | **−13.207 ± 0.001** (seed+cpu pinned) | **−13.207** |
+| **vs published v1.2.7** | **within 0.05 kcal/mol of −13.234** | **0.027** |
+| same seed twice | identical to 1e-6 | **identical** |
+| poses | ≥ 3 | **4** |
 
-### Pins (data tier: stable public source with a durable id)
+**Two claims, separated because they fail for different reasons.** The reproducibility assertion
+breaks if the search stops being pinned — someone changes `cpu`, or a resolver swaps the build. The
+published-reference assertion breaks if the receptor, box centre, or ligand is wrong. A single band
+around the published value would conflate them, and each tolerance is now set by what it checks: the
+0.05 kcal/mol is what a 3-decimal affinity from a stochastic search supports, loose enough not to
+require our thread count to match the tutorial's exactly.
 
-| | |
+This is a **published-number reproduction**, the same tier as [SIESTA](../siesta/README.md)
+reproducing its committed −214.377236: the number is not ours, so agreeing with it tests more than
+internal consistency. The version match is load-bearing — the receptor and ligand come from the
+AutoDock-Vina `v1.2.7` tag matching the container, and a reference pose from another release is a
+different number.
+
+### Pinning the seed was not enough, and this is why
+
+Vina parallelises its Monte Carlo search, so **the thread count changes the search trajectory and
+therefore the top pose.** The recipe originally pinned only `seed`, which makes the result a property
+of the box rather than of the recipe: run the same spec on a 16-core instance and there is no reason
+to expect −13.207, and the assertion would look flaky when it was really under-specified.
+
+`cpu=2` is now pinned alongside `seed=42`, on a 2-vCPU box so the pinned count matches the hardware.
+Honest caveat: this did **not** change the observed value, because the original run was already on a
+2-vCPU box. What it changes is whether the number is reproducible by someone else. Verified across
+**three runs on three separate instances**, all −13.207 — which is what licensed replacing the old
+±0.5 band.
+
+Same rule as [IQ-TREE, Flye and muscle](../../practices/cross-checks.md), reached independently in a
+fourth domain.
+
+### Why there is no virtual screen here
+
+A screen is the obvious "real workload" for a docking tool, and it was measured and set aside.
+Vina's cost scales steeply with torsion count, and a deterministic slice of ChEMBL contains peptides
+with dozens of rotatable bonds — enough to consume a 15-minute budget on a handful of ligands. A
+usable screen therefore needs a drug-likeness filter (MW ≤ 500, rotatable bonds ≤ 10) and its own
+throughput measurement, which is a separate piece of work rather than a parameter change here.
+
+Two incidental findings from that attempt, both worth reusing: Open Babel's `make3D` is **0.04 s per
+ligand** against RDKit ETKDG+MMFF's **0.55 s** — 14× faster, the opposite of what we assumed — and a
+Python task should run `python3 -u`, because buffered stdout is lost when a process is killed and
+[the log only ships at the end](https://github.com/spore-host/spawn/issues/632).
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` (tag `2026.09.04`, AutoDock Vina 1.2.7 conda-forge `vina`, cosign-signed, `linux/arm64`) |
-| receptor | `1iep_receptor.pdbqt` from `ccsb-scripps/AutoDock-Vina` tag **`v1.2.7`** — `sha256:f13cf3b3…` (216,160 B) |
-| ligand | `1iep_ligand.pdbqt`, same tag — `sha256:15fb3564…` (3,841 B) |
+| Vina | 1.2.7, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| receptor | `AutoDock-Vina` @ `v1.2.7` → `example/basic_docking/solution/1iep_receptor.pdbqt`, sha256 `f13cf3b36f61d87c…` |
+| ligand | same tag → `1iep_ligand.pdbqt`, sha256 `15fb35648d8c18c7…` |
 
-**Note the package name.** conda-forge `vina` has a `linux-aarch64` build; bioconda `autodock-vina` does not — searching the obvious name concludes AutoDock has no arm64 route and is wrong (catalog issue #2). `stage-inputs.sh` fetches, verifies and uploads once.
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| receptor + ligand sha256 | match the pins | OK | wrong/corrupt input |
-| **top affinity** | −13.7 … −12.7 kcal/mol (v1.2.7 ref −13.234) | **−13.207** | broken scoring/search |
-| **deterministic seed** | two runs at the same seed agree to < 1e-6 | **identical** | seed ignored |
-| poses returned | ≥ 3 | 4 | search collapsed |
+conda-forge's `vina` ships no example data, so the inputs come from the code's own
+version-matched tutorial — [the sourcing move](../../practices/reference-from-tests.md) that turns
+"produce a number" into "reproduce a published number".
 
 ### Run + verify
 
 ```sh
-make stage RECIPE=vina            # once; fetch + verify + upload the 1iep pair (~220 KB)
-make run RECIPE=vina
-make ls RECIPE=vina
+make stage RECIPE=vina
+make run   RECIPE=vina
+make ls    RECIPE=vina
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`dock.log`, `dock.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `top_affinity_pinned -13.207` and `vs_published_v127` under 0.05.
 
 </details>
