@@ -15,7 +15,7 @@ Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and r
 
 ```bash
 make stage RECIPE=gatk4       # shared: reference, GIAB truth slice, the 36x chr20 BAM
-make run   RECIPE=freebayes   # call (~11 min) then score against GIAB
+for s in $(make -s spec RECIPE=freebayes); do spawn task run --spec "$s" --wait; done   # call (~11 min) then score against GIAB
 make ls    RECIPE=freebayes   # freebayes.vcf.gz + concordance.txt
 
 freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf

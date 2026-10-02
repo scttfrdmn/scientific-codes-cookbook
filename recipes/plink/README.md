@@ -14,6 +14,7 @@ PLINK 1.9 computes allele frequencies and runs a quantitative association scan o
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=plink)" --wait
 plink --dummy 300 1000 0.02 0 acgt --seed 42 --make-bed --out data   # synthetic cohort
 plink --bfile data --freq counts --out pcount                         # integer allele counts
 plink --bfile data --pheno pheno.txt --assoc --allow-no-sex --out as  # quantitative scan

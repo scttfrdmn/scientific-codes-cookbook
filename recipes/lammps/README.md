@@ -16,7 +16,7 @@ Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 a
 
 ```bash
 make stage RECIPE=lammps   # once: the pinned data.rhodo (32,000-atom system)
-make run   RECIPE=lammps   # 1000 steps at 128k atoms, ~48 s, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=lammps)" --wait   # 1000 steps at 128k atoms, ~48 s, self-terminating
 make ls    RECIPE=lammps   # smoke-check.txt + lmp.log
 
 mpiexec -n 16 lmp_mpi -in in.rhodo -log lmp.log     # replicate 2 2 1 → 128k atoms

@@ -15,7 +15,7 @@ Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 11
 
 ```bash
 make stage RECIPE=salmon   # once: Ensembl 116 cDNA + the full ERR188026 run
-make run   RECIPE=salmon   # index 50 s, then quant ~1 min; self-terminating
+for s in $(make -s spec RECIPE=salmon); do spawn task run --spec "$s" --wait; done   # index 50 s, then quant ~1 min; self-terminating
 make ls    RECIPE=salmon   # quant.sf + smoke-check.txt
 ```
 

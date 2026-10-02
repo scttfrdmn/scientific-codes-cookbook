@@ -12,6 +12,9 @@ Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmet
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=ase-phonopy)" --wait
+```
 ```python
 import numpy as np
 from ase.build import bulk

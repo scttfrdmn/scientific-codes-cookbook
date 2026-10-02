@@ -16,6 +16,8 @@ Bracken turns a kraken2 classification into species abundance on Graviton4, agai
 ## Run it
 
 ```bash
+make stage RECIPE=abundance
+for s in $(make -s spec RECIPE=abundance); do spawn task run --spec "$s" --wait; done
 kraken2 --db db --output mix.kraken --report mix.report mix.fasta
 bracken -d dbmin -i mix.report -o mix.bracken -r 100 -l S -t 1
 ```

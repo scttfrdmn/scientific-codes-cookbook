@@ -13,6 +13,10 @@ GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads t
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=mdtraj)" --wait
+```
+
 ```python
 import mdtraj, MDAnalysis as mda
 t = mdtraj.load("out.xtc", top="spc216.gro")  # GROMACS-written XTC + its topology → MDTraj

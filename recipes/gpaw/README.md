@@ -15,7 +15,7 @@ Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices
 ## Run it
 
 ```bash
-make run RECIPE=gpaw   # ~7.4 min on c8g.4xlarge at 16 ranks, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=gpaw)" --wait   # ~7.4 min on c8g.4xlarge at 16 ranks, self-terminating
 make ls  RECIPE=gpaw   # smoke-check.txt + gpaw.txt
 
 mpiexec -n 16 python3 slab.py   # ASE builds Pt(111) 3×3×4; PAW datasets ship in the image

@@ -26,14 +26,20 @@ Two recipes stage their inputs by subsetting large public BAMs in a pinned conta
 ```sh
 brew install spore-host/tap/truffle spore-host/tap/spawn
 make bootstrap            # create your cookbook bucket (once — leaves an S3 bucket in your account)
-make run RECIPE=r         # fit a linear model on a Graviton4 box — checked, self-terminating
+
+# `make spec` resolves the recipe's TaskSpec against your bucket; spawn sizes the box from its
+# resources{}, runs the pinned container under lifecycle.ttl + cost_limit, and self-terminates.
+spawn task run --spec "$(make -s spec RECIPE=r)" --wait
 make ls  RECIPE=r         # your result: fit.txt, smoke-check.txt
 spawn list                # confirm the box turned itself off (gone within a minute or two)
 ```
 
+`make run RECIPE=r` is the same `spawn task run` call in one line — every recipe page shows the
+spawn form, because that is the part worth reading.
+
 `r` is the first run because **it builds its input inside the task** — no data staging, so it really is five minutes. `make run` sizes a Graviton4 box, runs R's OLS fit on the bundled `cars` dataset in a pinned container, fails if the output isn't real, and turns the box off (`on_complete: terminate`, with the TTL as a backstop). `make run` returns when the task is done; the box then self-terminates on a ~1–2 minute tick, so `spawn list` — which lists every instance in your account, across regions — shows your `cookbook-r-lm` box winding down and gone shortly after, with nothing left to pay for and nothing to remember to shut off. The run reports what it cost (cents). A short job is mostly boot overhead — [job arrays](patterns/job-arrays.md) amortize that across a cohort.
 
-Every recipe runs the same way — `make run RECIPE=<name>`, with `make stage RECIPE=<name>` first for the ones that need input data (each page says which, and where the data comes from).
+Every recipe runs the same way — `spawn task run --spec "$(make -s spec RECIPE=<name>)"`, with `make stage RECIPE=<name>` first for the ones that need input data (each page says which, and where the data comes from).
 
 ## Find your code
 

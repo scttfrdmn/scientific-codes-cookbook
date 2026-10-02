@@ -18,6 +18,7 @@ hisat2 aligns transcript reads across splice junctions and StringTie rebuilds th
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=transcript-assembly); do spawn task run --spec "$s" --wait; done
 hisat2-build genome.fa idx
 hisat2 -x idx -U reads.fq -S aln.sam            # finds junctions with NO annotation given
 samtools sort -o sample.bam aln.sam && samtools index sample.bam

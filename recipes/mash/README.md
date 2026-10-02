@@ -16,7 +16,7 @@ Sketches 20 complete RefSeq genomes and recovers all ten species from the distan
 
 ```bash
 make stage RECIPE=mash   # once: 20 RefSeq genomes, 10 species x 2 strains
-make run   RECIPE=mash   # ~2 min billed, almost all of it boot
+spawn task run --spec "$(make -s spec RECIPE=mash)" --wait   # ~2 min billed, almost all of it boot
 make ls    RECIPE=mash   # dist.tsv + smoke-check.txt
 
 mash sketch -p 8 -k 21 -s 10000 -o all GCF_*.fna.gz

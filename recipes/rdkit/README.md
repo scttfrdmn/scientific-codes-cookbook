@@ -14,7 +14,7 @@ Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in
 
 ```bash
 make stage RECIPE=rdkit   # once: 100,000 ChEMBL 37 compounds WITH their published keys
-make run   RECIPE=rdkit   # 37 s on c8g.xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=rdkit)" --wait   # 37 s on c8g.xlarge, self-terminating
 make ls    RECIPE=rdkit   # rdkit_keys.tsv + smoke-check.txt
 
 python3 -c "from rdkit import Chem; from rdkit.Chem import inchi; \

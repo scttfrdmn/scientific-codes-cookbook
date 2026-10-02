@@ -12,6 +12,10 @@ pymatgen builds silicon from its space group and round-trips it through CIF — 
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=pymatgen)" --wait
+```
+
 ```python
 from pymatgen.core import Structure, Lattice
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer

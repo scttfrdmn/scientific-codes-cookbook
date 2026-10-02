@@ -15,6 +15,7 @@ last_verified: 2026-09-12
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=openfoam)" --wait
 # inside the pinned container; the tutorial ships in the image, nothing is staged
 source /usr/lib/openfoam/openfoam2412/etc/bashrc
 cp -r $FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity .

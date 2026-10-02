@@ -16,7 +16,7 @@ Classifies a complete human WGS run against the 8 GB standard index and finds th
 
 ```bash
 make stage RECIPE=kraken2   # once: the 5.5 GiB standard-8 index
-make run   RECIPE=kraken2   # ~4 min billed on r8g.2xlarge, 68 s of it kraken2
+spawn task run --spec "$(make -s spec RECIPE=kraken2)" --wait   # ~4 min billed on r8g.2xlarge, 68 s of it kraken2
 make ls    RECIPE=kraken2   # out.report + kraken2.log + smoke-check.txt
 
 kraken2 --db db --paired --threads 8 --report out.report --output /dev/null \

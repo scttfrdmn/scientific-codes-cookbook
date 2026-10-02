@@ -15,7 +15,7 @@ Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precisio
 
 ```bash
 make stage RECIPE=gatk4     # shared: reference, GIAB truth slice, the 36x chr20 BAM
-make run   RECIPE=bcftools  # call + score, ~5 min, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=bcftools)" --wait   # call + score, ~5 min, self-terminating
 make ls    RECIPE=bcftools  # bcftools.vcf.gz + concordance.txt
 
 bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \

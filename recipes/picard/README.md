@@ -13,7 +13,7 @@ Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s. For anyone 
 
 ```bash
 make stage RECIPE=bwa-samtools   # the chain: align -> sort -> mark duplicates
-make run   RECIPE=picard         # ~10 min on r8g.2xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=picard)" --wait   # ~10 min on r8g.2xlarge, self-terminating
 make ls    RECIPE=picard         # dup_metrics.txt + smoke-check.txt
 
 picard -Xmx24g MarkDuplicates I=aln.sorted.bam O=marked.bam M=dup_metrics.txt TMP_DIR=/tmp

@@ -17,6 +17,7 @@ whatshap assigns heterozygous variants to haplotypes on Graviton4, scored agains
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=phasing); do spawn task run --spec "$s" --wait; done
 bwa mem -R '@RG\tID:s1\tSM:sample1' ref.fa reads.fq > aln.sam   # SM must match the VCF sample
 samtools sort -o sample.bam aln.sam && samtools index sample.bam && samtools faidx ref.fa
 

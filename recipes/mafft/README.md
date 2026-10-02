@@ -13,7 +13,7 @@ Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's 
 
 ```bash
 make stage RECIPE=hmmer   # the proteome; mafft reads hmmer's hits.tbl.gz too
-make run   RECIPE=hmmer   # produces the family membership this recipe extracts
+spawn task run --spec "$(make -s spec RECIPE=mafft)" --wait   # produces the family membership this recipe extracts
 make run   RECIPE=mafft   # 3 s of mafft, ~2 min billed
 make ls    RECIPE=mafft   # gpcr906.fa + aln.fa + smoke-check.txt
 

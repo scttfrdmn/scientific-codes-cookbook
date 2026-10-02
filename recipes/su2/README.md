@@ -15,6 +15,7 @@ SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right w
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=su2)" --wait
 SU2_CFD euler.cfg                 # Euler solve; uniform Mach 0.5 is the exact solution
 mpirun -n 2 SU2_CFD euler.cfg     # same case, domain-decomposed across 2 ranks (ParMETIS)
 ```

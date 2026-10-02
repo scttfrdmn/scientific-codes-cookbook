@@ -15,7 +15,7 @@ Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, rea
 
 ```bash
 make stage RECIPE=iqtree   # the Pfam 38.2 seed alignment, read by both tree recipes
-make run   RECIPE=iqtree   # ML search, ~6 min
+spawn task run --spec "$(make -s spec RECIPE=iqtree)" --wait   # ML search, ~6 min
 make ls    RECIPE=iqtree   # iqout.treefile + smoke-check.txt
 
 iqtree3 -s pfam38.2_seed_alignment.fa -m LG+G4 -T 4 --seed 12345 --prefix iqout

@@ -14,6 +14,10 @@ Astropy runs the core transforms every astronomy pipeline leans on — physical 
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=astropy)" --wait
+```
+
 ```python
 from astropy.wcs import WCS
 w = WCS(naxis=2)

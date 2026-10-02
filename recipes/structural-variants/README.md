@@ -19,12 +19,12 @@ delly and manta each call a 1 kb deletion on Graviton4, against a deletion remov
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=structural-variants); do spawn task run --spec "$s" --wait; done
 bwa mem -R '@RG\tID:s1\tSM:sample1' ref.fa R1.fq R2.fq > aln.sam   # delly needs @RG SM
 samtools sort -o sample.bam aln.sam && samtools index sample.bam && samtools faidx ref.fa
 
 delly sr -g ref.fa -o sv.bcf sample.bam        # 'sr', not 'call' — see below
 bcftools query -f '%CHROM\t%POS\t%INFO/SVTYPE\t%INFO/END\t%INFO/SVLEN\n' sv.bcf
-
 configManta.py --bam sample.bam --referenceFasta ref.fa --runDir mrun   # the second caller
 mrun/runWorkflow.py -m local -j 2 -g 6                                  # -g is load-bearing
 ```

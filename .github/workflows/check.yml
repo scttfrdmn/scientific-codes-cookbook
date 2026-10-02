@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # check_verified_freshness compares last_verified against each spec's last
+          # commit date, so it needs real history. At the default depth 1 every spec
+          # looks changed today and every stamped recipe fails -- 57 false errors.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

@@ -18,13 +18,13 @@ Bismark and bwa-meth align the same bisulfite reads on Graviton4 and MethylDacke
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=bismark); do spawn task run --spec "$s" --wait; done
 bismark prepare genome --bowtie2                              # CT + GA converted indices
 bismark align --genome genome --single_end reads.fq            # directional bisulfite alignment
 bismark extract -s --bedGraph --comprehensive reads_bismark_bt2.bam
 
 samtools sort -o sorted.bam reads_bismark_bt2.bam && samtools index sorted.bam
 MethylDackel extract --mergeContext chrS.fa sorted.bam -o md   # the second, independent caller
-
 bwameth.py index bwm.fa && bwameth.py --reference bwm.fa reads.fq > bwm.sam   # the second aligner
 MethylDackel extract --mergeContext chrS.fa bwm.bam -o bwm     # same caller, other alignments
 ```

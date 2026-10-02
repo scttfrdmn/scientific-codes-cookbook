@@ -13,7 +13,7 @@ Assembles a 65× MinION run of *E. coli* into one circular 4.72 Mb chromosome pl
 
 ```bash
 make stage RECIPE=flye   # once: ERR10114907, 55,898 reads / 299.5 Mbp
-make run   RECIPE=flye   # 306 s on c8g.2xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=flye)" --wait   # 306 s on c8g.2xlarge, self-terminating
 make ls    RECIPE=flye   # assembly.fasta + assembly_info.txt + flye.log
 
 flye --nano-hq ERR10114907.fastq.gz -g 4.6m -t 8 -o out

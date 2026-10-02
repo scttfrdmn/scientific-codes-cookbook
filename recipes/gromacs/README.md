@@ -16,7 +16,7 @@ Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and rep
 
 ```bash
 make stage RECIPE=gromacs   # once: the pinned benchMEM.tpr
-make run   RECIPE=gromacs   # 10,000 steps (20 ps), ~70 s, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=gromacs)" --wait   # 10,000 steps (20 ps), ~70 s, self-terminating
 make ls    RECIPE=gromacs   # smoke-check.txt + bm.log
 
 mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off

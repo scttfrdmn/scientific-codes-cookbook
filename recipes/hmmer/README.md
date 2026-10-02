@@ -13,7 +13,7 @@ Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at P
 
 ```bash
 make stage RECIPE=hmmer   # once: Pfam-A 38.2 + Ensembl 116, one protein per gene
-make run   RECIPE=hmmer   # ~31 min on c8g.2xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=hmmer)" --wait   # ~31 min on c8g.2xlarge, self-terminating
 make ls    RECIPE=hmmer   # hits.tbl.gz + smoke-check.txt
 
 hmmsearch --cpu 8 --cut_ga --noali --tblout hits.tbl -o hmmer.out Pfam-A.hmm pep.fa

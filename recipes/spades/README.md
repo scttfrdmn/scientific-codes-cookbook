@@ -12,6 +12,7 @@ Assemble short reads into contigs with no reference — the standard bacterial/s
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=spades)" --wait
 spades.py --isolate -t 4 -1 reads_1.fq.gz -2 reads_2.fq.gz -o out
 ```
 

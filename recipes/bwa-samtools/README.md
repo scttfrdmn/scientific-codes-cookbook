@@ -15,7 +15,7 @@ Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Gr
 
 ```bash
 make stage RECIPE=bwa-samtools   # once — caches the RODA index + reads into your bucket
-make run   RECIPE=bwa-samtools   # align (~13 min) then sort+index (~1 min), self-terminating
+for s in $(make -s spec RECIPE=bwa-samtools); do spawn task run --spec "$s" --wait; done   # align (~13 min) then sort+index (~1 min), self-terminating
 make ls    RECIPE=bwa-samtools   # aln.sam.gz, aln.sorted.bam + .bai, smoke checks
 ```
 

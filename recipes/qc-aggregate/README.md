@@ -16,6 +16,7 @@ FastQC measures four samples on Graviton4 and MultiQC rolls them into one cohort
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=qc-aggregate); do spawn task run --spec "$s" --wait; done
 fastqc -t 2 --extract -o . sampleA.fastq sampleB.fastq sampleC.fastq sampleD.fastq
 multiqc -f -o mqc zips/          # reads the *_fastqc.zip files directly
 ```

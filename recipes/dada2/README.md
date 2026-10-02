@@ -13,6 +13,10 @@ DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked a
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=dada2)" --wait
+```
+
 ```r
 filterAndTrim("reads.fastq", "filt.fastq", truncQ=2, maxN=0, maxEE=2)
 err <- learnErrors("filt.fastq")               # fit the error model from the data

@@ -15,7 +15,7 @@ Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, lan
 
 ```bash
 make stage RECIPE=iqtree     # shares the Pfam seed alignment
-make run   RECIPE=raxml-ng   # adaptive ML search, ~7.6 min
+spawn task run --spec "$(make -s spec RECIPE=raxml-ng)" --wait   # adaptive ML search, ~7.6 min
 make ls    RECIPE=raxml-ng   # rx.raxml.bestTree + smoke-check.txt
 
 raxml-ng --search --msa pfam38.2_seed_alignment.fa --model LG+G4 \

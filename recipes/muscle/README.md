@@ -15,7 +15,7 @@ Aligns the same `7tm_1` family mafft does, from mafft's own extraction, and agre
 ## Run it
 
 ```bash
-make run RECIPE=mafft    # produces gpcr906.fa; muscle reads the identical bytes
+spawn task run --spec "$(make -s spec RECIPE=muscle)" --wait   # produces gpcr906.fa; muscle reads the identical bytes
 make run RECIPE=muscle   # 278 s on c8g.2xlarge, self-terminating
 make ls  RECIPE=muscle   # aln.fa + smoke-check.txt
 

@@ -14,6 +14,10 @@ photutils performs the core image photometry an astronomy pipeline runs — aper
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=photutils)" --wait
+```
+
 ```python
 from photutils.aperture import CircularAperture, aperture_photometry
 ap = CircularAperture([(x0, y0)], r=5 * sigma)

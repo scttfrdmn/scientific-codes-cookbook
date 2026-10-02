@@ -15,7 +15,7 @@ Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 1
 
 ```bash
 make stage RECIPE=salmon     # shares salmon's cDNA + reads; nothing kallisto-specific to stage
-make run   RECIPE=kallisto   # index (~8 min, once) then quant (~4 min) + the salmon cross-check
+for s in $(make -s spec RECIPE=kallisto); do spawn task run --spec "$s" --wait; done   # index (~8 min, once) then quant (~4 min) + the salmon cross-check
 make ls    RECIPE=kallisto   # abundance.tsv + smoke-check.txt
 
 kallisto index -i kallisto.idx ensembl116_cdna.fa.gz

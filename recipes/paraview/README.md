@@ -13,6 +13,10 @@ spawn_version: 0.104.0
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=paraview)" --wait
+```
+
 ```python
 # pvbatch script. Headless: the recipe starts Xvfb + sets LIBGL_ALWAYS_SOFTWARE=1 first
 # (load-bearing — no GPU, no display; see below), then:

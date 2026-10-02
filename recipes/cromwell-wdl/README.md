@@ -14,6 +14,7 @@ Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked agai
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=cromwell-wdl)" --wait
 womtool validate sumcheck.wdl          # static check first
 cromwell run sumcheck.wdl -m meta.json # local backend
 ```

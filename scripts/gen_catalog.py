@@ -71,9 +71,19 @@ def stage_builds(recipe_dir):
     if not os.path.exists(sh):
         return set()
     text = open(sh, encoding="utf-8").read()
-    # same regex as check_pages.py's staging-coverage: catches both inputs/<p>/ upload
-    # paths and PREFIX="inputs/<p>" variable forms (no trailing slash).
-    return {m.group(1) for m in re.finditer(r"inputs/([\w.-]+)", text)}
+    # Attribution needs UPLOAD DESTINATIONS, not any mention. The loose `inputs/<p>` match
+    # (which check_pages.py still uses, correctly, to ask only "is this prefix buildable
+    # at all") counted comments and echo strings: recipes/abundance says "they already live
+    # under inputs/kraken2/ and this recipe reads them there", which made abundance a
+    # "builder" of kraken2's prefix. So: drop comments, then require an s3:// destination
+    # or a path-variable assignment.
+    body = "\n".join(l.split("#", 1)[0] for l in text.splitlines())
+    pats = (r"s3://[^/\s\"']*/inputs/([\w.-]+)",
+            r"^\s*\w*(?:PREFIX|DST|DEST|TARGET)\w*=\"?[^\"\n]*?inputs/([\w.-]+)")
+    found = set()
+    for pat in pats:
+        found |= {m.group(1) for m in re.finditer(pat, body, re.M)}
+    return found
 
 
 def git_updated(recipe_dir):
@@ -103,11 +113,18 @@ def main():
         d = os.path.dirname(readme)
         recipes[os.path.basename(d)] = d
 
-    # prefix -> recipe whose stage script builds it
+    # prefix -> EVERY recipe whose stage script uploads to it.
+    #
+    # This was `builder[p] = name`, last-writer-wins over a filesystem-ordered glob -- so a
+    # prefix two recipes both stage (inputs/bwa-real/ is built partly by bwa-samtools and
+    # partly by bwa-mem2) resolved differently on macOS and on Linux, and the generated
+    # catalog was platform-dependent. `make catalog` locally then disagreed with CI's
+    # --check forever. A set, emitted sorted, is both deterministic and the truthful answer:
+    # when a prefix has two partial builders, name them both.
     builder = {}
-    for name, d in recipes.items():
-        for p in stage_builds(d):
-            builder[p] = name
+    for name in sorted(recipes):
+        for p in stage_builds(recipes[name]):
+            builder.setdefault(p, set()).add(name)
 
     rows = []
     for name in sorted(recipes):
@@ -123,7 +140,7 @@ def main():
         # distinction item 4 exists for, not the mere fact of a dependency:
         #   stage-dep: reads a sibling's *staged input*  -> `make stage RECIPE=<sib>`
         #   run-dep:   reads a sibling's *run output*     -> `make run RECIPE=<sib>` and wait
-        stage_deps = {builder[p] for p in prefixes if builder.get(p) and builder[p] != name}
+        stage_deps = {r for p in prefixes for r in builder.get(p, ()) if r != name}
         run_deps = {x for x in runs if x != name}
 
         # Inference is the default; `depends_on` overrides only where it's wrong or can't see
@@ -190,6 +207,13 @@ def main():
         current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
         if norm(current) != norm(content):
             print("catalog/recipes.md is stale — run `make catalog`", file=sys.stderr)
+            import difflib
+            d = list(difflib.unified_diff(norm(current).splitlines(), norm(content).splitlines(),
+                                          "committed", "regenerated", lineterm="", n=0))
+            for line in d[:24]:
+                print("  " + line, file=sys.stderr)
+            if len(d) > 24:
+                print(f"  … {len(d) - 24} more diff lines", file=sys.stderr)
             return 1
         print("catalog/recipes.md up to date")
         return 0

@@ -12,6 +12,8 @@ Call enriched peaks from a ChIP-seq treatment against its matched input control.
 ## Run it
 
 ```bash
+make stage RECIPE=macs2
+spawn task run --spec "$(make -s spec RECIPE=macs2)" --wait
 macs2 callpeak -t treatment.bam -c control.bam -f BAM -g hs -n out
 ```
 

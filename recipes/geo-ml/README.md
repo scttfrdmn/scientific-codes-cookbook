@@ -12,6 +12,10 @@ The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) comp
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=geo-ml)" --wait
+```
+
 ```python
 import geopandas as gpd
 from shapely.geometry import box

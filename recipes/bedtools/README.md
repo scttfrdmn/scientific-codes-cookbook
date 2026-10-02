@@ -12,7 +12,7 @@ Runs the four set-algebra operations on hand-checkable intervals, then `genomeco
 ## Run it
 
 ```bash
-make run RECIPE=bedtools   # both tasks: set algebra (<1 s) then genomecov (146 s)
+for s in $(make -s spec RECIPE=bedtools); do spawn task run --spec "$s" --wait; done   # both tasks: set algebra (<1 s) then genomecov (146 s)
 make ls  RECIPE=bedtools
 
 bedtools merge     -i a.bed

@@ -13,6 +13,8 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
+make stage RECIPE=relion
+spawn task run --spec "$(make -s spec RECIPE=relion)" --wait
 relion_postprocess --i run_half1_class001_unfil.mrc --mask mask3d.mrc \
   --angpix 0.968 --auto_bfac --autob_lowres 10 --o /tmp/postprocess
 # → FinalResolution 2.747871 Å, matching the depositors' postprocess.star exactly

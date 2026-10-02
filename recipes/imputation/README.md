@@ -16,6 +16,7 @@ Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same ref
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=imputation); do spawn task run --spec "$s" --wait; done
 # Minimac4 wants a compressed reference and an indexed target
 minimac4 --compress-reference ref.vcf -o ref.msav
 bgzip -c target.vcf > target.vcf.gz && tabix -p vcf target.vcf.gz

@@ -13,7 +13,7 @@ Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone r
 
 ```bash
 make stage RECIPE=bwa-samtools   # seqkit reads the same reads bwa aligns
-make run   RECIPE=seqkit         # ~4 min on c8g.2xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=seqkit)" --wait   # ~4 min on c8g.2xlarge, self-terminating
 make ls    RECIPE=seqkit         # stats.tsv + fa_stats.tsv + smoke-check.txt
 
 seqkit stats -T -j 8 SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz

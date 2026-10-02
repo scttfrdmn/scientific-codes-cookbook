@@ -15,7 +15,7 @@ Searches 1000 proteins against all 382,428 Ensembl 116 peptides in 19 s, and rec
 
 ```bash
 make stage RECIPE=blast     # shares blast's proteome and query set
-make run   RECIPE=diamond   # makedb then search + the BLAST+ cross-check, ~1 min
+spawn task run --spec "$(make -s spec RECIPE=diamond)" --wait   # makedb then search + the BLAST+ cross-check, ~1 min
 make ls    RECIPE=diamond   # dmnd_hits.tsv + smoke-check.txt
 
 diamond makedb --in pep.fa -d pepdb

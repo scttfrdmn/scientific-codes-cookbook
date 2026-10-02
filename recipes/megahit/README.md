@@ -12,6 +12,7 @@ A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the dat
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=megahit)" --wait
 megahit -t 1 --min-count 2 -1 reads_1.fq.gz -2 reads_2.fq.gz -o out
 ```
 
