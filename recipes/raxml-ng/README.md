@@ -2,71 +2,106 @@
 tool: raxml-ng
 tool_version: 2.0.2
 image: quay.io/aarchbio/raxml-ng@sha256:3a6bbc162ff43249ada42bd92828ac0024855c33b614c0cdbaaa1e3e3eed89e5
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
-# RAxML-NG — maximum-likelihood phylogeny
+# RAxML-NG — an ML phylogeny, and the same optimum IQ-TREE finds
 
-Infer an ML tree from a multiple-sequence alignment, with an adaptive search that sizes itself to the data.
+Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM.
+
+> **The optimum is identical on all four Graviton generations, to all six decimals.** Fixed seed plus pinned threads make the search deterministic; the chip changes only how long it takes.
 
 ## Run it
 
 ```bash
-raxml-ng --search --msa alignment.fasta --model LG+G4 --threads 8 --seed 12345
+make stage RECIPE=iqtree     # shares the Pfam seed alignment
+make run   RECIPE=raxml-ng   # adaptive ML search, ~7.6 min
+make ls    RECIPE=raxml-ng   # rx.raxml.bestTree + smoke-check.txt
+
+raxml-ng --search --msa pfam38.2_seed_alignment.fa --model LG+G4 \
+  --threads 8 --workers 1 --seed 12345 --prefix rx
 ```
 
-The recipe infers a 114-taxon protein tree under LG+G4, reaching the **same optimum as [IQ-TREE](../iqtree/README.md)** on the same alignment. RAxML-NG 2.0's `--search` sizes its own starting-tree set from a difficulty prediction — no flag needed.
+## Which box — measured (same alignment, same seed, 8 threads)
+
+| generation | instance | search | **$/search** | log-likelihood |
+|---|---|---|---|---|
+| Graviton2 | `c6g.2xlarge` | 638.1 s | 0.0482 | −52706.731409 |
+| Graviton3 | `c7g.2xlarge` | 465.0 s | **0.0375** | −52706.731409 |
+| Graviton4 | `c8g.2xlarge` | 456.0 s | 0.0404 | −52706.731409 |
+| **Graviton5** | `c9g.2xlarge` | **313.0 s** | **0.0303** | −52706.731409 |
+
+Graviton2→5 is **2.04× faster and 37% cheaper**. But **Graviton4 is 7.3% *dearer* than Graviton3** here — it buys only 2% of wall for 10% more per hour. That is the sharpest instance of a step that does not pay; [two DFT codes show the same thing](../../patterns/cost-per-result.md), and all three have likelihood-or-matrix inner loops rather than the throughput the newer chips added.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 114-sequence Pfam seed alignment | your own alignment (FASTA) | reused byte-for-byte from [IQ-TREE](../iqtree/README.md) (the spec reads `inputs/iqtree/`, no `stage-inputs.sh`) — the cross-check only means anything on identical bytes, so it isn't re-staged or re-converted. |
-| `--model LG+G4` | your model | given explicitly to remove a drift source and because it's the model IQ-TREE was given. |
-| the adaptive `--search` default | `--tree pars{n},rand{n}` for a fixed search | the adaptive default is what's worth demonstrating, and it earned it here — the best tree came from a *random* start a parsimony-only search would have missed. |
-| **`--threads 8` and `--seed 12345`** | pin *both* for a repeatable run | **determinism scaffolding** — thread count changes how many starting trees the adaptive search generates, so `AUTO` isn't reproducible. Pin both or assert a band ([pin threads and a seed](../../practices/cross-checks.md)). |
+| Pfam PF26127.1 (114 × 477) | your alignment | cost grows with taxa × sites × rate categories; 114 taxa is a real tree, not a fixture. |
+| `--threads 8 --workers 1` | your core count | **not** `AUTO`: thread count feeds the adaptive heuristic's starting trees, so it changes which optimum you land on. Pin it, with `--seed`. |
+| `--model LG+G4` | your model | changes the likelihood, so the cross-check with IQ-TREE only holds at matched models. |
 
-**Leave the fixture:** 114 taxa × 477 sites is a real ML inference that runs in minutes and lets the check assert tree shape exactly. It does *not* exercise the MPI/`--workers` path or a phylogenomic dataset's memory behaviour — a larger alignment is a longer run, not a more legible one. Leave-it.
-
-## Shape, size, cost
-
-One task, **7m39s** of actual search — the rare recipe where the science dominates boot overhead by an order of magnitude (7m39s inside an 8m25s command window). RAxML-NG's own `--parse` estimates **65 MB** RAM, so `c8g.2xlarge` is sized for the thread count, not footprint. TTL **20m**, cap $0.11 — retightened from the first real run (below).
+**Leave the workload** — a curated 114-taxon alignment, so the timings and the agreement transfer.
+**Scale it** by taxa, and re-pin threads and seed before quoting any exact number.
 
 <details>
-<summary>As shipped: the cross-validation, the one deliberately-loose band, pins, smoke check</summary>
+<summary>As shipped: internal identities, the cross-code agreement, pins</summary>
 
-**Cross-validation.** RAxML-NG reports `-52706.731409`; [IQ-TREE](../iqtree/README.md), a completely different codebase with a different search heuristic, reaches `-52706.731` on the same alignment under the same LG+G4 model. Two unrelated codes agreeing to ~1 part in 1e8 of the log-likelihood is far stronger evidence of the real ML optimum than either run alone — and free, because the two recipes share the pinned alignment.
-
-Most of the smoke check is arithmetic, not observation, so it costs nothing and cannot go flaky:
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| taxa / tips / sites | 114 / 114 / 477 (exact) | matches |
-| distinct site patterns | exactly 465, ≤ sites | 465 |
-| free parameters | == 2n−2 | 226 |
-| AIC / AICc / BIC | closed forms of lnL, k, n (≤1e-4) | 105865.462818 / 106275.878818 / 106807.321545 |
-| final lnL | == max(per-search lnL) | −52706.731409 |
-| ML / starting trees written | == searches reported | 13 == 13 |
-| analysis finished / Newick terminated | 1 / `;` | 1 / `;` |
-| best log-likelihood | −54000 … −52000 (wide, deliberate) | **−52706.731409** |
+| taxa read / tips in tree | == 114, both | **114 / 114** |
+| alignment sites | exactly 477 | **477** |
+| distinct site patterns | exactly 465, ≤ 477 | **465** |
+| free parameters | exactly 226 (= 2n−3 branches + α) | **226** |
+| **AIC** | **2k − 2lnL** | **105865.462818** |
+| **AICc** | **AIC + 2k(k+1)/(n−k−1)** | **106275.878818** |
+| **BIC** | **k·ln(n) − 2lnL** | **106807.321545** |
+| final == best of searches | exact | **−52706.731409 of 13** |
+| completion sentinel | `finished:` line present | **present** |
+| **vs IQ-TREE** | **< 0.01 absolute** | **0.000409** |
 
-- **`free parameters == 2n−2`**: an unrooted binary tree on *n* taxa has 2n−3 branches, LG+G4 adds exactly the gamma shape α, so k must be 226 — any other value means a wrong taxon count or model.
-- **The three information criteria** are closed forms RAxML-NG prints on adjacent lines; they agree to floating-point exactness (largest residual 5.9e−08), catching a garbled log or mismatched lnL/k pair for free.
-- **`final lnL == max(per-search)`** is what `--search` *means*; the margin is comfortable (second best −52707.13), so it's not a tie-break coin flip (contrast [blast](../blast/README.md)'s self-hit check, which failed 19-of-20 on exactly that).
-- **One ML + one starting tree per search**, stated as an identity not `== 13` on purpose: 13 is a *prediction* of the adaptive heuristic, so pinning the literal would turn a legitimate difficulty re-estimate into a red check.
-- **`Analysis finished`** is a completion sentinel — a search killed part-way leaves per-search lines and tree files that would still look plausible to a count.
+The three information criteria are **conservation identities**, not bands: each is a fixed function of
+the likelihood, the free-parameter count and the sample size, so recomputing them and comparing
+catches a corrupted likelihood or a miscounted model that any range check would wave through. They
+cost nothing.
 
-**The log-likelihood band is the only band, and a tight one would be wrong.** Search is heuristic: `--seed` repeats a run against itself, but the result moves with RAxML-NG version and thread count (which changes both the difficulty prediction and the update order). The band catches a tree built from garbage — the best random start scored −76,542, so a mis-parsed alignment lands nowhere near it. It's deliberately the **same** band [IQ-TREE](../iqtree/README.md) uses, so the two are directly comparable. No `python3` in this image (one tool per image), so every check is `awk`/`grep`.
+### Why the likelihood is a band and the agreement is not
 
-**Graviton4 was 2.17× faster** than the local measurement on identical work (7m39s vs 16m35s Docker Desktop, same predicted difficulty, same starting trees, same `-52706.731409`). The TTL was sized from the local run then **retightened from the box run**: 35m → 20m, cost cap $0.19 → $0.11, and `--dry-run` echoes both back — which is how the field is confirmed [honored, not merely parsed](../../practices/container-path.md). The general lesson: sizing from a local run is the right *first* move because it's free; the first real run is better evidence and should be spent. (The recorded run below used the original 35m/$0.19.)
+`best_log_likelihood` is asserted only as −54000..−52000, deliberately. An ML search is stochastic:
+thread count changes the order of likelihood updates and therefore which optimum it lands on, so an
+exact assertion is flaky across thread counts and versions even with a fixed seed — the
+[stochastic-search rule](../../practices/cross-checks.md).
 
-**Pins.** Image `quay.io/aarchbio/raxml-ng@sha256:3a6bbc162ff4…` (2.0.2, cosign-signed, `linux/arm64` only). Alignment: first 40–150-seq family in Pfam `releases/Pfam38.2/Pfam-A.seed.gz`, converted to FASTA (`sha256:b4d4d745…`, 114×477) — *derived*, shared with [IQ-TREE](../iqtree/README.md); `releases/Pfam38.2/` is immutable (`current_release/` is not).
+What *can* be asserted tightly is the **cross-code agreement**, because two unrelated search
+heuristics landing on the same optimum is a statement about the numerics rather than about either
+search. The tolerance is 0.01 absolute, set by IQ-TREE's printed precision — it reports 3 decimals,
+so ±0.0005 of rounding is inherent. Asserting 1e-6 would be asserting a print format. Observed
+difference 0.000409, or 7.8e-9 relative. Full comparison:
+[measurements/tree-crosscheck](../../measurements/tree-crosscheck/README.md).
 
-**Run + verify.**
+And the optimum came out **identical to six decimals on all four Graviton generations**, which is
+what pinning threads and the seed buys: the search is deterministic, so the chip cannot move it.
+
+### Pins
+
+| | data tier |
+|---|---|
+| RAxML-NG | `quay.io/aarchbio/raxml-ng@sha256:3a6bbc16…` (2.0.2, `linux/arm64`) |
+| alignment | Pfam 38.2 `PF26127.1` seed alignment — staged by [iqtree](../iqtree/README.md), versioned release |
+
+Both tools read the same staged object; a second copy would be a second thing to keep true, and the
+agreement only means something on identical bytes.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=iqtree          # once, if the shared alignment isn't staged
 make run RECIPE=raxml-ng
-make ls RECIPE=raxml-ng   # expect six objects
+make ls  RECIPE=raxml-ng
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). `--redo` is in the command, so a re-run doesn't trip the checkpoint guard. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `best_log_likelihood -52706.731409`, `free_parameters 226` and all
+three information criteria matching their identities.
 
 </details>

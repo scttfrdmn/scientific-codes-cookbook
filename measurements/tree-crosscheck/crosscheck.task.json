@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-tree-crosscheck",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\ngetL() { awk '/best_log_likelihood/{print $2; exit}' \"$1\"; }\nLI=$(getL iqtree-check.txt); LR=$(getL raxml-check.txt)\nD=$(awk -v a=\"$LI\" -v b=\"$LR\" 'BEGIN{d=a-b; if(d<0)d=-d; printf \"%.6f\", d}')\nREL=$(awk -v d=\"$D\" -v a=\"$LI\" 'BEGIN{x=a; if(x<0)x=-x; printf \"%.3e\", d/x}')\n{\n  echo \"== IQ-TREE vs RAxML-NG: the same ML optimum, two unrelated search heuristics ==\"\n  echo \"alignment            Pfam PF26127.1, 114 taxa x 477 columns, LG+G4\"\n  echo \"iqtree_logL          $LI   (IQ-TREE 3.1.3, -T 4, seed 12345)\"\n  echo \"raxml_logL           $LR   (RAxML-NG 2.0.2, --threads 8, seed 12345)\"\n  echo \"abs_difference       $D\"\n  echo \"rel_difference       $REL\"\n  echo \"tolerance            0.010000 absolute   want difference < this\"\n  echo \"\"\n  echo \"Two independent codebases with different search heuristics landing on the same optimum is\"\n  echo \"a statement about the NUMERICS that no single-tool check can make. The tolerance is set by\"\n  echo \"IQ-TREE's printed precision -- it reports 3 decimals, so +-0.0005 of rounding is inherent --\"\n  echo \"not by how close the two happen to land. Asserting 1e-6 would be asserting a print format.\"\n} > crosscheck.txt\ncat crosscheck.txt\nawk -v d=\"$D\" 'BEGIN{exit !(d<0.01)}'\nawk -v v=\"$LI\" 'BEGIN{exit !(v>-54000 && v<-52000)}'\nawk -v v=\"$LR\" 'BEGIN{exit !(v>-54000 && v<-52000)}'\necho 'TREE CROSS-CHECK PASSED'\n"
+  ],
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/iqtree/r1/smoke-check.txt",
+      "destination": "/tmp/iqtree-check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/raxml-ng/r1/smoke-check.txt",
+      "destination": "/tmp/raxml-check.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/crosscheck.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/tree-crosscheck/crosscheck.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.04
+  }
+}

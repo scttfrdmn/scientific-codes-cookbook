@@ -29,8 +29,9 @@ has its own numbers.
 ### But one rung does not pay, and it is measured twice
 
 Graviton3→Graviton4 is the weak step everywhere — as little as 2.4% cheaper per result on GROMACS —
-and for **both** DFT codes it is cost-negative: [GPAW](../recipes/gpaw/README.md) +1.4% and SIESTA
-+0.7%. At n = 1 that is a tie, not a reversal, so the honest reading is **cost-neutral for DFT**, not
+and in three codes it is cost-negative: [GPAW](../recipes/gpaw/README.md) +1.4%, SIESTA +0.7%, and
+[RAxML-NG](../recipes/raxml-ng/README.md) **+7.3%** — all three with likelihood-or-matrix inner loops
+rather than streaming throughput. At n = 1 that is a tie, not a reversal, so the honest reading is **cost-neutral for DFT**, not
 that Graviton3 wins. Either way it changes the advice: on Graviton3 running DFT, the rung worth paying
 for is Graviton5. Why this step is weak is not established here — attributing it would need a
 memory-bandwidth measurement, and a guess would be worse than the gap.
