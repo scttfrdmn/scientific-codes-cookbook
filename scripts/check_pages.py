@@ -314,6 +314,14 @@ def check_verified_freshness():
     committed on a LATER day, the claim predates the edit and nobody has run what now ships —
     the "verified number silently invalidated by an edit nobody re-ran" harm. Same-day edits do
     not fire, because editing and re-running in one sitting is the normal sequence."""
+    # A shallow clone has no per-file history: `git log -1 -- <spec>` then reports the single
+    # available commit for every path, so every spec looks changed today and every stamped
+    # recipe fails. Warn instead of inventing 57 errors (CI sets fetch-depth: 0).
+    shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"],
+                             capture_output=True, text=True, cwd=ROOT).stdout.strip()
+    if shallow == "true":
+        warns.append("shallow clone — skipping last_verified freshness (needs fetch-depth: 0)")
+        return
     for rm in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))):
         rdir = os.path.dirname(rm)
         rec = os.path.basename(rdir)
