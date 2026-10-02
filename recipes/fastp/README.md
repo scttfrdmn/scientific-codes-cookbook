@@ -2,59 +2,115 @@
 tool: fastp
 tool_version: 1.3.6
 image: quay.io/aarchbio/fastp@sha256:061ee7c6b8e5af265dfed6f25c51e482e3bb403c51f167561405010e5c5f632a
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
-# fastp — read QC and trimming
+# fastp — QC and trim a complete 48M-read run in 36 seconds
 
-Quality-filter and adapter/quality-trim paired reads, with an all-in-one JSON report.
+Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exactly. For anyone putting read QC in front of an aligner.
+
+> **The compute is free; the staging is what you pay for.** 36 s of fastp sits in a 226 s billed
+> window, and the box is chosen by RAM, not cores — see below before you rent a big one.
 
 ## Run it
 
 ```bash
-fastp -i reads_1.fq.gz -I reads_2.fq.gz -o out_1.fq.gz -O out_2.fq.gz -j fastp.json
-```
+make stage RECIPE=bwa-samtools   # fastp reads the same reads bwa aligns
+make run   RECIPE=fastp          # ~4 min on m8g.2xlarge, self-terminating
+make ls    RECIPE=fastp          # fastp.json + fastp.html + smoke-check.txt
 
-The recipe QCs the **same 400k read pairs [bwa](../bwa-samtools/README.md) aligned** and verifies a **conservation identity** — every input read is accounted for as passed or filtered, mates stay paired, output count matches passed count.
+fastp -i SRR062634_1.filt.fastq.gz -I SRR062634_2.filt.fastq.gz \
+      -o out_1.fq.gz -O out_2.fq.gz -j fastp.json -h fastp.html -w 8
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 400k-pair HG00096 slice | your own reads | reused byte-for-byte from [bwa](../bwa-samtools/README.md) — nothing re-staged. |
-| default QC + trimming | add `--dedup`, UMI, or overrepresentation flags | this recipe runs fastp's defaults; the conservation identity holds whatever filters you enable, but the exact component counts will change. |
+| the complete SRR062634 run | your FASTQs | reused byte-for-byte from [bwa](../bwa-samtools/README.md) — nothing re-staged. |
+| default QC + trimming | `--dedup`, UMI, overrepresentation flags | the conservation identity below holds whatever you enable; the component counts change. |
+| `-w 8` | more or fewer | 16 threads is **5 s faster** than 8 on this run. Threads are not the lever. |
 
-fastp is deterministic on fixed input — **nothing here is determinism scaffolding**. **Leave the fixture:** 400k pairs run in ~2 s and the read bookkeeping is exact-or-wrong; a bigger sample is a longer run, not a more legible one. Leave-it.
+**Leave the workload** — a complete 48M-read run, so the sizing argument below transfers. **Scale it**
+by read length or depth; both move the staging footprint, which is the thing that picks the box.
 
 ## Shape, size, cost
 
-One task, **~2 s** QC. `c8g.large`, ~$0.02, **~47s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
+`m8g.2xlarge` (8 vCPU, 32 GiB): **36 s of fastp in a 226 s billed window, $0.0225.**
 
-**Sizing:** no family question — fastp streams reads with a bounded footprint; a bigger sample is a longer run, not a heavier box. Any 8g box fits.
+**Size by RAM, and the reason is counter-intuitive.** Input (3.6 GiB) and output (~3.4 GiB) sit in
+tmpfs *together* — a measured **7,154 MB peak** — and tmpfs is
+[half of RAM](../../practices/container-path.md), so ≥16 GiB of tmpfs means ≥32 GiB of RAM. On `c8g`
+the only 32 GiB box is `4xlarge`, which drags along 16 cores fastp cannot use at $0.6381/hr; `m8g.2xlarge`
+has the same 32 GiB for **$0.3590**. Measured both: **$0.0401 on `c8g.4xlarge` at 16 threads against
+$0.0225 on `m8g.2xlarge` at 8 — 44% cheaper for 5 s slower.** Reading the core count right would still
+have picked the wrong box, because the binding resource was never compute.
 
 <details>
-<summary>As shipped: why a conservation identity not a cross-check, pins, smoke check</summary>
+<summary>As shipped: an exact count shared with bwa, the conservation identity, why fastp's duplicate rate is not a cross-check, pins</summary>
 
-fastp is a single-tool QC step with no natural sibling to cross-validate on the same bytes, so the honest strongest claim is a **conservation identity** — the same class as salmon's TPM sum: fastp's report must balance its books. `reads_before = passed + low_quality + too_many_N + too_short + too_long`, exactly, and the two output FASTQs carry equal read counts (paired-end integrity) summing to the passed count. Deterministic on fixed input, so every number is asserted exactly — a truncated or mis-split output fails the arithmetic even though the run exits 0.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| reads_before | exactly 800000 (400k × 2) | 800000 |
-| **accounted_for** | passed + low_quality + too_many_N + too_short + too_long == reads_before | 800000 |
-| out1 == out2 | paired mates stay paired | 374058 = 374058 |
-| out1 + out2 | == passed_filter | 748116 |
+| **reads in** | **exactly 48,297,986 — bwa's primary record count** | **48,297,986** |
+| **accounted for** | **passed + low_quality + too_many_N + too_short + too_long == reads in** | **48,297,986** |
+| out1 == out2 | mates stay paired | **22,772,943 = 22,772,943** |
+| out1 + out2 | == passed_filter | **45,545,886** |
 
-Components (folded into the sum): passed 748116, low_quality 51656, too_many_N 228, too_short 0, too_long 0.
+**The read count is a cross-tool identity, not a recorded constant.** 48,297,986 is bwa's
+48,817,006 BAM records minus its 519,020 supplementary ones — every input read becomes exactly one
+primary record. So two unrelated tools arrive at the same number from opposite directions, and if
+they ever disagree, one of them did not read the file you think it did. That is strictly stronger
+than hashing the FASTQs, because it is a claim about *content* rather than bytes.
 
-**Pins.** Image `quay.io/aarchbio/fastp@sha256:061ee7c6b8e5…` (1.3.6, cosign-verified, `linux/arm64`). Reads: ENA `SRR062634` (HG00096, 1000G) first 400k pairs (`sha256:4bd24cd…` / `sha256:ebd1ad5…`) — reused from [bwa](../bwa-samtools/README.md); run its `stage-inputs.sh` first.
+Then fastp's report must balance: 45,545,886 passed + 2,741,150 low-quality + 10,950 too-many-N
+accounts for all 48,297,986. Counting the two output FASTQs is what turns that report into a claim
+about the files fastp actually *wrote* — a truncated or mis-split output fails the arithmetic while
+still exiting 0. 4,829,798,600 bases over 48,297,986 reads is exactly 100 bp each, as this library is.
 
-**Run + verify.**
+Both runs — 8 threads and 16 — produced every count identically. Unlike
+[the assemblers](../flye/README.md), fastp's thread count does not move its answer, so these are
+asserted exactly with no seed to pin.
+
+### Why the duplicate rate is reported, not asserted
+
+fastp estimates **0.274%** duplication; [picard MarkDuplicates](../picard/README.md) measures
+**0.868%** on the alignments of these same reads. Both are right, and comparing them would be
+[comparing a method difference](../../practices/cross-checks.md): fastp looks for identical
+*sequences*, picard for pairs at identical *mapping positions* — which catches duplicates that
+differ by a sequencing error, and misses nothing to adapter trimming. There is no tolerance that
+makes those one number, so the page reports both and asserts neither. Q30 rate (0.90576) is the
+same kind of observation: a property of the library, not of fastp.
+
+### Pins
+
+| | data tier |
+|---|---|
+| fastp | `quay.io/aarchbio/fastp@sha256:061ee7c6b8e5…` (1.3.6, cosign-verified, `linux/arm64`) |
+| reads | RODA `s3://1000genomes/…/SRR062634_{1,2}.filt.fastq.gz` — HG00096, staged by [bwa](../bwa-samtools/README.md) |
+
+The reads' tier is a RODA path rather than a hash, so the run publishes their digests:
+`01b9c92fe5d197a7…` (R1) and `ec1bc2843e57db02…` (R2). The image carries no `python3` and no `jq`, so
+`fastp.json` is parsed with `grep`/`awk` — and the **first** `total_reads` in that file is
+`before_filtering` while the second is `after_filtering`, so `head -1` is load-bearing.
+
+The trimmed FASTQs are deliberately **not** uploaded: nothing in the catalog consumes them (bwa
+aligns the untrimmed reads, by its own pin), so storing 3.4 GiB would be paying to keep something
+unread. Add them to the spec's `outputs` if your next step needs them.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=bwa-samtools   # fastp reuses bwa's reads
-make run RECIPE=fastp
-make ls RECIPE=fastp   # expect out_1.fq.gz, out_2.fq.gz, fastp.json, smoke-check.txt
+make stage RECIPE=bwa-samtools
+make run   RECIPE=fastp
+make ls    RECIPE=fastp
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One QC run is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when a shared reference or spot capacity pushes back.
+Expect `smoke-check.txt` with `reads_before 48297986`, `accounted_for 48297986` and
+`out1+out2 45545886`.
+
+**Fan out across samples.** One QC run is one task; a cohort is the same task as a
+[job array](../../patterns/job-arrays.md), one instance per sample keyed by `$JOB_ARRAY_INDEX`.
 
 </details>

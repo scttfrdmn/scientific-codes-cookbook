@@ -1,0 +1,18 @@
+reads_before        48297986   want exactly 48297986
+                               == bwa's primary records (48817006 total - 519020 suppl.)
+total_bases         4829798600
+passed_filter       45545886
+low_quality         2741150
+too_many_N          10950
+too_short           0
+too_long            0
+accounted_for       48297986   want == reads_before   [CONSERVATION]
+out1_reads          22772943
+out2_reads          22772943   want == out1 (mates stay paired)
+out1+out2           45545886   want == passed_filter
+q30_rate            0.90576   (observation)
+fastp_dup_rate      0.00274475   (observation; sequence-based, not picard's 0.008684 by position)
+wall_s              36
+tmpfs_peak_used_mb  7154   <- input + output both live in RAM on this path
+sha256_R1           01b9c92fe5d197a7d5131b4778fce91ed86980a7ebb587048106534fd4b35756
+sha256_R2           ec1bc2843e57db021c8ddaf6bb0f6470a84d33de6d7a9f8701a59a26a8aea288

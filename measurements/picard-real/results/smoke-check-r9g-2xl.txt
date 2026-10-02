@@ -1,0 +1,14 @@
+reads_examined         48184934   = 2*24057356 pairs + 70222 unpaired
+                                 == samtools flagstat primary-mapped (48184934)
+secondary_supplementary 519020   == samtools flagstat supplementary (519020)
+unmapped               113052
+partition_total        48817006   want exactly 48817006 (every input record accounted for)
+read_pair_duplicates   206518
+optical_duplicates     0
+percent_duplication    0.008684   (picard)
+percent_recomputed     0.008684   from the counts picard reports
+percent_abs_diff       0.000000   want < 0.000001 (identity)
+estimated_library_size 1393194376
+bam_magic              1f8b0804   want 1f8b0804
+wall_s                 482
+tmpfs_peak_used_mb     8832   <- temp spill lands in RAM on this path

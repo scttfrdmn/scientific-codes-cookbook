@@ -7,9 +7,7 @@ last_verified: 2026-10-01
 ---
 # Picard MarkDuplicates — a whole-genome BAM, and a partition that must add up
 
-Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s, and proves no record was lost without needing a second tool. For anyone putting MarkDuplicates in a real pipeline.
-
-> **Its metrics file is a partition of the input**, so the four categories must sum to the record count. They do, exactly — and two of them independently match `samtools flagstat` on the same BAM.
+Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s. For anyone putting MarkDuplicates in a real pipeline.
 
 ## Run it
 
@@ -21,16 +19,6 @@ make ls    RECIPE=picard         # dup_metrics.txt + smoke-check.txt
 picard -Xmx24g MarkDuplicates I=aln.sorted.bam O=marked.bam M=dup_metrics.txt TMP_DIR=/tmp
 ```
 
-## Shape, size, cost
-
-`r8g.2xlarge` (8 vCPU, 64 GiB): **591 s of MarkDuplicates in a 702 s billed window, $0.105.**
-
-**Size it on RAM, not cores.** MarkDuplicates spills read-ends to `TMP_DIR`, and on the task path
-that is [tmpfs — i.e. RAM](../../practices/container-path.md), competing with its own Java heap. So
-the box pays twice: `-Xmx24g` of heap plus a measured **8,834 MB** tmpfs high-water mark, on top of
-the 4.5 GB staged input. That is the same double-spend [samtools sort](../bwa-samtools/README.md)
-hits one step earlier in the chain, and it is why this runs on `r8g` rather than `c8g`.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -39,8 +27,25 @@ hits one step earlier in the chain, and it is why this runs on `r8g` rather than
 | `-Xmx24g` | your heap | heap and `TMP_DIR` draw on the same RAM here, so raising one shrinks the other. |
 | mark only | `REMOVE_DUPLICATES=true` | then the partition identity below no longer holds, because records *are* dropped — which is the point of checking it. |
 
-**Leave the workload** — a real whole-genome BAM, so the timing and the memory shape transfer.
-**Scale it** by depth; duplicate rate rises with coverage and this library is shallow.
+**Leave the workload** — a real whole-genome BAM, so timing and memory shape transfer. **Scale it** by depth; duplicate rate rises with coverage and this library is shallow.
+
+## Which box — measured, same BAM, same `-Xmx24g`, 8 vCPU throughout
+
+| generation | instance | MarkDuplicates | **$/run** |
+|---|---|---|---|
+| Graviton2 | `r6g.2xlarge` | 928 s | 0.1288 |
+| Graviton3 | `r7g.2xlarge` | 747 s | 0.1144 |
+| Graviton4 | `r8g.2xlarge` | 591 s | 0.1081 |
+| **Graviton5** | `r9g.2xlarge` | **482 s** | **0.0923** |
+
+**~1.24× per generation, 1.93× over four, and every step pays for itself** — no cost-neutral rung, unlike
+the two DFT codes ([GPAW](../gpaw/README.md), [SIESTA](../siesta/README.md)). And a JVM tool doing integer
+and IO work gains *more* than SIESTA's 1.86×, so "the FP-heavy codes gain most" does not survive a fifth code.
+
+**Size by RAM, not cores.** MarkDuplicates spills to `TMP_DIR`, which here is
+[tmpfs — RAM](../../practices/container-path.md), so the box pays `-Xmx24g` of heap *plus* a measured
+**8,834 MB** high-water mark on top of the 4.5 GB staged input — the same double-spend
+[samtools sort](../bwa-samtools/README.md) hits one step earlier.
 
 <details>
 <summary>As shipped: the partition identity, the parsing trap, pins</summary>
@@ -65,6 +70,12 @@ or mismatched metrics file that any range check on the percentage would wave thr
 The first two lines also reconcile with `samtools flagstat` run by a different tool on the same BAM:
 48,184,934 primary-mapped and 519,020 supplementary, both to the digit. That is a cross-tool
 agreement obtained for free, because both tools are counting the same partition.
+
+**And every number above is identical on all four Graviton generations** — 206,518 read-pair
+duplicates and `PERCENT_DUPLICATION` 0.008684 on `r6g`, `r7g`, `r8g` and `r9g`, with the tmpfs
+high-water mark within 2 MB (8,832–8,834). MarkDuplicates is deterministic, so dividing the work
+across a different chip must not move the answer; that makes the four generation runs each other's
+check, and the memory footprint a property of the data rather than of the box.
 
 ### The parsing trap
 
