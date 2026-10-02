@@ -74,3 +74,7 @@ Your credentials, your buckets, your bill — nothing intermediated. spore.host 
 ## Where this will live
 
 The cookbook will be published at **https://cookbook.spore.host**. Until that site is built, this repository is the source of truth — read the recipes here.
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE). Copyright 2026 Scott Friedman.
