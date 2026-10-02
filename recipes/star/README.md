@@ -2,7 +2,8 @@
 tool: star
 tool_version: "2.7.11b"
 image: quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
-spawn_version: 0.111.1
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
 # STAR — a complete RNA-seq run against the whole human genome
 
@@ -54,7 +55,7 @@ STAR --runThreadN 32 --genomeDir idx --readFilesIn R1.fq.gz R2.fq.gz \
 |---|---|---|
 | input reads | > 5M (a real run) | **15,800,127** |
 | uniquely mapped | ≥ 85% | **92.47%** |
-| BAM | > 500 MB | **2,864,076,884 bytes** |
+| BAM | > 500 MB | **2,864,081,358 bytes** |
 | index | built and non-empty | **28.6 GiB, 15 files** |
 
 `--outSAMtype BAM Unsorted` keeps output order input-driven, so the record count is stable for
@@ -64,12 +65,17 @@ a crash.
 
 ### Why index-vs-align is the whole story
 
-Measured on `r8g.8xlarge`, 32 threads, billed 1176 s (**$0.616**):
+Measured on `r8g.8xlarge`, 32 threads, billed 1191 s (**$0.624**):
 
 ```text
-genomeGenerate   1047 s   71.63 GiB peak   11.40 of 32 cores   -> 28.6 GiB index
+genomeGenerate   1048 s   71.60 GiB peak   11.35 of 32 cores   -> 28.6 GiB index
 align            49 s     ~30 GiB          15.8M reads         -> 2.86 GB BAM
 ```
+
+Reproduced across two runs on different instances: index 1047/1048 s, peak 71.63/71.60 GiB,
+11.40/11.35 cores, and `input_reads` and `pct_unique` identical to the digit. The BAM is **not**
+byte-stable — 2,864,076,884 against 2,864,081,358, about 4.5 KB apart — which is BGZF block packing,
+so the size is a sanity bound and the read count is the assertion.
 
 Three consequences worth acting on:
 
