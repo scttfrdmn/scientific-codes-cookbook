@@ -1,5 +1,5 @@
 {
-  "task_id": "cookbook-seqkit-wgs",
+  "task_id": "cookbook-seqkit-gen-c6g",
   "command": [
     "bash",
     "-c",
@@ -11,7 +11,7 @@
     "memory_gib": 14,
     "architecture": "arm64",
     "families": [
-      "c8g"
+      "c6g"
     ]
   },
   "inputs": [
@@ -27,20 +27,20 @@
   "outputs": [
     {
       "source": "/tmp/stats.tsv",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/r1/stats.tsv"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/gen/c6g/stats.tsv"
     },
     {
       "source": "/tmp/fa_stats.tsv",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/r1/fa_stats.tsv"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/gen/c6g/fa_stats.tsv"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/seqkit/gen/c6g/smoke-check.txt"
     }
   ],
   "lifecycle": {
     "ttl": "20m",
     "on_complete": "terminate",
-    "cost_limit": 0.12
+    "cost_limit": 0.15
   }
 }

@@ -2,55 +2,102 @@
 tool: seqkit
 tool_version: 2.13.0
 image: quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
+# seqkit — stats and format conversion over a complete 48M-read run
 
-# seqkit — exact statistics over a FASTQ
-
-The everyday first look at a read set: how many sequences, how long, what spread.
+Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone reaching for seqkit as the first step of a pipeline.
 
 ## Run it
 
 ```bash
-seqkit stats reads_1.fq.gz reads_2.fq.gz
-```
+make stage RECIPE=bwa-samtools   # seqkit reads the same reads bwa aligns
+make run   RECIPE=seqkit         # ~4 min on c8g.2xlarge, self-terminating
+make ls    RECIPE=seqkit         # stats.tsv + fa_stats.tsv + smoke-check.txt
 
-That's the recipe. seqkit is deterministic, so on a fixed input every number is exact — which is what lets the smoke check assert them to the digit rather than in a band.
+seqkit stats -T -j 8 SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz
+seqkit fq2fa -j 8 SRR062634_1.filt.fastq.gz -o r1.fa.gz
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 51,933-pair fixture reads (the shared 30× set) | your own FASTQ/FASTA, any size | `seqkit stats` streams, so it doesn't care about input size or format — point it at anything FASTX. (Staging does care: the file lands in `/tmp`, tmpfs ≈ ½ the box's RAM, so a very large input needs a bigger box to stage — not more `disk_gib`.) |
-| `stats` | `seq`, `grep`, `rmdup`, `fx2tab`, … | it's the same binary; this recipe just exercises the read path with a checkable output. |
+| the complete SRR062634 run | your FASTQs | reused byte-for-byte from [bwa](../bwa-samtools/README.md) — nothing re-staged. |
+| `stats` + `fq2fa` | `grep`, `subseq`, `rmdup`, `sample`, … | same binary, same streaming shape — but `rmdup` holds a hash per record, so it is the one that is not footprint-free. |
+| `-j 8` | fewer threads | `stats` is gzip-decode bound; threads help the decode, not the counting. |
 
-Nothing here is determinism scaffolding — `seqkit stats` has no seed and no thread-order effect. **Leave the fixture small.** It's legible at any size and the numbers don't mislead; a 52k-pair set teaches exactly what a 52M-pair one would, faster and cheaper. Scaling it would prove nothing new.
+**Leave the workload** — a complete run, so the timings and the staging footprint transfer.
+**Scale it** by read count; everything here streams, so a bigger file is a longer run on the same box
+until the staged input stops fitting.
 
-## Shape, size, cost
+## Which box — measured, same reads, 8 vCPU throughout
 
-One task, sub-second. `c8g.large`, ~$0.02, **~47s** wall — nearly all of it boot and image pull, not seqkit; [a short task is mostly overhead](../../practices/what-this-does-not-cover.md).
+| generation | instance | `stats` + `fq2fa` | compute $ | billed $ |
+|---|---|---|---|---|
+| Graviton2 | `c6g.2xlarge` | 143 s | 0.0108 | 0.0227 |
+| Graviton3 | `c7g.2xlarge` | 110 s | 0.0089 | 0.0186 |
+| Graviton4 | `c8g.2xlarge` | 93 s | 0.0082 | 0.0201 |
+| **Graviton5** | `c9g.2xlarge` | **76 s** | **0.0073** | **0.0160** |
 
-**Sizing:** no family question — seqkit streams; the only limit is staging (the input lands in `/tmp`, tmpfs ≈ ½ RAM), flagged in *Make it yours*. Any 8g box fits for the compute.
+**1.88× over four generations.** **Read the compute column:** at ~90 s of work this is
+boot-dominated, so the billed column puts Graviton3 ahead of Graviton4 on noise, not hardware
+([which comparison applies](../../patterns/cost-per-result.md)).
 
 <details>
-<summary>As shipped: exact identities, pins, smoke check</summary>
+<summary>As shipped: a read count three tools agree on, conversion conservation, pins</summary>
 
-The check is a **conservation identity**, not two coincidental numbers: the `cat` of the two mates has `num_seqs` = 103,866 and `sum_len` = 15,579,900, and the smoke check asserts these equal `r1 + r2` (`103866 == 51933+51933`, `15579900 == 7789950+7789950`). Each mate is 51,933 seqs / 7,789,950 bp at a uniform 150 bp (min == max). Exact-or-wrong.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| r1, r2 num_seqs / sum_len | 51933 / 7789950 each | matches |
-| combined num_seqs | 103866 (== r1+r2) | 103866 |
-| combined sum_len | 15579900 (== r1+r2) | 15579900 |
-| read length | uniform 150 (min == max) | 150 / 150 |
+| R1 records | exactly 24,148,993 | **24,148,993** |
+| R2 records | == R1 (mates paired) | **24,148,993** |
+| **total records** | **exactly 48,297,986** | **48,297,986** |
+| **total bases** | **exactly 4,829,798,600** | **4,829,798,600** |
+| read length | min == max == 100 | **100 / 100** |
+| **after `fq2fa`** | **records and bases unchanged** | **48,297,986 / 4,829,798,600** |
 
-**Pins.** Image `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.13.0, cosign-verified, `linux/arm64`). Input: the 30× fixture's reads at `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared BAM fixture (`make stage RECIPE=bcftools`) — repinned to that reproducible derivation, since the prior sha256 came from an unrecorded command.
+**Neither total is a constant someone wrote down — both are shared with two other tools.**
+48,297,986 is [bwa](../bwa-samtools/README.md)'s 48,817,006 BAM records minus its 519,020
+supplementary ones, and it is also [fastp](../fastp/README.md)'s `before_filtering.total_reads`.
+4,829,798,600 is fastp's `total_bases`. Three tools, three different ways of counting the same file,
+one number each. If seqkit ever disagrees, one of the three did not read the file you think it did —
+which is a stronger claim than any band on a record count, and it costs nothing.
 
-**Run + verify.**
+`fq2fa` then adds a conservation check across a format change: dropping the quality lines must not
+change how many sequences there are or how long they are. A conversion that truncated its output, or
+mis-parsed a record boundary, fails the arithmetic while still exiting 0.
+
+Every number came back **identical on all four Graviton generations**. seqkit is deterministic, so
+that is an exact assertion rather than a tolerance, and it makes the four runs each other's check.
+
+### Pins
+
+| | data tier |
+|---|---|
+| seqkit | `quay.io/aarchbio/seqkit@sha256:5478aaad4dd7…` (2.11.0, cosign-verified, `linux/arm64`) |
+| reads | RODA `s3://1000genomes/…/SRR062634_{1,2}.filt.fastq.gz` — HG00096, staged by [bwa](../bwa-samtools/README.md) |
+
+The reads' tier is a RODA path rather than a hash, so their digests are published by
+[fastp](../fastp/README.md)'s run: `01b9c92fe5d197a7…` (R1), `ec1bc2843e57db02…` (R2).
+
+Measured tmpfs high-water mark is **5,612 MB** — the 3.6 GiB of staged reads plus the ~2.3 GiB of
+FASTA this writes. That fits the 8 GiB tmpfs of a 16 GiB box
+([staging is half of RAM](../../practices/container-path.md)), which is what sizes this at a 2xlarge.
+The FASTA is deliberately not uploaded: nothing in the catalog consumes it, so storing it would be
+paying to keep something unread.
+
+### Run + verify
+
 ```sh
-make run RECIPE=seqkit
-make ls RECIPE=seqkit   # expect stats.tsv, smoke-check.txt
+make stage RECIPE=bwa-samtools
+make run   RECIPE=seqkit
+make ls    RECIPE=seqkit
 ```
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `total_num_seqs 48297986`, `total_sum_len 4829798600` and
+`fa_sum_len` equal to the latter.
 
 </details>

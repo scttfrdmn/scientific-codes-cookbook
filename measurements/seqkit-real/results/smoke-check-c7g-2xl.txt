@@ -1,0 +1,12 @@
+r1_num_seqs      24148993   want 24148993
+r2_num_seqs      24148993   want == r1 (mates paired)
+total_num_seqs   48297986   want exactly 48297986
+                            == bwa primary records (48817006 - 519020 suppl.)
+                            == fastp before_filtering.total_reads
+total_sum_len    4829798600   want exactly 4829798600  == fastp total_bases
+read_len         min=100 max=100   want 100/100 (uniform)
+fa_format        FASTA   want FASTA
+fa_num_seqs      48297986   want == total_num_seqs  [conversion conserves records]
+fa_sum_len       4829798600   want == total_sum_len    [conversion conserves bases]
+wall_s           110
+tmpfs_peak_used_mb 5612

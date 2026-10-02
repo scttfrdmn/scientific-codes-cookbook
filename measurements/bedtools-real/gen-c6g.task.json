@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-bedtools-gen-c6g",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\ncd /tmp\necho \"== bedtools genomecov on bwa's whole-genome BAM: 48,817,006 records, 4.5 GB ==\"\ndf -m /tmp | awk 'NR==2{print \"tmpfs_total_mb \"$2}'\n( MAX=0; while :; do U=$(df -m /tmp | awk 'NR==2{print $3}')\n    [ \"$U\" -gt \"$MAX\" ] && { MAX=$U; echo \"$MAX\" > /tmp/.peak; }; sleep 2; done ) & SAMPLER=$!\n\nT0=$(date +%s)\nbedtools genomecov -ibam aln.sorted.bam > genomecov.txt\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nkill \"$SAMPLER\" 2>/dev/null || true\nPEAK=$(cat /tmp/.peak 2>/dev/null || echo 0)\n# Never rm a staged input: sticky /tmp + stage-in as the instance user means EPERM, which `rm -f`\n# does not suppress and which would kill the task under set -e.\n\n# genomecov writes <contig> <depth> <bases_at_that_depth> <contig_len> <fraction>, plus aggregate\n# rows keyed \"genome\". Bases run to 3e9, so every sum uses %.0f -- awk's %d is int32 and would\n# clamp at 2147483647, silently corrupting the conservation check.\nGEN=$(awk -F'\\t' '$1==\"genome\"{s+=$3} END{printf \"%.0f\", s}' genomecov.txt)\nPER=$(awk -F'\\t' '$1!=\"genome\"{s+=$3} END{printf \"%.0f\", s}' genomecov.txt)\n# The reference's own index is the independent authority on contig lengths.\nFAI=$(awk -F'\\t' '{s+=$2} END{printf \"%.0f\", s}' GRCh38_full_analysis_set_plus_decoy_hla.fa.fai)\nCONTIGS=$(awk -F'\\t' 'END{print NR}' GRCh38_full_analysis_set_plus_decoy_hla.fa.fai)\nD0=$(awk -F'\\t' '$1==\"genome\" && $2==0{printf \"%.0f\", $3}' genomecov.txt)\nCOVERED=$(awk -v g=\"$GEN\" -v z=\"$D0\" 'BEGIN{printf \"%.0f\", g-z}')\nPCT=$(awk -v c=\"$COVERED\" -v g=\"$GEN\" 'BEGIN{printf \"%.4f\", 100*c/g}')\nALNB=$(awk -F'\\t' '$1==\"genome\"{s+=$2*$3} END{printf \"%.0f\", s}' genomecov.txt)\nMEAN=$(awk -v a=\"$ALNB\" -v g=\"$GEN\" 'BEGIN{printf \"%.4f\", a/g}')\nMAXD=$(awk -F'\\t' '$1==\"genome\"{if($2>m)m=$2} END{print m}' genomecov.txt)\n\n{\n  echo \"genome_bases       $GEN   want == the .fai total ($FAI)   [cross-tool]\"\n  echo \"per_contig_bases   $PER   want == genome_bases            [CONSERVATION]\"\n  echo \"fai_contigs        $CONTIGS\"\n  echo \"uncovered_bases    $D0\"\n  echo \"covered_bases      $COVERED   ($PCT% of the genome at >=1x)\"\n  echo \"aligned_bases      $ALNB   = sum(depth x bases)\"\n  echo \"mean_depth         $MEAN   (observation; this library is ~1.5x)\"\n  echo \"max_depth          $MAXD   (observation)\"\n  echo \"wall_s             $WALL\"\n  echo \"tmpfs_peak_used_mb $PEAK\"\n} > genomecov-smoke-check.txt\ncat genomecov-smoke-check.txt\ntest \"$GEN\" = \"$FAI\"\ntest \"$PER\" = \"$GEN\"\nawk -v d=\"$D0\" -v g=\"$GEN\" 'BEGIN{exit !(d>0 && d<g)}'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/bedtools@sha256:cd1e72a29500369c5576c10e98b2c1723a09a73bde9fb50d80bf4022096b449b",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "c6g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam",
+      "destination": "/tmp/aln.sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/genomecov.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bedtools/gen/c6g/genomecov-wgs.txt"
+    },
+    {
+      "source": "/tmp/genomecov-smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bedtools/gen/c6g/genomecov-smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}
