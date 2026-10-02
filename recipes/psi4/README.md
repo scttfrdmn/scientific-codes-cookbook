@@ -14,6 +14,10 @@ last_verified: 2026-09-10
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=psi4)" --wait
+```
+
 ```python
 import psi4
 psi4.set_options({"scf_type": "pk"})   # exact integrals — Psi4 defaults to density fitting

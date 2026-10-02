@@ -16,6 +16,7 @@ RSEM quantifies two overlapping transcripts on Graviton4 from an expression rati
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=rsem); do spawn task run --spec "$s" --wait; done
 rsem-prepare-reference txome.fa idx                    # no aligner needed for this step
 bowtie2 --dpad 0 --gbar 99999999 --mp 1,1 --np 1 --score-min L,0,-0.1 \
         --no-unal -k 200 --sensitive -x txidx -U reads.fq -S aln.sam

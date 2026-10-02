@@ -14,6 +14,7 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait
 tleap -f build.in                                          # ACE-ALA-NME, ff14SB → parm7 + rst7
 sander -O -i md.in -p sys.parm7 -c sys.rst7 -o md.out      # 20-step in-vacuo NVE
 ```

@@ -12,6 +12,11 @@ spawn_version: 0.104.0
 
 ## Run it
 
+```bash
+make stage RECIPE=climate
+spawn task run --spec "$(make -s spec RECIPE=climate)" --wait
+```
+
 ```python
 import xesmf as xe
 src = xe.util.grid_global(5, 4)          # 5°×4° global grid

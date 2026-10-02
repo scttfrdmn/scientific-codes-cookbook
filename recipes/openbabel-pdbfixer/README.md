@@ -16,7 +16,7 @@ Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits
 ## Run it
 
 ```bash
-make run RECIPE=rdkit      # produces rdkit_keys.tsv; this recipe reads it
+for s in $(make -s spec RECIPE=openbabel-pdbfixer); do spawn task run --spec "$s" --wait; done   # produces rdkit_keys.tsv; this recipe reads it
 make run RECIPE=openbabel-pdbfixer   # 24 s + the structure-prep task
 make ls  RECIPE=openbabel-pdbfixer
 

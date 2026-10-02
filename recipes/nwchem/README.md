@@ -14,6 +14,7 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=nwchem)" --wait
 nwchem h2o.nw                     # serial RHF/STO-3G
 mpiexec -n 2 nwchem h2o.nw         # 2 ranks — same SCF energy
 ```

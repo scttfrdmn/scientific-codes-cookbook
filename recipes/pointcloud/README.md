@@ -13,6 +13,8 @@ spawn_version: 0.104.0
 ## Run it
 
 ```bash
+make stage RECIPE=pointcloud
+spawn task run --spec "$(make -s spec RECIPE=pointcloud)" --wait
 pdal info --summary autzen.laz               # count 10,653,336; bounds
 pdal info --stats --dimensions Z autzen.laz  # mean Z 434.1025 over all points
 ```

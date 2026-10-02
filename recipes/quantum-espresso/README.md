@@ -15,6 +15,7 @@ Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a pla
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=quantum-espresso)" --wait
 # pw.x SCF on bulk Si — PBE, SSSP pseudopotential bundled in the dft env
 pw.x -in si.scf.in   # &system ibrav=2 celldm(1)=10.26 ecutwfc=40 … K_POINTS 8 8 8
 ```

@@ -18,7 +18,7 @@ Aligns a whole sequencing run (24.1M pairs) to all of GRCh38 with both aligners 
 
 ```bash
 make stage RECIPE=bwa-mem2   # once: the 3.0 GB reference, then build the mem2 index (~14 min)
-make run   RECIPE=bwa-mem2   # bwa leg then bwa-mem2 leg, same box, same reads
+for s in $(make -s spec RECIPE=bwa-mem2); do spawn task run --spec "$s" --wait; done   # bwa leg then bwa-mem2 leg, same box, same reads
 make ls    RECIPE=bwa-mem2   # both smoke-check.txt files
 
 bwa-mem2 index GRCh38_full_analysis_set_plus_decoy_hla.fa      # ~14 min, 16.5 GiB out

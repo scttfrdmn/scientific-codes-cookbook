@@ -17,6 +17,7 @@ snpEff, `bcftools csq` and VEP annotate the same VCF against the same reference 
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=variant-annotation); do spawn task run --spec "$s" --wait; done
 snpEff build -c snpEff.config -gff3 -noCheckProtein -v chrA          # toy DB from your GFF
 snpEff ann   -c snpEff.config -noStats -hgvs1LetterAa chrA variants.vcf > ann.vcf
 

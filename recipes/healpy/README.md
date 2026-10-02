@@ -14,6 +14,10 @@ healpy does HEALPix sky pixelization — the equal-area tessellation of the sphe
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=healpy)" --wait
+```
+
 ```python
 import healpy as hp
 nside = 64

@@ -14,7 +14,7 @@ Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own p
 
 ```bash
 make stage RECIPE=vina   # once: the 1iep receptor + ligand from the v1.2.7 tag
-make run   RECIPE=vina   # ~1 min on c8g.large, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=vina)" --wait   # ~1 min on c8g.large, self-terminating
 make ls    RECIPE=vina   # smoke-check.txt + dock.json
 
 python3 -c "

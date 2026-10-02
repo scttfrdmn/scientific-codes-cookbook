@@ -12,6 +12,7 @@ Build an index, align paired reads — checked against bwa on identical bytes.
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=bowtie2)" --wait
 bowtie2-build ref.fa idx
 bowtie2 --local -x idx -1 reads_1.fq.gz -2 reads_2.fq.gz -S aln.sam
 ```

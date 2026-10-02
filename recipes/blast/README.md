@@ -15,7 +15,7 @@ Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. 
 
 ```bash
 make stage RECIPE=blast   # Ensembl 116 proteome + the first 1000 records as queries
-make run   RECIPE=blast   # makeblastdb then blastp, ~4 min total
+spawn task run --spec "$(make -s spec RECIPE=blast)" --wait   # makeblastdb then blastp, ~4 min total
 make ls    RECIPE=blast   # hits.tsv + smoke-check.txt
 
 makeblastdb -in pep.fa -dbtype prot -out pepdb

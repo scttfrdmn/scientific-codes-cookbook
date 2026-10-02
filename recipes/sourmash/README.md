@@ -13,7 +13,7 @@ Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with m
 
 ```bash
 make stage RECIPE=mash       # the 20-genome set; sourmash reuses it, nothing re-staged
-make run   RECIPE=mash       # mash first: this recipe reads its dist.tsv
+spawn task run --spec "$(make -s spec RECIPE=sourmash)" --wait   # mash first: this recipe reads its dist.tsv
 make run   RECIPE=sourmash   # ~3 min billed, 15 s of it sourmash
 make ls    RECIPE=sourmash   # sim.csv + smoke-check.txt
 

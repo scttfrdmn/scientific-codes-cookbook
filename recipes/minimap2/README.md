@@ -19,7 +19,7 @@ Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then 
 
 ```bash
 make stage RECIPE=minimap2   # once: pull chr20 HiFi reads out of the published GIAB BAM
-make run   RECIPE=minimap2   # align (~4.5 min) → sort → truth-support check
+for s in $(make -s spec RECIPE=minimap2); do spawn task run --spec "$s" --wait; done   # align (~4.5 min) → sort → truth-support check
 make ls    RECIPE=minimap2   # aln.sam.gz, hifi.sorted.bam + .bai, three check files
 
 minimap2 -ax map-hifi -t 16 --MD chr20.fa hifi.chr20.fq.gz > aln.sam

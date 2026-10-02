@@ -15,6 +15,10 @@ DESeq2, edgeR and limma-voom each test the same count matrix for differential ex
 
 ## Run it
 
+```bash
+for s in $(make -s spec RECIPE=rnaseq-de); do spawn task run --spec "$s" --wait; done
+```
+
 ```r
 dds <- DESeqDataSetFromMatrix(counts, coldata, ~ grp)   # DESeq2
 res <- results(DESeq(dds))

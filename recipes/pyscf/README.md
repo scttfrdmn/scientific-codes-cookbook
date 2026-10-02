@@ -13,6 +13,10 @@ last_verified: 2026-09-10
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=pyscf)" --wait
+```
+
 ```python
 from pyscf import gto, scf
 mol = gto.M(atom="H 0 0 0; H 0 0 0.74", basis="sto-3g")

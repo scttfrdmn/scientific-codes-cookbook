@@ -14,6 +14,9 @@ FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks it
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=fenicsx)" --wait
+```
 ```python
 import ufl
 from dolfinx import fem, mesh

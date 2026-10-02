@@ -16,6 +16,7 @@ featureCounts and HTSeq each count the same aligned reads against the same annot
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=rnaseq-counts); do spawn task run --spec "$s" --wait; done
 featureCounts -a genes.gtf -o fc.txt -t exon -g gene_id reads.sam
 htseq-count -f sam -t exon -i gene_id -s no reads.sam genes.gtf
 ```

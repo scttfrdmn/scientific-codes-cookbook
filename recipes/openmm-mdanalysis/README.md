@@ -12,6 +12,10 @@ OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysi
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=openmm-mdanalysis)" --wait
+```
+
 ```python
 # OpenMM ran a 27-atom argon NVE (200 steps) and wrote top.pdb + traj.dcd; MDAnalysis reads them back:
 import MDAnalysis as mda

@@ -16,7 +16,7 @@ Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's 
 
 ```bash
 make stage RECIPE=siesta   # once: Si.psf from the SIESTA 5.4.2 tag
-make run   RECIPE=siesta   # 8 SCFs (1 reference + 7 scan points), ~33 s
+spawn task run --spec "$(make -s spec RECIPE=siesta)" --wait   # 8 SCFs (1 reference + 7 scan points), ~33 s
 make ls    RECIPE=siesta   # smoke-check.txt + siesta-scan.dat
 
 mpiexec -n 2 siesta < si.fdf   # DZP basis, 6×6×6 k-grid, 200 Ry mesh, LDA

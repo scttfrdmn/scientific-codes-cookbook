@@ -16,6 +16,7 @@ last_verified: 2026-09-20
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=deeptools); do spawn task run --spec "$s" --wait; done
 samtools sort -o reads.bam reads.sam && samtools index reads.bam
 bamCoverage -b reads.bam -o cov.bedgraph --outFileFormat bedgraph \
             --binSize 1 --normalizeUsing None

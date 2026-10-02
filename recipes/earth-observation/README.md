@@ -12,6 +12,11 @@ spawn_version: 0.104.0
 
 ## Run it
 
+```bash
+make stage RECIPE=earth-observation
+spawn task run --spec "$(make -s spec RECIPE=earth-observation)" --wait
+```
+
 ```python
 import rasterio
 with rasterio.open("B01.tif") as ds:

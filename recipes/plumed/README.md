@@ -14,6 +14,7 @@ GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED comput
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=plumed)" --wait
 export PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so   # REQUIRED first, or mdrun aborts ("plumed not available")
 gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o t.tpr -maxwarn 5
 gmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat    # GROMACS integrates, PLUMED reads coords every step

@@ -16,6 +16,7 @@ piscem maps single-cell reads and alevin-fry turns them into a cell × gene coun
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=single-cell); do spawn task run --spec "$s" --wait; done
 piscem build -s txome.fa -k 31 -m 19 -o idx
 piscem map-sc -i idx -g "1{b[16]u[12]x:}2{r:}" -1 R1.fastq -2 R2.fastq -o rad
 

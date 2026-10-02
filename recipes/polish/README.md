@@ -16,6 +16,7 @@ racon rebuilds a consensus on Graviton4 from reads aligned to a draft, recoverin
 ## Run it
 
 ```bash
+for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s" --wait; done
 minimap2 -x map-ont draft.fa reads.fq > ov.paf
 racon -t 2 reads.fq ov.paf draft.fa > polished.fa
 ```

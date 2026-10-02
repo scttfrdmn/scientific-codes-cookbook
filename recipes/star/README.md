@@ -15,7 +15,7 @@ Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15
 
 ```bash
 make stage RECIPE=star   # once: Ensembl 116 primary assembly + GTF + the full run
-make run   RECIPE=star   # index ~17 min then align ~1 min; self-terminating
+spawn task run --spec "$(make -s spec RECIPE=star)" --wait   # index ~17 min then align ~1 min; self-terminating
 make ls    RECIPE=star   # Aligned.out.bam + smoke-check.txt
 ```
 

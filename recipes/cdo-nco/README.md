@@ -13,6 +13,7 @@ CDO builds and transforms a climate field; NCO — an independent toolchain — 
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=cdo-nco)" --wait
 cdo -f nc -topo,global_2 topo.nc      # ETOPO elevation on a 2° global grid
 cdo output -fldmax topo.nc            # 5761 — max elevation on this grid
 ncwa -y max -v topo topo.nc max.nc    # NCO's independent max of the same field → 5761

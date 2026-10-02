@@ -12,6 +12,7 @@ Score an assembly — contig counts, N50, total length — the standard "how goo
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=quast)" --wait
 quast.py assembly_1.fasta assembly_2.fasta -o report
 ```
 

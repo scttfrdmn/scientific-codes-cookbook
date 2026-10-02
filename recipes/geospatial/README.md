@@ -12,6 +12,10 @@ The shared geospatial core (PROJ, GEOS, GDAL, rasterio, shapely, pyproj) reproje
 
 ## Run it
 
+```bash
+spawn task run --spec "$(make -s spec RECIPE=geospatial)" --wait
+```
+
 ```python
 import pyproj, shapely, rasterio
 pyproj.Transformer.from_crs(4326, 3857).transform(-83, 40)   # → -9239517.74, 4865942.28 m

@@ -13,6 +13,7 @@ last_verified: 2026-09-10
 ## Run it
 
 ```bash
+spawn task run --spec "$(make -s spec RECIPE=r)" --wait
 Rscript -e 'fit <- lm(dist ~ speed, data = cars); coef(fit)'
 # (Intercept) -17.579095   speed 3.932409
 ```

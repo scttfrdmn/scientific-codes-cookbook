@@ -16,7 +16,7 @@ Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exac
 
 ```bash
 make stage RECIPE=bwa-samtools   # fastp reads the same reads bwa aligns
-make run   RECIPE=fastp          # ~4 min on m8g.2xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=fastp)" --wait   # ~4 min on m8g.2xlarge, self-terminating
 make ls    RECIPE=fastp          # fastp.json + fastp.html + smoke-check.txt
 
 fastp -i SRR062634_1.filt.fastq.gz -I SRR062634_2.filt.fastq.gz \

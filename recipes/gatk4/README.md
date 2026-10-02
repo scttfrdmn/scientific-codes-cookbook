@@ -15,7 +15,7 @@ Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then me
 
 ```bash
 make stage RECIPE=gatk4   # reference index, GIAB truth slice, and chr20 out of the 30x CRAM
-make run   RECIPE=gatk4   # call (~2h 12m) then score against GIAB
+for s in $(make -s spec RECIPE=gatk4); do spawn task run --spec "$s" --wait; done   # call (~2h 12m) then score against GIAB
 make ls    RECIPE=gatk4   # gatk.vcf.gz + smoke-check.txt + concordance.txt
 
 gatk HaplotypeCaller -R chr20.fa -I NA12878.chr20.30x.bam -L chr20 \
