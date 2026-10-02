@@ -190,6 +190,13 @@ def main():
         current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
         if norm(current) != norm(content):
             print("catalog/recipes.md is stale — run `make catalog`", file=sys.stderr)
+            import difflib
+            d = list(difflib.unified_diff(norm(current).splitlines(), norm(content).splitlines(),
+                                          "committed", "regenerated", lineterm="", n=0))
+            for line in d[:24]:
+                print("  " + line, file=sys.stderr)
+            if len(d) > 24:
+                print(f"  … {len(d) - 24} more diff lines", file=sys.stderr)
             return 1
         print("catalog/recipes.md up to date")
         return 0
