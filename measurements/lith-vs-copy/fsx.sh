@@ -4,7 +4,7 @@
 set -uo pipefail
 exec > >(tee -a /var/log/fsxcmp.log) 2>&1
 R=/tmp/fsxcmp.txt; : > "$R"
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }
 push(){ aws s3 cp "$R" "s3://$B/measurements/lith-vs-copy/fsx-result.txt" --only-show-errors 2>/dev/null || true; }
 REF=GRCh38_full_analysis_set_plus_decoy_hla.fa

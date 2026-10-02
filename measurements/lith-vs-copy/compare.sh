@@ -3,7 +3,7 @@
 # path differs. NOTE: `spawn launch --command` runs as a NON-ROOT user and the instance has
 # neither docker nor fuse (unlike the task-run path), so everything privileged uses sudo.
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 W=$HOME/work; mkdir -p "$W"; cd "$W"
 R=$W/result.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }

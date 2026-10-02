@@ -5,7 +5,7 @@
 # the copy occupies RAM the tool also needs, so the box has to be big enough for BOTH. On a
 # 62 GiB box this exact copy OOM-killed STAR; here there are 124 GiB, so it should fit.
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 IDX_S3="s3://$B/inputs/star-index-GRCh38-116"
 W=/root/dp; cd "$W"
 R=$W/tmpfs-leg.txt; : > "$R"

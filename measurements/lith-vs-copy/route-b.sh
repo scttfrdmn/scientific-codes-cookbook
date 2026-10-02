@@ -1,5 +1,5 @@
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 W=/home/scttfrdmn/work
 R=$W/resultB.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }

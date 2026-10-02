@@ -3,7 +3,7 @@
 # this asks what an align costs when it does not rebuild and does not copy 28.6 GiB.
 # Realistic split: mount the big immutable index, copy the small per-sample reads.
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 W=$HOME/work; mkdir -p "$W"; cd "$W"
 R=$W/mount-align.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }

@@ -10,7 +10,7 @@
 # and "EFS is fast" are claims about the second read, and the first read is the one you pay
 # for when a cohort fans out.
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 IDX_S3="s3://$B/inputs/star-index-GRCh38-116"
 W=/root/dp; mkdir -p "$W"; cd "$W"
 R=$W/four-data-paths.txt; : > "$R"

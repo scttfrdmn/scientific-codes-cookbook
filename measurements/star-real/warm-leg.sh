@@ -7,7 +7,7 @@
 # hold the whole 28.6 GiB index in page cache. That is the best case for every copy route, so
 # it is the fairest test of "but it's fast once it's local."
 set -uo pipefail
-B=cookbook-942542972736-us-west-2
+B="${COOKBOOK_BUCKET:?set COOKBOOK_BUCKET (make print-bucket)}"
 W=/root/dp; cd "$W"
 R=$W/warm-leg.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }
