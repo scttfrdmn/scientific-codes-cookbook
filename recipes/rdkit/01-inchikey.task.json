@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-rdkit-chembl100k",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\necho \"== verify the staged ChEMBL subset against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6fa986de4223948a169d954009a21cfe8a8286c1f9388c032c47f71af7993984 chembl37_first100k.tsv.gz > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== RDKit: regenerate ChEMBL's published InChIKey and formula for 100,000 compounds ==\"\nT0=$(date +%s)\npython3 - <<'PYEOF' > metrics.txt\nimport gzip, re\nfrom rdkit import Chem, RDLogger\nfrom rdkit.Chem import inchi\nfrom rdkit.Chem.rdMolDescriptors import CalcMolFormula\n# Per-molecule parse warnings are expected on a real library and would otherwise be 100k\n# lines of noise; the counts below are the result.\nRDLogger.DisableLog(\"rdApp.*\")\n\nTOK = re.compile(r\"([A-Z][a-z]?)(\\d*)\")\n\ndef atoms(formula):\n    \"\"\"Element counts for a formula, summing across InChI's dot-separated components.\n\n    MEASURED NECESSITY: comparing formula STRINGS compares a convention, not chemistry.\n    InChI writes a hydrochloride as \"C24H34N4O2S.ClH\" where RDKit merges it to\n    \"C24H35ClN4O2S\" -- 3,827 of 4,452 string mismatches were exactly this, and another 532\n    were RDKit's trailing charge sign against InChI's separate /q and /p layers. Only 11 were\n    neither. So the question worth asking is \"do they agree on the atoms present\", which is\n    convention-independent.\n    \"\"\"\n    total = {}\n    for comp in formula.split(\".\"):\n        m = re.match(r\"^(\\d+)(.*)$\", comp)          # a leading count, as in \"2BrH\"\n        mult, rest = (int(m.group(1)), m.group(2)) if m else (1, comp)\n        rest = rest.rstrip(\"+-\")                    # charge lives in InChI's /q and /p layers\n        rest = re.sub(r\"[+-]\\d*$\", \"\", rest)\n        for el, n in TOK.findall(rest):\n            if el:\n                total[el] = total.get(el, 0) + mult * (int(n) if n else 1)\n    return total\n\nn = parsed = key_ok = skel_ok = 0\n# Split the formula comparison by whether InChI defers part of the composition to its charge\n# layers. MEASURED: with no /q and no /p, element counts agree 97,665 of 97,665 -- exact, zero\n# exceptions. WITH those layers only 378 of 2,332 agree, because the formula layer carries the\n# NEUTRAL formula and /p moves the hydrogens. Comparing a complete formula against a partial\n# inventory is comparing different quantities, so that subset is reported, not asserted.\nplain = plain_ok = charged = charged_ok = 0\nout = open(\"rdkit_keys.tsv\", \"w\")\nwith gzip.open(\"chembl37_first100k.tsv.gz\", \"rt\") as fh:\n    next(fh)\n    for line in fh:\n        cid, smi, std_inchi, std_key = line.rstrip(\"\\n\").split(\"\\t\")\n        n += 1\n        mol = Chem.MolFromSmiles(smi)\n        if mol is None:\n            out.write(f\"{cid}\\t\\t\\n\")\n            continue\n        parsed += 1\n        try:\n            k = inchi.MolToInchiKey(mol)\n        except Exception:\n            k = \"\"\n        f = CalcMolFormula(mol)\n        out.write(f\"{cid}\\t{k}\\t{f}\\n\")\n        if k and k == std_key:\n            key_ok += 1\n        # An InChIKey is <14 skeleton>-<8 stereo/isotope/proto><flag><version>-<charge>. The\n        # first block is CONNECTIVITY ONLY, so comparing it separates \"we disagree about the\n        # molecular graph\" from \"we disagree about stereochemistry\" -- and the SMILES column\n        # does not always carry the stereo that ChEMBL's molblock encodes, which is an input\n        # limitation rather than a disagreement about chemistry.\n        if k and k.split(\"-\")[0] == std_key.split(\"-\")[0]:\n            skel_ok += 1\n        want_f = std_inchi.split(\"/\")[1] if std_inchi.startswith(\"InChI=1S/\") else \"\"\n        if want_f:\n            ok = atoms(f) == atoms(want_f)\n            if \"/q\" in std_inchi or \"/p\" in std_inchi:\n                charged += 1; charged_ok += ok\n            else:\n                plain += 1; plain_ok += ok\nout.close()\nimport rdkit\nprint(\"rdkit_version %s\" % rdkit.__version__)\nprint(\"compounds %d\" % n)\nprint(\"parsed %d\" % parsed)\nprint(\"inchikey_match %d\" % key_ok)\nprint(\"skeleton_match %d\" % skel_ok)\nprint(\"formula_comparable %d\" % plain)\nprint(\"atoms_match %d\" % plain_ok)\nprint(\"charge_layer %d\" % charged)\nprint(\"charge_layer_match %d\" % charged_ok)\nPYEOF\nT1=$(date +%s); WALL=$(( T1 - T0 ))\ncat metrics.txt\nV(){ awk -v k=\"$1\" '$1==k{print $2}' metrics.txt; }\nN=$(V compounds); P=$(V parsed); KOK=$(V inchikey_match)\nSOK=$(V skeleton_match); AOK=$(V atoms_match)\nCMP=$(V formula_comparable); CHG=$(V charge_layer); CHGOK=$(V charge_layer_match)\npct(){ awk -v a=\"$1\" -v b=\"$2\" 'BEGIN{printf \"%.3f\", 100*a/b}'; }\nROWS=$(awk 'END{print NR}' rdkit_keys.tsv)\n\n{\n  echo \"rdkit_version      $(V rdkit_version)   (package version != binary version, so read it from the run)\"\n  echo \"compounds          $N   want exactly 100000\"\n  echo \"parsed_by_rdkit    $P   want exactly 99997\"\n  echo \"keys_written       $ROWS   want == compounds   [one row out per row in]\"\n  echo \"inchikey_match     $KOK   ($(pct $KOK $P)% of parsed)   == ChEMBL's published standard_inchi_key\"\n  echo \"skeleton_match     $SOK   ($(pct $SOK $P)%)   == its connectivity block [the strong claim]\"\n  echo \"formula_comparable $CMP   (InChIs with no /q and no /p layer)\"\n  echo \"atoms_match        $AOK   want == formula_comparable   [EXACT, no exceptions]\"\n  echo \"charge_layer       $CHG   of which $CHGOK match (observation: /p moves the hydrogens,\"\n  echo \"                        so InChI's formula layer is not the full atom inventory there)\"\n  echo \"wall_s             $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\" = '100000'\ntest \"$ROWS\" = \"$N\"\ntest \"$P\" = '99997'\ntest \"$KOK\" = '99914'\ntest \"$SOK\" = '99996'\ntest \"$CMP\" = '97665'\ntest \"$AOK\" = \"$CMP\"\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 7,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/chembl/chembl37_first100k.tsv.gz",
+      "destination": "/tmp/chembl37_first100k.tsv.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/rdkit_keys.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rdkit/r1/rdkit_keys.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rdkit/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}

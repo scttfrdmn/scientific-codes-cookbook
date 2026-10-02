@@ -27,7 +27,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-01 | 2026-10-01 |
 | [iqtree](../recipes/iqtree/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, reaching −52706.731 — the same optimum [RAxML-NG finds independently](../recipes/raxml-ng/README.md). For anyone building trees on ARM. | aarchbio | stage | 2026-10-01 | 2026-10-01 |
 | [kallisto](../recipes/kallisto/README.md) | Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier. | aarchbio | stage · run: salmon | 2026-09-30 | 2026-09-30 |
-| [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, kraken2 | 2026-09-12 | 2026-10-02 |
+| [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, kraken2 | 2026-10-02 | 2026-10-02 |
 | [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-09-12 | 2026-09-10 |
 | [mafft](../recipes/mafft/README.md) | Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family. | aarchbio | stage · run: hmmer | 2026-10-02 | 2026-10-02 |
 | [mash](../recipes/mash/README.md) | Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale. | aarchbio | stage | 2026-10-01 | 2026-10-01 |
@@ -75,10 +75,10 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back. | comp-chem | build-in-task | 2026-09-12 | — |
+| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-09-12 | 2026-10-02 |
 | [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff. | comp-chem | build-in-task | 2026-09-12 | — |
 | [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-09-12 | 2026-09-10 |
-| [rdkit](../recipes/rdkit/README.md) | `rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception. | comp-chem | build-in-task | 2026-09-12 | — |
+| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-09-12 | 2026-10-02 |
 | [vina](../recipes/vina/README.md) | `vina` docks the imatinib ligand into the Abl-kinase receptor (PDB 1IEP) — molecular docking at the tutorial's canonical target. | comp-chem | stage | 2026-09-12 | — |
 
 ## dft

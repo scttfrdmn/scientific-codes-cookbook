@@ -1,74 +1,119 @@
 ---
 tool: rdkit
+tool_version: 2026.03.1
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# RDKit — exact cheminformatics identities on aspirin
+# RDKit — reproduce ChEMBL's published InChIKeys for 100,000 compounds
 
-`rdkit` parses a molecule and computes its canonical SMILES, formula, InChIKey, and ring/atom counts — cheminformatics perception.
-
-> **What this covers.** Parse one molecule and check exact graph properties — proof RDKit's native cheminformatics core works correctly on Graviton4. Not a benchmark; no conformer generation, fingerprinting at scale, or reaction handling.
+Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library.
 
 ## Run it
 
-```python
-from rdkit import Chem
-m = Chem.MolFromSmiles("CC(=O)Oc1ccccc1C(=O)O")   # aspirin
-Chem.MolToInchiKey(m)                              # BSYNRYMUTXBXSQ-UHFFFAOYSA-N
-```
+```bash
+make stage RECIPE=rdkit   # once: 100,000 ChEMBL 37 compounds WITH their published keys
+make run   RECIPE=rdkit   # 37 s on c8g.xlarge, self-terminating
+make ls    RECIPE=rdkit   # rdkit_keys.tsv + smoke-check.txt
 
-One task, single-threaded parsing. The aspirin SMILES is inline, so nothing is staged.
+python3 -c "from rdkit import Chem; from rdkit.Chem import inchi; \
+  print(inchi.MolToInchiKey(Chem.MolFromSmiles('CC(=O)Oc1ccccc1C(=O)O')))"
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| aspirin (`CC(=O)Oc1ccccc1C(=O)O`, inline) | your own molecule (SMILES) | aspirin is the hand-checkable case; RDKit's outputs are exact-or-wrong for any molecule. |
-| InChIKey against its published value | keep it as the primary check | the InChIKey is a hash of the standardized graph — effectively a checksum verified against an external reference (PubChem CID 2244). |
+| ChEMBL 37's first 100k | your own library | the input must carry a reference identifier, or there is nothing to check against. |
+| InChIKey + formula | `Descriptors`, fingerprints, substructure | those have no published reference, so a check becomes self-consistency — which is why this recipe does not use them. |
+| 100,000 compounds | more | 0.37 ms each, so the whole of ChEMBL is minutes, not hours. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** molecular graphs have definite canonical forms and counts, so there's nothing a bigger molecule makes more legible. Leave-it.
+**Leave the library** — it ships the answer alongside the question, which is what makes an exact
+check possible. **Scale it** by compound count; it is linear and cheap.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Parsing and descriptors are sub-second. Recorded command window **81s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** no family question — per-molecule perception is sub-second and single-threaded; fingerprinting a large library (scoped out) is a different workload, but the core is light. Any 8g box fits.
+`c8g.xlarge` (4 vCPU): **37 s, ~$0.01.** Single-threaded Python over 100k molecules, ~6 MB in.
+No generation table: at 37 s a four-chip ladder would measure boot, not RDKit
+([the same call as mash](../mash/README.md)).
 
 <details>
-<summary>As shipped: the identities, pins, smoke check, run + verify</summary>
+<summary>As shipped: three graded checks against one published reference, and why one needed restricting</summary>
 
-### The check — every value exact or published
+### The checks
 
-RDKit underpins the largest user base in the `comp-chem` env, and its outputs are exact-or-wrong — no bands to argue about. The strongest check is the **InChIKey against its published value**: `BSYNRYMUTXBXSQ-UHFFFAOYSA-N` (aspirin) is effectively a checksum of the whole structure against an external reference, so a wrong perception of aromaticity, tautomer, or connectivity changes it. The canonical-SMILES round-trip (canonicalize → reparse → recanonicalize → identical) is an internal idempotence identity on top.
+| observable | assertion | observed |
+|---|---|---|
+| compounds | exactly 100,000 | **100,000** |
+| parsed | exactly 99,997 | **99,997** |
+| rows written | == compounds | **100,000** |
+| **element counts** | **== comparable count, no exceptions** | **97,665 / 97,665** |
+| **connectivity block** | **exactly 99,996** | **99,996** (99.999%) |
+| full InChIKey | exactly 99,914 | **99,914** (99.917%) |
 
-### Pins (data tier: none / in-task)
+**Three claims of different strength against one source, which is more informative than one rate.**
+An InChIKey is `<14-char skeleton>-<8-char stereo/isotope/proto>-<charge>`, and the first block is
+connectivity alone. Comparing it separately separates *"we disagree about the molecular graph"* from
+*"we disagree about stereochemistry"* — and the answer is that RDKit and ChEMBL agree on the graph for
+**99,996 of 99,997** compounds, one disagreement in a hundred thousand. The 82 remaining full-key
+differences are stereo-block only, and the pattern is RDKit returning `UHFFFAOYSA` — the canonical
+"no stereo" block — where ChEMBL has stereochemistry. The SMILES column does not always carry the
+stereo that ChEMBL's molblock encodes, so that shortfall is information missing from the input rather
+than a disagreement about chemistry.
 
-| | |
+An InChIKey comparison needs **no tolerance at all**: InChI is canonical by construction, so the
+result is a 27-character string that matches or does not. That puts it with
+[bedtools' interval algebra](../bedtools/README.md) rather than with the rank correlations elsewhere
+in this catalog.
+
+### The formula check had to be restricted twice, and the second time made it exact
+
+Comparing formula *strings* compares a convention. Measured on the 4,452 initial mismatches:
+
+| cause | count |
 |---|---|
-| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` (tag `2026.09.04`, RDKit + pyscf + openmm + mdanalysis + …, cosign-signed, `linux/arm64`) |
-| input | aspirin SMILES, inline — nothing staged |
+| InChI writes a salt dot-separated (`C24H34N4O2S.ClH`) where RDKit merges it | 3,827 |
+| RDKit writes a trailing charge sign; InChI uses separate `/q` and `/p` layers | 532 |
+| neither | 11 |
 
-Same `comp-chem` image as [pyscf](../pyscf/README.md) and [vina](../vina/README.md).
+Summing element counts across components fixed most of it (95.5% → 98.0%), but 1,954 still differed.
+Splitting by whether the InChI defers composition to a charge layer explains the rest:
 
-### Smoke check (inside the task; measured before launch)
+| subset | compared | match |
+|---|---|---|
+| **no `/q` and no `/p`** | **97,665** | **97,665 — 100.0000%, zero exceptions** |
+| has `/q` or `/p` | 2,332 | 378 (16.21%) |
 
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| canonical SMILES round-trip | stable through canonicalize→reparse→canonicalize | True | broken canonicalization |
-| molecular formula | exactly `C9H8O4` | C9H8O4 | wrong perception |
-| **InChIKey** | `BSYNRYMUTXBXSQ-UHFFFAOYSA-N` (published aspirin) | matches | wrong graph |
-| ring count | exactly 1 | 1 | wrong ring perception |
-| heavy atoms | exactly 13 | 13 | atoms lost |
-| molecular weight | 180.16 ± 0.01 | 180.16 | wrong masses |
+InChI's formula layer carries the **neutral** formula and `/p` moves the hydrogens, so for those
+2,332 it is not the full atom inventory — comparing it against a complete formula compares different
+quantities. Restricted to where the formula layer *is* the whole story, agreement is exact with no
+exceptions, which is a stronger statement than any percentage. The restriction is principled rather
+than convenient, the same move [sourmash](../sourmash/README.md) needed for its rank statistic.
+
+### Pins
+
+| | data tier |
+|---|---|
+| RDKit | 2026.03.1, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| compounds | ChEMBL `releases/chembl_37/chembl_37_chemreps.txt.gz`, first 100,000 data rows; sha256 `6fa986de4223948a…` |
+
+The release directory is immutable, so the release is the durable id; the subset is the first 100,000
+rows, which anyone can reproduce from the same release. ChEMBL ids are roughly registration-ordered,
+so this is an older slice rather than a random sample. The version is read from inside the run
+because a package version is not a binary version.
+
+[Open Babel](../openbabel-pdbfixer/README.md) reads this same subset and this recipe's own
+`rdkit_keys.tsv`, and the asymmetry there is worth knowing before trusting either rate.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=rdkit
-make ls RECIPE=rdkit
+make stage RECIPE=rdkit
+make run   RECIPE=rdkit
+make ls    RECIPE=rdkit
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect one object (`smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `skeleton_match 99996` and `atoms_match 97665`.
 
 </details>

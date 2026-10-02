@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-openbabel-chembl100k",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\necho \"== verify the staged ChEMBL subset against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6fa986de4223948a169d954009a21cfe8a8286c1f9388c032c47f71af7993984 chembl37_first100k.tsv.gz > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== Open Babel: the same 100,000 compounds RDKit did, via pybel ==\"\n# NOT the obabel CLI. MEASURED on this image (Open Babel 3.2.1): `obabel -ismi x.smi\n# -oinchikey` ABORTS at the first malformed SMILES and still exits 0 -- 5 molecules in with a\n# bad one third gave 2 keys out, losing two VALID molecules after it; the same file with the\n# bad record last gave 4. And `--append title` emits no identifier, so there is nothing to\n# join on. Matching 100k results by row position would therefore have produced a confident\n# wrong agreement rate that looked like the two toolkits disagreeing. pybel costs one row per\n# bad molecule, catchably: 4 ok / 1 failed on both orderings.\nT0=$(date +%s)\npython3 - <<'PYEOF' > metrics.txt\nimport gzip\nfrom openbabel import pybel, openbabel\nopenbabel.obErrorLog.SetOutputLevel(0)   # per-molecule parse errors are counted, not printed\n\nrd = {}\nfor line in open(\"rdkit_keys.tsv\"):\n    p = line.rstrip(\"\\n\").split(\"\\t\")\n    if len(p) >= 2 and p[1]:\n        rd[p[0]] = p[1]\n\nn = parsed = key_ok = skel_ok = both = rd_key = rd_skel = 0\nout = open(\"ob_keys.tsv\", \"w\")\nwith gzip.open(\"chembl37_first100k.tsv.gz\", \"rt\") as fh:\n    next(fh)\n    for line in fh:\n        cid, smi, std_inchi, std_key = line.rstrip(\"\\n\").split(\"\\t\")\n        n += 1\n        try:\n            k = pybel.readstring(\"smi\", smi).write(\"inchikey\").strip()\n        except Exception:\n            k = \"\"\n        out.write(f\"{cid}\\t{k}\\n\")\n        if not k:\n            continue\n        parsed += 1\n        if k == std_key:\n            key_ok += 1\n        if k.split(\"-\")[0] == std_key.split(\"-\")[0]:\n            skel_ok += 1\n        # The three-way: where BOTH toolkits produced a key, do they agree with each other?\n        # InChI is canonical by construction, so two correct implementations must agree on a\n        # molecule they both read the same way -- no tolerance to pick.\n        if cid in rd:\n            both += 1\n            if k == rd[cid]:\n                rd_key += 1\n            if k.split(\"-\")[0] == rd[cid].split(\"-\")[0]:\n                rd_skel += 1\nout.close()\nprint(\"compounds %d\" % n)\nprint(\"parsed %d\" % parsed)\nprint(\"chembl_key_match %d\" % key_ok)\nprint(\"chembl_skeleton_match %d\" % skel_ok)\nprint(\"both_parsed %d\" % both)\nprint(\"rdkit_key_match %d\" % rd_key)\nprint(\"rdkit_skeleton_match %d\" % rd_skel)\nPYEOF\nT1=$(date +%s); WALL=$(( T1 - T0 ))\ncat metrics.txt\nV(){ awk -v k=\"$1\" '$1==k{print $2}' metrics.txt; }\nN=$(V compounds); P=$(V parsed); CK=$(V chembl_key_match); CS=$(V chembl_skeleton_match)\nB=$(V both_parsed); RK=$(V rdkit_key_match); RS=$(V rdkit_skeleton_match)\npct(){ awk -v a=\"$1\" -v b=\"$2\" 'BEGIN{printf \"%.3f\", 100*a/b}'; }\nROWS=$(awk 'END{print NR}' ob_keys.tsv)\n\n{\n  echo \"compounds             $N   want exactly 100000\"\n  echo \"keys_written          $ROWS   want == compounds   [one row out per row in]\"\n  echo \"parsed_by_openbabel   $P   want exactly 100000 (RDKit managed 99997)\"\n  echo \"chembl_key_match      $CK   ($(pct $CK $P)% of parsed)   want exactly 99846\"\n  echo \"chembl_skeleton_match $CS   ($(pct $CS $P)%)   want exactly 99930  (RDKit: 99996)\"\n  echo \"both_parsed           $B   (Open Babel and RDKit both produced a key)\"\n  echo \"rdkit_key_match       $RK   ($(pct $RK $B)%)   want exactly 99926  [the neutral number]\"\n  echo \"rdkit_skeleton_match  $RS   ($(pct $RS $B)%)   want exactly 99928\"\n  echo \"wall_s                $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$N\"  = '100000'\ntest \"$ROWS\" = \"$N\"\ntest \"$P\"  = '100000'\ntest \"$CK\" = '99846'\ntest \"$CS\" = '99930'\ntest \"$B\"  = '99997'\ntest \"$RK\" = '99926'\ntest \"$RS\" = '99928'\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 7,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/chembl/chembl37_first100k.tsv.gz",
+      "destination": "/tmp/chembl37_first100k.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rdkit/r1/rdkit_keys.tsv",
+      "destination": "/tmp/rdkit_keys.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/ob_keys.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openbabel-pdbfixer/r1/ob_keys.tsv"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openbabel-pdbfixer/r1/inchikey-smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "15m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

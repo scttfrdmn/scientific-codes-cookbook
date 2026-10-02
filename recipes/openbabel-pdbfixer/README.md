@@ -1,78 +1,123 @@
 ---
 tool: openbabel
+tool_version: 3.2.1
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# Open Babel + PDBFixer — structure prep, cross-validated
+# Open Babel — 100,000 InChIKeys, checked against RDKit and against ChEMBL
 
-Open Babel handles chemical perception (SMILES ↔ SDF, formula, InChIKey); PDBFixer repairs a protein structure (missing atoms, hydrogens), and Open Babel reads the result back.
+Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit.
 
-> **What this covers.** Round-trip one molecule through a format conversion, cross-check an InChIKey against RDKit, repair a small heavy-atom peptide — proof Open Babel and PDBFixer work and hand off correctly on Graviton4. Not a benchmark; no large-molecule prep or docking pipeline.
+> **Do not use the `obabel` CLI for a batch.** Measured: it aborts at the first malformed SMILES and
+> still exits 0. Use `pybel` — details below.
 
 ## Run it
 
 ```bash
-obabel -:"CC(=O)Oc1ccccc1C(=O)O" -osdf | obabel -isdf -oinchikey   # perception → InChIKey
-pdbfixer input.pdb --add-atoms=all --add-residues --ph=7.0         # repair the peptide
-# then Open Babel reads fixed.pdb back and counts the 12 H PDBFixer added — the repair cross-check
-```
+make run RECIPE=rdkit      # produces rdkit_keys.tsv; this recipe reads it
+make run RECIPE=openbabel-pdbfixer   # 24 s + the structure-prep task
+make ls  RECIPE=openbabel-pdbfixer
 
-One task, two tools. The aspirin SMILES and an ALA-ALA heavy-atom PDB are inline, so nothing is staged.
+python3 -c "from openbabel import pybel; \
+  print(pybel.readstring('smi','CC(=O)Oc1ccccc1C(=O)O').write('inchikey').strip())"
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| aspirin SMILES + ALA-ALA heavy-atom PDB (inline) | your own molecule / structure | small hand-checkable inputs; for inputs like these, Open Babel and PDBFixer are sub-second — large-molecule prep (out of scope here; see the caveat) is where size begins to matter. |
-| InChIKey as the cross-check metric | keep it — don't use canonical SMILES | **load-bearing:** InChIKey is an IUPAC standard, so two engines *must* agree; canonical SMILES is algorithm-specific and the two engines produce different strings ([compare like with like](../../practices/cross-checks.md)). |
+| `pybel` per molecule | the `obabel` CLI | **don't.** One bad record truncates the run silently, exit 0. |
+| ChEMBL 37's first 100k | your library | reused byte-for-byte from [rdkit](../rdkit/README.md); the comparison needs identical bytes. |
+| InChIKey | canonical SMILES | SMILES canonicalisation is algorithm-specific, so two engines legitimately differ — there is nothing to assert. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the identities are exact-or-wrong for any molecule, and a small one keeps every count hand-auditable. Leave-it.
+**Leave the library** — 100k compounds with a published key is what makes a two-engine comparison
+checkable. **Scale it** freely: 0.24 ms per molecule.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Conversions + repair are sub-second. Recorded command window **65s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** no question for these inline molecules (sub-second on any box); large-molecule prep — out of scope, flagged in *Make it yours* — is where size would start to matter.
+`c8g.xlarge` (4 vCPU): **24 s, ~$0.01**, plus a sub-second structure-prep task. No generation table —
+at 24 s a ladder would measure boot ([same call as mash](../mash/README.md)).
 
 <details>
-<summary>As shipped: the two flows, pins, smoke-check table, run + verify</summary>
+<summary>As shipped: the CLI trap measured, and why the published-reference rate is not neutral</summary>
 
-### The checks — chemical decode + a cross-validated repair
+### The checks
 
-- **Open Babel — format decode + a two-engine cross-check.** A SMILES → SDF → SMILES round-trip recovers the canonical form (the graph survives, not just metadata); the formula (`C9H8O4`) and heavy-atom count (13) are preserved; and Open Babel's InChIKey equals RDKit's (`BSYNRYMUTXBXSQ-UHFFFAOYSA-N`, aspirin).
-- **PDBFixer → Open Babel — a repair confirmed by an independent reader.** PDBFixer adds the missing C-terminal oxygen (heavy 10 → 11) and the hydrogens (12 at pH 7); Open Babel reads the repaired PDB and independently counts 12 H. The two tools cross-validate the repair rather than each self-reporting.
+| observable | assertion | observed |
+|---|---|---|
+| compounds / rows written | exactly 100,000 each | **100,000** |
+| parsed by Open Babel | exactly 100,000 | **100,000** (RDKit: 99,997) |
+| vs ChEMBL, full key | exactly 99,846 | **99,846** (99.846%) |
+| vs ChEMBL, connectivity | exactly 99,930 | **99,930** (99.930%) |
+| **vs RDKit, full key** | **exactly 99,926** | **99,926** (99.929%) |
+| **vs RDKit, connectivity** | **exactly 99,928** | **99,928** (99.931%) |
 
-### Pins (data tier: none / in-task)
+No tolerance is involved anywhere: InChI is canonical by construction, so each comparison is a
+27-character string that matches or does not.
 
-| | |
-|---|---|
-| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` (tag `2026.09.04`, Open Babel + PDBFixer + RDKit + …, cosign-signed, `linux/arm64`) |
-| input | aspirin SMILES + an ALA-ALA heavy-atom PDB, inline — nothing staged |
+### The published-reference rate is not a neutral referee
 
-Same `comp-chem` image as [rdkit](../rdkit/README.md), [pyscf](../pyscf/README.md), [vina](../vina/README.md).
+RDKit agrees with ChEMBL's connectivity on **99,996 of 99,997**. Open Babel disagrees on **70** — a
+seventyfold difference against the same reference. That is not a defect in Open Babel: those
+canonical SMILES were written by *some* toolkit, and whichever one it was round-trips its own output
+best. So **the toolkit-versus-toolkit number is the neutral one** (99.929% full key, 99.931%
+connectivity across the 99,997 both engines parsed), and the ChEMBL rates should be read as "how
+close is this engine to the one that produced the file".
 
-### Smoke check (inside the task; measured before launch)
+Open Babel is also the more permissive parser — it produced a key for all 100,000 where RDKit rejected
+3. "More permissive" and "closer to this particular reference" point in opposite directions, which is
+the useful thing when choosing between them.
 
-| observable | assertion | observed | catches |
+### The CLI trap, measured
+
+`obabel -ismi x.smi -oinchikey` is the obvious batch invocation and it is unsafe. Three files, same
+four valid molecules, one malformed record moved around:
+
+| input | molecules in | keys out | exit |
 |---|---|---|---|
-| SMILES round-trip | canonical stable through SMILES→SDF→SMILES | True | graph not preserved |
-| formula | `C9H8O4` | C9H8O4 | wrong perception |
-| heavy atoms | 13 | 13 | atoms lost |
-| **InChIKey (2-engine)** | Open Babel == RDKit == `BSYNRYMUTXBXSQ-…` | match | either engine wrong |
-| PDBFixer heavy atoms | 11 (10 input + OXT added) | 11 | repair failed |
-| **PDBFixer H added** | 12 (ALA-ALA at pH 7) | 12 | wrong protonation |
-| **Open Babel confirms H** | 12 H in the repaired PDB | 12 | handoff mangled |
+| no bad record | 4 | 4 | 0 |
+| **bad record 3rd of 5** | 5 | **2** | **0** |
+| bad record last of 5 | 5 | 4 | 0 |
 
-All exact-or-wrong — standardized graph hashes and exact counts, no bands.
+**It aborts at the first malformed SMILES and reports success.** Bad-in-the-middle lost the broken
+record *and both valid molecules after it*. `--append title` emits no identifier, so there is nothing
+to join on either — matching 100k results by row position would have produced a confident wrong
+agreement rate that looked like the two engines disagreeing about chemistry. `pybel` costs exactly one
+row per bad molecule, catchably, and gave 4 ok / 1 failed on both orderings.
+
+This is why the recipe iterates in Python with explicit ids. The trap was found with a one-cent probe
+before the real run, which is [cheap-to-expensive sequencing](../../patterns/sizing.md) earning its
+place.
+
+### Task 2 — structure prep, deliberately small
+
+`02-prep` keeps a hand-checkable fixture: aspirin through a SMILES→SDF→SMILES round-trip with an
+exact formula and InChIKey, and a two-residue peptide through `pdbfixer`, with Open Babel
+independently counting the hydrogens pdbfixer added. Small is the point there, as with
+[bedtools' intervals](../bedtools/README.md) — the answers are checkable by hand, and a real protein
+would run the same code paths while proving less.
+
+### Pins
+
+| | data tier |
+|---|---|
+| Open Babel | 3.2.1, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| compounds | ChEMBL 37 first 100,000 rows, sha256 `6fa986de4223948a…` — staged by [rdkit](../rdkit/README.md) |
+| RDKit's keys | `runs/rdkit/r1/rdkit_keys.tsv` — the comparison reads the real run's output |
+
+Nothing is staged twice, and the cross-check reads RDKit's actual output rather than recomputing it.
 
 ### Run + verify
 
 ```sh
+make run RECIPE=rdkit
 make run RECIPE=openbabel-pdbfixer
-make ls RECIPE=openbabel-pdbfixer
+make ls  RECIPE=openbabel-pdbfixer
 ```
 
-The smoke check runs *inside* the task, and the bucket listing is the second half of it — an exit code says the command ran, never that its output is real. Expect two objects (`fixed.pdb`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `inchikey-smoke-check.txt` with `rdkit_key_match 99926`, and `prep-smoke-check.txt` from the
+structure task.
 
 </details>

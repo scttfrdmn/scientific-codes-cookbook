@@ -1,0 +1,11 @@
+rdkit_version      2026.03.1   (package version != binary version, so read it from the run)
+compounds          100000   want exactly 100000
+parsed_by_rdkit    99997   want exactly 99997
+keys_written       100000   want == compounds   [one row out per row in]
+inchikey_match     99914   (99.917% of parsed)   == ChEMBL's published standard_inchi_key
+skeleton_match     99996   (99.999%)   == its connectivity block [the strong claim]
+formula_comparable 97665   (InChIs with no /q and no /p layer)
+atoms_match        97665   want == formula_comparable   [EXACT, no exceptions]
+charge_layer       2332   of which 378 match (observation: /p moves the hydrogens,
+                        so InChI's formula layer is not the full atom inventory there)
+wall_s             37

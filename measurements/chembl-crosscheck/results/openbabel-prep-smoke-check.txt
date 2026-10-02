@@ -1,0 +1,7 @@
+ob_smiles_roundtrip      True  want True (SMILES->SDF->SMILES stable)
+ob_formula               C9H8O4  want C9H8O4
+ob_heavy                 13  want 13
+inchikey_two_engine      OB=BSYNRYMUTXBXSQ-UHFFFAOYSA-N RDKit=BSYNRYMUTXBXSQ-UHFFFAOYSA-N
+pdbfixer_heavy           11  want 11 (10 input + OXT added)
+pdbfixer_h_added         12  want 12 (H added to ALA-ALA at pH 7)
+chain_openbabel_confirms_H openbabel counts 12 H  want 12 (== pdbfixer added)
