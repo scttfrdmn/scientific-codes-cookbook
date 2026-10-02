@@ -2,58 +2,125 @@
 tool: mafft
 tool_version: 7.525
 image: quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# MAFFT — multiple sequence alignment
+# MAFFT — align 906 human GPCRs in three seconds
 
-Align a set of sequences with MAFFT — fast progressive and iterative multiple-sequence alignment.
+Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family.
 
 ## Run it
 
 ```bash
-mafft --retree 2 --maxiterate 0 --thread 1 sequences.fasta > aligned.fasta
-```
+make stage RECIPE=hmmer   # the proteome; mafft reads hmmer's hits.tbl.gz too
+make run   RECIPE=hmmer   # produces the family membership this recipe extracts
+make run   RECIPE=mafft   # 3 s of mafft, ~2 min billed
+make ls    RECIPE=mafft   # gpcr906.fa + aln.fa + smoke-check.txt
 
-The recipe aligns a 114-protein Pfam family (FFT-NS-2) and verifies **residue conservation** — an aligner may only insert gaps, so ungapping every row must reproduce the input exactly.
+mafft --auto --thread 8 gpcr906.fa > aln.fa
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the 114-sequence Pfam family | your own sequences (FASTA) | reused byte-for-byte from [IQ-TREE](../iqtree/README.md) (gaps stripped) so it shares input with [MUSCLE](../muscle/README.md); a bigger family is a longer run, not a more legible one. |
-| **`--retree 2 --maxiterate 0 --thread 1`** (FFT-NS-2) | MAFFT's iterative/accuracy modes (`--maxiterate 1000`, L-INS-i…) | **determinism scaffolding** — this progressive mode is deterministic (verified: byte-identical on rerun); iterative refinement and multi-thread can reorder and move the result, so if you change them, drop the exact-alignment assertion. |
+| `7tm_1`'s 906 human members | any family in `hits.tbl.gz` | change one `awk` pattern; the family is whatever hmmsearch found, not a hand-curated set. |
+| `--auto` | `--localpair --maxiterate 1000` | `--auto` picked FFT-NS-2 here; L-INS-i is far better and far slower at this size. |
+| `--thread 8` | fewer | 3 s either way at this size. Keep it *pinned* — see below. |
 
-**Leave the fixture:** a curated family aligns in ~1 s and every residue-conservation check is exact-or-wrong — the identity holds for any correct aligner regardless of algorithm. Leave-it.
+**Leave the family** — 906 sequences of ~344 aa is a real alignment and it runs in 3 s, so the whole
+recipe is boot. **Scale it** by picking a bigger family or dropping `--auto` for an iterative mode;
+both cost real time where this does not.
 
 ## Shape, size, cost
 
-One task, **~1 s** align. `c8g.large`, ~$0.02, **~50s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)).
+`c8g.2xlarge`: **3 s of mafft inside a ~2 min billed window, ~$0.01.**
 
-**Sizing:** the progressive mode here (FFT-NS-2) is memory-light and compute-scales with cores ([sizing](../../patterns/sizing.md)); accuracy modes (L-INS-i) on a large family grow memory sharply — a mode-and-N question the 114-protein fixture can't reveal by measurement.
+**No generation table.** Three seconds of work cannot distinguish four chips — a ladder here would
+measure boot, the same reason [mash](../mash/README.md) has none. If you need mafft to take real
+time, the lever is `--localpair`, not a newer core.
 
 <details>
-<summary>As shipped: why residue conservation not a column comparison, pins, smoke check</summary>
+<summary>As shipped: a conservation identity, a reproducibility result muscle does not share, pins</summary>
 
-Two aligners on the same sequences produce **different alignments by design**, so comparing MAFFT's columns to another tool's (or to the original Pfam alignment) would fail for a reason unrelated to correctness — the [compare-like-with-like](../../practices/cross-checks.md) trap. The honest self-contained identity is **residue conservation**: ungapping each output row must return the exact input sequence and the total residue count is invariant — exact-or-wrong, method-independent.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| aligned sequences | exactly 114 (== input) | 114 |
-| **residue conservation** | ungap(row) == input for every sequence | 114/114 |
-| ungapped total | exactly 49098 residues | 49098 |
-| rectangular / width ≥ longest input (440) | 1 row length / ≥440 | 1 (487) / 487 |
-| deterministic | identical alignment on rerun | yes |
+| ids from hmmer | exactly 906 | **906** |
+| sequences extracted | == ids from hmmer | **906** |
+| input residues | exactly 311,969 | **311,969** |
+| aligned sequences | == input | **906** |
+| **aligned residues** | **exactly 311,969** | **311,969** |
+| **alignment columns** | **exactly 4,340** | **4,340** |
 
-No bands — every check is exact. The genuine **cross-code** check (MAFFT vs [MUSCLE](../muscle/README.md): both alignments → same tree-builder → same topology, Robinson-Foulds = 0) is like-with-like and lives downstream in the [nf-spawn](../nf-spawn/README.md) Shape-F pipeline on these same bytes, not asserted here.
+**An alignment may only insert gaps, never alter sequence content** — so the ungapped residue count
+of the output must equal the input's, exactly. That is thread-independent, needs no tolerance, and
+catches the failure that actually happens: a sequence silently dropped or truncated, which any
+sum-of-pairs score band would pass. The uniform row length is the other free structural check: every
+row of an alignment is the same length by definition.
 
-**Pins.** Image `quay.io/aarchbio/mafft@sha256:f23e4545b6c1…` (7.525, cosign-verified, `linux/arm64`). Input: 114 Pfam seed proteins with gaps stripped (`sha256:3adadccd…`, 49,098 residues) — *derived* from [IQ-TREE](../iqtree/README.md)'s alignment by a deterministic rule, the same bytes [MUSCLE](../muscle/README.md) aligns.
+**The column count is asserted because it was measured twice.** Two runs of this spec on
+byte-identical input returned 4,340 columns both times, so it is exact-or-wrong here.
+[muscle](../muscle/README.md) is **not** like this — two runs of its spec on the same bytes gave
+5,633 then 5,636 — which is why only this recipe pins its alignment length
+([the rule](../../practices/cross-checks.md)). `--thread` is pinned for the same reason: mafft's
+progressive alignment depends on the thread count.
 
-**Run + verify.**
+### Stop codons, and why they are stripped at extraction
+
+Ensembl pep sequences carry `*` for stop codons — 111 of them across 23 of these 906 proteins, from
+readthrough and annotation artefacts. `*` is not an amino acid and MAFFT silently drops it, which
+broke the conservation identity on the first run: 312,080 residues in, 311,969 out, with every other
+character count preserved exactly.
+
+The fix is to strip `*` at extraction rather than to account for it afterwards, and the reason is the
+cross-check: muscle need not handle `*` the way mafft does, so a divergence caused by stop codons
+would be a difference in **input handling** masquerading as a difference in alignment. Cleaning the
+input makes both tools answer the same question.
+
+### Compared with muscle on identical bytes
+
+muscle reads `runs/mafft/r1/gpcr906.fa` — this recipe's own uploaded extraction, not a second copy,
+because the comparison only means anything on identical bytes.
+
+| | columns | ≥50% occupied | ≥90% | gaps | wall |
+|---|---|---|---|---|---|
+| mafft `--auto` (FFT-NS-2) | **4,340** | 311 | 213 | 92.1% | **3 s** |
+| muscle `-super5` | 5,636 | 316 | 281 | 93.9% | 278 s |
+
+**The cores agree, the gap placement does not.** Both tools find ~313 columns occupied by at least
+half the family (311 vs 316, 1.6% apart) — sensible for seven transmembrane helices plus conserved
+loops — while muscle's alignment is 30% longer overall. That core agreement is an *observation*, not
+an assertion: an MSA has no defined precision the way an ML optimum does, so any tolerance would be
+chosen to pass rather than justified by the problem. What **is** asserted jointly is that stripping
+the gaps from both alignments returns all 906 sequences byte-identical — the same residues, two
+independent aligners.
+
+Note that gap-free columns are **0 in both**: no column survives all 906 sequences, because class-A
+GPCR termini vary wildly. A gap-free count would have read `0 / 0` and distinguished nothing, which
+is why occupancy thresholds replaced it.
+
+### Pins
+
+| | data tier |
+|---|---|
+| MAFFT | `quay.io/aarchbio/mafft@sha256:f23e4545b6c1…` (7.525, cosign-verified, `linux/arm64`) |
+| proteome | Ensembl 116, one protein per gene, sha256 `c753ba28b98b7506…` — staged by [hmmer](../hmmer/README.md) |
+| family membership | `runs/hmmer/r1/hits.tbl.gz` — hmmsearch's own tblout, not a curated list |
+
+`awk` and `gzip` do the extraction; both are base-image utilities, not a second scientific tool, so
+this is still one tool per task.
+
+### Run + verify
+
 ```sh
-make stage RECIPE=mafft          # derive the Pfam family (public)
-make run RECIPE=mafft
-make ls RECIPE=mafft   # expect mafft_aln.fa, smoke-check.txt
+make stage RECIPE=hmmer
+make run   RECIPE=hmmer
+make run   RECIPE=mafft
+make ls    RECIPE=mafft
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+
+Expect `smoke-check.txt` with `aligned_residues 311969` and `row_length 4340..4340`.
 
 </details>

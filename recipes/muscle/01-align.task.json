@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-muscle-r1",
+  "task_id": "cookbook-muscle-gpcr",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\necho \"== verify staged input sha256 (same bytes the mafft recipe aligns) ==\"\nprintf '%s  %s\\n' 3adadccdf1c0af2d2931b7d6dae68355c4df5ac2cff3905cb5c251bf1d78d43f unaligned.fa > pin.sha256\nsha256sum -c pin.sha256\necho \"== muscle v5 align ==\"\nmuscle -align unaligned.fa -output aln.fa 2> muscle.log\n# Do NOT rm unaligned.fa: it is a staged input owned by the instance user; on host /tmp\n# (sticky 1777) the container gets EPERM unlinking it and `rm -f` does not suppress EPERM.\n# ---- smoke check: RESIDUE CONSERVATION (exact-or-wrong, method-independent) ----\n# An aligner may only insert gap columns; ungapping every aligned row must reproduce the\n# exact input sequence. Cross-code agreement with mafft is a DIFFERENT question (two MSAs\n# differ by design) and is checked downstream via tree topology -- see recipes/nf-spawn.\nawk '\nFNR==1{fn++}\n/^>/{id=substr($1,2); if(fn==1){uord[++nu]=id} else {aord[++na]=id}; cur=id; next}\n{ if(fn==1){U[cur]=U[cur] $0} else {A[cur]=A[cur] $0} }\nEND{\n  fail=0; maxin=0\n  for(i=1;i<=nu;i++){ if(length(U[uord[i]])>maxin) maxin=length(U[uord[i]]) }\n  alnlen=-1; totres=0\n  for(i=1;i<=na;i++){ id=aord[i]; a=A[id]\n    if(alnlen==-1) alnlen=length(a); else if(length(a)!=alnlen){print \"FAIL non-rectangular \"id; fail=1}\n    g=a; gsub(/[-.]/,\"\",g)\n    if(!(id in U)){print \"FAIL id-not-in-input \"id; fail=1; continue}\n    if(g!=U[id]){print \"FAIL residues-differ \"id; fail=1}\n    totres+=length(g)\n  }\n  printf \"nseqs                    %d   want exactly 114\\n\", na          > \"smoke-check.txt\"\n  printf \"aln_len                  %d  want >= %d (longest input)\\n\", alnlen, maxin >> \"smoke-check.txt\"\n  printf \"total_ungapped_residues  %d   want exactly 49098 (residue conservation)\\n\", totres >> \"smoke-check.txt\"\n  if(na!=114) fail=1\n  if(alnlen<maxin) fail=1\n  if(totres!=49098) fail=1\n  if(fail){ print \"residue conservation broken\" > \"/dev/stderr\"; exit 1 }\n}\n' unaligned.fa aln.fa\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\ncd /tmp\necho \"== muscle on mafft's own extraction: the identical 906 bytes, not a second copy ==\"\nIN=gpcr906.fa\nWANT=$(grep -c '^>' $IN)\nINRES=$(awk '!/^>/{n+=length($0)} END{printf \"%.0f\", n}' $IN)\n\n# -super5, NOT -align. MEASURED: muscle5 -align did not finish these 906 sequences inside a\n# 90-minute TTL on this box, where mafft --auto aligns them in 3 seconds. muscle5's docs\n# suggest -align up to ~1000 sequences; at 906 it is already past what a recipe can budget.\n# -super5 is the large-input path and is what makes this workload runnable at all.\n#\n# -threads is pinned, and it is STILL not enough. Measured: two runs of this exact spec on\n# byte-identical input gave 5633 then 5636 columns. -super5's subset selection is randomised\n# and pinning threads does not settle it, so the column count is an OBSERVATION here and\n# nothing about gap placement may be asserted -- only sequence content, which did hold across\n# both runs. mafft on the same bytes gives 4340 twice and does assert its count.\nT0=$(date +%s)\nmuscle -super5 $IN -output aln.fa -threads 8 2> muscle.log\nT1=$(date +%s); WALL=$(( T1 - T0 ))\n\n# An alignment may only insert gaps, never alter sequence content.\nSEQS=$(grep -c '^>' aln.fa)\nRES=$(awk '!/^>/{gsub(/-/,\"\"); n+=length($0)} END{printf \"%.0f\", n}' aln.fa)\nread -r LMIN LMAX <<<\"$(awk '/^>/{if(l!=\"\"){if(l<mn||mn==\"\")mn=l; if(l>mx)mx=l}; l=0; next}\n  {l+=length($0)} END{if(l<mn)mn=l; if(l>mx)mx=l; print mn, mx}' aln.fa)\"\n\n# A cross-tool identity, not a score: strip the gaps from BOTH alignments and the 906\n# sequences must come back byte-identical. Each task already asserts its own residue COUNT,\n# but this asserts the CONTENT agrees between two independent aligners -- so a tool that\n# silently substituted or reordered residues fails even though its own count balances.\nungap() { awk '/^>/{if(id!=\"\")print id\"\\t\"s; id=substr($1,2); s=\"\"; next}\n  {gsub(/-/,\"\"); s=s $0} END{if(id!=\"\")print id\"\\t\"s}' \"$1\" | sort; }\nungap aln.fa       > muscle_seqs.tsv\nungap mafft_aln.fa > mafft_seqs.tsv\nIDENT=$(comm -12 muscle_seqs.tsv mafft_seqs.tsv | wc -l | tr -d ' ')\n\n# Column occupancy, reported for both. NOT gap-free columns: measured, no column of either\n# alignment is gap-free, because 906 class-A GPCRs have wildly variable N- and C-termini --\n# a gap-free count is 0 for both tools and distinguishes nothing. Occupancy thresholds do.\nocc() {\n  awk -v t1=0.5 -v t9=0.9 '\n    /^>/ {if(s!=\"\"){n++; L=length(s); for(i=1;i<=L;i++) if(substr(s,i,1)!=\"-\") c[i]++}; s=\"\"; next}\n    {s=s $0}\n    END {if(s!=\"\"){n++; L=length(s); for(i=1;i<=L;i++) if(substr(s,i,1)!=\"-\") c[i]++}\n         h=0; d=0; for(i=1;i<=L;i++){ if(c[i]>=t1*n) h++; if(c[i]>=t9*n) d++ }\n         printf \"%d %d %d\", L, h, d}' \"$1\"\n}\nread -r MLEN MH50 MH90 <<<\"$(occ aln.fa)\"\nread -r FLEN FH50 FH90 <<<\"$(occ mafft_aln.fa)\"\nMGAP=$(awk -v r=\"$RES\" -v n=\"$SEQS\" -v l=\"$MLEN\" 'BEGIN{printf \"%.1f\", 100*(1-r/(n*l))}')\nFGAP=$(awk -v r=\"$RES\" -v n=\"$SEQS\" -v l=\"$FLEN\" 'BEGIN{printf \"%.1f\", 100*(1-r/(n*l))}')\n\n{\n  echo \"input_sequences      $WANT   want exactly 906   (mafft's gpcr906.fa, byte-identical)\"\n  echo \"input_residues       $INRES   want exactly 311969\"\n  echo \"aligned_sequences    $SEQS   want == input_sequences\"\n  echo \"aligned_residues     $RES   want exactly 311969   [CONSERVATION: gaps only, no edits]\"\n  echo \"row_length           $LMIN..$LMAX   want equal (it is an alignment); value NOT asserted\"\n  echo \"ungapped_identical   $IDENT   want exactly 906   [CROSS-TOOL: same residues, both aligners]\"\n  echo \"muscle_columns       $MLEN   >=50% occupied $MH50   >=90% $MH90   gaps ${MGAP}%\"\n  echo \"mafft_columns        $FLEN   >=50% occupied $FH50   >=90% $FH90   gaps ${FGAP}%   (same input bytes)\"\n  echo \"wall_s               $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$WANT\"  -eq 906\ntest \"$INRES\" = '311969'\ntest \"$SEQS\"  -eq \"$WANT\"\ntest \"$RES\"   = '311969'\ntest \"$LMIN\"  -eq \"$LMAX\"\ntest \"$IDENT\" -eq 906\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 14,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,8 +16,12 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-muscle/pfam_unaligned.fa",
-      "destination": "/tmp/unaligned.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mafft/r1/gpcr906.fa",
+      "destination": "/tmp/gpcr906.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mafft/r1/aln.fa",
+      "destination": "/tmp/mafft_aln.fa"
     }
   ],
   "outputs": [
@@ -31,8 +35,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "45m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.25
   }
 }

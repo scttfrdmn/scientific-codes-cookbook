@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-mafft-r1",
+  "task_id": "cookbook-mafft-gpcr",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\necho \"== verify staged input against pinned sha256 (same residues iqtree's alignment holds) ==\"\necho \"3adadccdf1c0af2d2931b7d6dae68355c4df5ac2cff3905cb5c251bf1d78d43f  pfam_unaligned.fa\" | sha256sum -c -\necho \"== mafft align: FFT-NS-2, single thread (deterministic) ==\"\nmafft --thread 1 --retree 2 --maxiterate 0 pfam_unaligned.fa > mafft_aln.fa 2> mafft.log\necho \"== determinism: identical on rerun ==\"\nmafft --thread 1 --retree 2 --maxiterate 0 pfam_unaligned.fa > rerun.fa 2>/dev/null\nDET=$(cmp -s mafft_aln.fa rerun.fa && echo YES || echo NO)\nrm -f rerun.fa\n# ---- smoke check (awk; no python in image). RESIDUE CONSERVATION is the identity:\n# an aligner may only insert gaps, never alter/drop residues -- exact, method-independent.\n# NOT a column comparison vs muscle (two MSAs differ by design; the mafft<->muscle\n# cross-code check is downstream RF=0 via iqtree, in the nf-spawn Shape-F recipe).\nlin() { awk '/^>/{if(s)print id\"\\t\"s; id=substr($1,2); s=\"\"; next}{gsub(/\\r/,\"\");s=s$0}END{if(s)print id\"\\t\"s}' \"$1\" | tr 'a-z' 'A-Z'; }\nlin pfam_unaligned.fa > in.tsv\nlin mafft_aln.fa       > out.tsv\nNIN=$(wc -l < in.tsv | tr -d ' '); NOUT=$(wc -l < out.tsv | tr -d ' ')\nNWIDTHS=$(awk -F'\\t' '{print length($2)}' out.tsv | sort -u | wc -l | tr -d ' ')\nAWID=$(awk -F'\\t' '{print length($2); exit}' out.tsv)\nMAXIN=$(awk -F'\\t' '{if(length($2)>m)m=length($2)}END{print m}' in.tsv)\nUNGAP=$(awk -F'\\t' '{g=$2; gsub(/-/,\"\",g); s+=length(g)}END{print s}' out.tsv)\nCONS=$(join -t\"$(printf '\\t')\" <(sort in.tsv) <(awk -F'\\t' '{g=$2;gsub(/-/,\"\",g);print $1\"\\t\"g}' out.tsv | sort) | awk -F'\\t' '$2==$3{ok++}END{print ok+0}')\n{\n  echo \"aligned_sequences    $NOUT   want 114 (== input)\"\n  echo \"residue_conservation $CONS   want 114 (ungap(row)==input, every sequence)\"\n  echo \"ungapped_total       $UNGAP   want 49098 (residues preserved, none altered/dropped)\"\n  echo \"rectangular          $NWIDTHS distinct row length   want 1\"\n  echo \"aln_width_ge_max_in  width=$AWID max_input=$MAXIN   want width>=max\"\n  echo \"deterministic_rerun  $DET   want YES\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$NIN\" -eq 114; test \"$NOUT\" -eq 114; test \"$CONS\" -eq 114\ntest \"$UNGAP\" -eq 49098; test \"$NWIDTHS\" -eq 1; test \"$AWID\" -ge \"$MAXIN\"; test \"$DET\" = YES\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\ncd /tmp\necho \"== verify staged inputs against their pinned sha256 ==\"\nprintf '%s  %s\\n' c753ba28b98b750659e27a7f9e0ceb224e26a5c767ce676a219c0a20adae5259 ensembl116_pep_one_per_gene.fa.gz > pins.sha256\nsha256sum -c pins.sha256\n\n# The family comes from hmmsearch's own tblout, so this recipe aligns what hmmer FOUND\n# rather than a set someone curated by hand: 7tm_1 (PF00001, class A GPCRs) is the largest\n# family in the human one-protein-per-gene set at 906 members. awk and gzip are base-image\n# utilities, not a second scientific tool -- this is still one tool, one task.\ngzip -dc hits.tbl.gz | grep -v '^#' | awk '$3==\"7tm_1\"{print $1}' | sort -u > ids.txt\nWANT=$(awk 'END{print NR}' ids.txt)\n# Ensembl pep sequences carry `*` for stop codons -- 111 of them across 23 of these 906\n# proteins, from readthrough and annotation artefacts. `*` is not an amino acid, and MAFFT\n# silently drops it (measured: every other character count is preserved exactly). Stripping\n# it HERE rather than accounting for it later is what keeps the cross-check honest: muscle\n# need not handle `*` the same way mafft does, and a divergence from stop codons would be a\n# difference in input handling masquerading as a difference in alignment.\ngzip -dc ensembl116_pep_one_per_gene.fa.gz | awk '\n  NR==FNR {want[$1]=1; next}\n  /^>/ {id=substr($1,2); keep=(id in want); if (keep) print; next}\n  keep {gsub(/\\*/,\"\"); print}\n' ids.txt - > family.fa\nGOT=$(grep -c '^>' family.fa)\nINRES=$(awk '!/^>/{n+=length($0)} END{printf \"%.0f\", n}' family.fa)\necho \"family 7tm_1: want $WANT ids, extracted $GOT sequences, $INRES residues\"\n\necho \"== mafft --auto, 906 GPCR sequences ==\"\n# --thread is pinned: mafft's progressive alignment is deterministic for a fixed thread\n# count, and an unpinned count is the subtlest way an exact assertion goes flaky.\nT0=$(date +%s)\nmafft --auto --thread 8 family.fa > aln.fa 2> mafft.log\nT1=$(date +%s); WALL=$(( T1 - T0 ))\n# mafft prints \"Strategy:\" and names the strategy on the FOLLOWING line.\nSTRATEGY=$(awk '/^Strategy:/{getline; print $1; exit}' mafft.log)\n\n# An alignment must not alter sequence CONTENT -- only insert gaps. So the ungapped residue\n# count is a conservation identity: exact, thread-independent, and it catches the failure that\n# actually happens (a sequence silently dropped or truncated) which any score band would pass.\nSEQS=$(grep -c '^>' aln.fa)\nRES=$(awk '!/^>/{gsub(/-/,\"\"); n+=length($0)} END{printf \"%.0f\", n}' aln.fa)\n# Every row of an alignment is the same length, by definition of being an alignment.\nread -r LMIN LMAX <<<\"$(awk '/^>/{if(l!=\"\"){if(l<mn||mn==\"\")mn=l; if(l>mx)mx=l}; l=0; next}\n  {l+=length($0)} END{if(l<mn)mn=l; if(l>mx)mx=l; print mn, mx}' aln.fa)\"\n\n{\n  echo \"family               7tm_1 (PF00001), from hmmsearch's own tblout\"\n  echo \"ids_from_hmmer       $WANT   want exactly 906\"\n  echo \"sequences_extracted  $GOT   want == ids_from_hmmer\"\n  echo \"input_residues       $INRES   want exactly 311969 (stop codons stripped)\"\n  echo \"aligned_sequences    $SEQS   want == sequences_extracted\"\n  echo \"aligned_residues     $RES   want exactly 311969   [CONSERVATION: gaps only, no edits]\"\n  echo \"row_length           $LMIN..$LMAX   want exactly 4340   [reproducible: 2 runs, identical]\"\n  echo \"mafft_strategy       $STRATEGY   (observation)\"\n  echo \"wall_s               $WALL\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$WANT\" -eq 906\ntest \"$GOT\"  -eq \"$WANT\"\ntest \"$INRES\" = '311969'\ntest \"$SEQS\" -eq \"$GOT\"\ntest \"$RES\"  = '311969'\ntest \"$LMIN\" -eq \"$LMAX\"\n# MEASURED, twice, on identical bytes with --thread pinned: mafft returns 4340 columns both\n# times, so the alignment length is exact-or-wrong here. muscle is NOT like this (5633 then\n# 5636 on the same input), which is why only this recipe asserts its column count.\ntest \"$LMIN\" -eq 4340\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 14,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,14 +16,22 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-muscle/pfam_unaligned.fa",
-      "destination": "/tmp/pfam_unaligned.fa"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer/ensembl116_pep_one_per_gene.fa.gz",
+      "destination": "/tmp/ensembl116_pep_one_per_gene.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/hits.tbl.gz",
+      "destination": "/tmp/hits.tbl.gz"
     }
   ],
   "outputs": [
     {
-      "source": "/tmp/mafft_aln.fa",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/mafft/r1/mafft_aln.fa"
+      "source": "/tmp/family.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mafft/r1/gpcr906.fa"
+    },
+    {
+      "source": "/tmp/aln.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mafft/r1/aln.fa"
     },
     {
       "source": "/tmp/smoke-check.txt",
@@ -31,8 +39,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "30m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.17
   }
 }
