@@ -2,7 +2,8 @@
 tool: bowtie2
 tool_version: 2.5.5
 image: quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-01
 ---
 # Bowtie 2 — short-read alignment, cross-checked against bwa
 
@@ -42,15 +43,16 @@ The `--local` choice is a finding worth keeping ([compare like with like](../../
 | primary records | exactly 800000 (400k×2) — conservation | 800000 |
 | primary mapped | 150000–260000 | 206155 |
 | overall alignment rate (`--local`) | 22–29% | 25.77% |
-| concordance vs bwa (mapped-set) | ≥ 0.90 | 0.9462 |
+| concordance vs bwa (mapped-set) | ≥ 0.90 | **0.9461** |
 
 Bowtie 2 is deterministic, so counts reproduce exactly; bands exist only to survive a version change, and the concordance floor is method-justified — none can go flaky.
 
-**Pins.** Image `quay.io/aarchbio/bowtie2@sha256:a6807f0611a1…` (2.5.5, cosign-signed, `linux/arm64`). Reads + reference are [bwa](../bwa-samtools/README.md)'s pinned `inputs/bwa-samtools/` bytes (chr20 slice + 400k-pair HG00096 from the 1000G RODA mirror); cross-check against `runs/bwa-samtools/r1/aln.sam`. Reused — no `stage-inputs.sh`.
+**Pins.** Image `quay.io/aarchbio/bowtie2@sha256:a6807f0611a1…` (2.5.5, cosign-signed, `linux/arm64`). Reads + reference are [bwa](../bwa-samtools/README.md)'s pinned `inputs/bwa-samtools/` bytes (chr20 slice + 400k-pair HG00096 from the 1000G RODA mirror); cross-check against `runs/bwa-samtools/r1/aln_chr20smoke.sam`, which bwa-samtools' `03-baseline-chr20.task.json` exists to produce for exactly this comparison — borrowing that recipe's *main* output broke the moment it moved to the whole genome. Reused — no `stage-inputs.sh`.
 
 **Run + verify.**
 ```sh
-make stage RECIPE=bwa-samtools && make run RECIPE=bwa-samtools   # bowtie2 reuses bwa's inputs + aln.sam
+make stage RECIPE=bwa-samtools   # bowtie2 reuses bwa's chr20 fixture
+make run   RECIPE=bwa-samtools   # includes the chr20 baseline this compares against
 make run RECIPE=bowtie2
 make ls RECIPE=bowtie2   # expect smoke-check.txt, align.log, build.log
 ```
