@@ -1,5 +1,5 @@
 {
-  "task_id": "cookbook-hmmer-pfamA",
+  "task_id": "cookbook-hmmer-gen-c7g",
   "command": [
     "bash",
     "-c",
@@ -11,7 +11,7 @@
     "memory_gib": 14,
     "architecture": "arm64",
     "families": [
-      "c8g"
+      "c7g"
     ]
   },
   "inputs": [
@@ -27,16 +27,16 @@
   "outputs": [
     {
       "source": "/tmp/hits.tbl.gz",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/hits.tbl.gz"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/gen/c7g/hits.tbl.gz"
     },
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/gen/c7g/smoke-check.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "55m",
+    "ttl": "70m",
     "on_complete": "terminate",
-    "cost_limit": 0.3
+    "cost_limit": 0.36
   }
 }
