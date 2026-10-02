@@ -33,7 +33,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [mash](../recipes/mash/README.md) | Sketch two sequences and get a distance without aligning them — the fast "how similar are these?" for whole genomes. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
 | [muscle](../recipes/muscle/README.md) | Align a set of sequences with MUSCLE v5 — a second aligner alongside [MAFFT](../recipes/mafft/README.md). | aarchbio | stage: mafft | 2026-09-12 | — |
-| [picard](../recipes/picard/README.md) | Mark PCR/optical duplicates in a coordinate-sorted BAM and write a metrics file. | aarchbio | stage: bcftools | 2026-09-12 | — |
+| [picard](../recipes/picard/README.md) | Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s, and proves no record was lost without needing a second tool. For anyone putting MarkDuplicates in a real pipeline. | aarchbio | run: bwa-samtools | 2026-09-12 | 2026-10-01 |
 | [plink](../recipes/plink/README.md) | PLINK 1.9 computes allele frequencies and runs a quantitative association scan on Graviton4, checked against integer arithmetic and against a variant whose effect was planted. The catalog's first statistical-genomics recipe, for anyone doing GWAS-style work. | aarchbio | build-in-task | 2026-09-19 | 2026-09-20 |
 | [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-09-12 | 2026-09-10 |
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../recipes/iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM. | aarchbio | stage: iqtree | 2026-10-01 | 2026-10-01 |
@@ -42,7 +42,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [seqkit](../recipes/seqkit/README.md) | The everyday first look at a read set: how many sequences, how long, what spread. | aarchbio | stage: bcftools | 2026-09-12 | — |
 | [sourmash](../recipes/sourmash/README.md) | The same "how similar are these?" as Mash, by a different sketch — sourmash's scaled MinHash, which is what its taxonomy tooling is built on. | aarchbio | run: megahit, spades | 2026-09-12 | — |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-09-12 | 2026-09-10 |
-| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: salmon, star | 2026-09-26 | 2026-10-01 |
+| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: salmon, star | 2026-10-01 | 2026-10-01 |
 
 ## astro
 

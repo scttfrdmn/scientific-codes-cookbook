@@ -1,42 +1,42 @@
 {
-  "task_id": "cookbook-picard-r1",
+  "task_id": "cookbook-picard-wgs-r2",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\nexport LC_ALL=C\necho \"== verify staged BAM against its pinned sha256 ==\"\nprintf '%s  %s\\n' 6949939b5937046f1ec7fdcc764dc47df5dd3c35d48b5487470ae3527d21b04a region.bam > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== picard MarkDuplicates -- deterministic on a fixed coordinate-sorted BAM ==\"\n# LC_ALL=C silences a harmless picard-wrapper locale warning; VERBOSITY=ERROR keeps the log clean.\npicard MarkDuplicates I=region.bam O=marked.bam M=dup_metrics.txt QUIET=true VERBOSITY=ERROR 2> md.log\n# Never rm the staged region.bam (sticky /tmp -> EPERM under a different user, which rm -f\n# does not suppress). marked.bam is ours; we don't stage it out (the metrics are the evidence).\n\n# ---- smoke check (inside the task) ----\n# The single LIBRARY data line: cols 2=UNPAIRED_READS_EXAMINED 3=READ_PAIRS_EXAMINED\n# 6=UNPAIRED_READ_DUPLICATES 7=READ_PAIR_DUPLICATES 9=PERCENT_DUPLICATION.\nread UPE RPE UPD RPD PCT < <(awk 'p{print $2,$3,$6,$7,$9; exit} /^LIBRARY\\t/{p=1}' dup_metrics.txt)\n{\n  echo \"read_pairs_examined     $RPE  want 52189   (fixed 30x chr20:2.0-2.4Mb BAM)\"\n  echo \"unpaired_reads_examined $UPE  want 122\"\n  echo \"read_pair_duplicates    $RPD  want 5012    (exact-or-wrong: MarkDuplicates is deterministic)\"\n  echo \"unpaired_read_dups      $UPD  want 25\"\n  echo \"percent_duplication     $PCT  want 0.096163\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$RPE\" -eq 52189\ntest \"$UPE\" -eq 122\ntest \"$RPD\" -eq 5012\ntest \"$UPD\" -eq 25\ntest \"$PCT\" = \"0.096163\"\necho \"SMOKE CHECK PASSED\""
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\necho \"== MarkDuplicates on bwa's whole-genome BAM: 48,817,006 records, 4.5 GB ==\"\ndf -m /tmp | awk 'NR==2{print \"tmpfs_total_mb \"$2}'\n# MarkDuplicates spills read-ends to TMPDIR, which on this path is tmpfs -- RAM, competing with its\n# own Java heap. Sample the high-water mark: that is the constraint, as it was for samtools sort.\n( MAX=0; while :; do U=$(df -m /tmp | awk 'NR==2{print $3}')\n    [ \"$U\" -gt \"$MAX\" ] && { MAX=$U; echo \"$MAX\" > /tmp/.peak; }; sleep 2; done ) & SAMPLER=$!\nT0=$(date +%s)\npicard -Xmx24g MarkDuplicates I=aln.sorted.bam O=marked.bam M=dup_metrics.txt \\\n  TMP_DIR=/tmp QUIET=true VERBOSITY=ERROR 2> md.log\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nkill \"$SAMPLER\" 2>/dev/null || true\nPEAK=$(cat /tmp/.peak 2>/dev/null || echo 0)\n\n# Tab-delimited, and the LIBRARY value is \"Unknown Library\" -- WITH A SPACE -- so default awk field\n# splitting shifts every column by one and silently reports optical duplicates larger than total\n# duplicates. -F'\\t' is load-bearing, not style.\nV() { awk -F'\\t' -v want=\"$1\" '/^LIBRARY/{for(i=1;i<=NF;i++) if($i==want) c=i; getline; print $c; exit}' dup_metrics.txt; }\nUNP=$(V UNPAIRED_READS_EXAMINED); PAIRS=$(V READ_PAIRS_EXAMINED)\nSECSUP=$(V SECONDARY_OR_SUPPLEMENTARY_RDS); UNMAP=$(V UNMAPPED_READS)\nUNPD=$(V UNPAIRED_READ_DUPLICATES); RPD=$(V READ_PAIR_DUPLICATES)\nOPT=$(V READ_PAIR_OPTICAL_DUPLICATES); PCT=$(V PERCENT_DUPLICATION); LIBSZ=$(V ESTIMATED_LIBRARY_SIZE)\n\n# Conservation: picard partitions every input record into exactly four buckets, so they must sum to\n# the input count. This proves no record was dropped WITHOUT needing samtools in this image -- and\n# the first two reconcile independently with samtools flagstat on the same BAM.\nEXAMINED=$(awk -v p=\"$PAIRS\" -v u=\"$UNP\" 'BEGIN{printf \"%.0f\", 2*p+u}')\nTOTAL=$(awk -v e=\"$EXAMINED\" -v s=\"$SECSUP\" -v m=\"$UNMAP\" 'BEGIN{printf \"%.0f\", e+s+m}')\n# PERCENT_DUPLICATION is a function of counts picard itself reports: recomputing it is free.\nPCT_CALC=$(awk -v d=\"$RPD\" -v p=\"$PAIRS\" -v ud=\"$UNPD\" -v u=\"$UNP\" \\\n  'BEGIN{den=2*p+u; num=2*d+ud; printf \"%.6f\", (den>0? num/den : 0)}')\nPCT_DIFF=$(awk -v a=\"$PCT\" -v b=\"$PCT_CALC\" 'BEGIN{d=a-b; if(d<0)d=-d; printf \"%.6f\", d}')\nMAGIC=$(od -An -tx1 -N4 marked.bam | tr -d ' \\n')\n\n{\n  echo \"reads_examined         $EXAMINED   = 2*$PAIRS pairs + $UNP unpaired\"\n  echo \"                                 == samtools flagstat primary-mapped (48184934)\"\n  echo \"secondary_supplementary $SECSUP   == samtools flagstat supplementary (519020)\"\n  echo \"unmapped               $UNMAP\"\n  echo \"partition_total        $TOTAL   want exactly 48817006 (every input record accounted for)\"\n  echo \"read_pair_duplicates   $RPD\"\n  echo \"optical_duplicates     $OPT\"\n  echo \"percent_duplication    $PCT   (picard)\"\n  echo \"percent_recomputed     $PCT_CALC   from the counts picard reports\"\n  echo \"percent_abs_diff       $PCT_DIFF   want < 0.000001 (identity)\"\n  echo \"estimated_library_size $LIBSZ\"\n  echo \"bam_magic              $MAGIC   want 1f8b0804\"\n  echo \"wall_s                 $WALL\"\n  echo \"tmpfs_peak_used_mb     $PEAK   <- temp spill lands in RAM on this path\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$TOTAL\" = '48817006'\ntest \"$EXAMINED\" = '48184934'\ntest \"$SECSUP\" = '519020'\ntest \"$MAGIC\" = '1f8b0804'\nawk -v d=\"$PCT_DIFF\" 'BEGIN{exit !(d<0.000001)}'\necho 'SMOKE CHECK PASSED'\n"
   ],
   "container": "quay.io/aarchbio/picard@sha256:c6a742e8277b9010df9aa3b9a6bb40651792ff319627cc1c2bf8a70ac633e6bd",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 60,
     "architecture": "arm64",
     "families": [
-      "c8g"
+      "r8g"
     ]
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam",
-      "destination": "/tmp/region.bam"
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam",
+      "destination": "/tmp/aln.sorted.bam"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x.bam.bai",
-      "destination": "/tmp/region.bam.bai"
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam.bai",
+      "destination": "/tmp/aln.sorted.bam.bai"
     }
   ],
   "outputs": [
     {
-      "source": "/tmp/dup_metrics.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/picard/r1/dup_metrics.txt"
-    },
-    {
       "source": "/tmp/smoke-check.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/picard/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/dup_metrics.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/picard/r1/dup_metrics.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "75m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.8
   }
 }
