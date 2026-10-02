@@ -1,27 +1,31 @@
 {
-  "task_id": "cookbook-kraken2-r1",
+  "task_id": "cookbook-kraken2-standard8",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify pinned inputs by sha256 (the date in the DB name is NOT a byte guarantee -- the hash is the pin) ==\"\n{ printf '%s  %s\\n' 9cbf9ddc5b88c33f3103b56defb66b966c89f47c0988757077c651bfa6d92f6c viral_20240605.tar\n  printf '%s  %s\\n' 0891c00cc2d503f58e0c600ce5ee64e9c64b939525c70d5486bc46cbc7cb073e NC_045512.2.fasta\n} > pins.sha256\nsha256sum -c pins.sha256\n\n# A directory DB travels as one flat tar; untar it. Do NOT rm the staged tar: host /tmp is\n# sticky 1777 and stage-in runs as a different user, so the container gets EPERM and rm -f\n# does not suppress EPERM -- it would kill the task under set -e.\nmkdir -p db\ntar -xf viral_20240605.tar -C db\ntest -s db/hash.k2d\n\necho \"== classify the SARS-CoV-2 genome against the viral DB ==\"\nkraken2 --db db --output out.kraken --report out.report NC_045512.2.fasta 2> kraken2.log\n\n# ---- smoke check: a known virus classifies to its known taxon (exact-or-wrong, deterministic) ----\nSTATUS=$(cut -f1 out.kraken)          # C (classified) / U (unclassified)\nTAXID=$(cut -f3 out.kraken)           # LCA taxid assigned\nCLASSIFIED=$(grep -c '^C' out.kraken || true)\nUNCLASS=$(grep -c '^U' out.kraken || true)\n{\n  echo \"status              $STATUS   want C (classified, not unclassified)\"\n  echo \"assigned_taxid      $TAXID   want 2697049 (Severe acute respiratory syndrome coronavirus 2)\"\n  echo \"classified_seqs     $CLASSIFIED   want 1\"\n  echo \"unclassified_seqs   $UNCLASS   want 0\"\n} > smoke-check.txt\ncat smoke-check.txt\n\ntest \"$STATUS\" = \"C\"\ntest \"$TAXID\" -eq 2697049\ntest \"$CLASSIFIED\" -eq 1\ntest \"$UNCLASS\" -eq 0\necho \"SMOKE CHECK PASSED\""
+    "set -eo pipefail\ncd /tmp\ndf -m /tmp | awk 'NR==2{print \"tmpfs_total_mb \"$2}'\n( MAX=0; MEM=0; while :; do U=$(df -m /tmp | awk 'NR==2{print $3}')\n    [ \"$U\" -gt \"$MAX\" ] && { MAX=$U; echo \"$MAX\" > /tmp/.peak; }\n    M=$(awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf \"%.0f\", (t-a)/1024}' /proc/meminfo)\n    [ \"$M\" -gt \"$MEM\" ] && { MEM=$M; echo \"$MEM\" > /tmp/.mem; }\n    sleep 5; done ) & SAMPLER=$!\n\n# The date in the index name is a durable id, not a byte guarantee -- publish the hash so\n# anyone can check they got the same index. Printed, not asserted, on this first run.\nDBSHA=$(sha256sum k2_standard_08gb_20250402.tar.gz | cut -d\" \" -f1)\n\necho \"== unpack the standard-8 index (5.5 GiB gz -> ~8 GB of k2d) ==\"\nmkdir -p db\ntar -xzf k2_standard_08gb_20250402.tar.gz -C db\n# Never rm the staged tar.gz: sticky /tmp, stage-in ran as the instance user, EPERM is not\n# suppressed by `rm -f` and would kill the task under set -e. Budget for holding both copies.\ntest -s db/hash.k2d\nHASHMB=$(( $(stat -c%s db/hash.k2d) / 1048576 ))\n\necho \"== classify the complete SRR062634 run against standard-8 ==\"\n# --output /dev/null: the per-read assignments for 24M pairs are gigabytes nobody reads here,\n# and tmpfs is already holding the index twice. The report carries the totals.\nT0=$(date +%s)\nkraken2 --db db --paired --threads 8 --report out.report --output /dev/null \\\n  SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz 2> kraken2.log\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nkill \"$SAMPLER\" 2>/dev/null || true\nPEAK=$(cat /tmp/.peak 2>/dev/null || echo 0); RSS=$(cat /tmp/.mem 2>/dev/null || echo 0)\ncat kraken2.log\n\n# kraken2 logs \"N sequences (M Mbp) processed\", then classified/unclassified counts. With\n# --paired a PAIR is one sequence, so N is the per-mate read count seqkit asserts.\nPROC=$(awk '/sequences .*processed/{print $1; exit}' kraken2.log)\nCLASS=$(awk '/sequences classified/{print $1; exit}' kraken2.log)\nUNCL=$(awk '/sequences unclassified/{print $1; exit}' kraken2.log)\nSUM=$(awk -v a=\"$CLASS\" -v b=\"$UNCL\" 'BEGIN{printf \"%.0f\", a+b}')\nPCT=$(awk -v c=\"$CLASS\" -v p=\"$PROC\" 'BEGIN{printf \"%.2f\", 100*c/p}')\n# out.report columns: pct, clade_reads, taxon_reads, rank, taxid, name\nHUMAN=$(awk -F'\\t' '$5==9606{gsub(/^ +/,\"\",$6); printf \"%d\", $2; exit}' out.report)\nHUMANPCT=$(awk -v h=\"$HUMAN\" -v p=\"$PROC\" 'BEGIN{printf \"%.2f\", 100*h/p}')\n# `| head -3` would SIGPIPE sort under `pipefail` (exit 141) -- awk reads to EOF instead.\nTOPS=$(awk -F'\\t' '$4==\"S\"{gsub(/^ +/,\"\",$6); print $2\"\\t\"$5\"\\t\"$6}' out.report | sort -k1,1nr | awk 'NR<=3')\nTOPTAX=$(printf '%s' \"$TOPS\" | awk -F'\\t' 'NR==1{print $2}')\n# 1000 Genomes samples are EBV-transformed lymphoblastoid cell lines, so the virus used to\n# immortalise the line is expected to appear. Asserted as \"present\", not as an exact count:\n# the claim worth making is that the cell line's EBV shows up at all.\nEBV=$(awk -F'\\t' '$5==3050299{printf \"%d\", $2; exit}' out.report)\nEBV=${EBV:-0}\n\n{\n  echo \"db_sha256           $DBSHA\"\n  echo \"db_hash_k2d_mb      $HASHMB\"\n  echo \"pairs_processed     $PROC   want exactly 24148993\"\n  echo \"                           == seqkit's per-mate read count (== bwa primary / 2)\"\n  echo \"classified          $CLASS   ($PCT%)   want exactly 21047258\"\n  echo \"unclassified        $UNCL\"\n  echo \"class+unclass       $SUM   want == pairs_processed   [CONSERVATION]\"\n  echo \"human_clade_pairs   $HUMAN   ($HUMANPCT%)   want exactly 20928455\"\n  echo \"ebv_clade_pairs     $EBV   want > 0 (HG00096 is an EBV-transformed cell line)\"\n  echo \"top_species_taxid   $TOPTAX   want 9606 (these are 1000 Genomes human reads)\"\n  echo \"wall_s              $WALL\"\n  echo \"tmpfs_peak_used_mb  $PEAK\"\n  echo \"host_mem_peak_mb    $RSS\"\n  echo \"-- top 3 species by clade reads --\"\n  printf '%s\\n' \"$TOPS\"\n} > smoke-check.txt\ncat smoke-check.txt\ntest \"$PROC\" = '24148993'\ntest \"$SUM\"  = \"$PROC\"\ntest \"$CLASS\" = '21047258'\ntest \"$HUMAN\" = '20928455'\ntest \"$TOPTAX\" = '9606'\ntest \"$EBV\" -gt 0\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 8,
+    "memory_gib": 60,
     "architecture": "arm64",
     "families": [
-      "c8g"
+      "r8g"
     ]
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/viral_20240605.tar",
-      "destination": "/tmp/viral_20240605.tar"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/k2_standard_08gb_20250402.tar.gz",
+      "destination": "/tmp/k2_standard_08gb_20250402.tar.gz"
     },
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/NC_045512.2.fasta",
-      "destination": "/tmp/NC_045512.2.fasta"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_2.filt.fastq.gz"
     }
   ],
   "outputs": [
@@ -30,13 +34,17 @@
       "destination": "s3://${COOKBOOK_BUCKET}/runs/kraken2/r1/out.report"
     },
     {
+      "source": "/tmp/kraken2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kraken2/r1/kraken2.log"
+    },
+    {
       "source": "/tmp/smoke-check.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/kraken2/r1/smoke-check.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "20m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.16
   }
 }

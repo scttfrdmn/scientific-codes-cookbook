@@ -2,59 +2,109 @@
 tool: kraken2
 tool_version: 2.17.1
 image: quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# Kraken2 — taxonomic classification
+# Kraken2 — classify 24M read pairs against standard-8 in 68 seconds
 
-Classify reads against a prebuilt taxonomic database — the standard metagenomics first pass.
+Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale.
+
+> **You will spend longer moving the index than classifying with it** — 92 s of stage-in against 68 s
+> of work. That ratio, not the chip, is what this recipe is about.
 
 ## Run it
 
 ```bash
-kraken2 --db viral_db --report out.report query.fasta
-```
+make stage RECIPE=kraken2   # once: the 5.5 GiB standard-8 index
+make run   RECIPE=kraken2   # ~4 min billed on r8g.2xlarge, 68 s of it kraken2
+make ls    RECIPE=kraken2   # out.report + kraken2.log + smoke-check.txt
 
-The recipe classifies the SARS-CoV-2 reference genome against a real prebuilt **viral** DB and asserts it lands on SARS-CoV-2's exact taxon — the "known input → known answer" identity (BLAST/diamond self-hit, one domain over).
+kraken2 --db db --paired --threads 8 --report out.report --output /dev/null \
+        SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| SARS-CoV-2 `NC_045512.2` (a known genome) | your own reads | a *known* query is what makes the exact-taxon assertion possible; on unknown reads you'd assert classified-rate bands instead. |
-| the 0.66 GB `viral_20240605` DB (staged as a tar, copy-per-task) | a larger prebuilt DB | at 0.66 GB it fits the copy-per-task model every recipe uses — **no EFS**. A full-size DB (where large reference data is the *subject*) is what would justify the mount; don't reach for EFS as a by-product of an oversized DB ([copy, mount, or share?](../../patterns/data-movement.md)). |
+| standard-8 | standard-16, PlusPF, PlusPFP | the index is the accuracy knob *and* the cost driver. PlusPF is ~70 GB and no longer fits this shape — it needs a mount. |
+| `SRR062634` | your reads | reused byte-for-byte from [bwa](../bwa-samtools/README.md); `--paired` counts a pair as one sequence. |
+| `--output /dev/null` | a real path | per-read assignments for 24M pairs are gigabytes. The report carries the totals. |
 
-**Leave the fixture:** a real prebuilt viral DB (not a toy 2–3-genome DB that classifies nothing) plus a known genome gives an exact-or-wrong identity; a metagenomic workload is a different, larger recipe. Leave-it.
+**Leave the index at standard-8** — the one most people actually run, and it fits a normal box. **Scale it** by index size, not sample count: more samples amortise the index load, a bigger index multiplies it.
 
 ## Shape, size, cost
 
-One task, **~1 s** classification (the DB copy dominates). `c8g.large`, ~$0.02, **~1 min** wall — boot, image pull and staging the 633 MB DB tar ([why](../../practices/what-this-does-not-cover.md)).
+`r8g.2xlarge` (8 vCPU, 64 GiB): **68 s of kraken2 in a ~4 min billed window, ~$0.03.**
 
-**Sizing:** RAM ≈ DB size — Kraken2 loads the whole DB into memory. The viral DB (0.66 GB) runs in ~2 GiB (`c8g`); a standard DB (8+ GB) needs a memory box sized to *your* DB. A stated requirement, not a fixture measurement.
+**64 GiB is the minimum, and a staging rule is why — not kraken2's appetite.** A staged input
+[cannot be deleted](../../practices/container-path.md), so the 5.5 GiB tar.gz and the ~7.6 GB of
+unpacked `.k2d` must coexist, plus 3.6 GiB of reads: measured tmpfs peak **17,538 MB**. tmpfs is half
+of RAM, so a 32 GiB box offers 16 GiB and cannot hold it. Host memory peaked at 29,819 MB.
+
+**No generation table here.** At 68 s of compute against 92 s of index transfer, the chip is not the
+lever — amortising the index across samples is. [Five data paths, measured](../../measurements/star-real/README.md)
+is the relevant comparison, not a Graviton ladder.
 
 <details>
-<summary>As shipped: the known-answer identity, why not EFS, pins, smoke check</summary>
+<summary>As shipped: a fourth tool on one read count, a virus that should be there, pins</summary>
 
-Kraken2 is deterministic, so the classification is exact-or-wrong. The SARS-CoV-2 reference (`NC_045512.2`) classifies as **C** with LCA taxid **2697049** — *SARS-CoV-2*, the exact species. The report walks the full lineage (Viruses → Riboviria → … → *Sarbecovirus* → SARS-CoV-2), so a broken DB load or misbuilt index would fail to classify or land on the wrong node.
-
-The DB is genome-idx's `viral_20240605`, a *real* RefSeq viral DB — not a toy that classifies nothing. At 0.66 GB it fits copy-per-task (staged as one tar, untarred on the box: 633 MB tar + ~660 MB DB + query ≈ 1.3 GB in `/tmp`, within budget), so it needs **no EFS**. That's deliberate: a 0.66 GB DB doesn't justify the mount, and introducing EFS here would be smuggling a Round-Two lever in as a side effect of an oversized DB.
-
-**The DB pin is a moving artifact ([tier 3](../../practices/what-this-does-not-cover.md)).** genome-idx repacks its prebuilt DBs, so `make stage RECIPE=kraken2` may fetch a `.tar` whose bytes differ from the recorded sha256 — the pin records the version we ran, not a promise the next fetch matches. When it drifted, we re-ran the recipe against the current DB and the assertion held (SARS-CoV-2 → **2697049**), then repinned: **the recipe tests the classification, not the bytes**, which is exactly why a moving pin is acceptable here and wouldn't be for a derived fixture.
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| status | `C` (classified) | C |
-| **assigned taxid** | exactly 2697049 (SARS-CoV-2) | 2697049 |
-| classified / unclassified seqs | 1 / 0 | 1 / 0 |
+| **pairs processed** | **exactly 24,148,993** | **24,148,993** |
+| **classified + unclassified** | **== pairs processed** | **24,148,993** |
+| classified | exactly 21,047,258 (87.16%) | **21,047,258** |
+| human clade pairs | exactly 20,928,455 (86.66%) | **20,928,455** |
+| top species | taxid 9606 | **9606** |
+| **EBV clade pairs** | **> 0** | **5,133** |
 
-**Pins.** Image `quay.io/aarchbio/kraken2@sha256:fc6dd9becb7f…` (2.17.1, cosign-verified, `linux/arm64`). DB: genome-idx `viral_20240605` (`sha256:9cbf9ddc…`, 633 MB) — date-versioned, but a date in the name is **not** a guarantee the bytes are stable, so the sha256 is the real pin. Query: SARS-CoV-2 `NC_045512.2` (`sha256:0891c00c…`, 29,903 bp). Both hashes re-verified on the box before classifying.
+**The read count is the fourth independent arrival at one number.** With `--paired` kraken2 counts a
+pair as one sequence, so 24,148,993 is [seqkit](../seqkit/README.md)'s per-mate count, which is
+[bwa](../bwa-samtools/README.md)'s 48,297,986 primary records halved, which is
+[fastp](../fastp/README.md)'s `before_filtering` halved. Four tools, four different ways of counting
+the same file. kraken2's own books then balance: classified plus unclassified is exactly the number
+processed.
 
-**Run + verify.**
+**The truth here is the sample's provenance, not a claim about its contents.** These are 1000 Genomes
+reads from HG00096, so "the dominant species is *Homo sapiens*" is a fact about the input. That
+mattered for the design: the tempting alternative was a ZymoBIOMICS mock community, where the
+manufacturer's known mixture would be a GIAB-style constructed truth — but establishing *which*
+public run is genuinely shotgun-of-a-known-mix means asserting a sample's composition from inference,
+and this batch already lost two genomes to exactly that kind of guess.
+
+**Epstein-Barr virus is expected biology, and that is the nicest check on the page.** 1000 Genomes
+samples are EBV-transformed lymphoblastoid cell lines, so the virus used to immortalise the line is
+in the sample by construction. Finding 5,133 pairs of `Lymphocryptovirus` is classification working,
+not contamination — and it is asserted as *presence* rather than an exact count, because the claim
+worth making is that the cell line's virus shows up at all.
+
+Everything else is trace: 713 pairs of *Xanthomonas*, 303 of *Mycobacterium canetti*. At 87% overall
+and 86.66% human, the 12.84% unclassified is what an 8 GB-capped index costs in sensitivity.
+
+### Pins
+
+| | data tier |
+|---|---|
+| Kraken2 | `quay.io/aarchbio/kraken2@sha256:fc6dd9becb7f…` (2.17.1, cosign-verified, `linux/arm64`) |
+| index | `k2_standard_08gb_20250402` from `s3://genome-idx/kraken/` — date-versioned; sha256 `e592faea3e307f01…`, `hash.k2d` 7,629 MB |
+| reads | RODA `s3://1000genomes/…/SRR062634_{1,2}.filt.fastq.gz` — staged by [bwa](../bwa-samtools/README.md) |
+
+The index name's date is a durable id but not a byte guarantee, so the run publishes the archive's
+sha256. Staging is a server-side S3 copy from the public `genome-idx` bucket into your own — note that
+`--no-sign-request` cannot be used, because it would make the *destination* write anonymous too and
+multipart upload then fails.
+
+### Run + verify
+
 ```sh
-make run RECIPE=kraken2
-make ls RECIPE=kraken2   # expect out.report, smoke-check.txt
+make stage RECIPE=kraken2
+make run   RECIPE=kraken2
+make ls    RECIPE=kraken2
 ```
-Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
-**Fan out across samples.** One classification is one task; a cohort is the same task as a [job array](../../patterns/job-arrays.md) — validate on one sample with `make run` above, *then* fan out one instance per sample, each keyed by `$JOB_ARRAY_INDEX`. `spawn array status` / `collect` / `retry --failed` manage the set; add `--max-concurrent-auto` when a shared reference or spot capacity pushes back.
+Expect `smoke-check.txt` with `pairs_processed 24148993`, `top_species_taxid 9606` and
+`ebv_clade_pairs` above zero.
 
 </details>
