@@ -9,7 +9,7 @@ internal link. Warnings (exit 0): the markdown-a11y nits. Site-level a11y — co
 contrast, focus order, Atkinson Hyperlegible — is a site-build gate, not this.
 """
 import subprocess
-import os, re, sys, glob, urllib.request
+import os, re, sys, glob, json, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The image DIGEST is the authoritative version-of-record; tool_version is a friendly
@@ -251,6 +251,40 @@ def check_portability():
             errors.append(f"{rel}: raw 'spawn task run --spec recipes/…' — the runnable path is `make run RECIPE=…` (portability)")
 
 
+def check_diagnostics_survive():
+    """Two defects that only bite when a run fails, measured across 118 specs (58 and 22).
+
+    A task's own log is the first thing you want when a run dies, and `command.log` only
+    ships at stage-out (spawn#632) -- so a log the task writes but never uploads dies with
+    the instance. mdtraj cost two blind-diagnosed failures to this; flye cost one.
+
+    And Python buffers stdout when it is not a tty, so a killed process loses output it had
+    already produced: `python3 -u` is the difference between a probe that says where it got
+    to and one that says nothing at all.
+
+    Warnings, not errors: the fix changes a spec, and a spec change means the recipe needs
+    re-running before its last_verified still covers what ships. So these land when a recipe
+    is next run, rather than inviting 58 stale stamps at once.
+    """
+    for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
+        rel = os.path.relpath(f, ROOT)
+        spec = json.load(open(f, encoding="utf-8"))   # a malformed spec should fail loudly
+        cmd = spec.get("command") or []
+        if len(cmd) < 3:
+            continue
+        body = cmd[2]
+        staged = " ".join(o.get("source", "") for o in spec.get("outputs", []))
+        logs = set(re.findall(r"2?>\s*([\w.-]+\.log)\b", body))
+        missing = sorted(l for l in logs if l not in staged)
+        if missing:
+            warns.append(f"{rel}: writes {', '.join(missing)} but never stages it out — "
+                         f"a failed run leaves no log (fix when the recipe is next run)")
+        buffered = len(re.findall(r"^python3 - ", body, re.M))
+        if buffered:
+            warns.append(f"{rel}: {buffered} python heredoc(s) without -u — buffered stdout is "
+                         f"lost if the task is killed (fix when the recipe is next run)")
+
+
 def check_staging_coverage():
     """Every recipe's inputs must be reachable in a clean account: built by a stage script
     (its own or a sibling's), reused from a sibling recipe's run, or build-in-task (no inputs).
@@ -376,6 +410,7 @@ def main():
     check_output_collisions()
     check_verified_freshness()
     check_page_paths_exist()
+    check_diagnostics_survive()
     if "--external" in sys.argv:
         check_external()
     for w in warns:

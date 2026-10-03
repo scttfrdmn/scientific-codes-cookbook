@@ -1,81 +1,102 @@
 ---
 tool: openmm
+tool_version: 8.6.0.dev-c6173db
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# OpenMM → MDAnalysis — write an NVE trajectory, read it back and check it
+# OpenMM — 20 ps of NVE on 1,728 atoms, read back by MDAnalysis
 
-OpenMM runs a short NVE simulation and writes a topology + trajectory; MDAnalysis reads them back — the simulate-then-analyze handoff.
-
-> **What this covers.** A 27-atom argon NVE run (200 steps) analyzed by MDAnalysis — proof OpenMM's integrator and MDAnalysis's DCD/PDB readers work, and hand off correctly, on Graviton4. Not a benchmark; no biomolecular force field, thermostat/barostat, or long trajectory.
+Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=openmm-mdanalysis)" --wait
+spawn task run --spec "$(make -s spec RECIPE=openmm-mdanalysis)" --wait   # 7 s of MD
+make ls RECIPE=openmm-mdanalysis   # top.pdb + traj.dcd + omm.json + smoke-check.txt
 ```
 
 ```python
-# OpenMM ran a 27-atom argon NVE (200 steps) and wrote top.pdb + traj.dcd; MDAnalysis reads them back:
-import MDAnalysis as mda
-u = mda.Universe("top.pdb", "traj.dcd")
-u.atoms.n_atoms, len(u.trajectory), u.dimensions[:3]   # 27, 10, 11.460 Å — exactly what OpenMM wrote
+sim = app.Simulation(top, system, mm.VerletIntegrator(1*unit.femtosecond),
+                     mm.Platform.getPlatformByName("CPU"))
+sim.context.setPositions(unit.Quantity(pos, unit.nanometer))   # units are load-bearing
+sim.step(20000)                                                # no thermostat: NVE
+u = mda.Universe("top.pdb", "traj.dcd")                        # the other layer reads it back
 ```
-
-One task: OpenMM writes the trajectory and MDAnalysis reads it in the same container. The identity is about the *format handoff* (OpenMM's writer ↔ MDAnalysis's reader), not the storage path, so routing through S3 would add a boot for no scientific gain. The system is built in code, so nothing is staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| 27-atom argon lattice (built in code) | your own system + force field | argon on a Lennard-Jones potential is a hand-checkable NVE test; the readers don't care about the force field. This fixture runs OpenMM's **CPU** platform for the proof — production OpenMM MD is GPU-bound (a Round Two concern), a different sizing story. |
-| NVE, no thermostat | a thermostat / barostat | NVE is what makes energy conservation an *exact* check — add a thermostat and you check temperature control instead. |
+| 1,728-atom argon | your own system | built in Python from OpenMM primitives, so nothing is staged. |
+| `VerletIntegrator` (NVE) | Langevin / a thermostat | **the energy identity goes away** — a thermostat exchanges energy by design. |
+| 100 K | your temperature | LJ argon melts near 84 K, so 100 K is a fluid; below that you are simulating a solid. |
+| `CPU` platform | `CUDA` / `OpenCL` | `OPENMM_CPU_THREADS` controls the CPU platform; drift is thread-order dependent (below). |
 
-Deterministic on fixed input — **nothing is determinism scaffolding**. **Leave the fixture:** the decode identities are exact-or-wrong at any trajectory length, and a short run keeps the check fast. Leave-it.
+**Leave the size.** 7 s of compute already makes drift accumulate over 20,000 steps, which is what
+the identity tests; a bigger box would cost more without sharpening it. **Scale it** if you need
+throughput numbers rather than a correctness check.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Simulation + analysis take ~1 s. Recorded command window **70s** — boot, Docker install, and the ~0.62 GB `comp-chem` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** the fixture runs OpenMM's CPU platform and is trivial; production OpenMM MD is GPU-bound (Round Two), a different platform — not a family choice here. The note is in *Make it yours*.
+`c8g.2xlarge` (8 threads): **20 ps in 7 s**, well under a cent. No generation table — at 7 s a
+four-chip ladder would measure boot ([same call as mash](../mash/README.md)).
 
 <details>
-<summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>
+<summary>As shipped: an energy identity, a cross-layer decode, and the units bug the decode caught</summary>
 
-### The checks — energy conservation + a cross-layer decode
+### The checks
 
-- **OpenMM: NVE energy conservation.** With no thermostat, kinetic + potential energy must be conserved — a physical law, the same class as [ambertools](../ambertools/README.md)' check on a different engine. Observed relative drift **3.9e-7** over 200 steps (a switching function on the LJ cutoff and a 1 fs timestep make it that clean).
-- **Cross-layer decode: MDAnalysis recovers what OpenMM wrote.** Exact atom count, frame count and box, plus the lattice spacing read back from the coordinates. A writer/reader mismatch (endianness, unit, frame stride) fails these even if both tools "ran".
+| observable | assertion | observed |
+|---|---|---|
+| **NVE conserved** | **drift < 1e-5 relative** | **2.96e-07** over 20 ps (1.5e-11/step) |
+| atoms | 1,728 = 12³, OpenMM == MDAnalysis | **1,728** |
+| frames | 100 (every 200 of 20,000 steps) | **100** |
+| box | MDAnalysis == OpenMM's box | **45.840 Å** |
+| **lattice spacing** | **nearest neighbour == 3.820 Å** | **3.820** |
 
-### Pins (data tier: none / in-task)
+**Energy conservation is the right identity for an integrator.** With no thermostat, total energy
+must be constant, and the error *accumulates* — so the test sharpens with system size and run
+length. The previous version of this recipe ran 27 atoms for 200 steps, where there is barely time
+to drift; 1,728 atoms over 20,000 steps conserves to 2.96e-07 relative, or 1.5e-11 per step.
 
-| | |
+**The threshold is 1e-5, not the observed value, and that is deliberate.** Two runs of the identical
+spec gave 2.21e-07 and 2.96e-07 — OpenMM's CPU platform reduces forces in a thread-dependent order,
+so accumulated round-off is not reproducible. Pinning 2.21e-07 would have been exact once and flaky
+after ([the rule](../../practices/cross-checks.md)). 1e-5 catches a broken integrator or a thermostat
+left enabled; the per-step figure is what transfers to a different run length, since the total
+depends on how long you ran.
+
+### The decode identity caught a real bug
+
+MDAnalysis reads OpenMM's `top.pdb` and `traj.dcd` back and must recover the atom count, the frame
+count, the box, and — from the coordinates alone — the lattice spacing OpenMM built.
+
+That last one earned its place. A bare list of `mm.Vec3` is **nanometres** to `setPositions` but
+**Ångström** to `PDBFile.writeFile`, so writing the raw list produced a PDB ten times too small:
+`lattice_spacing_decode` read **0.382 Å** where 3.820 was required, while every other check passed.
+The fix is to carry units explicitly — `unit.Quantity(pos, unit.nanometer)` for both calls — and the
+lesson is that a decode identity on a *derived geometric quantity* finds unit errors that count-based
+checks cannot.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09` (tag `2026.09.04`, OpenMM + MDAnalysis + …, cosign-signed, `linux/arm64`) |
-| input | 27-atom argon lattice, built in code — nothing staged |
+| OpenMM 8.6.0.dev / MDAnalysis 2.10.0 | both in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| system | built in Python: 12³ argon, 0.382 nm spacing, σ=0.34 nm, ε=0.996 kJ/mol |
 
-Same `comp-chem` image as [pyscf](../pyscf/README.md), [rdkit](../rdkit/README.md), [vina](../vina/README.md).
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| **NVE conserved** | relative drift < 1e-4 over 200 steps | 3.91e-7 | broken integrator |
-| **MDA atoms == OpenMM** | exactly 27 | 27 | wrong decode |
-| **MDA frames** | exactly 10 (DCD every 20 of 200) | 10 | wrong frame stride |
-| **MDA box == OpenMM** | 11.460 Å | 11.460 | box not recovered |
-| **lattice spacing decode** | nearest-neighbour 3.820 Å (from coords) | 3.820 | coordinates mangled |
-
-The NVE drift is a physics band (must conserve; 1e-4 is cleared by ~250×), robust to cross-host floating point. The other four are exact structural identities.
+Nothing is staged, so there is no `stage-inputs.sh` — the trade is that the system is pinned by the
+*image* rather than by a hash. Versions are read from inside the run rather than recorded by hand.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=openmm-mdanalysis
+spawn task run --spec "$(make -s spec RECIPE=openmm-mdanalysis)" --wait
 make ls RECIPE=openmm-mdanalysis
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect four objects (`top.pdb`, `traj.dcd`, `omm.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `nve_conserved` under 1e-5 and `lattice_spacing_decode 3.820`.
 
 </details>
