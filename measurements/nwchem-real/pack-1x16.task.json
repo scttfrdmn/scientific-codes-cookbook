@@ -1,0 +1,33 @@
+{
+  "task_id": "cookbook-nwchem-pack-1x16",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n# The env's basis sets come from activation (NWCHEM_BASIS_LIBRARY); without it nwchem falls\n# back to the feedstock build path baked into the binary and exits 255. Confirm, don't assume.\ntest -n \"${NWCHEM_BASIS_LIBRARY:-}\" && test -f \"$NWCHEM_BASIS_LIBRARY/sto-3g\"\n\necho \"== NWChem DFT on a real molecule: caffeine, 24 atoms, 6-31G*, B3LYP ==\"\n# Caffeine at its experimental geometry: 24 atoms / 146 basis functions at 6-31G*, which is a\n# calculation where parallelism actually does something -- the point of this recipe is the\n# openmpi build, and 3 basis functions of water cannot demonstrate it.\ncat > caffeine.nw <<'EOF'\necho\nstart caffeine\nmemory total 900 mb\ngeometry units angstrom\n  N    1.1700   -1.2200    0.0000\n  C    0.0000   -0.4600    0.0000\n  N   -1.2200   -1.1300    0.0000\n  C   -1.3900   -2.4800    0.0000\n  C   -0.1900   -3.2000    0.0000\n  C    1.0400   -2.5700    0.0000\n  O    2.1400   -3.1300    0.0000\n  N   -0.6200    1.3900    0.0000\n  C    0.1900    0.9400    0.0000\n  O   -0.3200    2.6200    0.0000\n  C    2.4700   -0.5800    0.0000\n  H    2.5400    0.0400    0.8900\n  H    3.2700   -1.3100    0.0000\n  H    2.5400    0.0400   -0.8900\n  C   -2.4300   -0.3300    0.0000\n  H   -2.9900   -0.5200    0.9000\n  H   -3.0400   -0.5700   -0.8700\n  H   -2.2300    0.7300   -0.0200\n  C   -2.7000   -3.1200    0.0000\n  H   -3.4700   -2.3600    0.0000\n  H   -2.8000   -3.7300    0.8900\n  H   -2.8000   -3.7300   -0.8900\n  H   -0.2100   -4.2700    0.0000\n  H    1.1700    2.2700    0.0000\nend\nbasis\n  * library 6-31G*\nend\ndft\n  xc b3lyp\n  iterations 60\nend\ntask dft energy\nEOF\n\n\n# PACKING: for a FIXED 16-core box, what is the best way to fill it? The per-job question\n# (\"how many ranks\") is subordinate to this one for anyone with a queue of work -- and a\n# single job with 15 idle cores does not contend for memory bandwidth the way 16 concurrent\n# jobs do, so the naive \"16x the throughput for the same rent\" needs measuring.\ncpu_usec() { awk '/^usage_usec/{print $2}' /sys/fs/cgroup/cpu.stat 2>/dev/null || echo 0; }\nNPROC_BOX=$(nproc --all)\n: > pack.txt\n\npack() {   # $1 = concurrent jobs, $2 = ranks each\n  local J=$1 R=$2 i\n  rm -rf p; mkdir -p p\n  local c0 t0 t1 c1\n  c0=$(cpu_usec); t0=$(date +%s)\n  for i in $(seq 1 \"$J\"); do\n    mkdir -p \"p/$i\"; cp caffeine.nw \"p/$i/\"\n    if [ \"$R\" = 1 ]; then ( cd \"p/$i\" && nwchem caffeine.nw > out 2>&1 ) &\n    # --bind-to none is LOAD-BEARING when packing. Each concurrent mpiexec believes it\n    # owns the machine and binds rank k to core k, so 8 concurrent 2-rank jobs pile 16\n    # processes onto 2 cores: measured 2342s at exactly 2.00 cores busy, against 148s at\n    # 15.83 for the same work as 16 single-rank jobs. The integral core count is the tell.\n    else ( cd \"p/$i\" && mpiexec --bind-to none -n \"$R\" nwchem caffeine.nw > out 2>&1 ) & fi\n  done\n  wait\n  t1=$(date +%s); c1=$(cpu_usec)\n  local wall=$(( t1 - t0 ))\n  local ok=$(grep -l \"Total DFT energy\" p/*/out 2>/dev/null | wc -l | tr -d ' ')\n  local cores=$(awk -v a=\"$c0\" -v b=\"$c1\" -v w=\"$wall\" 'BEGIN{printf \"%.2f\", (b-a)/1e6/w}')\n  echo \"$J $R $wall $ok $cores\" >> pack.txt\n  echo \"  ${J}x${R}rank: ${wall}s for $ok results, ${cores} cores busy\"\n}\n\npack 1 16\n\npython3 -u - <<'PYEOF' > smoke-check.txt\nRATE = 0.63808           # c8g.4xlarge on-demand, us-west-2\nN = 10000                # a modest campaign\nrows = [l.split() for l in open(\"pack.txt\")]\nbox = open(\"/proc/cpuinfo\").read().count(\"processor\\t\")\nprint(f\"box_vcpu                   {box}\")\nprint(\"-- filling ONE c8g.4xlarge: cost of 10,000 caffeine calculations --\")\nprint(f\"{'layout':>10} {'wall':>6} {'done':>5} {'cores busy':>11} {'util':>6} {'s/result':>9} {'$/10k':>8}\")\nbest = None\nfor j, r, w, ok, cores in rows:\n    j, r, w, ok, cores = int(j), int(r), float(w), int(ok), float(cores)\n    if ok != j:\n        print(f\"{j}x{r:<8} {w:6.0f} {ok:5d}  INCOMPLETE -- not counted\"); continue\n    per = w / j                      # wall seconds per result\n    cost = per * RATE / 3600 * N\n    util = 100 * cores / box\n    print(f\"{str(j)+'x'+str(r)+'rank':>10} {w:6.0f} {ok:5d} {cores:11.2f} {util:5.1f}% {per:9.1f} {'$'+format(cost,',.0f'):>8}\")\n    if best is None or cost < best[1]: best = (f\"{j}x{r}\", cost)\nprint(f\"\\nbest layout on this box    {best[0]}  ${best[1]:,.0f} per 10,000\")\nPYEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/pack/1x16/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/pack.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/pack/1x16/pack.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
