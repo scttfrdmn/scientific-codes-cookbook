@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-nwchem-rightsized-16",
+  "command": [
+    "bash",
+    "-c",
+    "export NW_RANKS=16\nset -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n# The env's basis sets come from activation (NWCHEM_BASIS_LIBRARY); without it nwchem falls\n# back to the feedstock build path baked into the binary and exits 255. Confirm, don't assume.\ntest -n \"${NWCHEM_BASIS_LIBRARY:-}\" && test -f \"$NWCHEM_BASIS_LIBRARY/sto-3g\"\n\necho \"== NWChem DFT on a real molecule: caffeine, 24 atoms, 6-31G*, B3LYP ==\"\n# Caffeine at its experimental geometry: 24 atoms / 146 basis functions at 6-31G*, which is a\n# calculation where parallelism actually does something -- the point of this recipe is the\n# openmpi build, and 3 basis functions of water cannot demonstrate it.\ncat > caffeine.nw <<'EOF'\necho\nstart caffeine\nmemory total 1800 mb\ngeometry units angstrom\n  N    1.1700   -1.2200    0.0000\n  C    0.0000   -0.4600    0.0000\n  N   -1.2200   -1.1300    0.0000\n  C   -1.3900   -2.4800    0.0000\n  C   -0.1900   -3.2000    0.0000\n  C    1.0400   -2.5700    0.0000\n  O    2.1400   -3.1300    0.0000\n  N   -0.6200    1.3900    0.0000\n  C    0.1900    0.9400    0.0000\n  O   -0.3200    2.6200    0.0000\n  C    2.4700   -0.5800    0.0000\n  H    2.5400    0.0400    0.8900\n  H    3.2700   -1.3100    0.0000\n  H    2.5400    0.0400   -0.8900\n  C   -2.4300   -0.3300    0.0000\n  H   -2.9900   -0.5200    0.9000\n  H   -3.0400   -0.5700   -0.8700\n  H   -2.2300    0.7300   -0.0200\n  C   -2.7000   -3.1200    0.0000\n  H   -3.4700   -2.3600    0.0000\n  H   -2.8000   -3.7300    0.8900\n  H   -2.8000   -3.7300   -0.8900\n  H   -0.2100   -4.2700    0.0000\n  H    1.1700    2.2700    0.0000\nend\nbasis\n  * library 6-31G*\nend\ndft\n  xc b3lyp\n  iterations 60\nend\ntask dft energy\nEOF\n\nRANKS=\"${NW_RANKS:?set NW_RANKS}\"\nmkdir -p r; cp caffeine.nw r/\ncpu_usec() { awk '/^usage_usec/{print $2}' /sys/fs/cgroup/cpu.stat 2>/dev/null || echo 0; }\nNPROC_BOX=$(nproc --all)   # --all: `nproc` honours cgroup affinity and under-reports the box\nC0=$(cpu_usec)\nT0=$(date +%s)\nif [ \"$RANKS\" = 1 ]; then ( cd r && nwchem caffeine.nw > nwchem.out 2>&1 )\nelse ( cd r && mpiexec -n \"$RANKS\" nwchem caffeine.nw > nwchem.out 2>&1 ); fi\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nC1=$(cpu_usec)\n# average cores busy over the run, and what fraction of the rented box that is\nAVGCORES=$(awk -v a=\"$C0\" -v b=\"$C1\" -v w=\"$WALL\" 'BEGIN{printf \"%.2f\", (b-a)/1e6/w}')\nUTIL=$(awk -v c=\"$AVGCORES\" -v n=\"$NPROC_BOX\" 'BEGIN{printf \"%.1f\", 100*c/n}')\n# one output file, read twice by the checks below\ncp r/nwchem.out nwchem-serial.out; cp r/nwchem.out nwchem-4rank.out\necho \"ranks $RANKS  wall ${WALL}s\"\n\npython3 -u - <<'PYEOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys, os\nfail = []\ndef check(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\ndef grab(f, pat, cast=float):\n    m = re.search(pat, open(f).read(), re.M)\n    return cast(m.group(1)) if m else None\n\nS, P = \"nwchem-serial.out\", \"nwchem-4rank.out\"\ne_s = grab(S, r\"Total DFT energy\\s*=\\s*(-?\\d+\\.\\d+)\")\ne_p = grab(P, r\"Total DFT energy\\s*=\\s*(-?\\d+\\.\\d+)\")\nnp_s = grab(S, r\"^\\s*nproc\\s*=\\s*(\\d+)\", int)\nnp_p = grab(P, r\"^\\s*nproc\\s*=\\s*(\\d+)\", int)\n# Pattern AND value read from NWChem's own output (\"AO basis - number of functions:   217\"),\n# not guessed: my first attempt invented both the regex and the count (146), and the regex\n# failing is the only reason a fabricated number did not become an assertion.\nnbf  = grab(S, r\"number of functions:\\s*(\\d+)\", int)\nconv_s = \"Total DFT energy\" in open(S).read()\nconv_p = \"Total DFT energy\" in open(P).read()\n\n# MPI actually ran on the ranks we launched. conda-forge ships nompi builds at higher build\n# numbers than the openmpi ones, so an unpinned solve hands back a serial binary that under\n# mpiexec -n 4 runs four independent rank-0 calculations -- all printing the same energy, so a\n# naive \"parallel == serial\" check passes vacuously. Reading nwchem's OWN nproc is what proves\n# the parallelism the next check cross-validates.\nimport os\nwant = int(os.environ[\"NW_RANKS\"])\ncheck(\"nproc_matches_launch\", np_s == want,\n      f\"{np_s}  want exactly {want} (NWChem's own nproc -- a nompi build reads 1)\")\ncheck(\"converged\", conv_s, f\"{'yes' if conv_s else 'NO'} (SCF reached an energy)\")\ncheck(\"basis_functions\", nbf == 217, f\"{nbf}  want 217 (caffeine at 6-31G*, from NWChem)\")\n# The identity: dividing the work across 4 ranks must not change the answer. DFT converges to\n# a fixed point, so this is exact to SCF convergence -- not a tolerance on an observation.\n# DFT converges to a fixed point, so for a pinned geometry, basis and functional the energy\n# is exact-or-wrong rather than a band. Serial and 4-rank agree to 4.6e-08 Ha, so the window\n# is set by SCF convergence.\ncheck(\"dft_energy\", e_s is not None and abs(e_s - (-625.538048)) < 1e-5,\n      f\"{e_s} Ha  want -625.538048 +/-1e-5 (B3LYP/6-31G*, caffeine)\")\nif fail:\n    print(\"FAILED: \" + \", \".join(fail)); sys.exit(1)\nPYEOF\necho \"ranks              $RANKS\" >> smoke-check.txt\necho \"wall_s             $WALL\" >> smoke-check.txt\necho \"box_vcpu           $NPROC_BOX\" >> smoke-check.txt\necho \"avg_cores_busy     $AVGCORES\" >> smoke-check.txt\necho \"core_utilization   ${UTIL}%   <- paid for $NPROC_BOX, used $AVGCORES\" >> smoke-check.txt\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/nwchem-serial.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/rightsized/16/nwchem.out"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/rightsized/16/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}
