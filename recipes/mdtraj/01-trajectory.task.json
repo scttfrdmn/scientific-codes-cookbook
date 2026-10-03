@@ -1,0 +1,49 @@
+{
+  "task_id": "cookbook-mdtraj-xtc",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C GMX_MAXBACKUP=-1\ncd /tmp\necho \"== GROMACS writes a real XTC; MDTraj and MDAnalysis read the SAME bytes ==\"\n# spc216 + tip3p ship in the GROMACS package, so a real trajectory needs zero staging:\n# solvate a 6.2 nm box from the 216-water template, then run 100 ps.\nGRO=/opt/conda/share/gromacs/top/spc216.gro\nprintf '#include \"amber99sb-ildn.ff/forcefield.itp\"\\n#include \"amber99sb-ildn.ff/tip3p.itp\"\\n[ system ]\\nwater\\n[ molecules ]\\n' > topol.top\ngmx_mpi solvate -cs \"$GRO\" -box 6.2 6.2 6.2 -o big.gro -p topol.top > solvate.log 2>&1\nNWAT=$(awk '/^SOL/{print $2; exit}' topol.top)\nNATOM=$(awk -v n=\"$NWAT\" 'BEGIN{print n*3}')\necho \"solvated $NWAT waters = $NATOM atoms\"\n\n# 50,000 steps x 2 fs = 100 ps, a frame every 100 steps -> 501 frames.\n# -ntomp is pinned: thread count changes the trajectory (MD is chaotic), which is why nothing\n# below asserts a coordinate. The cross-library checks do not care -- both readers parse the\n# SAME file, so their agreement is a property of the parsers, not of the dynamics.\n# Energy minimisation FIRST: solvate packs waters that overlap, and dynamics started from\n# those either blow up or collapse.\nprintf 'integrator = steep\\nnsteps = 2000\\nemtol = 100\\ncutoff-scheme = Verlet\\ncoulombtype = PME\\nrvdw = 0.9\\nrcoulomb = 0.9\\n' > em.mdp\ngmx_mpi grompp -f em.mdp -c big.gro -p topol.top -o em.tpr -maxwarn 5 > grompp_em.log 2>&1\ngmx_mpi mdrun -s em.tpr -deffnm em -ntomp 8 -pin on > mdrun_em.log 2>&1\nawk '/Potential Energy/{print \"em_potential\", $4}' mdrun_em.log || true\n\n# PME rather than plain cut-off for water, and a thermostat so the run is a real NVT\n# trajectory instead of drifting.\nprintf 'integrator = md\\nnsteps = 50000\\ndt = 0.002\\ncutoff-scheme = Verlet\\ncoulombtype = PME\\nrvdw = 0.9\\nrcoulomb = 0.9\\nconstraints = h-bonds\\ntcoupl = v-rescale\\ntc-grps = System\\ntau-t = 0.1\\nref-t = 300\\ngen-vel = yes\\ngen-temp = 300\\ngen-seed = 42\\nnstxout-compressed = 100\\n' > md.mdp\ngmx_mpi grompp -f md.mdp -c em.gro -p topol.top -o t.tpr -maxwarn 5 > grompp.log 2>&1\nT0=$(date +%s)\ngmx_mpi mdrun -s t.tpr -deffnm out -ntomp 8 -pin on > mdrun.log 2>&1\ntail -3 mdrun.log || true\nT1=$(date +%s); WALL=$(( T1 - T0 ))\nls -l out.xtc | awk '{print \"xtc_bytes\", $5}'\n\npython3 -u - <<'PYEOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys, numpy as np\nimport mdtraj as mdt\nimport MDAnalysis as mda\nfail = []\ndef check(l, ok, detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n\n# getattr, not a guessed attribute path: `mdtraj.version` does not exist in this build and an\n# AttributeError here threw away a completed 2.5-minute simulation. A diagnostic must never be\n# able to fail the run it is describing.\nprint(f\"mdtraj_version             {getattr(mdt, '__version__', 'unknown')}\")\nprint(f\"mdanalysis_version         {getattr(mda, '__version__', 'unknown')}\")\nt = mdt.load(\"out.xtc\", top=\"big.gro\")\nu = mda.Universe(\"big.gro\", \"out.xtc\")\n\n# gmx solvate is deterministic for a fixed box and template, so the count is exact-or-wrong.\ncheck(\"mdtraj_atoms\", t.n_atoms == u.atoms.n_atoms == 23262,\n      f\"{t.n_atoms}  == MDAnalysis {u.atoms.n_atoms}  want 23262 (7754 waters x 3)\")\ncheck(\"frames\", t.n_frames == len(u.trajectory) == 501,\n      f\"MDTraj {t.n_frames} / MDAnalysis {len(u.trajectory)}  want 501 (50000/100 + t=0)\")\n\n# THE parser identity: the same bytes decoded by two libraries must give the same numbers.\n# Coordinates admit no model difference -- no masses, no definitions, nothing to disagree\n# about -- so this is the check with nothing to argue over. (An earlier version compared\n# mass-weighted Rg and failed at 4.9e-4 nm: the two libraries GUESS masses from atom names\n# in a .gro and their tables differ slightly, which is a method difference masquerading as a\n# parser bug. Rg is reported below, not asserted.)\nrg_t = mdt.compute_rg(t)                                  # nm, used by the box check below\nxyz_t = t.xyz                                             # nm\nxyz_m = np.array([u.atoms.positions.copy() for _ in u.trajectory]) / 10.0   # A -> nm\nd_xyz = float(np.max(np.abs(xyz_t - xyz_m)))\ncheck(\"coords_two_libraries\", d_xyz < 1e-5,\n      f\"max|MDTraj - MDAnalysis| = {d_xyz:.2e} nm over {xyz_t.size} values  want < 1e-5\")\n\n# Box volume per frame: also decode-only.\nvol_t = np.array([np.linalg.det(b) for b in t.unitcell_vectors])               # nm^3\nvol_m = np.array([u.trajectory.ts.volume for _ in u.trajectory]) / 1000.0      # A^3 -> nm^3\nd_v = float(np.max(np.abs(vol_t - vol_m)))\ncheck(\"volume_two_libraries\", d_v < 1e-3,\n      f\"max|diff| = {d_v:.2e} nm^3  want < 1e-3 (same bytes, 2 parsers)\")\n\n# The physical check: constraints = h-bonds holds every O-H at tip3p's 0.09572 nm. An earlier\n# run read a mean of 0.0246 nm, which is impossibly short -- so print the distribution and\n# both periodic settings rather than guessing which assumption was wrong.\npairs = np.array([[i, i+1] for i in range(0, t.n_atoms, 3)])\noh_p = mdt.compute_distances(t, pairs, periodic=True)\noh_n = mdt.compute_distances(t, pairs, periodic=False)\nprint(f\"oh_periodic_true           min {oh_p.min():.5f}  med {np.median(oh_p):.5f}  max {oh_p.max():.5f}\")\nprint(f\"oh_periodic_false          min {oh_n.min():.5f}  med {np.median(oh_n):.5f}  max {oh_n.max():.5f}\")\noh = float(np.median(oh_n))\n# The window is set by the FORCE FIELD, not by what this run produced: constraints = h-bonds\n# holds every O-H at tip3p's 0.09572 nm exactly, and XTC stores coordinates to 0.001 nm, so a\n# median outside +/-0.0005 of 0.09572 means the constraint was not applied -- not that the\n# water moved. Observed median lands on 0.09572 to five decimals.\ncheck(\"oh_constraint\", abs(oh - 0.09572) < 5e-4,\n      f\"{oh:.5f} nm (median)  want 0.09572 +/-0.0005 (tip3p constraint, XTC rounds to 0.001)\")\n\n# Raw coordinates of the first water, so a bad trajectory shows itself rather than having to\n# be deduced from a failing distance.\nprint(\"first_water_frame0         \" + \" \".join(f\"{v:.4f}\" for v in t.xyz[0][:3].ravel()))\nprint(\"first_water_frameN         \" + \" \".join(f\"{v:.4f}\" for v in t.xyz[-1][:3].ravel()))\n# Rg of a filled box must be about L/2; this is the check that caught the collapsed run.\nL = float(np.cbrt(vol_t.mean()))\ncheck(\"rg_fills_box\", abs(rg_t.mean() - L / 2) < 0.25,\n      f\"{rg_t.mean():.4f} nm vs L/2 = {L/2:.4f} nm  want within 0.25 (a filled box, not collapsed)\")\n\nrg_m = np.array([u.atoms.radius_of_gyration() for _ in u.trajectory]) / 10.0\nprint(f\"rg_mdtraj_mean             {rg_t.mean():.4f} nm\")\nprint(f\"rg_mda_mean                {rg_m.mean():.4f} nm   (differs: the two guess masses)\")\nprint(f\"volume_mean                {vol_t.mean():.2f} nm^3\")\nif fail:\n    print(\"FAILED: \" + \", \".join(fail)); sys.exit(1)\nPYEOF\necho \"atoms              $NATOM\" >> smoke-check.txt\necho \"wall_s             $WALL\" >> smoke-check.txt\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [],
+  "outputs": [
+    {
+      "source": "/tmp/out.xtc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/out.xtc"
+    },
+    {
+      "source": "/tmp/big.gro",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/big.gro"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/mdrun.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/mdrun.log"
+    },
+    {
+      "source": "/tmp/grompp.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/grompp.log"
+    },
+    {
+      "source": "/tmp/mdrun_em.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj/r1/mdrun_em.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.22
+  }
+}
