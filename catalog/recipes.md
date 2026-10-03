@@ -109,19 +109,19 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-02 | 2026-10-03 |
+| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-03 | 2026-10-03 |
 
 ## geospatial
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-02 | 2026-10-03 |
+| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-03 | 2026-10-03 |
 
 ## md
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-02 | 2026-10-03 |
+| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-03 | 2026-10-03 |
 | [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
 | [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
 | [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 |
@@ -137,7 +137,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [deeptools](../recipes/deeptools/README.md) | `bamCoverage` turns aligned reads into a coverage track on Graviton4, verified against a coverage profile that was constructed rather than observed. For anyone doing ChIP-seq, ATAC-seq or any coverage-based analysis. | pipeline | stage | 2026-10-02 | 2026-09-20 |
 | [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 |
 | [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
-| [nf-spawn](../recipes/nf-spawn/README.md) | The catalog's **first Shape-F recipe.** Other multi-step recipes (bwa-samtools, salmon, star) are a *sequence of tasks you launch by hand*, one `make run` each; this one hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process step to its *own* ephemeral instance automatically, data moving between steps through an **S3 work dir** (each instance self-terminates before the next reads its output). That workflow-engine-controlled per-rule dispatch — not merely having more than one task — is what a hand-launched recipe can't demonstrate. | pipeline | stage: mafft | 2026-09-12 | — |
+| [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-09-12 | 2026-10-03 |
 | [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |
 | [polish](../recipes/polish/README.md) | racon rebuilds a consensus on Graviton4 from reads aligned to a draft, recovering a sequence whose errors were planted before the reads existed. The catalog's first polisher, for anyone finishing a long-read assembly. | pipeline | stage | 2026-10-02 | 2026-09-22 |
 | [qc-aggregate](../recipes/qc-aggregate/README.md) | FastQC measures four samples on Graviton4 and MultiQC rolls them into one cohort report, both checked against read counts, lengths, GC and duplication that were fixed before the FASTQs existed. For anyone QC-ing more than one sample. | pipeline | stage | 2026-10-02 | 2026-09-22 |
@@ -165,4 +165,4 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-02 | 2026-10-03 |
+| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-03 | 2026-10-03 |
