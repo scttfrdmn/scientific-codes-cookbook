@@ -1,75 +1,105 @@
 ---
 tool: nwchem
-tool_version: 7.3.1
+tool_version: 7.3.0
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
-# NWChem — RHF/STO-3G on water, serial and over 2 MPI ranks
+# NWChem — caffeine at B3LYP/6-31G*, serial and on 4 MPI ranks
 
-`nwchem` computes the Hartree-Fock energy of a water molecule, serially and again over two MPI ranks — a third quantum-chemistry SCF engine in the `dft` env.
-
-> **What this covers.** One small SCF on H₂O, serial and 2-rank — proof NWChem 7.3.1 and its OpenMPI build compute correctly and in parallel on Graviton4. NWChem is one of the few QC codes that genuinely scales multi-node; this is not that demo (single-node, 2-rank) and not a benchmark.
+Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=nwchem)" --wait
-nwchem h2o.nw                     # serial RHF/STO-3G
-mpiexec -n 2 nwchem h2o.nw         # 2 ranks — same SCF energy
-```
+spawn task run --spec "$(make -s spec RECIPE=nwchem)" --wait   # 128 s serial + 68 s on 4 ranks
+make ls RECIPE=nwchem   # nwchem-serial.out + nwchem-4rank.out + smoke-check.txt
 
-One task, run twice. The H₂O geometry and RHF/STO-3G directives are an inline input deck; the STO-3G basis ships in the env, so nothing is staged.
+mpiexec -n 4 nwchem caffeine.nw        # geometry and basis inline; nothing staged
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| H₂O at experimental geometry (inline `.nw`) | your own molecule + method | RHF/STO-3G on H₂O is a completely-determined reference number; scale the theory freely. |
-| `mpiexec -n 2` | more ranks / multi-node | NWChem's parallelism is over integral evaluation (not a reducing SCF), so the energy is rank-independent; the real multi-node speed-up is the case this single-node 2-rank demo doesn't measure (see the caveat above). |
+| caffeine, 24 atoms | your geometry | written inline in the spec — no staging, so the molecule is the spec. |
+| `6-31G*` / `b3lyp` | your basis and functional | both change the energy; the basis-function count is asserted, so a silent basis change fails. |
+| `-n 4` | more ranks | **and pass `--bind-to none` if you run concurrent jobs** — see below. |
 
-RHF is deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the reference energy is exact-or-wrong at any basis, and a bigger molecule is a longer run, not a more legible one. Leave-it.
+**Leave the molecule** — 217 basis functions is where parallelism starts doing something, which is
+what this recipe is for. **Scale it** by basis or system size; both move the
+[knee](../../patterns/layout-and-effective-cost.md).
 
-## Shape, size, cost
+## Which box — and the layout matters more
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are for the two ranks), TTL 5m, cap $0.02. The two SCF runs take ~4 s. Recorded command window **93s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+`c8g.2xlarge`: **128 s serial, 68 s on 4 ranks.** Measured on one 16-core box, for 10,000 of these
+calculations:
 
-**Sizing:** single-node 2-rank proof; NWChem's real strength is multi-node scaling (EFA) — that is the sizing question, deliberately not this single-node demo. The energy is rank-independent; scale ranks for speed.
+| | cost |
+|---|---|
+| 16 concurrent 1-rank jobs | **$16** |
+| one job on 16 ranks, repeated | $44 |
+| one instance per job, 16 ranks each | $300 |
+
+Ranks-per-job is the *smallest* of those levers. Full measurement, including the two knees and why
+$/core-hour cannot see any of this: [layout and effective cost](../../patterns/layout-and-effective-cost.md).
 
 <details>
-<summary>As shipped: the reference reproduction, the rank-count guard, the digest note, pins, smoke check, run + verify</summary>
+<summary>As shipped: the rank-count assertion that stops a vacuous pass, and a reference energy</summary>
 
-### The check — a published reference plus an internal cross-validation
+### The checks
 
-aarch.science ran exactly this when it verified NWChem into the `dft` env (`dft.smoke.py`), reporting **−74.963023 Ha**; Graviton4 gives −74.963023128766 — the [reproduce-a-published-result move](../../practices/reference-from-tests.md). The 2-rank leg must match the serial one (catches an MPI stack that links but computes wrong), and NWChem's integral/SCF stack shares no code with the env's [gpaw](../gpaw/README.md) or [psi4](../psi4/README.md), so it's a third independent SCF kernel in the same image.
+| observable | assertion | observed |
+|---|---|---|
+| **MPI ranks** | **exactly 4** (NWChem's own `nproc`) | **4** |
+| serial ranks | exactly 1 | **1** |
+| both converged | an energy was reached, both runs | **yes / yes** |
+| basis functions | exactly 217 | **217** |
+| **serial == 4-rank** | **< 1e-6 Ha** | **4.55e-08** |
+| DFT energy | −625.538048 ± 1e-5 Ha | **−625.538048227205** |
 
-**[Assert the rank count from inside the run](../../practices/mpi-rank-count.md).** The 2-rank leg reads `nproc = 2` from NWChem's own banner — proof the OpenMPI build parallelised rather than running two serial jobs.
+**The rank-count assertion is what stops the equality passing vacuously.** conda-forge ships nompi
+builds at *higher* build numbers than the openmpi ones, so an unpinned solve hands back a serial
+binary that under `mpiexec -n 4` runs four independent rank-0 calculations — each printing the same
+energy. "Parallel equals serial" would then pass while nothing was parallel. Reading NWChem's own
+`nproc` proves the parallelism that the equality cross-validates
+([the practice](../../practices/mpi-rank-count.md)).
 
-### Pins (data tier: bundled / in-task)
+**The energy identity is exact, not a tolerance.** DFT converges to a fixed point, so dividing the
+work across 4 ranks must not move the answer; 4.55e-08 Ha is SCF-convergence noise. The serial
+energy reproduced to all twelve digits across runs, which is what licensed pinning it.
 
-| | |
+The basis-function count is asserted because a silently different basis is the failure that would
+otherwise look like a wrong energy. Both the regex and the value came from NWChem's output
+(`AO basis - number of functions:`) — an earlier version of this recipe invented both, and the regex
+failing is the only reason a fabricated count never became an assertion.
+
+### Packing concurrent jobs: `--bind-to none` is load-bearing
+
+Each `mpiexec` believes it owns the machine and binds rank *k* to core *k*. Eight concurrent 2-rank
+jobs therefore put 16 processes on **2 cores**: measured **2342 s at exactly 2.00 cores busy**,
+against **110 s at 15.81** for the same work with `--bind-to none`. A 21× slowdown that reads as
+memory-bandwidth contention, and the only tell is the integral core count.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e` (tag `2026.09.04` / `s5cb0d94e928d`, NWChem 7.3.1 `py314_mpi_ts` OpenMPI, cosign-signed, `linux/arm64`) |
-| input | H₂O geometry + STO-3G, inline / bundled — nothing staged |
+| NWChem 7.3.0 | `quay.io/aarchsci/dft@sha256:0740fab9721d…` (`linux/arm64`, openmpi build) |
+| geometry + basis | inline in the spec; basis sets ship in the env |
 
-**Note the digest.** This is a *newer* `dft` than [siesta](../siesta/README.md) and [psi4](../psi4/README.md) pin (`b356499…`): aarch.science added NWChem and republished under the same `2026.09.04` date-tag, moving it to `0740fab9…`. The older recipes keep their old digest — immutable and still valid. NWChem is the `_ts` (two-sided) variant, not `_pr` (which has no serial mode and needs more `/dev/shm` than a container's default). `dft` now requires the container entrypoint (NWChem relies on `activate.d` to set `NWCHEM_BASIS_LIBRARY`, or it exits 255); spawn runs through the entrypoint, and the task asserts the variable is set.
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| **serial SCF energy** | −74.963023 ± 1e-5 Ha (`dft` D3 reference) | **−74.963023128766** | broken integral/SCF |
-| MPI ranks (2-rank leg) | exactly 2 (NWChem's `nproc`) | 2 | serial build under `mpiexec` |
-| serial ranks | exactly 1 | 1 | wrong launch |
-| **serial == 2-rank** | \|serial − parallel\| < 1e-6 | **identical** | MPI computes wrong |
+Nothing is staged, so there is no `stage-inputs.sh`. The task first checks `NWCHEM_BASIS_LIBRARY` is
+set and holds `sto-3g` — without activation NWChem falls back to the feedstock build path baked into
+the binary and exits 255, which is a confusing failure to debug from an exit code alone.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=nwchem
+spawn task run --spec "$(make -s spec RECIPE=nwchem)" --wait
 make ls RECIPE=nwchem
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`nwchem-serial.out`, `nwchem-2rank.out`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `mpi_ranks 4`, `basis_functions 217` and `serial_eq_4rank` under 1e-6.
 
 </details>
