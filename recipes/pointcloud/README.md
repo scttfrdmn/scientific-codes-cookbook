@@ -2,7 +2,8 @@
 tool: pdal
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
 # PDAL (pointcloud env) — decode the canonical autzen cloud, header vs a decode statistic
 
@@ -32,7 +33,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Decoding 10.6M points and computing stats is ~4 s. Recorded command window **80s** — boot, Docker install, the ~0.64 GB `pointcloud` image pull, and staging the ~56 MB cloud are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** (The ~56 MB cloud stages into `/tmp`, a tmpfs sized to ½ the instance RAM, not the root disk — trivial at this size.)
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split: stage-in of the 54 MB cloud **1 s**, Docker install **38 s**, image pull **76 s**, decoding 10.6M points and computing stats **7 s**. Provisioning is 94% of the 123 s window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). The cloud stages into `/tmp` — [tmpfs at ½ the instance RAM](../../patterns/data-movement.md), not the root disk — which is trivial at this size but is what sizes the box at real scale.
 
 **Sizing:** decode is compute-light; large clouds and tiled/streaming workflows are I/O- and staging-bound (tmpfs ≈ ½ RAM) — size on [data movement](../../patterns/data-movement.md), not cores.
 

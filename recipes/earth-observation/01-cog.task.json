@@ -1,14 +1,14 @@
 {
-  "task_id": "cookbook-earth-observation-cog-r1",
+  "task_id": "cookbook-earth-observation-scl-ndvi-r2",
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\ncd /tmp\n\necho \"== verify the staged Sentinel-2 COG against its pinned sha256 ==\"\nprintf '%s  %s\\n' 8626d4bb645a0ec92ba0099b2c6aab94d0ee328a12ada9190d1c2d0d1771a3f0 B01.tif > pins.sha256\nsha256sum -c pins.sha256\n\necho \"== open the COG and cross-check header against the scene's STAC metadata ==\"\n# Scene S2B_11SKA_20240704_0_L2A (Sentinel-2 L2A, RODA sentinel-cogs). Its STAC item\n# declares proj:epsg 32611, proj:shape [1830,1830], transform [60,0,199980,0,-60,4100040],\n# uint16, nodata 0. This asserts the fetched pixels/header agree with that metadata, and\n# adds a deterministic GDAL band checksum -- the pixel-level decode identity that sha256\n# (byte integrity) does not cover.\npython3 - <<'PY' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport sys\nimport rasterio, rioxarray\nfrom osgeo import gdal\ngdal.UseExceptions()\nfail=[]\ndef check(l,ok,detail):\n    print(f\"{l:26s} {detail}\")\n    if not ok: fail.append(l)\n\nwith rasterio.open(\"/tmp/B01.tif\") as s:\n    epsg=s.crs.to_epsg(); dt=s.dtypes[0]; h,w,cnt=s.height,s.width,s.count\n    nod=s.nodata; tr=[round(v,3) for v in list(s.transform)[:6]]\n_ds=gdal.Open(\"/tmp/B01.tif\"); chk=_ds.GetRasterBand(1).Checksum()\nrx_epsg=rioxarray.open_rasterio(\"/tmp/B01.tif\").rio.crs.to_epsg()\n\n# each is exact-or-wrong and cross-checked against the STAC-declared value\ncheck(\"crs_epsg\", epsg==32611, f\"{epsg}  want 32611 (STAC proj:epsg)\")\ncheck(\"dtype\", dt==\"uint16\", f\"{dt}  want uint16 (STAC data_type)\")\ncheck(\"shape\", (h,w)==(1830,1830), f\"({h},{w})  want (1830,1830) (STAC proj:shape)\")\ncheck(\"band_count\", cnt==1, f\"{cnt}  want 1\")\ncheck(\"nodata\", nod==0, f\"{nod}  want 0 (STAC nodata)\")\ncheck(\"transform\", tr==[60.0,0.0,199980.0,0.0,-60.0,4100040.0], f\"{tr}  want [60,0,199980,0,-60,4100040]\")\ncheck(\"gdal_checksum\", chk==55297, f\"{chk}  want 55297 (deterministic pixel decode)\")\ncheck(\"rioxarray_agrees\", rx_epsg==32611, f\"{rx_epsg}  want 32611 (rioxarray reads same CRS)\")\nif fail: print(\"FAILED: \"+\", \".join(fail)); sys.exit(1)\nPY\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n\necho \"== staged scene: 10 m red + NIR (10980^2), 20 m scene classification (5490^2), STAC item ==\"\nls -l /tmp/B04.tif /tmp/B08.tif /tmp/SCL.tif /tmp/item.json\n\npython3 -u - <<'PYEOF' > smoke-check.txt 2>&1 || { cat smoke-check.txt; exit 1; }\nimport json, sys, time\nimport numpy as np\nimport rasterio\nfrom rasterio.enums import Resampling\n\nfail = []\ndef check(label, ok, detail):\n    print(f\"{label:30s} {detail}\")\n    if not ok: fail.append(label)\ndef obs(label, detail):\n    print(f\"{label:30s} {detail}   [observation]\")\n\nitem = json.load(open(\"/tmp/item.json\"))\nprops, assets = item[\"properties\"], item[\"assets\"]\nobs(\"rasterio_version\", f\"{rasterio.__version__}  GDAL {rasterio.__gdal_version__}\")\nobs(\"scene\", f\"{item['id']}  {props['datetime']}  cloud {props['eo:cloud_cover']}%\")\n\n# ---- the grid matches what the depositors published -------------------------------\nt0 = time.time()\nwith rasterio.open(\"/tmp/B04.tif\") as s:\n    red = s.read(1); red_shape, red_tr, red_crs = s.shape, s.transform, s.crs\nwith rasterio.open(\"/tmp/B08.tif\") as s:\n    nir = s.read(1); nir_shape = s.shape\nt_read = time.time() - t0\nwith rasterio.open(\"/tmp/SCL.tif\") as s:\n    scl = s.read(1); scl_shape = s.shape\n\ncheck(\"grid_matches_published\",\n      list(red_shape) == assets[\"red\"][\"proj:shape\"] == assets[\"nir\"][\"proj:shape\"]\n      and list(scl_shape) == assets[\"scl\"][\"proj:shape\"]\n      and red_crs.to_epsg() == props[\"proj:epsg\"],\n      f\"red/nir {red_shape} scl {scl_shape} EPSG:{red_crs.to_epsg()}\"\n      f\"  want the item's proj:shape and proj:epsg\")\n# The 2x2 aggregation below is exact only on an integer-factor, co-origined grid.\ncheck(\"grids_nest_exactly\",\n      red_shape == nir_shape and red_shape[0] == 2 * scl_shape[0]\n      and red_shape[1] == 2 * scl_shape[1]\n      and red_tr.c == 199980.0 and red_tr.f == 4100040.0,\n      f\"10 m is exactly 2x the 20 m grid on a shared origin \"\n      f\"({red_tr.c:.0f}, {red_tr.f:.0f})\")\n\n# ---- reproduce ESA's own scene-classification percentages -------------------------\n# SCL class codes, L2A product definition. The percentages in the STAC item were\n# computed by ESA's processor from this band; recomputing them from the pixels turns\n# \"produce a number\" into \"reproduce a published number\".\nSCL = {0: \"nodata_pixel\", 2: \"dark_features\", 3: \"cloud_shadow\", 4: \"vegetation\",\n       5: \"not_vegetated\", 6: \"water\", 7: \"unclassified\",\n       8: \"medium_proba_clouds\", 9: \"high_proba_clouds\", 10: \"thin_cirrus\",\n       11: \"snow_ice\"}\ncounts = np.bincount(scl.ravel(), minlength=12)\ntotal = int(counts.sum())\ncheck(\"scl_pixels\", total == 5490 * 5490, f\"{total:,}  want 30,140,100 (5490^2)\")\n\nworst_class, worst = None, 0.0\nfor code, name in sorted(SCL.items()):\n    got = 100.0 * counts[code] / total\n    pub = props[f\"s2:{name}_percentage\"]\n    d = abs(got - pub)\n    if d > worst:\n        worst_class, worst = name, d\n    obs(f\"  {name}\", f\"{counts[code]:>9,} px  {got:.6f}%  published {pub:.6f}%  d={got-pub:+.2e}\")\n# ESA publishes 6 decimal places, so a half-ulp of the PUBLISHED value is 5e-7 pp; the\n# bound is set by their rounding, not by how close the run happens to land. This is\n# sensitive to a single pixel: high_proba_clouds is 3 px of 30,140,100 (0.000010%), and\n# one pixel there moves the 6th decimal.\ncheck(\"scl_reproduces_published\", worst < 2e-6,\n      f\"max|computed - published| = {worst:.2e} pp over {len(SCL)} classes \"\n      f\"(worst: {worst_class})  want < 2e-6 (their printed precision)\")\n\n# ---- NDVI over the full 10 m scene -----------------------------------------------\nt1 = time.time()\nrf = red.astype(np.float32)\nnf = nir.astype(np.float32)\nden = nf + rf\nnum = nf - rf\nndvi = np.zeros(red.shape, dtype=np.float32)\nnp.divide(num, den, out=ndvi, where=den > 0)\nvalid = den > 0\nt_ndvi = time.time() - t1\ndel num, den, rf, nf\n# NDVI = (NIR-R)/(NIR+R) with both reflectances non-negative is in [-1, 1] by\n# construction -- algebra, not a band.\nvmin, vmax = float(ndvi[valid].min()), float(ndvi[valid].max())\ncheck(\"ndvi_in_range\", -1.0 <= vmin and vmax <= 1.0,\n      f\"[{vmin:.4f}, {vmax:.4f}] over {int(valid.sum()):,} valid px  want within [-1, 1]\")\n\n# Aggregate the 10 m index onto the 20 m classification grid. Averaging the index down\n# is the defensible direction; upsampling the CLASS would invent classifications.\nagg = ndvi.reshape(scl_shape[0], 2, scl_shape[1], 2).mean(axis=(1, 3))\n\ndef stats(code):\n    m = scl == code\n    if not m.any(): return None\n    v = agg[m]\n    return int(m.sum()), float(v.mean()), float(np.percentile(v, 10)), float(np.percentile(v, 90))\n\nveg, nveg, water = stats(4), stats(5), stats(6)\nfor nm, st in ((\"vegetation\", veg), (\"not_vegetated\", nveg), (\"water\", water)):\n    obs(f\"  ndvi[{nm}]\", f\"n={st[0]:,} mean={st[1]:+.4f} p10={st[2]:+.4f} p90={st[3]:+.4f}\")\n\n# Cross-validation, not a band: ESA's SCL comes from a full multi-spectral classifier\n# and NDVI from two bands by a different route, so their agreement is a real check on\n# both. Asserting the ORDERING of disjoint percentiles -- the quietest vegetation pixel\n# ESA found is greener than the greenest thing it called bare -- has no tolerance to\n# pick: it is either true or the two derivations disagree about the scene.\ncheck(\"classifier_agrees_with_index\", veg[2] > nveg[3],\n      f\"p10(vegetation)={veg[2]:+.4f} > p90(not_vegetated)={nveg[3]:+.4f} \"\n      f\"(margin {veg[2]-nveg[3]:+.4f})  want the distributions to separate\")\n# Water absorbs NIR almost completely, so NDVI over water is negative. Physics.\ncheck(\"water_ndvi_negative\", water[1] < 0,\n      f\"mean NDVI over ESA-classified water = {water[1]:+.4f}  want < 0 (NIR absorbed)\")\n\nobs(\"wall_read_2x10980sq\", f\"{t_read:.1f}s for 2 x 120,560,400 uint16\")\nobs(\"wall_ndvi\", f\"{t_ndvi:.1f}s over 120,560,400 px\")\n\nif fail:\n    print(\"FAILED: \" + \", \".join(fail)); sys.exit(1)\nPYEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
   ],
   "container": "quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337",
   "resources": {
-    "cpu": 2,
-    "memory_gib": 4,
+    "cpu": 4,
+    "memory_gib": 8,
     "architecture": "arm64",
     "families": [
       "c8g"
@@ -16,19 +16,31 @@
   },
   "inputs": [
     {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/B01.tif",
-      "destination": "/tmp/B01.tif"
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/B04.tif",
+      "destination": "/tmp/B04.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/B08.tif",
+      "destination": "/tmp/B08.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/SCL.tif",
+      "destination": "/tmp/SCL.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/item.json",
+      "destination": "/tmp/item.json"
     }
   ],
   "outputs": [
     {
       "source": "/tmp/smoke-check.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/earth-observation/r1/smoke-check.txt"
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/earth-observation/r2/smoke-check.txt"
     }
   ],
   "lifecycle": {
-    "ttl": "5m",
+    "ttl": "12m",
     "on_complete": "terminate",
-    "cost_limit": 0.02
+    "cost_limit": 0.05
   }
 }

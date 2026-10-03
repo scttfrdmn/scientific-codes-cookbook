@@ -2,7 +2,8 @@
 tool: relion
 tool_version: 5.1.0
 image: quay.io/aarchbio/relion@sha256:74aef38176ce4b9929f1312bb977c54c06994329e63c94fc3accce44ea844119
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
 # RELION — cryo-EM post-processing of a real 2.75 Å reconstruction
 
@@ -35,7 +36,7 @@ Deterministic (FFTs, a shell-wise correlation, a straight-line fit — no sampli
 
 ## Shape, size, cost
 
-One task, **`m8g.large`** (2 vCPU / 8 GiB), TTL 20m, cap $0.05. Measured: **25.3s** wall, peak **3.82 GiB RSS** (three 325 MiB maps + FFT workspace over a 440³ box). That measurement picks the box both ways — 3.82 GiB rules out `c8g.large`'s 4 GiB, and the absence of a thread flag rules out paying for more vCPUs, so `m8g.large`, not `m8g.xlarge`. TTL is sized by the ~975 MiB cross-region **staging**, not the 25 s of compute. Recorded command window **94s** (RELION 25 s; the rest is stage-in + Docker install + the 0.40 GiB pull). **These timings are not compute cost.**
+One task, **`m8g.large`** (2 vCPU / 8 GiB), TTL 20m, cap $0.05. Measured: **25.3s** wall, peak **3.82 GiB RSS** (three 325 MiB maps + FFT workspace over a 440³ box). That measurement picks the box both ways — 3.82 GiB rules out `c8g.large`'s 4 GiB, and the absence of a thread flag rules out paying for more vCPUs, so `m8g.large`, not `m8g.xlarge`. TTL is sized by the ~975 MiB cross-region **staging**, not the 25 s of compute. Measured phase split on the verifying run: stage-in of 1.02 GB in **6 s** (~170 MB/s from S3, same region), Docker install **35 s**, image pull **49 s**, `relion_postprocess` **30 s**, stage-out of 681 MB in **3 s** — a 123 s window. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). Note the staging: the TTL was sized for a slow cross-region copy that does not happen, because `stage-inputs.sh` already did it once.
 
 <details>
 <summary>As shipped: the reproduction, the ghostscript workaround, pins, the 15-value smoke check, run + verify</summary>
