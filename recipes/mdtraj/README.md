@@ -3,79 +3,120 @@ tool: mdtraj
 tool_version: 1.11.1
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# MDTraj ← GROMACS — read an XTC trajectory, cross-checked against MDAnalysis
+# MDTraj — read a real 100 ps trajectory, checked against MDAnalysis byte for byte
 
-GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format.
-
-> **What this covers.** Write a 50-step rigid-water trajectory and read it two ways — proof MDTraj's GROMACS-XTC reader works on Graviton4 and agrees with a second parser. Not a benchmark; no large trajectory or analysis pipeline.
+Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=mdtraj)" --wait
+spawn task run --spec "$(make -s spec RECIPE=mdtraj)" --wait   # ~4 min on c8g.2xlarge
+make ls RECIPE=mdtraj   # out.xtc + smoke-check.txt + the GROMACS logs
 ```
 
 ```python
-import mdtraj, MDAnalysis as mda
-t = mdtraj.load("out.xtc", top="spc216.gro")  # GROMACS-written XTC + its topology → MDTraj
-u = mda.Universe("spc216.gro", "out.xtc")     # the same files → MDAnalysis, independently
-t.n_atoms, t.n_frames, t.unitcell_lengths[0]  # 648, 6, 1.8621 nm — and the two agree on an O-H distance
+import mdtraj as mdt, MDAnalysis as mda
+t = mdt.load("out.xtc", top="big.gro")          # GROMACS XTC + .gro topology
+u = mda.Universe("big.gro", "out.xtc")          # the SAME bytes, a second parser
 ```
-
-One task: GROMACS produces the trajectory, both readers parse it in the same container. The XTC handoff is the point, so routing it through S3 would add a boot for no scientific gain — the input (spc216 water) is bundled in the gromacs package, so nothing is staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| GROMACS-written spc216 `.xtc` | your own trajectory + topology | MDTraj reads many formats; XTC is chosen because it's the compressed format neither MDAnalysis recipe covered. |
-| the O-H distance as the agreed quantity | any geometry your analysis needs | counts + box can survive a handoff that still mangles coordinates; an agreed *distance* is what proves the coordinates round-tripped. |
+| 7,754-water box | your own system | nothing is staged — spc216 and tip3p ship in the GROMACS package. |
+| 100 ps / 501 frames | longer | the XTC is 41 MB at this length; analysis is linear in frames. |
+| `-ntomp 8` | your cores | changes the trajectory, so **no coordinate is asserted** — see below. |
+| MDTraj + MDAnalysis | either alone | the point of running both is that neither then checks the other. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** two readers agreeing on the same bytes is exact-or-wrong at any trajectory length, and a short trajectory keeps the check fast. (Real trajectory analysis is a different sizing problem — a large trajectory is memory- or I/O-bound, not this ~1 s decode.) Leave-it.
+**Leave the system** — a real solvated box at 23k atoms, so the parse and the analysis are both at
+realistic size. **Scale it** by frames or atoms; both cost linearly.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. MD + both reads take ~1 s. Recorded command window **100s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** no question here (two reads of a short trajectory, ~1 s, any box); a large trajectory is memory-/I-O-bound — flagged in *Make it yours*.
+`c8g.2xlarge`: minimisation + **100 ps of NVT in 151 s**, ~$0.02, producing a 41 MB XTC.
+No generation table — the interesting cost here is GROMACS's, which
+[its own recipe](../gromacs/README.md) measures across four generations.
 
 <details>
-<summary>As shipped: the two identities, pins, smoke-check table, run + verify</summary>
+<summary>As shipped: a parser identity that survives chaotic dynamics, a constraint not a band, and the collapsed run that taught the box check</summary>
 
-### The checks — cross-layer decode + a two-reader cross-check
+### The checks
 
-- **Cross-layer decode (MDTraj ← GROMACS).** MDTraj recovers the exact atom count (648), frame count (6) and box (1.8621 nm) that GROMACS wrote.
-- **Two-reader cross-check (MDTraj vs MDAnalysis).** Both read the same `out.xtc` and compute the same O-H distance, agreeing to < 1e-6 nm. Two unrelated parsers landing on the same geometry from the same bytes is [comparing like with like](../../practices/cross-checks.md) — a stronger statement than either reader's self-report, and free since both ship in the image.
+| observable | assertion | observed |
+|---|---|---|
+| atoms | exactly 23,262, both libraries | **23,262** |
+| frames | exactly 501, both libraries | **501** |
+| **coordinates** | **max\|MDTraj − MDAnalysis\| < 1e-5 nm** | **2.38e-07** over 34,962,786 values |
+| box volume | max\|diff\| < 1e-3 nm³ | **2.76e-05** |
+| **O-H distance** | **0.09572 ± 0.0005 nm** | **0.09572** |
+| Rg fills the box | within 0.25 nm of L/2 | **3.1003** vs **3.1000** |
 
-### Pins (data tier: bundled in the image)
+**The coordinate identity is the one that matters, and it works *because* MD is chaotic.** Both
+libraries read the *same file*, so their agreement is a property of the parsers, not of the dynamics:
+35 million values agreeing to 2.4e-07 nm is float32 XTC precision, so the decoders are equivalent.
 
-| | |
+That the dynamics are *not* reproducible is measured, not assumed. Two runs with the same
+`gen-seed 42` and the same `-ntomp 8` gave a different trajectory — first water's final frame
+`1.2240 0.2740 0.4580` against `4.9140 1.4590 5.8840`, Rg 3.1003 against 3.1006 — because GROMACS's
+dynamic load balancing and PME reduction order are not bit-stable. So no coordinate can be asserted
+here, while `coords_two_libraries` held at exactly 2.38e-07 across both runs. The invariants that
+survive are properties of the system and the force field, not of the run: atom count, frame count,
+the tip3p constraint, and Rg ≈ L/2.
+
+**Why coordinates and not radius of gyration.** The first version compared mass-weighted Rg and
+failed at 4.9e-04 nm. Both libraries *guess* masses from atom names in a `.gro`, and their tables
+differ slightly — confirmed here, MDTraj 3.1003 against MDAnalysis 3.0999 on identical coordinates.
+That is a [method difference, not a parser bug](../../practices/cross-checks.md); Rg is reported, not
+asserted. Coordinates admit no model difference at all, which is what makes them the right
+cross-check.
+
+**The O-H distance is a constraint, not a band.** `constraints = h-bonds` holds every bond at tip3p's
+0.09572 nm exactly, and XTC stores coordinates to 0.001 nm — so the window comes from the force field
+and the file format, and a median outside it means the constraint was never applied rather than that
+the water moved. The observed median lands on 0.09572 to five decimals, with min 0.09418 and max
+0.09728 from the rounding.
+
+### The collapsed run, and the check that now catches it
+
+The first attempt ran `gmx solvate` straight into `mdrun` with no minimisation, plain cut-off
+electrostatics and no thermostat. It completed, wrote 501 frames and a plausible 27 MB XTC — and was
+wrong: **Rg 0.796 nm in a 6.2 nm box**, with most O-H pairs at distance 0. Solvation packs
+overlapping waters, and dynamics started from those degenerate.
+
+Nothing in the original check set caught it. The O-H assertion failed, but as a symptom four steps
+downstream, which sent me looking at indexing and periodic wrapping instead of at the trajectory.
+`rg_fills_box` is the fix: a uniformly filled periodic box must have Rg ≈ L/2, so the number to
+compare against is **3.1000**, derived from the box, not from a previous run. It read 0.796 then and
+3.1003 now.
+
+The protocol is now minimise (`steep`, 2000 steps, PME) → NVT (`v-rescale`, 300 K, `gen-seed 42`),
+and `mdrun.log`, `grompp.log` and `mdrun_em.log` are **staged out**, because the first two failures
+were diagnosed blind: the logs existed inside the task and died with the instance. Same lesson
+[flye](../flye/README.md) carries.
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` (tag `2026.09.04`, GROMACS 2026.3 + MDTraj 1.11.1 + MDAnalysis, cosign-signed, `linux/arm64`) |
-| input | spc216 water + tip3p, bundled in the gromacs package — nothing staged |
+| MDTraj 1.11.1 / MDAnalysis 2.10.0 / GROMACS | all in `quay.io/aarchsci/md@sha256:1ee941664add…` (`linux/arm64`) — versions read from the run |
+| water template | `spc216.gro` + `amber99sb-ildn`/tip3p — ship inside the GROMACS package |
 
-Same `md` image as [gromacs](../gromacs/README.md).
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| MDTraj atoms | exactly 648 (216 waters × 3) | 648 | wrong decode |
-| MDTraj frames | exactly 6 (50 steps / 10 + t=0) | 6 | wrong frame stride |
-| MDTraj box | 1.8621 nm (from the XTC) | 1.8621 | box not recovered |
-| MDAnalysis atoms / frames | 648 / 6 (agree) | 648 / 6 | reader disagreement |
-| distance physical | O-H ≈ 0.0956 nm | 0.09560 | coordinates mangled |
-| **two-reader agreement** | \|MDTraj − MDAnalysis\| < 1e-6 nm | ~1e-8 | one parser wrong |
+Nothing is staged: `gmx solvate` builds the 6.2 nm box from the packaged 216-water template, so the
+recipe has no `stage-inputs.sh` and no external data to pin. The trade is that the structure is
+pinned by the *image* rather than by a hash.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=mdtraj
+spawn task run --spec "$(make -s spec RECIPE=mdtraj)" --wait
 make ls RECIPE=mdtraj
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect two objects (`out.xtc`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `coords_two_libraries` under 1e-5, `oh_constraint 0.09572` and
+`rg_fills_box` near 3.1000.
 
 </details>

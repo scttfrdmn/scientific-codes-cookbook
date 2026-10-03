@@ -1,0 +1,17 @@
+mdtraj_version             1.11.1
+mdanalysis_version         2.10.0
+mdtraj_atoms               23262  == MDAnalysis 23262  want 23262 (7754 waters x 3)
+frames                     MDTraj 501 / MDAnalysis 501  want 501 (50000/100 + t=0)
+coords_two_libraries       max|MDTraj - MDAnalysis| = 2.38e-07 nm over 34962786 values  want < 1e-5
+volume_two_libraries       max|diff| = 2.76e-05 nm^3  want < 1e-3 (same bytes, 2 parsers)
+oh_periodic_true           min 0.09421  med 0.09572  max 0.09730
+oh_periodic_false          min 0.09421  med 0.09572  max 0.09730
+oh_constraint              0.09572 nm (median)  want 0.09572 +/-0.0005 (tip3p constraint, XTC rounds to 0.001)
+first_water_frame0         0.2320 0.6950 0.0220 0.2260 0.6500 0.1060 0.1940 0.6340 -0.0410
+first_water_frameN         5.9640 0.1640 0.4970 5.9570 0.2150 0.4170 6.0050 0.0820 0.4700
+rg_fills_box               3.1007 nm vs L/2 = 3.1000 nm  want within 0.25 (a filled box, not collapsed)
+rg_mdtraj_mean             3.1007 nm
+rg_mda_mean                3.1002 nm   (differs: the two guess masses)
+volume_mean                238.33 nm^3
+atoms              23262
+wall_s             152

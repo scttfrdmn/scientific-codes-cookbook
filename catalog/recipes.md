@@ -124,7 +124,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [ambertools](../recipes/ambertools/README.md) | `tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path. | md | build-in-task | 2026-10-02 | — |
 | [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
 | [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
-| [mdtraj](../recipes/mdtraj/README.md) | GROMACS writes a compressed `.xtc`; MDTraj reads it back, and MDAnalysis reads the *same file* independently — two trajectory parsers on one compressed format. | md | build-in-task | 2026-10-02 | — |
+| [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 |
 | [plumed](../recipes/plumed/README.md) | GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run. | md | build-in-task | 2026-10-02 | — |
 
 ## pipeline
