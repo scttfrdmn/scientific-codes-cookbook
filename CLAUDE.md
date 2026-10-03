@@ -111,8 +111,17 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   check, because it teaches people to ignore failures: a ceiling 3% above the observed
   value fails on noise, and "the best hit is itself" failed 19-of-20 because BLAST breaks
   score ties arbitrarily. Assert the claim you mean ("nothing beats itself"), not the
-  convenient proxy for it. (An assertion that fails for reasons unrelated to correctness,
-  or waves through garbage.)
+  convenient proxy for it. **Two shapes to reach for when no reference value exists:
+  an *invariance* and a *convergence rate*, both of which beat any band on a single run.**
+  Moran's I has no closed-form value, but it is a ratio of covariance to variance of the
+  same centred variable, so `I(y) == I(3.7y+112.5)` is bit-identical — measured `0.00e+00`,
+  and an implementation that normalised wrongly could not satisfy it. And a discretised
+  method has a *theoretical order*: ParaView's marching-cubes area error over 65³→513³ falls
+  `4.01, 4.01, 4.00` per doubling, which is O(h²) — asserting the ratio catches a
+  correct-but-first-order implementation that would sit comfortably inside any
+  single-resolution tolerance you picked. A ladder costs one extra rung and tests the
+  *method*; a band tests the answer. (An assertion that fails for reasons unrelated to
+  correctness, or waves through garbage.)
 - **Where two codes solve the same problem, run them on the same bytes and compare —
   cross-validation beats any identity.** RAxML-NG and IQ-TREE, same alignment, same
   LG+G4, independently reached `-52706.731409` and `-52706.731`: two unrelated codebases
@@ -250,7 +259,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   ran RAxML-NG's search 2.17x faster than Docker Desktop (7m39s vs 16m35s), so the TTL
   sized from the local measurement came down 35m → 20m and the cap $0.19 → $0.11 on
   identical work. A local run is the right *first* move because it is free, not because
-  it is accurate. **And a measured sample is not the same as a *representative* one: an
+  it is accurate — **and it errs in both directions, so budget for the bad one.** AmberTools'
+  `sander` went the other way: 14.95 ns/day on an Apple-Silicon laptop against **9.45 on
+  Graviton4**, so the local number was 1.6x *optimistic* and a TTL at 2x it left 1.45x margin
+  on the real run, not 2x. Fast laptop cores flatter a serial code and the measurement says
+  nothing about which way a given tool will go, so on a first launch size the TTL from the
+  local wall **times the slowdown you would still survive**, then retighten from the run. **And a measured sample is not the same as a *representative* one: an
   average over a heterogeneous workload does not license sizing from a sub-window of it.**
   GATK4 HaplotypeCaller's rate along chr20 varies ~50x with local complexity (~9,480
   regions/min on the p-arm, **168** in pericentromeric 30-31 Mb — 1.07 Mb in 35.4 min), so a
