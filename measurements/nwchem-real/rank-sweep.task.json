@@ -1,0 +1,48 @@
+{
+  "task_id": "cookbook-nwchem-scf-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport OMPI_MCA_rmaps_base_oversubscribe=yes OMP_NUM_THREADS=1\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n# The env's basis sets come from activation (NWCHEM_BASIS_LIBRARY); without it nwchem falls\n# back to the feedstock build path baked into the binary and exits 255. Confirm, don't assume.\ntest -n \"${NWCHEM_BASIS_LIBRARY:-}\" && test -f \"$NWCHEM_BASIS_LIBRARY/sto-3g\"\n\necho \"== NWChem DFT on a real molecule: caffeine, 24 atoms, 6-31G*, B3LYP ==\"\n# Caffeine at its experimental geometry: 24 atoms / 146 basis functions at 6-31G*, which is a\n# calculation where parallelism actually does something -- the point of this recipe is the\n# openmpi build, and 3 basis functions of water cannot demonstrate it.\ncat > caffeine.nw <<'EOF'\necho\nstart caffeine\nmemory total 1800 mb\ngeometry units angstrom\n  N    1.1700   -1.2200    0.0000\n  C    0.0000   -0.4600    0.0000\n  N   -1.2200   -1.1300    0.0000\n  C   -1.3900   -2.4800    0.0000\n  C   -0.1900   -3.2000    0.0000\n  C    1.0400   -2.5700    0.0000\n  O    2.1400   -3.1300    0.0000\n  N   -0.6200    1.3900    0.0000\n  C    0.1900    0.9400    0.0000\n  O   -0.3200    2.6200    0.0000\n  C    2.4700   -0.5800    0.0000\n  H    2.5400    0.0400    0.8900\n  H    3.2700   -1.3100    0.0000\n  H    2.5400    0.0400   -0.8900\n  C   -2.4300   -0.3300    0.0000\n  H   -2.9900   -0.5200    0.9000\n  H   -3.0400   -0.5700   -0.8700\n  H   -2.2300    0.7300   -0.0200\n  C   -2.7000   -3.1200    0.0000\n  H   -3.4700   -2.3600    0.0000\n  H   -2.8000   -3.7300    0.8900\n  H   -2.8000   -3.7300   -0.8900\n  H   -0.2100   -4.2700    0.0000\n  H    1.1700    2.2700    0.0000\nend\nbasis\n  * library 6-31G*\nend\ndft\n  xc b3lyp\n  iterations 60\nend\ntask dft energy\nEOF\n\nrun() {  # $1 = dir, $2 = ranks\n  mkdir -p \"$1\"; cp caffeine.nw \"$1/\"\n  local t0 t1; t0=$(date +%s)\n  if [ \"$2\" = 1 ]; then ( cd \"$1\" && nwchem caffeine.nw > nwchem.out 2>&1 )\n  else ( cd \"$1\" && mpiexec -n \"$2\" nwchem caffeine.nw > nwchem.out 2>&1 ); fi\n  t1=$(date +%s); echo $(( t1 - t0 ))\n}\n# RANK SWEEP on one box: 1, 2, 4, 8 ranks of the same calculation. NOTE on the 8-rank point:\n# this is an 8-vCPU box, so 8 ranks contend for memory bandwidth with nothing left over --\n# it measures \"8 ranks on a box sized for 8\", not ideal scaling. GPAW taught this catalog that\n# running each rank count on the box you would actually rent moves the cheapest option by 18%.\nfor n in 1 2 4 8 16; do\n  w=$(run \"r$n\" \"$n\")\n  cp \"r$n/nwchem.out\" \"nwchem-${n}rank.out\"\n  echo \"ranks_${n}_wall_s $w\" >> sweep.txt\n  echo \"  $n rank(s): ${w}s\"\ndone\ncp nwchem-1rank.out nwchem-serial.out\nWALL_S=$(awk '$1==\"ranks_1_wall_s\"{print $2}' sweep.txt)\nWALL_P=$(awk '$1==\"ranks_4_wall_s\"{print $2}' sweep.txt)\n\npython3 -u - <<'PYEOF' > smoke-check.txt || { cat smoke-check.txt; exit 1; }\nimport re, sys, os\nfail = []\ndef check(label, ok, detail):\n    print(f\"{label:26s} {detail}\")\n    if not ok: fail.append(label)\ndef grab(f, pat, cast=float):\n    m = re.search(pat, open(f).read(), re.M)\n    return cast(m.group(1)) if m else None\n\nS, P = \"nwchem-serial.out\", \"nwchem-4rank.out\"\ne_s = grab(S, r\"Total DFT energy\\s*=\\s*(-?\\d+\\.\\d+)\")\ne_p = grab(P, r\"Total DFT energy\\s*=\\s*(-?\\d+\\.\\d+)\")\nnp_s = grab(S, r\"^\\s*nproc\\s*=\\s*(\\d+)\", int)\nnp_p = grab(P, r\"^\\s*nproc\\s*=\\s*(\\d+)\", int)\n# Pattern AND value read from NWChem's own output (\"AO basis - number of functions:   217\"),\n# not guessed: my first attempt invented both the regex and the count (146), and the regex\n# failing is the only reason a fabricated number did not become an assertion.\nnbf  = grab(S, r\"number of functions:\\s*(\\d+)\", int)\nconv_s = \"Total DFT energy\" in open(S).read()\nconv_p = \"Total DFT energy\" in open(P).read()\n\n# MPI actually ran on the ranks we launched. conda-forge ships nompi builds at higher build\n# numbers than the openmpi ones, so an unpinned solve hands back a serial binary that under\n# mpiexec -n 4 runs four independent rank-0 calculations -- all printing the same energy, so a\n# naive \"parallel == serial\" check passes vacuously. Reading nwchem's OWN nproc is what proves\n# the parallelism the next check cross-validates.\ncheck(\"mpi_ranks\", np_p == 4, f\"{np_p}  want exactly 4 (nwchem's own nproc)\")\ncheck(\"serial_nproc\", np_s == 1, f\"{np_s}  want exactly 1\")\ncheck(\"both_converged\", conv_s and conv_p,\n      f\"serial {'yes' if conv_s else 'NO'} / 4-rank {'yes' if conv_p else 'NO'} (SCF reached an energy)\")\ncheck(\"basis_functions\", nbf == 217, f\"{nbf}  want 217 (caffeine at 6-31G*, from NWChem)\")\n# The identity: dividing the work across 4 ranks must not change the answer. DFT converges to\n# a fixed point, so this is exact to SCF convergence -- not a tolerance on an observation.\ncheck(\"serial_eq_4rank\", e_s is not None and e_p is not None and abs(e_s - e_p) < 1e-6,\n      f\"|{e_s} - {e_p}| = {abs(e_s-e_p):.2e}  want < 1e-6 Ha (serial == 4-rank)\")\n# DFT converges to a fixed point, so for a pinned geometry, basis and functional the energy\n# is exact-or-wrong rather than a band. Serial and 4-rank agree to 4.6e-08 Ha, so the window\n# is set by SCF convergence.\ncheck(\"dft_energy\", e_s is not None and abs(e_s - (-625.538048)) < 1e-5,\n      f\"{e_s} Ha  want -625.538048 +/-1e-5 (B3LYP/6-31G*, caffeine)\")\nif fail:\n    print(\"FAILED: \" + \", \".join(fail)); sys.exit(1)\nPYEOF\ncat sweep.txt >> smoke-check.txt\npython3 -u - <<'PYEOF' >> smoke-check.txt\nw = {}\nfor line in open(\"sweep.txt\"):\n    k, v = line.split(); w[int(k.split(\"_\")[1])] = float(v)\nbase = w[1]\nprint(\"-- speedup and parallel efficiency (one box, same binary, same input) --\")\nprev = None\nfor n in sorted(w):\n    sp = base / w[n]; eff = 100 * sp / n\n    marginal = \"\" if prev is None else f\"  marginal {w[prev]/w[n]:.2f}x for 2x ranks\"\n    print(f\"ranks_{n:<2d} {w[n]:6.1f}s  speedup {sp:4.2f}x  efficiency {eff:5.1f}%{marginal}\")\n    prev = n\n# The knee: the last rank count whose marginal speedup beats 1.3x for a doubling. Stated as a\n# derived observation, not an assertion -- it is a property of THIS problem size, and it moves\n# right as the calculation grows.\nknee = 1\nfor a, b in zip(sorted(w), sorted(w)[1:]):\n    if w[a] / w[b] >= 1.3: knee = b\nprint(f\"knee_ranks                 {knee}  (last doubling that returned >=1.3x; 217 basis functions)\")\nPYEOF\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/nwchem-1rank.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/nwchem-1rank.out"
+    },
+    {
+      "source": "/tmp/nwchem-2rank.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/nwchem-2rank.out"
+    },
+    {
+      "source": "/tmp/nwchem-4rank.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/nwchem-4rank.out"
+    },
+    {
+      "source": "/tmp/nwchem-8rank.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/nwchem-8rank.out"
+    },
+    {
+      "source": "/tmp/nwchem-16rank.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/nwchem-16rank.out"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nwchem/sweep/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.65
+  }
+}

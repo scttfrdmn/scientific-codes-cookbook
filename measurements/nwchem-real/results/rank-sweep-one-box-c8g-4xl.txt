@@ -1,0 +1,18 @@
+mpi_ranks                  4  want exactly 4 (nwchem's own nproc)
+serial_nproc               1  want exactly 1
+both_converged             serial yes / 4-rank yes (SCF reached an energy)
+basis_functions            217  want 217 (caffeine at 6-31G*, from NWChem)
+serial_eq_4rank            |-625.538048227205 - -625.538048181779| = 4.54e-08  want < 1e-6 Ha (serial == 4-rank)
+dft_energy                 -625.538048227205 Ha  want -625.538048 +/-1e-5 (B3LYP/6-31G*, caffeine)
+ranks_1_wall_s 128
+ranks_2_wall_s 100
+ranks_4_wall_s 67
+ranks_8_wall_s 41
+ranks_16_wall_s 24
+-- speedup and parallel efficiency (one box, same binary, same input) --
+ranks_1   128.0s  speedup 1.00x  efficiency 100.0%
+ranks_2   100.0s  speedup 1.28x  efficiency  64.0%  marginal 1.28x for 2x ranks
+ranks_4    67.0s  speedup 1.91x  efficiency  47.8%  marginal 1.49x for 2x ranks
+ranks_8    41.0s  speedup 3.12x  efficiency  39.0%  marginal 1.63x for 2x ranks
+ranks_16   24.0s  speedup 5.33x  efficiency  33.3%  marginal 1.71x for 2x ranks
+knee_ranks                 16  (last doubling that returned >=1.3x; 217 basis functions)
