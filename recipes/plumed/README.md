@@ -3,76 +3,111 @@ tool: plumed
 tool_version: 2.9.2
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-spawn_version: 0.104.0
+spawn_version: 0.111.4
+last_verified: 2026-10-02
 ---
-# PLUMED → GROMACS — collective variables computed live during an MD run
+# PLUMED — collective variables from a live 23k-atom GROMACS run
 
-GROMACS runs a rigid-water MD with PLUMED attached (`-plumed`), so PLUMED computes collective variables from the coordinates at every step — the live-CV path under any biased-sampling run.
-
-> **What this covers.** A 50-step MD of 216 rigid waters with PLUMED computing a distance and an angle — proof GROMACS and PLUMED are coupled correctly on Graviton4 and PLUMED's CV machinery is right. Not a benchmark; no metadynamics or biased sampling (a restraint check would be sampling-dependent — this uses a fixed-geometry CV instead).
+Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=plumed)" --wait
-export PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so   # REQUIRED first, or mdrun aborts ("plumed not available")
-gmx_mpi grompp -f md.mdp -c spc216.gro -p topol.top -o t.tpr -maxwarn 5
-gmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat    # GROMACS integrates, PLUMED reads coords every step
+spawn task run --spec "$(make -s spec RECIPE=plumed)" --wait   # ~4 min on c8g.2xlarge
+make ls RECIPE=plumed   # COLVAR + smoke-check.txt + every GROMACS log
 ```
 
-`plumed.dat` computes an O-H distance and an H-O-H angle and prints them to `COLVAR`. One task; GROMACS hands its coordinates to PLUMED in the same container. The input (spc216 water) is bundled in the gromacs package, so nothing is staged.
+```bash
+# PLUMED is coupled live, every step -- not run on a saved trajectory
+gmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat -ntomp 8 -pin on
+```
+
+```
+d: DISTANCE ATOMS=1,2            # rigid water geometry: a force-field constant
+a: ANGLE    ATOMS=2,1,3
+c: COORDINATION GROUPA=1,4,7,10,13 GROUPB=<all 7754 O> R_0=0.35
+PRINT ARG=d,a,c FILE=COLVAR STRIDE=100
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| a fixed-geometry CV (rigid-water O-H, H-O-H) | your own CVs / a biased simulation | rigid water makes the CV an *exact force-field constant* to check against; a biased CV would be sampling-dependent (weaker). |
-| `PLUMED_KERNEL=/opt/conda/lib/libplumedKernel.so` | keep it — set before `mdrun` | **load-bearing:** GROMACS 2026.3's PLUMED integration aborts with "plumed … not available" unless this points at `libplumedKernel.so`; it is not set by default in the image. |
+| 7,754-water box | your own system | nothing is staged — spc216 and tip3p ship in the GROMACS package. |
+| `DISTANCE` / `ANGLE` / `COORDINATION` | `METAD`, `RESTRAINT`, any CV | the coupling is what this recipe proves; the CV is yours to choose. |
+| `STRIDE=100` | every step | PLUMED evaluates its CVs every step regardless; `STRIDE` only thins the output. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the CV identities are defined constants recovered through the full coupling, exact at any run length. Leave-it.
+**Leave the system** — 23k atoms with PLUMED in the loop is a realistic coupling cost. **Scale it**
+by CV expense: a `COORDINATION` over every pair is O(N²) per step and will dominate GROMACS.
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. MD + CV computation is ~1 s. Recorded command window **106s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
-
-**Sizing:** the coupling proof is ~1 s; production biased MD is compute-bound exactly like [GROMACS](../gromacs/README.md) — size it there ([sizing](../../patterns/sizing.md)), with PLUMED's per-step CV cost small on top.
+`c8g.2xlarge`: minimisation + **100 ps of coupled NVT in 154 s**, ~$0.02. GROMACS's own
+generation scaling is measured in [its recipe](../gromacs/README.md); PLUMED adds the CV cost on top.
 
 <details>
-<summary>As shipped: the coupling check, pins, smoke-check table, run + verify</summary>
+<summary>As shipped: CVs checked against force-field constants, and one observation deliberately not asserted</summary>
 
-### The check — a fixed-geometry CV validates the coupling
+### The checks
 
-GROMACS integrates and hands its coordinates to PLUMED every step; PLUMED evaluates the CVs and writes `COLVAR`. A CV that comes out right validates the GROMACS → PLUMED coordinate passing *and* PLUMED's CV code together — the same chain-validation logic as [ase-phonopy](../ase-phonopy/README.md). Water is held rigid, so the intramolecular O-H distance and H-O-H angle are exact TIP3P constants (0.09572 nm, 104.52°), invariant across the trajectory — making the check exact-geometry rather than sampling-dependent.
+| observable | assertion | observed |
+|---|---|---|
+| coupling ran | GROMACS finished **and** PLUMED wrote CVs | **501 rows, mdrun finished** |
+| COLVAR rows | exactly 501 | **501** |
+| **O-H distance** | **0.09572 nm** (TIP3P, via PLUMED `DISTANCE`) | **0.09572** |
+| **H-O-H angle** | **1.82422 rad** = 104.52° (via `ANGLE`) | **1.82422** |
+| distance invariant | spread < 1e-4 nm over 501 frames | **2.0e-06** |
+| angle invariant | spread < 1e-3 rad | **1.5e-05** |
 
-### Pins (data tier: bundled in the image)
+**These are force-field constants, not sampled values.** `constraints = h-bonds` holds every water
+rigid, so TIP3P's O-H bond *is* 0.09572 nm and its angle *is* 104.52° — there is no tolerance to
+choose, only the force field's own numbers. PLUMED reading anything else would mean the
+GROMACS↔PLUMED coupling, the atom indexing, or the CV machinery is wrong. That makes this a
+constraint check rather than a band, which is why it survives at any system size or run length.
 
-| | |
+The invariance checks are the other half: a rigid geometry must not move across 501 frames of real
+dynamics. One run gave a distance spread of exactly `0.00e+00` and the next `2.00e-06` nm — both
+pass, and the difference is where constraint round-off lands in a different trajectory, which is why
+this is a bound and not an equality.
+
+### The coordination number is reported, not asserted
+
+| | value |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` (tag `2026.09.04`, GROMACS 2026.3 PLUMED-patched + PLUMED 2.9.2, cosign-signed, `linux/arm64`) |
-| input | spc216 water + amber99sb-ildn/tip3p, bundled in the gromacs package — nothing staged |
+| `COORDINATION` total | **40.802** (sum over 5 central O × all O pairs) |
+| per central atom | **8.160** within R_0 = 0.35 nm |
+| per-atom range | 7.135 … 9.013 |
 
-Same `md` image as [gromacs](../gromacs/README.md) / [lammps](../lammps/README.md).
+Two reasons it is an observation. PLUMED's `COORDINATION` with `GROUPA`/`GROUPB` sums over **all
+pairs**, so with 5 central oxygens the CV is a total — an earlier version of this recipe printed it
+as "per O" and read 40.686, which is nine times a first-shell count and was a labelling error, not a
+wrong number. And the default `RATIONAL` switching function (NN=6, MM=12) decays slowly, partially
+counting second-shell neighbours past the nominal R_0 — so 8.16 is **not** the hard-cutoff
+first-shell number (~4.5) and asserting it against that literature value would be
+[comparing a method difference](../../practices/cross-checks.md).
 
-### Smoke check (inside the task; measured before launch)
+### Pins
 
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| GROMACS+PLUMED ran | `Performance:` in log + COLVAR written | yes, 6 rows | coupling failed |
-| COLVAR rows | exactly 6 (50 steps / stride 10 + t=0) | 6 | wrong stride |
-| **DISTANCE CV** | 0.09572 nm ± 1e-4 (TIP3P O-H) | 0.09572 | CV computed wrong |
-| **ANGLE CV** | 1.82422 rad ± 2e-3 (104.52°) | 1.82422 | CV computed wrong |
-| distance invariant | spread < 1e-4 nm across frames | 0.0 | rigid constraint broke |
-| angle invariant | spread < 1e-3 rad across frames | 0.0 | rigid constraint broke |
+| | data tier |
+|---|---|
+| PLUMED 2.9.2 / GROMACS | both in `quay.io/aarchsci/md@sha256:1ee941664add…` (`linux/arm64`) |
+| water template | `spc216.gro` + `amber99sb-ildn`/tip3p — ship inside the GROMACS package |
 
-No fitted bands — the distance and angle are defined force-field constants recovered through the coupling, and their invariance confirms the rigid-water construction.
+Nothing is staged: `gmx solvate` builds the 6.2 nm box from the packaged 216-water template, so the
+recipe has no `stage-inputs.sh`. `PLUMED_KERNEL` must point at `libplumedKernel.so` for the
+`-plumed` flag to work, which the task sets.
+
+Every log the task writes is staged out — `mdrun.log`, `grompp.log`, `mdrun_em.log`, `solvate.log`,
+`grompp_em.log` — because `command.log` only reaches S3 at stage-out, so an unstaged tool log dies
+with the instance and a failed run leaves nothing to diagnose.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=plumed
+spawn task run --spec "$(make -s spec RECIPE=plumed)" --wait
 make ls RECIPE=plumed
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect two objects (`COLVAR`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+Expect `smoke-check.txt` with `distance_cv 0.09572`, `angle_cv 1.82422` and `colvar_rows 501`.
 
 </details>
