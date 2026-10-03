@@ -3,75 +3,142 @@ tool: ambertools
 tool_version: "26.0"
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
-# AmberTools — build a peptide, integrate it, conserve its energy
+# AmberTools — 100 ps of solvated NVE, and ff14SB checked against GROMACS
 
-`tleap` builds a capped alanine dipeptide from the ff14SB force field; `sander` runs a short in-vacuo NVE trajectory — AmberTools' serial MD path.
+`tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM.
 
-> **What this covers.** `sander` (AmberTools' serial MD engine) on a 22-atom peptide for 20 steps — proof the ff14SB kernels and the Fortran integrator are numerically correct on Graviton4. Not `pmemd` (licence-gated, never in AmberTools), explicit solvent, or long trajectories.
+> **What this covers.** `sander`, AmberTools' serial MD engine — not `pmemd`, which is licence-gated and never in AmberTools. So the scale here is what a serial engine can honestly do: 2,101 atoms, PME, 100 ps.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait
-tleap -f build.in                                          # ACE-ALA-NME, ff14SB → parm7 + rst7
-sander -O -i md.in -p sys.parm7 -c sys.rst7 -o md.out      # 20-step in-vacuo NVE
+spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait   # ~17 min; nothing staged
 ```
 
-One task, two subcommands of the same suite. The ff14SB force field ships inside the ambertools package, so nothing is staged — the image digest is the only pin.
+```bash
+tleap -f l.in                       # ACE-ALA-NME + solvateoct TIP3P 10.0 -> 2101 atoms
+sander -O -i nve.in -p sol.parm7 -c heat.rst -o nve.out -x nve.nc   # irest=1 is load-bearing
+```
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| ACE-ALA-NME (22 atoms), built inline | your own system (`.pdb` → `tleap`) | the peptide is a hand-checkable NVE system, not a limit on `sander`. |
-| in-vacuo, no thermostat | explicit solvent + a thermostat | NVE (no thermostat) is what makes energy conservation an *exact* check; add a thermostat and you check temperature control instead. |
+| ACE-ALA-NME in a TIP3P octahedron | your own system | `solvateoct` has no RNG, so the atom count is reproducible and asserted exactly — a different solute needs its own count. |
+| `nstlim=100000, dt=0.001` | longer, or `dt=0.002` | the conservation check normalises per ns, so it survives a length change; a larger timestep legitimately leaks more. |
+| ff14SB / TIP3P | ff19SB, OPC, … | ff19SB adds CMAP, which **breaks the ParmEd → GROMACS conversion** the cross-check depends on. |
+| `irest=1, ntx=5` | — | **do not drop these.** Without them sander discards the equilibrated velocities and starts from rest, so the run is not NVE at temperature at all. |
 
-`sander` is deterministic here — **nothing is determinism scaffolding**. **Leave the fixture:** NVE conservation is exact-or-wrong for a correct integrator at any size, and 22 atoms make the energy budget hand-auditable. A bigger peptide is a longer run, not a more legible one. Leave-it.
+**Leave the system size.** `sander` is serial, so 2,101 atoms with PME is roughly the largest
+system that reaches a 100 ps production run inside a sane TTL — and the conservation check gets
+*sharper* with trajectory length, not with atom count. For bigger systems you want `pmemd`, which
+is not in AmberTools.
 
-## Shape, size, cost
+## Which box
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. `tleap` + `sander` take ~1 s on 22 atoms; `sander` is serial, so cores and memory don't bear on correctness. Recorded command window **116s** — boot, Docker install, and the 1.19 GB `md` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+`c8g.large` (2 vCPU / 4 GiB) — `sander` is single-threaded, so cores buy nothing. Measured on
+Graviton4: minimise **18 s**, heat **101 s**, 100 ps NVE **914 s** = **9.45 ns/day**.
 
-**Sizing:** `sander` here is serial on 22 atoms, so cores and memory don't bind; real MD is compute-bound (the fast `pmemd` engine is licence-gated and absent) — size it on [sizing](../../patterns/sizing.md), not this fixture.
+**The local sizing run was 1.6× optimistic** — the dangerous direction for a TTL. The same pinned
+image gave 14.95 ns/day on an Apple-Silicon laptop (11 min) against 9.45 ns/day here (17 min), so a
+TTL sized at 2× the local number would have left 1.45× margin, not 2×. Retightened from the real
+run to 28m, cap $0.05 ([why TTL is a cost cap](../../patterns/layout-and-effective-cost.md)).
 
 <details>
-<summary>As shipped: the conservation check, pins, smoke-check table, run + verify</summary>
+<summary>As shipped: a cross-engine force-field identity, a conservation law on a thermal scale, and two metrics that were wrong first</summary>
 
-### The check — a conservation law, not a threshold
+### The checks
 
-In-vacuo NVE forces total energy to be conserved, so the recipe asserts drift ≈ 0 directly. This mirrors aarch.science's `md.smoke.py`, so the result is comparable to what they published for this image. It's cross-checked against `sander`'s own RMS fluctuation figure (computed on a separate code path); the parse stops before `sander`'s `A V E R A G E S` / `R M S FLUCTUATIONS` summary blocks, which reuse the `Etot =` format and would otherwise inflate the drift by ~13 kcal/mol.
+| observable | assertion | observed |
+|---|---|---|
+| atoms, vacuum | exactly 22 (ACE-ALA-NME) | 22 |
+| atoms, solvated | exactly 2101 (+693 TIP3P) | 2101 |
+| water count consistent | (sol − vac)/3 = 693 | 693 |
+| **sander vs GROMACS** | **< 0.01 kcal/mol on identical bytes** | **0.0011** |
+| energy terms matched | 7/7 by name in both outputs | 7/7 |
+| NVE frames | ≥ 100 | 100 |
+| started at temperature | T(frame 0) > 200 K (`irest=1` worked) | **306.3 K** |
+| mean temperature | 240–360 K | 305.2 K |
+| trajectory decodes | mdtraj reads sander's NetCDF + prmtop | 100 × 2101 |
+| water constraints | 1386 O-H + 693 H-H (3 per rigid water) | 1386 + 693 |
+| **SHAKE holds water** | **max\|d(O-H) − 0.9572\| < 1e-3 Å** | **8.88e-06** over 138,600 |
+| water stays rigid | H-H spread < 1e-3 Å | 1.31e-05 over 69,300 |
+| **NVE conserved** | **leak < 5% of *kT* per DoF per ns** | **0.76%** |
 
-This is the free half of AMBER: `pmemd` (the fast production engine) ships **only under the paid Amber licence** and is not in AmberTools at all — the env's own smoke test asserts its absence.
+### Two codes, one force field, the same coordinates
 
-### Pins (data tier: bundled in the image)
+ParmEd converts the ff14SB prmtop to GROMACS format and `gmx mdrun -nsteps 0` recomputes the
+energy. Two unrelated codebases agree to **0.0011 kcal/mol** — and the tolerance is *print
+precision*, not how close they landed: sander prints 4 decimals on each of 7 terms (±0.0004) and
+GROMACS 6 significant figures on a −335 kJ term (±0.0001). Worst single term 0.0029 kcal/mol
+(`EEL`). ff14SB has no CMAP and uniform 1-4 scaling, so the conversion is lossless.
 
-| | |
+Getting a meaningful comparison took two fixes, both of which look like a force-field disagreement
+([the rule](../../practices/cross-checks.md)):
+
+- **Match the modes.** Modern GROMACS has no infinite-cutoff mode, so sander's in-vacuo `cut=9999`
+  is reproduced with a 10 nm box and a 4 nm cutoff — every pair inside, every periodic image
+  outside — plus `coulomb-modifier = none` and `vdw-modifier = none` to remove GROMACS' default
+  potential shift, which sander does not apply.
+- **`.gro` writes 3 decimals in nm = 0.01 Å.** That rounding alone moved the bond energy 6×
+  (0.0206 → 0.1406 kcal/mol) and made two correct codes look **0.29 kcal/mol** apart. Writing
+  coordinates at `precision=8` fixed it. A file-format artifact, wearing a physics result's
+  clothes.
+
+### Conservation, on a scale that means something
+
+Energy conservation is a law, so the only question is what the integrator's discretisation costs —
+and the meaningful scale is thermal, not a fraction of the total. The run leaks **4.54e-03 kcal/mol
+per degree of freedom per ns**, which is **0.76% of *kT*** at 300 K. The 4,209 degrees of freedom
+are computed from the constraint count mdtraj reports (3 × 2101 − 2091 − 3), not assumed. For
+reference, `|drift|/|Etot| = 3.77e-04` — a number that sounds reassuring and says nothing.
+
+**SHAKE is a geometric constraint, so it is exact.** TIP3P's O-H length is 0.9572 Å and `ntc=2`
+holds it every step: observed `max|d − 0.9572| = 8.88e-06 Å` across **138,600 measurements** (693
+waters × 2 bonds × 100 frames). Two things had to be right first:
+
+- **AmberTools constrains *three* distances per rigid water, not two** — the two O-H bonds and the
+  H-H distance, which is how the HOH angle is held. A "all bonds inside water" filter picks up
+  3 × 693 = 2079 pairs, and the H-H ones sit at 1.514 Å, failing a 0.9572 Å assertion for a reason
+  that has nothing to do with SHAKE. They are split by element and each asserted for what it is;
+  the H-H *value* follows from the prmtop's angle, so what is asserted there is that it does not
+  move (spread 1.31e-05 Å, implying 104.491°).
+- **cpptraj's `distance` over multi-atom masks is a centre-of-mass distance.**
+  `distance :WAT&@O :WAT&@H1` measures the separation of two 693-atom centroids — about 0.008 Å —
+  not per-water bond lengths. It reported `max|d − 0.9572| = 0.949 Å` and looked like catastrophic
+  SHAKE failure. cpptraj keeps the peptide RMS (1.045 Å max); mdtraj does the bond lengths.
+
+### What is reproducible here, and what is not
+
+The single-point energies are identical run to run and machine to machine, because they are one
+evaluation on coordinates `tleap` writes deterministically. **The trajectory is not.** The same
+pinned image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop: the
+minimiser's last floating-point bits differ, and 100,000 MD steps amplify that. Every assertion
+above holds on both because each is a conservation law, a geometric constraint, or a cross-code
+identity — none is a remembered value. Asserting the drift itself would be
+[exact one run and different the next](../flye/README.md).
+
+### Pins
+
+| | data tier |
 |---|---|
-| image | `quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9` (tag `2026.09.04`, AmberTools 26.0, cosign-signed, `linux/arm64`) |
-| input | ff14SB force field, bundled in the ambertools package — nothing staged |
+| AmberTools 26.0 + GROMACS | `quay.io/aarchsci/md@sha256:1ee941664add…` (`linux/arm64`, cosign-signed) |
+| ff14SB, TIP3P, ParmEd 4.3.1, mdtraj | in the image; **nothing is staged** |
 
-Same `md` image as [gromacs](../gromacs/README.md) and [lammps](../lammps/README.md), under the same digest.
-
-### Smoke check (inside the task; measured before launch)
-
-| observable | assertion | observed | catches |
-|---|---|---|---|
-| tleap wrote parm7 / rst7 | both non-empty | 19069 B / 814 B | build failure |
-| atoms | exactly 22 (ACE-ALA-NME) | 22 | wrong system |
-| per-step Etot values | ≥ 2 | 21 | run died early |
-| **NVE conserved** | drift < 0.5 kcal/mol over 20 steps | **0.0164** | broken force/integrator |
-| Etot negative | first-step total < 0 | −13.3341 | garbage energetics |
-| sander's own RMS | Etot RMS fluctuation < 0.5 | 0.0044 | parser vs `sander` disagree |
+The whole system is built in-task by `tleap`, so there is no `stage-inputs.sh`.
 
 ### Run + verify
 
 ```sh
-make run RECIPE=ambertools
+spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait
 make ls RECIPE=ambertools
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`md.out`, `tleap.log`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+The smoke check runs inside the task and the bucket listing is the second half of it
+([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt`,
+`sander-single-point.out`, `gromacs-single-point.log`, `nve.out`, `tleap.log`, `cpptraj.log`.
 
 </details>
