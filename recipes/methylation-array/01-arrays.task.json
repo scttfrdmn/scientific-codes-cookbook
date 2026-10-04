@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-methylation-array-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n\necho \"== minfiData ships the IDATs, the manifest and the annotation: nothing is staged ==\"\nls /opt/conda/lib/R/library/minfiData/extdata | head\n\ncat > check.R <<'REOF'\nsuppressMessages({library(minfi); library(minfiData)})\npv <- function(p) as.character(packageVersion(p))\ncat(sprintf(\"%-30s %s\\n\", \"minfi_version\", pv(\"minfi\")))\ncat(sprintf(\"%-30s %s\\n\", \"minfiData_version\", pv(\"minfiData\")))\ncat(sprintf(\"%-30s %s\\n\", \"manifest_version\", pv(\"IlluminaHumanMethylation450kmanifest\")))\ndata(RGsetEx)\npd <- as.data.frame(pData(RGsetEx))\nfail <- character(0)\nck <- function(lab, ok, detail) { cat(sprintf(\"%-30s %s\\n\", lab, detail)); if (!ok) fail <<- c(fail, lab) }\nob <- function(lab, detail) cat(sprintf(\"%-30s %s   [observation]\\n\", lab, detail))\n\nck(\"samples\", nrow(pd) == 6, sprintf(\"%d  want exactly 6 (minfiData RGsetEx)\", nrow(pd)))\nck(\"array_type\", identical(unname(annotation(RGsetEx)[\"array\"]), \"IlluminaHumanMethylation450k\"),\n   sprintf(\"%s / %s  want IlluminaHumanMethylation450k\", annotation(RGsetEx)[\"array\"], annotation(RGsetEx)[\"annotation\"]))\n# three individuals, each contributing a normal AND a cancer sample -- the design that makes\n# the identity check below a combinatorial truth rather than a clustering opinion\ntb <- table(pd$person)\nck(\"three_persons_paired\", length(tb) == 3 && all(tb == 2),\n   sprintf(\"%s  want 3 persons x 2 samples\", paste(sprintf(\"%s=%d\", names(tb), tb), collapse=\" \")))\n\ngr <- mapToGenome(ratioConvert(preprocessRaw(RGsetEx)))\nb  <- getBeta(preprocessRaw(RGsetEx))\n# 485,512 is the 450k array's probe count after mapping -- exact, not a band\nck(\"probes\", nrow(b) == 485512, sprintf(\"%d  want exactly 485512 (450k array)\", nrow(b)))\n# beta = M/(M+U+offset) with both intensities non-negative, so [0,1] is algebra\nrng <- range(b, na.rm = TRUE)\nck(\"beta_in_range\", rng[1] >= 0 && rng[2] <= 1,\n   sprintf(\"[%.6f, %.6f] over %s values  want within [0,1]\", rng[1], rng[2], format(length(b), big.mark=\",\")))\n\n# TRUTH 1: sex predicted from X/Y intensity must equal the sex the package ships\nps <- getSex(gr)$predictedSex\nck(\"predicted_sex_matches\", all(ps == pd$sex),\n   sprintf(\"%s vs annotated %s  %d/%d agree\", paste(ps, collapse=\"\"), paste(pd$sex, collapse=\"\"),\n           sum(ps == pd$sex), nrow(pd)))\n\n# TRUTH 2: the 450k array carries 65 SNP probes specifically for sample identity. Each\n# sample's nearest neighbour by SNP beta must be its own donor's other sample -- a\n# combinatorial claim (3 correct pairs out of 15 possible), not a similarity threshold.\nsb <- getSnpBeta(RGsetEx)\nck(\"snp_probes\", nrow(sb) == 65, sprintf(\"%d  want exactly 65 (450k identity probes)\", nrow(sb)))\nd <- as.matrix(dist(t(sb))); diag(d) <- Inf\nnn <- colnames(d)[apply(d, 1, which.min)]\nsame <- pd$person[match(nn, rownames(pd))] == pd$person\nck(\"snp_identifies_donor\", all(same),\n   sprintf(\"%d/%d samples' nearest neighbour is the same person\", sum(same), length(same)))\nob(\"snp_within_vs_between\", sprintf(\"median within-donor %.4f vs between-donor %.4f\",\n   median(d[cbind(1:6, match(nn, colnames(d)))]), median(d[is.finite(d)])))\nob(\"detection_p_median\", sprintf(\"%.3e\", median(detectionP(RGsetEx), na.rm = TRUE)))\n\nif (length(fail)) { cat(\"FAILED: \", paste(fail, collapse=\", \"), \"\\n\"); quit(status = 1) }\nREOF\n# Rscript, not R CMD BATCH: output must reach stdout unbuffered so a killed run still\n# leaves what it had (the catalog's dying-run rule).\nRscript check.R > smoke-check.txt 2>&1 || { cat smoke-check.txt; exit 1; }\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/bioconductor-minfidata@sha256:afec63a77f9e2662e44104f1d5f17aded9ad6aa9e6ff0f07b494d9e972bb300b",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/methylation-array/r1/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}

@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **79 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **80 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -32,6 +32,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [mafft](../recipes/mafft/README.md) | Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family. | aarchbio | stage · run: hmmer | 2026-10-02 | 2026-10-02 |
 | [mash](../recipes/mash/README.md) | Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
 | [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
+| [methylation-array](../recipes/methylation-array/README.md) | Reads six real 450k IDATs, recovers each donor's sex from X/Y intensity and each sample's donor from the array's 65 identity probes. For anyone doing array methylation on ARM. | aarchbio | build-in-task | — | 2026-10-03 |
 | [muscle](../recipes/muscle/README.md) | Aligns the same `7tm_1` family mafft does, from mafft's own extraction, and agrees with it on the family's core. For anyone choosing an aligner. | aarchbio | run: mafft | 2026-10-02 | 2026-10-02 |
 | [picard](../recipes/picard/README.md) | Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s. For anyone putting MarkDuplicates in a real pipeline. | aarchbio | run: bwa-samtools | 2026-10-02 | 2026-10-01 |
 | [plink](../recipes/plink/README.md) | PLINK 1.9 computes allele frequencies and runs a quantitative association scan on Graviton4, checked against integer arithmetic and against a variant whose effect was planted. The catalog's first statistical-genomics recipe, for anyone doing GWAS-style work. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 |
