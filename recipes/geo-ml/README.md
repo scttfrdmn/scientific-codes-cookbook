@@ -1,79 +1,134 @@
 ---
 tool: geopandas
+tool_version: 1.1.4
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23bb00d083c6f163b25529e0
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
-# geopandas + PySAL + sklearn (geo-ml env) — spatial join, projected area, weights, two-engine OLS
+# geopandas + libpysal — recover Census's published county areas, then do spatial statistics
 
-The geospatial-ML stack (geopandas / libpysal / scikit-learn / statsmodels) computes a spatial join, a CRS-aware area, a spatial-weights graph, and an OLS fit — the core operations of spatial data science.
-
-> **What this covers.** The `geo-ml` analysis layer (geopandas / libpysal / scikit-learn / statsmodels) on small constructed inputs — proof it's correct on Graviton4. Not a benchmark; the heavier learners (xgboost/lightgbm ship in the env) aren't exercised here.
+Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=geo-ml)" --wait
+make stage RECIPE=geo-ml                                           # once: 84 MB, pinned
+spawn task run --spec "$(make -s spec RECIPE=geo-ml)" --wait       # ~22 s of compute
 ```
 
 ```python
-import geopandas as gpd
-from shapely.geometry import box
-from libpysal.weights import lat2W
-# points, squares, a 3×3 lattice are built in code (the recipe constructs them); the core ops:
-gpd.sjoin(points, squares, predicate="within")                  # → 3 points inside
-gpd.GeoSeries([box(0, 0, 1000, 1000)], crs="EPSG:32611").area   # → 1,000,000 m² (1 km square)
-lat2W(3, 3, rook=True)                                          # rook contiguity → n=9, s0=24
+g = gpd.read_file("tiger.zip")                    # 3235 counties, EPSG:4269
+geod = Geod(ellps="WGS84")
+abs(geod.geometry_area_perimeter(g.geometry[0])[0])   # matches that county's ALAND+AWATER
 ```
-
-One task, one `python3` invocation. Every input is constructed in code, so nothing is staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the constructed points / polygons / 3×3 lattice / collinear line | your own GeoDataFrames | constructing the inputs is what makes every check *exact* rather than banded — the small synthetic input is the point, not a compromise. |
-| the OLS on `y = 3x + 7` | your model + real data | fit to exactly collinear points, the answer is closed-form (R²=1, slope 3, intercept 7); real data has no such identity to assert. |
-| EPSG:32611 (UTM 11N) for the area | your metric CRS | the 1 km² area identity is CRS-aware — a geographic CRS would give degrees², not m². |
+| TIGER2024 counties | tracts, block groups, another year | TIGER is versioned by year on a stable path; every level carries `ALAND`/`AWATER`, so the reference comes along. |
+| `Geod(ellps="WGS84")` | a projected CRS | **this is the load-bearing choice** — see the projection table below before you reach for `.area`. |
+| `log10(ALAND)` for Moran's I | your own variable | the invariance assertion holds for any variable; the *value* 0.605 does not. |
+| rook contiguity | `Queen`, KNN, distance bands | rook is the one with an exact shared-edge count to check against. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** every identity is exact at this size and hand-checkable; a large dataset is a longer run, not a more legible one. Leave-it.
+**Leave the fixture.** 3,235 polygons is already a real workload — 8,235,114 vertices and 14.7 s of
+contiguity building — and it is the largest unit at which Census publishes an area for every
+feature, which is what makes the check possible. Tracts would be more rows, not a stronger claim.
 
-## Shape, size, cost
+## Which box
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The work is ~1 s, single-threaded. Recorded command window **87s** — boot, Docker install, and the ~0.80 GB `geo-ml` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+`m8g.large` (2 vCPU / 8 GiB). Measured: read 0.8 s, geodesic area over 8.2M vertices **6.9 s**,
+rook contiguity **14.7 s** — 22 s of compute, all single-threaded, so RAM picks the box and not
+cores. Docker install and the image pull dominate the window; **these timings are not compute
+cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
-**Sizing:** no family question for these constructed ops (sub-second); the env's heavier learners (xgboost/lightgbm, not exercised here) scale with your data — that's their question, not this fixture's. Any 8g box fits the core.
+`m8g` over `c8g` because the geometry and the weights matrix are the constraint: 84 MB of staged
+zip expands to 8.2M coordinate pairs plus a 17,762-link adjacency, and nothing here scales with
+vCPU count.
 
 <details>
-<summary>As shipped: six identities, the two-engine cross-check, pins, run + verify</summary>
+<summary>As shipped: a reference that ships inside the data, three exact invariances, one trap</summary>
 
-### Six identities, no thresholds
+### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| **OLS R²** | exactly 1.0 (fit to collinear y = 3x + 7) | 1.000000000000 |
-| **OLS slope / intercept** | 3.0 / 7.0 | 3.0 / 7.0 |
-| **sklearn == statsmodels** | slope, intercept, R² match to ≤ 1e-9 | match |
-| **spatial join count** | exactly 3 points within the two squares (geopandas) | 3 |
-| **projected area** | exactly 1,000,000 m² (1 km square in EPSG:32611) | 1000000.000000 |
-| **PySAL rook links** | n = 9, s0 = 24 (3×3 lattice, rook contiguity) | n=9, s0=24 |
+| features | exactly 3235 (TIGER2024 county file) | 3235 |
+| CRS | EPSG:4269, as TIGER ships | 4269 |
+| **geodesic area vs Census** | **max rel err < 1e-5 over 3235 counties** | **6.710e-07** (median 5.2e-08) |
+| total area conserved | sum rel err < 1e-6 | **6.372e-08** |
+| CONUS subset | exactly 3109 | 3109 |
+| weights symmetric | every link reciprocated | yes |
+| links even | `s0` = 2 × shared edges | 17762 = 2 × 8881 |
+| no islands | 0 after dropping island states | 0 |
+| row-standardised | `s0` exactly = `n` | 3109.000000 |
+| **Moran's I affine-invariant** | **I(y) == I(3.7y + 112.5) exactly** | **\|diff\| = 0.00e+00** |
+| **Moran's I sign-invariant** | **I(y) == I(−y) exactly** | **\|diff\| = 0.00e+00** |
+| Moran's expectation | `EI` = −1/(n−1) | −0.000321750322 |
+| **three OLS routes agree** | **max pairwise diff < 1e-12** | **8.88e-15** |
 
-The **sklearn == statsmodels** row is a [two-engine cross-check](../../practices/cross-checks.md): two independent OLS implementations (normal-equations/SVD vs statsmodels) agreeing to machine precision on the same fit, stronger than either engine's self-report. The rest are closed-form or exact graph/geometry properties: a 3×3 lattice has 12 shared edges → 24 directed neighbor links; a 1 km square in a metric CRS has area exactly 1e6 m² (the GEOS + projection path); the `within` predicate puts exactly 3 of 5 points inside.
+**The reference ships inside the data.** TIGER's `.dbf` carries `ALAND` and `AWATER` — Census's own
+computed land and water areas in m² — beside each polygon. Recovering them from the geometry makes
+this a reproduction rather than a measurement, and it is the best kind of reference because the
+reference and the data are *the same pinned object*: no version to match, nothing to drift
+([the practice](../../practices/reference-from-tests.md)). The residual is Census's own precision —
+integer m² on counties of order 1e9 m² — not a band fitted to the result.
 
-### Pins (data tier: synthetic / in-task)
+**It only works in the right space, and the wrong space fails quietly-ish.** The same areas through
+two projected CRSs, as observations rather than assertions (Mercator's distortion is a mathematical
+certainty, not a property of this build):
+
+| method | median rel err | max rel err |
+|---|---|---|
+| **geodesic, WGS84 ellipsoid** | **5.2e-08** | **6.7e-07** |
+| Albers equal-area (EPSG:5070) | 5.4e-08 | **4.5e-05** |
+| Web Mercator (EPSG:3857) | **0.62** | **7.02** |
+
+Albers is the instructive one. It is equal-area and its median is as good as the geodesic answer —
+but it is parameterised for the lower 48, so Alaska, Hawaii and the territories blow the maximum
+out by 70×. A check written on the median would have passed; the max is what notices. Web Mercator
+is off by 62% at the median and 702% at worst, which is `.area` on a geographic frame reprojected
+for web tiles — the single most common way a correct library returns a meaningless number.
+
+**Moran's I has no closed-form reference value, so assert an invariance instead.** I is a ratio of
+spatial covariance to variance of the *same* centred variable, so it is unchanged by any
+non-degenerate affine transform of that variable — including a sign flip. That makes
+`I(y) == I(3.7y + 112.5)` a bit-identical equality rather than a band, and an implementation that
+normalised incorrectly would not satisfy it. Observed `|diff| = 0.00e+00` for both transforms.
+The weights checks are the same spirit: shared-edge contiguity is symmetric by construction, so
+the directed-link count must be *even*, and row-standardisation makes every row sum to 1, so the
+total must be exactly `n`. Integer and exact — no tolerance to pick.
+
+The 126 island-state and territory counties are dropped before contiguity (AK, HI, AS, GU, MP, PR,
+VI) rather than carried as neighbourless features, so `no_islands == 0` is a real assertion instead
+of a count of things we already knew were disconnected.
+
+Three least-squares routes — statsmodels, scikit-learn's LAPACK path, and the normal equations
+through `lstsq` — agree to **8.9e-15** on the same real design. The tolerance is conditioning, not
+taste.
+
+### Pins (data tier: durable government source)
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23bb00d083c6f163b25529e0` (tag `2026.09.04`, geopandas + libpysal + scikit-learn + statsmodels + xgboost + lightgbm, cosign-signed, `linux/arm64`) |
-| input | constructed geometries / data, **in-task** — nothing staged |
+| image | `quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4…` — geopandas 1.1.4, shapely 2.1.2, pyproj 3.7.2, libpysal 4.15.0, esda 2.10.0, scikit-learn 1.9.0, statsmodels 0.15.0 |
+| counties | `tl_2024_us_county.zip`, `sha256:04e668d35027…` (83,913,260 B) from `www2.census.gov/geo/tiger/TIGER2024/COUNTY/` |
+
+TIGER is versioned by year on a stable path, so `TIGER2024` is a durable id. The zip travels as one
+flat file and geopandas reads it in place, so there is no directory to stage
+([why](../../practices/container-path.md)).
 
 ### Run + verify
 
 ```sh
-make run RECIPE=geo-ml
+make stage RECIPE=geo-ml
+spawn task run --spec "$(make -s spec RECIPE=geo-ml)" --wait
 make ls RECIPE=geo-ml
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`geoml-results.txt`, `geoml-results.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+The smoke check runs inside the task and the bucket listing is the second half of it
+([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt` with
+`geodesic_area_vs_census` under 1e-5. Re-running overwrites the prefix; no spec edit needed.
 
 </details>

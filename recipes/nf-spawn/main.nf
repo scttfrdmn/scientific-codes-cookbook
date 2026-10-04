@@ -70,7 +70,7 @@ process TREE {
 // --- join: report the two topologies' RF distance as an OBSERVATION (no assertion) ---
 process OBSERVE_RF {
     container 'quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7'
-    publishDir "s3://${System.getenv('COOKBOOK_BUCKET')}/runs/nf-spawn/r1", mode: 'copy'
+    publishDir "s3://${System.getenv('COOKBOOK_BUCKET')}/runs/nf-spawn/r3", mode: 'copy'
     input:  path 'mafft.treefile'
             path 'muscle.treefile'
     output: path 'rf-observation.txt'
@@ -91,6 +91,18 @@ process OBSERVE_RF {
 }
 
 workflow {
+    // Fail here rather than let the DAG succeed in the wrong place. AWS_REGION is where
+    // nf-spawn launches the instances; COOKBOOK_BUCKET holds the S3 work dir they hand data
+    // through. If the two disagree the run still goes green — measured: five stages, every
+    // .exitcode 0, the right RF — while every intermediate crosses the continent, and nothing
+    // in Nextflow's summary or spawn's completion records mentions it.
+    if (!System.getenv('COOKBOOK_BUCKET')) {
+        error "COOKBOOK_BUCKET is unset — run: export COOKBOOK_BUCKET=\$(make -C ../.. print-bucket)"
+    }
+    if (!(System.getenv('AWS_REGION') ?: System.getenv('AWS_DEFAULT_REGION'))) {
+        error "AWS_REGION is unset — run: export AWS_REGION=\$(aws configure get region). " +
+              "It must be the region holding COOKBOOK_BUCKET, or every stage handoff crosses regions."
+    }
     seqs = Channel.fromPath(params.seqs)
     // fan-out
     aln = MAFFT(seqs).mix(MUSCLE(seqs))

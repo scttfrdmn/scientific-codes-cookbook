@@ -1,8 +1,10 @@
 ---
 tool: pymatgen
+tool_version: 2026.8.30
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
 # pymatgen — bulk-silicon structure, symmetry, and a CIF round-trip
 
@@ -36,7 +38,7 @@ Deterministic — **nothing is determinism scaffolding**. Note pymatgen's symmet
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Build + symmetry + round-trip is sub-second. Recorded command window **87s** — boot, Docker install, and the ~0.87 GB `dft` image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split for the verifying run: Docker install **40 s**, `dft` image pull **104 s**, the actual chemistry **4 s**. Provisioning is 97% of the 148 s wrapper window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** — and this is the shape where packing or an AMI would help, if there were enough work to pack ([layout](../../patterns/layout-and-effective-cost.md)).
 
 **Sizing:** no family question — structure/symmetry/CIF are sub-second in-memory operations; a bigger cell is a longer run, not a heavier box. Any 8g box fits.
 

@@ -2,7 +2,8 @@
 tool: xesmf
 env: climate
 image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7
-spawn_version: 0.104.0
+spawn_version: 0.115.0
+last_verified: 2026-10-03
 ---
 # xESMF (climate env) — conservative regridding between global grids
 
@@ -39,7 +40,7 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from the first real run (10m → 5m, $0.03 → $0.02). Reader + regrid + calc take ~2 s. Recorded command window **74s** — boot, Docker install, the ~0.57 GB `climate` image pull, and staging the ~7 MB netCDF are the whole task ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from the first real run (10m → 5m, $0.03 → $0.02). Measured phase split: stage-in of the 7 MB netCDF **1 s**, Docker install **46 s**, image pull **75 s**, reader + regrid + calc **5 s**. Provisioning is 96% of the 127 s window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 **Sizing:** no family question for this fixture; a real reanalysis is I/O-bound (large netCDF/GRIB at scale), not compute — size on [data movement](../../patterns/data-movement.md).
 
