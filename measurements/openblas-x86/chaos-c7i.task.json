@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-openblas-chaos-c7i",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\ncat > chaos.R <<'REOF'\n# Take 2. The first probe's \"path\" was a power iteration, which CONVERGES -- so its sum of\n# 20,000 norms is ~20000 x lambda, a fixed point wearing a path's clothes, and it came back\n# bit-identical on every kernel. This one is genuinely chaotic: a logistic nonlinearity at\n# r = 3.9 applied between BLAS gemv calls, so a rounding difference in gemv amplifies\n# exponentially instead of being damped out.\nf <- function(k, v) cat(sprintf(\"%-26s %s\\n\", k, v))\nf(\"arch\", R.version$arch)\nf(\"cpu_model\", sub(\"^model name\\\\s*:\\\\s*\", \"\",\n    grep(\"model name|Model name\", readLines(\"/proc/cpuinfo\"), value = TRUE)[1]))\ncat(paste(system(paste0(\"python3 -c \\\"\",\n  \"import ctypes,glob;so=sorted(glob.glob('/opt/conda/lib/libopenblas*.so*'));\",\n  \"l=ctypes.CDLL(so[-1])\\n\",\n  \"g=l.openblas_get_corename;g.restype=ctypes.c_char_p;print('%-26s %s'%('openblas_get_corename',g().decode()))\\\"\"),\n  intern = TRUE), collapse = \"\\n\"), \"\\n\")\n\nset.seed(20261004)\nn <- 200\nA <- matrix(rnorm(n * n), n, n); A <- A + t(A)\nx <- rep(0.5, n); x[1] <- 0.5000001\npath <- 0; lyap <- 0\nfor (i in 1:5000) {\n  y  <- A %*% x                      # BLAS gemv: where the kernel choice enters\n  y  <- y / sqrt(sum(y * y))\n  x  <- as.numeric(3.9 * y * (1 - y))  # logistic map: chaotic, amplifies the last bits\n  path <- path + sum(abs(x))\n  if (i %% 1000 == 0) lyap <- lyap + log(abs(sum(x)))\n}\nf(\"chaotic_path_sum\",   sprintf(\"%.15e\", path))\nf(\"chaotic_final_x1\",   sprintf(\"%.15e\", x[1]))\nf(\"chaotic_lyap_proxy\", sprintf(\"%.15e\", lyap))\nREOF\nRscript chaos.R > chaos-probe.txt 2>&1 || { cat chaos-probe.txt; exit 1; }\ncat chaos-probe.txt\necho PROBE OK\n"
+  ],
+  "container": "quay.io/aarchbio/bioconductor-minfidata@sha256:26e726e72d60754ca4d5ce334aaf0ed6042f307c65f62ca98c0fd1839c560317",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c7i"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/chaos-probe.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openblas-x86/c7i/chaos-probe.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "10m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}

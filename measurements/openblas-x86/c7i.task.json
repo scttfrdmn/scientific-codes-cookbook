@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-openblas-c7i-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\ncat > probe.R <<'REOF'\n# Does the OpenBLAS DYNAMIC_ARCH finding generalise to x86? Two quantities in one run:\n#  - a FIXED POINT (converged dominant eigenvalue) -- expected kernel-robust\n#  - a PATH (sum over every intermediate norm) -- expected kernel-determined\n# Same amd64 image on every x86 rung, so only the host microarchitecture differs.\nf <- function(k, v) cat(sprintf(\"%-26s %s\\n\", k, v))\nf(\"arch\", R.version$arch)\nf(\"blas_lib\", basename(La_library()))\nf(\"cpu_model\", sub(\"^model name\\\\s*:\\\\s*\", \"\",\n    grep(\"model name|Model name\", readLines(\"/proc/cpuinfo\"), value = TRUE)[1]))\n# Read the selected kernel through ctypes. Deliberately NOT via R's .Call: these are\n# plain C symbols returning char*, not registered R routines, so .Call on them dies.\ncat(paste(system(paste0(\"python3 -c \\\"\",\n  \"import ctypes,glob;so=sorted(glob.glob('/opt/conda/lib/libopenblas*.so*'));\",\n  \"l=ctypes.CDLL(so[-1])\\n\",\n  \"for n in ('openblas_get_corename','openblas_get_config'):\\n\",\n  \"    g=getattr(l,n);g.restype=ctypes.c_char_p;print('%-26s %s'%(n,g().decode()))\\\"\" ),\n  intern = TRUE), collapse = \"\\n\"), \"\\n\")\n\nset.seed(20261004)\nn <- 200\nA <- matrix(rnorm(n * n), n, n); A <- A + t(A)      # symmetric: real spectrum\nx <- rep(1 / sqrt(n), n)\npath <- 0\nfor (i in 1:20000) {                                 # power iteration through BLAS\n  x <- A %*% x\n  nx <- sqrt(sum(x * x))\n  path <- path + nx                                  # PATH: every intermediate, accumulated\n  x <- x / nx\n}\nf(\"fixed_point_eigenvalue\", sprintf(\"%.15e\", as.numeric(t(x) %*% (A %*% x))))\nf(\"path_sum_of_norms\",      sprintf(\"%.15e\", path))\n# LAPACK's full eigendecomposition is an independent route to the same number the BLAS\n# power iteration converges on (largest MAGNITUDE eigenvalue, which here is negative) --\n# so the run carries its own cross-check rather than only a remembered value.\nev  <- eigen(A, only.values = TRUE)$values\nref <- ev[which.max(abs(ev))]\nf(\"lapack_eigen_largest_abs\", sprintf(\"%.15e\", ref))\nf(\"power_vs_lapack_reldiff\",  sprintf(\"%.3e\", abs(as.numeric(t(x) %*% (A %*% x)) - ref) / abs(ref)))\nREOF\nRscript probe.R > blas-probe.txt 2>&1 || { cat blas-probe.txt; exit 1; }\ncat blas-probe.txt\necho PROBE OK\n"
+  ],
+  "container": "quay.io/aarchbio/bioconductor-minfidata@sha256:26e726e72d60754ca4d5ce334aaf0ed6042f307c65f62ca98c0fd1839c560317",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c7i"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/blas-probe.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openblas-x86/c7i/blas-probe.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "10m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}

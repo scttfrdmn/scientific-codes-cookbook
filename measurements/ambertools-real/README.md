@@ -137,7 +137,21 @@ would not be.
 Worth stating because the over-cautious conclusion is also wrong: this is **not** a reason to stop
 reproducing published numbers. It is a reason to know which kind of number you have.
 
-### The x86 question
+### x86, now measured — and it narrows this
+
+The prediction was that x86 would behave the same way. **Half right.** Kernel dispatch there is just
+as varied — four microarchitectures, four different kernels, with AMD Zen 4 running the Intel-named
+`Cooperlake` because 0.3.34 has no Zen 4 target — but the numbers are **bit-identical across all
+four**, and a 200×200 `dgemv` is identical across five kernels including arm64's. So kernel choice is
+not uniformly dangerous: the risk lives in large blocked GEMM, not in anything that touches a BLAS.
+Full probe, including the two probe designs that failed to test what they intended:
+[openblas-x86](../openblas-x86/README.md).
+
+That does not weaken the controlled result below — same host, same image, one env var, trajectory
+flipped — it bounds it. The still-missing experiment is AmberTools 26.0 on x86 with this exact
+protocol, which needs a version-matched image.
+
+### The x86 question (as originally stated)
 
 The same mechanism exists there — OpenBLAS DYNAMIC_ARCH picks `HASWELL`/`SKYLAKEX`/`ZEN` and so on —
 so the prediction is that x86 trajectories group by corename too, and that `OPENBLAS_CORETYPE` pins

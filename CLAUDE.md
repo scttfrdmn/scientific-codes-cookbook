@@ -114,8 +114,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   which the rules already refuse. Two practical consequences: check
   `openblas_get_corename()` before blaming a cross-machine difference on the tool; and set
   `OPENBLAS_CORETYPE` only when an exact *path* is the point, leaving it unset otherwise so a recipe
-  reports what a normal run does on each chip. (A "reproducible" run that silently isn't — and the
-  opposite error, refusing a sound published-reference assertion out of misplaced caution.)
+  reports what a normal run does on each chip. **Third condition, measured afterwards and narrowing
+  this: the call also has to be big enough for the dispatcher to reach kernel-specific code.** Five
+  distinct kernels — `SkylakeX`, `Zen`, `SapphireRapids`, `Cooperlake`, `neoversev2` — compute a
+  200×200 `dgemv` bit-identically, so kernel dispatch is not uniformly dangerous; the risk lives in
+  large blocked GEMM, not in "anything that touches a BLAS". (x86 dispatch is just as varied, and
+  AMD Zen 4 runs the Intel-named `Cooperlake` kernel because 0.3.34 has no Zen 4 target — the same
+  newer-core-inherits-an-older-kernel shape as Graviton5, across vendors. So you cannot infer the
+  kernel from the instance family.) (A "reproducible" run that silently isn't — and the opposite
+  error, refusing a sound published-reference assertion out of misplaced caution.)
 - **Smoke-check every run.** Runs-to-exit-0 with empty or garbage output is a
   failure, not a success. This is the correctness bar — the minimum, not ceremony.
   Don't report a run worked without checking its output. (Silent failure.)
