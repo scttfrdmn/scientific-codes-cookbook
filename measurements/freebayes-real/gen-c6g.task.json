@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-freebayes-gen-c6g",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\necho '== freebayes, whole chr20, NA12878 at 36x =='\nT0=$(date +%s)\nfreebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf 2> fb.log\nT1=$(date +%s)\nN=$(grep -vc '^#' freebayes.vcf || true)\nSM=$(awk '/^#CHROM/{print $10; exit}' freebayes.vcf)\nNONCHR=$(awk '!/^#/ && $1!=\"chr20\"' freebayes.vcf | wc -l | tr -d ' ')\n{ echo \"wall_s          $(( T1 - T0 ))\"; echo \"variants        $N\"; echo \"sample          $SM  want NA12878\"; echo \"off_chr20       $NONCHR  want 0\"; } > smoke-check.txt\ncat smoke-check.txt\ngzip -c freebayes.vcf > freebayes.vcf.gz\ntest \"$SM\" = 'NA12878'\ntest \"$NONCHR\" -eq 0\ntest \"$N\" -gt 50000\necho 'SMOKE CHECK PASSED'"
+  ],
+  "container": "quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c6g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/freebayes.vcf.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/freebayes/gen/c6g/freebayes.vcf.gz"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/freebayes/gen/c6g/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.14
+  }
+}

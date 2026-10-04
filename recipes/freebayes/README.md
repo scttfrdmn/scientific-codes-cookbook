@@ -45,6 +45,8 @@ freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 
 Two tasks on `c8g.xlarge`: **644 s of calling**, then scoring in the bcftools image ([one tool per image](../../practices/container-path.md)). 385,371 variants — 3× the others, which is the QUAL tail above.
 
+**Generation is the biggest lever measured in this catalog: 2.65× Gv2→Gv5** (1349 → 509 s), the same call getting **52% cheaper** while `$/hr` rises 27.9% — and uniquely, with *no weak step* (1.59× / 1.32× / 1.27×). The variant count is identical on all four chips. [Full ladder](../../measurements/freebayes-real/README.md).
+
 <details>
 <summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>
 
