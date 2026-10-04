@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-methylation-array-sesame-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\n\necho \"== restore SeSAMe's ExperimentHub cache, and verify the resource CONTENTS ==\"\n# Extract into a directory THIS CONTAINER creates, never into /tmp itself: the tar\n# carries a '.' entry, so `-C /tmp` makes tar try to chmod/utime /tmp -- which is\n# sticky 1777 and owned by the INSTANCE user while this runs as the image's user, so\n# it fails with EPERM and tar exits non-zero even though every file extracted. Same\n# ownership trap as never-rm-a-staged-input (practices/container-path.md), reached\n# through tar. -m and --no-same-* stop it restoring times/modes it cannot set.\nmkdir -p /tmp/sesamehome\ntar -xmf /tmp/sesame-cache.tar -C /tmp/sesamehome --no-same-owner --no-same-permissions\nexport HOME=/tmp/sesamehome\nC=/tmp/sesamehome/.cache/R/ExperimentHub\ntest -d \"$C\" || { echo \"cache dir missing after untar\"; ls -R /tmp/sesamehome | head; exit 1; }\n# The pin is on content: BiocFileCache gives each blob a random prefix and the\n# sqlite files carry timestamps, so names and the tar sum are not reproducible but\n# the downloaded resources are immutable. Require the hash SET to match.\ncat > /tmp/want.txt <<'EOF'\n73578ce17c439acc8e1443f9a6c55c3f02fdcc18cdff287b7b93f74cb86c835e\n7f361fdce9de733ab7b59461d89d950bcca3bf363cea999176f281ab7df2d982\n99300ba1d45aec5d5fdcdb12b61923f7313b1600c4ec9c8b9ca573d09bfc1655\nb4eb0da4ef492655c2fe18b45fa65e969967c9f4a0c2149a5fae9241b510c7b2\nEOF\n( cd \"$C\" && for x in $(ls | grep -vE 'sqlite|LOCK'); do sha256sum \"$x\" | cut -d' ' -f1; done ) | sort > /tmp/got.txt\nsort -o /tmp/want.txt /tmp/want.txt\ndiff /tmp/want.txt /tmp/got.txt || { echo 'sesameData cache contents do not match the pins'; exit 1; }\necho \"  OK: $(wc -l < /tmp/got.txt | tr -d ' ') blobs match their pinned sha256\"\n\necho \"== the IDATs minfi exported, same bytes it analysed ==\"\nmkdir -p /tmp/idats\ntar -xmf /tmp/idats.tar -C /tmp/idats --no-same-owner --no-same-permissions\nfind /tmp/idats -iname '*.idat' | wc -l\n\ncat > cmp.R <<'REOF'\nsuppressMessages(library(sesame))\nf <- function(k, v) cat(sprintf(\"%-30s %s\\n\", k, v))\nfail <- character(0)\nck <- function(k, ok, v) { f(k, v); if (!ok) fail <<- c(fail, k) }\nob <- function(k, v) cat(sprintf(\"%-30s %s   [observation]\\n\", k, v))\n\nf(\"sesame_version\",     as.character(packageVersion(\"sesame\")))\nf(\"sesameData_version\", as.character(packageVersion(\"sesameData\")))\n\np <- searchIDATprefixes(\"/tmp/idats\")\nck(\"idat_prefixes\", length(p) == 6, sprintf(\"%d  want exactly 6\", length(p)))\n\nS <- openSesame(p); colnames(S) <- basename(colnames(S))\nck(\"sesame_ran_offline\", all(dim(S) > 0),\n   sprintf(\"%d x %d betas, %d non-NA  (no network on this box)\", nrow(S), ncol(S), sum(!is.na(S))))\nM <- as.matrix(read.delim(\"/tmp/minfi-betas.tsv.gz\", row.names = 1, check.names = FALSE))\nck(\"minfi_betas_read\", nrow(M) == 485512 && ncol(M) == 6,\n   sprintf(\"%d x %d  want 485512 x 6\", nrow(M), ncol(M)))\n\nshared <- intersect(rownames(M), rownames(S))\nMs <- M[shared, ]; Ss <- S[shared, colnames(Ms)]\nkeep <- complete.cases(Ms) & complete.cases(Ss)\nMs <- Ms[keep, ]; Ss <- Ss[keep, ]\nob(\"shared_probes\", sprintf(\"%d of %d minfi / %d sesame\", length(shared), nrow(M), nrow(S)))\nob(\"probes_both_retain\", sprintf(\"%d  (sesame masks the rest)\", nrow(Ms)))\n\n# Different normalisation makes RAW beta values incomparable, so compare by RANK; and make\n# the claim a MATCHING rather than a correlation threshold, so there is nothing to tune.\n# Probes are ranked by variance in minfi's matrix alone -- not by the comparison's own\n# outcome -- and the restriction is there because between-sample methylation differences\n# live in the variable probes; over all of them the margin is only 0.009, which is a thin\n# check pretending to be a strong one.\nmatch_at <- function(Ma, Sa) {\n  C <- cor(Ma, Sa, method = \"spearman\")\n  best <- apply(C, 2, function(x) rownames(C)[which.max(x)])\n  offmax <- sapply(seq_len(ncol(C)), function(j) max(C[-j, j]))\n  list(n = sum(best == colnames(C)), tot = ncol(C),\n       mind = min(diag(C)), maxoff = max(offmax))\n}\nv <- apply(Ms, 1, var)\nladder <- c(50000, 20000, 5000, 1000)\nfor (n in ladder) {\n  idx <- head(order(v, decreasing = TRUE), n)\n  r <- match_at(Ms[idx, ], Ss[idx, ])\n  ob(sprintf(\"  match_top%d\", n),\n     sprintf(\"%d/%d  min diag %.5f  max off %.5f  margin %.5f\", r$n, r$tot, r$mind, r$maxoff, r$mind - r$maxoff))\n}\nra <- match_at(Ms, Ss)\nob(\"  match_all_probes\", sprintf(\"%d/%d  margin %.5f  (thin -- why the restriction exists)\",\n   ra$n, ra$tot, ra$mind - ra$maxoff))\n\nidx <- head(order(v, decreasing = TRUE), 5000)\nr <- match_at(Ms[idx, ], Ss[idx, ])\n# The assertion: two independent preprocessing pipelines agree about WHICH SAMPLE IS WHICH,\n# for all six, with the nearest rival a clear distance back. 6 correct of 36 ordered pairs.\nck(\"pipelines_agree_on_identity\", r$n == r$tot,\n   sprintf(\"%d/%d samples' best rank-match is the same sample (top 5000 probes)\", r$n, r$tot))\nck(\"identity_margin_not_marginal\", (r$mind - r$maxoff) > 0.05,\n   sprintf(\"min diag %.5f vs max off-diag %.5f, margin %.5f  want > 0.05\", r$mind, r$maxoff, r$mind - r$maxoff))\n\nif (length(fail)) { cat(\"FAILED: \", paste(fail, collapse = \", \"), \"\\n\"); quit(status = 1) }\nREOF\nRscript cmp.R > smoke-check.txt 2>&1 || { cat smoke-check.txt; exit 1; }\ncat smoke-check.txt\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "container": "quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array/sesame-cache.tar",
+      "destination": "/tmp/sesame-cache.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/methylation-array/r1/idats.tar",
+      "destination": "/tmp/idats.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/methylation-array/r1/minfi-betas.tsv.gz",
+      "destination": "/tmp/minfi-betas.tsv.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/methylation-array/r1/smoke-check-sesame.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

@@ -1,19 +1,24 @@
 ---
-tool: minfi
-tool_version: "1.56.0"
+tool: minfi-sesame
+tool_version: "minfi 1.56.0 / SeSAMe 1.28.1"
 env: aarchbio
-image: quay.io/aarchbio/bioconductor-minfidata@sha256:afec63a77f9e2662e44104f1d5f17aded9ad6aa9e6ff0f07b494d9e972bb300b
+images:
+  minfi: quay.io/aarchbio/bioconductor-minfidata@sha256:afec63a77f9e2662e44104f1d5f17aded9ad6aa9e6ff0f07b494d9e972bb300b
+  sesame: quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b
 spawn_version: 0.116.0
-last_verified: 2026-10-03
+last_verified: 2026-10-04
 ---
-# minfi — Illumina 450k arrays, checked against two truths the array itself carries
+# minfi + SeSAMe — Illumina 450k arrays, checked three ways on the same IDATs
 
-Reads six real 450k IDATs, recovers each donor's sex from X/Y intensity and each sample's donor from the array's 65 identity probes. For anyone doing array methylation on ARM.
+Recovers each donor's sex from X/Y intensity, each sample's donor from the array's 65 identity probes, and then has a second, independent pipeline agree about which sample is which. For anyone doing array methylation on ARM.
 
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=methylation-array)" --wait   # 20 s, nothing staged
+make stage RECIPE=methylation-array                                      # once: SeSAMe's 19 MB cache
+for s in $(make -s spec RECIPE=methylation-array); do
+  spawn task run --spec "$s" --wait                                      # minfi 20 s, then SeSAMe 53 s
+done
 ```
 
 ```r
@@ -34,9 +39,13 @@ getSnpBeta(RGsetEx)                                      # 65 probes → which d
 
 ## Which box
 
-`c8g.large` (2 vCPU / 4 GiB) — verified to run under a **2 GiB** cgroup limit, so RAM isn't the constraint at this size. Measured: Docker install 39 s, the R image pull **81 s**, the analysis **20 s**. Provisioning is 86% of the 140 s window, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
-
-Nothing is staged — `minfiData` ships the IDATs (93 MB), the 450k manifest and the ilmn12.hg19 annotation inside the image, so there is no `stage-inputs.sh` and no input to pin separately.
+Two tasks, one image each ([one tool per image](../../practices/container-path.md)): minfi on
+`c8g.large` (verified under a **2 GiB** cgroup limit), then SeSAMe on `m8g.large` for the 124 MB
+it stages in. Measured: minfi **20 s** of analysis in a 140 s window, SeSAMe **53 s** in 203 s —
+provisioning is 74–86% of both, so **these timings are not compute cost**
+([layout](../../patterns/layout-and-effective-cost.md)). Only SeSAMe's 19 MB cache is staged —
+`minfiData` carries the IDATs, manifest and annotation in its image, and task 1 re-exports them
+because SeSAMe's image has no minfiData, which is also what made the failed first attempt cheap.
 
 <details>
 <summary>As shipped: two truths the array carries, and why SeSAMe isn't here yet</summary>
@@ -53,6 +62,9 @@ Nothing is staged — `minfiData` ships the IDATs (93 MB), the 450k manifest and
 | **predicted sex** | **== the shipped annotation, all 6** | **MFMFFF vs MFMFFF, 6/6** |
 | SNP probes | exactly 65 | 65 |
 | **nearest neighbour by SNP** | **== the same donor, all 6** | **6/6** |
+| SeSAMe ran offline | betas produced with no network | 486,427 × 6, 2,246,800 non-NA |
+| **minfi ↔ SeSAMe identity** | **each sample's best rank-match is itself, all 6** | **6/6** |
+| identity margin | min diagonal − max off-diagonal > 0.05 | **0.11575** |
 
 **Both strong checks are truths the array was built to carry, not bands on observed values.**
 
@@ -74,22 +86,67 @@ The tag is multi-arch (`linux/amd64` + `linux/arm64`), and a manifest list is no
 
 One image covers the whole stack deliberately: `bioconductor-minfidata` depends on minfi, the manifest *and* the annotation, so requesting it ([aarchbio#64](https://github.com/playgroundlogic/aarchbio/issues/64)) closed a four-package set that is only useful together — the same reason `recipes/rnaseq-de` runs three methods from two digests.
 
-### Why there is no SeSAMe cross-check yet
+### The SeSAMe cross-check, and why the claim is a *matching*
 
-The plan was two independent routes from the same IDATs — minfi and SeSAMe have genuinely different preprocessing — compared by rank, since different normalisation makes raw beta values incomparable ([the rule](../../practices/cross-checks.md)). The image was requested and built ([aarchbio#65](https://github.com/playgroundlogic/aarchbio/issues/65)), and `sesameData` 1.28.0 even comes along in its dependency closure.
+Two independent routes from the same IDATs: minfi's `preprocessRaw`, and SeSAMe's
+`openSesame` (pOOBAH masking + its own normalisation). They disagree about 148,000 probes
+before you start — SeSAMe masks down to 337,853 of the 485,512 shared — so **raw beta
+values are not comparable**, and a correlation threshold would be measuring the
+normalisation difference ([the rule](../../practices/cross-checks.md)).
 
-**But SeSAMe cannot run offline.** Measured by running it with the network disabled, which is the only way to find this out rather than being told by a green run on a machine that has internet:
+So the assertion is a **matching**: correlate all 6 × 6 sample pairs by Spearman rank, and
+require each SeSAMe sample's best match to be *its own* minfi sample. Six correct of
+thirty-six ordered pairs, with nothing to tune.
+
+| probe set | matched | min diagonal | max off-diagonal | margin |
+|---|---|---|---|---|
+| all 337,853 both retain | 6/6 | 0.99076 | 0.98198 | **0.00877** |
+| top 50,000 by variance | 6/6 | 0.98535 | 0.96093 | 0.02443 |
+| top 20,000 | 6/6 | 0.98599 | 0.93955 | 0.04644 |
+| **top 5,000 (asserted)** | **6/6** | **0.96830** | **0.85255** | **0.11575** |
+| top 1,000 | 6/6 | 0.94085 | 0.70819 | 0.23266 |
+
+**The restriction is there because the all-probes margin is 0.0088, and a check that
+squeaks past by 0.009 is a flaky check wearing a strong one's clothes.** Methylation
+profiles are similar across samples from the same tissue, so most probes carry no
+between-sample signal and simply dilute the comparison. Ranking by variance in *minfi's*
+matrix alone — never by the comparison's own outcome — and taking the top 5,000 widens the
+margin 13× to 0.116. The ladder is reported in full because 6/6 holding at every size is
+the stronger statement: the matching is not an artifact of where the cut was made.
+
+### Staging SeSAMe offline, and what is actually pinned
+
+`openSesame` fetches three resources from ExperimentHub at first use — `idatSignature`,
+`HM450.address` and `KYCG.HM450.Mask.20220123` — and a recipe here may not fetch at run
+time. The minimal set was found by iterating (cache, run, read which resource the error
+names, repeat); `sesameDataCache()` with no argument downloads gigabytes for a **19 MB**
+need. Same sourcing move as SIESTA's stripped pseudopotentials
+([the practice](../../practices/reference-from-tests.md)).
+
+**The pin is on content, not on the tar.** BiocFileCache gives each blob a random filename
+prefix and the sqlite files carry timestamps, so neither the names nor the tar's sha256 are
+reproducible — but the downloaded resources are immutable. Staging hashes every non-sqlite
+blob and requires the *set* to match four pinned sha256s; the task re-checks the same set
+after untarring, before SeSAMe runs. The box has no network path to ExperimentHub, so
+`sesame_ran_offline` returning 486,427 betas is itself the proof the cache was complete.
+
+### A tar that extracts fine and still fails the task
+
+First attempt died with `rc=2` on `tar -xf /tmp/sesame-cache.tar -C /tmp`:
 
 ```
-openSesame FAILED:
-| File idatSignature either not found or needs to be cached to be used in sesame.
-| > sesameDataCache("idatSignature")
+tar: .: Cannot utime: Operation not permitted
+tar: .: Cannot change mode to rwxr-xr-t: Operation not permitted
+tar: Exiting with failure status due to previous errors
 ```
 
-Its manifests come from ExperimentHub at first use, and a recipe here may not fetch data at run time. The fix is the documented one — cache it once at staging time and ship the pinned cache
-([reference-from-tests](../../practices/reference-from-tests.md) covers the same shape for SIESTA's
-pseudopotentials) — so this is a staging job, not a blocker. Until then the recipe stands on the two
-constructed truths above, which are stronger than a rank correlation anyway.
+Every file extracted correctly. The tar carries a `.` entry, so tar tried to restore the
+mode and mtime of **`/tmp` itself** — sticky `1777`, owned by the *instance* user while the
+container runs as the *image's* user. It is the same ownership trap as never `rm`-ing a
+staged input ([container-path](../../practices/container-path.md)), arriving through `tar`
+instead, and with the same shape: a non-zero exit for a reason unrelated to the work.
+Extract into a directory the container creates itself, and pass `-m --no-same-owner
+--no-same-permissions`.
 
 ### Run + verify
 
