@@ -10,8 +10,6 @@ last_verified: 2026-10-03
 
 `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM.
 
-> **What this covers.** `sander`, AmberTools' serial MD engine — not `pmemd`, which is licence-gated and never in AmberTools. So the scale here is what a serial engine can honestly do: 2,101 atoms, PME, 100 ps.
-
 ## Run it
 
 ```bash
@@ -32,20 +30,21 @@ sander -O -i nve.in -p sol.parm7 -c heat.rst -o nve.out -x nve.nc   # irest=1 is
 | ff14SB / TIP3P | ff19SB, OPC, … | ff19SB adds CMAP, which **breaks the ParmEd → GROMACS conversion** the cross-check depends on. |
 | `irest=1, ntx=5` | — | **do not drop these.** Without them sander discards the equilibrated velocities and starts from rest, so the run is not NVE at temperature at all. |
 
-**Leave the system size.** `sander` is serial, so 2,101 atoms with PME is roughly the largest
-system that reaches a 100 ps production run inside a sane TTL — and the conservation check gets
-*sharper* with trajectory length, not with atom count. For bigger systems you want `pmemd`, which
-is not in AmberTools.
+**Leave the system size.** `sander` is serial (and `pmemd`, the scalable engine, is licence-gated and
+never in AmberTools), so 2,101 atoms with PME is about the largest system reaching 100 ps inside a
+sane TTL — and the conservation check sharpens with trajectory *length*, not atom count.
 
 ## Which box
 
 `c8g.large` (2 vCPU / 4 GiB) — `sander` is single-threaded, so cores buy nothing. Measured on
 Graviton4: minimise **18 s**, heat **101 s**, 100 ps NVE **914 s** = **9.45 ns/day**.
 
-**The local sizing run was 1.6× optimistic** — the dangerous direction for a TTL. The same pinned
-image gave 14.95 ns/day on an Apple-Silicon laptop (11 min) against 9.45 ns/day here (17 min), so a
-TTL sized at 2× the local number would have left 1.45× margin, not 2×. Retightened from the real
-run to 28m, cap $0.05 ([why TTL is a cost cap](../../patterns/layout-and-effective-cost.md)).
+**Generation matters more here than for any other code in this catalog: 2.50× Gv2→Gv5** (5.36 →
+13.42 ns/day), the same 100 ps costing **49% less** even though `$/hr` rises 27.8% —
+[full ladder](../../measurements/ambertools-real/README.md). And **the local sizing run was 1.6×
+optimistic**, the dangerous direction for a TTL: 14.95 ns/day on a laptop against 9.45 here, so 2× the
+local number leaves 1.45× margin, not 2×. TTL 28m, cap $0.05
+([why that's a cost cap](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: a cross-engine force-field identity, a conservation law on a thermal scale, and two metrics that were wrong first</summary>
@@ -114,11 +113,22 @@ waters × 2 bonds × 100 frames). Two things had to be right first:
 ### What is reproducible here, and what is not
 
 The single-point energies are identical run to run and machine to machine, because they are one
-evaluation on coordinates `tleap` writes deterministically. **The trajectory is not.** The same
-pinned image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop: the
-minimiser's last floating-point bits differ, and 100,000 MD steps amplify that. Every assertion
-above holds on both because each is a conservation law, a geometric constraint, or a cross-code
-identity — none is a remembered value. Asserting the drift itself would be
+evaluation on coordinates `tleap` writes deterministically. **The trajectory is not** — the same
+pinned image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop, because
+the minimiser's last floating-point bits differ and 100,000 MD steps amplify that.
+
+But "it varies by machine" turned out to be too strong. Running the
+[generation ladder](../../measurements/ambertools-real/README.md) put the same image on five
+machines and produced exactly **three** trajectories, grouped by vector path: the laptop and
+Graviton2 (NEON) agree to every printed digit, Graviton3 (SVE) is its own, and **Graviton4 and
+Graviton5 (SVE2) agree to every printed digit**. So it is bit-reproducible wherever the vector path
+matches — likely FFTW selecting PME kernels by detected CPU features, though that mechanism is a
+hypothesis the sweep did not confirm.
+
+Which is the sharper argument for how this recipe is checked: you cannot tell from a trajectory
+number *which group you are in*, so every assertion above is a conservation law, a geometric
+constraint, or a cross-code identity, and none is a remembered value. All of them held on all four
+chips. Asserting the drift itself would be
 [exact one run and different the next](../flye/README.md).
 
 ### Pins

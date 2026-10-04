@@ -1,0 +1,28 @@
+atoms_vacuum                 22  want exactly 22 (ACE-ALA-NME, ff14SB)
+atoms_solvated               2101  want exactly 2101 (+693 TIP3P)
+water_count_consistent       693 waters  want 693 (and (sol-vac) divisible by 3)
+sander_potential             -13.3340 kcal/mol (7 terms summed)   [observation]
+gromacs_potential            -13.3351 kcal/mol   [observation]
+crosscode_sander_vs_gmx      |-13.3340 - -13.3351| = 0.0011 kcal/mol  want < 0.01 (print-precision floor ~0.0005)
+crosscode_terms_parsed       7/7 energy terms matched by name in both outputs
+crosscode_worst_term         0.0029 kcal/mol (EEL), over 7 terms   [observation]
+nve_frames                   100 Etot prints  want >= 100 (100 ps at ntpr=1000)
+nve_started_hot              T(frame 0) = 310.29 K  want > 200 (irest=1 kept velocities)
+nve_etot_initial             -5059.4918 kcal/mol   [observation]
+nve_etot_final               -5060.6413 kcal/mol   [observation]
+nve_drift_absolute           -1.1495 kcal/mol over 100 ps (-11.495 per ns)   [observation]
+nve_etot_span                2.4889 kcal/mol (max - min)   [observation]
+nve_drift_fraction           |drift|/|Etot| = 2.27e-04   [observation]
+nve_temperature              307.3 K mean  want 240-360 (equipartition after heating to 300)
+trajectory_decodes           100 frames x 2101 atoms  want 100 x 2101 (mdtraj reading sander's NetCDF + prmtop)
+water_constraint_count       1386 O-H + 693 H-H  want 1386 + 693 (3 per rigid water)
+shake_holds_water            max|d(O-H) - 0.9572| = 8.17e-06 A over 138,600 measurements (693 waters x 2 x 100 frames)  want < 1e-3 (SHAKE, ntc=2)
+water_stays_rigid            H-H spread 1.29e-05 A over 69,300 measurements  want < 1e-3
+water_hh_distance            1.51360 A (HOH angle 104.491 deg)   [observation]
+peptide_heavy_atom_rms       1.007 A max from frame 1   [observation]
+degrees_of_freedom           4209 (3x2101 - 2091 constraints - 3 COM)   [observation]
+nve_conserved                2.73e-03 kcal/mol per DoF per ns = 0.46% of kT(300K)  want < 5% (integrator leak far below thermal)
+wall_min_s          21
+wall_heat_s         117
+wall_nve_100ps_s    1062
+ns_per_day           8.14
