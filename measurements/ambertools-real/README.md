@@ -110,6 +110,33 @@ kernels are usually faster — but it is worth measuring before assuming the tra
   was plausible, but the mechanism is the BLAS: `liblapack.so.3 → libopenblasp-r0.3.34.so`, and the
   corename predicts the grouping where vector-ISA presence alone does not.
 
+### Does it invalidate any assertion already in the catalog? No — and here is the dividing line
+
+The obvious worry is that several recipes assert exact floating-point values a BLAS touched —
+nwchem (−625.538048 ± 1e-5 Ha), siesta reproducing a published −214.377236 eV, gpaw −11.703689 eV,
+psi4 and pyscf textbook energies — and the `dft` env carries the same `DYNAMIC_ARCH` OpenBLAS
+0.3.34. So the same controlled test was run on nwchem: `OPENBLAS_CORETYPE=NEOVERSEN1` on a
+Graviton4 box, 217 basis functions, B3LYP/6-31G\*.
+
+| quantity | native `neoversev2` | forced `neoversen1` | change |
+|---|---|---|---|
+| ambertools NVE drift / 100 ps | −1.9126 kcal/mol | −2.3891 kcal/mol | **25%** |
+| **nwchem DFT energy** | −625.538048227205 Ha | −625.538048227**199** Ha | **6e-12 Ha** |
+| nwchem serial == 4-rank | 4.55e-08 | 4.54e-08 | — |
+
+**Twelve digits agree on the energy.** Against the recipe's 1e-5 Ha tolerance that is roughly 2e6×
+of headroom, and the wall times moved 128→127 s and 68→69 s, i.e. not at all.
+
+So the sensitivity is not a property of the code or of the BLAS — it is a property of **what you are
+asserting**. An SCF or variational result is a *fixed point*: kernel choice changes the path taken
+to it and cannot move the answer past convergence. A trajectory is a *path*, and 100,000 steps
+amplify the last bits into the first. That is why the catalog's exact-FP assertions are safe, and
+why the quantity it refuses to assert — a remembered trajectory value — is exactly the one that
+would not be.
+
+Worth stating because the over-cautious conclusion is also wrong: this is **not** a reason to stop
+reproducing published numbers. It is a reason to know which kind of number you have.
+
 ### The x86 question
 
 The same mechanism exists there — OpenBLAS DYNAMIC_ARCH picks `HASWELL`/`SKYLAKEX`/`ZEN` and so on —

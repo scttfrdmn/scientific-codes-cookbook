@@ -1,0 +1,8 @@
+mpi_ranks                  4  want exactly 4 (nwchem's own nproc)
+serial_nproc               1  want exactly 1
+both_converged             serial yes / 4-rank yes (SCF reached an energy)
+basis_functions            217  want 217 (caffeine at 6-31G*, from NWChem)
+serial_eq_4rank            |-625.538048227199 - -625.538048181848| = 4.54e-08  want < 1e-6 Ha (serial == 4-rank)
+dft_energy                 -625.538048227199 Ha  want -625.538048 +/-1e-5 (B3LYP/6-31G*, caffeine)
+wall_serial_s      127
+wall_4rank_s       69

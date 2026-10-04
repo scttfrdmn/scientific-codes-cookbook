@@ -5,3 +5,6 @@ c7g.large (Graviton3)	0xd40	sve 32B	neoversev1	8.17e-06	2.73e-03	-	B
 c8g.large (Graviton4)	0xd4f	sve2 16B	neoversev2	8.88e-06	4.54e-03	-1.9126	C
 c9g.large (Graviton5)	0xd84	sve2 16B	neoversev2 (fallback)	8.88e-06	4.54e-03	-	C
 c8g.large + OPENBLAS_CORETYPE=NEOVERSEN1	0xd4f	sve2 16B	neoversen1 (forced)	7.45e-06	5.68e-03	-2.3891	A
+# converged-quantity control: same kernel swap, an SCF fixed point instead of a trajectory
+c8g.2xlarge nwchem native	0xd4f	sve2 16B	neoversev2	-	-	DFT_energy=-625.538048227205	fixed-point
+c8g.2xlarge nwchem + OPENBLAS_CORETYPE=NEOVERSEN1	0xd4f	sve2 16B	neoversen1 (forced)	-	-	DFT_energy=-625.538048227199	fixed-point
