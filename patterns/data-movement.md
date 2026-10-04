@@ -49,6 +49,13 @@ And it fits *where reference data actually lives*: the measured runs read the GR
 
 > **Measured — lith holds under concurrency, and wins.** Six tasks mmap'ing the same index at once averaged **~583 MB/s each** (445–741 range) with **no contention collapse**, because each instance reads S3 over its *own* NIC — unlike EFS's single shared filesystem, whose aggregate capacity is split across readers. Per task, lith (445–741) already beats EFS's 329 MB/s in isolation; under six-way concurrency the gap widens. Setup is ≈0 and it leaves nothing behind. So for immutable reference data across a fan-out, **lith is the pick**: faster per task, no hydration, no cleanup. (The 445–741 MB/s is a *floor* — lith fell back to a conservative readahead with no NIC probe available in the guest.)
 
+## The other axis: which bytes, not where they are
+
+This page picks a *transport*. It says nothing about whether the bytes that arrive are the ones
+the recipe was verified against — a separate question, with a separate answer, and one the
+TB-scale mount case cannot even ask (you cannot hash what you declined to download). That seam
+is [proving which bytes you ran on](../practices/input-provenance.md).
+
 ## Which resource are you sizing on?
 
 This is the seam between this page and [sizing](sizing.md). A **compute-bound** run sizes on cores — where adding them stops paying (the knee). A **data-movement-bound** run sizes on **NIC and RAM**: cold reads are your NIC (bytes stream from S3), warm re-reads are your RAM (the cache), metadata is free. If your job spends its time waiting on bytes rather than computing on them, size the box by bandwidth and working-set, not core count — and see [lith's node-sizing guidance](https://scttfrdmn.github.io/lith/sizing/) for the depth, since it's the tool that surfaced the distinction.
