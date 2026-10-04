@@ -117,13 +117,17 @@ evaluation on coordinates `tleap` writes deterministically. **The trajectory is 
 pinned image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop, because
 the minimiser's last floating-point bits differ and 100,000 MD steps amplify that.
 
-But "it varies by machine" turned out to be too strong. Running the
-[generation ladder](../../measurements/ambertools-real/README.md) put the same image on five
-machines and produced exactly **three** trajectories, grouped by vector path: the laptop and
-Graviton2 (NEON) agree to every printed digit, Graviton3 (SVE) is its own, and **Graviton4 and
-Graviton5 (SVE2) agree to every printed digit**. So it is bit-reproducible wherever the vector path
-matches — likely FFTW selecting PME kernels by detected CPU features, though that mechanism is a
-hypothesis the sweep did not confirm.
+But "it varies by machine" turned out to be too strong, and the reason is worth knowing if you care
+about reproducibility at all. The [generation ladder](../../measurements/ambertools-real/README.md)
+put this same digest on five machines and got exactly **three** trajectories, predicted one-to-one by
+the **OpenBLAS kernel the process picks from the host CPU at load time** (`liblapack.so.3` here is
+`libopenblasp-r0.3.34.so`, built `DYNAMIC_ARCH`). Confirmed by changing one variable on one host:
+`OPENBLAS_CORETYPE=NEOVERSEN1` on **Graviton4** reproduces the laptop's trajectory exactly — drift
+−2.3891 kcal/mol, matching to four decimals — for a 0.4% slowdown.
+
+**So a pinned image digest does not pin the numerics.** Pinning is still necessary; it just isn't
+sufficient. This recipe deliberately does not set `OPENBLAS_CORETYPE`, because its job is to report
+what a normal run does on each chip — set it if you need an exact trajectory back.
 
 Which is the sharper argument for how this recipe is checked: you cannot tell from a trajectory
 number *which group you are in*, so every assertion above is a conservation law, a geometric

@@ -50,32 +50,82 @@ of *kT* per degree of freedom per ns, the exact atom and constraint counts. That
 per generation defensible: each rung is a correctness check on the other three, so a wrong number
 would have to be wrong identically four times.
 
-## A reproducibility finding that was not the point of the sweep
+## A pinned digest does not pin the numerics
 
-The *trajectory* is chaotic, so it is not expected to be reproducible — and it isn't. But it does not
-vary per machine. Across five machines there are exactly **three** trajectories, and they group:
+This was not the point of the sweep and is the more useful result. The *trajectory* is chaotic, so
+it is not expected to be reproducible — but it does not vary per machine. Across five machines there
+are exactly **three** trajectories, and what predicts the grouping is the BLAS kernel the process
+selects at load time:
 
-| machines | SHAKE max dev | NVE leak | vector path |
-|---|---|---|---|
-| Apple-Silicon laptop, **Graviton2** | 7.45e-06 Å | 5.68e-03 | NEON only |
-| **Graviton3** | 8.17e-06 Å | 2.73e-03 | SVE (256-bit) |
-| **Graviton4 and Graviton5** | **8.88e-06 Å** | **4.54e-03** | SVE2 |
+| machine | CPU part | SVE | OpenBLAS corename | SHAKE max dev | NVE leak |
+|---|---|---|---|---|---|
+| Apple-Silicon laptop | — | none | `neoversen1` | 7.45e-06 Å | 5.68e-03 |
+| Graviton2 `c6g` | 0xd0c | none | `neoversen1` | **7.45e-06** | **5.68e-03** |
+| Graviton3 `c7g` | 0xd40 | SVE 32 B | `neoversev1` | 8.17e-06 | 2.73e-03 |
+| Graviton4 `c8g` | 0xd4f | SVE2 16 B | `neoversev2` | 8.88e-06 | 4.54e-03 |
+| Graviton5 `c9g` | **0xd84** | SVE2 16 B | `neoversev2` *(fallback)* | **8.88e-06** | **4.54e-03** |
 
-Graviton4 and Graviton5 agree to every printed digit, and Graviton2 agrees to every printed digit
-with a laptop that is not an AWS instance at all. Two independent coincidences on a chaotic
-trajectory is not a coincidence.
+Three corenames, three trajectories, one-to-one. The two rows that look like coincidences are the
+evidence: a **laptop that is not an AWS instance at all** lands on the Graviton2 kernel and matches
+it digit for digit, and **Graviton5 is different silicon** — CPU part `0xd84`, not Graviton4's
+`0xd4f` — for which OpenBLAS 0.3.34 has no kernel, so it falls back to `neoversev2` and inherits
+Graviton4's numbers exactly.
 
-**The grouping is the measurement; the mechanism is a hypothesis.** The obvious candidate is
-runtime kernel dispatch: `sander`'s PME goes through FFTW, which selects SIMD kernels by detected
-CPU features, so a different vector width changes the summation order in the transform and 100,000
-MD steps amplify the last bits. That is consistent with all five observations and **not established
-here** — confirming it needs an FFTW wisdom or kernel dump per rung, which this sweep did not
-collect.
+### The controlled test
 
-Either way it refines what the recipe's page should claim. "The trajectory is not reproducible
-across machines" is too strong: it is bit-reproducible wherever the vector path matches, which is
-also why a recipe must never assert a remembered trajectory value — you cannot tell from the
-number which group you are in.
+Correlation over five machines is suggestive, so one variable was changed on one host. Forcing the
+Graviton2 kernel **on a Graviton4 box**:
+
+```sh
+export OPENBLAS_CORETYPE=NEOVERSEN1     # same instance type, same image digest
+```
+
+| Graviton4 run | SHAKE max dev | NVE leak | drift over 100 ps | ns/day |
+|---|---|---|---|---|
+| native (`neoversev2`) | 8.88e-06 | 4.54e-03 | −1.9126 | 9.45 |
+| **forced `NEOVERSEN1`** | **7.45e-06** | **5.68e-03** | **−2.3891** | 9.41 |
+
+It reproduces the laptop/Graviton2 trajectory **exactly**, including a drift that matches the
+laptop's to four decimal places — on Graviton4 hardware, from the same digest. That is a
+demonstrated cause, not a grouping.
+
+It also costs **0.4%** (918 s vs 914 s), so on this workload bit-reproducibility across machines is
+effectively free. That will not generalise — the whole point of DYNAMIC_ARCH is that the newer
+kernels are usually faster — but it is worth measuring before assuming the trade is expensive.
+
+### What to take from it
+
+- **A pinned container digest does not pin floating-point results.** The cookbook pins every image
+  by `@sha256:`, and that is still necessary — but OpenBLAS is built `DYNAMIC_ARCH` and re-selects
+  kernels from the *host's* CPU at load time, so the same digest is a different computation on a
+  different box. Reproducibility is per kernel target, not per image.
+- **It is one environment variable away** when you need it: `OPENBLAS_CORETYPE`. Recipes here
+  deliberately do **not** set it, because the catalog's job is to report what a normal run does on
+  each chip; a paper reproducing an exact trajectory should set it.
+- **This is why none of the recipe's assertions is a remembered value.** You cannot tell from a
+  trajectory number which kernel produced it, so every check is a conservation law, a geometric
+  constraint, or a cross-code identity — and all of them held on all four generations plus the
+  forced-kernel run.
+- An earlier draft of this page blamed FFTW's SIMD dispatch. `sander` does link `libfftw3`, so it
+  was plausible, but the mechanism is the BLAS: `liblapack.so.3 → libopenblasp-r0.3.34.so`, and the
+  corename predicts the grouping where vector-ISA presence alone does not.
+
+### The x86 question
+
+The same mechanism exists there — OpenBLAS DYNAMIC_ARCH picks `HASWELL`/`SKYLAKEX`/`ZEN` and so on —
+so the prediction is that x86 trajectories group by corename too, and that `OPENBLAS_CORETYPE` pins
+them the same way. **Untested here**, and it needs an image that does not exist yet: biocontainers
+carries AmberTools only at 20.4 and 21.10, while this recipe is 26.0. conda-forge *does* ship
+`ambertools 26.0` for `linux-64` as well as `linux-aarch64`, so a version-matched x86 image is
+buildable from the same recipe — which is exactly the case for an x86 sibling registry, where the
+comparison is attributable by construction because only the chip differs.
+
+Note what an x86 run would and would not show. A *different* trajectory there proves nothing about
+the mechanism, because it would be a different compiler and build — not the same binary on a
+different host, which is what makes the arm64 evidence clean. The informative x86 experiment is the
+same-image-across-x86-microarchitectures one: `c6a` (Zen 3) against `c7a` (Zen 4) against `c7i`
+(Sapphire Rapids), where a grouping by corename would confirm the mechanism on the other
+architecture.
 
 ## Reproducing it
 

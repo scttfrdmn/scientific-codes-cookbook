@@ -94,6 +94,22 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   of completing is a failure. (Stranded spend.)
 - **Pin the image by digest, not tag; cosign-verify aarch.* images.** A `:tag` at
   run time is a bug. (Unreproducible run.)
+- **A pinned digest pins the bytes, not the numerics — conda's OpenBLAS is `DYNAMIC_ARCH` and
+  re-selects kernels from the *host* CPU at load time.** So the same digest is a different
+  floating-point computation on a different box, and no amount of pinning fixes it. Measured on
+  ambertools: one image on five machines gave exactly **three** trajectories, predicted one-to-one
+  by `openblas_get_corename()` — an Apple-Silicon laptop and Graviton2 both land on `neoversen1` and
+  agree digit for digit, Graviton3 is `neoversev1`, and **Graviton5 is different silicon (CPU part
+  `0xd84` vs Graviton4's `0xd4f`) for which 0.3.34 has no kernel, so it falls back to `neoversev2`
+  and inherits Graviton4's numbers exactly.** Confirmed by changing one variable on one host:
+  `OPENBLAS_CORETYPE=NEOVERSEN1` on Graviton4 reproduced the laptop's trajectory to four decimals,
+  for 0.4%. Two consequences. **(1)** Never assert a remembered floating-point value that a BLAS
+  touched — you cannot tell from the number which kernel produced it; assert a conservation law, a
+  geometric constraint, or a cross-code identity, all of which held on every rung. **(2)** When a
+  recipe's *point* is an exact reproduction, set `OPENBLAS_CORETYPE` and say so; otherwise leave it
+  unset, because the catalog's job is to report what a normal run does on each chip. Check
+  `openblas_get_corename()` before blaming a cross-machine difference on the tool.
+  (A "reproducible" run that silently isn't, and a flaky assertion blamed on the science.)
 - **Smoke-check every run.** Runs-to-exit-0 with empty or garbage output is a
   failure, not a success. This is the correctness bar — the minimum, not ceremony.
   Don't report a run worked without checking its output. (Silent failure.)

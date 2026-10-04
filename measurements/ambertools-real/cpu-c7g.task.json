@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-ambertools-cpu-c7g",
+  "command": [
+    "bash",
+    "-c",
+    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\npython3 -u - <<'PYEOF' > cpu-probe.txt 2>&1\nimport ctypes, glob, re, platform\ndef line(k, v): print(f\"{k:28s} {v}\")\nline(\"uname_machine\", platform.machine())\n# The decisive value: OpenBLAS is built DYNAMIC_ARCH, so it re-selects kernels per HOST\n# at load time. If the trajectory grouping follows this string rather than the image\n# digest, kernel selection is the mechanism.\nso = sorted(glob.glob(\"/opt/conda/lib/libopenblas*.so*\"))\nlib = ctypes.CDLL(so[-1])\nfor fn in (\"openblas_get_corename\", \"openblas_get_config\"):\n    f = getattr(lib, fn); f.restype = ctypes.c_char_p\n    line(fn, f().decode())\nline(\"openblas_so\", so[-1].split(\"/\")[-1])\ntxt = open(\"/proc/cpuinfo\").read()\nfeat = re.search(r\"^Features\\s*:\\s*(.*)$\", txt, re.M)\nfeats = set(feat.group(1).split()) if feat else set()\nline(\"has_sve\", \"sve\" in feats)\nline(\"has_sve2\", \"sve2\" in feats)\nline(\"has_asimd\", \"asimd\" in feats)\nimpl = re.search(r\"CPU implementer\\s*:\\s*(\\S+)\", txt)\npart = re.search(r\"CPU part\\s*:\\s*(\\S+)\", txt)\nline(\"cpu_implementer_part\", f\"{impl.group(1) if impl else '?'} / {part.group(1) if part else '?'}\")\ntry:\n    line(\"sve_vector_length_B\", open(\"/proc/sys/abi/sve_default_vector_length\").read().strip())\nexcept OSError:\n    line(\"sve_vector_length_B\", \"n/a (no SVE)\")\nPYEOF\ncat cpu-probe.txt\necho \"PROBE OK\"\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c7g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/cpu-probe.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ambertools/gen/c7g/cpu-probe.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6m",
+    "on_complete": "terminate",
+    "cost_limit": 0.02
+  }
+}
