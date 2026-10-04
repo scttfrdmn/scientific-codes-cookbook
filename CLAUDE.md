@@ -287,12 +287,16 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   (Silent failure — output that exists but is empty, garbage, or absent, wearing a green
   check.)
 - **A run that dies must leave its evidence behind, and a diagnostic must never be able to kill
-  the run it describes.** `command.log` only reaches S3 at stage-out (spawn#632), so anything the
-  task captured dies with the instance: **stage the tool's own log out** (`mdrun.log`,
-  `flye.log`, `kraken2.log`) and run Python with **`python3 -u`**, because buffered stdout is lost
-  when a process is killed — a probe that dies then prints nothing even though it had produced
-  output. Measured across 118 specs: 58 wrote a log they never uploaded, 22 buffered. mdtraj cost
-  two blind-diagnosed failures and flye one; a muscle TTL death left nothing at all. The mirror
+  the run it describes.** Since **spawn 0.116.0** a lifecycle kill — TTL *or* cost limit — runs a
+  pre-stop hook that flushes `command.log` **and** `completion.json` while the instance is still
+  healthy (spawn#643, fixing #632/#642), so a dead task is no longer silent and its phase markers
+  survive. That closes the platform half and **not** the two things this rule is about: **stage the
+  tool's own log out** (`mdrun.log`, `flye.log`, `kraken2.log`), which is a separate file spawn
+  never uploads unless the spec declares it an output, and run Python with **`python3 -u`**, because
+  buffering happens *inside the process* — a killed probe's stdout never reaches `command.log` to be
+  flushed at all. Measured across 118 specs: 58 wrote a log they never uploaded, 22 buffered. mdtraj
+  cost two blind-diagnosed failures and flye one; a muscle TTL death left nothing at all (that last
+  symptom is what #643 fixes — the other two are not). The mirror
   rule: a version print that guessed an API (`mdtraj.version`, which does not exist in that build)
   raised and **threw away a completed 2.5-minute simulation** — use `getattr(mod, "__version__",
   "unknown")`, never a guessed attribute path, and never let a line whose only job is to describe
