@@ -163,24 +163,61 @@ It amortizes over every sample in the instance's lifetime: **~$1.02 for one samp
 for a hundred.** And NVMe, not RAM, is the destination — `x8g.24xlarge` (1536 GiB) is $9.3792/hr
 against $2.3514, and `--memory-mapping` exists precisely so the table need not be resident.
 
-**Unmeasured, and the one number still missing: kraken2's reads/min and $/sample.** Two attempts
-failed, and the second found the cause of both — **not** anything to do with mmap or storage:
+### Measured at last: what a kraken2 result costs
 
-```
-Loading database information... done.
-Unable to open file: /w/out-10k.kraken, reason: Permission denied
-```
+Human WGS reads (`SRR062634`) against the full 1.1 TiB RefSeq-Complete DB on local NVMe,
+`r8gd.8xlarge`, 32 threads. kraken2's own reported rate, and a read-count ladder so a kill
+costs the largest rung rather than all of them:
 
-`chown`-ing the NVMe mount to the *instance* user is not enough, because the container runs as the
-**image's** user. It is the same ownership trap this project documents for staged *inputs*
-([container-path](../../practices/container-path.md)), arriving through an **output** path, and the
-fix is `chmod 1777` on the output directory — what host `/tmp` uses, for exactly this reason.
+| reads | kraken2 wall | its rate | classified | compute $ |
+|---|---|---|---|---|
+| 10,000 | 21.9 s | 27.4 Kseq/min | 98.64% | $0.0268 |
+| 100,000 | 70.4 s | 85.3 Kseq/min | 99.29% | $0.0529 |
+| **1,000,000** | **483.2 s** | **124.2 Kseq/min** | **99.30%** | **$0.3331** |
+| 100,000 (repeat) | 71.2 s | 84.2 Kseq/min | 99.29% | $0.0529 |
 
-An earlier version of this page speculated that ~9 minutes failing to finish 1M reads meant
-"either `mmap` faults do not parallelise or startup over a 1.1 TiB mapping is expensive."
-**That is withdrawn** — the first attempt had the identical permission setup, so the speculation
-had a much duller explanation available and should not have been offered. A one-second container
-write test before the 28-minute copy would have caught it twice over, and now runs.
+Fitting the extremes: **≈17 s fixed + 466 s per million reads**, i.e. a marginal rate of
+**~129,000 reads/min**. The rate quadruples from 10k to 1M purely because that fixed 17 s of
+mmap and taxonomy setup amortises — the same reason [recipe timings are not compute
+cost](../../patterns/layout-and-effective-cost.md).
+
+98.6–99.3% classified is the sanity check that matters: these are human reads and human is in
+RefSeq Complete, so near-total classification is what correct looks like.
+
+**$/sample, with the copy amortised:**
+
+| samples on one box | copy | compute | **each** |
+|---|---|---|---|
+| 1 | $1.0209 | $0.3331 | **$1.354** |
+| 10 | $0.1021 | $0.3331 | $0.435 |
+| 100 | $0.0102 | $0.3331 | **$0.343** |
+
+So the 1107 GiB copy stops dominating at roughly **30 samples**, and the floor is **~$0.33 per
+million reads**. Whole ladder, copy included: **$1.5643** for 2.11M reads classified.
+
+**A free cross-run identity:** the two 100k rungs returned *exactly* 99,291 classified and 709
+unclassified. kraken2 is deterministic given the same input and thread count, so each rung
+checks the other.
+
+**And the rung I designed badly, stated plainly: it did not test what it was for.** The repeat
+was meant to separate "what the first sample costs" from "what the next one costs" via page
+cache. But `cache_gib_before` was **243, 244, 242, 241 GiB** — the 1107 GiB copy leaves the cache
+already full of the database, so **there was never a cold rung to compare against**, and 70.4 s
+vs 71.2 s measures run-to-run stability rather than cache warmth. Testing it properly needs
+`drop_caches` before the first rung. What the identical times *do* rule out is any large
+remaining cache win on this box.
+
+### What this does to the redesign argument
+
+It sharpens it against my own earlier framing. At 124.2 Kseq/min the run is doing roughly
+**62,000 lookups/s** — about 11× the single-threaded NVMe probe (5,412/s), comfortably inside
+what 32 threads can deliver, so this is **not obviously I/O-bound** and this ladder cannot
+separate CPU from I/O (a cold rung plus `iostat` would).
+
+Which means: **a scan-shaped redesign would save the $1.02 copy and the big box, not the $0.33 of
+compute.** The win is being able to classify on a small instance without moving 1.1 TB — real,
+and worth it at low sample counts — but it is not a claim that classification itself gets faster.
+My earlier framing implied more than that.
 
 ## Three process notes that cost real money
 
@@ -195,6 +232,20 @@ Filed as [lith#362](https://github.com/scttfrdmn/lith/issues/362); the warning s
 **A probe must stream its result.** `spawn launch --command` does not stage logs out (spawn#643's
 pre-stop flush is a `task run` feature). Learned in the canary, then re-learned one phase later
 when P3 was lost anyway.
+
+**Two bugs, one invisible cause.** kraken2 loaded the 1.1 TiB database and then died with
+`Unable to open file: /w/out-10k.kraken, reason: Permission denied` — `chown`-ing the NVMe mount
+to the *instance* user is not enough, because the container runs as the **image's** user. Same
+ownership trap this project documents for staged *inputs*
+([container-path](../../practices/container-path.md)), via an output path; fix is `chmod 1777`.
+But the reason three such failures were *undiagnosable* is that
+**`spawn launch --command` runs under `bash -e`** (`$-` == `ehB` before any user `set`), and
+`set -uo pipefail` does **not** clear it — so each script exited *before* the line that would
+have reported why. Filed [spawn#707](https://github.com/spore-host/spawn/issues/707) asking for
+the effective shell options to be echoed into `command.log`, not for `-e` to be removed. Use
+`set +e` explicitly and check statuses by hand. **Two correct local tests actively misled me
+here**: `zcat | sed …q` and `$(( $(failing) / 4 ))` both *survive* `set -uo pipefail` alone, so
+local was right about the construct and silent about the environment.
 
 **A heredoc binds to the last command in a pipeline.** `python3 - 2>&1 | tee <<'PY'` gives Python
 an empty stdin and makes `tee` write the script's own source into the results file. One wasted

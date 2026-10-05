@@ -1,0 +1,154 @@
+instance_type	r8gd.8xlarge
+nproc	32
+mem_gib	247
+nvme	1.8T
+image_pulled	yes
+container_can_write	yes
+== reads ==	
+  reads_10k	10000
+  reads_100k	100000
+  reads_1m	1000000
+== copy the 1108 GiB runtime set to local NVMe ==	
+  copy_progress	18 GiB / 145 s
+  copy_progress	39 GiB / 175 s
+  copy_progress	60 GiB / 206 s
+  copy_progress	81 GiB / 236 s
+  copy_progress	101 GiB / 267 s
+  copy_progress	122 GiB / 297 s
+  copy_progress	143 GiB / 327 s
+  copy_progress	164 GiB / 358 s
+  copy_progress	184 GiB / 388 s
+  copy_progress	205 GiB / 419 s
+  copy_progress	225 GiB / 449 s
+  copy_progress	246 GiB / 479 s
+  copy_progress	267 GiB / 510 s
+  copy_progress	288 GiB / 540 s
+  copy_progress	309 GiB / 571 s
+  copy_progress	329 GiB / 601 s
+  copy_progress	350 GiB / 631 s
+  copy_progress	371 GiB / 662 s
+  copy_progress	391 GiB / 692 s
+  copy_progress	412 GiB / 723 s
+  copy_progress	435 GiB / 753 s
+  copy_progress	458 GiB / 784 s
+  copy_progress	480 GiB / 814 s
+  copy_progress	503 GiB / 844 s
+  copy_progress	526 GiB / 875 s
+  copy_progress	548 GiB / 905 s
+  copy_progress	570 GiB / 936 s
+  copy_progress	593 GiB / 966 s
+  copy_progress	614 GiB / 996 s
+  copy_progress	637 GiB / 1027 s
+  copy_progress	659 GiB / 1057 s
+  copy_progress	681 GiB / 1088 s
+  copy_progress	704 GiB / 1118 s
+  copy_progress	726 GiB / 1148 s
+  copy_progress	748 GiB / 1179 s
+  copy_progress	770 GiB / 1209 s
+  copy_progress	793 GiB / 1240 s
+  copy_progress	815 GiB / 1270 s
+  copy_progress	838 GiB / 1300 s
+  copy_progress	860 GiB / 1331 s
+  copy_progress	883 GiB / 1361 s
+  copy_progress	906 GiB / 1392 s
+  copy_progress	928 GiB / 1422 s
+  copy_progress	950 GiB / 1452 s
+  copy_progress	972 GiB / 1483 s
+  copy_progress	995 GiB / 1513 s
+  copy_progress	1017 GiB / 1544 s
+  copy_progress	1039 GiB / 1574 s
+  copy_progress	1061 GiB / 1604 s
+  copy_progress	1084 GiB / 1635 s
+  copy_progress	1107 GiB / 1665 s
+copy_wall_s	1563
+copy_gib	1107.6
+copy_gbps	0.76
+copy_cost_usd	1.0209
+== rung 10k: 10000 reads ==	
+  cache_gib_before	243
+  10k_progress	0 reads / 20 s
+  10k_progress	10000 reads / 41 s
+  10k_rc	0
+  10k_wall_s	41
+  10k_reads_per_min	14634
+  10k_classified_pct	1.36
+  10k_out_lines	10000
+  10k_compute_usd	0.0268
+  10k_cache_gib_after	244
+  10k_log	10000 sequences (1.00 Mbp) processed in 21.907s (27.4 Kseq/m, 2.74 Mbp/m).
+  10k_log	  9864 sequences classified (98.64%)
+  10k_log	  136 sequences unclassified (1.36%)
+== rung 100k: 100000 reads ==	
+  cache_gib_before	244
+  100k_progress	0 reads / 20 s
+  100k_progress	0 reads / 40 s
+  100k_progress	31458 reads / 60 s
+  100k_progress	100000 reads / 81 s
+  100k_rc	0
+  100k_wall_s	81
+  100k_reads_per_min	74074
+  100k_classified_pct	0.71
+  100k_out_lines	100000
+  100k_compute_usd	0.0529
+  100k_cache_gib_after	242
+  100k_log	100000 sequences (10.00 Mbp) processed in 70.373s (85.3 Kseq/m, 8.53 Mbp/m).
+  100k_log	  99291 sequences classified (99.29%)
+  100k_log	  709 sequences unclassified (0.71%)
+== rung 1m: 1000000 reads ==	
+  cache_gib_before	242
+  1m_progress	0 reads / 20 s
+  1m_progress	0 reads / 40 s
+  1m_progress	0 reads / 60 s
+  1m_progress	0 reads / 81 s
+  1m_progress	0 reads / 101 s
+  1m_progress	0 reads / 122 s
+  1m_progress	0 reads / 142 s
+  1m_progress	0 reads / 163 s
+  1m_progress	0 reads / 183 s
+  1m_progress	0 reads / 203 s
+  1m_progress	0 reads / 224 s
+  1m_progress	0 reads / 244 s
+  1m_progress	31458 reads / 265 s
+  1m_progress	31458 reads / 285 s
+  1m_progress	31458 reads / 305 s
+  1m_progress	31458 reads / 326 s
+  1m_progress	31458 reads / 346 s
+  1m_progress	31458 reads / 367 s
+  1m_progress	31458 reads / 387 s
+  1m_progress	31458 reads / 408 s
+  1m_progress	125832 reads / 428 s
+  1m_progress	125832 reads / 448 s
+  1m_progress	125832 reads / 469 s
+  1m_progress	1000000 reads / 489 s
+  1m_progress	1000000 reads / 510 s
+  1m_rc	0
+  1m_wall_s	510
+  1m_reads_per_min	117647
+  1m_classified_pct	0.70
+  1m_out_lines	1000000
+  1m_compute_usd	0.3331
+  1m_cache_gib_after	241
+  1m_log	1000000 sequences (100.00 Mbp) processed in 483.157s (124.2 Kseq/m, 12.42 Mbp/m).
+  1m_log	  993042 sequences classified (99.30%)
+  1m_log	  6958 sequences unclassified (0.70%)
+== rung 100kwarm: 100000 reads ==	
+  cache_gib_before	241
+  100kwarm_progress	0 reads / 20 s
+  100kwarm_progress	0 reads / 40 s
+  100kwarm_progress	0 reads / 60 s
+  100kwarm_progress	100000 reads / 81 s
+  100kwarm_rc	0
+  100kwarm_wall_s	81
+  100kwarm_reads_per_min	74074
+  100kwarm_classified_pct	0.71
+  100kwarm_out_lines	100000
+  100kwarm_compute_usd	0.0529
+  100kwarm_cache_gib_after	243
+  100kwarm_log	100000 sequences (10.00 Mbp) processed in 71.230s (84.2 Kseq/m, 8.42 Mbp/m).
+  100kwarm_log	  99291 sequences classified (99.29%)
+  100kwarm_log	  709 sequences unclassified (0.71%)
+== totals ==	
+total_box_s	2395
+total_box_usd	1.5643
+DONE	yes
+trap_exit_line	1
