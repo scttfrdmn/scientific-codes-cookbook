@@ -1,0 +1,32 @@
+instance_type	c8g.2xlarge
+nproc	8
+/home/scttfrdmn/.local/lib/python3.9/site-packages/boto3/compat.py:89: PythonDeprecationWarning: Boto3 will no longer support Python 3.9 starting April 29, 2026. To continue receiving service updates, bug fixes, and security updates please upgrade to Python 3.10 or later. More information can be found here: https://aws.amazon.com/blogs/developer/python-support-policy-updates-for-aws-sdks-and-tools/
+  warnings.warn(warning, PythonDeprecationWarning)
+hash_k2d_bytes	1189091671800
+probes_per_config	10000	depth	256
+dense_spacing_bytes	39636	(a 1M-read sample)
+sparse_spacing_bytes	118909167	(what the failed test measured)
+
+== RUNG A: REALISTIC density (~39.6 KB apart) -- sweep the coalescing window ==
+region_width_mib	378.0
+individual           10000 reqs      39.1 MiB   13.11 s       763.0 lookups/s
+64 KiB                3781 reqs     134.9 MiB    5.20 s      1921.5 lookups/s
+256 KiB               1316 reqs     284.3 MiB    2.18 s      4583.3 lookups/s
+1 MiB                  365 reqs     352.4 MiB    0.91 s     10978.1 lookups/s
+4 MiB                   94 reqs     371.9 MiB    0.46 s     21891.9 lookups/s
+16 MiB                  24 reqs     375.9 MiB    0.31 s     32128.0 lookups/s
+
+== RUNG B: SPARSE density (~119 MB apart) -- the test that measured nothing ==
+individual           10000 reqs      39.1 MiB   12.92 s       773.8 lookups/s
+1 MiB                 9909 reqs      82.8 MiB   12.82 s       779.9 lookups/s
+
+== RUNG C: plain sequential scan of the dense region (the limit case) ==
+scan 8 MiB              48 reqs     377.9 MiB    0.35 s     28388.5 lookups/s  (1125 MB/s)
+
+== VERDICT ==
+dense:  individual 763.0 -> best 32128.0 lookups/s  (42.1x, window=16 MiB)
+sparse: individual 773.8 -> best 779.9 lookups/s  (1.0x)
+If dense gains and sparse does not, DENSITY was the variable -- and my earlier
+null result was an undersized test, not evidence against sorting.
+DONE	yes
+trap_exit_line	1

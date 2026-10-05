@@ -1,10 +1,12 @@
-# A 1.2 TB mount costs nothing to build, and the thing that kills it is queue depth
+# kraken2's access pattern is a choice, and on S3 it is worth 4,000x
 
-> **`lith index build` covered 1.206 TB of RODA in about a second into a 728-byte index — then
-> kraken2 classified zero reads in eleven minutes.** The mount is not slow and not wasteful: it
-> moves only **23×** the bytes asked for, and at **7.9 random 4 KiB probes/s** it is running at
-> exactly the rate raw S3 serves *one synchronous request at a time* (6.9/s). The whole failure is
-> that `mmap` has no queue depth — and **~100× of the gap is recoverable on the same storage.**
+> **This is not a finding about lith, and not a storage bake-off.** On one unchanged S3 object,
+> changing only *how the application asks* moves random-lookup throughput from **7.9/s to
+> 32,128/s — ~4,067×**, with the storage, the latency and the bucket held constant. The mount is
+> byte-efficient (23x) and runs at exactly the rate raw S3 serves one synchronous request (6.9/s
+> vs the mount's 7.9/s). What fails is `mmap`: no queue depth, no batching, one fault at a time.
+> **kraken2's performance on object storage is a property of a 2013 design constraint — "the
+> database must fit in RAM" — not of the problem or of S3.**
 
 The RODA kraken2 RefSeq-Complete v205 database is **1.206 TB** in `us-west-2`; `hash.k2d` alone is
 `1,189,091,671,800` bytes. Nothing can copy that casually, so it is the case where a mount is
@@ -59,7 +61,58 @@ This *supports* [lith#232](https://github.com/scttfrdmn/lith/issues/232)'s "lith
 rather than undermining it: the lever needs several future offsets at once, and a page fault
 exposes one. The lever belongs to the application, and the number says it is worth ~68×.
 
-## Two of my own arguments that the measurements killed
+## And coalescing at realistic density is worth another 42×
+
+Depth alone is half of it. The other half is *request shape*, and it only shows up at the density
+a real sample implies. A 1M-read sample is ~30M minimizer lookups over 1.189 TB — a mean spacing
+of **39.6 KB**, which a probe can reproduce by confining 10,000 lookups to a 378 MiB region
+rather than issuing 30M requests.
+
+Same object, same depth 256, same 10,000 probes; only the coalescing window changes:
+
+| window | requests | MiB | wall | lookups/s |
+|---|---|---|---|---|
+| individual (kraken2's shape) | 10,000 | 39.1 | 13.11 s | 763 |
+| 64 KiB | 3,781 | 134.9 | 5.20 s | 1,922 |
+| 256 KiB | 1,316 | 284.3 | 2.18 s | 4,583 |
+| 1 MiB | 365 | 352.4 | 0.91 s | 10,978 |
+| 4 MiB | 94 | 371.9 | 0.46 s | 21,892 |
+| **16 MiB** | **24** | 375.9 | **0.31 s** | **32,128** |
+| *plain sequential scan* | *48* | *377.9* | *0.35 s* | *28,389 — **1125 MB/s*** |
+
+**There is no knee: the sweep converges on a scan.** At 16 MiB the "coalescing" fetches 375.9 of
+378 MiB and matches the explicit scan rung within noise, so **at real density the optimal strategy
+is to stream the index, not probe it.** That is the merge-join argument, measured.
+
+The control is what makes it a result rather than a story: at **sparse** density (119 MB apart)
+the identical sweep gives **1.0×** — 773.8 → 779.9 lookups/s. Density was the variable.
+
+**The cost model agrees with the performance model, which is not usual.** Requests fell **417×**
+(10,000 → 24) while bytes rose only 9.6×, and in-region transfer is free while GETs are billed. So
+the coalesced shape is simultaneously ~42× faster and ~400× cheaper per lookup. kraken2's access
+pattern fights both at once.
+
+Combined with depth, **7.9/s → 32,128/s is ~4,067× on storage that never changed** — and 5.9×
+above this page's single-threaded local-NVMe probe (not concurrency-matched, so not a claim that
+S3 beats NVMe; it *is* a demonstration that the $1.02 copy bought less than changing the request
+shape would have, for free).
+
+### What it does to the layout question
+
+Measured sequential S3 is **1125 MB/s** with depth, not the 146 MB/s a single stream gives. So a
+fan-out that streams the index costs:
+
+| | wall | cost |
+|---|---|---|
+| **10 × `c8g.2xlarge`, 110 GiB each** | **~98 s** | **~$0.19** |
+| copy 1107 GiB to one `r8gd.8xlarge` NVMe | 1561 s | $1.02 |
+
+~5.4× cheaper, ~16× faster, no big-memory or big-NVMe box in the design. Boot dominates, which is
+why ten larger workers beat a hundred small ones. And a scan has the property a point lookup
+cannot: **it amortizes across samples** — batch 20 samples into one pass and per-sample cost falls
+~20×, where 20 samples through a resident hash table costs 20× the lookups.
+
+## Three of my own claims the measurements killed
 
 **Byte amplification was a red herring.** I argued a scattered 4 KiB fault pulls an 8 MiB block
 (2048×), reasoning backwards from a latency. Measured by counting NIC bytes across exactly 200
@@ -68,12 +121,12 @@ crossover I quoted (4,000–15,000 reads) was wrong too — at 91 KiB/probe, cum
 1107 GiB at ~12.8M probes ≈ **425,000 reads**, so below a few hundred thousand reads the mount
 moves *fewer* bytes than copying. It still loses, on latency alone.
 
-**"Sort the queries" did not survive its own test.** Sorted 10k probes: 779 lookups/s against 784
-random — nothing. Coalescing into 1 MiB spans *hurt* (767/s) and doubled bytes moved (39.1 → 84.7
-MiB) for 97 merges out of 10,000. The arithmetic I should have done first: 10k probes over 1.189
-TB sit **~119 MB apart**, so a 1 MiB window catches almost nothing. **The test was undersized by
-~100×** — density needs ~1.1M probes (≈38,000 reads), and a real 1M-read sample would have ~40 KB
-mean spacing. So sorting is *unmeasured at the scale where it would matter*, not disproven.
+**My first "sort the queries" test measured nothing, and the test was the fault.** 10k probes over
+1.189 TB sit **~119 MB apart**, so a 1 MiB window merged 97 of 10,000 and doubled bytes for no
+gain — undersized by ~100× to detect its own mechanism. I reported it as a null result at the
+time; re-run at realistic density it is worth **42×** (above). The lesson is not about sorting: a
+null result from a probe that cannot resolve the effect is not evidence, and I should have
+computed the mean spacing before believing it.
 
 ## Why caching cannot rescue it either
 
@@ -127,7 +180,16 @@ when P3 was lost anyway.
 an empty stdin and makes `tee` write the script's own source into the results file. One wasted
 launch.
 
+## A note on the order things happened
+
+The hypothesis — *kraken2's access pattern is a choice, not a property of the problem* — was
+stated **before** the density probe was written, as was the objection that fixed the amplification
+error ("why assume a block read serves only the 4 KiB?") and the one that moved the destination
+from RAM to NVMe. That order matters: it makes the 42× a confirmed prediction rather than a
+narrative fitted to a number afterwards. Three of this page's own earlier claims died in the
+process, which is the honest cost of having had them.
+
 Raw output in [`results/`](results/); scripts are [`canary.sh`](canary.sh),
-[`readpath.sh`](readpath.sh), [`nvme.sh`](nvme.sh) and
-[`concurrency.sh`](concurrency.sh). [data-movement](../../patterns/data-movement.md) is when to
+[`readpath.sh`](readpath.sh), [`nvme.sh`](nvme.sh),
+[`concurrency.sh`](concurrency.sh) and [`density.sh`](density.sh). [data-movement](../../patterns/data-movement.md) is when to
 reach for a mount at all; this page is the access pattern that voids it.
