@@ -1,0 +1,24 @@
+instance_type	c8g.2xlarge
+nproc	8
+boto3	1.42.97
+/home/scttfrdmn/.local/lib/python3.9/site-packages/boto3/compat.py:89: PythonDeprecationWarning: Boto3 will no longer support Python 3.9 starting April 29, 2026. To continue receiving service updates, bug fixes, and security updates please upgrade to Python 3.10 or later. More information can be found here: https://aws.amazon.com/blogs/developer/python-support-policy-updates-for-aws-sdks-and-tools/
+  warnings.warn(warning, PythonDeprecationWarning)
+hash_k2d_bytes	1189091671800
+
+== RUNG 1: identical random 4 KiB reads, only the queue depth changes ==
+depth	n	lookups_per_s	apparent_req_latency_ms
+1	40	6.9	145	(1x over depth 1)
+4	80	30.6	131	(4x over depth 1)
+16	320	129.3	124	(19x over depth 1)
+64	1280	465.9	137	(68x over depth 1)
+256	2560	707.4	362	(103x over depth 1)
+1024	5120	788.7	1298	(115x over depth 1)
+
+== RUNG 2: does SORTING the queries help, independent of depth? ==
+random order             12.8 s     783.6 lookups/s  10000 requests    39.1 MiB
+sorted order             12.8 s     779.0 lookups/s  10000 requests    39.1 MiB
+sorted+coalesced         13.0 s     767.4 lookups/s   9903 requests    84.7 MiB
+
+NOTE: lookups/s is the metric; requests and MiB show what each ordering COSTS to get it.
+DONE	yes
+trap_exit_line	1
