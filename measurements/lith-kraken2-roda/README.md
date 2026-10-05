@@ -493,20 +493,31 @@ useful.
 > bottlenecked on the NIC (18.48 GB/s). The copy exists to make re-reads fast; if you read once
 > per batch, the write is pure overhead.
 
-**Prefix sharding: not the binding constraint at these rates.** S3 documents ~5,500 GET/s per
-prefix, and the earlier 34,456/s was all against one key in one prefix — so this needed checking.
-1,024 objects staged two ways in our own bucket, 4 KiB GETs:
+**Prefix sharding: not the binding constraint for a burst this size — and 5,500 is a floor, not a
+cap.** The S3 docs say *"at least 3,500 PUT/COPY/POST/DELETE or 5,500 GET/HEAD requests per second
+per partitioned Amazon S3 prefix"* and *"There are no limits to the number of prefixes in a
+bucket."* **"At least"** matters: 5,500 is a guaranteed minimum that S3 scales past, not a ceiling
+to be exceeded. 1,024 objects staged two ways — **1 prefix vs 64 prefixes, same key count both
+ways** — 4 KiB GETs:
 
 | layout | conc 256 | conc 1024 | conc 2048 |
 |---|---|---|---|
 | flat (1 prefix) | 8,079/s | 31,659/s | **44,790/s** |
 | sharded (64 prefixes) | 8,774/s | 23,806/s | **47,388/s** |
 
-**A single prefix sustained 44,790 GET/s — 8× the documented figure — with zero errors**, and
-sharding across 64 prefixes gave +5.8%, inside the run-to-run noise (note sharded@1024 came in
-*below* flat@1024). Two caveats: S3's prefix partitioning is **adaptive**, so fresh prefixes may
-not be partitioned yet and a null result here is weak evidence rather than proof sharding never
-helps; and "flat" here means 1,024 distinct keys under one prefix, not a single key.
+**A single prefix sustained 44,790 GET/s with zero errors**, and 64 prefixes gave +5.8% — inside
+run-to-run noise, with sharded@1024 landing *below* flat@1024.
+
+**This does not mean sharding is useless; the docs explain the null result.** Scaling *"happens
+gradually and is not instantaneous"*, so 64 freshly-created prefixes had not been partitioned yet,
+while the single flat prefix had already scaled into its headroom. Sharding is the documented
+lever for sustained rates (*"if you create 10 prefixes… you could scale your read performance to
+55,000 read requests per second"*) — it just does not help a cold 60-second burst, which is what
+this probe was. **So: shard if you need sustained high request rates; do not expect it to help a
+short run, and do not read 5,500/s as a wall you have to engineer around.**
+
+Worth noting the bandwidth figure against the same page: AWS cites data-lake applications reaching
+*"up to 100 Gb/s on a single instance."* The 147.8 Gbit/s measured above is past that example.
 
 **The first attempt at this rung was invalid and the cause was mine**: the SDK logged a DEBUG line
 per request through `tee`, producing 20 MB of output and a serialization point that made
@@ -551,6 +562,28 @@ right depends on whether you need the answer in one minute or four.
 - **The refactor is a database format change, not only code.** A merge join needs the table as a
   sorted, chunked run by minimizer hash — a one-time offline rebuild, which `kraken2-build`
   already is, but a format change is an adoption cost on top of an engineering one.
+
+## What this says about where optimisation lives
+
+Every infrastructure lever here was measured and most of them moved the number a lot: queue depth
+(68×), a competent client (44×), coalescing (42×), the instance NIC (3.1×), the destination (685×
+mount→NVMe). And the end of it is still **$0.0194/sample against kraken2's own compute floor of
+$0.0116** — i.e. after all of that, the tool's own single-threaded assumptions set the ceiling.
+
+**There is only so much the infrastructure side can do, and the optimisation point is routinely
+counter-intuitive.** Five times in this directory the obvious move was wrong:
+
+- Mounting a 1.2 TB database looks like the whole point of a mount, and *faithfully preserving the
+  access pattern* is precisely what breaks it.
+- "Copy into RAM" is wrong; NVMe is 4× cheaper and `--memory-mapping` exists to avoid residency.
+- 256 MiB chunks are **slower** than 8 MiB at depth 512.
+- The **cheap** box is ~4× cheaper per sample than the fat-NIC one, which the rate card gets
+  backwards in both directions at once.
+- And 5,500 GET/s is a floor, not a cap — the thing I was engineering around was not there.
+
+The pattern: **the lever you reach for first is usually the one already near its limit**, and the
+one that pays is a property of the workload nobody wrote down. That is the cookbook's recurring
+finding, and this directory is the longest worked example of it.
 
 ## What the excursion cost
 
