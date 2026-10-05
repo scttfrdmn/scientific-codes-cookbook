@@ -1,0 +1,25 @@
+nproc	4
+mem_gib	31
+mount_ok	yes
+files	database150mers.kmer_distrib database150mers.kraken genomes_added.txt hash.k2d opts.k2d seqid2taxid.map taxo.k2d taxonomy.tar.gz unmapped.txt 
+  size database150mers.kmer_distrib	177841040
+  size database150mers.kraken	7071133341
+  size genomes_added.txt	10887257
+  size hash.k2d	1189091671800
+  size opts.k2d	56
+  size seqid2taxid.map	3030112471
+  size taxo.k2d	179150665
+  size taxonomy.tar.gz	6625959242
+  size unmapped.txt	261
+== H1/H3: sequential read of taxo.k2d, ON THE HOST ==	
+  host_taxo_seq	179 MB, 171 MiB in 1.66689 s, 107 MB/s
+== H1/H3: sequential read of hash.k2d (the 1.1 TiB file), ON THE HOST ==	
+  host_hash_seq	268 MB, 256 MiB in 1.84344 s, 146 MB/s
+== H3: RANDOM 4 KiB reads into hash.k2d, on the host (kraken2's actual pattern) ==	
+  random_4k	200 probes in 28.1s = 7.1 probes/s (141 ms each)
+== H2: the SAME sequential read, INSIDE the container (bind-mounted FUSE) ==	
+  container_taxo_seq	179 MB, 171 MiB in 0.0217253 s, 8.2 GB/s
+== baseline: same bytes straight from S3, no mount, same box ==	
+  s3_cp_full_taxo	170.9 MiB/s (171 MiB in 1s)
+DONE	yes
+exit_line	1
