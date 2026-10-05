@@ -1,0 +1,18 @@
+instance_type	c8g.2xlarge
+nproc	8
+nic_advertised	unknown Mb/s (ethtool view)
+ulimit_n	65535
+binary_sha	verified
+== Go: same random 4 KiB range GETs, goroutines, no GIL, plain net/http ==	
+object_bytes	1189091671800
+probe_bytes	4096
+  depth  n        lookups_per_s  MB_per_s     errors     vs_depth_1
+  1      60       8.8            0.04         0          1.0x
+  8      480      72.5           0.30         0          8.3x
+  32     1920     296.0          1.21         0          33.8x
+  128    7680     1237.7         5.07         0          141.4x
+  512    20480    5443.8         22.30        0          622.1x
+  2048   40960    24370.6        99.82        0          2785.1x
+  8192   65536    34456.5        141.13       0          3937.7x
+DONE	yes
+trap_exit	rc=0

@@ -52,10 +52,30 @@ The assumption worth naming, because nobody checks it: *"random access over netw
 hopeless"* is treated as physics when it is a statement about **queue depth**.
 
 Scaling is linear to depth 64 — **68× more work at flat per-request latency (145 → 137 ms)**.
-Nothing got faster. The plateau past 256 is **this probe's client, not S3**: latency inflates
-137 → 1298 ms while throughput barely moves (466 → 789), which is in-process queuing, and
-789 × 4 KiB = 3.2 MB/s is nowhere near the NIC or S3's ~5,500 GET/s per prefix. **So 100× is a
-floor.**
+Nothing got faster.
+
+**The plateau past 256 was my Python client, and the margin is embarrassing.** I originally
+guessed that and asserted it without testing. Rewriting the identical sweep in **Go** (goroutines,
+no GIL, plain `net/http` range GETs, same offsets and seed) **on the same instance type**:
+
+| depth | Python/boto3 | **Go** |
+|---|---|---|
+| 1 | 6.9/s | 8.8/s |
+| 128 | — | 1,237.7/s |
+| 512 | — | 5,443.8/s |
+| 2048 | — | 24,370.6/s |
+| **8192** | — | **34,456.5/s** (141 MB/s, 0 errors) |
+| best Python | 788.7/s | **44× higher** |
+
+Two instance shapes were also compared to rule out the NIC: `c8g.2xlarge` (8 vCPU, *burstable*
+"Up to 15 Gb") vs `r8gd.8xlarge` (32 vCPU, *sustained* 15 Gb). Under Python the plateau moved only
+**788.7 → 905.1 (+15%)** — 4× the cores and a better NIC bought almost nothing, because the GIL
+makes extra cores inert. So the ceiling was never bandwidth, PPS, or S3; **it was one process's
+ability to keep requests in flight.**
+
+**Against the lith mount's 7.9/s that is 4,362× — on identical storage, from an 8-vCPU box.** It
+also **exceeds single-threaded local NVMe (5,412/s) by 6.4×**, which is the sentence that changes
+the architecture question from *"is the copy expensive"* to *"is the copy necessary."*
 
 This *supports* [lith#232](https://github.com/scttfrdmn/lith/issues/232)'s "lith has no lever"
 rather than undermining it: the lever needs several future offsets at once, and a page fault
@@ -99,8 +119,8 @@ shape would have, for free).
 
 ### What it does to the layout question
 
-Measured sequential S3 is **1125 MB/s** with depth, not the 146 MB/s a single stream gives. So a
-fan-out that streams the index costs:
+Measured sequential S3 is **1125 MB/s** with depth, not the 146 MB/s a single stream gives (and the
+Go probe shows even that is not the ceiling). So a fan-out that streams the index costs:
 
 | | wall | cost |
 |---|---|---|
@@ -206,6 +226,28 @@ already full of the database, so **there was never a cold rung to compare agains
 vs 71.2 s measures run-to-run stability rather than cache warmth. Testing it properly needs
 `drop_caches` before the first rung. What the identical times *do* rule out is any large
 remaining cache win on this box.
+
+### The term I had not counted: S3 request charges decide the design
+
+Throughput is not the binding constraint once the client is competent — **money is**, and only in
+a bucket you own. At $0.0004/1000 GETs, for one 1M-read sample at ~30 lookups/read:
+
+| design | throughput | requests | **cost in your own bucket** | barrier |
+|---|---|---|---|---|
+| `mmap` over a mount (what kraken2 does) | 7.9 lookups/s | — | — | none, but unusable |
+| per-lookup range GETs, deep queue | **34,456/s** | 30M | **$12.00** | none |
+| **sorted + coalesced scan** | **1125 MB/s** | **72k** | **$0.029** | none |
+| copy 1107 GiB to local NVMe | 124.2 Kseq/min | — | $1.02 one-off | **26 min** |
+
+So the two design moves are **both load-bearing and neither is sufficient**: concurrency buys the
+throughput, coalescing buys the request economics (417× fewer requests, measured). Per-lookup GETs
+are byte-efficient and request-ruinous; the scan is both.
+
+**And a trap worth naming.** This RODA bucket reports `Payer: BucketOwner`, so those 30M GETs are
+**free to the requester** — the Open Data sponsor pays. Which makes the per-lookup pattern look
+costless exactly while you are prototyping against public data, and turns into $12/sample the
+moment the database lives in a bucket you own. A recipe that only works because someone else is
+paying for the requests is not a recipe.
 
 ### Scaling out does not help, and the method has slack at any scale
 
