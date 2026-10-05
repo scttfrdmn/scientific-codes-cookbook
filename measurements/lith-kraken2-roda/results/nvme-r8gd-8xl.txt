@@ -1,0 +1,102 @@
+instance_type	r8gd.8xlarge
+nproc	32
+mem_gib	247
+== P0: find and format the instance-store NVMe ==	
+root_dev	nvme1n1
+nvme_found	nvme0n1 1.7T
+nvme_mounted	1.8T avail 1.8T fs /dev/nvme0n1
+== P1: lith random 4 KiB probes, with NIC bytes -> MEASURED amplification ==	
+mount_ok	yes
+  lith_probe	200 probes 25.3s 7.9/s 126 ms_each
+lith_probe_nic_mib	17
+lith_amplification	23x over 200x4KiB
+lith_fill_kib_per_probe	91
+== P2: parallel copy of the RUNTIME set (hash.k2d+taxo.k2d+opts.k2d) to NVMe ==	
+  copied	opts.k2d 56
+  copied	taxo.k2d 179150665
+  copy_progress	13 GiB / 88 s
+  copy_progress	27 GiB / 109 s
+  copy_progress	42 GiB / 129 s
+  copy_progress	57 GiB / 149 s
+  copy_progress	71 GiB / 170 s
+  copy_progress	86 GiB / 190 s
+  copy_progress	100 GiB / 211 s
+  copy_progress	114 GiB / 231 s
+  copy_progress	129 GiB / 251 s
+  copy_progress	143 GiB / 272 s
+  copy_progress	158 GiB / 292 s
+  copy_progress	172 GiB / 313 s
+  copy_progress	187 GiB / 333 s
+  copy_progress	202 GiB / 353 s
+  copy_progress	217 GiB / 374 s
+  copy_progress	231 GiB / 394 s
+  copy_progress	246 GiB / 415 s
+  copy_progress	260 GiB / 435 s
+  copy_progress	274 GiB / 455 s
+  copy_progress	288 GiB / 476 s
+  copy_progress	301 GiB / 496 s
+  copy_progress	316 GiB / 517 s
+  copy_progress	331 GiB / 537 s
+  copy_progress	347 GiB / 557 s
+  copy_progress	362 GiB / 578 s
+  copy_progress	377 GiB / 598 s
+  copy_progress	392 GiB / 619 s
+  copy_progress	408 GiB / 639 s
+  copy_progress	422 GiB / 659 s
+  copy_progress	435 GiB / 680 s
+  copy_progress	449 GiB / 700 s
+  copy_progress	463 GiB / 721 s
+  copy_progress	477 GiB / 741 s
+  copy_progress	490 GiB / 761 s
+  copy_progress	505 GiB / 782 s
+  copy_progress	519 GiB / 802 s
+  copy_progress	534 GiB / 823 s
+  copy_progress	547 GiB / 843 s
+  copy_progress	562 GiB / 864 s
+  copy_progress	577 GiB / 884 s
+  copy_progress	593 GiB / 904 s
+  copy_progress	608 GiB / 925 s
+  copy_progress	623 GiB / 945 s
+  copy_progress	639 GiB / 966 s
+  copy_progress	654 GiB / 986 s
+  copy_progress	670 GiB / 1006 s
+  copy_progress	685 GiB / 1027 s
+  copy_progress	701 GiB / 1047 s
+  copy_progress	715 GiB / 1068 s
+  copy_progress	729 GiB / 1088 s
+  copy_progress	743 GiB / 1108 s
+  copy_progress	758 GiB / 1129 s
+  copy_progress	773 GiB / 1149 s
+  copy_progress	788 GiB / 1170 s
+  copy_progress	804 GiB / 1190 s
+  copy_progress	819 GiB / 1210 s
+  copy_progress	834 GiB / 1231 s
+  copy_progress	849 GiB / 1251 s
+  copy_progress	864 GiB / 1272 s
+  copy_progress	878 GiB / 1292 s
+  copy_progress	893 GiB / 1312 s
+  copy_progress	908 GiB / 1333 s
+  copy_progress	923 GiB / 1353 s
+  copy_progress	938 GiB / 1374 s
+  copy_progress	952 GiB / 1394 s
+  copy_progress	966 GiB / 1414 s
+  copy_progress	981 GiB / 1435 s
+  copy_progress	995 GiB / 1455 s
+  copy_progress	1009 GiB / 1476 s
+  copy_progress	1023 GiB / 1496 s
+  copy_progress	1037 GiB / 1516 s
+  copy_progress	1052 GiB / 1537 s
+  copy_progress	1067 GiB / 1557 s
+  copy_progress	1082 GiB / 1578 s
+  copy_progress	1097 GiB / 1598 s
+  copy_progress	1108 GiB / 1619 s
+  copied	hash.k2d 1189091671800
+copy_wall_s	1561
+copy_gib	1107.6
+copy_gbps	0.76 GB/s
+copy_cost_usd	1.0196
+== P3: random 4 KiB probes on NVMe -- the direct comparison to P1 ==	
+  nvme_probe	2000 probes 0.37s 5412/s 0.185 ms_each
+== P3: kraken2 --memory-mapping on 1M real reads from NVMe ==	
+reads_in	1000000
+trap_exit_line	1
