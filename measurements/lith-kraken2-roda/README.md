@@ -455,18 +455,80 @@ with async range GETs needs **565k–1.69M lookups/s** to feed that floor; Go at
 nowhere near sufficient.
 
 **The scan gets there, and its cost is per-*batch* rather than per-sample** — one pass answers an
-arbitrarily large batch, which is the property neither the copy nor per-lookup has. On a
-`c8gn.16xlarge` (64 vCPU, 200 Gb, no local disk, $3.792/hr), assuming 10 GB/s:
+arbitrarily large batch, which is the property neither the copy nor per-lookup has. On a `c8gn.16xlarge` (64 vCPU, 200 Gb, no local disk, $3.792/hr) at the **measured 18.48 GB/s**:
 
 | samples batched | scan | compute | total | **$/sample** |
 |---|---|---|---|---|
-| 1 | 2.0 min | 0.3 min | $0.151 | $0.151 |
-| 10 | 2.0 min | 3.0 min | $0.319 | $0.032 |
-| **100** | 2.0 min | 29.5 min | $1.998 | **$0.0200** |
-| 1000 | 2.0 min | 295 min | $18.79 | $0.0188 |
+| 1 | 64 s | 18 s | $0.0939 | **$0.0939** |
+| 4 | 64 s | 71 s | $0.1498 | $0.0375 |
+| **100** | 64 s | 1771 s | $1.9407 | **$0.0194** |
+| 1000 | 64 s | 17710 s | $18.73 | $0.0187 |
+
+Compute overtakes the scan at just **3.6 samples**, so above that you are paying to classify
+rather than to read — the right place to be.
 
 **$0.0200/sample against today's best of $0.3672 — 18× cheaper**, with no local disk, no 26-minute
 barrier and no 1.2 TB instance requirement.
+
+### Measured, not assumed: the scan rate, and whether prefix sharding matters
+
+The batched projection hinged on an assumed 10 GB/s. It is now measured, and **10 GB/s was
+conservative.** Large sequential range GETs on the real `hash.k2d`, bytes discarded (pure network
+read, no disk in the path):
+
+| chunk | conc | `c8gn.4xlarge` (16c) | `c8gn.16xlarge` (64c, 200 Gb) |
+|---|---|---|---|
+| 8 MiB | 32 | 1.44 GB/s | 1.42 GB/s |
+| 8 MiB | 128 | 5.12 GB/s | 5.40 GB/s |
+| **8 MiB** | **512** | **5.64 GB/s** | **18.48 GB/s — 147.8 Gbit, 74% of NIC** |
+| 32 MiB | 512 | 4.73 GB/s | 17.95 GB/s |
+| 256 MiB | 512 | 5.77 GB/s | 13.97 GB/s |
+
+Zero errors anywhere; 533 GB pulled per run. **Concurrency is worth 13×, chunk size only ~1.3× —
+and 8 MiB beats 256 MiB at depth 512**, because 512 × 256 MiB means 128 GB in flight, well past
+useful.
+
+> **The whole 1,189 GB table streams in 64.3 s. Copying it took 1,563 s — 24× slower for the same
+> bytes**, because the copy is bottlenecked on NVMe *write* (0.76 GB/s) while the stream is
+> bottlenecked on the NIC (18.48 GB/s). The copy exists to make re-reads fast; if you read once
+> per batch, the write is pure overhead.
+
+**Prefix sharding: not the binding constraint at these rates.** S3 documents ~5,500 GET/s per
+prefix, and the earlier 34,456/s was all against one key in one prefix — so this needed checking.
+1,024 objects staged two ways in our own bucket, 4 KiB GETs:
+
+| layout | conc 256 | conc 1024 | conc 2048 |
+|---|---|---|---|
+| flat (1 prefix) | 8,079/s | 31,659/s | **44,790/s** |
+| sharded (64 prefixes) | 8,774/s | 23,806/s | **47,388/s** |
+
+**A single prefix sustained 44,790 GET/s — 8× the documented figure — with zero errors**, and
+sharding across 64 prefixes gave +5.8%, inside the run-to-run noise (note sharded@1024 came in
+*below* flat@1024). Two caveats: S3's prefix partitioning is **adaptive**, so fresh prefixes may
+not be partitioned yet and a null result here is weak evidence rather than proof sharding never
+helps; and "flat" here means 1,024 distinct keys under one prefix, not a single key.
+
+**The first attempt at this rung was invalid and the cause was mine**: the SDK logged a DEBUG line
+per request through `tee`, producing 20 MB of output and a serialization point that made
+81,920-request rungs collapse to ~500/s with zero errors. Fixed with `logging.Nop{}` and
+`WithClientLogMode(0)`.
+
+### Which box — and the rate card gets it backwards twice
+
+| | $/hr | scan rate | $ per scan | $/sample at N=100 |
+|---|---|---|---|---|
+| `c8gn.4xlarge` (16c) | 0.9480 | 5.88 GB/s | **$0.0533** | **$0.0099** |
+| `c8gn.16xlarge` (64c) | 3.7920 | 18.48 GB/s | $0.0678 | $0.0380 |
+
+4× the rate card buys **3.1×** the bandwidth, so the fat box is **1.3× dearer per byte scanned** —
+and once the compute leg is included the small box is **~4× cheaper per sample**, because kraken2
+appears to saturate near 16 threads and the 64-core box leaves ~48 cores idle
+([effective cost](../../patterns/layout-and-effective-cost.md): you rent a bundle and use a
+fraction). *Caveat: that saturation came from a 1.7 s warm run, too short to be a reliable scaling
+measurement — it is the weakest input in this table.*
+
+So the fat NIC buys **latency** (64 s vs 202 s to sweep the table), not $/result. Which one is
+right depends on whether you need the answer in one minute or four.
 
 ### The asymmetry that makes the shape obvious
 
@@ -484,8 +546,8 @@ barrier and no 1.2 TB instance requirement.
 - **The 17.7 s floor derives from a 1.77 s warm run** — short enough that thread startup may
   dominate, so the true floor could be lower. `t16` (1.724 s) ≈ `t32` (1.771 s) hints at
   saturation by 16 threads but is not a reliable scaling measurement at that duration.
-- **10 GB/s on a 200 Gb NIC is assumed.** Measured here is 1125 MB/s on a 15 Gb box (7.5% of NIC);
-  10 GB/s is 4% of 200 Gb, so plausible and unproven — and the batched table hinges on it.
+- ~~10 GB/s on a 200 Gb NIC is assumed.~~ **Now measured at 18.48 GB/s** (74% of NIC, zero
+  errors), so the assumption was conservative and the batched figures improved.
 - **The refactor is a database format change, not only code.** A merge join needs the table as a
   sorted, chunked run by minimizer hash — a one-time offline rebuild, which `kraken2-build`
   already is, but a format change is an adoption cost on top of an engineering one.

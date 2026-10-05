@@ -1,0 +1,39 @@
+instance_type	c8gn.4xlarge
+nproc	16
+mem_gib	31
+nic_driver_speed	not reported Mb/s
+ulimit_n	65535
+sysctl_tuned	yes
+binary_sha	verified
+object_bytes	1189091671800
+
+== RUNG A: bandwidth -- big sequential range GETs on hash.k2d ==
+  chunk     conc   GB_read   GB_per_s    Gbit_per_s errors
+  8 MiB     32     34.4      1.44        11.6      0
+  8 MiB     128    34.4      5.12        41.0      0
+  8 MiB     512    34.4      5.64        45.1      0
+  32 MiB    32     34.4      2.51        20.1      0
+  32 MiB    128    34.4      5.88        47.1      0
+  32 MiB    512    34.4      4.73        37.8      0
+  64 MiB    32     34.4      2.86        22.9      0
+  64 MiB    128    34.4      5.46        43.7      0
+  64 MiB    512    34.4      4.91        39.3      0
+  256 MiB   32     34.4      2.03        16.3      0
+  256 MiB   128    34.4      4.31        34.5      0
+  256 MiB   512    137.4     5.77        46.1      0
+
+== RUNG B: small-request rate, FLAT vs SHARDED across 64 prefixes ==
+  staged flat     1024 objects (0 failed) in 0.8 s
+  staged sharded  1024 objects (0 failed) in 0.8 s
+
+  layout    conc   n         gets_per_s     errors
+  flat      256    7680      8079.6         0
+  flat      1024   30720     31659.1        0
+  flat      2048   61440     44789.9        0
+  sharded   256    7680      8773.7         0
+  sharded   1024   30720     23805.6        0
+  sharded   2048   61440     47388.4        0
+total_nic_rx_gb	533.7
+total_wall_s	146
+DONE	yes
+trap_exit	rc=0
