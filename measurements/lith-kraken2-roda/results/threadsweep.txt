@@ -1,0 +1,110 @@
+instance_type	r8gd.8xlarge
+nproc	32
+mem_gib	247
+== Q1: S3 concurrency sweep on this NIC (was it the client or the instance?) ==	
+/home/scttfrdmn/.local/lib/python3.9/site-packages/boto3/compat.py:89: PythonDeprecationWarning: Boto3 will no longer support Python 3.9 starting April 29, 2026. To continue receiving service updates, bug fixes, and security updates please upgrade to Python 3.10 or later. More information can be found here: https://aws.amazon.com/blogs/developer/python-support-policy-updates-for-aws-sdks-and-tools/
+  warnings.warn(warning, PythonDeprecationWarning)
+  depth	n	lookups_per_s	MB_per_s
+  1	40	7.9	0.03	(1x)
+  16	320	129.0	0.53	(16x)
+  64	1280	535.3	2.19	(68x)
+  256	2560	864.3	3.54	(109x)
+  1024	5120	894.7	3.66	(113x)
+  2048	8192	905.1	3.71	(115x)
+container_can_write	yes
+reads	100000
+== Q4: the copy is a stage-then-run barrier -- measure its WALL, not just its $ ==	
+  copy_prog	43 GiB / 203 s
+  copy_prog	87 GiB / 263 s
+  copy_prog	132 GiB / 323 s
+  copy_prog	177 GiB / 384 s
+  copy_prog	221 GiB / 444 s
+  copy_prog	265 GiB / 505 s
+  copy_prog	309 GiB / 565 s
+  copy_prog	352 GiB / 625 s
+  copy_prog	396 GiB / 686 s
+  copy_prog	439 GiB / 746 s
+  copy_prog	483 GiB / 807 s
+  copy_prog	527 GiB / 867 s
+  copy_prog	572 GiB / 927 s
+  copy_prog	617 GiB / 988 s
+  copy_prog	662 GiB / 1048 s
+  copy_prog	706 GiB / 1109 s
+  copy_prog	751 GiB / 1169 s
+  copy_prog	796 GiB / 1229 s
+  copy_prog	841 GiB / 1290 s
+  copy_prog	886 GiB / 1350 s
+  copy_prog	929 GiB / 1411 s
+  copy_prog	971 GiB / 1471 s
+  copy_prog	1015 GiB / 1531 s
+  copy_prog	1060 GiB / 1592 s
+  copy_prog	1104 GiB / 1652 s
+copy_wall_s	1529
+copy_wall_min	25.5
+copy_gbps	0.78
+copy_cost_usd	0.9987
+copy_barrier	no science happens during these 25 minutes
+== Q2: threads 4 -> 32 on IDENTICAL work. linear => queue depth binds; plateau => CPU ==	
+-- t4: --threads 4  --	
+  t4_cache_gib_before	244
+  t4_prog	0 / 20s
+  t4_prog	0 / 40s
+  t4_prog	0 / 61s
+  t4_prog	0 / 81s
+  t4_prog	0 / 101s
+  t4_prog	0 / 122s
+  t4_prog	100000 / 142s
+  t4_rc	0
+  t4_wall_s	142
+  t4_kraken_rate	48.3 Kseq/m
+  t4_kraken_secs	124.284
+  t4_classified_pct	0.71
+  t4_compute_usd	0.0927
+-- t8: --threads 8  --	
+  t8_cache_gib_before	242
+  t8_prog	100000 / 20s
+  t8_rc	0
+  t8_wall_s	21
+  t8_kraken_rate	1289.6 Kseq/m
+  t8_kraken_secs	4.653
+  t8_classified_pct	0.71
+  t8_compute_usd	0.0137
+-- t16: --threads 16  --	
+  t16_cache_gib_before	242
+  t16_prog	100000 / 20s
+  t16_rc	0
+  t16_wall_s	21
+  t16_kraken_rate	3480.2 Kseq/m
+  t16_kraken_secs	1.724
+  t16_classified_pct	0.71
+  t16_compute_usd	0.0137
+-- t32: --threads 32  --	
+  t32_cache_gib_before	242
+  t32_prog	100000 / 20s
+  t32_rc	0
+  t32_wall_s	21
+  t32_kraken_rate	3387.9 Kseq/m
+  t32_kraken_secs	1.771
+  t32_classified_pct	0.71
+  t32_compute_usd	0.0137
+== Q3: the cold rung the previous ladder never had (drop_caches first) ==	
+-- t32cold: --threads 32 cold --	
+  t32cold_cache_gib_before	0
+  t32cold_prog	0 / 20s
+  t32cold_prog	0 / 40s
+  t32cold_prog	0 / 61s
+  t32cold_prog	0 / 81s
+  t32cold_prog	0 / 102s
+  t32cold_prog	0 / 122s
+  t32cold_prog	100000 / 142s
+  t32cold_prog	100000 / 163s
+  t32cold_rc	0
+  t32cold_wall_s	163
+  t32cold_kraken_rate	42.9 Kseq/m
+  t32cold_kraken_secs	139.909
+  t32cold_classified_pct	0.71
+  t32cold_compute_usd	0.1065
+total_box_s	2061
+total_box_usd	1.3462
+DONE	yes
+trap_exit	rc=0

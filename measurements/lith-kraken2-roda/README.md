@@ -8,6 +8,45 @@
 > **kraken2's performance on object storage is a property of a 2013 design constraint — "the
 > database must fit in RAM" — not of the problem or of S3.**
 
+## The answer, before the evidence
+
+**kraken2 is 98.7% I/O wait.** Identical 100k-read work takes **139.9 s cold** and **1.77 s warm**
+(32 threads, `drop_caches` between) — so its compute floor is ~1.8 s per 100k reads and everything
+else is waiting for the database. The access pattern is not a detail of this workload; it *is* the
+workload.
+
+**Cross-region is an anti-pattern, which collapses the decision.** In-region, S3→EC2 transfer is
+free and only requests are billed. So *buying byte-precision buys the wrong thing* — and that is
+exactly what `mmap` does, which is why mounting the database fails rather than merely being slow.
+
+Three ways to feed it, per 1M-read sample:
+
+| | per-lookup 4 KiB (`mmap`, mount) | **stream big chunks** | **copy to local** |
+|---|---|---|---|
+| requests | 28.5M → **$11.40** | 70,875 → $0.028 | 17,719 → **$0.0074** |
+| bytes moved (free in-region) | 117 GB | 1,189 GB | 1,189 GB |
+| big box required | no | **no** | **yes** — ≥1.2 TB NVMe or RAM |
+| barrier before any science | none | **none**, overlaps fetch | **26 min** |
+| works with kraken2 today | yes — at **7.9 lookups/s**, i.e. never finishes | **no**, needs a rewrite | **yes** |
+
+**So the optimum is one question: how many samples per box?**
+
+- **Cohort (≳30 samples) → copy once to local NVMe.** The barrier and the $1.02 amortise to
+  **$0.367/sample**, and this is **the best option available with kraken2 as it exists.** It needs
+  the big box.
+- **One or a few samples → streaming big chunks wins**, because at low N the barrier and the big
+  instance dominate. kraken2 cannot do this, so today the honest choices are to eat the barrier or
+  use a capped DB (Standard-8/16) on a small box.
+- **Never: per-lookup random access in-region.** 1,600× the request cost to save bytes that are
+  free.
+
+**The amortisation caveat that matters:** 1.77 s is kraken2's *compute floor*, not what sample #2
+costs. A different sample probes different table locations, and 247 GiB of page cache against a
+1,107 GiB table holds **22%** — so every fresh sample is ~78% cold. **Caching does not reduce
+per-sample cost; only the copy does.**
+
+---
+
 The RODA kraken2 RefSeq-Complete v205 database is **1.206 TB** in `us-west-2`; `hash.k2d` alone is
 `1,189,091,671,800` bytes. Nothing can copy that casually, so it is the case where a mount is
 forced rather than chosen — the adversarial test for [lith](https://github.com/scttfrdmn/lith),
@@ -333,10 +372,22 @@ I/O-bound" on the strength of it using only 36% of the NVMe ceiling — but the 
 figure makes that reasoning too weak: 1.5M cycles is far beyond any plausible CPU cost for a hash
 probe, so the time is going into stalls. **Not CPU-bound, not device-saturated, concurrency-starved.**
 
-**The decisive test is cheap and not yet run:** copy once, then sweep `--threads` 4/8/16/32 at
-100k reads on the same box (~$1.02 + 4 × $0.05). If throughput is linear in threads, queue depth
-is the binding constraint; if it plateaus, CPU is. That single rung would settle what the redesign
-should actually attack.
+**That test has now run, and my rung design broke again in the same way — no `drop_caches`
+*between* rungs**, so the first rung warmed the cache and the rest rode it:
+
+| threads | kraken2 secs | rate | what it actually measured |
+|---|---|---|---|
+| 4 | 124.284 | 48.3 Kseq/m | **cold** — paid all the faults |
+| 8 | 4.653 | 1,289.6 Kseq/m | warm |
+| 16 | 1.724 | 3,480.2 Kseq/m | warm |
+| 32 | 1.771 | 3,387.9 Kseq/m | warm, saturated at 16 |
+| **32, `drop_caches`** | **139.909** | 42.9 Kseq/m | **cold** |
+
+4→8 threads "improving" 27× is impossible as thread scaling; the cold rung landing back at 139.9 s
+is the proof. **The accident is more useful than the design was:** cold/warm on identical work is
+**79×**, so kraken2's compute floor is ~1.8 s per 100k reads and **98.7% of a cold run is I/O
+wait.** That answers the CPU-vs-I/O question definitively — it is I/O — and it means the earlier
+124.2 Kseq/min figure was partially warm, not cold.
 
 **The largest slack is algorithmic and invisible at every scale.** 99.30% of these reads classify,
 overwhelmingly to one organism — the run performs tens of millions of full-table probes to
