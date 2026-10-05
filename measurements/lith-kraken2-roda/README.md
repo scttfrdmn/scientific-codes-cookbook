@@ -232,22 +232,39 @@ remaining cache win on this box.
 Throughput is not the binding constraint once the client is competent — **money is**, and only in
 a bucket you own. At $0.0004/1000 GETs, for one 1M-read sample at ~30 lookups/read:
 
-| design | throughput | requests | **cost in your own bucket** | barrier |
-|---|---|---|---|---|
-| `mmap` over a mount (what kraken2 does) | 7.9 lookups/s | — | — | none, but unusable |
-| per-lookup range GETs, deep queue | **34,456/s** | 30M | **$12.00** | none |
-| **sorted + coalesced scan** | **1125 MB/s** | **72k** | **$0.029** | none |
-| copy 1107 GiB to local NVMe | 124.2 Kseq/min | — | $1.02 one-off | **26 min** |
+| design | throughput | requests | **GET $** | bytes moved | barrier |
+|---|---|---|---|---|---|
+| `mmap` over a mount (what kraken2 does) | 7.9 lookups/s | — | — | 2.7 GB | none, but unusable |
+| per-lookup range GETs, deep queue | **34,456/s** | 30,000,000 | **$12.00** | 123 GB | none |
+| sorted + coalesced scan, 16 MiB | **1125 MB/s** | 74,319 | $0.0297 | 1,189 GB | none |
+| **`aws s3 cp`, 64 MB chunks** | 0.76 GB/s | **18,580** | **$0.0074** | 1,189 GB | **26 min** |
 
-So the two design moves are **both load-bearing and neither is sufficient**: concurrency buys the
-throughput, coalescing buys the request economics (417× fewer requests, measured). Per-lookup GETs
-are byte-efficient and request-ruinous; the scan is both.
+**The copy is the most coalesced reader of all** — biggest chunks, fewest calls, cheapest in
+requests. The scan makes 4× *more* requests than the copy, and at realistic density it touches
+essentially every chunk anyway, so it moves roughly the same bytes.
 
-**And a trap worth naming.** This RODA bucket reports `Payer: BucketOwner`, so those 30M GETs are
-**free to the requester** — the Open Data sponsor pays. Which makes the per-lookup pattern look
-costless exactly while you are prototyping against public data, and turns into $12/sample the
-moment the database lives in a bucket you own. A recipe that only works because someone else is
-paying for the requests is not a recipe.
+So the honest split is narrower than "the scan wins on economics": **concurrency is what makes a
+no-copy design possible at all, and the only thing the scan buys over the copy is that it overlaps
+fetch with compute instead of being a 26-minute barrier**
+([data-movement](../../patterns/data-movement.md) already says exactly this). What coalescing
+rules *out* is the per-lookup design — byte-efficient, 1,600× the copy's request count, and the
+only uneconomic option on the list.
+
+**And a trap worth naming, which is bigger than requests.** This RODA bucket reports
+`Payer: BucketOwner`, so every GET above is **free to the requester** — the Open Data sponsor
+pays. For a 1,189 GB database the terms RODA is absorbing are:
+
+| | if you host it yourself |
+|---|---|
+| storage | **$27.35/month**, standing, before one read is classified |
+| GET charges | $0.0074 per copy, or $12.00 per per-lookup sample |
+| in-region transfer S3→EC2 | free — **and $23.78 cross-region for a single copy** |
+
+So the per-lookup pattern looks costless exactly while you prototype against public data, and the
+whole cost structure changes the moment the database lives in a bucket you own. **A recipe that
+only works because someone else is paying is not a recipe** — check `Payer` and cost it as though
+you owned the bucket. (That transfer line also reprices the cross-region mistake earlier on this
+page: at full scale it is $23.78, not merely slow.)
 
 ### Scaling out does not help, and the method has slack at any scale
 
