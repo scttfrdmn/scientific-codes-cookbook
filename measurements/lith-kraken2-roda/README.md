@@ -266,6 +266,36 @@ only works because someone else is paying is not a recipe** — check `Payer` an
 you owned the bucket. (That transfer line also reprices the cross-region mistake earlier on this
 page: at full scale it is $23.78, not merely slow.)
 
+### Eliminating requests costs 9.7× the data movement — it is a frontier, not a win
+
+Chunk size is the dial, and the two ends are genuinely opposed: per-lookup 4 KiB GETs move only
+the **117 GB** you actually need but make 28.5M requests; big chunks make almost none but move the
+whole **1,189 GB**.
+
+| chunk | requests | GB moved | amplification | GET $ | **in-region total** | **cross-region total** |
+|---|---|---|---|---|---|---|
+| 4 KiB | 28,501,953 | 116.7 | 1.0× | $11.40 | $11.40 | **$13.74** ← best |
+| 64 KiB | 14,671,459 | 961.5 | 7.8× | $5.87 | $5.87 | $25.10 |
+| 256 KiB | 4,529,938 | 1,187.5 | 9.7× | $1.81 | $1.81 | $25.56 |
+| 16 MiB | 70,875 | 1,189.1 | 9.7× | $0.0284 | $0.0284 | $23.81 |
+| 256 MiB | 4,430 | 1,189.1 | 9.7× | $0.0018 | **$0.0018** ← best | $23.78 |
+
+**Amplification saturates at 9.7× by 256 KiB** — past that you are already touching every chunk,
+so you move the entire table regardless and are *only* buying request reduction. Which is why,
+in-region, there is no reason to stop short of the largest chunk you can buffer.
+
+**And the optimum inverts with transfer pricing.** In-region S3→EC2 transfer is free, so you buy
+fewer requests with unlimited amplification and the copy wins by **1,615×**. Cross-region at
+$0.02/GB, bytes dominate, so you buy precision and eat the request count — and **per-lookup wins
+by 1.6×**. Same workload, opposite architecture.
+
+> **So the sharpest version of the finding: kraken2's `mmap` pattern minimises *bytes read*. That
+> was the correct objective on a local disk with finite bandwidth. In-region S3 charges for
+> *requests* and gives bytes away free — so the design is optimal for a cost model that no longer
+> applies.** Not wrong; obsolete. And it is the reason the naive fix ("just mount it") fails: a
+> mount faithfully preserves the byte-minimising access pattern, which is exactly the thing that
+> is no longer worth minimising.
+
 ### Scaling out does not help, and the method has slack at any scale
 
 **$0.3044 per million reads is invariant under scale-out.** The compute is 14,912 **core-seconds**
