@@ -440,6 +440,56 @@ from RAM to NVMe. That order matters: it makes the 42× a confirmed prediction r
 narrative fitted to a number afterwards. Three of this page's own earlier claims died in the
 process, which is the honest cost of having had them.
 
+## What a refactor would buy, from measured floors
+
+The forward question: not which existing option is least bad, but what is reachable if the tool
+is fixed. Every input below is measured on this page.
+
+**The ceiling is kraken2's own compute floor, 27× away.** Warm, it does 100k reads in 1.77 s, so
+1M reads is **17.7 s of compute** against the **483.2 s** actually observed — $0.0116 vs $0.3331,
+**29× cheaper**.
+
+**The obvious refactor does not get there, which is the useful negative result.** Replacing `mmap`
+with async range GETs needs **565k–1.69M lookups/s** to feed that floor; Go at depth 8192 delivers
+**34,456/s** on 8 vCPU (~138k scaled to 32). **Still 4–49× short.** Concurrency is necessary and
+nowhere near sufficient.
+
+**The scan gets there, and its cost is per-*batch* rather than per-sample** — one pass answers an
+arbitrarily large batch, which is the property neither the copy nor per-lookup has. On a
+`c8gn.16xlarge` (64 vCPU, 200 Gb, no local disk, $3.792/hr), assuming 10 GB/s:
+
+| samples batched | scan | compute | total | **$/sample** |
+|---|---|---|---|---|
+| 1 | 2.0 min | 0.3 min | $0.151 | $0.151 |
+| 10 | 2.0 min | 3.0 min | $0.319 | $0.032 |
+| **100** | 2.0 min | 29.5 min | $1.998 | **$0.0200** |
+| 1000 | 2.0 min | 295 min | $18.79 | $0.0188 |
+
+**$0.0200/sample against today's best of $0.3672 — 18× cheaper**, with no local disk, no 26-minute
+barrier and no 1.2 TB instance requirement.
+
+### The asymmetry that makes the shape obvious
+
+| | bytes |
+|---|---|
+| 100 samples of queries (3B minimizers × ~16 B) | **48 GB** |
+| the table | **1,189 GB** |
+
+> **kraken2 streams the reads and holds the table. The right shape streams the table and holds the
+> reads.** The query side is 25× smaller, so buffering queries and sweeping the table past them is
+> the natural structure — feasible in RAM to ~100 samples before an external sort is needed.
+
+### Three caveats, because this is a projection and not a measurement
+
+- **The 17.7 s floor derives from a 1.77 s warm run** — short enough that thread startup may
+  dominate, so the true floor could be lower. `t16` (1.724 s) ≈ `t32` (1.771 s) hints at
+  saturation by 16 threads but is not a reliable scaling measurement at that duration.
+- **10 GB/s on a 200 Gb NIC is assumed.** Measured here is 1125 MB/s on a 15 Gb box (7.5% of NIC);
+  10 GB/s is 4% of 200 Gb, so plausible and unproven — and the batched table hinges on it.
+- **The refactor is a database format change, not only code.** A merge join needs the table as a
+  sorted, chunked run by minimizer hash — a one-time offline rebuild, which `kraken2-build`
+  already is, but a format change is an adoption cost on top of an engineering one.
+
 ## What the excursion cost
 
 Eleven launches, roughly **$8.60**. The kraken2 figure alone took five, of which four died to
