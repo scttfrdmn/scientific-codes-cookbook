@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-polish-medaka-r2",
+  "container": "quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nMODEL=r1041_e82_400bps_hac_v6.0.0\n\necho \"== the model is PINNED, not auto-resolved ==\"\n# medaka can infer a model from basecaller tags in the input, but this recipe states it\n# explicitly for the same reason it pins image digests: the run must not depend on metadata\n# that staging could strip. The model must be one the IMAGE carries -- medaka 2.2.2 bundles\n# four, so nothing is fetched at run time.\nmedaka --version\nmedaka tools list_models 2>&1 | tr ',' '\\n' | sed 's/^ *//' | grep -c . > /dev/null\nmedaka tools list_models 2>&1 | grep -q \"$MODEL\" || { echo \"model $MODEL not in this image\"; medaka tools list_models 2>&1 | head -5; exit 1; }\necho \"model_pinned\\t$MODEL (bundled, no download)\"\n\necho \"== medaka consensus from the same draft and the same reads racon saw ==\"\nT0=$(date +%s)\nmedaka_consensus -i reads.fastq -d draft.fa -o med -t 2 -m \"$MODEL\" > medaka.log 2>&1\nRC=$?; T1=$(date +%s)\necho \"medaka_rc\\t$RC\"\ntest \"$RC\" = \"0\" || { tail -30 medaka.log; exit 1; }\ncp med/consensus.fasta polished-medaka.fa\necho \"medaka_wall_s\\t$(( T1 - T0 ))\"\n\necho \"== score ALL THREE against the depositors' reference, by exact edit distance ==\"\n# python-edlib ships in this image, so the distance is exact Levenshtein rather than a\n# heuristic from an aligner's NM tag.\npython3 -u - <<'PYEOF' | tee score.tsv\nimport edlib, math, sys\n\ndef seq(p):\n    s = []\n    for line in open(p):\n        if not line.startswith(\">\"):\n            s.append(line.strip())\n    return \"\".join(s)\n\ntruth = seq(\"truth.fa\")\nrows = [(\"draft\", \"draft.fa\"), (\"racon\", \"polished-racon.fa\"), (\"medaka\", \"polished-medaka.fa\")]\nprint(\"stage\\tbp\\tedit_distance\\tidentity_pct\\tQ\")\nout = {}\nfor name, path in rows:\n    s = seq(path)\n    # circular plasmid: a linear consensus can start anywhere, so compare under rotation by\n    # doubling the truth and asking for the best infix match. Without this a correct\n    # consensus with a different start point scores as thousands of errors.\n    r = edlib.align(s, truth + truth, mode=\"HW\", task=\"distance\")\n    d = r[\"editDistance\"]\n    ident = 100.0 * (1 - d / len(truth))\n    # d == 0 is the GOOD case and the first version of this line divided by d to produce\n    # it, so a perfect consensus crashed the scorer. Guard first, compute second.\n    q = \"inf\" if d == 0 else \"%.1f\" % (-10 * math.log10(d / len(truth)))\n    print(\"%s\\t%d\\t%d\\t%.4f\\t%s\" % (name, len(s), d, ident, q))\n    out[name] = d\nprint(\"# planted: 18 substitutions + 3 deletions = 21 errors\")\nif not (out[\"racon\"] < out[\"draft\"]):\n    print(\"FAIL racon did not improve on the draft\", file=sys.stderr); sys.exit(1)\nif not (out[\"medaka\"] < out[\"draft\"]):\n    print(\"FAIL medaka did not improve on the draft\", file=sys.stderr); sys.exit(1)\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"scoring failed\"; exit 1; }\n\ncat score.tsv > medaka-diag.txt\n{ printf 'medaka_version\\t%s\\n' \"$(medaka --version 2>&1 | head -1)\"\n  printf 'model\\t%s\\nmedaka_wall_s\\t%s\\n' \"$MODEL\" \"$(( T1 - T0 ))\"; } >> medaka-diag.txt\necho \"MEDAKA OK\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/truth.fa",
+      "destination": "/tmp/truth.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/draft.fa",
+      "destination": "/tmp/draft.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/reads.fastq",
+      "destination": "/tmp/reads.fastq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/polished-racon.fa",
+      "destination": "/tmp/polished-racon.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/polished-medaka.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/polished-medaka.fa"
+    },
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/score.tsv"
+    },
+    {
+      "source": "/tmp/medaka-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/medaka-diag.txt"
+    },
+    {
+      "source": "/tmp/medaka.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish/r2/medaka.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
