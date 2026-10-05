@@ -1,0 +1,131 @@
+# A wildcard scatter-gather: N per-sample jobs discovered from the data, then one join.
+#
+# WHY THE SHELL RUNS DOCKER RATHER THAN USING `container:`.
+# snakemake-executor-plugin-spawn 0.4.0 emits a TaskSpec with no `container` field at all --
+# 0.3.0 added a passthrough and 0.4.0 removed it, because routing a Snakemake re-invocation
+# through `spec.container` puts it inside a one-tool image that has no Snakemake
+# (snakemake-executor-plugin-spawn#16, resolved by removal rather than by patch). Snakemake's
+# own `container:` directive would need apptainer, which stock AL2023 does not have and the
+# plugin's install preamble is not user-settable.
+#
+# So the digest has to be named by the rule itself. That is what the shell does: install
+# docker idempotently, then `docker run` a cosign-verified image pinned by @sha256. The two
+# hard rules this catalog will not bend on -- pin by digest, cap the launch -- are both
+# satisfied: the digest is here, and the cap comes from --spawn-cost-limit.
+
+SAMPLES = [
+    "GCF_000005845.2",   # Escherichia coli K-12 MG1655
+    "GCF_000006945.2",   # Salmonella enterica Typhimurium LT2
+    "GCF_000009045.1",   # Bacillus subtilis 168
+    "GCF_000195955.2",   # Mycobacterium tuberculosis H37Rv
+]
+
+BUCKET = config["bucket"]
+IN     = f"s3://{BUCKET}/inputs/snakemake"
+SEQKIT = "quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5"
+
+# Idempotent, and quiet about it: every job runs on a fresh bare instance, so this is the
+# per-job cost of having a pinned image at all.
+DOCKER = """
+if ! command -v docker >/dev/null 2>&1; then sudo dnf install -y -q docker >/dev/null 2>&1; fi
+sudo systemctl is-active --quiet docker || sudo systemctl start docker >/dev/null 2>&1
+"""
+
+
+rule all:
+    input:
+        "summary.tsv",
+
+
+rule stats:
+    """One job per genome. The job count comes from the wildcard, not from this file."""
+    input:
+        fna=storage.s3(IN + "/genomes/{sample}.fna.gz"),
+    output:
+        tsv="stats/{sample}.tsv",
+    resources:
+        mem_mb=2000,
+    threads: 2
+    shell:
+        DOCKER + r"""
+        mkdir -p stats
+        cp {input.fna} /tmp/in.fna.gz
+        sudo docker run --rm -v /tmp:/w {seqkit} \
+            bash -lc 'export PATH=/opt/conda/bin:$PATH; seqkit stats -T -a /w/in.fna.gz' \
+            > /tmp/raw.tsv
+        # -T is tabular, -a adds N50 etc. Relabel the filename column with the sample so the
+        # join does not depend on the order jobs happen to finish in.
+        awk -v s={wildcards.sample} 'BEGIN{{FS=OFS="\t"}}
+            NR==1{{print "sample",$2,$3,$4,$5,$6,$7,$8; next}}
+            {{print s,$2,$3,$4,$5,$6,$7,$8}}' /tmp/raw.tsv > {output.tsv}
+        cat {output.tsv}
+        """.replace("{seqkit}", SEQKIT)
+
+
+rule aggregate:
+    """The join. Checks each genome against NCBI, then the fan-out against its own sum."""
+    input:
+        stats=expand("stats/{sample}.tsv", sample=SAMPLES),
+        expected=storage.s3(IN + "/expected.tsv"),
+    output:
+        summary="summary.tsv",
+    resources:
+        mem_mb=2000,
+    threads: 1
+    shell:
+        r"""
+        python3 -u - {input.expected} {output.summary} {input.stats} <<'PYEOF'
+# NO BRACE LITERALS ANYWHERE BELOW. Snakemake runs .format() over a shell: block, so a
+# a bare pair of braces is an empty replacement field, and an f-string's placeholder is a
+# resolve -- the first version of this rule died at parse time with
+# wildcard it cannot resolve. The first two versions of this rule died at PARSE time with
+# "IndexError: tuple index out of range, when formatting" -- the second because the comment
+# explaining the first still contained braces. Use dict() and %-formatting, never literals.
+import sys
+
+exp_path = sys.argv[1]
+out_path = sys.argv[2]
+stat_paths = sys.argv[3:]
+
+expected = dict()
+total_expected = None
+for line in open(exp_path):
+    f = line.rstrip("\n").split("\t")
+    if f[0] in ("sample", ""):
+        continue
+    if f[0] == "TOTAL":
+        total_expected = int(f[2])
+    else:
+        expected[f[0]] = (f[1], int(f[2]))
+
+rows = []
+total_obs = 0
+for sp in stat_paths:
+    lines = [l.rstrip("\n").split("\t") for l in open(sp) if l.strip()]
+    d = dict(zip(lines[0], lines[1]))
+    sample = d["sample"]
+    sum_len = int(d["sum_len"])
+    total_obs += sum_len
+    org, want = expected[sample]
+    rows.append((sample, org, sum_len, want, sum_len == want))
+
+rows.sort()
+fh = open(out_path, "w")
+fh.write("sample\torganism\tseqkit_sum_len\tncbi_length\tmatch\n")
+for s, org, got, want, ok in rows:
+    fh.write("%s\t%s\t%d\t%d\t%s\n" % (s, org, got, want, "OK" if ok else "MISMATCH"))
+agg_ok = "OK" if total_obs == total_expected else "MISMATCH"
+fh.write("TOTAL\t-\t%d\t%d\t%s\n" % (total_obs, total_expected, agg_ok))
+fh.close()
+sys.stdout.write(open(out_path).read())
+
+bad = [r[0] for r in rows if not r[4]]
+if bad:
+    sys.exit("FAIL per-genome length disagrees with NCBI: " + ",".join(bad))
+if len(rows) != 4:
+    sys.exit("FAIL expected 4 fan-out results, joined %d" % len(rows))
+if total_obs != total_expected:
+    sys.exit("FAIL fan-out total %d != %d" % (total_obs, total_expected))
+print("AGGREGATE OK: 4/4 genomes match NCBI, and the fan-out sum is exact")
+PYEOF
+        """
