@@ -516,8 +516,15 @@ lever for sustained rates (*"if you create 10 prefixes… you could scale your r
 this probe was. **So: shard if you need sustained high request rates; do not expect it to help a
 short run, and do not read 5,500/s as a wall you have to engineer around.**
 
+**And the honest headline is YMMV.** The same page says *"actual performance will vary based on
+your specific workload characteristics, usage patterns, and system configuration"* — so 44,790/s
+is a data point from one 60-second burst on one instance type, not a number to plan against. The
+durable facts are the *shapes*: 5,500/s is a floor, prefixes are unlimited, scaling is gradual,
+and you have to measure your own case.
+
 Worth noting the bandwidth figure against the same page: AWS cites data-lake applications reaching
-*"up to 100 Gb/s on a single instance."* The 147.8 Gbit/s measured above is past that example.
+*"up to 100 Gb/s on a single instance."* The 147.8 Gbit/s measured above is past that example —
+which is itself a YMMV data point, not a promise.
 
 **The first attempt at this rung was invalid and the cause was mine**: the SDK logged a DEBUG line
 per request through `tee`, producing 20 MB of output and a serialization point that made
