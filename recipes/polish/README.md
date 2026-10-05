@@ -5,7 +5,7 @@ images:
   minimap2: quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a
   racon: quay.io/aarchbio/racon@sha256:75020311bdb6a635ee67718984db28029e95ee2272e32de9d0def8a9826ed4ee
   medaka: quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e
-spawn_version: 0.121.0
+spawn_version: 0.122.0
 last_verified: 2026-10-05
 ---
 # Assembly polishing — two polishers, real nanopore reads, a published answer key
@@ -16,7 +16,7 @@ racon and medaka each rebuild a consensus from real Oxford Nanopore reads on Gra
 
 ```bash
 make stage RECIPE=polish                    # once: 165 ONT reads (120x) + the 6,361 bp reference
-for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s"; done
+for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s" --wait; done
 make ls RECIPE=polish                       # score.tsv is the answer
 
 minimap2 -x map-ont -t 2 draft.fa reads.fastq > ov.paf
@@ -57,6 +57,7 @@ Three tasks: minimap2 and racon on `c8g.large` (2 vCPU / 4 GiB, caps $0.05), med
 | racon | fewer errors than the draft | **0** over the 6,350 bp it emitted |
 | **medaka** | fewer errors than the draft | **0 at exactly 6,361 bp** |
 | model | bundled in the image, nothing fetched at run time | `r1041_e82_400bps_hac_v6.0.0` |
+| determinism | the whole pipeline reproduces across runs | **identical score.tsv on two spawn versions** |
 
 **The draft scoring exactly 21 is the check that validates the scorer**, not just the fixture: an
 independent edit-distance implementation recovered precisely the number of errors planted by an
@@ -111,14 +112,18 @@ against `playgroundlogic/aarchbio/.github/workflows/publish.yml@refs/heads/main`
 
 ```sh
 make stage RECIPE=polish
-for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s"; done
+for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s" --wait; done
 make ls RECIPE=polish
 ```
 
-`--wait` is omitted deliberately: on spawn 0.121.0 it never reads the completion record and times
-out at TTL on a task that succeeded ([spawn#715](https://github.com/spore-host/spawn/issues/715)).
-Polling the bucket for the declared outputs is the workaround and is stronger anyway — it checks
-artifacts rather than a status field ([exit 0 isn't proof](../../practices/container-path.md)).
+Still check the bucket afterwards: `--wait` reports that the command *ran*, never that its output
+is real ([exit 0 isn't proof](../../practices/container-path.md)). `score.tsv` is the artifact that
+settles it.
+
+*Historical, for anyone reading an older run: on spawn **0.121.0** `--wait` never read the
+completion record and timed out at TTL on tasks that had succeeded in under a minute
+([spawn#715](https://github.com/spore-host/spawn/issues/715), fixed in 0.122.0). This recipe was
+re-verified end to end on 0.122.0 and the scores reproduced identically.*
 
 ### Not covered
 
