@@ -17,6 +17,12 @@
 # page cache against a 1107 GiB table should make rung 2 of the same size cheaper. The ladder
 # is therefore NOT independent -- later rungs inherit warmth -- and the warm repeat is how we
 # quantify that rather than pretend it away.
+# MEASURED: spawn runs --command under `bash -e` ($- == "ehB" before this line runs), and
+# `set -uo pipefail` does NOT clear an inherited -e. That silently killed four runs today:
+# a SIGPIPE'd `zcat | sed` under pipefail (rc=141), a kraken2 that exited non-zero, and a
+# `wait` on a failed background job -- each time exiting BEFORE the line that would have
+# reported why. So disable it explicitly and check every status by hand.
+set +e
 set -uo pipefail
 B="${COOKBOOK_BUCKET:?}"
 W=/tmp/w; mkdir -p "$W"
@@ -66,7 +72,10 @@ push
 # ---- reads first, so a slow copy never costs us the fixture
 say "== reads ==" ""
 aws s3 cp "s3://$B/inputs/bwa-real/SRR062634_1.filt.fastq.gz" "$W/r1.fq.gz" --only-show-errors
-zcat "$W/r1.fq.gz" | sed -n '1,4000000p;4000001q' > /mnt/nvme/reads1m.fq 2>/dev/null
+# NOT `sed ...;Nq`: sed quitting early closes the pipe, zcat takes SIGPIPE (141), and
+# pipefail turns that into a failed pipeline. Read the whole stream instead -- slower by
+# seconds, and it cannot take the run down.
+zcat "$W/r1.fq.gz" | sed -n '1,4000000p' > /mnt/nvme/reads1m.fq 2>/dev/null
 sed -n '1,400000p' /mnt/nvme/reads1m.fq > /mnt/nvme/reads100k.fq
 sed -n '1,40000p'  /mnt/nvme/reads1m.fq > /mnt/nvme/reads10k.fq
 rm -f "$W/r1.fq.gz"
@@ -114,7 +123,7 @@ rung(){                       # rung <label> <readsfile> <nreads>
       "$(wc -l < "$OUT" 2>/dev/null | tr -d ' ' || echo 0)" "$(( $(date +%s) - T4 ))" >> "$R"
     aws s3 cp "$R" "s3://$B/measurements/lith-kraken2-roda/kraken2-cost.txt" --only-show-errors 2>/dev/null
   done
-  wait $DP; local RC=$?
+  wait $DP; local RC=$?      # safe now that -e is off; under -e this exited silently
   local T5=$(date +%s) S=$(( $(date +%s) - T4 ))
   say "  ${L}_rc" "$RC"
   say "  ${L}_wall_s" "$S"
