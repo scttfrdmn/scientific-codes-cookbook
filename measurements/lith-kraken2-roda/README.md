@@ -207,17 +207,57 @@ vs 71.2 s measures run-to-run stability rather than cache warmth. Testing it pro
 `drop_caches` before the first rung. What the identical times *do* rule out is any large
 remaining cache win on this box.
 
-### What this does to the redesign argument
+### Scaling out does not help, and the method has slack at any scale
 
-It sharpens it against my own earlier framing. At 124.2 Kseq/min the run is doing roughly
-**62,000 lookups/s** — about 11× the single-threaded NVMe probe (5,412/s), comfortably inside
-what 32 threads can deliver, so this is **not obviously I/O-bound** and this ladder cannot
-separate CPU from I/O (a cold rung plus `iostat` would).
+**$0.3044 per million reads is invariant under scale-out.** The compute is 14,912 **core-seconds**
+per million reads; splitting it across 10 or 100 nodes buys wall-clock and changes the bill not at
+all, because it is the same core-seconds either way. So the only thing that moves $/result is
+reducing core-seconds — which means the *method*, not the deployment.
 
-Which means: **a scan-shaped redesign would save the $1.02 copy and the big box, not the $0.33 of
-compute.** The win is being able to classify on a small instance without moving 1.1 TB — real,
-and worth it at low sample counts — but it is not a claim that classification itself gets faster.
-My earlier framing implied more than that.
+And there is a lot to reduce. 124.2 Kseq/min on 32 cores is **64.7 reads/s/core**; at 10–30
+minimizer lookups per 100 bp read that is:
+
+| lookups/read assumed | lookups/s/core | **cycles per lookup** | NVMe utilisation |
+|---|---|---|---|
+| 10 | 647 | **4,638,000** | 12% |
+| 20 | 1,294 | **2,319,000** | 24% |
+| 30 | 1,940 | **1,546,000** | 36% |
+
+**A DRAM miss is ~200–300 cycles and a 0.185 ms NVMe read is ~550,000.** So every bracket of that
+range costs several NVMe round-trips' worth of time per lookup, while the device sits **12–36%
+utilised**. Neither the CPU nor the storage is saturated — which is the signature of being
+**latency-bound with insufficient concurrency in flight.**
+
+That is the same root cause as the S3 result above, on different hardware: **kraken2 ties its I/O
+queue depth to its thread count.** 32 threads means 32 outstanding faults, because threads are
+doing double duty as CPU parallelism *and* as I/O concurrency. The
+[queue-depth sweep](#concurrency-buys-back-the-latency-without-the-latency-changing) showed S3
+scaling linearly to depth 64+; NVMe wants 32–128+ for the same reason. A design with explicit
+async I/O would get depth 256 from a handful of threads.
+
+**So scale-out multiplies the slack rather than removing it.** At ~36% device utilisation you are
+renting ~2.8× the hardware the work needs ([effective
+cost](../../patterns/layout-and-effective-cost.md)); a 100-node fan-out rents 100× that slack.
+
+This also corrects what this page said a moment ago. I wrote that the run was "not obviously
+I/O-bound" on the strength of it using only 36% of the NVMe ceiling — but the cycles-per-lookup
+figure makes that reasoning too weak: 1.5M cycles is far beyond any plausible CPU cost for a hash
+probe, so the time is going into stalls. **Not CPU-bound, not device-saturated, concurrency-starved.**
+
+**The decisive test is cheap and not yet run:** copy once, then sweep `--threads` 4/8/16/32 at
+100k reads on the same box (~$1.02 + 4 × $0.05). If throughput is linear in threads, queue depth
+is the binding constraint; if it plateaus, CPU is. That single rung would settle what the redesign
+should actually attack.
+
+**The largest slack is algorithmic and invisible at every scale.** 99.30% of these reads classify,
+overwhelmingly to one organism — the run performs tens of millions of full-table probes to
+rediscover "human" a million times over. A pre-filter (Bloom/xor over the minimizer set, ~1–2
+bytes/key) or any use of sample-level structure would eliminate most lookups outright. kraken2
+treats every read as independent and novel, which is correct and maximally wasteful for the
+commonest real workload.
+
+So, revising the earlier framing: a scan-shaped redesign saves the **$1.02 copy and the big box**;
+the concurrency and pre-filter changes are what would move the **$0.33**. Scale-out moves neither.
 
 ## Three process notes that cost real money
 
@@ -259,6 +299,19 @@ error ("why assume a block read serves only the 4 KiB?") and the one that moved 
 from RAM to NVMe. That order matters: it makes the 42× a confirmed prediction rather than a
 narrative fitted to a number afterwards. Three of this page's own earlier claims died in the
 process, which is the honest cost of having had them.
+
+## What the excursion cost
+
+Eleven launches, roughly **$8.60**. The kraken2 figure alone took five, of which four died to
+three bugs tangled together — a container-uid output permission failure, a SIGPIPE'd pipeline
+under `pipefail`, and `spawn --command` running under an inherited `bash -e` that made all three
+exit before reporting why. Three wrong diagnoses, one of which reached this page and was
+withdrawn.
+
+Worth stating because it is the honest shape of this kind of work: **the measurements were cheap
+and the scaffolding was expensive.** Every number above cost cents of compute; the $8.60 was
+mostly paid to learn that a probe must stream its output, that a cheap rung must come first, and
+that `$-` is one line worth printing.
 
 Raw output in [`results/`](results/); scripts are [`canary.sh`](canary.sh),
 [`readpath.sh`](readpath.sh), [`nvme.sh`](nvme.sh),
