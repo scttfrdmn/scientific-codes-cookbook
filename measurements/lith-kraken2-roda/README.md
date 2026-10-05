@@ -146,21 +146,41 @@ unbounded growth — default `--mem-cache` is 25% of RAM = 7.75 GiB on that box,
 
 ## What a result costs
 
-Copying the runtime set (`hash.k2d` + `taxo.k2d` + `opts.k2d`, **1107.6 GiB**) to local NVMe:
-**1561 s at 0.76 GB/s for $1.0196** on `r8gd.8xlarge` ($2.3514/hr). That used only **41% of the
-15 Gbps NIC**, so it is bounded by NVMe write throughput or the CLI's 64-way concurrency — the
-$1.02 is a ceiling, not a floor.
+Copying the runtime set (`hash.k2d` + `taxo.k2d` + `opts.k2d`, **1107.6 GiB**) to local NVMe,
+measured twice on `r8gd.8xlarge` ($2.3514/hr):
+
+| concurrency | wall | rate | cost |
+|---|---|---|---|
+| `max_concurrent_requests 64` | 1561 s | 0.76 GB/s | $1.0196 |
+| `max_concurrent_requests 128` | 1686 s | 0.71 GB/s | $1.1012 |
+
+**Doubling client concurrency made it slightly slower**, which settles the open question from the
+first run: at 41% of a 15 Gbps NIC it is bounded by **NVMe write throughput**, not by the network
+or the client. So ~$1.02–1.10 is the real cost of the copy on this instance shape, and a bigger
+NIC would not move it — more NVMe devices to stripe across would.
 
 It amortizes over every sample in the instance's lifetime: **~$1.02 for one sample, ~$0.01 each
 for a hundred.** And NVMe, not RAM, is the destination — `x8g.24xlarge` (1536 GiB) is $9.3792/hr
 against $2.3514, and `--memory-mapping` exists precisely so the table need not be resident.
 
-**Unmeasured, and the one number still missing: kraken2's reads/min and $/sample.** The TTL killed
-it mid-run on 1M reads. That was a design error, not bad luck — the progress sampler is stopped
-after the copy, so unlike the copy phase this one left nothing partial behind. Instance store is
-ephemeral, so recovering it means re-copying. Worth noting ~9 minutes did not finish 1M reads even
-though 5,412 probes/s × 32 threads implies ~3 min; whether `mmap` faults fail to parallelise or
-kraken2's startup over a 1.1 TiB mapping is expensive is **not established**.
+**Unmeasured, and the one number still missing: kraken2's reads/min and $/sample.** Two attempts
+failed, and the second found the cause of both — **not** anything to do with mmap or storage:
+
+```
+Loading database information... done.
+Unable to open file: /w/out-10k.kraken, reason: Permission denied
+```
+
+`chown`-ing the NVMe mount to the *instance* user is not enough, because the container runs as the
+**image's** user. It is the same ownership trap this project documents for staged *inputs*
+([container-path](../../practices/container-path.md)), arriving through an **output** path, and the
+fix is `chmod 1777` on the output directory — what host `/tmp` uses, for exactly this reason.
+
+An earlier version of this page speculated that ~9 minutes failing to finish 1M reads meant
+"either `mmap` faults do not parallelise or startup over a 1.1 TiB mapping is expensive."
+**That is withdrawn** — the first attempt had the identical permission setup, so the speculation
+had a much duller explanation available and should not have been offered. A one-second container
+write test before the 28-minute copy would have caught it twice over, and now runs.
 
 ## Three process notes that cost real money
 
