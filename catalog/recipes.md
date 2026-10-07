@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **82 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **83 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -25,6 +25,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-03 | 2026-09-30 |
 | [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-02 | 2026-09-26 |
 | [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
+| [humann](../recipes/humann/README.md) | Runs HUMAnN's bundled demo end to end on Graviton4 — gene families, pathway abundance, pathway coverage — and checks the build with the 186 assertions HUMAnN's authors ship with it. For anyone doing metagenomic functional profiling on ARM. | aarchbio | build-in-task | — | 2026-10-07 |
 | [iqtree](../recipes/iqtree/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, reaching −52706.731 — the same optimum [RAxML-NG finds independently](../recipes/raxml-ng/README.md). For anyone building trees on ARM. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
 | [kallisto](../recipes/kallisto/README.md) | Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier. | aarchbio | stage · run: salmon | 2026-10-02 | 2026-09-30 |
 | [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, bwa-samtools, kraken2 | 2026-10-02 | 2026-10-02 |

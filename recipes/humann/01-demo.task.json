@@ -1,0 +1,56 @@
+{
+  "task_id": "cookbook-humann-demo-r1",
+  "container": "quay.io/aarchbio/humann@sha256:c614308013fd2a7f7cef181d18ad0ce3c785b1b3243f62f0428fa313c1852ac6",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does not clear it\n# (spawn#707), so errexit is off and every status is checked by hand.\n\necho \"== the aligners must be the ARCHITECTURE they claim ==\"\n# aarchbio#66: this image once shipped x86_64 diamond and bowtie2 inside an arm64 image,\n# because the noarch humann package carries its own copies and overwrote the correct\n# linux-aarch64 ones. Rebuilt and verified -- an x86 binary could not print a version here.\ndiamond --version 2>&1 | head -1 | sed \"s/^/  /\"\nbowtie2 --version 2>&1 | head -1 | sed \"s/^/  /\"\nuname -m | sed \"s/^/  uname\t/\"\n\necho \"== HUMAnNs OWN test suite: 186 author-written assertions ==\"\n# This is the correctness claim. The committed demo_genefamilies.tsv is NOT usable as a\n# reference here -- see the README -- so the verification comes from the authors' suite\n# rather than from a number we cannot reproduce (practices/reference-from-tests.md).\nT0=$(date +%s)\nhumann_test > unit.log 2>&1; UNIT_RC=$?\nT1=$(date +%s)\necho \"unit_rc\t$UNIT_RC\"\necho \"unit_wall_s\t$(( T1 - T0 ))\"\nNTESTS=$(grep -aoE \"^Ran [0-9]+ tests\" unit.log | grep -oE \"[0-9]+\" | head -1)\necho \"unit_tests_run\t${NTESTS:-0}\"\ngrep -aE \"^OK$|^FAILED\" unit.log | tail -1 | sed \"s/^/  verdict\t/\"\ntest \"$UNIT_RC\" = \"0\" || { echo \"HUMAnN unit tests failed\"; tail -25 unit.log; exit 1; }\ntest \"${NTESTS:-0}\" -ge 180 || { echo \"only ${NTESTS} tests ran; expected >=180\"; exit 1; }\n\necho \"== and the tool-level functional tests ==\"\nhumann_test --run-functional-tests-tools --bypass-unit-tests > func.log 2>&1; FUNC_RC=$?\necho \"func_rc\t$FUNC_RC\"\ntest \"$FUNC_RC\" = \"0\" || { echo \"functional tool tests failed\"; tail -20 func.log; exit 1; }\n\necho \"== a real end-to-end run on the bundled demo ==\"\nD=$(python3 -c \"import humann,os;print(os.path.dirname(humann.__file__))\")\nDEMO=\"$D/tests/data/demo.fastq\"; CH=\"$D/data/chocophlan_DEMO\"; UR=\"$D/data/uniref_DEMO\"\necho \"demo_reads\t$(( $(wc -l < \"$DEMO\") / 4 ))\"\n# --bypass-prescreen is REQUIRED, not chosen: HUMAnN probes `metaphlan --version` and\n# parses the LAST line, but MetaPhlAn always appends a database status line there -- a\n# warning when absent, 'Installed databases:' when present. So no database fixes it, and\n# the prescreen is the only step that needs MetaPhlAn. Measured both ways; see README.\nT2=$(date +%s)\nhumann --input \"$DEMO\" --output out --threads \"$(nproc --all)\" --bypass-prescreen \\\n  --nucleotide-database \"$CH\" --protein-database \"$UR\" > humann.log 2>&1\nRC=$?; T3=$(date +%s)\necho \"humann_rc\t$RC\"\necho \"humann_wall_s\t$(( T3 - T2 ))\"\ntest \"$RC\" = \"0\" || { tail -30 humann.log; exit 1; }\n\necho \"== the three outputs must exist, be non-empty and be the right shape ==\"\nOK=1\nfor f in demo_genefamilies demo_pathabundance demo_pathcoverage; do\n  p=\"out/$f.tsv\"\n  if [ -s \"$p\" ]; then\n    N=$(grep -vc \"^#\" \"$p\")\n    printf \"  %-22s %6d rows\\n\" \"$f\" \"$N\"\n    test \"$N\" -ge 2 || { echo \"  $f has $N rows\"; OK=0; }\n    head -1 \"$p\" | grep -q \"Abundance\\|Coverage\\|RPK\" || { echo \"  $f header unexpected: $(head -1 \"$p\")\"; OK=0; }\n  else echo \"  $f MISSING or empty\"; OK=0; fi\ndone\ntest \"$OK\" = \"1\" || { echo \"output shape check failed\"; exit 1; }\n\necho \"== UNMAPPED is an accounting row HUMAnN must emit ==\"\n# Every read is either assigned to a gene family or counted as UNMAPPED, so its presence\n# is a structural property of a complete run rather than a band on a value.\ngrep -q \"^UNMAPPED\" out/demo_genefamilies.tsv || { echo \"no UNMAPPED row -- run was not complete\"; exit 1; }\ngrep -aE \"^UNMAPPED\" out/demo_genefamilies.tsv | head -1 | sed \"s/^/  /\"\n\necho \"== determinism: the same input twice must give byte-identical gene families ==\"\nhumann --input \"$DEMO\" --output out2 --threads \"$(nproc --all)\" --bypass-prescreen \\\n  --nucleotide-database \"$CH\" --protein-database \"$UR\" > humann2.log 2>&1\necho \"  second_rc\t$?\"\nif cmp -s out/demo_genefamilies.tsv out2/demo_genefamilies.tsv; then\n  echo \"determinism\tbyte-identical across two runs\"\nelse\n  echo \"determinism\tDIFFERS between runs\"; diff <(head -40 out/demo_genefamilies.tsv) <(head -40 out2/demo_genefamilies.tsv) | head -10; exit 1\nfi\n\n{ printf \"diamond\t%s\\n\" \"$(diamond --version 2>&1 | head -1)\"\n  printf \"bowtie2\t%s\\n\" \"$(bowtie2 --version 2>&1 | head -1)\"\n  printf \"unit_tests\t%s passed in %ss\\n\" \"${NTESTS}\" \"$(( T1 - T0 ))\"\n  printf \"humann_wall_s\t%s\\n\" \"$(( T3 - T2 ))\"\n  grep -vc \"^#\" out/demo_genefamilies.tsv | sed \"s/^/gene_families\t/\"\n  echo \"determinism\tbyte-identical\"; } > humann-diag.txt\ncp out/demo_genefamilies.tsv .; cp out/demo_pathabundance.tsv .; cp out/demo_pathcoverage.tsv .\necho \"HUMANN OK\""
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  },
+  "outputs": [
+    {
+      "source": "/tmp/demo_genefamilies.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/demo_genefamilies.tsv"
+    },
+    {
+      "source": "/tmp/demo_pathabundance.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/demo_pathabundance.tsv"
+    },
+    {
+      "source": "/tmp/demo_pathcoverage.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/demo_pathcoverage.tsv"
+    },
+    {
+      "source": "/tmp/humann-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/humann-diag.txt"
+    },
+    {
+      "source": "/tmp/humann.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/humann.log"
+    },
+    {
+      "source": "/tmp/unit.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/unit.log"
+    },
+    {
+      "source": "/tmp/func.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/func.log"
+    },
+    {
+      "source": "/tmp/humann2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann/r1/humann2.log"
+    }
+  ]
+}
