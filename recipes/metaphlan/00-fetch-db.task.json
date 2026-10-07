@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-metaphlan-fetchdb-r1",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\n\n# spawn runs --command/task commands under bash -e and `set -uo pipefail` does not clear it\n# (spawn#707), so errexit is disabled above and every status is checked by hand.\n\nIDX=mpa_vJun23_CHOCOPhlAnSGB_202403\nMD5=d985de75a217cd319e721863f68e7d33\nHOST=https://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases\n\necho \"== fetch the index in-region rather than through someone's laptop ==\"\n# MetaPhlAn's own hardcoded URL is http:// and 301s to https, so follow redirects.\n# 3.32 GB: smaller than several inputs this catalog already stages (bwa-mem2's is 17.7 GB).\nT0=$(date +%s)\ncurl -fL --retry 3 --retry-delay 5 -o \"$IDX.tar\" \"$HOST/$IDX.tar\"\nRC=$?; T1=$(date +%s)\necho \"curl_rc\t$RC\"\ntest \"$RC\" = \"0\" || { echo \"download failed\"; exit 1; }\nBYTES=$(stat -c%s \"$IDX.tar\")\necho \"download_s\t$(( T1 - T0 ))\"\necho \"bytes\t$BYTES\"\nprintf 'MB_per_s\t%.1f\\n' \"$(awk -v b=$BYTES -v s=$((T1-T0)) 'BEGIN{if(s>0)print b/1e6/s; else print 0}')\"\n\necho \"== verify against the md5 the DEPOSITORS publish next to the tarball ==\"\n# This is the source's own integrity statement, which is what makes a tier-3 HTTP host\n# acceptable: the bytes are checkable at the source, not merely checkable against ourselves.\necho \"$MD5  $IDX.tar\" > want.md5\nmd5sum -c want.md5 || { echo \"published md5 does not match -- do NOT stage these bytes\"; exit 1; }\necho \"md5\tmatches the published $MD5\"\n\necho \"== our own sha256, which is what the recipe pins ==\"\nsha256sum \"$IDX.tar\" | tee \"$IDX.tar.sha256\"\n\necho \"== what is actually inside ==\"\ntar -tf \"$IDX.tar\" | head -12\necho \"entries\t$(tar -tf \"$IDX.tar\" | wc -l)\"\n# A bowtie2 index plus the marker metadata pickle. If the .bt2l files are missing the\n# profile step would fail later with a confusing \"no database\" message, so check here.\ntest \"$(tar -tf \"$IDX.tar\" | grep -c 'bt2l$')\" -ge 4 || { echo \"no bowtie2 large-index files in the tar\"; exit 1; }\necho \"bowtie2_index\tpresent\"\n\necho \"== stage ==\"\n# No copy: /tmp is a tmpfs at half the instance RAM, so duplicating a 3.32 GB tar would\n# cost 6.6 GB of it for nothing. The outputs name the file directly.\ndf -h /tmp | awk 'NR==2{print \"  tmpfs\\t\"$2\" total, \"$4\" free\"}'\necho \"== the version string HUMAnN parses, with NO database present ==\"\n# HUMAnN reads `metaphlan --version` last line, column 2. MetaPhlAn appends a no-database\n# warning there, so HUMAnN parses the word \"MetaPhlAn\" as a version and dies. Captured here\n# because staging this index is what makes that warning go away.\nmetaphlan --version 2>&1 | sed 's/^/  ver_nodb\\t/' | tail -4\necho \"STAGE OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  },
+  "outputs": [
+    {
+      "source": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403.tar"
+    },
+    {
+      "source": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.sha256"
+    }
+  ]
+}
