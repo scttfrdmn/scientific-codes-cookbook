@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-metaphlan-fetchbt2-r1",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does NOT clear it\n# (spawn#707), so errexit is off above and every status is checked by hand.\n\nIDX=mpa_vJun23_CHOCOPhlAnSGB_202403\nMD5=8caae86b4d2931416cbdbb92f5985cef\nHOST=https://cmprod1.cibio.unitn.it/biobakery4/metaphlan_databases/bowtie2_indexes\n\necho \"== /tmp is a tmpfs at HALF the instance RAM, so check the room BEFORE a 23 GB fetch ==\"\ndf -BG /tmp | awk 'NR==2{print \"  tmpfs\\t\"$2\" total, \"$4\" free\"}'\nFREE=$(df -BG /tmp | awk 'NR==2{gsub(/G/,\"\",$4); print $4}')\ntest \"$FREE\" -ge 26 || { echo \"only ${FREE}G free in /tmp; a 23 GB index needs more\"; exit 1; }\n\necho \"== fetch the DEPOSITORS prebuilt bowtie2 index ==\"\n# NOT built here on purpose. MetaPhlAn publishes this index with its own md5, and it is\n# byte-identical to what `metaphlan --install` fetches -- so the bytes are checkable AT\n# THE SOURCE. A locally built index would be unverifiable against anything, and\n# bowtie2-build over the full CHOCOPhlAn marker set is hours of CPU for a worse artifact.\nT0=$(date +%s)\ncurl -fL --no-progress-meter --retry 3 --retry-delay 10 -o \"${IDX}_bt2.tar\" \"$HOST/${IDX}_bt2.tar\"\nRC=$?; T1=$(date +%s)\necho \"fetch_rc\\t$RC\"\ntest \"$RC\" = \"0\" || { echo \"download failed\"; exit 1; }\nBYTES=$(stat -c%s \"${IDX}_bt2.tar\")\necho \"download_s\\t$(( T1 - T0 ))\"\necho \"bytes\\t$BYTES\"\nawk -v b=$BYTES -v s=$((T1-T0)) 'BEGIN{if(s>0)printf \"MB_per_s\\t%.1f\\n\", b/1e6/s}'\n\necho \"== verify against the published md5 ==\"\necho \"$MD5  ${IDX}_bt2.tar\" > want.md5\nmd5sum -c want.md5 || { echo \"published md5 MISMATCH -- do not stage these bytes\"; exit 1; }\necho \"md5\\tmatches the published $MD5\"\n\necho \"== our pin on the staged copy ==\"\nsha256sum \"${IDX}_bt2.tar\" | tee \"${IDX}_bt2.tar.sha256\"\n\necho \"== what is inside (listing only; untarring would need a second 23 GB) ==\"\ntar -tf \"${IDX}_bt2.tar\" | head -10\nN=$(tar -tf \"${IDX}_bt2.tar\" | wc -l)\necho \"entries\\t$N\"\n# bowtie2 LARGE index: .1.bt2l .2.bt2l .3.bt2l .4.bt2l .rev.1.bt2l .rev.2.bt2l\nBT2=$(tar -tf \"${IDX}_bt2.tar\" | grep -c \"bt2l$\")\necho \"bt2l_files\\t$BT2\"\ntest \"$BT2\" -ge 6 || { echo \"expected >=6 .bt2l files, found $BT2\"; exit 1; }\necho \"STAGE OK\""
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "75m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  },
+  "outputs": [
+    {
+      "source": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar"
+    },
+    {
+      "source": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.sha256"
+    }
+  ]
+}

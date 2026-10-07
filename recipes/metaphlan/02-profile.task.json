@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-metaphlan-profile-r1",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does NOT clear it\n# (spawn#707), so errexit is off and every status is checked by hand.\n\nIDX=mpa_vJun23_CHOCOPhlAnSGB_202403\nACC=ERR12736123\nNP=$(nproc --all)\n\necho \"== the staged bytes must be the pinned bytes ==\"\nsha256sum -c \"$IDX.tar.sha256\" || { echo \"marker tar does not match its pin\"; exit 1; }\nsha256sum -c \"${IDX}_bt2.tar.sha256\" || { echo \"bowtie2 index does not match its pin\"; exit 1; }\necho \"pins\tboth staged tars match\"\n\necho \"== budget: /tmp is a tmpfs at HALF the instance RAM ==\"\ndf -BG /tmp | awk 'NR==2{print \"  tmpfs\\t\"$2\" total, \"$4\" free\"}'\n# 23 GB index tar + 23 GB untarred + the marker pkl all live in tmpfs at once, and a\n# staged input can never be rm'd (sticky /tmp, stage-in ran as the instance user, EPERM\n# is not suppressed by rm -f). So the box is sized for ~50 GB of tmpfs, not for compute.\n\necho \"== unpack the database MetaPhlAn expects: markers .pkl + the bowtie2 index ==\"\nmkdir -p db\n# Only the .pkl is needed from the 3.32 GB marker tar at profile time -- the marker FASTAs\n# exist to BUILD an index, and we staged the depositors' prebuilt one instead.\ntar -xf \"$IDX.tar\" -C db \"$IDX.pkl\" || { echo \"could not extract $IDX.pkl\"; exit 1; }\ntar -xmf \"${IDX}_bt2.tar\" -C db --no-same-owner --no-same-permissions\nRC=$?; echo \"untar_rc\t$RC\"\ntest \"$RC\" = \"0\" || { echo \"untar of the bowtie2 index failed\"; exit 1; }\n# A tar carrying a '.' entry tries to restore the mode of the DIRECTORY, which on sticky\n# /tmp owned by another uid fails -- hence -m --no-same-owner --no-same-permissions.\nfind db -name '*.bt2l' | head -8\nBT2=$(find db -name \"*.bt2l\" | wc -l)\necho \"bt2l_files\t$BT2\"\ntest \"$BT2\" -ge 6 || { echo \"expected >=6 .bt2l files, found $BT2\"; exit 1; }\nls -1 db/ | head\n\necho \"== MetaPhlAn ==\"\nmetaphlan --version 2>&1 | tail -2\nT0=$(date +%s)\nmetaphlan \"${ACC}_1.fastq.gz,${ACC}_2.fastq.gz\" --input_type fastq \\\n  --bowtie2db db --index \"$IDX\" --nproc \"$NP\" \\\n  --bowtie2out bt2.out -o profile.txt > metaphlan.log 2>&1\nRC=$?; T1=$(date +%s)\necho \"metaphlan_rc\t$RC\"\necho \"metaphlan_wall_s\t$(( T1 - T0 ))\"\ntest \"$RC\" = \"0\" || { tail -30 metaphlan.log; exit 1; }\ntest -s profile.txt || { echo \"profile.txt is empty\"; exit 1; }\nhead -4 profile.txt\n\necho \"== score the profile against the composition ZymoBIOMICS publishes ==\"\npython3 -u - profile.txt zymo_d6300.tsv score.tsv <<'PYEOF'\n# No brace literals needed here (this is a task spec, not a Snakemake shell block), but\n# the scoring is kept deliberately simple: presence is the primary claim.\nimport sys\nprof_p, truth_p, out_p = sys.argv[1], sys.argv[2], sys.argv[3]\n\ntruth = []\nfor line in open(truth_p):\n    f = line.rstrip(\"\\n\").split(\"\\t\")\n    if f[0] in (\"species\", \"\"): continue\n    truth.append((f[0], float(f[1]), f[2], f[3]))\n\n# MetaPhlAn writes one row per clade; species rows are the deepest with s__ and no t__.\nobs = {}\nfor line in open(prof_p):\n    if line.startswith(\"#\"): continue\n    f = line.rstrip(\"\\n\").split(\"\\t\")\n    if len(f) < 3: continue\n    clade, rel = f[0], f[2]\n    if \"|s__\" in clade and \"|t__\" not in clade:\n        name = clade.split(\"|s__\")[-1]\n        obs[name] = obs.get(name, 0.0) + float(rel)\n\ndef found(sp, alt):\n    for cand in (sp, alt):\n        if cand and cand != \"-\" and cand in obs:\n            return cand, obs[cand]\n    return None, 0.0\n\nrows = []\nfor sp, pct, kingdom, alt in truth:\n    hit, ab = found(sp, alt)\n    rows.append((sp, kingdom, pct, hit, ab))\n\nbact = [r for r in rows if r[1] == 'Bacteria']\nbact_found = [r for r in bact if r[3]]\nbact_total = sum(r[4] for r in bact_found)\n\nfh = open(out_p, 'w')\nfh.write('expected_species\\tkingdom\\tzymo_dna_pct\\tdetected_as\\tmetaphlan_pct\\tshare_of_bacteria\\n')\nfor sp, k, pct, hit, ab in rows:\n    share = (100.0 * ab / bact_total) if (k == 'Bacteria' and bact_total > 0) else 0.0\n    fh.write('%s\\t%s\\t%.1f\\t%s\\t%.4f\\t%.2f\\n' % (sp, k, pct, hit or 'NOT_FOUND', ab, share))\n# Anything MetaPhlAn reports above 1% that Zymo does not list is a false positive worth\n# seeing -- a defined mixture has a closed species list, which is what makes this checkable.\nnames = set()\nfor sp, pct, k, alt in truth:\n    names.add(sp)\n    if alt and alt != '-': names.add(alt)\nextra = sorted(((n, a) for n, a in obs.items() if n not in names and a >= 1.0), key=lambda x: -x[1])\nfor n, a in extra:\n    fh.write('UNEXPECTED\\t-\\t0.0\\t%s\\t%.4f\\t%.2f\\n' % (n, a, 100.0 * a / bact_total if bact_total else 0))\nfh.close()\nsys.stdout.write(open(out_p).read())\n\nprint('species_rows_in_profile\\t%d' % len(obs))\nprint('zymo_bacteria_detected\\t%d/%d' % (len(bact_found), len(bact)))\nprint('unexpected_above_1pct\\t%d' % len(extra))\nprint('bacterial_fraction_pct\\t%.2f' % bact_total)\n\nmissing = [r[0] for r in bact if not r[3]]\nif missing:\n    sys.exit('FAIL Zymo bacteria not detected: ' + ','.join(missing))\nif len(extra) > 2:\n    sys.exit('FAIL %d unexpected species above 1%%: %s' % (len(extra), ','.join(n for n,_ in extra[:5])))\nprint('PROFILE OK: all %d Zymo bacteria detected' % len(bact))\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"scoring failed\"; exit 1; }\n\ncp score.tsv metaphlan-diag.txt\n{ printf \"metaphlan_version\\t%s\\n\" \"$(metaphlan --version 2>&1 | head -1)\"\n  printf \"index\\t%s\\nthreads\\t%s\\nwall_s\\t%s\\n\" \"$IDX\" \"$NP\" \"$(( T1 - T0 ))\"; } >> metaphlan-diag.txt\necho \"METAPHLAN OK\""
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "50m",
+    "on_complete": "terminate",
+    "cost_limit": 0.9
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403.tar",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.sha256",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403.tar.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.sha256",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/ERR12736123_1.fastq.gz",
+      "destination": "/tmp/ERR12736123_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/ERR12736123_2.fastq.gz",
+      "destination": "/tmp/ERR12736123_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/zymo_d6300.tsv",
+      "destination": "/tmp/zymo_d6300.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/profile.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/metaphlan/r1/profile.txt"
+    },
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/metaphlan/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/metaphlan-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/metaphlan/r1/metaphlan-diag.txt"
+    },
+    {
+      "source": "/tmp/metaphlan.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/metaphlan/r1/metaphlan.log"
+    }
+  ]
+}
