@@ -10,15 +10,23 @@
 # Both downloads happen on a box, not through your laptop (the bwa-mem2/gatk4 precedent).
 #
 # WHY THIS SAMPLE. MetaPhlAn answers "what is in this sample, and how much", so the honest
-# check needs a sample whose answer is known before sequencing. ZymoBIOMICS D6300 is a
-# defined mixture, and the manufacturer publishes its composition -- so the recipe can assert
-# a *published* truth rather than its own internal consistency.
+# check needs a sample whose answer is known before sequencing. ZymoBIOMICS is a defined
+# mixture and the manufacturer publishes its composition, so the recipe asserts a *published*
+# truth rather than its own internal consistency.
+#
+# AND IT MUST BE SHOTGUN. MetaPhlAn maps to clade-specific markers, so an AMPLICON library
+# hits almost none of them. An earlier version of this recipe used ERR12736123 -- same Zymo
+# standard, same platform, selected on sample_title -- which is `library_strategy=AMPLICON`,
+# `library_selection=PCR`. MetaPhlAn processed all 2,514,728 reads, exited 0, and reported
+# "No species were detected". That was the tool being correct about the wrong input. So the
+# strategy is now ASSERTED below rather than assumed, because the failure looks exactly like
+# a broken database.
 set -euo pipefail
 
 BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=metaphlan does this}"
 REGION="${AWS_REGION:-us-west-2}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ACC=ERR12736123
+ACC=ERR15105294
 IDX=mpa_vJun23_CHOCOPhlAnSGB_202403
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
@@ -42,40 +50,20 @@ else
 fi
 
 # ------------------------------------------------------------------- 3. the reads (355 MB)
-echo "== the mock-community metagenome =="
-# PATH PROVENANCE: the FASTQ paths are NOT constructed here. ENA's portal API is asked for
-# them, because the vol1/fastq/<prefix>/<subdir>/ layout is not something to guess. The run
-# accession is the durable id; ENA resolves it to bytes. Same discipline as recipes/flye.
-API="https://www.ebi.ac.uk/ena/portal/api/filereport?accession=$ACC&result=read_run"
-curl -fsS "$API&fields=fastq_ftp,fastq_md5,read_count,base_count&format=tsv" -o "$tmp/rep.tsv"
-# Read the columns BY HEADER NAME, not by position: ENA prepends run_accession to whatever
-# you ask for, so positional indices are off by one and silently put an md5 where a read
-# count belongs. An earlier version of this did exactly that and then tried to curl a host
-# called "ERR12736123".
-col() { awk -F'\t' -v want="$1" 'NR==1{for(i=1;i<=NF;i++) if($i==want) c=i; next} NR==2{print $c}' "$tmp/rep.tsv"; }
-FTP=$(col fastq_ftp)
-MD5=$(col fastq_md5)
-ENA_READS=$(col read_count)
-ENA_BASES=$(col base_count)
-test -n "$FTP" || { echo "ENA returned no fastq_ftp for $ACC" >&2; exit 1; }
-echo "  ENA reports $ENA_READS reads / $ENA_BASES bases for $ACC"
-
-i=1
-for u in ${FTP//;/ }; do
-  m=$(echo "$MD5" | cut -d';' -f$i)
-  f="${ACC}_$i.fastq.gz"
-  if aws s3 ls "$BUCKET/inputs/metaphlan/$f" --region "$REGION" >/dev/null 2>&1; then
-    echo "  $f already staged"
-  else
-    echo "  downloading $f"
-    curl -fsS --retry 3 -o "$tmp/$f" "https://$u"
-    # ENA publishes an md5 per file. Checking it makes a truncated transfer loud here rather
-    # than a quietly worse profile later -- a short FASTQ is still valid gzip and still runs.
-    echo "$m  $tmp/$f" | md5sum -c - >/dev/null || { echo "  md5 mismatch on $f" >&2; exit 1; }
-    aws s3 cp "$tmp/$f" "$BUCKET/inputs/metaphlan/$f" --region "$REGION" --only-show-errors
-  fi
-  i=$((i+1))
-done
+echo "== the mock-community metagenome (117 MB) =="
+# ON A BOX, not here. A laptop managed ~1.5 MB/s against EBI and lost a 1.4 GB transfer to a
+# truncation -- which the md5 check caught, but only after 35 wasted minutes. The same box
+# that fetched the database got 18.2 MB/s. Anything multi-GB belongs in a task.
+#
+# The task also asserts library_strategy=WGS and selection!=PCR, because MetaPhlAn maps to
+# clade-specific markers: an AMPLICON library of the same Zymo standard processes every read,
+# exits 0, and reports no species. That is what an earlier version of this recipe did.
+if aws s3 ls "$BUCKET/inputs/metaphlan/${ACC}_2.fastq.gz" --region "$REGION" >/dev/null 2>&1; then
+  echo "  reads already staged: ${ACC}_{1,2}.fastq.gz"
+else
+  sed "s|\${COOKBOOK_BUCKET}|${BUCKET#s3://}|g" "$HERE/02-fetch-reads.task.json" > "$tmp/reads.json"
+  spawn task run --spec "$tmp/reads.json" --region "$REGION" --wait
+fi
 
 # -------------------------------------------------------------- 4. the manufacturer's truth
 echo "== the composition ZymoBIOMICS publishes for D6300 =="
@@ -109,5 +97,5 @@ aws s3 cp "$tmp/zymo_d6300.tsv" "$BUCKET/inputs/metaphlan/zymo_d6300.tsv" --regi
 echo "done."
 echo "  $BUCKET/inputs/metaphlan/$IDX.tar            (3.32 GB markers)"
 echo "  $BUCKET/inputs/metaphlan/${IDX}_bt2.tar      (22.99 GB bowtie2 index)"
-echo "  $BUCKET/inputs/metaphlan/${ACC}_{1,2}.fastq.gz  (355 MB, 2,514,728 reads)"
+echo "  $BUCKET/inputs/metaphlan/${ACC}_{1,2}.fastq.gz  (117 MB, 1,588,558 shotgun reads)"
 echo "  $BUCKET/inputs/metaphlan/zymo_d6300.tsv      (the published composition)"

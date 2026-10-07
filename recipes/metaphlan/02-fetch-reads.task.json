@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-metaphlan-fetchreads-r1",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does not clear it\n# (spawn#707), so errexit is off and statuses are checked by hand.\n\nACC=ERR15105294\nAPI=\"https://www.ebi.ac.uk/ena/portal/api/filereport?accession=$ACC&result=read_run\"\n\necho \"== ask ENA for the paths; never construct them ==\"\n# The vol1/fastq/<prefix>/<subdir>/ layout is not something to guess, and ENA also hands\n# back a per-file md5 plus its own read/base counts. Same discipline as recipes/flye.\ncurl -fsS \"$API&fields=fastq_ftp,fastq_md5,read_count,base_count,library_strategy,library_selection&format=tsv\" -o rep.tsv\ncol() { awk -F'\\t' -v want=\"$1\" 'NR==1{for(i=1;i<=NF;i++) if($i==want) c=i; next} NR==2{print $c}' rep.tsv; }\nFTP=$(col fastq_ftp); MD5=$(col fastq_md5)\nSTRAT=$(col library_strategy); SEL=$(col library_selection)\necho \"library\t$STRAT / $SEL\"\n# MetaPhlAn maps to clade-specific markers, so an AMPLICON library hits almost none of\n# them: it processes every read, exits 0, and reports no species. Assert the strategy.\ntest \"$STRAT\" = \"WGS\" || { echo \"$ACC is $STRAT, not WGS\"; exit 1; }\n# NOT a check on library_selection: PCR there means the library prep amplified, which is\n# routine and still whole-genome. library_strategy is the discriminator that matters.\n\necho \"== fetch; the md5 is the gate, not the byte count ==\"\n# MEASURED, and it corrects an assumption: EBI to us-west-2 ran at 0.8 MB/s, SLOWER than a\n# home connection. The 18.2 MB/s seen elsewhere in this recipe was unitn.it in Italy, not\n# EBI -- one host says nothing about another. That is why this fixture is 117 MB rather than\n# the 2.97 GB run: at 0.8 MB/s the larger one costs an hour of instance time per attempt.\ni=1; OK=1\nfor u in ${FTP//;/ }; do\n  m=$(echo \"$MD5\" | cut -d\";\" -f$i)\n  f=\"${ACC}_$i.fastq.gz\"\n  T0=$(date +%s)\n  curl -fL --no-progress-meter --retry 5 --retry-delay 10 -o \"$f\" \"https://$u\"\n  RC=$?; T1=$(date +%s)\n  SZ=$(stat -c%s \"$f\" 2>/dev/null || echo 0)\n  awk -v r=$RC -v s=$((T1-T0)) -v b=$SZ -v f=\"$f\" 'BEGIN{printf \"%s\\trc=%d %ds %.0f MB %.1f MB/s\\n\", f, r, s, b/1e6, (s>0? b/1e6/s : 0)}'\n  echo \"$m  $f\" > \"$f.want.md5\"\n  md5sum -c \"$f.want.md5\" || { echo \"md5 MISMATCH on $f\"; OK=0; }\n  i=$((i+1))\ndone\ntest \"$OK\" = \"1\" || { echo \"one or more files failed their published md5\"; exit 1; }\necho \"md5\tboth files match ENA published checksums\"\n\necho \"== independent cross-check on the transfer: ENA own counts ==\"\n# A truncated FASTQ is still valid gzip and would still profile, into a quietly worse\n# answer. Counting reads is a second, independent check on top of the md5.\nR1=$(zcat ${ACC}_1.fastq.gz | awk 'END{print NR/4}')\nR2=$(zcat ${ACC}_2.fastq.gz | awk 'END{print NR/4}')\necho \"reads_r1\t$R1\"; echo \"reads_r2\t$R2\"\nENA_READS=$(col read_count)\necho \"ena_read_count\t$ENA_READS\"\ntest \"$R1\" = \"$R2\" || { echo \"mates disagree: $R1 vs $R2\"; exit 1; }\n# ENA reports the total across both mates for a paired run.\nawk -v a=\"$R1\" -v e=\"$ENA_READS\" 'BEGIN{ if (2*a != e) { printf \"read count mismatch: 2x%d != %d\\n\", a, e; exit 1 } }' || exit 1\necho \"counts\t2 x $R1 == $ENA_READS as ENA reports\"\necho \"STAGE OK\""
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  },
+  "outputs": [
+    {
+      "source": "/tmp/ERR15105294_1.fastq.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/ERR15105294_1.fastq.gz"
+    },
+    {
+      "source": "/tmp/ERR15105294_2.fastq.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/ERR15105294_2.fastq.gz"
+    }
+  ]
+}
