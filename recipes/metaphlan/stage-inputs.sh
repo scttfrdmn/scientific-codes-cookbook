@@ -48,10 +48,16 @@ echo "== the mock-community metagenome =="
 # accession is the durable id; ENA resolves it to bytes. Same discipline as recipes/flye.
 API="https://www.ebi.ac.uk/ena/portal/api/filereport?accession=$ACC&result=read_run"
 curl -fsS "$API&fields=fastq_ftp,fastq_md5,read_count,base_count&format=tsv" -o "$tmp/rep.tsv"
-FTP=$(awk 'NR==2{print $1}' "$tmp/rep.tsv")
-MD5=$(awk 'NR==2{print $2}' "$tmp/rep.tsv")
-ENA_READS=$(awk 'NR==2{print $3}' "$tmp/rep.tsv")
-ENA_BASES=$(awk 'NR==2{print $4}' "$tmp/rep.tsv")
+# Read the columns BY HEADER NAME, not by position: ENA prepends run_accession to whatever
+# you ask for, so positional indices are off by one and silently put an md5 where a read
+# count belongs. An earlier version of this did exactly that and then tried to curl a host
+# called "ERR12736123".
+col() { awk -F'\t' -v want="$1" 'NR==1{for(i=1;i<=NF;i++) if($i==want) c=i; next} NR==2{print $c}' "$tmp/rep.tsv"; }
+FTP=$(col fastq_ftp)
+MD5=$(col fastq_md5)
+ENA_READS=$(col read_count)
+ENA_BASES=$(col base_count)
+test -n "$FTP" || { echo "ENA returned no fastq_ftp for $ACC" >&2; exit 1; }
 echo "  ENA reports $ENA_READS reads / $ENA_BASES bases for $ACC"
 
 i=1
