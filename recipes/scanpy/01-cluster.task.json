@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-scanpy-cluster-r1",
+  "container": "quay.io/aarchbio/scanpy@sha256:5621e1cc9d14fbac0c86d002efd852abf92587a4739d5e32893786b90f87277e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl NUMBA_CACHE_DIR=/tmp/numba\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does not clear it\n# (spawn#707), so errexit is off and statuses are checked by hand.\n\necho \"== staged bytes must match the pin before anything is computed ==\"\nsha256sum -c pbmc3k.tar.gz.sha256 || { echo \"pbmc3k does not match its pin\"; exit 1; }\ntar -xzf pbmc3k.tar.gz\necho \"pin\tpbmc3k.tar.gz matches\"\n\n# Heredoc binds to python3 because it sits BEFORE the pipe; `python3 - | tee <<EOF` would\n# attach it to tee instead. python3 -u so a killed run still has its stdout.\npython3 -u - <<'PYEOF' 2>&1 | tee scanpy.log\nimport sys, numpy as np, scanpy as sc, anndata\nfrom sklearn.metrics import adjusted_rand_score as ari\n\n# getattr, never a guessed attribute path: a version print must not be able to fail the run.\nfor m in (sc, anndata):\n    print(\"version\\t%s %s\" % (m.__name__, getattr(m, \"__version__\", \"unknown\")))\nimport igraph, leidenalg\nprint(\"version\\tigraph %s\" % getattr(igraph, \"__version__\", \"unknown\"))\nprint(\"version\\tleidenalg %s\" % getattr(leidenalg, \"version\", \"unknown\"))\nsc.settings.verbosity = 1\n\n# ---------------------------------------------------------------- 1. exact dimensions\nA = sc.read_10x_mtx(\"filtered_gene_bc_matrices/hg19/\", var_names=\"gene_symbols\", cache=False)\nprint(\"cells\\t%d\" % A.n_obs)\nprint(\"genes\\t%d\" % A.n_vars)\n# Published properties of the deposited matrix, so a wrong or truncated input fails here.\nif (A.n_obs, A.n_vars) != (2700, 32738):\n    sys.exit(\"FAIL dimensions are %d x %d, expected 2700 x 32738\" % (A.n_obs, A.n_vars))\n\n# ------------------------------------------- 2. a planted control with an EXACT answer\n# Clustering real cells has no closed-form answer, so first check the machinery on data\n# whose answer is constructed: three well-separated blobs must come back as three\n# clusters with ARI exactly 1.0. No tolerance, and it isolates a broken leidenalg from\n# a merely surprising biological result.\nrng = np.random.default_rng(0)\nblocks, truth = [], []\nfor k in range(3):\n    centre = np.zeros(50); centre[k * 10:(k + 1) * 10] = 8.0\n    blocks.append(rng.normal(centre, 0.35, size=(60, 50)))\n    truth += [k] * 60\nS = anndata.AnnData(np.vstack(blocks).astype('float32'))\nsc.pp.pca(S, n_comps=10, svd_solver='arpack', random_state=0)\nsc.pp.neighbors(S, n_neighbors=10, random_state=0)\nsc.tl.leiden(S, key_added='l', random_state=0, flavor='igraph', n_iterations=2, directed=False)\nnsyn = S.obs['l'].nunique(); asyn = ari(truth, S.obs['l'].astype(int))\nprint(\"synthetic_clusters\\t%d\" % nsyn)\nprint(\"synthetic_ari\\t%.4f\" % asyn)\nif nsyn != 3 or abs(asyn - 1.0) > 1e-9:\n    sys.exit(\"FAIL planted control: %d clusters, ARI %.4f (expected 3 and exactly 1.0)\" % (nsyn, asyn))\n\n# ------------------------------------------------------- 3. the real pipeline on pbmc3k\nsc.pp.filter_cells(A, min_genes=200)\nsc.pp.filter_genes(A, min_cells=3)\nprint(\"after_qc\\t%d cells x %d genes\" % (A.n_obs, A.n_vars))\nsc.pp.normalize_total(A, target_sum=1e4)\nsc.pp.log1p(A)\n# Keep the log-normalised full matrix: the marker check needs genes that HVG selection\n# would discard, and reaching into .raw later is more fragile than holding a copy.\nfull = A.copy()\nsc.pp.highly_variable_genes(A, min_mean=0.0125, max_mean=3, min_disp=0.5)\nprint(\"hvg\\t%d\" % int(A.var.highly_variable.sum()))\nA = A[:, A.var.highly_variable].copy()\nsc.pp.scale(A, max_value=10)\nsc.tl.pca(A, svd_solver='arpack', random_state=0)\nsc.pp.neighbors(A, n_neighbors=10, n_pcs=40, random_state=0)\n\n# Two independent community-detection algorithms on the SAME kNN graph: Leiden via\n# leidenalg, Louvain via igraph's multilevel. Agreement between them is a cross-method\n# check, not a restatement of one result.\nsc.tl.leiden(A, key_added='leiden', random_state=0, flavor='igraph', n_iterations=2, directed=False)\nsc.tl.louvain(A, key_added='louvain', random_state=0, flavor='igraph')\nnl = A.obs['leiden'].nunique(); nv = A.obs['louvain'].nunique()\nprint(\"leiden_clusters\\t%d\" % nl)\nprint(\"louvain_clusters\\t%d\" % nv)\ncross = ari(A.obs['leiden'].astype(str), A.obs['louvain'].astype(str))\nprint(\"leiden_vs_louvain_ari\\t%.4f\" % cross)\nif nl < 5 or nl > 20:\n    sys.exit(\"FAIL leiden found %d clusters; PBMCs should give roughly 5-20\" % nl)\n# Two different algorithms on one graph should largely agree without being identical.\n# 0.5 is deliberately loose: the claim is 'these find the same structure', and a tight\n# band here would be a band on an algorithmic difference rather than on correctness.\nif cross < 0.5:\n    sys.exit(\"FAIL leiden and louvain disagree: ARI %.4f\" % cross)\n\n# ------------------------------------------------------------------ 4. determinism\nsc.tl.leiden(A, key_added='leiden2', random_state=0, flavor='igraph', n_iterations=2, directed=False)\nsame = bool((A.obs['leiden'].astype(str) == A.obs['leiden2'].astype(str)).all())\nprint(\"determinism\\t%s\" % (\"identical\" if same else \"DIFFERS\"))\nif not same:\n    sys.exit(\"FAIL same seed gave different labels\")\n\n# ----------------------------------------------- 5. the biology: three lineages, three clusters\n# PBMCs contain T cells, monocytes and B cells. CD3D, LYZ and MS4A1 are textbook markers\n# for exactly those, so each must peak in a DIFFERENT cluster. Categorical: no threshold\n# on any expression value, just three distinct argmaxes.\nlab = A.obs['leiden'].astype(str).values\nrows = []\nfor gene in ('CD3D', 'LYZ', 'MS4A1'):\n    if gene not in full.var_names:\n        sys.exit(\"FAIL marker %s not in the matrix\" % gene)\n    x = np.asarray(full[:, gene].X.todense()).ravel()\n    means = {c: float(x[lab == c].mean()) for c in set(lab)}\n    top = max(means, key=means.get)\n    order = sorted(means.values(), reverse=True)\n    rows.append((gene, top, order[0], order[1]))\n    print(\"marker\\t%-6s peaks in cluster %-3s mean %.3f (next %.3f)\" % (gene, top, order[0], order[1]))\npeaks = [r[1] for r in rows]\nprint(\"marker_clusters_distinct\\t%s\" % (\"yes\" if len(set(peaks)) == 3 else \"NO\"))\nif len(set(peaks)) != 3:\n    sys.exit(\"FAIL CD3D/LYZ/MS4A1 peak in %d distinct clusters, expected 3: %s\" % (len(set(peaks)), peaks))\n\nwith open('score.tsv', 'w') as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"cells\\t2700\\ngenes\\t32738\\n\")\n    fh.write(\"synthetic_clusters\\t%d\\nsynthetic_ari\\t%.4f\\n\" % (nsyn, asyn))\n    fh.write(\"leiden_clusters\\t%d\\nlouvain_clusters\\t%d\\n\" % (nl, nv))\n    fh.write(\"leiden_vs_louvain_ari\\t%.4f\\n\" % cross)\n    fh.write(\"determinism\\tidentical\\n\")\n    for g, c, m1, m2 in rows:\n        fh.write(\"marker_%s\\tcluster %s (%.3f vs %.3f)\\n\" % (g, c, m1, m2))\nA.write('pbmc3k_clustered.h5ad')\nprint(\"SCANPY OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"scanpy pipeline failed\"; exit 1; }\ncp score.tsv scanpy-diag.txt\necho \"DONE\""
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy/pbmc3k.tar.gz",
+      "destination": "/tmp/pbmc3k.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy/pbmc3k.tar.gz.sha256",
+      "destination": "/tmp/pbmc3k.tar.gz.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/scanpy-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy/r1/scanpy-diag.txt"
+    },
+    {
+      "source": "/tmp/scanpy.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy/r1/scanpy.log"
+    },
+    {
+      "source": "/tmp/pbmc3k_clustered.h5ad",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy/r1/pbmc3k_clustered.h5ad"
+    }
+  ]
+}
