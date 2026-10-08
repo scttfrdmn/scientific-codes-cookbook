@@ -1,0 +1,60 @@
+{
+  "task_id": "cookbook-plink2-gen19-r2",
+  "container": "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed here: aarchbio images have their PATH dropped by the task shell.\n# (aarchsci env images are the opposite -- exporting there shadows their python, which cost\n# two dead runs on the gsw recipe.)\n#\n# This task generates the fileset ONCE and stages it, so the PLINK 2 task reads the same\n# BYTES rather than regenerating from the same seed. The cross-check rule is explicit: point\n# the second tool at the first one's staged input, because a second generation is a second\n# thing to keep true.\n\nplink --version | head -1\n\necho \"== generate a deterministic fileset: 300 samples, 1000 variants, 2% missing ==\"\nplink --dummy 300 1000 0.02 0 acgt --seed 42 --make-bed --out data > /tmp/gen.log 2>&1\ntest \"$?\" = \"0\" || { tail -20 /tmp/gen.log; echo \"FAIL: --dummy failed\"; exit 1; }\nls -l data.bed data.bim data.fam | awk '{print \"file\\t\"$9\"\\t\"$5}'\nsha256sum data.bed data.bim data.fam | tee data.sha256\n\necho \"== allele counts, missingness, HWE ==\"\nplink --bfile data --freq counts --out p19 > /tmp/freq.log 2>&1 || { cat /tmp/freq.log; exit 1; }\nplink --bfile data --missing        --out p19 > /tmp/miss.log 2>&1 || { cat /tmp/miss.log; exit 1; }\nplink --bfile data --hardy          --out p19 > /tmp/hwe.log  2>&1 || { cat /tmp/hwe.log;  exit 1; }\n\nhead -2 p19.frq.counts | sed 's/^/  frq: /'\nhead -2 p19.lmiss      | sed 's/^/  lmiss: /'\nhead -2 p19.hwe        | sed 's/^/  hwe: /'\n\n# Normalise to a convention-free summary. A1 in PLINK 1.9 is the MINOR allele; PLINK 2 reports\n# the ALT allele instead, so \"A1 count\" vs \"ALT count\" would compare two different things.\n# min(count, total-count) is the minor-allele count under either convention, and it is an\n# INTEGER -- so the comparison can be exact equality rather than a tolerance.\nawk 'NR>1{t=$5+$6; m=($5<$6?$5:$6); print $2\"\\t\"m\"\\t\"t}' p19.frq.counts | sort -k1,1 > p19.minor.tsv\nawk 'NR>1{print $2\"\\t\"$3\"\\t\"$4}' p19.lmiss | sort -k1,1 > p19.miss.tsv\n# PLINK 1.9's --hardy emits THREE rows per variant (TEST = ALL / AFF / UNAFF) whenever a\n# case/control phenotype exists, and --dummy creates one. PLINK 2 emits a single all-samples\n# row. Without this filter the later strata silently overwrite ALL when keyed by variant ID,\n# and the comparison becomes PLINK 1.9's UNAFF subset against PLINK 2's whole sample --\n# measured at 9.2e-01 apart, which reads as a catastrophic disagreement and is really a\n# different population. Restrict to ALL so the two sides are the same samples.\nawk 'NR>1 && $3==\"ALL\"{print $2\"\\t\"$9}' p19.hwe | sort -k1,1 > p19.hwe.tsv\nawk 'NR>1{print $3}' p19.hwe | sort -u | tr '\\n' ' ' | sed 's/^/  hwe TEST strata present: /'\necho\nwc -l p19.minor.tsv p19.miss.tsv p19.hwe.tsv | sed 's/^/  /'\n\necho \"PLINK19 OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/data.bed",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.bed"
+    },
+    {
+      "source": "/tmp/data.bim",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.bim"
+    },
+    {
+      "source": "/tmp/data.fam",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.fam"
+    },
+    {
+      "source": "/tmp/data.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.sha256"
+    },
+    {
+      "source": "/tmp/p19.minor.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.minor.tsv"
+    },
+    {
+      "source": "/tmp/p19.miss.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.miss.tsv"
+    },
+    {
+      "source": "/tmp/p19.hwe.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.hwe.tsv"
+    },
+    {
+      "source": "/tmp/p19.frq.counts",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/p19.frq.counts"
+    },
+    {
+      "source": "/tmp/p19.hwe",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/p19.hwe"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

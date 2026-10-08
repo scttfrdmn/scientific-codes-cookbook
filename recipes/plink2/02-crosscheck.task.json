@@ -1,0 +1,78 @@
+{
+  "task_id": "cookbook-plink2-crosscheck-r4",
+  "container": "quay.io/aarchbio/plink2@sha256:8a025c5284f1fce7c14e50309e596d10860431abde8d23b94cd6ec5e061f511d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# THE COMPARISON IS IN AWK, NOT PYTHON. This aarchbio image wraps a single C binary and has\n# NO python3 at all -- the first version of this task reached the comparison and died on\n# `python3: command not found` after plink2 had already produced every output. A bioconda\n# single-tool image is not a conda env image; do not assume an interpreter is present.\n\necho \"== the fileset must be the exact bytes PLINK 1.9 analysed ==\"\nsha256sum -c data.sha256 || { echo \"FAIL: the fileset differs from what PLINK 1.9 used\"; exit 1; }\nprintf 'same_bytes\\tdata.{bed,bim,fam} match PLINK 1.9 staged sha256\\n'\n\nplink2 --version | head -1\n\necho \"== PLINK 2: the same three computations ==\"\nplink2 --bfile data --freq counts --out p2 > /tmp/freq2.log 2>&1 || { cat /tmp/freq2.log; exit 1; }\nplink2 --bfile data --missing     --out p2 > /tmp/miss2.log 2>&1 || { cat /tmp/miss2.log; exit 1; }\nplink2 --bfile data --hardy       --out p2 > /tmp/hwe2.log  2>&1 || { cat /tmp/hwe2.log;  exit 1; }\nls -l p2.acount p2.vmiss p2.hardy | awk '{print \"out\\t\"$9\"\\t\"$5}'\nhead -1 p2.acount | sed 's/^/  acount header: /'\nhead -1 p2.vmiss  | sed 's/^/  vmiss header:  /'\nhead -1 p2.hardy  | sed 's/^/  hardy header:  /'\n\n# ---------------------------------------------------------------- 1. allele counts, exact\n# A1 in PLINK 1.9 is the MINOR allele; PLINK 2 reports the ALT allele. Comparing \"A1 count\"\n# to \"ALT count\" compares two different quantities and would disagree on roughly half the\n# variants -- a method difference wearing the clothes of a bug. min(count, total-count) is the\n# minor count under EITHER convention, and it is an integer, so this is exact equality.\nawk '\n  NR==FNR { m19[$1]=$2+0; t19[$1]=$3+0; next }\n  FNR==1 {\n    for (i=1; i<=NF; i++) { h=$i; sub(/^#/,\"\",h); col[h]=i }\n    if (!(\"ID\" in col) || !(\"ALT_CTS\" in col) || !(\"OBS_CT\" in col)) {\n      printf \"FAIL: p2.acount header lacks ID/ALT_CTS/OBS_CT\\n\"; exit 2 }\n    next\n  }\n  {\n    id=$(col[\"ID\"]); alt=$(col[\"ALT_CTS\"])+0; obs=$(col[\"OBS_CT\"])+0\n    n++\n    if (!(id in m19)) { printf \"FAIL: %s absent from PLINK 1.9 output\\n\", id; exit 2 }\n    m2 = (alt < obs-alt ? alt : obs-alt)\n    if (t19[id] != obs) { bt++; if (ex<3) { printf \"example\\ttotal %s %d vs %d\\n\", id, t19[id], obs; ex++ } }\n    if (m19[id] != m2)  { bm++; if (ex<3) { printf \"example\\tminor %s %d vs %d\\n\", id, m19[id], m2;  ex++ } }\n  }\n  END{\n    printf \"variants_compared\\t%d\\n\", n+0\n    printf \"total_allele_mismatches\\t%d\\n\", bt+0\n    printf \"minor_allele_count_mismatches\\t%d\\n\", bm+0\n  }' p19.minor.tsv p2.acount | tee counts.tsv\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: allele-count comparison errored\"; exit 1; }\n\nNC=$(awk -F'\\t' '$1==\"variants_compared\"{print $2}' counts.tsv)\nBT=$(awk -F'\\t' '$1==\"total_allele_mismatches\"{print $2}' counts.tsv)\nBM=$(awk -F'\\t' '$1==\"minor_allele_count_mismatches\"{print $2}' counts.tsv)\ntest \"$NC\" -gt 900 || { echo \"FAIL: only $NC variants compared, expected ~1000\"; exit 1; }\ntest \"$BT\" = \"0\" || { echo \"FAIL: $BT total-allele mismatches\"; exit 1; }\ntest \"$BM\" = \"0\" || { echo \"FAIL: $BM minor-allele-count mismatches\"; exit 1; }\nprintf 'identity_counts\\tminor-allele counts and total observations identical, exactly\\n'\n\n# ---------------------------------------------------------------- 2. missing counts, exact\nawk '\n  NR==FNR { n19[$1]=$2+0; next }\n  FNR==1 { for (i=1;i<=NF;i++){h=$i; sub(/^#/,\"\",h); col[h]=i}\n           if (!(\"ID\" in col) || !(\"MISSING_CT\" in col)) { printf \"FAIL: p2.vmiss header\\n\"; exit 2 } next }\n  { id=$(col[\"ID\"]); mc=$(col[\"MISSING_CT\"])+0\n    if (id in n19) { n++; if (n19[id] != mc) { b++; if (ex<3) { printf \"example\\tmiss %s %d vs %d\\n\", id, n19[id], mc; ex++ } } } }\n  END{ printf \"missing_compared\\t%d\\nmissing_ct_mismatches\\t%d\\n\", n+0, b+0 }' p19.miss.tsv p2.vmiss | tee miss.tsv\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: missingness comparison errored\"; exit 1; }\nBMI=$(awk -F'\\t' '$1==\"missing_ct_mismatches\"{print $2}' miss.tsv)\ntest \"$BMI\" = \"0\" || { echo \"FAIL: $BMI missing-count mismatches\"; exit 1; }\nprintf 'identity_missing\\tper-variant missing counts identical, exactly\\n'\n\n# ------------------------------------------- 3. HWE p-values: same test, printed precision\n# Both implement the same exact test, so any residual is the ~4 significant figures each tool\n# PRINTS, not a numerical disagreement. The bound is therefore justified by the output format,\n# which is stated rather than tuned.\nawk '\n  NR==FNR { p19[$1]=$2; next }\n  FNR==1 { for (i=1;i<=NF;i++){h=$i; sub(/^#/,\"\",h); col[h]=i}\n           pc = (\"P\" in col) ? col[\"P\"] : ((\"MIDP\" in col) ? col[\"MIDP\"] : 0)\n           if (!(\"ID\" in col) || pc==0) { printf \"hwe\\tno usable P column -- reported, not asserted\\n\"; skip=1 }\n           next }\n  skip { next }\n  { id=$(col[\"ID\"]); if (id in p19) { a=p19[id]+0; b=$(pc)+0; d=a-b; if (d<0) d=-d; n++; if (d>w) w=d } }\n  END{ if (!skip) { printf \"hwe_compared\\t%d\\nhwe_max_abs_diff\\t%.3e\\n\", n+0, w+0 } }' p19.hwe.tsv p2.hardy | tee hwe.tsv\nHW=$(awk -F'\\t' '$1==\"hwe_max_abs_diff\"{print $2}' hwe.tsv)\nif [ -n \"$HW\" ]; then\n  awk -v w=\"$HW\" 'BEGIN{ if (w+0 > 1e-4) { printf \"FAIL: HWE p-values differ by %s, more than printed precision explains\\n\", w; exit 1 } }' || exit 1\n  printf 'agreement_hwe\\tHWE p-values agree to printed precision\\n'\nfi\n\n{ printf 'observable\\tvalue\\n'; cat counts.tsv miss.tsv hwe.tsv; } > score.tsv\n# compare.log is a DECLARED OUTPUT, so it must be written. The python version produced it via\n# `tee`; when the comparison was rewritten in awk the tee went away but the output declaration\n# stayed, and spawn correctly failed the task on a declared-but-missing file even though the\n# science had already passed with rc=0. Build it explicitly rather than dropping the output.\ncat counts.tsv miss.tsv hwe.tsv > compare.log\n\n# WHY NO ASSOCIATION COMPARISON. PLINK 1.9's --assoc is an allelic chi-square; PLINK 2 removed\n# it in favour of --glm, a regression. DIFFERENT TESTS, so comparing their statistics would\n# measure the method change rather than the two implementations. Stated, not forced.\nprintf 'note\\t--assoc (1.9) and --glm (2.0) are different tests; no association comparison made\\n'\ncp score.tsv plink2-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"PLINK2 CROSSCHECK OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.bed",
+      "destination": "/tmp/data.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.bim",
+      "destination": "/tmp/data.bim"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.fam",
+      "destination": "/tmp/data.fam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/data.sha256",
+      "destination": "/tmp/data.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.minor.tsv",
+      "destination": "/tmp/p19.minor.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.miss.tsv",
+      "destination": "/tmp/p19.miss.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2/p19.hwe.tsv",
+      "destination": "/tmp/p19.hwe.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/plink2-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/plink2-diag.txt"
+    },
+    {
+      "source": "/tmp/compare.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/compare.log"
+    },
+    {
+      "source": "/tmp/p2.acount",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/p2.acount"
+    },
+    {
+      "source": "/tmp/p2.vmiss",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/p2.vmiss"
+    },
+    {
+      "source": "/tmp/p2.hardy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2/r1/p2.hardy"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
