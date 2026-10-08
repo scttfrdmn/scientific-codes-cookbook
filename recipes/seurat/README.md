@@ -73,20 +73,15 @@ from [scanpy](../scanpy/README.md)'s 0.7665. Internal agreement depends on the H
 count and k, which differ between the two recipes, so the reference scale has to be measured
 under *these* parameters to mean anything.
 
-### My "algorithm-matched" premise was wrong, and the data said so
+### "Both called Louvain" does not mean the same algorithm
 
-The comparison was designed with Scanpy-**louvain** vs Seurat as the headline, reasoning that
-Seurat's `FindClusters` default is Louvain and so the algorithms would match. It produced the
-**lowest** of the three numbers (0.5994).
+Pairing Scanpy's **louvain** with Seurat's `FindClusters` default looks like the algorithm-matched
+comparison, and it gives the **lowest** of the three numbers (0.5994). Seurat implements its own
+modularity optimisation; Scanpy calls igraph's multilevel. Empirically Seurat's clustering sits
+closer to Scanpy's **leiden** (0.7318).
 
-Both being *called* Louvain does not make them the same algorithm: Seurat implements its own
-modularity optimisation, Scanpy calls igraph's multilevel implementation. Empirically Seurat's
-clustering sits closer to Scanpy's **leiden** (0.7318) than to Scanpy's louvain. Reported as
-measured rather than presenting the flattering pairing as the designed one.
-
-The asserted floor stays on the louvain pairing — the conservative one — at 0.45, below the
-measured internal 0.6736 on the principle that two tools should not be *required* to beat two
-algorithms in one tool.
+So match the algorithm by behaviour, not by name. The asserted floor stays on the louvain pairing
+because it is the conservative one.
 
 ### What had to be forced identical, and why each mattered
 
@@ -105,28 +100,29 @@ while Seurat's `CreateSeuratObject` applies `min.cells` and `min.features` to th
 once.** Those give different retained sets. Making them identical by construction means the
 `identity_cells` check verifies the construction rather than discovering a coincidence.
 
-### Four failures, and the one that would have been dangerous
+### The trap that would have passed silently
 
-1. **`ModuleNotFoundError: No module named 'skmisc'`.** `flavor="seurat_v3"` needs `scikit-misc`
-   for its loess fit and the env lacks it. Chosen originally because it mimics Seurat's `vst` —
-   but that reasoning does not survive scrutiny: the comparison needs both tools on the **same**
-   gene set, not a Seurat-flavoured one. `flavor="seurat"` needs nothing extra and is handed to
-   Seurat verbatim. (Filed as a real env gap regardless — it is scanpy's recommended flavour.)
-2. **`subscript out of bounds` in R — the dangerous one.** pbmc3k has **91 duplicated gene
-   symbols** and zero duplicated IDs, and the ecosystems dedup differently: python
-   `var_names_make_unique()` → `A-1`, R `make.unique()` → `A.1`. Joining on deduplicated symbols
-   breaks on exactly those genes. **Had those 91 fallen outside the HVG set, this recipe would
-   have passed while silently comparing partitions built from different feature sets.** Fixed by
-   keying on Ensembl IDs, with both legs asserting their key is unique before use.
-3. **Nothing staged for the R leg** on an early failure, because the declared log did not exist
-   yet. The task now creates its log files up front, which is how Seurat's actual R error became
-   readable from the bucket instead of requiring a rerun to diagnose.
-4. **`__version__` deprecated** in scanpy 1.12 (a `FutureWarning`). Switched to
-   `importlib.metadata.version`, wrapped so a version print still cannot fail the run.
+pbmc3k's reference has **91 duplicated gene symbols and zero duplicated gene IDs**, and the two
+ecosystems disambiguate duplicates differently:
 
-**The generalisable one is #2: do not join on a display name when a stable identifier exists.**
-Gene symbols are labels — not unique, not stable across annotations, and disambiguated
-differently by every toolchain.
+```text
+python  var_names_make_unique()  ->  A, A-1, B
+R       make.unique()            ->  A, A.1, B
+```
+
+Joining the two tools on deduplicated *symbols* breaks on exactly those genes. **Had those 91
+fallen outside the HVG set, this comparison would have passed while silently using different
+feature sets on each side.** Hence both legs key on Ensembl IDs and assert the key is unique before
+use, and Seurat reports how many of Scanpy's genes and cells are missing rather than raising R's
+opaque `subscript out of bounds`.
+
+**Do not join on a display name when a stable identifier exists.** Gene symbols are labels — not
+unique, not stable across annotations, disambiguated differently by every toolchain.
+
+Two smaller notes: `flavor="seurat_v3"` needs `scikit-misc`, which this env lacks
+([aarchsci#28](https://github.com/playgroundlogic/aarchsci/issues/28)) — irrelevant here because
+the comparison needs the *same* gene set rather than a Seurat-flavoured one. And scanpy 1.12
+deprecates `__version__` in favour of `importlib.metadata.version`.
 
 ### Pins
 

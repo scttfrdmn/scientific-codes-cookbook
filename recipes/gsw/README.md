@@ -97,25 +97,16 @@ cosign-verified against `playgroundlogic/aarchsci` (signed by its `publish.yml` 
 The signature covers the **manifest-list** digest, so verifying the per-architecture digest directly
 returns `no signatures found` — verify the tag, pin the arm64 digest.
 
-### Two failures before this ran, because both mislead in the same direction
+### Pinning: verify the tag, but check the image is not stale
 
-**`ModuleNotFoundError: No module named 'gsw'` — on an image whose lock file lists gsw 3.6.23.**
+cosign proves an image is **authentic**, never that it is **the one you meant**. Resolve the
+newest tag by *parsing* `last_modified` — RFC-822 dates begin with a day name, so sorting them as
+strings puts `"Wed, 30 Sep"` after `"Thu, 08 Oct"` — and confirm the env lock's `Built:` timestamp
+is from the same build as the tag you pin. A lock file in git and an image in a registry are two
+different artifacts.
 
-The error points at the image. It was neither the image nor, as first diagnosed, the
-`export PATH=/opt/conda/bin:$PATH` that aarchbio recipes require — removing that export changed
-nothing. The real cause: **the tag was selected by sorting `last_modified` as a string.** RFC-822
-dates begin with a day name, so `"Wed, 30 Sep 2026"` sorts after `"Thu, 08 Oct 2026"`, and a
-30 September image was picked as "newest" — eight days before gsw was added. The lock file was read
-from git HEAD, describing the 8 October build.
-
-So the pinning discipline ran correctly on the wrong object: manifest list resolved, arm64 entry
-taken, signature verified — of a stale image. **Verification proves an image is authentic, never
-that it is the one you meant.** Parse dates (`parsedate_to_datetime`); the date-shaped tag names
-sort correctly as strings, the API's `last_modified` does not.
-
-That is also why this task asserts the check-value file exists before using it: a lock file in git
-and an image in a registry are two different artifacts, and the only honest check is on the
-capability actually present in the image.
+This recipe therefore asserts the check-value file exists before using it: the only honest check is
+on the capability actually present in the image.
 
 ### Run + verify
 

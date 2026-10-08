@@ -78,10 +78,10 @@ So the right statement is **HiGHS and SCIP reproduce the published optimum to th
 which it was published.** A tolerance tighter than ~1e-11 would be asserting more precision than
 netlib printed.
 
-### CBC's 4.29e-08 spread is a printing artifact, and finding that out was the work
+### CBC's 4.29e-08 spread is printing precision, not disagreement
 
-CBC has no Python binding in this env, so its objective is parsed from stdout — and **it prints the
-value three times at different precisions**:
+CBC has no Python binding here, so its objective is parsed from stdout — and it prints the value
+three times at **different precisions**:
 
 ```text
 Optimal - objective value -464.75314                      8 figs  -> 6.2e-09 from published
@@ -89,23 +89,17 @@ After Postsolve, objective -464.75314, infeasibilities …   8 figs
 Optimal objective -464.7531429 - 5 iterations            10 figs  -> 9.2e-11 from published
 ```
 
-The first attempt at this recipe matched the coarse line with a regex that also required a colon
-CBC never prints. Fixing only the regex would have landed on the 8-figure value, which sits
-*outside* a 1e-9 tolerance — and the tempting next move, loosening to 1e-8, would have been a band
-widened to accommodate **text formatting** while reading like a claim about solver accuracy.
-
-The task now prefers the 10-figure line, falls back explicitly, and **records which precision source
-it used** (`cbc_precision_source`), so the number can never be silently coarser than the comparison
-assumes. The `solver_spread` of 4.29e-08 is entirely CBC's last printed digit; the three solvers do
-not actually disagree.
+Parse the 10-figure line. The task records which source it used (`cbc_precision_source`) so the
+number can never be silently coarser than the comparison assumes, and the `solver_spread` of
+4.29e-08 is entirely CBC's last printed digit rather than a real disagreement.
 
 **The general shape:** when a tool reports one quantity at several precisions, the line you parse
-silently sets your tolerance. Coarse line + loose band and precise line + tight band look identical
-in a passing run, and only one of them is checking anything.
+silently sets your tolerance. Coarse line plus a loose band and precise line plus a tight band look
+identical in a passing run — only one of them is checking anything.
 
-A smaller instance of the same thing: CBC's log also contained its duality certificate
-(`infeasibilities - dual 0 (0), primal 0 (0)`), which the first version ignored — so that run would
-have had two solvers certifying optimality and a third merely agreeing on a number.
+CBC's log also carries its own duality certificate (`infeasibilities - dual 0 (0), primal 0 (0)`),
+which is why all three solvers here certify optimality rather than two certifying and a third
+merely agreeing on a number.
 
 ### Why three solvers can be compared at all
 

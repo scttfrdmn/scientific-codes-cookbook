@@ -113,29 +113,19 @@ arm64 digest. The PLINK 2 image exists because of
 [aarchbio#67](https://github.com/playgroundlogic/aarchbio/issues/67) — bioconda published its first
 `linux-aarch64` build of plink2 on 2026-10-04, which is what unblocked this recipe at all.
 
-### Four failed attempts, each a different wrong assumption
+### Two implementation notes for anyone extending this
 
-1. **A nested `"""docstring"""`** inside the authoring script's raw string terminated it. Caught
-   before spending.
-2. **`python3: command not found`.** This aarchbio image wraps a single C binary and ships **no
-   interpreter** — PLINK 2 had already produced every output when the comparison died. *A bioconda
-   single-tool image is not a conda env image*; the PATH export it needs is a separate question from
-   whether an interpreter exists. Rewritten in awk, which is present.
-3. **The HWE stratification**, above.
-4. **A stale output declaration.** `compare.log` stayed in the outputs list after the awk rewrite
-   dropped the `tee` that wrote it, so spawn failed the task on a declared-but-missing file *after*
-   the science had passed with `rc=0`. That is spawn behaving correctly — a missing declared output
-   is a failure, not a silently partial result.
+**A bioconda single-tool image may contain no interpreter.** This one wraps a C binary and ships
+no `python3`, so the comparison is written in awk. That is separate from the PATH question —
+aarchbio images need `export PATH=/opt/conda/bin:$PATH`, aarchsci env images must not have it.
 
-The awk comparison was validated locally in **both directions** before launching: a case where
-PLINK 2's `ALT` is deliberately the major allele (confirming the convention-free metric holds), and
-a case with one count altered by 1 (confirming the check actually fails). A check never observed
-failing is not yet a check.
+**Read column indices from the header, never by position.** PLINK 2's `.acount` is
+`#CHROM ID REF ALT PROVISIONAL_REF? ALT_CTS OBS_CT` — the `PROVISIONAL_REF?` column is easy to not
+anticipate, and fixed positions would compare the wrong field confidently.
 
-Column indices are read from the header rather than hardcoded — which mattered, because PLINK 2's
-`.acount` header is `#CHROM ID REF ALT PROVISIONAL_REF? ALT_CTS OBS_CT`, carrying a
-`PROVISIONAL_REF?` column this recipe never anticipated. Fixed positions would have compared the
-wrong field confidently.
+The awk comparison was validated both ways before running: a case where PLINK 2's `ALT` is
+deliberately the major allele, and a case with one count altered by 1 to confirm the check fails.
+A check never observed failing is not yet a check.
 
 ### Run + verify
 
