@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-lineage-pangolin-r4",
+  "container": "quay.io/aarchbio/pangolin@sha256:32551903d08cbe39fc70fcf924326fec08c100b8416346acd0302bb0e7f2a03a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp XDG_CACHE_HOME=/tmp/cache\nmkdir -p /tmp/cache\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: dataset.tar does not match its pin\"; exit 1; }\ntar -xf dataset.tar\nNSEQ=$(awk -F'\\t' '$1==\"n_sequences\"{print $2}' expected.tsv)\n\n# DIAGNOSTICS BEFORE THE RUN. pangolin bundles its designation data as the `pangolin-data`\n# package, and whether a given build can call lineages entirely offline is a property of the\n# image rather than something to assume. Print what it has before asking it to work, so a\n# failure is diagnosable from this log alone.\necho \"== what this pangolin build actually has ==\"\npangolin --version 2>&1 | head -3\npangolin --all-versions 2>&1 | head -12\npython3 -c \"\nimport importlib.util as u\nfor m in ('pangolin','pangolin_data','scorpio','constellations'):\n    s=u.find_spec(m)\n    print('module\\t%-16s %s' % (m, 'present' if s else 'MISSING'))\n\" 2>&1\n\necho \"== call the same 165 sequences, offline ==\"\n# --skip-scorpio avoids the constellations lookup; --analysis-mode usher is the default and\n# uses the protobuf tree shipped in pangolin-data.\npangolin dataset/sequences.fasta --outfile pangolin.csv --tempdir /tmp/pangotmp \\\n  --threads \"$(nproc)\" --skip-designation-cache > pango.log 2>&1\nRC=$?\nprintf 'pangolin_rc\\t%s\\n' \"$RC\"\nif [ \"$RC\" != \"0\" ]; then\n  echo \"---- pangolin log tail ----\"; tail -40 pango.log\n  echo \"FAIL: pangolin exited $RC\"; exit 1\nfi\ntest -s pangolin.csv || { tail -20 pango.log; echo \"FAIL: pangolin wrote no output\"; exit 1; }\nhead -2 pangolin.csv | sed 's/^/  /'\nPROWS=$(( $(wc -l < pangolin.csv) - 1 ))\nprintf 'pangolin_rows\\t%s\\n' \"$PROWS\"\ntest \"$PROWS\" = \"$NSEQ\" || { echo \"FAIL: pangolin produced $PROWS rows for $NSEQ sequences\"; exit 1; }\n\npython3 -u - <<'PYEOF' 2>&1 | tee compare.log\nimport sys, csv, json\n\n# ---- nextclade side (carried over from task 1) ----\nnc = {}\nwith open(\"nc_calls.tsv\") as fh:\n    r = csv.DictReader(fh, delimiter=\"\\t\")\n    for row in r:\n        nc[row[\"seqName\"]] = (row[\"nextclade_pango\"] or \"\").strip()\nprint(\"nextclade_calls\\t%d\" % len(nc))\n\n# ---- pangolin side ----\npg = {}\nwith open(\"pangolin.csv\") as fh:\n    r = csv.DictReader(fh)\n    if \"taxon\" not in r.fieldnames or \"lineage\" not in r.fieldnames:\n        sys.exit(\"FAIL: pangolin.csv lacks taxon/lineage (%s)\" % r.fieldnames)\n    for row in r:\n        pg[row[\"taxon\"]] = (row[\"lineage\"] or \"\").strip()\nprint(\"pangolin_calls\\t%d\" % len(pg))\n\n# Nextclade keys on the full FASTA header, pangolin truncates at the first whitespace. Join on\n# the first token of each, which is the sequence ID both derive from -- comparing the raw keys\n# would silently intersect to nothing.\ndef key(s):\n    return s.split()[0] if s else s\nnck = {key(k): v for k, v in nc.items()}\npgk = {key(k): v for k, v in pg.items()}\nshared = sorted(set(nck) & set(pgk))\nprint(\"shared_sequences\\t%d\" % len(shared))\nif len(shared) < 100:\n    sys.exit(\"FAIL: only %d sequences shared between the two outputs; the join key is wrong\"\n             % len(shared))\n\nUNASSIGNED = {\"\", \"Unassigned\", \"None\", \"unclassified\"}\nboth = [s for s in shared if nck[s] not in UNASSIGNED and pgk[s] not in UNASSIGNED]\nprint(\"both_assigned\\t%d\" % len(both))\n\nexact = sum(1 for s in both if nck[s] == pgk[s])\nprint(\"exact_agreement\\t%d\" % exact)\nprint(\"exact_agreement_rate\\t%.4f\" % (exact / len(both)) if both else \"exact_agreement_rate\\tNA\")\n\n# TWO THINGS HAVE TO BE RESOLVED BEFORE THESE NAMES ARE COMPARABLE, and the first attempt at\n# this recipe only handled one of them.\n#\n# 1. HIERARCHY. BA.2 and BA.2.3 are not a disagreement -- one is more specific.\n# 2. ALIASES. Pango gives a lineage a NEW LETTER PREFIX once its dotted name grows too long,\n#    so C.* IS B.1.1.1.*, BA.* is B.1.1.529.*, AY.* is B.1.617.2.*. Measured: the only two\n#    \"disagreements\" in the first run were nextclade=B.1.1.1 against pangolin=C.27, which name\n#    the SAME placement. A prefix test cannot see that, because the strings share no prefix --\n#    so that was a limitation of the metric, not a difference between the tools.\n#\n# Both calls are therefore unaliased into the B/A root namespace first, using the authoritative\n# alias table pinned from pango-designation v1.41.\nwith open(\"alias_key.json\") as fh:\n    ALIAS = json.load(fh)\nprint(\"alias_entries\\t%d\" % len(ALIAS))\n\ndef unalias(lin):\n    if not lin or lin in UNASSIGNED:\n        return lin\n    parts = lin.split(\".\")\n    v = ALIAS.get(parts[0])\n    # Recombinant lineages (X*) map to a LIST of parents and have no single root form, so they\n    # are left as-is rather than forced into one arbitrarily.\n    if isinstance(v, str) and v:\n        return \".\".join([v] + parts[1:])\n    return lin\n\ndef compatible(a, b):\n    a, b = unalias(a), unalias(b)\n    if a == b:\n        return True\n    pa, pb = a.split(\".\"), b.split(\".\")\n    n = min(len(pa), len(pb))\n    return pa[:n] == pb[:n]\nexact_un = sum(1 for s in both if unalias(nck[s]) == unalias(pgk[s]))\nprint(\"exact_agreement_unaliased\\t%d\" % exact_un)\nprint(\"exact_agreement_unaliased_rate\\t%.4f\" % (exact_un / len(both) if both else 0))\ncompat = sum(1 for s in both if compatible(nck[s], pgk[s]))\nrate_c = compat / len(both) if both else 0.0\nprint(\"hierarchy_compatible\\t%d\" % compat)\nprint(\"hierarchy_compatible_rate\\t%.4f\" % rate_c)\n\nfor s in [x for x in both if not compatible(nck[x], pgk[x])][:8]:\n    print(\"disagree\\t%-28s nextclade=%-12s pangolin=%-12s (unaliased: %s vs %s)\"\n          % (s[:28], nck[s], pgk[s], unalias(nck[s]), unalias(pgk[s])))\n\n# The floor is on the HIERARCHY-COMPATIBLE rate, because that is the quantity that means \"the\n# two callers placed this genome in the same part of the Pango tree\". 0.80 is well below what\n# two maintained callers on a curated example set should achieve and well above what a broken\n# one would reach; the exact rate is reported, not asserted, since granularity differences are\n# a real and legitimate difference between the methods.\nif rate_c < 0.80:\n    sys.exit(\"FAIL: hierarchy-compatible agreement %.4f is below the 0.80 floor\" % rate_c)\nprint(\"crosscheck\\tNextclade and pangolin place the same genomes compatibly in the Pango tree\")\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"shared_sequences\\t%d\\n\" % len(shared))\n    fh.write(\"both_assigned\\t%d\\n\" % len(both))\n    fh.write(\"exact_agreement\\t%d\\n\" % exact)\n    fh.write(\"exact_agreement_rate\\t%.4f\\n\" % (exact / len(both) if both else 0))\n    fh.write(\"hierarchy_compatible\\t%d\\n\" % compat)\n    fh.write(\"exact_agreement_unaliased\\t%d\\n\" % exact_un)\n    fh.write(\"hierarchy_compatible_rate\\t%.4f\\n\" % rate_c)\nprint(\"LINEAGE CROSSCHECK OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: the comparison failed\"; exit 1; }\ncp score.tsv lineage-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/dataset.tar",
+      "destination": "/tmp/dataset.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/expected.tsv",
+      "destination": "/tmp/expected.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/nc_calls.tsv",
+      "destination": "/tmp/nc_calls.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/alias_key.json",
+      "destination": "/tmp/alias_key.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/lineage-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/lineage-diag.txt"
+    },
+    {
+      "source": "/tmp/compare.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/compare.log"
+    },
+    {
+      "source": "/tmp/pangolin.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/pangolin.csv"
+    },
+    {
+      "source": "/tmp/pango.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/pango.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

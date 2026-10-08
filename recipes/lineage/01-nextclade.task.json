@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-lineage-nextclade-r3",
+  "container": "quay.io/aarchbio/nextclade@sha256:7cbf30abb4fa7fbc9b9a2c608b9ed361d8527514af139fb6c1883dce16e16f62",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: dataset.tar does not match its pin\"; exit 1; }\ntar -xf dataset.tar\nTAG=$(awk -F'\\t' '$1==\"dataset_tag\"{print $2}' expected.tsv)\nNSEQ=$(awk -F'\\t' '$1==\"n_sequences\"{print $2}' expected.tsv)\n\necho \"== the dataset must still self-report the staged tag ==\"\n# Checked with grep rather than an interpreter. This runs in a single-tool bioconda image\n# built around a Rust binary, which ships no interpreter at all -- and the first version hid\n# that behind a stderr redirect, so \"command not found\" surfaced as an empty tag and the\n# failure message blamed the dataset, which was perfect. A diagnostic must never be able to\n# obscure its own cause. Asserting the staged tag appears in pathogen.json IS the claim.\nprintf 'dataset_tag_expected\\t%s\\n' \"$TAG\"\nif grep -q \"\\\"$TAG\\\"\" dataset/pathogen.json; then\n  printf 'dataset_tag_reported\\t%s\\n' \"$TAG\"\nelse\n  echo \"FAIL: pathogen.json does not declare tag $TAG\"\n  grep -o '\"tag\"[^,]*' dataset/pathogen.json | head -3\n  exit 1\nfi\n\nnextclade --version 2>&1 | head -1\n\necho \"== self-identity: the reference aligned to its own dataset ==\"\n# The dataset's reference IS the coordinate system, so running it as a query must find zero\n# differences. Algorithmic, exact, and independent of any lineage question.\nnextclade run --input-dataset dataset --output-tsv ref.tsv --output-all ref_out \\\n  dataset/reference.fasta > nc_ref.log 2>&1\ntest \"$?\" = \"0\" || { tail -20 nc_ref.log; echo \"FAIL: nextclade on the reference failed\"; exit 1; }\nawk -F'\\t' 'NR==1{for(i=1;i<=NF;i++)h[$i]=i; next}\n  { printf \"ref_totalSubstitutions\\t%s\\n\", $(h[\"totalSubstitutions\"])\n    printf \"ref_totalDeletions\\t%s\\n\",     $(h[\"totalDeletions\"])\n    printf \"ref_totalInsertions\\t%s\\n\",    $(h[\"totalInsertions\"])\n    printf \"ref_totalMissing\\t%s\\n\",       $(h[\"totalMissing\"]) }' ref.tsv | tee refid.tsv\nS=$(awk -F'\\t' '$1==\"ref_totalSubstitutions\"{print $2}' refid.tsv)\nD=$(awk -F'\\t' '$1==\"ref_totalDeletions\"{print $2}' refid.tsv)\nI=$(awk -F'\\t' '$1==\"ref_totalInsertions\"{print $2}' refid.tsv)\ntest \"${S:-x}\" = \"0\" -a \"${D:-x}\" = \"0\" -a \"${I:-x}\" = \"0\" || {\n  echo \"FAIL: the reference differs from itself (subs $S, del $D, ins $I)\"; exit 1; }\nprintf 'identity_reference\\treference vs its own dataset: 0 substitutions, 0 indels\\n'\n\necho \"== call the 165 example sequences ==\"\nnextclade run --input-dataset dataset --output-tsv nextclade.tsv \\\n  dataset/sequences.fasta > nc.log 2>&1\ntest \"$?\" = \"0\" || { tail -25 nc.log; echo \"FAIL: nextclade run failed\"; exit 1; }\nROWS=$(( $(wc -l < nextclade.tsv) - 1 ))\nprintf 'nextclade_rows\\t%s\\n' \"$ROWS\"\ntest \"$ROWS\" = \"$NSEQ\" || { echo \"FAIL: $ROWS rows for $NSEQ sequences\"; exit 1; }\n\n# Carry forward exactly what the comparison needs: name and Pango call.\nawk -F'\\t' 'NR==1{for(i=1;i<=NF;i++)h[$i]=i\n    if(!(\"seqName\" in h)){print \"FAIL: no seqName column\" > \"/dev/stderr\"; exit 2}\n    pc = (\"Nextclade_pango\" in h) ? h[\"Nextclade_pango\"] : 0\n    if(pc==0){print \"FAIL: no Nextclade_pango column\" > \"/dev/stderr\"; exit 2}\n    print \"seqName\\tnextclade_pango\\tclade\"; next}\n  { print $(h[\"seqName\"]) \"\\t\" $(pc) \"\\t\" $(h[\"clade\"]) }' nextclade.tsv > nc_calls.tsv\ntest \"$?\" = \"0\" || { echo \"FAIL: could not extract Nextclade pango calls\"; exit 1; }\nwc -l < nc_calls.tsv | awk '{print \"nc_calls_rows\\t\"$1-1}'\nhead -3 nc_calls.tsv | sed 's/^/  /'\nawk -F'\\t' 'NR>1 && $2!=\"\" {n++} END{printf \"nextclade_pango_assigned\\t%d\\n\", n+0}' nc_calls.tsv\n\n{ printf 'observable\\tvalue\\n'; cat refid.tsv\n  printf 'nextclade_rows\\t%s\\n' \"$ROWS\"; } > nc_score.tsv\necho \"NEXTCLADE OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/dataset.tar",
+      "destination": "/tmp/dataset.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/expected.tsv",
+      "destination": "/tmp/expected.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/nc_calls.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/lineage/nc_calls.tsv"
+    },
+    {
+      "source": "/tmp/nc_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/nc_score.tsv"
+    },
+    {
+      "source": "/tmp/nextclade.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/nextclade.tsv"
+    },
+    {
+      "source": "/tmp/nc.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage/r1/nc.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
