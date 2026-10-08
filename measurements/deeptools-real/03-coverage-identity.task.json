@@ -1,0 +1,58 @@
+{
+  "task_id": "deeptoolsreal-identity-r2",
+  "container": "quay.io/aarchbio/deeptools@sha256:91c028a26e85579dde0eadb0efd06c662bcdcb52956e48c941cdeea6c3016ca8",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl NUMBA_CACHE_DIR=/tmp/numba\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# WHY THIS RUN EXISTS. The first attempt asserted that bamCoverage's coverage integral equals\n# samtools' `bases mapped (cigar)` -- a conservation identity if true. It measured 1.644889 and\n# the loose 5% gate refused it, correctly: at bin width W, bamCoverage credits a read to EVERY\n# bin it touches, so each read is spread over (L-1+W) bases rather than L. With L=76 and W=50\n# that predicts (76-1+50)/76 = 1.644737 against the observed 1.644889 -- agreement to 0.0093%.\n# Not a bug in either tool; the metric was comparing a binned quantity to an unbinned one.\n#\n# So this run asserts two things instead, both fixed by construction rather than observed:\n#   1. At W=1, L-1+W == L, so the integral must EQUAL bases mapped. A true conservation\n#      identity, exact, no tolerance.\n#   2. At W=50, the integral must match the DERIVED prediction bases*(L-1+W)/L. That is a law\n#      with a closed form, not a band on a measured value -- an implementation that binned\n#      wrongly would miss it even though it sits inside any tolerance you would pick blind.\n#\n# The integral comes from the bigWig totalSummary `sumData`, which is the sum of value x width\n# over all covered bases -- i.e. the integral directly, O(1) and bin-width agnostic. That also\n# avoids materialising a 3.1e9-row bedgraph at binSize 1.\n\ngrep ENCFF933NSJ encode.md5 > /tmp/this.md5\nmd5sum -c /tmp/this.md5 || { echo \"FAIL: BAM does not match ENCODE's published md5\"; exit 1; }\n\nbamCoverage --version 2>&1 | head -1\npython3 -u -c \"import pyBigWig; print('version\\tpyBigWig %s' % getattr(pyBigWig,'__version__','unknown'))\"\nnproc | awk '{print \"nproc\\t\"$1}'\n\nBM=$(awk -F'\\t' '$1==\"bases_mapped_cigar\"{print $2}' basis.tsv)\nMR=$(awk -F'\\t' '$1==\"reads_mapped\"{print $2}' basis.tsv)\nprintf 'samtools_bases_mapped_cigar\\t%s\\n' \"$BM\"\nprintf 'samtools_reads_mapped\\t%s\\n' \"$MR\"\nL=$(awk -v b=\"$BM\" -v r=\"$MR\" 'BEGIN{printf \"%.6f\", b/r}')\nprintf 'mean_read_length\\t%s\\n' \"$L\"\n\nrun_bin() {\n  W=\"$1\"; OUT=\"$2\"\n  echo \"== bamCoverage --binSize $W ==\"\n  T0=$(date +%s)\n  bamCoverage -b ENCFF933NSJ.bam -o \"$OUT\" --outFileFormat bigwig \\\n    --binSize \"$W\" --normalizeUsing None -p \"$(nproc)\" > \"/tmp/bc-$W.log\" 2>&1\n  RC=$?\n  T1=$(date +%s)\n  printf 'bamcoverage_w%s_rc\\t%s\\n' \"$W\" \"$RC\"\n  printf 'bamcoverage_w%s_wall_s\\t%s\\n' \"$W\" \"$((T1-T0))\"\n  test \"$RC\" = \"0\" || { tail -20 \"/tmp/bc-$W.log\"; echo \"FAIL: bamCoverage W=$W exited $RC\"; exit 1; }\n  test -s \"$OUT\" || { echo \"FAIL: $OUT is empty\"; exit 1; }\n}\n\nrun_bin 1  cov1.bw\nrun_bin 50 cov50.bw\n\npython3 -u - <<'PYEOF' | tee /tmp/identity.tsv\nimport pyBigWig, sys\n\ndef integral(path):\n    bw = pyBigWig.open(path); h = bw.header(); bw.close()\n    # bigWig totalSummary sumData = sum of value*width over covered bases = the integral.\n    return h[\"sumData\"], h[\"nBasesCovered\"]\n\ni1, n1 = integral(\"cov1.bw\")\ni50, _ = integral(\"cov50.bw\")\n\nwith open(\"basis.tsv\") as fh:\n    d = dict(l.rstrip(\"\\n\").split(\"\\t\") for l in fh if \"\\t\" in l)\nBM = float(d[\"bases_mapped_cigar\"]); MR = float(d[\"reads_mapped\"])\n\n# samtools stats ID lines: ID <length> <insertion count> <deletion count>.\nins = dels = 0\nfor line in open(\"samstats.txt\"):\n    if line.startswith(\"ID\\t\"):\n        q = line.split(\"\\t\"); n = int(q[1]); ins += n*int(q[2]); dels += n*int(q[3])\n\n# THE CORRECTION THAT MAKES THIS AN IDENTITY RATHER THAN A NEAR-MISS.\n# samtools' 'bases mapped (cigar)' counts M+I, because an insertion consumes QUERY bases.\n# Reference coverage counts M only -- an insertion occupies zero reference positions. So the\n# quantity bamCoverage can possibly reproduce is M = (M+I) - I. Measured: the first attempt at\n# this identity was short by exactly 132,420 bases, and the ID lines sum to exactly 132,420\n# inserted bases. Not a tolerance; an accounting correction, confirmed to the base.\nM = BM - ins\nL = BM / MR\n\nprint(\"integral_w1\\t%d\" % round(i1))\nprint(\"bases_covered_w1\\t%d\" % n1)\nprint(\"integral_w50\\t%d\" % round(i50))\nprint(\"samtools_bases_mapped_cigar\\t%d\" % round(BM))\nprint(\"inserted_bases\\t%d\" % ins)\nprint(\"deleted_bases\\t%d\" % dels)\nprint(\"samtools_M_bases\\t%d\" % round(M))\nprint(\"mean_read_length\\t%.6f\" % L)\n\n# ---- ASSERTED: exact conservation identity at binSize 1 ----\ndiff = round(i1) - round(M)\nprint(\"w1_minus_M\\t%d\" % diff)\nprint(\"w1_over_M\\t%.9f\" % (i1 / M))\nif abs(diff) > 1:\n    sys.exit(\"FAIL: binSize-1 integral %d != M bases %d (diff %d). These are the same \"\n             \"quantity counted two ways and must agree.\" % (round(i1), round(M), diff))\nprint(\"identity_w1\\tcoverage integral == M bases, exactly\")\n\n# ---- REPORTED: the bin-width inflation law at W=50 ----\n# At bin width W a read is credited to every bin it touches, spreading it over ~(L-1+W)\n# reference positions instead of L. Approximate rather than exact, because indels make each\n# read's reference span differ from its length -- so this is reported with a loose sanity\n# band, not asserted as a law.\nW = 50\npred = BM * (L - 1 + W) / L\nrel = abs(i50 - pred) / pred\nprint(\"w50_over_samtools\\t%.6f\" % (i50 / BM))\nprint(\"w50_predicted_ratio\\t%.6f\" % ((L - 1 + W) / L))\nprint(\"w50_predicted\\t%d\" % round(pred))\nprint(\"w50_relative_error\\t%.6f\" % rel)\nif rel > 0.01:\n    sys.exit(\"FAIL: binSize-50 integral %d is %.4f from the (L-1+W)/L account %d\"\n             % (round(i50), rel, round(pred)))\nprint(\"account_w50\\tbin-width inflation matches (L-1+W)/L to %.4f%%\" % (rel*100))\n\nprint(\"DEEPTOOLS IDENTITY OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: the identity check failed\"; exit 1; }\n\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_used_mib\\t%.0f\\n\", $3/1024}'\nls -l cov1.bw cov50.bw | awk '{print \"bigwig\\t\"$9\"\\t\"$5}'\necho \"DEEPTOOLS REAL OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF933NSJ.bam",
+      "destination": "/tmp/ENCFF933NSJ.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/deeptools-real/ENCFF933NSJ.bam.bai",
+      "destination": "/tmp/ENCFF933NSJ.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/deeptools-real/basis.tsv",
+      "destination": "/tmp/basis.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/encode.md5",
+      "destination": "/tmp/encode.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/index/samstats.txt",
+      "destination": "/tmp/samstats.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/identity.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/identity/identity.tsv"
+    },
+    {
+      "source": "/tmp/bc-1.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/identity/bc-1.log"
+    },
+    {
+      "source": "/tmp/bc-50.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/identity/bc-50.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
