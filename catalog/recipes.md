@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **88 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **89 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -151,7 +151,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
 | [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 |
 | [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [plink2](../recipes/plink2/README.md) | Runs PLINK 2 and PLINK 1.9 over the identical binary fileset on Graviton4 and checks that their allele counts and missingness match to the integer. For anyone moving a PLINK 1.9 pipeline to PLINK 2 on ARM. | pipeline | stage | — | 2026-10-08 |
+| [plink2](../recipes/plink2/README.md) | Runs PLINK 2 and PLINK 1.9 over the identical binary fileset on Graviton4 and checks that their allele counts and missingness match to the integer. For anyone moving a PLINK 1.9 pipeline to PLINK 2 on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
 | [polish](../recipes/polish/README.md) | racon and medaka each rebuild a consensus from real Oxford Nanopore reads on Graviton4, scored against the depositors' own plasmid reference. For anyone finishing a long-read assembly and choosing a polisher. | pipeline | stage | 2026-10-05 | 2026-10-05 |
 | [qc-aggregate](../recipes/qc-aggregate/README.md) | FastQC measures four samples on Graviton4 and MultiQC rolls them into one cohort report, both checked against read counts, lengths, GC and duplication that were fixed before the FASTQs existed. For anyone QC-ing more than one sample. | pipeline | stage | 2026-10-02 | 2026-09-22 |
 | [rnaseq-counts](../recipes/rnaseq-counts/README.md) | featureCounts and HTSeq each count the same aligned reads against the same annotation on Graviton4, checked against counts that were planted rather than measured. The step that produces the matrix [differential expression](../recipes/rnaseq-de/README.md) consumes. | pipeline | stage | 2026-10-02 | 2026-09-20 |
@@ -174,6 +174,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 |
+
+## single-cell
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | — | 2026-10-08 |
 
 ## viz
 
