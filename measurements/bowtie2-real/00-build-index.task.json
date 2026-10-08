@@ -4,13 +4,15 @@
   "command": [
     "bash",
     "-c",
-    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\n# WHY BUILD RATHER THAN FETCH. 1000genomes publishes a prebuilt *bwa* index beside this\n# reference but no .bt2. bowtie2's own published indexes are built on DIFFERENT references\n# (GRCh38_noalt_as / _noalt_decoy_as), and aligning to a different reference than bwa used\n# would turn the bwa-vs-bowtie2 cross-check into a method difference masquerading as a\n# disagreement. So the index is built on bwa-real's exact staged reference, once, and reused\n# by every rung of the sweep.\n\necho \"== the reference must be the exact bytes bwa-real aligned against ==\"\nls -l GRCh38_full_analysis_set_plus_decoy_hla.fa\nSZ=$(stat -c %s GRCh38_full_analysis_set_plus_decoy_hla.fa)\necho \"ref_bytes\t$SZ\"\ntest \"$SZ\" = \"3263683042\" || { echo \"FAIL: reference is $SZ bytes, 1000genomes publishes 3263683042\"; exit 1; }\n\nbowtie2-build --version | head -2\nnproc | awk '{print \"nproc\\t\"$1}'\n\necho \"== bowtie2-build, whole genome (the long pole of this batch) ==\"\nT0=$(date +%s)\nbowtie2-build --threads \"$(nproc)\" \\\n  GRCh38_full_analysis_set_plus_decoy_hla.fa GRCh38_fadh > /tmp/bt2build.log 2>&1\nRC=$?\nT1=$(date +%s)\necho \"build_rc\t$RC\"\necho \"build_wall_s\t$((T1-T0))\"\ntail -5 /tmp/bt2build.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: bowtie2-build exited $RC\"; exit 1; }\n\n# A completion sentinel beats a size band: bowtie2-inspect reading the index back is the\n# tool's own statement that what was written is a loadable index, not merely N bytes.\necho \"== bowtie2-inspect must read the index back ==\"\nbowtie2-inspect -s GRCh38_fadh > /tmp/bt2inspect.txt 2>&1\nIRC=$?\necho \"inspect_rc\t$IRC\"\ntest \"$IRC\" = \"0\" || { echo \"FAIL: the index does not load\"; exit 1; }\nhead -4 /tmp/bt2inspect.txt\n\n# The reference has 3366 sequences (primary + alt + decoy + HLA). bowtie2-inspect reports\n# one Sequence- line per contig, so this ties the index back to the reference it came from.\nNSEQ=$(grep -c '^Sequence-' /tmp/bt2inspect.txt)\necho \"index_sequences\t$NSEQ\"\ntest \"$NSEQ\" -gt 3000 || { echo \"FAIL: index holds only $NSEQ sequences\"; exit 1; }\n\nls -l GRCh38_fadh*.bt2* | awk '{print \"idxfile\\t\"$9\"\\t\"$5}'\n\n# One flat tar so the consuming tasks stage a single pinnable artifact. The .bt2 files were\n# created by this task, so removing them after is allowed -- unlike a staged input, which\n# the container cannot unlink (sticky /tmp, EPERM).\necho \"== tar the index to one flat artifact ==\"\ntar -cf GRCh38_fadh.bt2.tar GRCh38_fadh*.bt2*\ntar -tf GRCh38_fadh.bt2.tar | awk '{print \"tar_member\\t\"$1}'\nrm -f GRCh38_fadh*.bt2*\nls -l GRCh38_fadh.bt2.tar\nsha256sum GRCh38_fadh.bt2.tar | tee GRCh38_fadh.bt2.tar.sha256\n\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_used_mib\\t%.0f\\n\", $3/1024}'\necho \"BOWTIE2 INDEX OK\"\n"
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\n# WHY BUILD RATHER THAN FETCH. 1000genomes publishes a prebuilt *bwa* index beside this\n# reference but no .bt2. bowtie2's own published indexes are built on DIFFERENT references\n# (GRCh38_noalt_as / _noalt_decoy_as), and aligning to a different reference than bwa used\n# would turn the bwa-vs-bowtie2 cross-check into a method difference masquerading as a\n# disagreement. So the index is built on bwa-real's exact staged reference, once, and reused\n# by every rung of the sweep.\n\necho \"== the reference must be the exact bytes bwa-real aligned against ==\"\nls -l GRCh38_full_analysis_set_plus_decoy_hla.fa\nSZ=$(stat -c %s GRCh38_full_analysis_set_plus_decoy_hla.fa)\necho \"ref_bytes\t$SZ\"\ntest \"$SZ\" = \"3263683042\" || { echo \"FAIL: reference is $SZ bytes, 1000genomes publishes 3263683042\"; exit 1; }\n\nbowtie2-build --version | head -2\nnproc | awk '{print \"nproc\\t\"$1}'\n\necho \"== bowtie2-build, whole genome (the long pole of this batch) ==\"\nT0=$(date +%s)\nbowtie2-build --threads \"$(nproc)\" \\\n  GRCh38_full_analysis_set_plus_decoy_hla.fa GRCh38_fadh > /tmp/bt2build.log 2>&1\nRC=$?\nT1=$(date +%s)\necho \"build_rc\t$RC\"\necho \"build_wall_s\t$((T1-T0))\"\ntail -5 /tmp/bt2build.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: bowtie2-build exited $RC\"; exit 1; }\n\n# A completion sentinel beats a size band: bowtie2-inspect reading the index back is the\n# tool's own statement that what was written is a loadable index, not merely N bytes.\necho \"== bowtie2-inspect must read the index back ==\"\nbowtie2-inspect -s GRCh38_fadh > /tmp/bt2inspect.txt 2>&1\nIRC=$?\necho \"inspect_rc\t$IRC\"\ntest \"$IRC\" = \"0\" || { echo \"FAIL: the index does not load\"; exit 1; }\nhead -4 /tmp/bt2inspect.txt\n\n# The reference has 3366 sequences (primary + alt + decoy + HLA). bowtie2-inspect reports\n# one Sequence- line per contig, so this ties the index back to the reference it came from.\nNSEQ=$(grep -c '^Sequence-' /tmp/bt2inspect.txt)\necho \"index_sequences\t$NSEQ\"\ntest \"$NSEQ\" -gt 3000 || { echo \"FAIL: index holds only $NSEQ sequences\"; exit 1; }\n\nls -l GRCh38_fadh*.bt2* | awk '{print \"idxfile\\t\"$9\"\\t\"$5}'\n\n# One flat tar so the consuming tasks stage a single pinnable artifact.\n#\n# MEMBERS ARE LISTED EXPLICITLY, NOT GLOBBED. The first version of this task used\n# `tar -cf GRCh38_fadh.bt2.tar GRCh38_fadh*.bt2*` and then `rm -f` with the same pattern --\n# which matches the tar itself (`*` takes the empty string, then `.bt2`, then `*` takes\n# `.tar`), so the cleanup deleted the artifact the build had just produced. The task still\n# printed OK and exited 0, because the failing `ls`/`sha256sum` were unchecked under\n# `set +e`; only spawn's stage-out caught it. Hence: explicit names, a verified tar, and no\n# rm at all -- 4.3 GB of index plus a 4.3 GB tar plus the 3.3 GB reference is ~12 GB against\n# a 32 GiB tmpfs, so there was never anything to reclaim.\necho \"== tar the index to one flat artifact ==\"\nMEMBERS=\"GRCh38_fadh.1.bt2 GRCh38_fadh.2.bt2 GRCh38_fadh.3.bt2 GRCh38_fadh.4.bt2 GRCh38_fadh.rev.1.bt2 GRCh38_fadh.rev.2.bt2\"\nfor m in $MEMBERS; do\n  test -s \"$m\" || { echo \"FAIL: expected index file $m is missing or empty\"; exit 1; }\ndone\ntar -cf bt2index.tar $MEMBERS\ntest \"$?\" = \"0\" || { echo \"FAIL: tar returned non-zero\"; exit 1; }\ntar -tf bt2index.tar | awk '{print \"tar_member\\t\"$1}'\n# The artifact must exist and be non-trivial BEFORE anything else runs -- the check the\n# first attempt lacked.\ntest -s bt2index.tar || { echo \"FAIL: bt2index.tar is missing or empty after tar\"; exit 1; }\nTARSZ=$(stat -c %s bt2index.tar)\nprintf 'tar_bytes\\t%s\\n' \"$TARSZ\"\ntest \"$TARSZ\" -gt 4000000000 || { echo \"FAIL: tar is only $TARSZ bytes; the index is ~4.3 GB\"; exit 1; }\nsha256sum bt2index.tar | tee bt2index.tar.sha256\n\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_used_mib\\t%.0f\\n\", $3/1024}'\necho \"BOWTIE2 INDEX OK\"\n"
   ],
   "resources": {
     "cpu": 16,
     "memory_gib": 60,
     "architecture": "arm64",
-    "families": ["m8g"]
+    "families": [
+      "m8g"
+    ]
   },
   "inputs": [
     {
@@ -20,12 +22,12 @@
   ],
   "outputs": [
     {
-      "source": "/tmp/GRCh38_fadh.bt2.tar",
-      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/GRCh38_fadh.bt2.tar"
+      "source": "/tmp/bt2index.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/bt2index.tar"
     },
     {
-      "source": "/tmp/GRCh38_fadh.bt2.tar.sha256",
-      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/GRCh38_fadh.bt2.tar.sha256"
+      "source": "/tmp/bt2index.tar.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/bt2index.tar.sha256"
     },
     {
       "source": "/tmp/bt2build.log",
@@ -37,8 +39,8 @@
     }
   ],
   "lifecycle": {
-    "ttl": "240m",
+    "ttl": "60m",
     "on_complete": "terminate",
-    "cost_limit": 2.5
+    "cost_limit": 0.6
   }
 }

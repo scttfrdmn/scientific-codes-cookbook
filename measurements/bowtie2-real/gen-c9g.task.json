@@ -1,0 +1,54 @@
+{
+  "task_id": "bowtie2real-gen-c9g",
+  "container": "quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# Clocking run for the bowtie2 generation + knee sweeps. Deliberately over-provisioned\n# (16 vCPU / 64 GiB) so the tool is never what is throttled: the big box is the instrument,\n# not the recommendation. The sweep gets sized from what this measures.\n\necho \"== the index must match the pin the build task recorded ==\"\nsha256sum -c bt2index.tar.sha256 || { echo \"FAIL: index tar does not match its pin\"; exit 1; }\ntar -xf bt2index.tar\nls -l GRCh38_fadh*.bt2 | awk '{print \"idxfile\\t\"$9\"\\t\"$5}'\n\nbowtie2 --version | head -1\nnproc | awk '{print \"nproc\\t\"$1}'\n\n# ---------------------------------------------------------------- inline instrument\nCG=/sys/fs/cgroup\nsampler() {\n  : > /tmp/samples.tsv\n  while : ; do\n    mc=$(cat $CG/memory.current 2>/dev/null || echo 0)\n    cu=$(awk '/^usage_usec/{print $2; exit}' $CG/cpu.stat 2>/dev/null || echo 0)\n    tk=$(df -k /tmp 2>/dev/null | awk 'NR==2{print $3}')\n    printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \"${mc:-0}\" \"${cu:-0}\" \"${tk:-0}\" >> /tmp/samples.tsv\n    sleep 2\n  done\n}\nsampler & SPID=$!\n\n# ---------------------------------------------------------------- the real workload\n# --local, NOT the default end-to-end. This is the match-the-modes rule: bwa soft-clips,\n# bowtie2's default does not, and comparing those two gave 82% where --local on the mapped\n# set gave 0.9462. The cross-check against bwa-real is the whole reason this index was built\n# on bwa's exact reference, so the mode has to match or the comparison measures the mode.\n#\n# The SAM is never written to disk. 24.1M pairs would be ~15-20 GB of SAM against a tmpfs\n# that is half of RAM; instead it streams through awk, which does the counting and emits a\n# compact gzipped TSV of high-confidence primary alignments for the bwa comparison.\n# awk reads the stream to completion -- never `head` under pipefail, which is SIGPIPE 141.\necho \"== bowtie2 --local, whole genome, 24,148,993 read pairs ==\"\nT0=$(date +%s)\nbowtie2 --local -p \"$(nproc)\" -x GRCh38_fadh \\\n  -1 SRR062634_1.filt.fastq.gz -2 SRR062634_2.filt.fastq.gz 2> /tmp/bt2align.log \\\n  | awk 'BEGIN{OFS=\"\\t\"}\n      /^@/ {next}\n      {\n        n++; f=$2+0;\n        sec=int(f/256)%2; sup=int(f/2048)%2; unm=int(f/4)%2;\n        if (sec==0 && sup==0) {\n          prim++;\n          if (unm==0) { pmap++; if ($5+0>=30) hiq++; }\n        }\n        if (unm==0) mapped++;\n      }\n      END{\n        print \"sam_records\\t\" n+0;\n        print \"primary_records\\t\" prim+0;\n        print \"primary_mapped\\t\" pmap+0;\n        print \"all_mapped_records\\t\" mapped+0;\n        print \"primary_mapq30\\t\" hiq+0;\n      }' > /tmp/counts.tsv\nBRC=${PIPESTATUS[0]}\nT1=$(date +%s)\nkill $SPID 2>/dev/null; wait $SPID 2>/dev/null\nWALL=$((T1-T0))\necho \"bowtie2_rc\t$BRC\"\necho \"bowtie2_wall_s\t$WALL\"\ncat /tmp/counts.tsv\ncat /tmp/bt2align.log\ntest \"$BRC\" = \"0\" || { echo \"FAIL: bowtie2 exited $BRC\"; exit 1; }\n\nawk -F'\\t' -v wall=\"$WALL\" '\n  NR==1{cu0=$3}\n  {if($2>mc)mc=$2; if($4>tk)tk=$4; cu=$3; n++}\n  END{\n    printf \"peak_rss_mib\\t%.0f\\n\", mc/1048576;\n    printf \"tmpfs_peak_mib\\t%.0f\\n\", tk/1024;\n    if(wall>0) printf \"avg_cores\\t%.2f\\n\", (cu-cu0)/(wall*1000000);\n  }' /tmp/samples.tsv\n\n# ------------------------------------------------- the conservation identity, not a band\n# Every read gets exactly one primary record whether it aligns or not, so the primary count\n# is fixed by the input: 2 x 24,148,993 pairs = 48,297,986. bwa-real aligned these exact\n# bytes, so this is the same denominator both tools must satisfy. A truncated run, a dropped\n# mate, or a silently-skipped tile fails this even though the alignment rate would still look\n# plausible -- which a band on \"% mapped\" would not catch.\nPRIM=$(awk -F'\\t' '$1==\"primary_records\"{print $2}' /tmp/counts.tsv)\necho \"primary_expected\t48297986\"\ntest \"$PRIM\" = \"48297986\" || { echo \"FAIL: $PRIM primary records, expected 48297986 (2 x 24,148,993 pairs)\"; exit 1; }\necho \"identity\tprimary records == 2 x read pairs\"\n\n# bowtie2 reports its own overall alignment rate; assert a floor only, since the exact value\n# is a property of this library and reference rather than something fixed by construction.\nRATE=$(awk '/overall alignment rate/{gsub(\"%\",\"\",$1); print $1}' /tmp/bt2align.log)\necho \"overall_alignment_rate\t$RATE\"\nawk -v r=\"$RATE\" 'BEGIN{ if (r+0 < 90) { print \"FAIL: alignment rate \" r \"% is below 90%\"; exit 1 } }' || exit 1\n\necho \"clock_primary_mapped\\t48198738\"\necho \"clock_primary_mapq30\\t40042364\"\nPM=$(awk -F'\\t' '$1==\"primary_mapped\"{print $2}' /tmp/counts.tsv)\nPQ=$(awk -F'\\t' '$1==\"primary_mapq30\"{print $2}' /tmp/counts.tsv)\nif [ \"$PM\" = \"48198738\" ] && [ \"$PQ\" = \"40042364\" ]; then\n  echo \"invariance\\tmapped and mapq30 match the clock exactly\"\nelse\n  echo \"invariance\\tDIFFERS from clock: mapped=$PM mapq30=$PQ -- a finding, not a failure\"\nfi\n\n{ echo -e \"observable\\tvalue\"\n  echo -e \"bowtie2_wall_s\\t$WALL\"\n  echo -e \"overall_alignment_rate\\t$RATE\"\n  cat /tmp/counts.tsv\n} > /tmp/clock.tsv\n\nuname -m | awk '{print \"arch\\t\"$1}'\ngrep -m1 \"CPU part\" /proc/cpuinfo | awk '{print \"cpu_part\\t\"$4}'\necho \"BOWTIE2 CLOCK OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c9g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/bt2index.tar",
+      "destination": "/tmp/bt2index.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/bt2index.tar.sha256",
+      "destination": "/tmp/bt2index.tar.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_2.filt.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/clock.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bowtie2-real/gen-c9g/rung.tsv"
+    },
+    {
+      "source": "/tmp/bt2align.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bowtie2-real/gen-c9g/bt2align.log"
+    },
+    {
+      "source": "/tmp/samples.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bowtie2-real/gen-c9g/samples.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.55
+  }
+}
