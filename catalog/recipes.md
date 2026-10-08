@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **90 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **91 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -47,6 +47,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-02 | 2026-10-01 |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
 | [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: kallisto, salmon, star | 2026-10-02 | 2026-10-01 |
+| [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | — | 2026-10-08 |
 
 ## astro
 
@@ -86,7 +87,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-02 | 2026-09-10 |
 | [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-02 | 2026-10-02 |
 | [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-02 | 2026-10-02 |
-| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | — | 2026-10-08 |
+| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-08 | 2026-10-08 |
 
 ## dft
 

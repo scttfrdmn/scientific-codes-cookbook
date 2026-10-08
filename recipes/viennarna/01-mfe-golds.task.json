@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-viennarna-mfe-r1",
+  "container": "quay.io/aarchbio/viennarna@sha256:df02a2dc5052d8afdba41acbf18b69df253a2ca7d93b070df247bd4cdd47c51e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n#\n# This reproduces ViennaRNA's own RNAfold test exactly as tests/RNAfold/general runs it:\n#   RNAfold --noPS -d <n> < rnafold.small.seq > out   then  diff -ru <gold> out\n# A BYTE-EXACT whole-file comparison over 50 sequences, not a single MFE value -- so every\n# structure and every energy in the file has to match, in seven different modes.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\n\necho \"== the binary version must match the golds' release ==\"\nRNAfold --version | tee ver.txt\ngrep -q \"RNAfold 2.7.2\" ver.txt || {\n  echo \"FAIL: this is not RNAfold 2.7.2; the gold files are version-specific\"; exit 1; }\n\nPASS=0; FAIL=0\nrun_mode() {\n  label=\"$1\"; gold=\"$2\"; shift 2\n  RNAfold --noPS \"$@\" < rnafold.small.seq > \"out.$label\" 2> \"err.$label\"\n  rc=$?\n  if [ \"$rc\" != \"0\" ]; then\n    printf 'mode\\t%-6s RNAfold exited %s\\n' \"$label\" \"$rc\"; tail -5 \"err.$label\"; FAIL=$((FAIL+1)); return\n  fi\n  if diff -q \"$gold\" \"out.$label\" >/dev/null 2>&1; then\n    printf 'mode\\t%-6s byte-identical to %s\\n' \"$label\" \"$gold\"; PASS=$((PASS+1))\n  else\n    printf 'mode\\t%-6s DIFFERS from %s\\n' \"$label\" \"$gold\"\n    diff -u \"$gold\" \"out.$label\" | head -12\n    FAIL=$((FAIL+1))\n  fi\n}\n\necho \"== four dangling-end treatments, --noLP, two temperatures ==\"\nfor d in 0 1 2 3; do run_mode \"d$d\" \"rnafold.small.d$d.mfe.gold\" -d \"$d\"; done\nrun_mode \"noLP\" rnafold.small.noLP.mfe.gold --noLP\nfor T in 25 40; do run_mode \"T$T\" \"rnafold.small.T$T.mfe.gold\" -T \"$T\"; done\n\nprintf 'modes_passed\\t%s\\n' \"$PASS\"\nprintf 'modes_failed\\t%s\\n' \"$FAIL\"\ntest \"$PASS\" = \"7\" || { echo \"FAIL: only $PASS of 7 modes reproduced their gold byte-for-byte\"; exit 1; }\ntest \"$FAIL\" = \"0\" || { echo \"FAIL: $FAIL modes differ\"; exit 1; }\nprintf 'reference\\tall 7 modes byte-identical to ViennaRNA committed golds\\n'\n\n# ---------------------------------------------------------- structural identities, gold-free\n# Dot-bracket is a balanced-parenthesis language and the structure spans the sequence, so for\n# every record: brackets balance, never go negative, and |structure| == |sequence|. These hold\n# whatever the golds say, so they survive a version bump that changes the predictions.\nawk '\n  /^[ACGUNacgun]+$/ { seq=$0; seqlen=length($0); next }\n  /^[.()]/ {\n    st=$1; n++\n    if (length(st) != seqlen) { printf \"FAIL: record %d structure %d chars vs sequence %d\\n\", n, length(st), seqlen; bad++ }\n    depth=0; mind=0\n    for (i=1; i<=length(st); i++) {\n      ch=substr(st,i,1)\n      if (ch==\"(\") depth++\n      else if (ch==\")\") depth--\n      if (depth<mind) mind=depth\n    }\n    if (depth != 0) { printf \"FAIL: record %d brackets unbalanced (net %d)\\n\", n, depth; bad++ }\n    if (mind  < 0) { printf \"FAIL: record %d closes before opening\\n\", n; bad++ }\n  }\n  END{\n    printf \"structures_checked\\t%d\\n\", n+0\n    printf \"structures_malformed\\t%d\\n\", bad+0\n    if (n < 40) { printf \"FAIL: only %d structures parsed, expected 50\\n\", n; exit 1 }\n    if (bad+0 > 0) exit 1\n  }' out.d2 | tee structural.tsv\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: structural identity violated\"; exit 1; }\nprintf 'identity_structure\\tbrackets balance and span the sequence in every record\\n'\n\n# The modes must actually differ from each other on this input, or seven green diffs would be\n# seven copies of one check.\nDISTINCT=$(sha256sum out.d0 out.d1 out.d2 out.d3 out.noLP out.T25 out.T40 | awk '{print $1}' | sort -u | wc -l)\nprintf 'distinct_outputs\\t%s of 7\\n' \"$DISTINCT\"\ntest \"$DISTINCT\" = \"7\" || { echo \"FAIL: only $DISTINCT distinct outputs; the modes are not being exercised\"; exit 1; }\n\n{ printf 'observable\\tvalue\\n'\n  printf 'rnafold_version\\t%s\\n' \"$(cat ver.txt)\"\n  printf 'modes_passed\\t%s\\n' \"$PASS\"\n  printf 'distinct_outputs\\t%s\\n' \"$DISTINCT\"\n  cat structural.tsv\n  printf 'first_mfe_d2\\t%s\\n' \"$(sed -n '2p' out.d2 | awk '{print $NF}')\"\n  printf 'first_mfe_d0\\t%s\\n' \"$(sed -n '2p' out.d0 | awk '{print $NF}')\"\n} > score.tsv\ncp score.tsv viennarna-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"VIENNARNA OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.seq",
+      "destination": "/tmp/rnafold.small.seq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.d0.mfe.gold",
+      "destination": "/tmp/rnafold.small.d0.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.d1.mfe.gold",
+      "destination": "/tmp/rnafold.small.d1.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.d2.mfe.gold",
+      "destination": "/tmp/rnafold.small.d2.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.d3.mfe.gold",
+      "destination": "/tmp/rnafold.small.d3.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.noLP.mfe.gold",
+      "destination": "/tmp/rnafold.small.noLP.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.T25.mfe.gold",
+      "destination": "/tmp/rnafold.small.T25.mfe.gold"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna/rnafold.small.T40.mfe.gold",
+      "destination": "/tmp/rnafold.small.T40.mfe.gold"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/viennarna/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/viennarna-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/viennarna/r1/viennarna-diag.txt"
+    },
+    {
+      "source": "/tmp/out.d2",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/viennarna/r1/out.d2"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
