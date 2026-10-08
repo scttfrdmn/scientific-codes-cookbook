@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-rebound-ias15-r1",
+  "container": "quay.io/aarchsci/astro@sha256:9568095c64864dbcf4ad2759ad1aa5457bfa4e12530282378f706c3d394dc753",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# NO `export PATH=/opt/conda/bin:$PATH`. That is required for aarchbio images, whose PATH the\n# task shell drops, but aarchsci env images already have their python first -- recipes/climate\n# and recipes/gsw both run on aarchsci images with no PATH handling.\n#\n# NOTHING IS STAGED, AND NOTHING IS FETCHED. `sim.add(\"outer solar system\")` resolves to a\n# dataset compiled into REBOUND (src/tools.c), not a JPL Horizons lookup -- so this runs with\n# no network and no input. Asserted below by particle count rather than assumed.\n\npython3 -u - <<'PYEOF' 2>&1 | tee /tmp/rebound.log\nimport sys, math, rebound\n\nprint(\"version\\trebound %s\" % getattr(rebound, \"__version__\", \"unknown\"))\n\nJUPYR = 11.86 * 2.0 * math.pi          # one Jupiter orbit in REBOUND's G=1 units\n\ndef outer_ss(integrator, dt=None):\n    sim = rebound.Simulation()\n    sim.integrator = integrator\n    if dt is not None:\n        sim.dt = dt\n    sim.add(\"outer solar system\")      # compiled-in builtin: Sun + 4 giants\n    sim.move_to_com()\n    return sim\n\n# ------------------------------------------------- the dataset is built in, not downloaded\nprobe = outer_ss(\"ias15\")\nprint(\"particles\\t%d\" % probe.N)\nif probe.N != 5:\n    sys.exit(\"FAIL: 'outer solar system' gave %d particles, expected 5 (Sun + 4 giants)\" % probe.N)\n\ndef max_rel_energy_drift(sim, t_end, samples=20):\n    e0 = sim.energy()\n    if e0 == 0.0:\n        sys.exit(\"FAIL: initial energy is exactly zero\")\n    worst = 0.0\n    for k in range(1, samples + 1):\n        sim.integrate(t_end * k / samples)\n        worst = max(worst, abs((sim.energy() - e0) / e0))\n    return worst, e0\n\n# ---------------------------------------------------------- 1. IAS15, the headline assertion\n# REBOUND's own test_integrator.py asserts |dE/E| < 1e-14 for IAS15 over 1000 Jupiter orbits\n# of this system. That is the package's published bound, not a band chosen here.\nT_LONG = 1e3 * JUPYR\nsim = outer_ss(\"ias15\")\nias15_err, e0 = max_rel_energy_drift(sim, T_LONG)\nprint(\"ias15_initial_energy\\t%.17e\" % e0)\nprint(\"ias15_orbits\\t1000\")\nprint(\"ias15_rel_energy_error\\t%.3e\" % ias15_err)\nif not (ias15_err < 1e-14):\n    sys.exit(\"FAIL: IAS15 drifted %.3e over 1000 Jupiter orbits; REBOUND's own bound is 1e-14\"\n             % ias15_err)\nprint(\"conservation_ias15\\t|dE/E| < 1e-14 over 1000 Jupiter orbits\")\n\n# ---------------------------------------- 2. the ladder: this tests the METHOD, not the answer\n# A non-adaptive symplectic integrator on the same system, same duration, must do far worse.\n# Asserted as an ORDERING (orders of magnitude apart), which is categorical and cannot go\n# flaky, rather than as a band on WHFast's error.\nsimw = outer_ss(\"whfast\", dt=JUPYR / 100.0)\nwhfast_err, _ = max_rel_energy_drift(simw, T_LONG)\nprint(\"whfast_dt\\t%.6f\" % (JUPYR / 100.0))\nprint(\"whfast_rel_energy_error\\t%.3e\" % whfast_err)\nratio = whfast_err / ias15_err if ias15_err > 0 else float(\"inf\")\nprint(\"whfast_over_ias15\\t%.3e\" % ratio)\nif not (ratio > 100.0):\n    sys.exit(\"FAIL: WHFast is only %.1fx worse than IAS15; the integrators are not being \"\n             \"distinguished, so the IAS15 result proves nothing about the method\" % ratio)\nprint(\"ladder\\tWHFast is >100x worse than IAS15 on identical initial conditions\")\n\n# --------------------------------------------- 3. Kepler's third law, a closed-form identity\n# Two bodies, G=1: a^3 / P^2 = (m1+m2) / (4 pi^2). Exact, independent of any integrator.\nk = rebound.Simulation()\nk.add(m=1.0)\nk.add(m=1.0e-3, a=1.0, e=0.0)\nk.move_to_com()\norb = k.particles[1].calculate_orbit(primary=k.particles[0]) if hasattr(\n    k.particles[1], \"calculate_orbit\") else k.particles[1].orbit(primary=k.particles[0])\nP_pred = 2.0 * math.pi * math.sqrt(orb.a ** 3 / (1.0 + 1.0e-3))\nrel_kepler = abs(orb.P - P_pred) / P_pred\nprint(\"kepler_a\\t%.12f\" % orb.a)\nprint(\"kepler_period\\t%.12f\" % orb.P)\nprint(\"kepler_predicted\\t%.12f\" % P_pred)\nprint(\"kepler_rel_error\\t%.3e\" % rel_kepler)\nif rel_kepler > 1e-12:\n    sys.exit(\"FAIL: Kepler's third law off by %.3e\" % rel_kepler)\nprint(\"identity_kepler\\ta^3/P^2 == (m1+m2)/(4pi^2)\")\n\n# ------------------------------------------------------------------ 4. determinism\ns1 = outer_ss(\"ias15\"); s1.integrate(10.0 * JUPYR)\ns2 = outer_ss(\"ias15\"); s2.integrate(10.0 * JUPYR)\nsame = (s1.energy() == s2.energy())\nprint(\"determinism\\t%s\" % (\"identical\" if same else \"DIFFERS\"))\nif not same:\n    sys.exit(\"FAIL: two identical IAS15 runs gave different energies (%.17e vs %.17e)\"\n             % (s1.energy(), s2.energy()))\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"rebound_version\\t%s\\n\" % getattr(rebound, \"__version__\", \"unknown\"))\n    fh.write(\"particles\\t%d\\n\" % probe.N)\n    fh.write(\"ias15_rel_energy_error\\t%.3e\\n\" % ias15_err)\n    fh.write(\"whfast_rel_energy_error\\t%.3e\\n\" % whfast_err)\n    fh.write(\"whfast_over_ias15\\t%.3e\\n\" % ratio)\n    fh.write(\"kepler_rel_error\\t%.3e\\n\" % rel_kepler)\n    fh.write(\"determinism\\tidentical\\n\")\n\nprint(\"REBOUND OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"rebound check failed\"; exit 1; }\ncp score.tsv rebound-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/rebound-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound/r1/rebound-diag.txt"
+    },
+    {
+      "source": "/tmp/rebound.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound/r1/rebound.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
