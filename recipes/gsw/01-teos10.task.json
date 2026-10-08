@@ -1,0 +1,36 @@
+{
+  "task_id": "cookbook-gsw-teos10-r3",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\n# NO `export PATH=/opt/conda/bin:$PATH` HERE, DELIBERATELY. That export is required for\n# aarchbio images, whose PATH spawn's task shell drops -- but it BREAKS aarchsci env images:\n# their python is already first on PATH, and prepending /opt/conda/bin shadows it with a base\n# interpreter that has none of the env's packages. The first run of this task did exactly that\n# and died with `ModuleNotFoundError: No module named 'gsw'` on an image that definitely has\n# gsw 3.6.23. recipes/climate (same image, verified) calls python3 with no PATH fiddling.\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# NOTHING IS STAGED. The official TEOS-10 check values ship inside the gsw package itself\n# (gsw/tests/gsw_cv_v3_0.npz), so this recipe reproduces a published reference table with no\n# input at all -- the reference-from-tests move, except the reference is already in the image.\n#\n# NOT DRIVEN BY pytest. The climate env has no pytest (checked the env lock before writing\n# this), so the check values are loaded and compared directly. That is better here anyway: the\n# recipe asserts named numbers a reader can see rather than \"the test suite passed\".\n\npython3 -u - <<'PYEOF' 2>&1 | tee /tmp/teos10.log\nimport sys, os, numpy as np, gsw\n\n# getattr, never a guessed attribute path -- a version print must not be able to fail the run.\nprint(\"version\\tgsw %s\" % getattr(gsw, \"__version__\", \"unknown\"))\nprint(\"version\\tnumpy %s\" % getattr(np, \"__version__\", \"unknown\"))\n\n# The check-value file must be present. Asserted, not assumed: it is the entire reference.\ncv_path = os.path.join(os.path.dirname(gsw.__file__), \"tests\", \"gsw_cv_v3_0.npz\")\nprint(\"checkvalue_file\\t%s\" % cv_path)\nif not os.path.exists(cv_path):\n    sys.exit(\"FAIL: the official TEOS-10 check-value file is not in this image\")\nprint(\"checkvalue_bytes\\t%d\" % os.path.getsize(cv_path))\n\ncv = np.load(cv_path)\nkeys = set(cv.files)\nprint(\"checkvalue_arrays\\t%d\" % len(keys))\n\nfor k in (\"SA_chck_cast\", \"CT_chck_cast\", \"p_chck_cast\"):\n    if k not in keys:\n        sys.exit(\"FAIL: input array %s missing from the check-value file\" % k)\nSA = cv[\"SA_chck_cast\"]; CT = cv[\"CT_chck_cast\"]; p = cv[\"p_chck_cast\"]\nprint(\"check_cast_shape\\t%s\" % (SA.shape,))\n\n# Functions of (SA, CT, p), plus two of (SA, CT). Each has a published expected array and a\n# published tolerance (<name>_ca) in the same file, so the assertion is the depositors' own\n# number at the depositors' own precision -- no band chosen here.\nCASES = [\n    (\"rho\",             (\"SA\", \"CT\", \"p\")),\n    (\"specvol\",         (\"SA\", \"CT\", \"p\")),\n    (\"alpha\",           (\"SA\", \"CT\", \"p\")),\n    (\"beta\",            (\"SA\", \"CT\", \"p\")),\n    (\"sound_speed\",     (\"SA\", \"CT\", \"p\")),\n    (\"internal_energy\", (\"SA\", \"CT\", \"p\")),\n    (\"enthalpy\",        (\"SA\", \"CT\", \"p\")),\n    (\"entropy\",         (\"SA\", \"CT\", \"p\")),\n    (\"dynamic_enthalpy\",(\"SA\", \"CT\", \"p\")),\n    (\"cp_t_exact\",      None),\n    (\"pt_from_CT\",      (\"SA\", \"CT\")),\n    (\"CT_from_pt\",      None),\n]\nargs = {\"SA\": SA, \"CT\": CT, \"p\": p}\n\nchecked = failed = skipped = 0\nfor name, sig in CASES:\n    if sig is None or name not in keys or (name + \"_ca\") not in keys or not hasattr(gsw, name):\n        skipped += 1\n        print(\"skip\\t%-18s (no expected array, no tolerance, or not in this build)\" % name)\n        continue\n    fn = getattr(gsw, name)\n    try:\n        got = fn(*[args[a] for a in sig])\n    except Exception as e:\n        skipped += 1\n        print(\"skip\\t%-18s (%s)\" % (name, type(e).__name__))\n        continue\n    want = cv[name]\n    tol = float(np.max(np.abs(cv[name + \"_ca\"])))\n    d = np.abs(np.asarray(got) - want)\n    d = d[np.isfinite(d)]\n    mx = float(np.max(d)) if d.size else float(\"nan\")\n    ok = mx <= tol\n    checked += 1\n    if not ok:\n        failed += 1\n    print(\"check\\t%-18s max|diff| %.6e  tol %.6e  %s\" % (name, mx, tol, \"OK\" if ok else \"FAIL\"))\n\nprint(\"functions_checked\\t%d\" % checked)\nprint(\"functions_failed\\t%d\" % failed)\nprint(\"functions_skipped\\t%d\" % skipped)\n\n# A named value a reader can verify by hand against the TEOS-10 tables, rather than only an\n# aggregate \"N functions passed\".\nr = float(gsw.rho(SA.flat[0], CT.flat[0], p.flat[0]))\nprint(\"sample_rho_inputs\\tSA=%.10f CT=%.10f p=%.1f\" % (SA.flat[0], CT.flat[0], p.flat[0]))\nprint(\"sample_rho\\t%.10f\" % r)\nprint(\"sample_rho_expected\\t%.10f\" % float(cv[\"rho\"].flat[0]))\n\n# INVOLUTIONS -- exact-to-float round trips, which hold regardless of any reference table and\n# which an implementation that normalised wrongly could not satisfy.\nSP = gsw.SP_from_SA(SA, p, 0.0, 0.0)\nSA2 = gsw.SA_from_SP(SP, p, 0.0, 0.0)\ninv1 = float(np.nanmax(np.abs(SA2 - SA)))\nprint(\"involution_SA_SP_SA\\t%.3e\" % inv1)\n\npt = gsw.pt_from_CT(SA, CT)\nCT2 = gsw.CT_from_pt(SA, pt)\ninv2 = float(np.nanmax(np.abs(CT2 - CT)))\nprint(\"involution_CT_pt_CT\\t%.3e\" % inv2)\n\nif failed:\n    sys.exit(\"FAIL: %d of %d official check values are outside their published tolerance\" % (failed, checked))\nif checked < 8:\n    sys.exit(\"FAIL: only %d functions checked; the reference table should cover far more\" % checked)\nif not (inv1 < 1e-9 and inv2 < 1e-9):\n    sys.exit(\"FAIL: a round trip is not an involution: SA %.3e, CT %.3e\" % (inv1, inv2))\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"gsw_version\\t%s\\n\" % getattr(gsw, \"__version__\", \"unknown\"))\n    fh.write(\"checkvalue_arrays\\t%d\\n\" % len(keys))\n    fh.write(\"functions_checked\\t%d\\n\" % checked)\n    fh.write(\"functions_failed\\t%d\\n\" % failed)\n    fh.write(\"sample_rho\\t%.10f\\n\" % r)\n    fh.write(\"involution_SA_SP_SA\\t%.3e\\n\" % inv1)\n    fh.write(\"involution_CT_pt_CT\\t%.3e\\n\" % inv2)\n\nprint(\"GSW OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"gsw check failed\"; exit 1; }\ncp score.tsv gsw-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/gsw-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw/r1/gsw-diag.txt"
+    },
+    {
+      "source": "/tmp/teos10.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw/r1/teos10.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

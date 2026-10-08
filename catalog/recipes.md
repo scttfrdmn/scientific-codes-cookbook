@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **84 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **85 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -42,7 +42,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../recipes/iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM. | aarchbio | stage: iqtree | 2026-10-02 | 2026-10-01 |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-10-03 | 2026-10-03 |
 | [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage: kallisto, salmon | 2026-10-02 | 2026-09-25 |
-| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | — | 2026-10-07 |
+| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | 2026-10-07 | 2026-10-07 |
 | [seqkit](../recipes/seqkit/README.md) | Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone reaching for seqkit as the first step of a pipeline. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-02 | 2026-10-01 |
 | [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-02 | 2026-10-01 |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
@@ -74,6 +74,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 |---|---|---|---|---|---|
 | [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-02 | 2026-09-13 |
 | [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-03 | 2026-10-03 |
+| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | — | 2026-10-08 |
 
 ## comp-chem
 
