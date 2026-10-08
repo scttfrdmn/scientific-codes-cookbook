@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-gfs-thickness-r2",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\n\npython3 -u - <<'PYEOF' 2>&1 | tee grib.log\nimport sys, numpy as np, xarray as xr\n\ndef ver(p):\n    try:\n        from importlib.metadata import version\n        return version(p)\n    except Exception:\n        return \"unknown\"\nfor p in (\"cfgrib\", \"eccodes\", \"metpy\", \"xarray\", \"pint\"):\n    print(\"version\\t%s %s\" % (p, ver(p)))\n\nGRIB = \"gfs.pgrb2.1p00.f000\"\n\n# ---------------------------------------------------------------- decode vs the publisher's manifest\n# NOAA ships a wgrib2 inventory beside the file: one line per message. Checking what eccodes\n# decodes against that is decode statistics against an EXTERNAL statement of the contents,\n# rather than against the same library that did the decoding.\ninv = [l for l in open(GRIB + \".idx\") if l.strip()]\nwant = {}\nfor l in inv:\n    f = l.split(\":\")\n    if len(f) > 4:\n        want[f[3]] = want.get(f[3], 0) + 1\nprint(\"inventory_messages\\t%d\" % len(inv))\nfor v in (\"HGT\", \"TMP\", \"RH\"):\n    print(\"inventory_%s\\t%d\" % (v, want.get(v, 0)))\n\n# TWO cfgrib SETTINGS, BOTH LOAD-BEARING.\n#\n# indexpath=\"\": cfgrib otherwise writes an index cache NEXT TO the input, and a staged input is\n# owned by the instance user while the container runs as the image's user -- the write fails\n# with EPERM on a file the task never created.\n#\n# ONE shortName PER OPEN: a GFS file carries variables on DIFFERENT vertical coordinates (here\n# 33 isobaric levels for most, 22 for some), and asking cfgrib for all isobaric variables at\n# once makes it raise DatasetBuildError internally, silently DROP the incompatible ones, and\n# carry on. That is not merely noisy -- the surviving merged `isobaricInhPa` coordinate would\n# then be used to index arrays that may not share it, so a level mask could select different\n# pressures for T than for RH and produce a wrong thickness with no error at all. Opening each\n# field separately and asserting the three level vectors are IDENTICAL removes the ambiguity.\ndef load(short):\n    return xr.open_dataset(\n        GRIB, engine=\"cfgrib\",\n        backend_kwargs={\"indexpath\": \"\",\n                        \"filter_by_keys\": {\"typeOfLevel\": \"isobaricInhPa\", \"shortName\": short}})\n\ndsT, dsR, dsH = load(\"t\"), load(\"r\"), load(\"gh\")\nVT, VR, VH = \"t\", \"r\", \"gh\"\nfor nm, dd, vv in ((\"T\", dsT, VT), (\"RH\", dsR, VR), (\"HGT\", dsH, VH)):\n    if vv not in dd.data_vars:\n        sys.exit(\"FAIL: %s not decoded from shortName=%s\" % (nm, vv))\n    print(\"decoded\\t%-4s %s on %d isobaric levels\" % (nm, vv, dd.isobaricInhPa.size))\n\nlevT = dsT.isobaricInhPa.values\nlevR = dsR.isobaricInhPa.values\nlevH = dsH.isobaricInhPa.values\nif not (np.array_equal(levT, levR) and np.array_equal(levT, levH)):\n    sys.exit(\"FAIL: T, RH and HGT are on different pressure levels (%d/%d/%d) -- any level mask \"\n             \"would compare different altitudes\" % (levT.size, levR.size, levH.size))\nprint(\"identity_levels\\tT, RH and HGT share an identical pressure-level vector (%d levels)\" % levT.size)\n\nds = dsT   # for the shared coordinate below\nlev = levT\nnlev_in_range = int(((lev >= 500) & (lev <= 1000)).sum())\nprint(\"levels_1000_to_500\\t%d\" % nlev_in_range)\nif nlev_in_range < 8:\n    sys.exit(\"FAIL: only %d levels between 1000 and 500 hPa; the integral would be too coarse\"\n             % nlev_in_range)\n\n# Every HGT/TMP/RH message in the inventory should be decodable. cfgrib's isobaric subset will\n# not contain surface or other level types, so compare the isobaric count rather than the total.\niso_count = {\"TMP\": int(dsT.isobaricInhPa.size), \"RH\": int(dsR.isobaricInhPa.size), \"HGT\": int(dsH.isobaricInhPa.size)}\nfor v, n in iso_count.items():\n    print(\"decoded_isobaric_%s\\t%d\" % (v, n))\n    if n == 0:\n        sys.exit(\"FAIL: no isobaric %s levels decoded\" % v)\n\n# ---------------------------------------------------------- the file checked against itself\n# The hypsometric equation ties geopotential thickness to the temperature and humidity field:\n#     Z(500) - Z(1000) = (Rd/g) * integral of Tv dln(p)\n# GFS carries BOTH sides -- its own geopotential heights and its own T/RH -- so the file can be\n# checked for internal consistency. This is an independent field verifying the computation\n# rather than a band on an observed value.\nimport metpy.calc as mpcalc\nfrom metpy.units import units\n\nsel = [(40.0, 260.0), (0.0, 180.0), (-45.0, 30.0), (60.0, 350.0), (20.0, 100.0)]\nmask = (lev >= 500) & (lev <= 1000)\norder = np.argsort(-lev[mask])          # descending pressure: 1000 -> 500\nplev = lev[mask][order]\n\nworst = 0.0\nrows = []\nfor la, lo in sel:\n    T  = dsT[VT].sel(latitude=la, longitude=lo, method=\"nearest\").values[mask][order]\n    RH = dsR[VR].sel(latitude=la, longitude=lo, method=\"nearest\").values[mask][order]\n    Z  = dsH[VH].sel(latitude=la, longitude=lo, method=\"nearest\")\n    z1000 = float(Z.sel(isobaricInhPa=1000.0, method=\"nearest\").values)\n    z500  = float(Z.sel(isobaricInhPa=500.0,  method=\"nearest\").values)\n    model = z500 - z1000\n\n    p_q  = plev * units.hPa\n    T_q  = (T * units.kelvin)\n    rh_q = np.clip(RH, 0.0, 100.0) * units.percent\n    w    = mpcalc.mixing_ratio_from_relative_humidity(p_q, T_q, rh_q)\n    calc = float(mpcalc.thickness_hydrostatic(p_q, T_q, mixing_ratio=w).to(\"m\").magnitude)\n\n    rel = abs(calc - model) / abs(model)\n    worst = max(worst, rel)\n    rows.append((la, lo, model, calc, rel))\n    print(\"point\\tlat %6.1f lon %6.1f  model %8.2f m  hypsometric %8.2f m  rel %.4f\"\n          % (la, lo, model, calc, rel))\n\nprint(\"thickness_max_rel_dev\\t%.5f\" % worst)\n# The band is set by the DISCRETISATION, not by what the numbers happened to do: the model\n# integrates its own hydrostatic equation on ~127 native levels, this reproduces it from the\n# 13 archived isobaric levels with a trapezoidal rule. A few tenths of a percent is the\n# expected cost of that; 2% is comfortably above it and far below any real inconsistency.\nif worst > 0.02:\n    sys.exit(\"FAIL: hypsometric thickness and the file's own geopotential disagree by %.4f\" % worst)\nprint(\"consistency\\tGFS geopotential agrees with its own T/RH field through the hypsometric equation\")\n\n# ------------------------------------------------- an exact involution, needing no second field\n# Potential temperature is invertible: theta(p,T) then T(p,theta) must return T. Holds whatever\n# the data are, so it survives any change of fixture.\nTin = dsT[VT].sel(latitude=40.0, longitude=260.0, method=\"nearest\").values[mask][order] * units.kelvin\nth  = mpcalc.potential_temperature(plev * units.hPa, Tin)\nTb  = mpcalc.temperature_from_potential_temperature(plev * units.hPa, th)\ninv_dev = float(np.nanmax(np.abs(Tb.to(\"kelvin\").magnitude - Tin.magnitude)))\nprint(\"involution_theta_max_abs_K\\t%.3e\" % inv_dev)\nif inv_dev > 1e-9:\n    sys.exit(\"FAIL: potential-temperature round trip is not an involution (%.3e K)\" % inv_dev)\nprint(\"identity_theta\\ttheta(p,T) -> T(p,theta) returns T exactly\")\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"inventory_messages\\t%d\\n\" % len(inv))\n    fh.write(\"pressure_levels\\t%d\\n\" % levT.size)\n    fh.write(\"levels_1000_to_500\\t%d\\n\" % nlev_in_range)\n    for la, lo, m, c, r in rows:\n        fh.write(\"thickness_%s_%s\\tmodel %.2f m, hypsometric %.2f m, rel %.5f\\n\" % (la, lo, m, c, r))\n    fh.write(\"thickness_max_rel_dev\\t%.5f\\n\" % worst)\n    fh.write(\"involution_theta_max_abs_K\\t%.3e\\n\" % inv_dev)\n\nprint(\"GRIB2 OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: the GRIB2 check failed\"; exit 1; }\ncp score.tsv gfs-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness/gfs.pgrb2.1p00.f000",
+      "destination": "/tmp/gfs.pgrb2.1p00.f000"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness/gfs.pgrb2.1p00.f000.idx",
+      "destination": "/tmp/gfs.pgrb2.1p00.f000.idx"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/gfs-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness/r1/gfs-diag.txt"
+    },
+    {
+      "source": "/tmp/grib.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness/r1/grib.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}

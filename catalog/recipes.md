@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **91 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **92 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -47,7 +47,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-02 | 2026-10-01 |
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
 | [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: kallisto, salmon, star | 2026-10-02 | 2026-10-01 |
-| [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | — | 2026-10-08 |
+| [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | 2026-10-08 | 2026-10-08 |
 
 ## astro
 
@@ -76,6 +76,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 |---|---|---|---|---|---|
 | [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-02 | 2026-09-13 |
 | [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-03 | 2026-10-03 |
+| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | — | 2026-10-08 |
 | [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-08 | 2026-10-08 |
 
 ## comp-chem
