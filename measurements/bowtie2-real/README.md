@@ -55,7 +55,7 @@ compute-only $/result:     16 cores $0.1732    32 cores $0.1737
 fixed overhead:            16 cores 86 s -> $0.0152
                            32 cores 85 s -> $0.0301
                            48 cores 83 s -> $0.0441
-                           64 cores 82 s -> $0.0581               <- same seconds, 3.8x the cost
+                           64 cores 82 s -> $0.0581               <- same seconds, 3.8× the cost
 ```
 
 Flat per-core pricing times ~100% efficiency means **the compute cost of the answer does not depend
@@ -162,9 +162,82 @@ bowtie2.
 **Scaling was not tested beyond 64 cores.** The curve is still perfectly linear at 64, so the knee —
 if there is one — is somewhere above what was measured. `c8g` goes to 192 vCPU.
 
-**The bwa cross-check has not been run.** The clocking run staged out a 352 MB gzipped TSV of
-MAPQ≥30 primary alignments specifically for it, and `bwa-real`'s BAM over the identical bytes already
-exists, so the comparison is set up and cheap. It is not done, and nothing here claims the two
-aligners agree. That is the next task, and its metric must be MAPQ-gated concordance on the
-confident set rather than naive all-mapped agreement
-([why](../../practices/cross-checks.md)).
+**Scaling beyond 64 cores, and a deeper/longer-read library.** Both untested.
+
+## Cross-validated against bwa on identical bytes
+
+`bwa mem` and `bowtie2 --local` aligned **the same 24,148,993 read pairs** to **the same
+reference**. Two unrelated codebases, one input — and `samtools flagstat` confirms the precondition
+rather than assuming it: bwa reports **48,297,986 primary** records, exactly bowtie2's count.
+
+| | |
+|---|---|
+| **chromosome concordance** | **0.999615** — *asserted*, floor 0.999 |
+| same base, exactly | **0.924444** |
+| within 100 bp | 0.999563 |
+| within 1000 bp | 0.999583 |
+| names compared | 19,974,019 (MAPQ≥30 on **both** sides) |
+| bwa high-confidence records | 44,194,457 |
+| bowtie2 high-confidence records | 40,042,364 |
+
+**92.4% of mutually-confident reads land on the exact same base**, and the two tools agree on the
+chromosome for 99.96%.
+
+### The positional residual is soft-clipping, and the curve proves it
+
+| tolerance | 0 | 5 | 10 | 20 | 50 | 100 | 1000 |
+|---|---|---|---|---|---|---|---|
+| concordance | 0.9244 | 0.9805 | 0.9847 | 0.9904 | 0.9974 | **0.9996** | 0.9996 |
+
+```
+residual     0 bp       18,464,860
+           1-10 bp       1,203,232
+          11-100 bp        297,202
+         101-1000 bp           396      <- falls off a cliff
+          >1000 bp            648
+```
+
+**The curve climbs to 0.9996 by 100 bp and then goes flat — and the reads are 100 bp.** Under
+`--local`, SAM `POS` is the leftmost *aligned* base, so a difference in how many bases each tool
+soft-clips shifts `POS` while both agree entirely about where the read belongs. Such a shift
+**cannot exceed the read length**, so a clipping-convention residual must be bounded by exactly
+100 bp. It is: beyond the read length only **1,044 reads of 20 million (0.005%)** disagree. The
+shape of the data identifies its own cause, which no single tolerance could have done.
+
+So **chromosome assignment is what gets asserted**, because it is clip-invariant and therefore
+measures placement rather than convention. Genuine disagreement between these two aligners is the
+0.005% past the read length, not the 1.9% a 5 bp tolerance reports.
+
+### How this metric was got wrong first, since the mistake is the lesson
+
+The first attempt asserted position agreement within 5 bp against a 0.98 floor and measured
+**0.980528** — a **0.05% margin**, which is a check that passes today and fails on noise. Two
+separate errors, both the kind these rules exist to catch:
+
+- **The assertion was on the clip-sensitive quantity.** 6,457 chromosome disagreements against
+  382,487 positional ones should have been read as "the metric is measuring method", not "the tools
+  disagree 1.9% of the time". Replaced by the clip-invariant claim plus the curve above.
+- **The vacuity guard was a band picked for convenience.** It required >20,000,000 names compared, a
+  round number chosen without computing the comparable set — which is 19,974,019. So the guard
+  *failed a valid run by 0.13%*, which is precisely the failure it existed to prevent. Now 10M:
+  unambiguously enough to mean something, nowhere near the observed value.
+
+One artefact worth recording: the two runs report different chromosome-disagreement counts (6,457
+then 7,681) on identical inputs. Not non-determinism — the first version broke out of its per-read
+loop on the first *positional* failure, which masked chromosome disagreements in reads that had
+both. The second version checks chromosome across all records before considering position, so 7,681
+is the correct attribution and 6,457 was an undercount.
+
+### Limitation: the naive contrast is not available from these inputs
+
+The pedagogically useful comparison here would be gated-vs-ungated concordance — the minimap2↔bwa
+pair measured **0.43 naive against 0.9921 gated**. That cannot be computed from this data, because
+the bowtie2 side was already filtered to MAPQ≥30 when the clocking run wrote its TSV. Producing it
+would need a re-run emitting all primaries. The gated figures above stand on their own; the
+naive-versus-gated contrast is cited from
+[practices/cross-checks.md](../../practices/cross-checks.md), not re-derived here.
+
+Also note the two tools are **not equally confident**: bwa assigns MAPQ≥30 to 44,194,457 records
+against bowtie2's 40,042,364, about 10% more. The comparison is therefore over the intersection of
+what both are sure about, which is the right set for the claim being made and is not a statement
+about which tool is better calibrated.
