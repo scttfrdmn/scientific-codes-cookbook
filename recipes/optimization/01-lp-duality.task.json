@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-optimization-lp-r2",
+  "container": "quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c284a34d4bb864d4f18820bd8837d4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first (unlike aarchbio).\n\necho \"== the staged bytes must match the pin before anything is solved ==\"\nprintf '%s  afiro.mps\\n' 9cd304f02717cbd6f85068cb777b69d28539b22a4868ae0f0fb425f514f0eea5 > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: afiro.mps does not match its pin\"; exit 1; }\n\nREF=$(awk -F'\\t' '$1==\"published_optimum\"{print $2}' afiro.reference.tsv)\nprintf 'published_optimum\\t%s\\n' \"$REF\"\n\necho \"== CBC: CLI only, no python binding in this env ==\"\ncbc afiro.mps solve solution /tmp/cbc.sol > /tmp/cbc.log 2>&1\nCBCRC=$?\nprintf 'cbc_rc\\t%s\\n' \"$CBCRC\"\ntest \"$CBCRC\" = \"0\" || { tail -20 /tmp/cbc.log; echo \"FAIL: cbc exited $CBCRC\"; exit 1; }\ngrep -iE \"objective value\" /tmp/cbc.log | head -2\n\npython3 -u - <<'PYEOF' 2>&1 | tee /tmp/lp.log\nimport sys, re\n\nREF = -4.6475314286e+02          # netlib's published optimum for afiro\nresults = {}\n\ndef rel(a, b):\n    return abs(a - b) / max(abs(b), 1e-30)\n\n# ---------------------------------------------------------------- HiGHS, via highspy\nimport highspy\nprint(\"version\\thighspy %s\" % getattr(highspy, \"__version__\", \"unknown\"))\nh = highspy.Highs()\nh.setOptionValue(\"output_flag\", False)\nh.readModel(\"afiro.mps\")\nh.run()\nstatus = h.getModelStatus()\nprint(\"highs_status\\t%s\" % h.modelStatusToString(status))\ninfo = h.getInfo()\nhobj = float(info.objective_function_value)\nresults[\"highs\"] = hobj\nprint(\"highs_objective\\t%.10f\" % hobj)\n\n# STRONG DUALITY, from HiGHS's own KKT residuals. At an LP optimum the primal and dual are\n# both feasible and their objectives coincide; HiGHS reports the worst violation of each, so\n# both being ~0 together with a reported optimal status IS the duality certificate.\npinf = float(getattr(info, \"max_primal_infeasibility\", float(\"nan\")))\ndinf = float(getattr(info, \"max_dual_infeasibility\", float(\"nan\")))\ncviol = float(getattr(info, \"max_complementarity_violation\", 0.0))\nprint(\"highs_max_primal_infeasibility\\t%.3e\" % pinf)\nprint(\"highs_max_dual_infeasibility\\t%.3e\" % dinf)\nprint(\"highs_max_complementarity_violation\\t%.3e\" % cviol)\nfor nm, v in ((\"primal infeasibility\", pinf), (\"dual infeasibility\", dinf),\n              (\"complementarity violation\", cviol)):\n    if not (v == v) or v > 1e-7:\n        sys.exit(\"FAIL: HiGHS reports %s %.3e; KKT is not satisfied so this is not an \"\n                 \"optimal primal-dual pair\" % (nm, v))\nprint(\"duality_highs\\tprimal and dual feasible, complementarity satisfied\")\n\n# ---------------------------------------------------------------- SCIP, via pyscipopt\nfrom pyscipopt import Model\nimport pyscipopt\nprint(\"version\\tpyscipopt %s\" % getattr(pyscipopt, \"__version__\", \"unknown\"))\nm = Model()\nm.hideOutput()\nm.readProblem(\"afiro.mps\")\nm.optimize()\nprint(\"scip_status\\t%s\" % m.getStatus())\nsobj = float(m.getObjVal())\nsp = float(m.getPrimalbound()); sd = float(m.getDualbound())\nresults[\"scip\"] = sobj\nprint(\"scip_objective\\t%.10f\" % sobj)\nprint(\"scip_primal_bound\\t%.10f\" % sp)\nprint(\"scip_dual_bound\\t%.10f\" % sd)\n\n# STRONG DUALITY, stated explicitly: SCIP reports both bounds, and for an LP solved to\n# optimality they must coincide. The gap is the thing being asserted -- an exact identity of\n# linear programming, not a tolerance on an observed value.\ngap = abs(sp - sd)\nrelgap = gap / max(abs(sp), 1e-30)\nprint(\"scip_duality_gap\\t%.3e\" % gap)\nprint(\"scip_relative_gap\\t%.3e\" % relgap)\nif relgap > 1e-9:\n    sys.exit(\"FAIL: SCIP's primal-dual gap is %.3e relative; strong duality says it must \"\n             \"vanish at an LP optimum\" % relgap)\nprint(\"duality_scip\\tprimal bound == dual bound\")\n\n# ---------------------------------------------------------------- CBC, from its log\n# CBC has no python binding in this env, so the objective is parsed from its output. It prints\n# the value THREE times at different precisions, and which line you read decides whether the\n# comparison is meaningful:\n#   \"Optimal - objective value -464.75314\"                 8 sig figs -> 6.2e-09 from published\n#   \"Optimal objective -464.7531429 - 5 iterations\"       10 sig figs -> 9.2e-11 from published\n# The first was what a naive regex matched, and at 8 figures it sits OUTSIDE a 1e-9 tolerance\n# for reasons of text formatting rather than arithmetic. Prefer the 10-figure line; fall back\n# to the coarse one only if absent, and say which was used.\ntxt = open(\"/tmp/cbc.log\").read()\ncobj = None; cprec = None\nmt = re.search(r\"Optimal objective\\s+(-?[0-9.]+(?:[eE][-+]?\\d+)?)\\s+-\\s+\\d+\\s+iterations\", txt)\nif mt:\n    cobj = float(mt.group(1)); cprec = \"iterations-line (10 sig figs)\"\nelse:\n    mt = re.search(r\"[Oo]bjective value:?\\s*(-?[0-9.]+(?:[eE][-+]?\\d+)?)\", txt)\n    if mt:\n        cobj = float(mt.group(1)); cprec = \"objective-value line (8 sig figs)\"\nif cobj is None:\n    sys.exit(\"FAIL: could not read CBC's objective from its log\")\nresults[\"cbc\"] = cobj\nprint(\"cbc_objective\\t%.10f\" % cobj)\nprint(\"cbc_precision_source\\t%s\" % cprec)\n\n# CBC states its own duality certificate after postsolve. Parsing it means all THREE solvers\n# independently certify optimality, rather than two certifying and one merely agreeing.\nmp = re.search(r\"infeasibilities\\s*-\\s*dual\\s+([0-9.eE+-]+)\\s*\\(\\d+\\),\\s*primal\\s+([0-9.eE+-]+)\", txt)\nif mp:\n    cd, cp = float(mp.group(1)), float(mp.group(2))\n    print(\"cbc_dual_infeasibility\\t%.3e\" % cd)\n    print(\"cbc_primal_infeasibility\\t%.3e\" % cp)\n    if cd > 1e-7 or cp > 1e-7:\n        sys.exit(\"FAIL: CBC reports dual %.3e / primal %.3e infeasibility after postsolve\" % (cd, cp))\n    print(\"duality_cbc\\tprimal and dual feasible after postsolve\")\nelse:\n    print(\"duality_cbc\\tNOT FOUND in the log -- reported, not asserted\")\n\n# ------------------------------------------- the published reference, and the cross-validation\nprint(\"netlib_published\\t%.10f\" % REF)\nfor name, v in sorted(results.items()):\n    r = rel(v, REF)\n    print(\"vs_published\\t%-6s %.10f  rel %.3e\" % (name, v, r))\n    if r > 1e-9:\n        sys.exit(\"FAIL: %s got %.10f against netlib's published %.10f (rel %.3e)\"\n                 % (name, v, REF, r))\nprint(\"reference\\tall three solvers reproduce netlib's published optimum\")\n\n# An LP optimum is unique IN VALUE even when the optimal vertex is not, which is exactly why\n# three unrelated codebases can be compared on one number. Tolerance is set by the published\n# reference's own precision (11 significant figures), not by how close these happen to land.\nvals = sorted(results.values())\nspread = vals[-1] - vals[0]\nprint(\"solver_spread\\t%.3e\" % spread)\nif spread / max(abs(vals[0]), 1e-30) > 1e-9:\n    sys.exit(\"FAIL: solvers disagree by %.3e\" % spread)\nprint(\"crosscheck\\tHiGHS, SCIP and CBC agree on identical MPS bytes\")\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"netlib_published\\t%.10f\\n\" % REF)\n    for name, v in sorted(results.items()):\n        fh.write(\"%s_objective\\t%.10f\\n\" % (name, v))\n    fh.write(\"scip_relative_gap\\t%.3e\\n\" % relgap)\n    fh.write(\"highs_max_primal_infeasibility\\t%.3e\\n\" % pinf)\n    fh.write(\"highs_max_dual_infeasibility\\t%.3e\\n\" % dinf)\n    fh.write(\"solver_spread\\t%.3e\\n\" % spread)\n\nprint(\"OPTIMIZATION OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"lp check failed\"; exit 1; }\ncp score.tsv optimization-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization/afiro.mps",
+      "destination": "/tmp/afiro.mps"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization/afiro.reference.tsv",
+      "destination": "/tmp/afiro.reference.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/optimization/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/optimization-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/optimization/r1/optimization-diag.txt"
+    },
+    {
+      "source": "/tmp/lp.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/optimization/r1/lp.log"
+    },
+    {
+      "source": "/tmp/cbc.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/optimization/r1/cbc.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
