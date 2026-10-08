@@ -1,0 +1,50 @@
+{
+  "task_id": "macs2real-gen-r9g",
+  "container": "quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# One rung of the generation sweep. Everything except the chip is held fixed: same image\n# digest, same two input objects, same 4 vCPU / 32 GiB shape, same macs2 flags.\n#\n# SIZED FROM A MEASURED RUN, NOT A GUESS. The m8g.2xlarge clocking run reported macs2 at\n# 389 s, peak RSS 7.6 GiB, avg_cores 1.01 and a tmpfs high-water of 11.1 GiB. So: 4 cores is\n# ample for a single-threaded tool, and the 32 GiB is bought for /tmp (tmpfs = half of RAM,\n# and 11.1 GiB of it is needed) rather than for compute. A 16 GiB box would have run out of\n# staging space, which is why this is r*.xlarge and not m*.large.\n\necho \"== the bytes must match ENCODE's own published md5 before any compute ==\"\nmd5sum -c encode.md5 || { echo \"FAIL: a BAM does not match ENCODE's published md5\"; exit 1; }\n\nCG=/sys/fs/cgroup\nsampler() {\n  : > /tmp/samples.tsv\n  while : ; do\n    mc=$(cat $CG/memory.current 2>/dev/null || echo 0)\n    cu=$(awk '/^usage_usec/{print $2; exit}' $CG/cpu.stat 2>/dev/null || echo 0)\n    tk=$(df -k /tmp 2>/dev/null | awk 'NR==2{print $3}')\n    printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \"${mc:-0}\" \"${cu:-0}\" \"${tk:-0}\" >> /tmp/samples.tsv\n    sleep 1\n  done\n}\nsampler & SPID=$!\n\necho \"== macs2 callpeak, whole genome ==\"\nT0=$(date +%s)\nmacs2 callpeak -t ENCFF933NSJ.bam -c ENCFF768XTH.bam -f BAM -g hs -q 0.05 \\\n  -n real --outdir /tmp > /tmp/macs2.log 2>&1\nRC=$?\nT1=$(date +%s)\nkill $SPID 2>/dev/null; wait $SPID 2>/dev/null\nWALL=$((T1-T0))\necho \"macs2_rc\t$RC\"\necho \"macs2_wall_s\t$WALL\"\ntest \"$RC\" = \"0\" || { tail -20 /tmp/macs2.log; echo \"FAIL: macs2 exited $RC\"; exit 1; }\n\nawk -F'\\t' -v wall=\"$WALL\" '\n  NR==1{cu0=$3}\n  {if($2>mc)mc=$2; if($4>tk)tk=$4; cu=$3; n++}\n  END{\n    printf \"peak_rss_mib\\t%.0f\\n\", mc/1048576;\n    printf \"tmpfs_peak_mib\\t%.0f\\n\", tk/1024;\n    if(wall>0) printf \"avg_cores\\t%.2f\\n\", (cu-cu0)/(wall*1000000);\n  }' /tmp/samples.tsv\n\n# ---------------------------------------------------- the identity that makes n=1 defensible\n# macs2 is deterministic, so the answer must not depend on which chip ran it. Asserting the\n# peak count exactly is safe: it is an integer, far from any floating-point edge. The file\n# sha256 is REPORTED rather than asserted -- it embeds q-values to five decimals, and if a\n# generation ever changes those last digits that is a finding worth seeing, not a test\n# failure to be absorbed by a tolerance.\nPEAKS=$(grep -vc '^#' /tmp/real_peaks.narrowPeak 2>/dev/null)\necho \"peaks\t${PEAKS:-0}\"\ntest \"${PEAKS:-0}\" = \"50276\" || { echo \"FAIL: $PEAKS peaks, every other generation gave 50276\"; exit 1; }\n\nBADQ=$(awk -F'\\t' '$0!~/^#/ && NF>=9 && $9 < 1.30103 {n++} END{print n+0}' /tmp/real_peaks.narrowPeak)\necho \"peaks_below_q_cutoff\t$BADQ\"\ntest \"$BADQ\" = \"0\" || { echo \"FAIL: $BADQ peaks below the -q 0.05 cutoff\"; exit 1; }\n\nSUM=$(grep -vc '^#' /tmp/real_summits.bed 2>/dev/null)\necho \"summits\t${SUM:-0}\"\ntest \"${SUM:-0}\" = \"${PEAKS:-0}\" || { echo \"FAIL: $SUM summits for $PEAKS peaks\"; exit 1; }\n\nsha256sum /tmp/real_peaks.narrowPeak | awk '{print \"narrowPeak_sha256\\t\"$1}'\necho \"narrowPeak_sha256_baseline\t687b97a9bc39fed53555d7e566dd2d44f49cd926d1b91ebaea3ecc7c1638c54d\"\n\n{ echo -e \"observable\\tvalue\"\n  echo -e \"macs2_wall_s\\t$WALL\"\n  echo -e \"peaks\\t$PEAKS\"\n} > /tmp/rung.tsv\n\nnproc | awk '{print \"nproc\\t\"$1}'\nuname -m | awk '{print \"arch\\t\"$1}'\ncat /proc/cpuinfo | grep -m1 \"CPU part\" | awk '{print \"cpu_part\\t\"$4}'\necho \"MACS2 RUNG OK\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "r9g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF933NSJ.bam",
+      "destination": "/tmp/ENCFF933NSJ.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF768XTH.bam",
+      "destination": "/tmp/ENCFF768XTH.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/encode.md5",
+      "destination": "/tmp/encode.md5"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/rung.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/gen-r9g/rung.tsv"
+    },
+    {
+      "source": "/tmp/macs2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/gen-r9g/macs2.log"
+    },
+    {
+      "source": "/tmp/samples.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/gen-r9g/samples.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

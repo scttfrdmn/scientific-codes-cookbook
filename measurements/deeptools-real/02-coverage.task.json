@@ -1,0 +1,32 @@
+{
+  "task_id": "deeptoolsreal-coverage-m8g",
+  "container": "quay.io/aarchbio/deeptools@sha256:91c028a26e85579dde0eadb0efd06c662bcdcb52956e48c941cdeea6c3016ca8",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl NUMBA_CACHE_DIR=/tmp/numba\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\ngrep ENCFF933NSJ encode.md5 > /tmp/this.md5\nmd5sum -c /tmp/this.md5 || { echo \"FAIL: BAM does not match ENCODE's published md5\"; exit 1; }\n\npython3 -u -c \"import deeptools, pyBigWig; print('version\\tdeeptools %s' % getattr(deeptools,'__version__','unknown')); print('version\\tpyBigWig %s' % getattr(pyBigWig,'__version__','unknown'))\"\nnproc | awk '{print \"nproc\\t\"$1}'\n\n# ---------------------------------------------------------------- inline instrument\nCG=/sys/fs/cgroup\nsampler() {\n  : > /tmp/samples.tsv\n  while : ; do\n    mc=$(cat $CG/memory.current 2>/dev/null || echo 0)\n    cu=$(awk '/^usage_usec/{print $2; exit}' $CG/cpu.stat 2>/dev/null || echo 0)\n    tk=$(df -k /tmp 2>/dev/null | awk 'NR==2{print $3}')\n    printf '%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \"${mc:-0}\" \"${cu:-0}\" \"${tk:-0}\" >> /tmp/samples.tsv\n    sleep 1\n  done\n}\nsampler & SPID=$!\n\n# ---------------------------------------------------------------- the real workload\n# Whole genome at binSize 50, the resolution a real ChIP track is built at.\n# --normalizeUsing None is load-bearing: it is what makes the coverage comparable to a\n# base count at all. Any normalisation rescales the values and the identity below dies.\necho \"== bamCoverage, whole genome ==\"\nT0=$(date +%s)\nbamCoverage -b ENCFF933NSJ.bam -o cov.bedgraph --outFileFormat bedgraph \\\n  --binSize 50 --normalizeUsing None -p \"$(nproc)\" > /tmp/bamcoverage.log 2>&1\nRC=$?\nT1=$(date +%s)\nkill $SPID 2>/dev/null; wait $SPID 2>/dev/null\nWALL=$((T1-T0))\necho \"bamcoverage_rc\t$RC\"\necho \"bamcoverage_wall_s\t$WALL\"\ntail -5 /tmp/bamcoverage.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: bamCoverage exited $RC\"; exit 1; }\n\nawk -F'\\t' -v wall=\"$WALL\" '\n  NR==1{cu0=$3}\n  {if($2>mc)mc=$2; if($4>tk)tk=$4; cu=$3; n++}\n  END{\n    printf \"peak_rss_mib\\t%.0f\\n\", mc/1048576;\n    printf \"tmpfs_peak_mib\\t%.0f\\n\", tk/1024;\n    if(wall>0) printf \"avg_cores\\t%.2f\\n\", (cu-cu0)/(wall*1000000);\n  }' /tmp/samples.tsv\n\n# ---------------------------------------------------------------- shape checks\nROWS=$(wc -l < cov.bedgraph)\necho \"bedgraph_rows\t$ROWS\"\ntest \"$ROWS\" -gt 1000000 || { echo \"FAIL: only $ROWS bedgraph rows genome-wide\"; exit 1; }\n\nBAD=$(awk -F'\\t' 'NF!=4 || $3<=$2 {n++} END{print n+0}' cov.bedgraph)\necho \"malformed_rows\t$BAD\"\ntest \"$BAD\" = \"0\" || { echo \"FAIL: $BAD rows malformed or non-increasing\"; exit 1; }\n\nNEG=$(awk -F'\\t' '$4<0 {n++} END{print n+0}' cov.bedgraph)\necho \"negative_coverage_rows\t$NEG\"\ntest \"$NEG\" = \"0\" || { echo \"FAIL: $NEG rows have negative coverage\"; exit 1; }\n\n# ------------------------------------------- the candidate identity, MEASURED not asserted\n# CLAIM UNDER TEST: with --normalizeUsing None, the integral of coverage over the genome is\n# the number of bases the aligner placed, so\n#     sum over rows of (end-start)*value  ==  samtools' 'bases mapped (cigar)'\n# That would be a conservation identity, which beats any band. But deepTools and samtools do\n# not necessarily count the same records by default (secondary and supplementary alignments,\n# duplicates, MAPQ 0), and asserting equality before checking that would be a green check on\n# the wrong metric -- the exact trap the cross-check rules name. So this run REPORTS the\n# ratio to six decimals and gates only loosely; the tight assertion is earned on the next\n# pass, once the flag semantics are matched and the residual is explained.\nBM=$(awk -F'\\t' '$1==\"bases_mapped_cigar\"{print $2}' basis.tsv)\nMR=$(awk -F'\\t' '$1==\"reads_mapped\"{print $2}' basis.tsv)\necho \"samtools_bases_mapped_cigar\t$BM\"\necho \"samtools_reads_mapped\t$MR\"\n\nINT=$(awk -F'\\t' '{s += ($3-$2)*$4} END{printf \"%.0f\", s}' cov.bedgraph)\necho \"coverage_integral\t$INT\"\nawk -v a=\"$INT\" -v b=\"$BM\" 'BEGIN{ if(b>0) printf \"integral_over_samtools\\t%.6f\\n\", a/b; }'\n\nRATIO_OK=$(awk -v a=\"$INT\" -v b=\"$BM\" 'BEGIN{ if(b<=0){print 0; exit} r=a/b; if(r>0.95 && r<1.05) print 1; else print 0 }')\ntest \"$RATIO_OK\" = \"1\" || { echo \"FAIL: coverage integral is not within 5% of samtools' mapped bases -- investigate the flag semantics before loosening this\"; exit 1; }\n\n# Genome span covered at all, as a sanity number for the page.\nawk -F'\\t' '$4>0{s += $3-$2} END{printf \"bases_with_nonzero_coverage\\t%.0f\\n\", s}' cov.bedgraph\n\n{ echo -e \"observable\\tvalue\"\n  echo -e \"bamcoverage_wall_s\\t$WALL\"\n  echo -e \"bedgraph_rows\\t$ROWS\"\n  echo -e \"coverage_integral\\t$INT\"\n  echo -e \"samtools_bases_mapped_cigar\\t$BM\"\n} > /tmp/coverage.tsv\n\ngzip -c cov.bedgraph > cov.bedgraph.gz\nls -l cov.bedgraph.gz | awk '{print \"bedgraph_gz_bytes\\t\"$5}'\necho \"DEEPTOOLS REAL OK\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": ["m8g"]
+  },
+  "inputs": [
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF933NSJ.bam", "destination": "/tmp/ENCFF933NSJ.bam" },
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/deeptools-real/ENCFF933NSJ.bam.bai", "destination": "/tmp/ENCFF933NSJ.bam.bai" },
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/deeptools-real/basis.tsv", "destination": "/tmp/basis.tsv" },
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/encode.md5", "destination": "/tmp/encode.md5" }
+  ],
+  "outputs": [
+    { "source": "/tmp/coverage.tsv", "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/coverage-m8g/coverage.tsv" },
+    { "source": "/tmp/bamcoverage.log", "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/coverage-m8g/bamcoverage.log" },
+    { "source": "/tmp/samples.tsv", "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/coverage-m8g/samples.tsv" },
+    { "source": "/tmp/cov.bedgraph.gz", "destination": "s3://${COOKBOOK_BUCKET}/measurements/deeptools-real/coverage-m8g/cov.bedgraph.gz" }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

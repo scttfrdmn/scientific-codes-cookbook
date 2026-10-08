@@ -1,0 +1,31 @@
+{
+  "task_id": "macs2real-clock-m8g",
+  "container": "quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n\n# spawn runs task commands under bash -e and `set -uo pipefail` does not clear it\n# (spawn#707), so errexit is cleared above and every status is checked by hand.\n\necho \"== the bytes must match ENCODE's own published md5 before any compute ==\"\nmd5sum -c encode.md5 || { echo \"FAIL: a BAM does not match ENCODE's published md5\"; exit 1; }\necho \"pin\tboth BAMs match ENCODE's published md5\"\n\n# ---------------------------------------------------------------- inline instrument\n# 1 Hz sampler of cgroup v2 + tmpfs, inline per measurements/sizing-ratio (no shared\n# engine). Fail-soft: if cgroup is unreadable the fields read 0 and the wall clock and\n# the science are still valid.\nCG=/sys/fs/cgroup\necho \"cgroup_v2_readable\t$([ -r $CG/memory.current ] && echo yes || echo no)\"\nsampler() {\n  : > /tmp/samples.tsv\n  while : ; do\n    mc=$(cat $CG/memory.current 2>/dev/null || echo 0)\n    an=$(awk '/^anon /{print $2; exit}' $CG/memory.stat 2>/dev/null || echo 0)\n    cu=$(awk '/^usage_usec/{print $2; exit}' $CG/cpu.stat 2>/dev/null || echo 0)\n    tk=$(df -k /tmp 2>/dev/null | awk 'NR==2{print $3}')\n    printf '%s\\t%s\\t%s\\t%s\\t%s\\n' \"$(date +%s)\" \"${mc:-0}\" \"${an:-0}\" \"${cu:-0}\" \"${tk:-0}\" >> /tmp/samples.tsv\n    sleep 1\n  done\n}\nsampler & SPID=$!\n\n# ---------------------------------------------------------------- the real workload\n# Whole genome, not chr20. Same two ENCODE files the shipped recipe subsets, same -f BAM\n# and -g hs so the only thing that changed is the amount of data.\necho \"== macs2 callpeak, whole genome ==\"\nT0=$(date +%s)\nmacs2 callpeak -t ENCFF933NSJ.bam -c ENCFF768XTH.bam -f BAM -g hs -q 0.05 \\\n  -n real --outdir /tmp > /tmp/macs2.log 2>&1\nRC=$?\nT1=$(date +%s)\nkill $SPID 2>/dev/null; wait $SPID 2>/dev/null\nWALL=$((T1-T0))\necho \"macs2_rc\t$RC\"\necho \"macs2_wall_s\t$WALL\"\ntail -5 /tmp/macs2.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: macs2 exited $RC\"; exit 1; }\n\n# ---------------------------------------------------------------- the instrument's answer\nawk -F'\\t' -v wall=\"$WALL\" '\n  NR==1{cu0=$4}\n  {if($2>mc)mc=$2; if($3>an)an=$3; if($5>tk)tk=$5; cu=$4; n++}\n  END{\n    printf \"peak_rss_mib\\t%.0f\\n\", mc/1048576;\n    printf \"anon_max_mib\\t%.0f\\n\", an/1048576;\n    printf \"tmpfs_peak_mib\\t%.0f\\n\", tk/1024;\n    if(wall>0) printf \"avg_cores\\t%.2f\\n\", (cu-cu0)/(wall*1000000);\n    printf \"samples\\t%d\\n\", n;\n  }' /tmp/samples.tsv\ncat $CG/memory.peak 2>/dev/null | awk '{printf \"memory_peak_mib\\t%.0f\\n\", $1/1048576}'\n\n# ---------------------------------------------------------------- checks on the result\n# An identity, not a band: macs2 was asked for q <= 0.05, so every row it reports must\n# satisfy that. narrowPeak column 9 is -log10(q), so the floor is 1.30103. A truncated or\n# mis-thresholded run fails this; a band on the peak count would not.\nPEAKS=$(grep -vc '^#' /tmp/real_peaks.narrowPeak 2>/dev/null)\necho \"peaks\t${PEAKS:-0}\"\ntest \"${PEAKS:-0}\" -gt 1000 || { echo \"FAIL: only ${PEAKS:-0} peaks genome-wide\"; exit 1; }\n\nBADQ=$(awk -F'\\t' '$0!~/^#/ && NF>=9 && $9 < 1.30103 {n++} END{print n+0}' /tmp/real_peaks.narrowPeak)\necho \"peaks_below_q_cutoff\t$BADQ\"\ntest \"$BADQ\" = \"0\" || { echo \"FAIL: $BADQ peaks are below the -q 0.05 cutoff macs2 was given\"; exit 1; }\n\nBADF=$(awk -F'\\t' '$0!~/^#/ && NF!=10 {n++} END{print n+0}' /tmp/real_peaks.narrowPeak)\necho \"rows_not_10_fields\t$BADF\"\ntest \"$BADF\" = \"0\" || { echo \"FAIL: $BADF narrowPeak rows are malformed\"; exit 1; }\n\n# One summit per peak is a structural property of macs2's own output pair.\nSUM=$(grep -vc '^#' /tmp/real_summits.bed 2>/dev/null)\necho \"summits\t${SUM:-0}\"\ntest \"${SUM:-0}\" = \"${PEAKS:-0}\" || { echo \"FAIL: $SUM summits for $PEAKS peaks\"; exit 1; }\n\n# Observation, deliberately NOT an assertion: the shipped chr20-only recipe reports 1390\n# peaks. Restricting THIS run to chr20 cannot be expected to reproduce that, because the\n# background lambda and the effective genome size both differ when the whole genome is in\n# the model. Recorded so the difference is visible rather than surprising.\nCHR20=$(awk -F'\\t' '$1==\"chr20\"' /tmp/real_peaks.narrowPeak | wc -l)\necho \"chr20_peaks_in_wholegenome_run\t$CHR20\"\necho \"chr20_peaks_in_shipped_chr20_recipe\t1390\"\n\n{ echo -e \"observable\\tvalue\"\n  echo -e \"macs2_wall_s\\t$WALL\"\n  echo -e \"peaks\\t$PEAKS\"\n  echo -e \"summits\\t$SUM\"\n  echo -e \"peaks_below_q_cutoff\\t$BADQ\"\n  echo -e \"chr20_peaks_wholegenome\\t$CHR20\"\n} > /tmp/clock.tsv\n\nnproc | awk '{print \"nproc\\t\"$1}'\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"MACS2 REAL OK\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": ["m8g"]
+  },
+  "inputs": [
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF933NSJ.bam", "destination": "/tmp/ENCFF933NSJ.bam" },
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/ENCFF768XTH.bam", "destination": "/tmp/ENCFF768XTH.bam" },
+    { "source": "s3://${COOKBOOK_BUCKET}/inputs/macs2-real/encode.md5", "destination": "/tmp/encode.md5" }
+  ],
+  "outputs": [
+    { "source": "/tmp/clock.tsv", "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/clock-m8g/clock.tsv" },
+    { "source": "/tmp/macs2.log", "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/clock-m8g/macs2.log" },
+    { "source": "/tmp/samples.tsv", "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/clock-m8g/samples.tsv" },
+    { "source": "/tmp/real_peaks.narrowPeak", "destination": "s3://${COOKBOOK_BUCKET}/measurements/macs2-real/clock-m8g/real_peaks.narrowPeak" }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 0.30
+  }
+}

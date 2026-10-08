@@ -1,0 +1,44 @@
+{
+  "task_id": "bowtie2real-build-index",
+  "container": "quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\n# WHY BUILD RATHER THAN FETCH. 1000genomes publishes a prebuilt *bwa* index beside this\n# reference but no .bt2. bowtie2's own published indexes are built on DIFFERENT references\n# (GRCh38_noalt_as / _noalt_decoy_as), and aligning to a different reference than bwa used\n# would turn the bwa-vs-bowtie2 cross-check into a method difference masquerading as a\n# disagreement. So the index is built on bwa-real's exact staged reference, once, and reused\n# by every rung of the sweep.\n\necho \"== the reference must be the exact bytes bwa-real aligned against ==\"\nls -l GRCh38_full_analysis_set_plus_decoy_hla.fa\nSZ=$(stat -c %s GRCh38_full_analysis_set_plus_decoy_hla.fa)\necho \"ref_bytes\t$SZ\"\ntest \"$SZ\" = \"3263683042\" || { echo \"FAIL: reference is $SZ bytes, 1000genomes publishes 3263683042\"; exit 1; }\n\nbowtie2-build --version | head -2\nnproc | awk '{print \"nproc\\t\"$1}'\n\necho \"== bowtie2-build, whole genome (the long pole of this batch) ==\"\nT0=$(date +%s)\nbowtie2-build --threads \"$(nproc)\" \\\n  GRCh38_full_analysis_set_plus_decoy_hla.fa GRCh38_fadh > /tmp/bt2build.log 2>&1\nRC=$?\nT1=$(date +%s)\necho \"build_rc\t$RC\"\necho \"build_wall_s\t$((T1-T0))\"\ntail -5 /tmp/bt2build.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: bowtie2-build exited $RC\"; exit 1; }\n\n# A completion sentinel beats a size band: bowtie2-inspect reading the index back is the\n# tool's own statement that what was written is a loadable index, not merely N bytes.\necho \"== bowtie2-inspect must read the index back ==\"\nbowtie2-inspect -s GRCh38_fadh > /tmp/bt2inspect.txt 2>&1\nIRC=$?\necho \"inspect_rc\t$IRC\"\ntest \"$IRC\" = \"0\" || { echo \"FAIL: the index does not load\"; exit 1; }\nhead -4 /tmp/bt2inspect.txt\n\n# The reference has 3366 sequences (primary + alt + decoy + HLA). bowtie2-inspect reports\n# one Sequence- line per contig, so this ties the index back to the reference it came from.\nNSEQ=$(grep -c '^Sequence-' /tmp/bt2inspect.txt)\necho \"index_sequences\t$NSEQ\"\ntest \"$NSEQ\" -gt 3000 || { echo \"FAIL: index holds only $NSEQ sequences\"; exit 1; }\n\nls -l GRCh38_fadh*.bt2* | awk '{print \"idxfile\\t\"$9\"\\t\"$5}'\n\n# One flat tar so the consuming tasks stage a single pinnable artifact. The .bt2 files were\n# created by this task, so removing them after is allowed -- unlike a staged input, which\n# the container cannot unlink (sticky /tmp, EPERM).\necho \"== tar the index to one flat artifact ==\"\ntar -cf GRCh38_fadh.bt2.tar GRCh38_fadh*.bt2*\ntar -tf GRCh38_fadh.bt2.tar | awk '{print \"tar_member\\t\"$1}'\nrm -f GRCh38_fadh*.bt2*\nls -l GRCh38_fadh.bt2.tar\nsha256sum GRCh38_fadh.bt2.tar | tee GRCh38_fadh.bt2.tar.sha256\n\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_used_mib\\t%.0f\\n\", $3/1024}'\necho \"BOWTIE2 INDEX OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": ["m8g"]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/GRCh38_fadh.bt2.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/GRCh38_fadh.bt2.tar"
+    },
+    {
+      "source": "/tmp/GRCh38_fadh.bt2.tar.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bowtie2-real/GRCh38_fadh.bt2.tar.sha256"
+    },
+    {
+      "source": "/tmp/bt2build.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bowtie2-real/build/bt2build.log"
+    },
+    {
+      "source": "/tmp/bt2inspect.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bowtie2-real/build/bt2inspect.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "240m",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}
