@@ -1,0 +1,126 @@
+{
+  "task_id": "cookbook-proteomics-openms-r7",
+  "container": "quay.io/aarchbio/openms@sha256:8e9f3d4b0a80c509dc94229a2f02bfd45b6f4375eb6ec7d9e2032e08f4c0e725",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n: > ssrc.log; : > search_bsa.log; : > fdr.log\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n# The identity checks live in the staged identities.py, not inline: a task command rides in\n# EC2 user data, capped at 16,384 bytes, and the inline version would not launch.\n\necho \"== staged bytes must match their pins ==\"\n# pins.sha256 covers every input the RECIPE stages; this task stages a subset of them, so\n# --ignore-missing is required -- plain `sha256sum -c` fails on a file it was never given.\n# That flag alone would pass vacuously if nothing were staged, so the number actually verified\n# is asserted too.\nsha256sum -c --ignore-missing pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nNOK=$(sha256sum -c --ignore-missing pins.sha256 2>/dev/null | grep -c ': OK$')\nprintf 'pinned_files_verified\\t%s\\n' \"$NOK\"\ntest \"$NOK\" -eq 9 || { echo \"FAIL: verified $NOK pinned files, expected 9\"; exit 1; }\nsed 's/^/  /' expected.tsv\nDBT=$(awk -F'\\t' '$1==\"db_targets\"{print $2}' expected.tsv)\nDBD=$(awk -F'\\t' '$1==\"db_decoys\"{print $2}'  expected.tsv)\n\necho \"== every tool this chain needs must be present ==\"\n# Check all of them before running any, so a missing tool is a clear message rather than a\n# failure three steps in. CometAdapter and MSGFPlusAdapter exist in this image but are only\n# WRAPPERS -- the Comet and MSGF+ binaries are not shipped -- which is why the search engine\n# here is OpenMS's own SimpleSearchEngine.\nfor t in SimpleSearchEngine PeptideIndexer FalseDiscoveryRate; do\n  if command -v \"$t\" >/dev/null 2>&1; then printf '  tool %-22s present\\n' \"$t\"\n  else printf '  tool %-22s MISSING\\n' \"$t\"; MISSING=1; fi\ndone\ntest -z \"${MISSING:-}\" || { echo \"FAIL: a required TOPP tool is absent from this image\"; exit 1; }\n\n# =========================================================== LEG A: the committed reproduction\n# SimpleSearchEngine ships its own test spectra, database, .ini and expected idXML. Passing the\n# committed .ini is what makes this a reproduction rather than a similar run -- it sets\n# threads=1, fragment tolerance 0.1 Da, empty fixed mods and variable Oxidation (M). Explicit\n# -in/-database/-out override the .ini's absolute paths from the committer's machine.\necho \"== LEG A: reproduce SimpleSearchEngine's own committed output ==\"\nSimpleSearchEngine -ini SimpleSearchEngine_1.ini \\\n  -in SimpleSearchEngine_1.mzML -database SimpleSearchEngine_1.fasta \\\n  -out ref_out.idXML > ssrc.log 2>&1\nRC=$?\nif [ \"$RC\" != \"0\" ]; then\n  grep -iE \"Unknown option|Invalid|error message\" ssrc.log | grep -v \"valid:\" | head -5\n  echo \"FAIL: SimpleSearchEngine exited $RC on its own test fixture\"; exit 1\nfi\ntest -s ref_out.idXML || { echo \"FAIL: leg A produced no output\"; exit 1; }\n\n# =============================================== LEG B: the real run, with a target-decoy FDR\n# Parameters follow the committed OMSSA reference where the tool permits: same database, same\n# enzyme, same missed cleavages, same +1..+3 charges, same 0.05 Da precursor window. Fragment\n# tolerance CANNOT match -- the reference used 0.3 Da and SimpleSearchEngine's deisotoper\n# refuses anything above 0.1 Da -- so this run searches 3x tighter, which costs sensitivity on\n# low-resolution MS2 and is why the peptide overlap is asserted as a floor, not an equality.\necho \"== LEG B: search 1,120 MS2 spectra against $DBT+$DBD target/decoy ==\"\nT0=$(date +%s)\nSimpleSearchEngine -in BSA1.mzML -database db.fasta -out psm.idXML \\\n  -Search:enzyme Trypsin \\\n  -Search:precursor:mass_tolerance 0.05 -Search:precursor:mass_tolerance_unit Da \\\n  -Search:fragment:mass_tolerance 0.1   -Search:fragment:mass_tolerance_unit Da \\\n  -Search:precursor:min_charge 1 -Search:precursor:max_charge 3 \\\n  -Search:peptide:missed_cleavages 1 \\\n  -Search:modifications:variable \"Oxidation (M)\" \\\n  -threads 1 > search_bsa.log 2>&1\nRC=$?\nT1=$(date +%s)\nprintf 'bsa_search_rc\\t%s\\nbsa_search_wall_s\\t%s\\n' \"$RC\" \"$((T1-T0))\"\nif [ \"$RC\" != \"0\" ]; then\n  grep -iE \"Unknown option|Invalid|error message\" search_bsa.log | grep -v \"valid:\" | head -5\n  echo \"FAIL: the BSA search exited $RC\"; exit 1\nfi\ntest -s psm.idXML || { echo \"FAIL: no PSMs written\"; exit 1; }\n\necho \"== assign target/decoy status by the _rev SUFFIX, then estimate FDR ==\"\n# The database marks decoys with a _rev suffix. Passing a prefix convention here would label\n# every decoy a target and the FDR estimate would be silently meaningless.\nPeptideIndexer -in psm.idXML -fasta db.fasta -out indexed.idXML \\\n  -decoy_string _rev -decoy_string_position suffix -missing_decoy_action warn \\\n  >> fdr.log 2>&1\ntest \"$?\" = \"0\" || { tail -25 fdr.log; echo \"FAIL: PeptideIndexer failed\"; exit 1; }\n# -protein defaults to TRUE, and protein-level FDR needs an inference step this recipe does\n# not do, so the tool refuses outright (\"protein inference was not yet performed\"). It is\n# right to: every identity here is PSM-level, so ask for PSM-level and nothing else rather\n# than reaching for -force and accepting a number that would not mean anything.\n# add_decoy_peptides keeps the decoy PSMs in the output -- by default the tool uses them to\n# estimate FDR and then DISCARDS them (957 -> 513 here), which breaks the row join and throws\n# away the only evidence the FDR estimate rests on. Their q-value is BORROWED from the nearest\n# target, so the checks count decoys by SCORE, never by q.\n#\n# It lives in the `algorithm` subsection, which this tool does NOT accept as\n# `-algorithm:add_decoy_peptides` on the command line -- it answers by printing its usage. The\n# documented route is -write_ini, so the default INI is generated, the one value flipped, and\n# the flip ASSERTED: a silently failed sed would leave decoys out of the output.\nFalseDiscoveryRate -write_ini fdr.ini > /dev/null 2>&1\ntest -s fdr.ini || { echo \"FAIL: could not write the default FalseDiscoveryRate INI\"; exit 1; }\nsed -i 's|\\(name=\"add_decoy_peptides\" *value=\"\\)false|\\1true|' fdr.ini\ngrep -q 'name=\"add_decoy_peptides\" *value=\"true\"' fdr.ini \\\n  || { grep -o 'name=\"add_decoy_peptides\"[^/]*' fdr.ini\n       echo \"FAIL: add_decoy_peptides is still false in the INI\"; exit 1; }\necho \"  add_decoy_peptides set to true in the generated INI\"\nFalseDiscoveryRate -ini fdr.ini -in indexed.idXML -out fdr.idXML \\\n  -PSM true -protein false >> fdr.log 2>&1\ntest \"$?\" = \"0\" || { tail -25 fdr.log; echo \"FAIL: FalseDiscoveryRate failed\"; exit 1; }\n# The checks read indexed.idXML and fdr.idXML directly. They are in shell, not Python: this\n# image ships no interpreter -- a single-tool bioconda image around a C++ toolkit, so python3\n# is absent even with /opt/conda/bin on PATH.\nbash identities.sh 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\ncp score.tsv proteomics-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/SimpleSearchEngine_1.fasta",
+      "destination": "/tmp/SimpleSearchEngine_1.fasta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/SimpleSearchEngine_1.mzML",
+      "destination": "/tmp/SimpleSearchEngine_1.mzML"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/SimpleSearchEngine_1.ini",
+      "destination": "/tmp/SimpleSearchEngine_1.ini"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/SimpleSearchEngine_1_out.idXML",
+      "destination": "/tmp/SimpleSearchEngine_1_out.idXML"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/BSA1.mzML",
+      "destination": "/tmp/BSA1.mzML"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/BSA1_OMSSA.idXML",
+      "destination": "/tmp/BSA1_OMSSA.idXML"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/db.fasta",
+      "destination": "/tmp/db.fasta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/ref_peptides.txt",
+      "destination": "/tmp/ref_peptides.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/identities.sh",
+      "destination": "/tmp/identities.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics/expected.tsv",
+      "destination": "/tmp/expected.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/proteomics-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/proteomics-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/identities.log"
+    },
+    {
+      "source": "/tmp/ref_out.idXML",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/ref_out.idXML"
+    },
+    {
+      "source": "/tmp/search_bsa.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/search_bsa.log"
+    },
+    {
+      "source": "/tmp/fdr.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/fdr.log"
+    },
+    {
+      "source": "/tmp/ssrc.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/ssrc.log"
+    },
+    {
+      "source": "/tmp/legB_psm.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/legB_psm.tsv"
+    },
+    {
+      "source": "/tmp/shared_backbones.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/shared_backbones.txt"
+    },
+    {
+      "source": "/tmp/ref_prot.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/ref_prot.tsv"
+    },
+    {
+      "source": "/tmp/run_prot.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/run_prot.tsv"
+    },
+    {
+      "source": "/tmp/fdr.ini",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/fdr.ini"
+    },
+    {
+      "source": "/tmp/q_by_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/q_by_score.tsv"
+    },
+    {
+      "source": "/tmp/fdr_by_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics/r1/fdr_by_score.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}
