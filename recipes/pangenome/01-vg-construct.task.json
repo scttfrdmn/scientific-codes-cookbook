@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-pangenome-vg-r1",
+  "container": "quay.io/aarchbio/vg@sha256:0c9767627faac4a98586fe99ffebb4e701903deb8cd5983ff12746344e8b0ccf",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n#\n# NOTHING NEW IS STAGED. chr20.fa comes from the bwa fixture and the VCF is the GIAB chr20\n# truth set already staged for gatk4 -- so the graph is built from bytes other recipes in this\n# catalog have already verified.\n\necho \"== the inputs must be the bytes the linear-reference recipes use ==\"\nREFBASES=$(tail -n +2 chr20.fa | tr -d '\\n' | wc -c | tr -d ' ')\nprintf 'reference_bases\\t%s\\n' \"$REFBASES\"\ntest \"$REFBASES\" = \"64444167\" || { echo \"FAIL: chr20.fa has $REFBASES bases, the staged fixture has 64444167\"; exit 1; }\nNVAR=$(zcat truth.chr20.vcf.gz | grep -vc '^#')\nprintf 'input_variants\\t%s\\n' \"$NVAR\"\ntest \"$NVAR\" -gt 50000 || { echo \"FAIL: only $NVAR variants\"; exit 1; }\n\nvg version 2>&1 | head -2\n\necho \"== build the graph: linear reference plus 82,818 real variants ==\"\nT0=$(date +%s)\nvg construct -r chr20.fa -v truth.chr20.vcf.gz -R chr20 -t \"$(nproc)\" > chr20.vg 2> construct.log\nRC=$?\nT1=$(date +%s)\nprintf 'construct_rc\\t%s\\n' \"$RC\"\nprintf 'construct_wall_s\\t%s\\n' \"$((T1-T0))\"\ntest \"$RC\" = \"0\" || { tail -25 construct.log; echo \"FAIL: vg construct exited $RC\"; exit 1; }\ntest -s chr20.vg || { echo \"FAIL: vg construct wrote no graph\"; exit 1; }\nls -l chr20.vg | awk '{print \"graph_bytes\\t\"$5}'\n\necho \"== graph structure ==\"\nvg stats -z -l chr20.vg > stats.txt 2>&1\ncat stats.txt | sed 's/^/  /'\nNODES=$(awk '$1==\"nodes\"{print $2}' stats.txt)\nEDGES=$(awk '$1==\"edges\"{print $2}' stats.txt)\nGLEN=$(awk '$1==\"length\"{print $2}' stats.txt)\nprintf 'nodes\\t%s\\n' \"$NODES\"\nprintf 'edges\\t%s\\n' \"$EDGES\"\nprintf 'graph_total_length\\t%s\\n' \"$GLEN\"\ntest -n \"$NODES\" -a -n \"$GLEN\" || { echo \"FAIL: could not read vg stats\"; exit 1; }\n\n# ------------------------------------------- THE IDENTITY: the graph still contains the genome\n# A variation graph embeds the reference as a named path. Walking that path must reproduce the\n# input FASTA CHARACTER FOR CHARACTER -- the graph is a lossless re-encoding of the linear\n# reference plus alternatives, so anything else means construction corrupted or dropped\n# sequence. This is exact: a sha256 over the sequence, no tolerance.\necho \"== extract the reference path and compare it to the input, byte for byte ==\"\nvg paths -F -x chr20.vg > paths.fa 2> paths.log\nPRC=$?\nprintf 'paths_rc\\t%s\\n' \"$PRC\"\ntest \"$PRC\" = \"0\" || { tail -20 paths.log; echo \"FAIL: vg paths exited $PRC\"; exit 1; }\ngrep '^>' paths.fa | head -5 | sed 's/^/  path: /'\nNPATH=$(grep -c '^>' paths.fa)\nprintf 'paths_in_graph\\t%s\\n' \"$NPATH\"\n\n# Normalise both sides identically: drop headers, drop newlines, uppercase. That removes FASTA\n# line-wrapping and case conventions, which are formatting rather than sequence -- what is\n# being compared is the base string itself.\ntail -n +2 chr20.fa | tr -d '\\n' | tr 'acgtn' 'ACGTN' > ref.seq\nawk '/^>/{next} {printf \"%s\", $0}' paths.fa | tr 'acgtn' 'ACGTN' > path.seq\nREFLEN=$(wc -c < ref.seq | tr -d ' ')\nPATHLEN=$(wc -c < path.seq | tr -d ' ')\nREFSHA=$(sha256sum ref.seq | awk '{print $1}')\nPATHSHA=$(sha256sum path.seq | awk '{print $1}')\nprintf 'ref_seq_length\\t%s\\n' \"$REFLEN\"\nprintf 'path_seq_length\\t%s\\n' \"$PATHLEN\"\nprintf 'ref_seq_sha256\\t%s\\n' \"$REFSHA\"\nprintf 'path_seq_sha256\\t%s\\n' \"$PATHSHA\"\n\ntest \"$PATHLEN\" = \"$REFLEN\" || {\n  echo \"FAIL: the reference path is $PATHLEN bases, the input is $REFLEN\"; exit 1; }\ntest \"$PATHSHA\" = \"$REFSHA\" || {\n  echo \"FAIL: the reference path does not spell the input back -- sha256 differs\"\n  cmp ref.seq path.seq 2>&1 | head -3\n  exit 1; }\nprintf 'identity_refpath\\tthe graph reference path spells chr20.fa back exactly (%s)\\n' \"$REFSHA\"\n\n# ------------------------------------------- arithmetic: the graph is bigger by the alt bases\n# Total graph sequence = reference length + novel sequence contributed by alternate alleles.\n# Reported rather than asserted: the exact novel-base count depends on how vg merges identical\n# alt sequence between overlapping variants, which is an implementation choice, not arithmetic\n# this recipe can predict.\nawk -v g=\"$GLEN\" -v r=\"$REFLEN\" 'BEGIN{printf \"graph_minus_reference\\t%d\\talt sequence added\\n\", g-r}'\n\n# odgi reads GFA, not vg's native serialisation, so the graph is exported in the interchange\n# format the next task actually consumes. GFA is also what makes the cross-check meaningful:\n# both tools parse the same text, so any disagreement is about interpretation rather than\n# about one of them reading a format the other wrote.\necho \"== export GFA for the odgi cross-check ==\"\nvg view -g chr20.vg > chr20.gfa 2> view.log\nVRC=$?\nprintf 'gfa_rc\\t%s\\n' \"$VRC\"\ntest \"$VRC\" = \"0\" || { tail -20 view.log; echo \"FAIL: vg view exited $VRC\"; exit 1; }\ntest -s chr20.gfa || { echo \"FAIL: vg view wrote no GFA\"; exit 1; }\nls -l chr20.gfa | awk '{print \"gfa_bytes\\t\"$5}'\nGFASEG=$(awk '$1==\"S\"' chr20.gfa | wc -l | tr -d ' ')\nprintf 'gfa_segments\\t%s\\n' \"$GFASEG\"\ntest \"$GFASEG\" = \"$NODES\" || { echo \"FAIL: GFA has $GFASEG segments, vg stats said $NODES nodes\"; exit 1; }\nprintf 'identity_gfa\\tGFA segment count matches vg node count (%s)\\n' \"$GFASEG\"\n\n{ printf 'observable\\tvalue\\n'\n  printf 'reference_bases\\t%s\\n' \"$REFBASES\"\n  printf 'input_variants\\t%s\\n' \"$NVAR\"\n  printf 'nodes\\t%s\\nedges\\t%s\\ngraph_total_length\\t%s\\n' \"$NODES\" \"$EDGES\" \"$GLEN\"\n  printf 'paths_in_graph\\t%s\\n' \"$NPATH\"\n  printf 'ref_seq_sha256\\t%s\\n' \"$REFSHA\"\n  printf 'path_seq_sha256\\t%s\\n' \"$PATHSHA\"; } > vg_score.tsv\nprintf 'nodes\\t%s\\nedges\\t%s\\ngraph_total_length\\t%s\\n' \"$NODES\" \"$EDGES\" \"$GLEN\" > vg_structure.tsv\nrm -f ref.seq path.seq paths.fa\necho \"VG OK\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/chr20.gfa",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/chr20.gfa"
+    },
+    {
+      "source": "/tmp/vg_structure.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/vg_structure.tsv"
+    },
+    {
+      "source": "/tmp/vg_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/vg_score.tsv"
+    },
+    {
+      "source": "/tmp/stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/stats.txt"
+    },
+    {
+      "source": "/tmp/construct.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/construct.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

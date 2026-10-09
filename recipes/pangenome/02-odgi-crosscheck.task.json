@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-pangenome-odgi-r2",
+  "container": "quay.io/aarchbio/odgi@sha256:51b2b70d3162e83453f95626932cfee54f10f5c63f679d41f6572371d1a1755d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\nVGNODES=$(awk -F'\\t' '$1==\"nodes\"{print $2}' vg_structure.tsv)\nVGLEN=$(awk -F'\\t' '$1==\"graph_total_length\"{print $2}' vg_structure.tsv)\nprintf 'vg_nodes\\t%s\\n' \"$VGNODES\"\nprintf 'vg_total_length\\t%s\\n' \"$VGLEN\"\ntest -n \"$VGNODES\" -a -n \"$VGLEN\" || { echo \"FAIL: no structure carried from the vg task\"; exit 1; }\n\nodgi version 2>&1 | head -2\n\necho \"== convert the same graph with an unrelated implementation ==\"\n# odgi is a separate codebase with its own graph representation. Converting vg's output and\n# recovering the SAME node count and total sequence length is a cross-code structural check:\n# two independent implementations agreeing on what the graph contains.\nodgi build -g chr20.gfa -o chr20.og -P > build.log 2>&1\nRC=$?\nprintf 'odgi_build_rc\\t%s\\n' \"$RC\"\ntest \"$RC\" = \"0\" || { tail -25 build.log; echo \"FAIL: odgi build exited $RC\"; exit 1; }\n\nodgi stats -i chr20.og -S > odgi_stats.txt 2>&1\ncat odgi_stats.txt | sed 's/^/  /'\n\n# odgi stats -S prints a header line then values; pull by column NAME, and strip the leading\n# '#' the first column carries -- odgi writes \"#length  nodes  edges  paths  steps\", so a\n# lookup for \"length\" misses, awk returns field 0, and $0 is the WHOLE LINE. That is the same\n# leading-'#' convention cfgrib and PLINK 2's #CHROM use; it is worth handling by reflex.\nONODES=$(awk 'NR==1{for(i=1;i<=NF;i++){k=$i; sub(/^#/,\"\",k); h[k]=i} next} {print $(h[\"nodes\"])}' odgi_stats.txt)\nOLEN=$(awk 'NR==1{for(i=1;i<=NF;i++){k=$i; sub(/^#/,\"\",k); h[k]=i} next} {print $(h[\"length\"])}' odgi_stats.txt)\nOEDGES=$(awk 'NR==1{for(i=1;i<=NF;i++){k=$i; sub(/^#/,\"\",k); h[k]=i} next} {print $(h[\"edges\"])}' odgi_stats.txt)\n# A field that came back as the whole line means the lookup missed; fail loudly rather than\n# comparing a line against a number.\ncase \"$OLEN\" in *[!0-9]*) echo \"FAIL: parsed total length as '$OLEN' -- the header lookup missed\"; exit 1;; esac\ncase \"$ONODES\" in *[!0-9]*) echo \"FAIL: parsed node count as '$ONODES'\"; exit 1;; esac\nprintf 'odgi_edges\\t%s\\n' \"$OEDGES\"\nprintf 'odgi_nodes\\t%s\\n' \"$ONODES\"\nprintf 'odgi_total_length\\t%s\\n' \"$OLEN\"\ntest -n \"$ONODES\" -a -n \"$OLEN\" || { echo \"FAIL: could not read odgi stats columns\"; exit 1; }\n\ntest \"$OLEN\" = \"$VGLEN\" || {\n  echo \"FAIL: odgi reports $OLEN total bases, vg reported $VGLEN -- the two implementations\"\n  echo \"      disagree about what the graph contains\"; exit 1; }\nprintf 'identity_length\\tvg and odgi agree on total graph sequence (%s bases)\\n' \"$OLEN\"\n\n# Node and edge counts are preserved too. Worth stating precisely what that proves: odgi\n# honours the segmentation declared in the GFA rather than re-deriving its own, so this is two\n# implementations agreeing on how to READ a graph, not independently choosing the same node\n# boundaries. The total-length agreement above is the stronger of the two claims.\ntest \"$ONODES\" = \"$VGNODES\" || { echo \"FAIL: odgi read $ONODES nodes from a GFA vg wrote with $VGNODES\"; exit 1; }\nprintf 'identity_nodes\\tvg and odgi agree on node count (%s)\\n' \"$ONODES\"\n\n{ printf 'observable\\tvalue\\n'\n  printf 'vg_nodes\\t%s\\nvg_total_length\\t%s\\n' \"$VGNODES\" \"$VGLEN\"\n  printf 'odgi_nodes\\t%s\\nodgi_edges\\t%s\\nodgi_total_length\\t%s\\n' \"$ONODES\" \"$OEDGES\" \"$OLEN\"; } > score.tsv\ncp score.tsv pangenome-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"ODGI OK\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/chr20.gfa",
+      "destination": "/tmp/chr20.gfa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/vg_structure.tsv",
+      "destination": "/tmp/vg_structure.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/pangenome-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/pangenome-diag.txt"
+    },
+    {
+      "source": "/tmp/odgi_stats.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/odgi_stats.txt"
+    },
+    {
+      "source": "/tmp/build.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome/r1/build.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}
