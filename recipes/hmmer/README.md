@@ -31,7 +31,7 @@ hmmsearch --cpu 8 --cut_ga --noali --tblout hits.tbl -o hmmer.out Pfam-A.hmm pep
 **Leave the workload** — all of Pfam against a real proteome is the job, and the timings transfer.
 **Scale it** by proteome size; runtime is models × residues, so it is linear and predictable.
 
-## Which box — measured, same inputs, 8 vCPU throughout
+## Which box — [measured](../../measurements/hmmer-real/README.md), same inputs, 8 vCPU throughout
 
 | generation | instance | `hmmsearch` | **compute $** | billed $ |
 |---|---|---|---|---|

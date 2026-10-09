@@ -459,6 +459,16 @@ a spawn/staging/instance concept when it's load-bearing.
   "apples-to-apples", raxml-ng's "same rule as the assemblers") is invisible to the checker and is
   human review. Do not trust R7 to cover re-teaching.]
 - **R8 — Cut hard.** Flabby prose under the ceiling still fails the one-minute bar. [human]
+- **R9 — A measurement that exists must be cited by the recipe that owns it.** A page that omits a
+  result the project already paid to learn understates what is known, and the next reader
+  re-derives it. bowtie2's page told readers to "scale cores to your knee" while
+  `measurements/bowtie2-real` had already established there is **no** knee through 64 cores — so
+  the page was not merely silent, it sent people to redo settled work. `make inventory` is the
+  answer to "is this recipe complete?"; **do not re-derive it by grepping.** Measured cost of
+  doing that: answering "which pages are missing their measurement?" by ad-hoc grep gave 11, then
+  6, then 4 — all wrong, because it counted *directories* instead of write-ups, and it missed
+  bedtools, hmmer, picard and salmon entirely. [auto: a `measurements/<dir>` with a README must be
+  linked from each recipe it maps to; a dir with artifacts and no README warns]
 - **Frontmatter** (machine-checkable versions): `tool`, `tool_version`, `image` (full
   `@sha256:`), `spawn_version`, `last_verified`. Pipeline recipes use `images:` (one digest per
   tool). `last_verified` is a date **only a real verifying run may set** — absent is honest

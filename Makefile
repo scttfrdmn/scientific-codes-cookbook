@@ -10,6 +10,9 @@ check: ## frontmatter + markdown-a11y + internal links + spec portability + cata
 	@python3 scripts/check_pages.py
 	@python3 scripts/gen_catalog.py --check
 
+inventory: ## per-recipe matrix: frontmatter, contract, last_verified, measurement linkage
+	@python3 scripts/check_pages.py --inventory
+
 catalog: ## regenerate catalog/recipes.md from the recipes' frontmatter + dependencies
 	@python3 scripts/gen_catalog.py
 

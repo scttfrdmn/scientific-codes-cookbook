@@ -56,7 +56,14 @@ def _outside_details_lines(text):
     return outside
 
 
-def check_recipe_contract(text, rel):
+def _st(status, key, value):
+    if status is not None:
+        status[key] = value
+
+
+def check_recipe_contract(text, rel, status=None):
+    """Enforce the recipe-page contract. `status` is filled in with per-rule booleans so the
+    inventory can report the same verdicts the gate enforces -- one implementation, not two."""
     lines = text.split("\n")
     hs = _headings(text)
     h1 = next((i for i, lvl, _ in hs if lvl == 1), None)
@@ -72,6 +79,7 @@ def check_recipe_contract(text, rel):
     # R2 — `## Run it` is the first `##`, with a fenced invocation inside it.
     if "Run it" not in titles:
         errors.append(f"{rel}: missing `## Run it` (R2)")
+        _st(status, "R2", False)
     elif titles[0] != "Run it":
         errors.append(f"{rel}: `## Run it` is not the first section (first is `## {titles[0]}`) (R2)")
     else:
@@ -83,6 +91,7 @@ def check_recipe_contract(text, rel):
     # R3 — `## Make it yours` present, with a table.
     if "Make it yours" not in titles:
         errors.append(f"{rel}: missing `## Make it yours` (R3)")
+        _st(status, "R3", False)
     else:
         mi = next(i for i, t in h2s if t == "Make it yours")
         nxt = next((i for i, _ in h2s if i > mi), len(lines))
@@ -104,13 +113,16 @@ def check_recipe_contract(text, rel):
     n_det = text.count("<details")
     if n_det == 0:
         errors.append(f"{rel}: no `<details>` — verification must live in one collapsed block (R5)")
+        _st(status, "R5", False)
     elif n_det > 1:
         errors.append(f"{rel}: {n_det} `<details>` blocks — verification must be in exactly one (R5)")
+        _st(status, "R5", False)
 
     # R6 — line ceiling outside <details>.
     od = _outside_details_lines(text)
     if od > RECIPE_FOLD_MAX:
         errors.append(f"{rel}: {od} lines outside `<details>` (ceiling {RECIPE_FOLD_MAX}) — cut, or justify (R6)")
+        _st(status, "R6", False)
 
     # R7 — no re-teaching: an owned phrase without a link to its page.
     low = text.lower()
@@ -394,7 +406,128 @@ def check_page_paths_exist():
                               f"uses it — prose describing wiring that no longer exists")
 
 
+# A measurement directory belongs to a recipe when its name says so. These few do not match by
+# name, so the mapping is DECLARED rather than inferred -- a measurement spanning two tools is
+# owned by both pages, and `bwa-real` belongs to the recipe that pairs bwa with samtools.
+MEASUREMENT_OWNERS = {
+    "bwa-real": ("bwa-samtools",),
+    "blast-diamond": ("blast", "diamond"),
+    "mash-sourmash": ("mash", "sourmash"),
+}
+
+
+def measurement_owners(name, recipes):
+    """Recipes a measurement dir belongs to, or () if it belongs to no single recipe.
+
+    Cross-recipe instruments (sizing-ratio, simd-width, the lith data-path work) legitimately
+    own no recipe, so they resolve to () and are reported only by --inventory. That is why there
+    is no hand-maintained allow-list here: "maps to a recipe" is derived, not curated.
+    """
+    if name in MEASUREMENT_OWNERS:
+        return tuple(r for r in MEASUREMENT_OWNERS[name] if r in recipes)
+    cand = re.sub(r"-(real|crosscheck)$", "", name)
+    for c in (cand, name):
+        if c in recipes:
+            return (c,)
+    return ()
+
+
+def measurement_state():
+    """Map recipe -> (dir, state) for every measurement that belongs to a recipe.
+
+    state is one of:
+      linked    -- a write-up exists and the recipe page links it
+      unlinked  -- a write-up exists and the page does NOT link it   (ERROR)
+      data-only -- result artifacts but no README.md to cite         (WARN)
+      empty     -- the directory holds nothing usable
+    """
+    recipes = {os.path.basename(os.path.dirname(f))
+               for f in glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))}
+    out, unowned = {}, []
+    for d in sorted(glob.glob(os.path.join(ROOT, "measurements", "*/"))):
+        name = os.path.basename(d.rstrip("/"))
+        owners = measurement_owners(name, recipes)
+        has_writeup = os.path.exists(os.path.join(d, "README.md"))
+        has_data = any(f != "README.md" for f in os.listdir(d))
+        if not owners:
+            unowned.append((name, has_writeup))
+            continue
+        for r in owners:
+            page = os.path.join(ROOT, "recipes", r, "README.md")
+            links = ("measurements/" + name) in open(page, encoding="utf-8").read()
+            if has_writeup:
+                state = "linked" if links else "unlinked"
+            elif has_data:
+                state = "data-only"
+            else:
+                state = "empty"
+            out.setdefault(r, []).append((name, state))
+    return out, unowned
+
+
+def check_measurement_linkage():
+    """A measurement that exists and is not on its recipe page means the page understates what the
+    project has already paid to learn, and the next reader re-derives it.
+
+    Measured harm: bowtie2's page told readers to "scale cores to your knee" while
+    measurements/bowtie2-real had already established there is no knee through 64 cores. Worse,
+    answering "which pages are missing their measurement?" by ad-hoc grep gave three different
+    answers (11, then 6, then 4) because it counted DIRECTORIES rather than write-ups. That is
+    what this check exists to make deterministic.
+    """
+    state, _ = measurement_state()
+    for rec in sorted(state):
+        for name, st in state[rec]:
+            if st == "unlinked":
+                errors.append(f"recipes/{rec}/README.md: measurements/{name} has a write-up the "
+                              f"page never cites — link the run, or surface its result if the page omits it too")
+            elif st == "data-only":
+                warns.append(f"measurements/{name}: result artifacts but no README.md — write it up so "
+                             f"recipes/{rec} can cite it, or move it out of measurements/ if it "
+                             f"is only that recipe's smoke output")
+
+
+def inventory():
+    """Print a per-recipe matrix of the contract elements, so "is this recipe complete?" is a
+    query rather than a re-scan. Same verdicts the gate enforces -- one implementation."""
+    state, unowned = measurement_state()
+    rows = []
+    for rm in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "README.md"))):
+        rec = os.path.basename(os.path.dirname(rm))
+        text = open(rm, encoding="utf-8").read()
+        rel = os.path.relpath(rm, ROOT)
+        st = {}
+        before_e, before_w = len(errors), len(warns)
+        check_recipe_contract(text, rel, st)
+        del errors[before_e:], warns[before_w:]        # inventory reports, it does not accuse
+        keys = frontmatter_keys(text)          # a set of key names
+        missing = [k for k in REQUIRED_FM
+                   if k not in keys and not (k == "image" and "images" in keys)]
+        m = re.search(r"^last_verified:\s*(\S+)", text, re.M)
+        lv = m.group(1) if m else ""
+        meas = ",".join(f"{n}:{x}" for n, x in state.get(rec, [])) or "-"
+        rows.append((rec, "ok" if not missing else "MISSING:" + ",".join(missing),
+                     "".join("." if st.get(k, True) else k for k in ("R2", "R3", "R5", "R6")) or ".",
+                     lv or "NEVER", meas))
+    w = max(len(r[0]) for r in rows)
+    print(f"{'recipe'.ljust(w)}  frontmatter  contract  last_verified  measurement")
+    for rec, fmv, con, lv, meas in rows:
+        print(f"{rec.ljust(w)}  {fmv:<11}  {con:<8}  {lv:<13}  {meas}")
+    bad = [r for r in rows if r[1] != "ok" or r[2].strip(".") or r[3] == "NEVER"
+           or ":unlinked" in r[4] or ":data-only" in r[4]]
+    print(f"\n{len(rows)} recipes | {len(rows) - len(bad)} complete | {len(bad)} with a gap")
+    for r in bad:
+        print(f"  GAP  {r[0]}: fm={r[1]} contract={r[2] or 'ok'} verified={r[3]} meas={r[4]}")
+    if unowned:
+        print("\nmeasurements owned by no single recipe (cross-recipe instruments, not a gap):")
+        for n, hw in unowned:
+            print(f"  {n}{'' if hw else '  (no write-up)'}")
+
+
 def main():
+    if "--inventory" in sys.argv:
+        inventory()
+        return
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
@@ -411,6 +544,7 @@ def main():
     check_verified_freshness()
     check_page_paths_exist()
     check_diagnostics_survive()
+    check_measurement_linkage()
     if "--external" in sys.argv:
         check_external()
     for w in warns:

@@ -24,7 +24,7 @@ salmon index -t ensembl116_cdna.fa.gz -i sidx -p 16 --ramLimit 8
 salmon quant -i sidx -l A -1 ERR188026_1.fastq.gz -2 ERR188026_2.fastq.gz -o squant -p 16
 ```
 
-## Which box — measured (same image, same bytes, 16 threads)
+## Which box — [measured](../../measurements/salmon-real/README.md) (same image, same bytes, 16 threads)
 
 | generation | instance | quant wall | $/hr | compute $ | **billed $/result** | overhead |
 |---|---|---|---|---|---|---|

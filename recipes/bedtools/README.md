@@ -31,7 +31,7 @@ bedtools genomecov -ibam aln.sorted.bam      # 48,817,006 records, 3,366 contigs
 
 **Leave the BED fixture small** — hand-sized intervals are what make the algebra checkable by hand, and a real annotation set would run the same ops and prove nothing more. **The genomecov task is the one at real scale**, where the runtime and the memory actually live.
 
-## Which box — measured, same BAM, 8 vCPU throughout
+## Which box — [measured](../../measurements/bedtools-real/README.md), same BAM, 8 vCPU throughout
 
 | generation | instance | `genomecov` | compute $ | billed $ |
 |---|---|---|---|---|

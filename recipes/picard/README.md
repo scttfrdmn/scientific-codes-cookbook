@@ -29,7 +29,7 @@ picard -Xmx24g MarkDuplicates I=aln.sorted.bam O=marked.bam M=dup_metrics.txt TM
 
 **Leave the workload** — a real whole-genome BAM, so timing and memory shape transfer. **Scale it** by depth; duplicate rate rises with coverage and this library is shallow.
 
-## Which box — measured, same BAM, same `-Xmx24g`, 8 vCPU throughout
+## Which box — [measured](../../measurements/picard-real/README.md), same BAM, same `-Xmx24g`, 8 vCPU throughout
 
 | generation | instance | MarkDuplicates | **$/run** |
 |---|---|---|---|
