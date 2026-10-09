@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-hic-cooler-r2",
+  "container": "quay.io/aarchbio/cooler@sha256:5f665b9b2c94e5ca6812216309cb2e8d462d7d4498d4b25206ac0515e89a7dd0",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\nVALID=$(awk -F'\\t' '$1==\"valid_pairs\"{print $2}' denominator.tsv)\nprintf 'valid_pairs_from_pairtools\\t%s\\n' \"$VALID\"\ntest -n \"$VALID\" || { echo \"FAIL: no denominator carried from the dedup task\"; exit 1; }\n\ncooler --version 2>&1 | head -2\n\necho \"== load the deduped pairs into a .cool at 1 Mb ==\"\n# Column indices come from the file's own `#columns:` header, not from a guess: the pairs are\n# 4DN v1.0.0 with readID first, so chrom1/pos1/chrom2/pos2 are fields 2/3/4/5. A sibling test\n# file in the same upstream directory is headerless with a different order, so these indices\n# are specific to this input and are checked at staging.\ncooler cload pairs -c1 2 -p1 3 -c2 4 -p2 5 \\\n  aag2.chrom.sizes:1000000 dedup.pairs.gz hic.1000000.cool > cload.log 2>&1\nRC=$?\nprintf 'cload_rc\\t%s\\n' \"$RC\"\ntest \"$RC\" = \"0\" || { tail -25 cload.log; echo \"FAIL: cooler cload exited $RC\"; exit 1; }\n\npython3 -u - <<'PYEOF' 2>&1 | tee identities.log\nimport sys, cooler, numpy as np\n\nvalid = int(open(\"denominator.tsv\").read().split(\"\\t\")[1])\nprint(\"valid_pairs\\t%d\" % valid)\n\n# ------------------------------------------------- IDENTITY 1: nothing is lost in the load\n# Every valid pair becomes exactly one contact, so the sum of the count column must equal the\n# number pairtools declared valid. A pair silently dropped -- an unknown chromosome, an\n# off-end coordinate -- fails this. The expected value comes from the previous task, not from\n# a constant in this file.\nc = cooler.Cooler(\"hic.1000000.cool\")\ntot = int(c.pixels()[:][\"count\"].sum())\nprint(\"cool_total_contacts\\t%d\" % tot)\nprint(\"cool_bins\\t%d\" % c.bins().shape[0])\nprint(\"cool_nnz\\t%d\" % c.info[\"nnz\"])\nif tot != valid:\n    sys.exit(\"FAIL: the .cool holds %d contacts but pairtools declared %d valid pairs\" % (tot, valid))\nprint(\"identity_load\\tcool total == pairtools valid pairs (%d)\" % tot)\n\n# ------------------------------------- IDENTITY 2: coarsening is a regrouping, not a filter\n# Merging bins moves contacts between pixels but cannot create or destroy them, so the total\n# must be IDENTICAL at every resolution. This is the check that catches a coarsener dropping\n# the last partial bin of a contig -- and with 3,579 contigs there are a great many of those.\nimport subprocess\nprev_path, prev_res = \"hic.1000000.cool\", 1000000\nfor k in (2, 2, 2):\n    res = prev_res * k\n    out = \"hic.%d.cool\" % res\n    r = subprocess.run([\"cooler\", \"coarsen\", \"-k\", str(k), \"-o\", out, prev_path],\n                       capture_output=True, text=True)\n    if r.returncode != 0:\n        sys.exit(\"FAIL: cooler coarsen to %d failed: %s\" % (res, r.stderr[-400:]))\n    cc = cooler.Cooler(out)\n    t = int(cc.pixels()[:][\"count\"].sum())\n    print(\"coarsen_%d_total\\t%d\\tbins %d\" % (res, t, cc.bins().shape[0]))\n    if t != valid:\n        sys.exit(\"FAIL: at %d bp the total is %d, not the %d it must conserve\" % (res, t, valid))\n    prev_path, prev_res = out, res\nprint(\"identity_coarsen\\ttotal conserved exactly at 1M, 2M, 4M and 8M\")\n\n# ----------------------------------------------- IDENTITY 3: the contact matrix is symmetric\n# A Hi-C contact between loci i and j is the same observation as j to i. cooler stores the\n# upper triangle; the materialised matrix must satisfy M == M.T exactly, in integers.\n# GENOME-WIDE, not one contig. Restricting to the largest contig gives an 8x8 block at 1 Mb\n# bins which, with 7,659 nonzeros spread over 4,447 bins, is nearly empty -- asserting symmetry\n# there is close to vacuous. The full matrix covers every nonzero, and the count it covers is\n# reported so the strength of the check is visible rather than implied.\nM = c.matrix(balance=False, sparse=False)[:, :]\nM = np.nan_to_num(M, nan=0.0)\nnz = int(np.count_nonzero(M))\nasym = float(np.max(np.abs(M - M.T)))\nprint(\"symmetry_scope\\tgenome-wide, all %d bins\" % M.shape[0])\nprint(\"symmetry_shape\\t%s\" % (M.shape,))\nprint(\"symmetry_nonzeros_covered\\t%d\" % nz)\nprint(\"symmetry_max_abs_diff\\t%.1f\" % asym)\n# Guard against a vacuous pass: a matrix of zeros is trivially symmetric.\nif nz < 1000:\n    sys.exit(\"FAIL: only %d nonzero cells; the symmetry check would be near-vacuous\" % nz)\nif asym != 0.0:\n    sys.exit(\"FAIL: the contact matrix is not symmetric (max |M - M.T| = %g)\" % asym)\nprint(\"identity_symmetry\\tM == M.T exactly, genome-wide over %d nonzero cells\" % nz)\n\nwith open(\"score.tsv\", \"w\") as fh:\n    fh.write(\"observable\\tvalue\\n\")\n    fh.write(\"valid_pairs\\t%d\\n\" % valid)\n    fh.write(\"cool_total_contacts\\t%d\\n\" % tot)\n    fh.write(\"cool_bins\\t%d\\n\" % c.bins().shape[0])\n    fh.write(\"cool_nnz\\t%d\\n\" % c.info[\"nnz\"])\n    fh.write(\"symmetry_nonzeros_covered\\t%d\\n\" % nz)\n    fh.write(\"symmetry_max_abs_diff\\t%.1f\\n\" % asym)\nprint(\"COOLER IDENTITIES OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ncp score.tsv hic-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic/aag2.chrom.sizes",
+      "destination": "/tmp/aag2.chrom.sizes"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/dedup.pairs.gz",
+      "destination": "/tmp/dedup.pairs.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/denominator.tsv",
+      "destination": "/tmp/denominator.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/hic-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/hic-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/identities.log"
+    },
+    {
+      "source": "/tmp/cload.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/cload.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

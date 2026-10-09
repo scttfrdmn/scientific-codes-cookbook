@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-hic-dedup-r1",
+  "container": "quay.io/aarchbio/pairtools@sha256:2b4ce4761b3e6acf9739ebbd598fbe5b4a9a42ab58fa35b23ae28733efaf913e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nNREC=$(awk -F'\\t' '$1==\"input_records\"{print $2}' expected.tsv)\nprintf 'input_records\\t%s\\n' \"$NREC\"\n\npairtools --version 2>&1 | head -2\n\necho \"== pairtools dedup: the valid-pair count this pipeline must conserve ==\"\n# dedup is where the denominator for the whole recipe comes from. Whatever pairtools declares\n# valid is what cooler must load -- the number is not hardcoded anywhere, it is produced here\n# and carried forward, so the identity cannot be satisfied by agreeing with a constant.\npairtools dedup --mark-dups \\\n  --output dedup.pairs.gz \\\n  --output-stats dedup.stats \\\n  aag2.sample1.pairs > dedup.log 2>&1\nRC=$?\nprintf 'dedup_rc\\t%s\\n' \"$RC\"\ntest \"$RC\" = \"0\" || { tail -25 dedup.log; echo \"FAIL: pairtools dedup exited $RC\"; exit 1; }\n\nTOTAL=$(awk '$1==\"total\"{print $2; exit}' dedup.stats)\nNODUP=$(awk '$1==\"total_nodups\"{print $2; exit}' dedup.stats)\nDUPS=$(awk '$1==\"total_dups\"{print $2; exit}' dedup.stats)\nprintf 'pairtools_total\\t%s\\n' \"$TOTAL\"\nprintf 'pairtools_total_dups\\t%s\\n' \"$DUPS\"\nprintf 'pairtools_total_nodups\\t%s\\n' \"$NODUP\"\n\n# pairtools' own bookkeeping identity: every input pair is either a duplicate or not.\ntest -n \"$TOTAL\" -a -n \"$NODUP\" -a -n \"$DUPS\" || { cat dedup.stats | head -20; echo \"FAIL: could not read dedup stats\"; exit 1; }\nawk -v t=\"$TOTAL\" -v n=\"$NODUP\" -v d=\"$DUPS\" 'BEGIN{ if (t+0 != n+0 + d+0) { printf \"FAIL: total %d != nodups %d + dups %d\\n\", t, n, d; exit 1 } }' || exit 1\nprintf 'identity_dedup\\ttotal == nodups + dups (%s == %s + %s)\\n' \"$TOTAL\" \"$NODUP\" \"$DUPS\"\ntest \"$TOTAL\" = \"$NREC\" || { echo \"FAIL: pairtools saw $TOTAL pairs, the staged file has $NREC\"; exit 1; }\nprintf 'identity_input\\tpairtools read every staged record\\n'\n\n# The deduped pairs still carry the format header the next task needs.\nzcat dedup.pairs.gz | grep '^#columns:' | head -1 | sed 's/^/  /'\n\n# Carried forward so the cooler task asserts against a number this run produced.\nprintf 'valid_pairs\\t%s\\n' \"$NODUP\" > denominator.tsv\n{ printf 'observable\\tvalue\\n'\n  printf 'pairtools_total\\t%s\\n' \"$TOTAL\"\n  printf 'pairtools_total_dups\\t%s\\n' \"$DUPS\"\n  printf 'pairtools_total_nodups\\t%s\\n' \"$NODUP\"; } > dedup_score.tsv\necho \"PAIRTOOLS OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic/aag2.sample1.pairs",
+      "destination": "/tmp/aag2.sample1.pairs"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic/aag2.chrom.sizes",
+      "destination": "/tmp/aag2.chrom.sizes"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic/expected.tsv",
+      "destination": "/tmp/expected.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/dedup.pairs.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/dedup.pairs.gz"
+    },
+    {
+      "source": "/tmp/denominator.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/denominator.tsv"
+    },
+    {
+      "source": "/tmp/dedup_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/dedup_score.tsv"
+    },
+    {
+      "source": "/tmp/dedup.stats",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/dedup.stats"
+    },
+    {
+      "source": "/tmp/dedup.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic/r1/dedup.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "25m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}
