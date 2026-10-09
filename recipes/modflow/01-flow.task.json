@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-modflow-r3",
+  "container": "quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: model.py does not match its pin\"; exit 1; }\n\necho \"== versions, read from the running binaries rather than the env lock ==\"\n# A lock file in git and an image in a registry are two different artifacts.\nmf6 -v 2>&1 | grep -oE 'mf6: [0-9.]+' | sed 's/^/  /'\npython3 -u -c \"\nimport flopy, numpy\nprint('  flopy        %s' % getattr(flopy, '__version__', 'unknown'))\nprint('  numpy        %s' % getattr(numpy, '__version__', 'unknown'))\n\" || { echo \"FAIL: flopy does not import\"; exit 1; }\ncommand -v mf6 >/dev/null || { echo \"FAIL: mf6 absent from this image\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u model.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\n\n# Copy the solver's OWN listings out BEFORE acting on the exit code: a first version did this\n# after the check, so the one run that failed staged no listing at all -- exactly the evidence\n# needed to diagnose it. spawn never uploads a tool's log unless the spec declares it an output.\ncp case1/m.lst mf6-case1.lst 2>/dev/null\ncp case2_201/m.lst mf6-case2-finest.lst 2>/dev/null\ncp score.tsv modflow-diag.txt 2>/dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow/model.py",
+      "destination": "/tmp/model.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/modflow-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow/r1/modflow-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow/r1/identities.log"
+    },
+    {
+      "source": "/tmp/mf6-case1.lst",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow/r1/mf6-case1.lst"
+    },
+    {
+      "source": "/tmp/mf6-case2-finest.lst",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow/r1/mf6-case2-finest.lst"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
