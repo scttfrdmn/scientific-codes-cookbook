@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-obspy-r1",
+  "container": "quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLBACKEND=Agg\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n# MPLBACKEND=Agg because obspy imports matplotlib and there is no display.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nNOK=$(sha256sum -c --ignore-missing pins.sha256 2>/dev/null | grep -c ': OK$')\nprintf 'pinned_files_verified\\t%s\\n' \"$NOK\"\ntest \"$NOK\" -eq 3 || { echo \"FAIL: verified $NOK pinned files, expected 3\"; exit 1; }\n\necho \"== the obspy in the image must be the version the reference was taken from ==\"\n# A reference from another version is a different implementation than the one being checked.\nV=$(python3 -c \"import obspy; print(obspy.__version__)\" 2>&1)\nprintf 'obspy_running\\t%s\\n' \"$V\"\ntest \"$V\" = \"1.5.1\" || { echo \"FAIL: image has obspy $V, the staged reference is obspy 1.5.1\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ncp score.tsv obspy-diag.txt 2>/dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy/taup_time_-h_10_-ph_ttall_-deg_35",
+      "destination": "/tmp/taup_time_-h_10_-ph_ttall_-deg_35"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy/taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135",
+      "destination": "/tmp/taup_time_-h_10_-ph_ttall_-deg_35_-mod_ak135"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/obspy-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy/r1/obspy-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
