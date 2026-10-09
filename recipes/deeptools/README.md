@@ -52,6 +52,18 @@ Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. The co
 
 **The conservation identity is the load-bearing one.** Coverage is a redistribution of aligned bases: every base a read covers must appear exactly once in the track, so the integral has to equal reads × read-length. That single number catches off-by-one interval boundaries, dropped reads, double counting, and accidental normalisation — none of which a spot check on one interval would notice. It is exact because coverage here is integer, which is also why `--normalizeUsing None` is not an incidental flag but the thing that makes the check possible.
 
+Measured on the full ENCODE CTCF alignment `ENCFF933NSJ` (1.92 GiB, 39,455,565 mapped reads, 76 bp), the two sides agree with **no tolerance at all**:
+
+```text
+samtools 'bases mapped (cigar)'      2,998,622,940
+- inserted bases (from ID lines)           132,420
+= M bases (reference-aligned)        2,998,490,520
+bamCoverage integral, binSize 1      2,998,490,520
+difference                                       0
+```
+
+The inserted-base subtraction is the part that is easy to miss: `bases mapped (cigar)` counts `I` operations, which consume read bases but no reference position, so they cannot appear in a coverage track. Full run in [measurements/deeptools-real](../../measurements/deeptools-real/README.md).
+
 **The whole track is compared, not sampled.** The expected bedgraph is written out before deepTools runs and then `cmp`-ed against the output:
 
 ```text

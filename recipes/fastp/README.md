@@ -44,7 +44,7 @@ tmpfs *together* — a measured **7,154 MB peak** — and tmpfs is
 the only 32 GiB box is `4xlarge`, which drags along 16 cores fastp cannot use at $0.6381/hr; `m8g.2xlarge`
 has the same 32 GiB for **$0.3590**. Measured both: **$0.0401 on `c8g.4xlarge` at 16 threads against
 $0.0225 on `m8g.2xlarge` at 8 — 44% cheaper for 5 s slower.** Reading the core count right would still
-have picked the wrong box, because the binding resource was never compute.
+have picked the wrong box, because the binding resource was never compute ([measurement](../../measurements/fastp-real/README.md)).
 
 <details>
 <summary>As shipped: an exact count shared with bwa, the conservation identity, why fastp's duplicate rate is not a cross-check, pins</summary>
