@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **94 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **95 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -114,6 +114,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | build-in-task | 2026-10-02 | 2026-09-13 |
+| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | — | 2026-10-09 |
 
 ## geo-ml
 
@@ -152,7 +153,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [bwa-mem2](../recipes/bwa-mem2/README.md) | Aligns a whole sequencing run (24.1M pairs) to all of GRCh38 with both aligners on one box, and prices the trade. For anyone deciding whether to swap `bwa mem` for `bwa-mem2`. | pipeline | stage: bwa-mem2, bwa-samtools | 2026-10-02 | 2026-09-30 |
 | [deeptools](../recipes/deeptools/README.md) | `bamCoverage` turns aligned reads into a coverage track on Graviton4, verified against a coverage profile that was constructed rather than observed. For anyone doing ChIP-seq, ATAC-seq or any coverage-based analysis. | pipeline | stage | 2026-10-02 | 2026-09-20 |
 | [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 |
-| [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | — | 2026-10-08 |
+| [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
 | [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
 | [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 |
 | [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |
