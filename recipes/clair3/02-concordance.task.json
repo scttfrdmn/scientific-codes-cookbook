@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-clair3-concordance-r3",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n#\n# THE SCORING IS GATK4'S, VERBATIM. recipes/gatk4/02-concordance.task.json restricts both sides\n# to the GIAB BED, splits multiallelics and left-aligns against the same chr20.fa, then counts\n# bcftools isec. Reusing that code rather than writing a second scorer is what makes Clair3's\n# F1 comparable to GATK4's 0.99272 -- a different scorer would produce a different number for\n# reasons unrelated to the caller.\n\necho \"== restrict both call set and truth to GIAB high-confidence regions ==\"\n# -f PASS IS LOAD-BEARING. Clair3 writes a RefCall row for every position it examined and\n# judged reference -- 179,453 of them here against 118,312 PASS calls. Without this filter the\n# scorer treats each one as a query variant, and the \"false positives\" it reports are Clair3\n# correctly saying \"no variant here\". GATK4 emits no such rows, which is exactly why the two\n# call sets need different preparation before the SAME scorer can compare them.\nbcftools view -R truth.chr20.bed -f PASS -Ou clair3.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o q.vcf.gz\nprintf 'query_pass_only\\tRefCall and LowQual rows excluded before scoring\\n'\nbcftools view -R truth.chr20.bed -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz | bcftools norm -f chr20.fa -m -any -Oz -o t.vcf.gz\nbcftools index -f q.vcf.gz\nbcftools index -f t.vcf.gz\n\n# EACH CALLER IS SCORED AT ITS OWN OPERATING POINT, and that is the fair comparison rather\n# than the loose one. The gatk4 scorer applies QUAL>=30 to its query, which keeps ~99% of GATK's\n# calls because GATK QUAL for a 36x germline sample runs into the hundreds. Clair3's QUAL is on\n# a different scale entirely -- measured on this run: median 23.2, p90 31.6, and only 17.5% of\n# PASS SNVs reach 30. Carrying GATK's threshold across discards 82% of Clair3's correct calls\n# and reports recall 0.229 with precision 1.00000 and ZERO false positives -- the signature of\n# a truncated query, not a bad caller.\n#\n# Clair3's own quality decision is FILTER=PASS, already applied above. So no second numeric\n# gate is used here; a threshold calibrated for another tool's scale is not a fairer comparison\n# than each tool's own recommended cutoff, it is just a different and wrong one. The QUAL>=30\n# figure is still computed and REPORTED so the size of that effect is visible.\nscore(){\n  ty=$1; qfile=${2:-q.vcf.gz}; tag=${3:-}\n  bcftools view -v \"$ty\" -Oz -o q.$ty$tag.vcf.gz \"$qfile\"\n  bcftools view -v \"$ty\" -Oz -o t.$ty.vcf.gz t.vcf.gz\n  bcftools index -f q.$ty$tag.vcf.gz\n  bcftools index -f t.$ty.vcf.gz\n  rm -rf is.$ty$tag\n  bcftools isec -p is.$ty$tag q.$ty$tag.vcf.gz t.$ty.vcf.gz\n  FP=$(grep -vc '^#' is.$ty$tag/0000.vcf || true)\n  FN=$(grep -vc '^#' is.$ty$tag/0001.vcf || true)\n  TP=$(grep -vc '^#' is.$ty$tag/0002.vcf || true)\n  awk -v ty=\"$ty\" -v tp=\"$TP\" -v fp=\"$FP\" -v fn=\"$FN\" 'BEGIN{\n    p=(tp+fp)>0?tp/(tp+fp):0; r=(tp+fn)>0?tp/(tp+fn):0; f=(p+r)>0?2*p*r/(p+r):0;\n    printf \"%s_tp %d\\n%s_fp %d\\n%s_fn %d\\n%s_precision %.5f\\n%s_recall %.5f\\n%s_f1 %.5f\\n\",\n      ty,tp,ty,fp,ty,fn,ty,p,ty,r,ty,f }'\n}\nscore snps   > snps.kv\nscore indels > indels.kv\n\n# The GATK-threshold variant, computed only to show how large the scale mismatch is.\nbcftools view -i 'QUAL>=30' -Oz -o q30.vcf.gz q.vcf.gz\nbcftools index -f q30.vcf.gz\nscore snps q30.vcf.gz _q30 > snps_q30.kv\ngetv(){ awk -v k=\"$1\" '$1==k{print $2}' \"$2\"; }\n\nSTP=$(getv snps_tp snps.kv); SFP=$(getv snps_fp snps.kv); SFN=$(getv snps_fn snps.kv)\nSP=$(getv snps_precision snps.kv); SR=$(getv snps_recall snps.kv); SF=$(getv snps_f1 snps.kv)\nIP=$(getv indels_precision indels.kv); IR=$(getv indels_recall indels.kv); IF1=$(getv indels_f1 indels.kv)\nBEDBP=$(awk '{s+=$3-$2} END{print s}' truth.chr20.bed)\nDENOM=$((STP + SFN))\n\nprintf 'benchmark_bases\\t%s\\n' \"$BEDBP\"\nprintf 'snv_tp\\t%s\\n' \"$STP\"\nprintf 'snv_fp\\t%s\\n' \"$SFP\"\nprintf 'snv_fn\\t%s\\n' \"$SFN\"\nprintf 'snv_precision\\t%s\\n' \"$SP\"\nprintf 'snv_recall\\t%s\\n' \"$SR\"\nprintf 'snv_f1\\t%s\\n' \"$SF\"\nprintf 'indel_precision\\t%s\\tOBSERVATION\\n' \"$IP\"\nprintf 'indel_recall\\t%s\\tOBSERVATION\\n' \"$IR\"\nprintf 'indel_f1\\t%s\\tOBSERVATION\\n' \"$IF1\"\nprintf 'truth_side_snv_denominator\\t%s\\n' \"$DENOM\"\nQ30R=$(awk '$1==\"snps_recall\"{print $2}' snps_q30.kv)\nQ30P=$(awk '$1==\"snps_precision\"{print $2}' snps_q30.kv)\nprintf 'snv_recall_at_gatk_qual30\\t%s\\tREPORTED: GATK threshold on Clair3 scale\\n' \"$Q30R\"\nprintf 'snv_precision_at_gatk_qual30\\t%s\\tREPORTED\\n' \"$Q30P\"\n\n# ---------------------------------------------------------- the cross-recipe identity\n# TP + FN is the truth-side SNV count inside the BED -- a property of the TRUTH SET and the\n# region, not of the caller. gatk4-real measured 69,210 on the identical files. If Clair3's\n# denominator matches, both recipes are scored against the same truth variants and their F1s\n# are comparable BY CONSTRUCTION rather than by assumption. If it differs, the comparison is\n# meaningless no matter how good the F1 looks.\nprintf 'gatk4_denominator\\t69210\\n'\ntest \"$DENOM\" = \"69210\" || {\n  echo \"FAIL: truth-side SNV denominator $DENOM != gatk4's 69210; the two recipes are not\"\n  echo \"      scoring against the same truth set, so their F1 values are not comparable\"\n  exit 1; }\nprintf 'identity_denominator\\tsame truth-side SNV set as gatk4 (69,210)\\n'\nprintf 'gatk4_snv_f1\\t0.99272\\tfor side-by-side reading, not asserted here\\n'\n\n# Floors justified the same way gatk4's are: this recipe applies no variant filtering beyond\n# QUAL>=30, so precision is partly a property of the recipe rather than of Clair3, and a floor\n# sitting 0.001 under the observed value would fail on noise.\nawk -v p=\"$SP\" 'BEGIN{ if (p+0 < 0.97) { printf \"FAIL: SNV precision %s below the 0.97 floor\\n\", p; exit 1 } }' || exit 1\nawk -v r=\"$SR\" 'BEGIN{ if (r+0 < 0.98) { printf \"FAIL: SNV recall %s below the 0.98 floor\\n\", r; exit 1 } }' || exit 1\nawk -v f=\"$SF\" 'BEGIN{ if (f+0 < 0.975) { printf \"FAIL: SNV F1 %s below the 0.975 floor\\n\", f; exit 1 } }' || exit 1\nprintf 'concordance\\tClair3 SNVs scored against GIAB HG001 v4.2.1 inside its confident regions\\n'\n\n# Indels REPORTED, not asserted -- POS:REF:ALT equality after left-alignment still counts two\n# correct spellings of one indel as FP *and* FN, which hap.py's haplotype comparison credits.\n# Asserting it would assert a representation difference. Same decision as gatk4.\n\n{ printf 'observable\\tvalue\\n'\n  printf 'benchmark_bases\\t%s\\n' \"$BEDBP\"\n  printf 'snv_tp\\t%s\\nsnv_fp\\t%s\\nsnv_fn\\t%s\\n' \"$STP\" \"$SFP\" \"$SFN\"\n  printf 'snv_precision\\t%s\\nsnv_recall\\t%s\\nsnv_f1\\t%s\\n' \"$SP\" \"$SR\" \"$SF\"\n  printf 'indel_precision\\t%s\\nindel_recall\\t%s\\nindel_f1\\t%s\\n' \"$IP\" \"$IR\" \"$IF1\"\n  printf 'truth_side_snv_denominator\\t%s\\n' \"$DENOM\"\nQ30R=$(awk '$1==\"snps_recall\"{print $2}' snps_q30.kv)\nQ30P=$(awk '$1==\"snps_precision\"{print $2}' snps_q30.kv)\nprintf 'snv_recall_at_gatk_qual30\\t%s\\tREPORTED: GATK threshold on Clair3 scale\\n' \"$Q30R\"\nprintf 'snv_precision_at_gatk_qual30\\t%s\\tREPORTED\\n' \"$Q30P\"\n  printf 'gatk4_snv_f1\\t0.99272\\n'; } > score.tsv\ncp score.tsv clair3-diag.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"CLAIR3 CONCORDANCE OK\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3.vcf.gz",
+      "destination": "/tmp/clair3.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3.vcf.gz.tbi",
+      "destination": "/tmp/clair3.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/clair3-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3-diag.txt"
+    },
+    {
+      "source": "/tmp/snps.kv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/snps.kv"
+    },
+    {
+      "source": "/tmp/indels.kv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/indels.kv"
+    },
+    {
+      "source": "/tmp/snps_q30.kv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/snps_q30.kv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

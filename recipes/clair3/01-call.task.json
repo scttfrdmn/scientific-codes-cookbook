@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-clair3-call-r2",
+  "container": "quay.io/aarchbio/clair3@sha256:b464803435a71829228bedd4641d994018106952d746517188761d7dbd7bd289",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH export IS needed: aarchbio images have their PATH dropped by the task shell.\n#\n# NOTHING NEW IS STAGED. This runs on the GIAB chr20 fixture already staged for gatk4,\n# bcftools and freebayes -- same BAM, same reference, same truth set -- so Clair3 becomes a\n# fourth caller in an existing comparison rather than a parallel universe with its own inputs.\n\necho \"== the BAM must be the exact bytes the other callers used ==\"\nprintf '%s  NA12878.chr20.30x.bam\\n' 0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: BAM differs from what the other callers scored\"; exit 1; }\n\nrun_clair3.sh --version 2>&1 | head -2\n\n# The ilmn model is BUNDLED in this image at /opt/conda/bin/models/ilmn -- established by a\n# probe before this recipe was designed, because which models a build ships is a property of\n# the image. 21 models are present (ilmn, hifi, and 15+ ONT), which is why the package is\n# 429 MB. So no model download, and the run is fully offline.\ntest -d /opt/conda/bin/models/ilmn || { echo \"FAIL: the bundled ilmn model is missing\"; exit 1; }\nls /opt/conda/bin/models/ilmn | head -5 | sed 's/^/  model file: /'\n\necho \"== Clair3 on the whole of chr20, Illumina model ==\"\nT0=$(date +%s)\nrun_clair3.sh \\\n  --bam_fn=NA12878.chr20.30x.bam \\\n  --ref_fn=chr20.fa \\\n  --threads=\"$(nproc)\" \\\n  --platform=ilmn \\\n  --model_path=/opt/conda/bin/models/ilmn \\\n  --ctg_name=chr20 \\\n  --output=/tmp/clair3_out > clair3.log 2>&1\nRC=$?\nT1=$(date +%s)\nWALL=$((T1-T0))\nprintf 'clair3_rc\\t%s\\n' \"$RC\"\nprintf 'clair3_wall_s\\t%s\\n' \"$WALL\"\nif [ \"$RC\" != \"0\" ]; then tail -40 clair3.log; echo \"FAIL: Clair3 exited $RC\"; exit 1; fi\n\nVCF=/tmp/clair3_out/merge_output.vcf.gz\ntest -s \"$VCF\" || { ls -l /tmp/clair3_out | head -20; echo \"FAIL: no merge_output.vcf.gz\"; exit 1; }\ncp \"$VCF\" clair3.vcf.gz\n[ -s \"$VCF.tbi\" ] && cp \"$VCF.tbi\" clair3.vcf.gz.tbi\n\n# Structural checks, the same ones the gatk4 recipe makes: this is not the correctness bar --\n# that is the GIAB concordance in task 2 -- but a VCF that is single-sample, entirely on chr20\n# and indexed is a precondition for the comparison meaning anything.\nzcat clair3.vcf.gz > c.vcf\n# CLAIR3's merge_output.vcf.gz IS NOT A VARIANT SET. It is a decision log: alongside PASS calls\n# it emits a RefCall row for every position it examined and judged reference. Measured here:\n# 179,453 RefCall against 118,312 PASS. Counting all rows as \"variants\" overstates the call set\n# by 2.5x and would let a scorer treat every reference call as a false positive. GATK4 has no\n# such concept, so the two are only comparable once Clair3 is restricted to PASS.\nALLROWS=$(grep -vc '^#' c.vcf || true)\nREFCALL=$(awk '!/^#/ && $7==\"RefCall\"' c.vcf | wc -l | tr -d ' ')\nTOTAL=$(awk '!/^#/ && $7==\"PASS\"' c.vcf | wc -l | tr -d ' ')\nSNV=$(awk '!/^#/ && $7==\"PASS\" && length($4)==1 && length($5)==1' c.vcf | wc -l | tr -d ' ')\nprintf 'all_rows\\t%s\\n' \"$ALLROWS\"\nprintf 'refcall_rows\\t%s\\tnot variants -- positions called reference\\n' \"$REFCALL\"\nNONCHR20=$(awk '!/^#/ && $1!=\"chr20\"' c.vcf | wc -l | tr -d ' ')\nNSAMP=$(awk '/^#CHROM/{print NF-9; exit}' c.vcf)\nHASTBI=0; [ -s clair3.vcf.gz.tbi ] && HASTBI=1\nprintf 'pass_variants\\t%s\\n' \"$TOTAL\"\nprintf 'pass_snv_count\\t%s\\n' \"$SNV\"\nprintf 'all_on_chr20\\t%s\\twant 0\\n' \"$NONCHR20\"\nprintf 'sample_columns\\t%s\\twant 1\\n' \"$NSAMP\"\nprintf 'vcf_index\\t%s\\twant 1\\n' \"$HASTBI\"\ntest \"$NONCHR20\" -eq 0 || { echo \"FAIL: $NONCHR20 calls off chr20\"; exit 1; }\ntest \"$NSAMP\" -eq 1 || { echo \"FAIL: $NSAMP sample columns, expected 1\"; exit 1; }\ntest \"$TOTAL\" -gt 50000 || { echo \"FAIL: only $TOTAL PASS variants on a 36x chromosome\"; exit 1; }\ntest \"$REFCALL\" -gt 0 || { echo \"FAIL: no RefCall rows -- is this really Clair3 output?\"; exit 1; }\nif [ \"$HASTBI\" != \"1\" ]; then\n  bgzip -f -c c.vcf > clair3.vcf.gz && tabix -f -p vcf clair3.vcf.gz && HASTBI=1\n  printf 'vcf_index_rebuilt\\t%s\\n' \"$HASTBI\"\nfi\nrm -f c.vcf\n\n{ printf 'observable\\tvalue\\n'\n  printf 'clair3_wall_s\\t%s\\n' \"$WALL\"\n  printf 'pass_variants\\t%s\\n' \"$TOTAL\"\n  printf 'pass_snv_count\\t%s\\n' \"$SNV\"; } > call_score.tsv\necho \"CLAIR3 CALL OK\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam",
+      "destination": "/tmp/NA12878.chr20.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/NA12878.chr20.30x.bam.bai",
+      "destination": "/tmp/NA12878.chr20.30x.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/clair3.vcf.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3.vcf.gz"
+    },
+    {
+      "source": "/tmp/clair3.vcf.gz.tbi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3.vcf.gz.tbi"
+    },
+    {
+      "source": "/tmp/call_score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/call_score.tsv"
+    },
+    {
+      "source": "/tmp/clair3.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3/r1/clair3.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "240m",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}
