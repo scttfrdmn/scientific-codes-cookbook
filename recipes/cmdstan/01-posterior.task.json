@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-cmdstan-r1",
+  "container": "quay.io/aarchsci/bayes@sha256:cfa7cc144c6118155b4c3da60a5623a9eaa71db80c22fdbf67f811949c92a2fb",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nNOK=$(sha256sum -c --ignore-missing pins.sha256 2>/dev/null | grep -c ': OK$')\nprintf 'pinned_files_verified\\t%s\\n' \"$NOK\"\ntest \"$NOK\" -eq 3 || { echo \"FAIL: verified $NOK pinned files, expected 3\"; exit 1; }\n\necho \"== cmdstan compiles every model, so the toolchain has to be here ==\"\n# Checked before anything else: a missing compiler otherwise surfaces as an opaque make error\n# several minutes in.\nfor t in g++ make; do\n  command -v \"$t\" >/dev/null || { echo \"FAIL: $t absent -- cmdstan cannot build a model\"; exit 1; }\n  printf '  %-6s %s\\n' \"$t\" \"$(command -v $t)\"\ndone\npython3 -c \"\nimport cmdstanpy\nprint('  cmdstan_path  %s' % cmdstanpy.cmdstan_path())\nprint('  cmdstan       %s' % '.'.join(str(x) for x in cmdstanpy.cmdstan_version()))\nprint('  cmdstanpy     %s' % cmdstanpy.__version__)\n\" || { echo \"FAIL: cmdstanpy does not import or cannot find cmdstan\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\n\n# Copy diagnostics out BEFORE acting on the exit code, so a failed run leaves its evidence.\ncp score.tsv cmdstan-diag.txt 2>/dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan/beta_binomial.stan",
+      "destination": "/tmp/beta_binomial.stan"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan/data.json",
+      "destination": "/tmp/data.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cmdstan/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/cmdstan-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cmdstan/r1/cmdstan-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cmdstan/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

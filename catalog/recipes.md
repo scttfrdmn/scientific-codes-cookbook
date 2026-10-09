@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **101 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **102 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -58,6 +58,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
 | [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
 | [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-08 | 2026-10-08 |
+
+## bayes
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | — | 2026-10-09 |
 
 ## cfd
 
@@ -127,7 +133,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 |
-| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | — | 2026-10-09 |
+| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 |
 
 ## geospatial
 
