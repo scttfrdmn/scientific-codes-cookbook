@@ -42,8 +42,10 @@ calculations:
 | one job on 16 ranks, repeated | $44 |
 | one instance per job, 16 ranks each | $300 |
 
-Ranks-per-job is the *smallest* of those levers. Full measurement, including the two knees and why
-$/core-hour cannot see any of this: [layout and effective cost](../../patterns/layout-and-effective-cost.md).
+Ranks-per-job is the *smallest* of those levers — adding ranks to one calculation returns 33%
+efficiency at 16, while adding *jobs* returns nearly 100%, so packing wins **2.72×** on throughput
+for 0–6.5% contention ([the run](../../measurements/nwchem-real/README.md)). Why $/core-hour cannot
+see any of this: [layout and effective cost](../../patterns/layout-and-effective-cost.md).
 
 <details>
 <summary>As shipped: the rank-count assertion that stops a vacuous pass, and a reference energy</summary>
