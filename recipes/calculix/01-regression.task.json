@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-calculix-r3",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:dd8638389359818beeeb4e626cda21107dee9dc87e180bb4e5ae9f95444cd14f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp OMP_NUM_THREADS=1\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n# OMP_NUM_THREADS=1 matches upstream's own `compare` script -- thread count must not move a\n# result that is being compared against a committed reference.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nNOK=$(sha256sum -c --ignore-missing pins.sha256 2>/dev/null | grep -c ': OK$')\nprintf 'pinned_files_verified\\t%s\\n' \"$NOK\"\ntest \"$NOK\" -eq 2 || { echo \"FAIL: verified $NOK pinned files, expected 2\"; exit 1; }\nsed 's/^/  /' expected.tsv\n\necho \"== the running binary must be the version the references came from ==\"\n# A reference from another version is a different number. Read it from the binary, not the lock.\nCCX=$(command -v ccx)\ntest -n \"$CCX\" || { echo \"FAIL: no ccx binary in this image\"; exit 1; }\nV=$(\"$CCX\" -v 2>&1 | grep -oE 'Version [0-9.]+' | head -1 | awk '{print $2}')\nprintf 'ccx_binary\\t%s\\nccx_version\\t%s\\n' \"$CCX\" \"$V\"\ntest \"$V\" = \"2.23\" || { echo \"FAIL: ccx reports $V, the staged suite is ccx_2.23\"; exit 1; }\n\necho \"== their comparison script is perl, so perl has to be here ==\"\ncommand -v perl >/dev/null || { echo \"FAIL: perl absent -- datcheck.pl cannot run\"; exit 1; }\nperl -e 'printf(\"  perl %vd\\n\", $^V)'\n\necho \"== unpack ==\"\ntar xjf ccx_2.23.test.tar.bz2\nTD=CalculiX/ccx_2.23/test\ncp run-suite.sh \"$TD\"/\ncd \"$TD\"\nchmod +x datcheck.pl run-suite.sh\nprintf 'cases_available\\t%s\\nreferences_available\\t%s\\n' \"$(ls *.inp | wc -l)\" \"$(ls *.dat.ref | wc -l)\"\n\necho \"== run the suite, compared by CalculiX's own datcheck.pl ==\"\nCCX=\"$CCX\" bash run-suite.sh 2>&1 | tee /tmp/suite.log\nRC=\"${PIPESTATUS[0]}\"\n\n# Copy evidence out BEFORE acting on the exit code, so a failed run is diagnosable.\ncp failures-static.txt failures-path.txt timings.tsv /tmp/ 2>/dev/null\ngrep -E '^(excluded_|static_cases_|path_cases_|suite_wall_s|slowest_case|path_deviations_)' /tmp/suite.log > /tmp/score.tsv.tmp 2>/dev/null\n\necho \"== the canary: achtel2 must reproduce the exact line staging pinned ==\"\nOURS=$(grep -m1 -E '^ *3 +2\\.46' achtel2.dat 2>/dev/null | tr -s ' ')\nREFS=$(grep -m1 -E '^ *3 +2\\.46' achtel2.dat.ref | tr -s ' ')\nprintf 'achtel2_node3_ours\\t%s\\nachtel2_node3_ref\\t%s\\n' \"$OURS\" \"$REFS\"\ntest -n \"$OURS\" || { echo \"FAIL: achtel2 produced no node-3 displacement row\"; exit 1; }\ntest \"$OURS\" = \"$REFS\" || { echo \"FAIL: achtel2 node 3 differs from its committed reference\"; exit 1; }\n\ncd /tmp\n{ echo -e \"observable\\tvalue\"; cat score.tsv.tmp 2>/dev/null\n  printf 'ccx_version\\t%s\\nachtel2_node3_exact\\tyes\\n' \"$V\"; } > score.tsv\ncp score.tsv calculix-diag.txt\ntest \"$RC\" = \"0\" || { echo \"FAIL: the suite reported failures\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix/ccx_2.23.test.tar.bz2",
+      "destination": "/tmp/ccx_2.23.test.tar.bz2"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix/run-suite.sh",
+      "destination": "/tmp/run-suite.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix/expected.tsv",
+      "destination": "/tmp/expected.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/calculix-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/calculix-diag.txt"
+    },
+    {
+      "source": "/tmp/suite.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/suite.log"
+    },
+    {
+      "source": "/tmp/failures-static.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/failures-static.txt"
+    },
+    {
+      "source": "/tmp/failures-path.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/failures-path.txt"
+    },
+    {
+      "source": "/tmp/timings.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix/r1/timings.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}
