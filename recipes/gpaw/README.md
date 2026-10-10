@@ -34,7 +34,7 @@ mpiexec -n 16 python3 slab.py   # ASE builds Pt(111) 3×3×4; PAW datasets ship 
 
 Graviton2→5 is **2.33× faster and 45% cheaper per SCF** — but **Graviton3 and Graviton4 are tied on cost** (1.4% apart, indistinguishable at n = 1), because Graviton4 is 8% faster for 10% more per hour. The only place in this catalog where "newest is always cheaper" fails; Graviton5 still clearly wins.
 
-On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — 82% parallel efficiency, better than DFT's reputation. 4 ranks is cheapest per SCF; 16 is the better buy if wall-clock matters. Each rank row ran on the box you would actually rent for it, which turns out to matter by 18% (below).
+On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — better than DFT's reputation. That 82% is the *purchasing* number, since each rung ran on the box you would rent; on one fixed box the rank sweep is **2.71×, 67.8%** ([both measured](../../measurements/gpaw-real/README.md)). 4 ranks is cheapest per SCF; 16 is the better buy if wall-clock matters. Each rank row ran on the box you would actually rent for it, which turns out to matter by 18% (below).
 
 ## Make it yours
 

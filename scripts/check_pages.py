@@ -482,9 +482,9 @@ def check_measurement_linkage():
                 errors.append(f"recipes/{rec}/README.md: measurements/{name} has a write-up the "
                               f"page never cites — link the run, or surface its result if the page omits it too")
             elif st == "data-only":
-                warns.append(f"measurements/{name}: result artifacts but no README.md — write it up so "
-                             f"recipes/{rec} can cite it, or move it out of measurements/ if it "
-                             f"is only that recipe's smoke output")
+                warns.append(f"measurements/{name}: artifacts, no README.md — decide write-up or relocate. "
+                             f"CHECK recipes/{rec} FIRST: 7 of 8 audited dirs were already fully "
+                             f"published on the page, so this is usually a filing question")
 
 
 def inventory():
@@ -513,11 +513,18 @@ def inventory():
     print(f"{'recipe'.ljust(w)}  frontmatter  contract  last_verified  measurement")
     for rec, fmv, con, lv, meas in rows:
         print(f"{rec.ljust(w)}  {fmv:<11}  {con:<8}  {lv:<13}  {meas}")
+    # A real gap is a missing required element or a write-up the page never cites. Stray
+    # artifacts are a FILING question, counted separately -- conflating them cried wolf on 15
+    # recipes when only one had anything unpublished.
     bad = [r for r in rows if r[1] != "ok" or r[2].strip(".") or r[3] == "NEVER"
-           or ":unlinked" in r[4] or ":data-only" in r[4]]
-    print(f"\n{len(rows)} recipes | {len(rows) - len(bad)} complete | {len(bad)} with a gap")
+           or ":unlinked" in r[4]]
+    stray = [r for r in rows if ":data-only" in r[4] and r not in bad]
+    print(f"\n{len(rows)} recipes | {len(rows) - len(bad)} complete | {len(bad)} with a gap"
+          f" | {len(stray)} carrying stray measurement artifacts")
     for r in bad:
-        print(f"  GAP  {r[0]}: fm={r[1]} contract={r[2] or 'ok'} verified={r[3]} meas={r[4]}")
+        print(f"  GAP    {r[0]}: fm={r[1]} contract={r[2] or 'ok'} verified={r[3]} meas={r[4]}")
+    for r in stray:
+        print(f"  STRAY  {r[0]}: {r[4]} — check the page before writing anything up")
     if unowned:
         print("\nmeasurements owned by no single recipe (cross-recipe instruments, not a gap):")
         for n, hw in unowned:
