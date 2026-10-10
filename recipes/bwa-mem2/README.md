@@ -34,7 +34,7 @@ bwa-mem2 mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | `bwa mem` | 817 s, 927 s | 52,101–59,116 | **5.26 GiB** | 48,817,006 |
 | `bwa-mem2 mem` | **542 s, 529 s** | **89,110–91,300** | **16.48 GiB** | 48,817,006 |
 
-**≈1.6× faster (1.51–1.75× across runs), for 3.14× the index** — and the index sets the instance, not just the disk bill. Staging is [tmpfs at half of RAM](../../practices/container-path.md), so 16.5 GiB of index needs ~34 GiB to stage plus ~18 for the aligner: a 128 GiB box, where bwa does the job on 32. Per result on each tool's cheapest viable box, **bwa `c8g.4xlarge` $0.1508 vs bwa-mem2 `r8g.4xlarge` $0.2186** — the speedup is real, the saving is not. Swap it in only if wall-clock is what you are buying.
+**≈1.6× faster (1.51–1.75× across runs), for 3.14× the index** — and the index sets the instance, not just the disk bill. Staging is [tmpfs at half of RAM](../../practices/container-path.md), so 16.5 GiB of index needs ~34 GiB to stage plus ~18 for the aligner: a 128 GiB box, where bwa does the job on 32. Per result on each tool's cheapest viable box, **bwa `c8g.4xlarge` $0.1508 vs bwa-mem2 `r8g.4xlarge` $0.2186** — the speedup is real, the saving is not. Swap it in only if wall-clock is what you are buying — and note **the index build pays back in wall clock and never in cost**: mem2 saves 398 s per alignment against the 831 s its index took to build, so you are ahead on time from the third alignment on, while the per-result gap above *widens* with every run.
 
 ## Make it yours
 
