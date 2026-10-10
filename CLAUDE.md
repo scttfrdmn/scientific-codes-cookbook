@@ -263,6 +263,27 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   the conda build; reach for them before settling for init-only or a bare band.
   (A recipe that asserts nothing physical, when the code's own tests were a pinnable
   reference away.)
+- **A suite's per-case tolerances are data, not a bar to assert directly — respect them where
+  they are *looser* than yours and concede where they are *tighter* than your toolchain can
+  reach.** The rule above gets you a committed reference; this one is how to compare against it,
+  and it was forced by a measurement in each direction. CP2K's regtest tolerances span
+  **2.0e-14 to 5.0e-06**, and the tight end is set at the bit level on the author's build:
+  `regtest-hybrid-1`'s 2.0e-14 on a −75.9 Ha energy is **1.18 machine epsilons relative**, which
+  asks for the same bits and is therefore a property of the reference build's BLAS and compiler,
+  not of CP2K. All eight cases exceeding tolerance were that shape — a few epsilons past a
+  tolerance a few epsilons wide (worst 1.405e-11 Ha, **1.9e-13 relative**). But a flat bound of
+  your own is *worse*: a single 1e-9 Ha criterion **failed** `regtest-sasccs` at 1.124e-08, a
+  case upstream deliberately allows 1e-07 on, and overriding a looser upstream tolerance asserts
+  something about the test that its author denies. So assert the **larger of the two**, justify
+  each clause separately, and **report how many references each clause carries** so the split is
+  visible rather than buried in a `max()` — 44 of 52 on upstream's own bound, 8 on ours. The
+  same measurement also shows **why** the spread exists, which is a free check on whether you
+  have read it right: every CP2K case allowed ≥1e-8 is an *outer iteration* (CDFT constraint
+  solve, geometry optimisation on TDDFPT forces, self-consistent solvation, k-point symmetry) and
+  every case pinned near machine precision is a single-point solve — the fixed-point-versus-path
+  line above, appearing in the test author's own choices. (A correct build failing a tolerance
+  that encodes someone else's bits, or a recipe quietly tightening a bound its author set wide
+  because it knew the case was ill-conditioned.)
 - **When a recipe claims MPI, assert the rank count from inside the run.** A serial
   fallback produces the *right physics* and a false claim about the build: conda-forge
   ships nompi builds at higher build numbers than the openmpi ones, so an unpinned solve
