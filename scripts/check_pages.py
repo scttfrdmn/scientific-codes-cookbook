@@ -475,7 +475,15 @@ def check_measurement_linkage():
     answers (11, then 6, then 4) because it counted DIRECTORIES rather than write-ups. That is
     what this check exists to make deterministic.
     """
-    state, _ = measurement_state()
+    state, unowned = measurement_state()
+    # An UNOWNED dir with no write-up is invisible to the per-recipe loop below, and that blind
+    # spot is how chembl-crosscheck, msa-crosscheck and openmm-real survived a cleanup that
+    # removed ten of their siblings: their recipes are named openbabel-pdbfixer, mafft/muscle and
+    # openmm-mdanalysis, so no name derivation reaches them.
+    for name, has_writeup in unowned:
+        if not has_writeup:
+            warns.append(f"measurements/{name}: artifacts, no README.md, and no recipe matches its "
+                         f"name — either add it to MEASUREMENT_OWNERS, write it up, or remove it")
     for rec in sorted(state):
         for name, st in state[rec]:
             if st == "unlinked":
