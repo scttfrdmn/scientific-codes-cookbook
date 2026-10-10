@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-r-spatial-r2",
+  "container": "quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd5869502007cf6c5a56c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# R needs a writable TMPDIR *and* HOME or it fails early and opaquely.\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.R does not match its pin\"; exit 1; }\n\necho \"== the shared inputs must have arrived ==\"\nfor f in tiger.zip SCL.tif item.json; do\n  test -s \"/tmp/$f\" || { echo \"FAIL: /tmp/$f missing or empty\"; exit 1; }\n  printf '  %-12s %12s bytes\\n' \"$f\" \"$(stat -c %s \"/tmp/$f\")\"\ndone\n\nRscript identities.R 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-spatial/identities.R",
+      "destination": "/tmp/identities.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-spatial/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geo-ml/tiger.zip",
+      "destination": "/tmp/tiger.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/SCL.tif",
+      "destination": "/tmp/SCL.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/item.json",
+      "destination": "/tmp/item.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-spatial/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-spatial/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}
