@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **105 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **106 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -101,7 +101,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | — | 2026-10-10 |
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-10 | 2026-10-10 |
 
 ## dft
 
@@ -169,6 +169,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-08 | 2026-10-08 |
+
+## pathology
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | — | 2026-10-10 |
 
 ## pipeline
 

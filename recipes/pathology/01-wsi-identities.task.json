@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-pathology-r3",
+  "container": "quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867fe936f9a5b962455e6f5a8e80",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\n\necho \"== the slide and mask must have arrived from RODA ==\"\n# A truncated 546 MB stage-in would otherwise surface as an opaque openslide error.\nfor f in tumor_091.tif tumor_091_mask.tif tumor_091.xml; do\n  test -s \"/tmp/$f\" || { echo \"FAIL: /tmp/$f missing or empty\"; exit 1; }\n  printf '  %-22s %12s bytes\\n' \"$f\" \"$(stat -c %s \"/tmp/$f\")\"\ndone\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology/checksums.md5",
+      "destination": "/tmp/checksums.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology/reference.csv",
+      "destination": "/tmp/reference.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://camelyon-dataset/CAMELYON16/images/tumor_091.tif",
+      "destination": "/tmp/tumor_091.tif"
+    },
+    {
+      "source": "s3://camelyon-dataset/CAMELYON16/masks/tumor_091_mask.tif",
+      "destination": "/tmp/tumor_091_mask.tif"
+    },
+    {
+      "source": "s3://camelyon-dataset/CAMELYON16/annotations/tumor_091.xml",
+      "destination": "/tmp/tumor_091.xml"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pathology/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pathology/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

@@ -239,14 +239,26 @@ def check_external():
                     warns.append(f"external link unverified ({code or e}): {u}")
 
 
+# Public read-only data buckets are portable BY CONSTRUCTION: they resolve identically in every
+# account, which is the property this check exists to protect. Parameterising one would be wrong
+# -- for a pinned public dataset the bucket name IS part of the pin, and reading it in place
+# beats copying it (recipes/pathology reads a 546 MB CAMELYON16 slide from RODA in-region in 6 s,
+# with no second copy to keep true). Listed explicitly, so a typo or an accidental private
+# bucket still fails.
+PUBLIC_DATA_BUCKETS = {
+    "camelyon-dataset",        # RODA: CAMELYON16/17 digital pathology (us-west-2)
+}
+
+
 def check_portability():
-    """The executable path must run in any account. Task specs reference the bucket only as
-    ${COOKBOOK_BUCKET} (make run substitutes it); stage scripts take it, not a hardcoded one."""
+    """The executable path must run in any account. Task specs reference our bucket only as
+    ${COOKBOOK_BUCKET} (make run substitutes it); stage scripts take it, not a hardcoded one.
+    A declared public dataset bucket is allowed -- see PUBLIC_DATA_BUCKETS."""
     for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "*.task.json"))):
         rel = os.path.relpath(f, ROOT)
         text = open(f, encoding="utf-8").read()
         for bucket in {m.group(1) for m in re.finditer(r"s3://([^/\"\s]+)", text)}:
-            if bucket != "${COOKBOOK_BUCKET}":
+            if bucket != "${COOKBOOK_BUCKET}" and bucket not in PUBLIC_DATA_BUCKETS:
                 errors.append(f"{rel}: hardcoded bucket 's3://{bucket}' — use s3://${{COOKBOOK_BUCKET}} (portability)")
     for f in sorted(glob.glob(os.path.join(ROOT, "recipes", "*", "stage-inputs.sh"))):
         rel = os.path.relpath(f, ROOT)
