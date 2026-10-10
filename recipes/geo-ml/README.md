@@ -75,6 +75,12 @@ reference and the data are *the same pinned object*: no version to match, nothin
 ([the practice](../../practices/reference-from-tests.md)). The residual is Census's own precision —
 integer m² on counties of order 1e9 m² — not a band fitted to the result.
 
+**A second stack confirms it on the same bytes.** [r-spatial](../r-spatial/README.md) reads this
+exact `tiger.zip` with `sf` and measures with `terra::expanse()`, and recovers the same residual —
+**6.710238e-07** max and **5.242285e-08** median, against **6.710e-07** and 5.2e-08 here, with the
+totals agreeing at 6.372e-08. Two unrelated geodesic implementations landing on the same residual
+is the evidence that the residual is Census's precision rather than either toolchain's error.
+
 **It only works in the right space, and the wrong space fails quietly-ish.** The same areas through
 two projected CRSs, as observations rather than assertions (Mercator's distortion is a mathematical
 certainty, not a property of this build):

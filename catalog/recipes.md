@@ -216,7 +216,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 |
-| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | — | 2026-10-10 |
+| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 |
 
 ## single-cell
 

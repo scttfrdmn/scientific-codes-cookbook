@@ -76,6 +76,11 @@ assertion compares against the depositors' file rather than numbers typed into a
 | not_vegetated | 60.315437 | 60.315436 | +9.1e-07 |
 | water | 0.370875 | 0.370875 | −3.2e-07 |
 | unclassified | 0.273861 | 0.273861 | +6.9e-08 |
+
+**R's terra reproduces these to the same digit**, from this same pinned `SCL.tif`:
+[r-spatial](../r-spatial/README.md) gets `9.642e-07` pp worst over the class set, with vegetation
+`+9.642e-07` and not_vegetated `+9.096e-07` — matching the rows above. It checks one class more
+(code 1, `saturated_defective`, 0 px here), which the map below omits.
 | dark_features | 0.124359 | 0.124359 | +2.4e-07 |
 | thin_cirrus | 0.000292 | 0.000292 | −3.0e-08 |
 | medium_proba_clouds | 0.000169 | 0.000169 | +2.1e-07 |
