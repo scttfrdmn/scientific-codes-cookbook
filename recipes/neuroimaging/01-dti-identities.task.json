@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-neuroimaging-r1",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:cb8a08c524d7aff435432265a8c9ffce81429b0dc8c4685653b8557691529277",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLBACKEND=Agg\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n# MPLBACKEND=Agg because nilearn/dipy import matplotlib and there is no display.\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\necho \"== the AFNI programs this recipe uses must be present ==\"\n# The conda AFNI package ships a SUBSET of AFNI's programs: 3dDWItoDT and the rest of the\n# diffusion toolbox are absent from this build, which is why the cross-check here is about\n# reading NIfTI rather than fitting tensors. Check what is used, before using it.\nfor t in afni 3dinfo 3dcalc 3dTstat; do\n  command -v \"$t\" >/dev/null || { echo \"FAIL: $t absent from this image\"; exit 1; }\n  printf '  %-10s %s\\n' \"$t\" \"$(command -v $t)\"\ndone\nprintf '  %-10s %s\\n' 3dDWItoDT \"$(command -v 3dDWItoDT || echo 'absent (expected -- see the page)')\"\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ncp score.tsv neuroimaging-diag.txt 2>/dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/neuroimaging-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging/r1/neuroimaging-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
