@@ -22,7 +22,7 @@ make ls    RECIPE=gromacs   # smoke-check.txt + bm.log
 mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 ```
 
-## Which box — measured (same tpr, same digest, 16 cores, 16×1)
+## Which box — [measured](../../measurements/gromacs-real/README.md) (same tpr, same digest, 16 cores, 16×1)
 
 | generation | instance | **ns/day** | mdrun wall | $/hr | **$/ns** |
 |---|---|---|---|---|---|

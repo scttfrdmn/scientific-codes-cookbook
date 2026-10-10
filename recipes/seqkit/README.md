@@ -32,7 +32,7 @@ seqkit fq2fa -j 8 SRR062634_1.filt.fastq.gz -o r1.fa.gz
 **Scale it** by read count; everything here streams, so a bigger file is a longer run on the same box
 until the staged input stops fitting.
 
-## Which box — measured, same reads, 8 vCPU throughout
+## Which box — [measured](../../measurements/seqkit-real/README.md), same reads, 8 vCPU throughout
 
 | generation | instance | `stats` + `fq2fa` | compute $ | billed $ |
 |---|---|---|---|---|

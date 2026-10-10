@@ -30,7 +30,7 @@ flye --nano-hq ERR10114907.fastq.gz -g 4.6m -t 8 -o out
 
 **Leave the depth** — 65× is what ONT assembly is actually run at: enough to close a chromosome, quick enough to finish in five minutes. **Scale it** by genome size, which moves runtime and the ~4.3 GB footprint together.
 
-## Which box — measured, same reads, 8 vCPU throughout
+## Which box — [measured](../../measurements/flye-real/README.md), same reads, 8 vCPU throughout
 
 | generation | instance | Flye | **compute $** | billed $ |
 |---|---|---|---|---|
