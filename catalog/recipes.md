@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **107 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **108 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -119,7 +119,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-03 | 2026-10-03 |
+| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-03 |
 
 ## fem-cfd
 
@@ -133,7 +133,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-03 | 2026-10-03 |
+| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-03 |
 
 ## geoscience
 
@@ -216,6 +216,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 |
+| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | — | 2026-10-10 |
 | [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 |
 
 ## single-cell

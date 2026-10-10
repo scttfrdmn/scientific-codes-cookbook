@@ -1,0 +1,94 @@
+{
+  "task_id": "cookbook-r-arrow-r2",
+  "container": "quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd5869502007cf6c5a56c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# R needs a writable TMPDIR *and* HOME or it fails early and opaquely.\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.R does not match its pin\"; exit 1; }\n\necho \"== every reference file the spec declares must have arrived ==\"\n# Checked BY NAME against the manifest, not by counting a glob: the first version counted\n# 9 parquet + 4 csv and asserted 12, which failed the run before R ever started.\nfor f in datapage_v1-corrupt-checksum.parquet datapage_v1-snappy-compressed-checksum.parquet datapage_v1-uncompressed-checksum.parquet delta_binary_packed.parquet delta_binary_packed_expect.csv delta_byte_array.parquet delta_byte_array_expect.csv delta_encoding_optional_column.parquet delta_encoding_optional_column_expect.csv delta_encoding_required_column.parquet delta_encoding_required_column_expect.csv plain-dict-uncompressed-checksum.parquet rle-dict-uncompressed-corrupt-checksum.parquet; do\n  test -s \"/tmp/$f\" || { echo \"FAIL: /tmp/$f missing or empty\"; exit 1; }\ndone\nprintf \"  %s reference files present\\n\" \"13\"\n\nRscript identities.R 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/identities.R",
+      "destination": "/tmp/identities.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_binary_packed.parquet",
+      "destination": "/tmp/delta_binary_packed.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_binary_packed_expect.csv",
+      "destination": "/tmp/delta_binary_packed_expect.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_byte_array.parquet",
+      "destination": "/tmp/delta_byte_array.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_byte_array_expect.csv",
+      "destination": "/tmp/delta_byte_array_expect.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_encoding_required_column.parquet",
+      "destination": "/tmp/delta_encoding_required_column.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_encoding_required_column_expect.csv",
+      "destination": "/tmp/delta_encoding_required_column_expect.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_encoding_optional_column.parquet",
+      "destination": "/tmp/delta_encoding_optional_column.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/delta_encoding_optional_column_expect.csv",
+      "destination": "/tmp/delta_encoding_optional_column_expect.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/datapage_v1-uncompressed-checksum.parquet",
+      "destination": "/tmp/datapage_v1-uncompressed-checksum.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/datapage_v1-snappy-compressed-checksum.parquet",
+      "destination": "/tmp/datapage_v1-snappy-compressed-checksum.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/plain-dict-uncompressed-checksum.parquet",
+      "destination": "/tmp/plain-dict-uncompressed-checksum.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/datapage_v1-corrupt-checksum.parquet",
+      "destination": "/tmp/datapage_v1-corrupt-checksum.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow/rle-dict-uncompressed-corrupt-checksum.parquet",
+      "destination": "/tmp/rle-dict-uncompressed-corrupt-checksum.parquet"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
