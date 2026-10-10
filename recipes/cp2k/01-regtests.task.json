@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-cp2k-r11",
+  "container": "quay.io/aarchsci/cp2k@sha256:a2b70e16570c46a30ee44f6567668cd10610db77c7f48017721845c9a81d8c6f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\n# Open MPI refuses to run as root without these, and a container runs as root. Omitting them\n# is how the first probe died: Open MPI killed the ranks with no useful message.\nexport OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1\nexport OMPI_MCA_btl_vader_single_copy_mechanism=none\nexport OMP_NUM_THREADS=1\ncd /tmp\n\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first.\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\necho \"== CP2K_DATA_DIR must be wired, or cp2k aborts on its first calculation ==\"\n# conda-forge installs 68 basis-set and pseudopotential files under share/cp2k/data and sets no\n# CP2K_DATA_DIR; the env's Dockerfile exports it (aarchsci#30). Verified present here rather\n# than assumed, because an unset value fails deep inside the first SCF.\nprintf 'CP2K_DATA_DIR\\t%s\\n' \"${CP2K_DATA_DIR:-<UNSET>}\"\ntest -n \"${CP2K_DATA_DIR:-}\" || { echo \"FAIL: CP2K_DATA_DIR unset -- cp2k cannot find its basis sets\"; exit 1; }\ntest -d \"$CP2K_DATA_DIR\" || { echo \"FAIL: CP2K_DATA_DIR=$CP2K_DATA_DIR is not a directory\"; exit 1; }\nprintf 'data_files\\t%s\\n' \"$(ls \"$CP2K_DATA_DIR\" | wc -l)\"\n\necho \"== the MPI binary and the regtests must both be present ==\"\ncommand -v cp2k.psmp >/dev/null || { echo \"FAIL: cp2k.psmp absent (the MPI build)\"; exit 1; }\ncommand -v mpiexec   >/dev/null || { echo \"FAIL: mpiexec absent\"; exit 1; }\nT=/opt/conda/etc/conda/test-files/cp2k/1/tests\ntest -d \"$T\" || { echo \"FAIL: regtests not installed at $T\"; exit 1; }\nprintf 'regtest_root\\t%s\\n' \"$T\"\n\n# python3 -u so a killed run still has its output in command.log.\n# Prefer the matcher registry the PACKAGE installs; fall back to the pinned staged copy from\n# the matching tag. Which one was used is printed, because they could in principle differ.\nMDIR=$(dirname \"$(find /opt/conda -name matchers.py -path '*tests*' 2>/dev/null | head -1)\")\nif [ -n \"$MDIR\" ] && [ -f \"$MDIR/matchers.py\" ]; then\n  printf 'matchers_source\\t%s (installed with the package)\\n' \"$MDIR\"\nelse\n  MDIR=/tmp\n  printf 'matchers_source\\t%s (staged, pinned, from tag v2026.2)\\n' \"$MDIR\"\nfi\n# TEST_DIRS likewise: prefer the package's copy, fall back to the pinned staged one.\nTD=$(find /opt/conda -name TEST_DIRS -path '*tests*' 2>/dev/null | head -1)\nif [ -n \"$TD\" ]; then printf 'test_dirs_source\\t%s (installed)\\n' \"$TD\"\nelse TD=/tmp/TEST_DIRS; printf 'test_dirs_source\\t%s (staged, pinned, tag v2026.2)\\n' \"$TD\"; fi\nCP2K_BIN=cp2k.psmp CP2K_TESTS=\"$T\" CP2K_MATCHERS=\"$MDIR\" CP2K_TEST_DIRS=\"$TD\" \\\n  python3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cp2k/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cp2k/matchers.py",
+      "destination": "/tmp/matchers.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cp2k/TEST_DIRS",
+      "destination": "/tmp/TEST_DIRS"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cp2k/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cp2k/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/cp2k-diag.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cp2k/r1/cp2k-diag.txt"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cp2k/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
