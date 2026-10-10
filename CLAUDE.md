@@ -401,8 +401,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 ## Tracking and findings
 
 - **State lives on GitHub only** — project board, milestones, issues, labels. This
-  file and CHARTER.md never carry status. To learn what's done or next, read the
-  board.
+  file and CHARTER.md never carry status. **Two artifacts, one job each: the generated
+  `catalog/recipes.md` says what *ships*, the board says what's *next*.** Ask the catalog
+  "is X done?" — it is generated from the recipes' own frontmatter, so it cannot drift.
+  Ask the board "what should I pick up?" — it carries **open work only**, grouped by phase.
+  Never put one row per recipe on the board: that duplicates a generated artifact and will
+  always lag it. Measured: the board sat at six `Recipe done:` rows while 102 recipes
+  shipped, and the four live issues — including the roadmap — were not on it at all.
+  (Maintenance issues have no phase in the current Status field and sit unset; that is a
+  gap in the vocabulary, not a filing mistake.)
 - A finding worth keeping is a **GitHub issue**, not a repo file. A finding that
   becomes a standing rule belongs **here**, stated flat. There is no findings log.
 
