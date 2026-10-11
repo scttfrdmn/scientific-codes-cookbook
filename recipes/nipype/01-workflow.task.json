@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-nipype-r1",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:6ede8870c83b095c25c9f08db34e56f66318e2cb6b668391d9d5642147856457",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# nipype needs a writable HOME (it writes ~/.nipype/nipype.cfg) and a writable TMPDIR.\nexport TMPDIR=/tmp HOME=/tmp\nexport OMP_NUM_THREADS=1\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\n# nipype writes per-node crash files and reports; collect anything it left behind so a\n# failure is diagnosable without a rerun.\n( cd /tmp && find . -maxdepth 3 -name 'crash-*' -o -maxdepth 3 -name '_report' -type d \\\n   | head -40 | tar -czf /tmp/nipype-diag.tar.gz -T - ) 2>/dev/null || true\ntest -f /tmp/nipype-diag.tar.gz || tar -czf /tmp/nipype-diag.tar.gz -T /dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype/r1/identities.log"
+    },
+    {
+      "source": "/tmp/nipype-diag.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype/r1/nipype-diag.tar.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
