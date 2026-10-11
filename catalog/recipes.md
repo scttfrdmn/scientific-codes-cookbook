@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **122 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **123 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -209,7 +209,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 |
 | [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
 | [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
-| [mrbayes](../recipes/mrbayes/README.md) | Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM. | pipeline | stage · run: iqtree, raxml-ng | — | 2026-10-11 |
+| [mrbayes](../recipes/mrbayes/README.md) | Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM. | pipeline | stage · run: iqtree, raxml-ng | 2026-10-11 | 2026-10-11 |
 | [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 |
 | [pangenome](../recipes/pangenome/README.md) | Builds a pangenome graph from chr20 plus 82,818 real variants on Graviton4, then checks the reference path reproduces the input FASTA character for character. For anyone moving from a linear reference to graphs on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 |
 | [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |
@@ -231,6 +231,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-03 | 2026-10-03 |
+
+## popgen
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [popgen](../recipes/popgen/README.md) | Simulates 40 genomes over 1 Mb on Graviton4 and checks the result against coalescent theory, integer tree invariants, and a second implementation of the same statistics. For anyone doing population genetics on ARM. | popgen | stage | — | 2026-10-11 |
 
 ## quantum
 

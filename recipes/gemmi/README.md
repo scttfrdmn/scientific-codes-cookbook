@@ -30,7 +30,7 @@ gemmi.read_structure("structure.pdb")    # within half a %8.3f grid step of what
 | mmCIF for coordinates you keep | PDB | **PDB's field is `%8.3f`**, so it quantizes to 0.001 Å and loses up to **5e-4 Å**. Measured: `4.985e-04` through PDB versus `4.998e-08` through mmCIF. |
 | the float32-ULP tolerance | exact equality across parsers | **don't.** biopython, MDAnalysis and MDTraj all store **float32** (`get_coord()` included), and MDTraj works in nm — so bit-equality with gemmi's float64 is impossible by dtype, not by error. |
 | the synthetic 400-atom structure | a real PDB entry | nothing is fetched here. Real entries bring altlocs, insertion codes and multiple models, none of which this exercises. |
-| `gemmi` from this env | — | **gemmi is a *transitive* dependency of `md`, not a declared one.** A future re-solve could drop it; the run records the resolved version to `gemmi-version.txt` so that is visible. |
+| `gemmi` from this env | — | it is now a **declared** member of `md` ([aarchsci#36](https://github.com/playgroundlogic/aarchsci/issues/36)); it used to arrive transitively. The run still records the resolved version to `gemmi-version.txt`. |
 | symmetry only | structure-factor work | MTZ/reflection handling is untouched; this page is the symmetry and coordinate layer. |
 
 **Leave the fixture.** Nothing is fetched and no structure is read: the references are published space-group orders, a closed-form volume, and closure under composition — none of which is data. **Scale it** by asserting more of the 230 space groups; the closure check costs O(n²) in the group order and `F m -3 m` already does 36,864 products.
@@ -133,10 +133,12 @@ rendering, and smaller than PDB's own precision claim is often assumed to be —
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
-**gemmi is not declared in this env's spec.** It arrives as a transitive dependency of `md`, so a
-future solve could drop it or move its version without anything announcing that. The run records
-the resolved version to `gemmi-version.txt`, and the fix is an aarchsci request to name it
-explicitly. Staging lifts the published table out of `identities.py` by name rather than restating
+**gemmi used to arrive here transitively, and no longer does.** When this recipe was verified it
+was an undeclared dependency of `md`, which a re-solve could have dropped or moved with nothing
+announcing it — so the run records the resolved version to `gemmi-version.txt`. [aarchsci#36](https://github.com/playgroundlogic/aarchsci/issues/36) has since declared it
+explicitly and added it to that env's own import check, so the guarantee is now upstream rather
+than detected after the fact. **The digest above is unchanged**: it is the image this recipe was
+actually verified on, and repinning is a change to the input, not a text edit. Staging lifts the published table out of `identities.py` by name rather than restating
 it, and checks both tolerance derivations without gemmi in the loop.
 
 ### Run + verify
