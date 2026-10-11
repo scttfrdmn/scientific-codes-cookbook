@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-mesalib-r1",
+  "container": "quay.io/aarchsci/viz@sha256:dda63dc2dcbd830258017f93df6cafe37ff3afbfc0a843fd7690bd5e6be166a7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first (unlike aarchbio).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\n# Pass 1, DIAGNOSTIC ONLY: which GL backends exist with no display at all. This records\n# the env's capability and must never fail the task -- see the README on why that is not\n# an assertion.\necho \"== backends available with no DISPLAY (diagnostic) ==\"\nunset DISPLAY\npython3 -u identities.py --backends 2>&1 | tee backends.txt\n\n# Pass 2, the real checks: software GL needs an X server in this image.\necho \"== rendering under Xvfb ==\"\nXvfb :99 -screen 0 1024x768x24 >/tmp/xvfb.log 2>&1 &\nXVFB_PID=$!\nsleep 3\nexport DISPLAY=:99\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\nkill \"$XVFB_PID\" 2>/dev/null\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mesalib/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mesalib/r1/identities.log"
+    },
+    {
+      "source": "/tmp/backends.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mesalib/r1/backends.txt"
+    },
+    {
+      "source": "/tmp/xvfb.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mesalib/r1/xvfb.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}

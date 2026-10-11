@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **118 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **119 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -137,7 +137,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | — | 2026-10-11 |
+| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-11 | 2026-10-11 |
 | [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-03 |
 | [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-11 |
 
@@ -254,4 +254,5 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
+| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | — | 2026-10-11 |
 | [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-03 | 2026-10-03 |
