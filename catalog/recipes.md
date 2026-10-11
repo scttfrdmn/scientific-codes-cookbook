@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **121 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **122 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -165,7 +165,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-03 | 2026-10-03 |
-| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | — | 2026-10-11 |
+| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | 2026-10-11 | 2026-10-11 |
 | [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-09 | 2026-09-30 |
 | [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
 | [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 |
@@ -209,6 +209,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 |
 | [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
 | [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
+| [mrbayes](../recipes/mrbayes/README.md) | Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM. | pipeline | stage · run: iqtree, raxml-ng | — | 2026-10-11 |
 | [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 |
 | [pangenome](../recipes/pangenome/README.md) | Builds a pangenome graph from chr20 plus 82,818 real variants on Graviton4, then checks the reference path reproduces the input FASTA character for character. For anyone moving from a linear reference to graphs on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 |
 | [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |

@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-mrbayes-mcmc-r1",
+  "container": "quay.io/aarchbio/mrbayes@sha256:a320f21c5742641ec3db1bd6b443df81bb513589acfe1f8974640fcd1c6556ab",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# aarchbio images: spawn's task shell drops the image PATH, so export it explicitly.\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: fasta2nexus.awk does not match its pin\"; exit 1; }\n\necho \"== FASTA -> NEXUS (the alignment is the one iqtree staged; not a second copy) ==\"\nawk -f fasta2nexus.awk aln.fa > data.nex || { echo \"FAIL: conversion\"; exit 1; }\nNTAX=$(awk '/^    [A-Za-z0-9]/{c++} END{print c+0}' data.nex)\nNCHAR=$(awk '/dimensions/{for(i=1;i<=NF;i++) if ($i ~ /^nchar=/) {sub(/nchar=/,\"\",$i); sub(/;/,\"\",$i); print $i}}' data.nex)\necho \"nexus_taxa\\t$NTAX\"\necho \"nexus_sites\\t$NCHAR\"\ntest \"$NTAX\" = \"114\" || { echo \"FAIL: $NTAX taxa, expected 114\"; exit 1; }\ntest \"$NCHAR\" = \"477\" || { echo \"FAIL: $NCHAR sites, expected 477\"; exit 1; }\n\n# The label sets must be identical, or the tree this produces cannot be compared with the\n# ML recipes' trees on topology -- it would be comparing different leaves.\nawk '/^>/{print substr($0,2)}' aln.fa | sort > fa.labels\nawk '/^    [A-Za-z0-9]/{print $1}' data.nex | sort > nx.labels\ncmp -s fa.labels nx.labels || { echo \"FAIL: label sets differ between FASTA and NEXUS\"; exit 1; }\necho \"label_sets\\tidentical (114)\"\n\necho \"== MCMC: LG+G4, the SAME model raxml-ng and iqtree used ==\"\ncat > run.nex <<'EOF'\n#NEXUS\nbegin mrbayes;\n  set autoclose=yes nowarn=yes seed=20261011 swapseed=20261011 usebeagle=no;\n  execute data.nex;\n  lset rates=gamma ngammacat=4;\n  prset aamodelpr=fixed(lg);\n  mcmcp ngen=100000 samplefreq=100 nchains=4 nruns=2 printfreq=10000 diagnfreq=5000\n        stoprule=yes stopval=0.01 file=mb;\n  mcmc;\n  sumt burnin=250 conformat=simple;\n  sump burnin=250;\n  quit;\nend;\nEOF\nS=$(date +%s)\nmb run.nex > mb.out 2>&1\nRC=$?\nE=$(date +%s)\necho \"mcmc_wall_s\\t$((E-S))\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: mb exited $RC\"; tail -40 mb.out; exit 1; }\n\n# The model must be the one claimed -- a silent fall back to Poisson would still produce\n# a tree, and the cross-check with the ML recipes would then be a method difference.\ngrep -q 'Setting Aamodelpr to Fixed(LG)' mb.out || {\n  echo \"FAIL: the run did not use LG; the cross-check would not be like-with-like\"\n  grep -i aamodelpr mb.out | head; exit 1; }\necho \"model\\tLG+G4 (Fixed(LG), 4 gamma categories)\"\ngrep -q 'Setting number of rate categories to 4' mb.out && echo \"gamma_categories\\t4\"\n\ngrep -q 'Analysis completed in' mb.out || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho \"completion\\tAnalysis completed (sentinel present)\"\n\necho \"== exact sample arithmetic: ngen/samplefreq + 1 per run ==\"\nfor n in 1 2; do\n  ROWS=$(grep -vc '^\\[ID' \"mb.run$n.p\")\n  echo \"p_rows_run$n\\t$ROWS\"\n  test \"$ROWS\" = \"1002\" || { echo \"FAIL: run$n has $ROWS .p lines, expected 1002 (header + 1001 samples)\"; exit 1; }\n  T=$(grep -c '^   tree gen' \"mb.run$n.t\")\n  echo \"t_trees_run$n\\t$T\"\n  test \"$T\" = \"1001\" || { echo \"FAIL: run$n has $T sampled trees, expected 1001\"; exit 1; }\ndone\n\necho \"== conservation: topology posterior probabilities sum to 1 ==\"\nLASTP=$(grep -o 'P = [0-9.]*' mb.trprobs | tail -1 | awk '{print $3}')\necho \"trprobs_cumulative_P\\t$LASTP\"\ntest \"$LASTP\" = \"1.000\" || { echo \"FAIL: cumulative topology probability is $LASTP, not 1.000\"; exit 1; }\nNTOPO=$(grep -c '^   tree tree_' mb.trprobs)\necho \"distinct_topologies\\t$NTOPO\"\n\necho \"== consensus -> Newick, with the label set asserted ==\"\nawk -f nexus2newick.awk mb.con.tre > mb.consensus.nwk || { echo \"FAIL: newick conversion\"; exit 1; }\ntr ',()' '\\n\\n\\n' < mb.consensus.nwk | sed 's/:.*//' | grep -E '^[A-Za-z0-9_]+$' | sort -u > nwk.labels\nNL=$(grep -c . nwk.labels)\necho \"newick_labels\\t$NL\"\ncmp -s fa.labels nwk.labels || {\n  echo \"FAIL: the Newick consensus labels are not the alignment's 114 labels\"\n  diff fa.labels nwk.labels | head; exit 1; }\necho \"newick_label_sets\\tidentical to the alignment\"\n\necho \"== convergence, REPORTED not asserted ==\"\nASDSF=$(grep -o 'Average standard deviation of split frequencies: [0-9.]*' mb.out | tail -1 | awk '{print $NF}')\necho \"asdsf\\t$ASDSF\"\ngrep -oE 'Average PSRF for parameter values \\(.*\\)' mb.out | tail -1 | sed 's/^/psrf\\t/'\n\necho \"== determinism: a SHORT chain twice with the same seed (not a second long run) ==\"\nfor tag in d1 d2; do\n  sed -e \"s/file=mb;/file=$tag;/\" -e 's/ngen=100000/ngen=1000/'       -e 's/printfreq=10000/printfreq=1000/' -e 's/diagnfreq=5000/diagnfreq=1000/'       -e 's/  sumt burnin=250 conformat=simple;//' -e 's/  sump burnin=250;//' run.nex > $tag.nex\n  mb $tag.nex > $tag.out 2>&1\ndone\nDET=yes\nfor n in 1 2; do\n  # MrBayes stamps a per-run [ID: nnnnn] header, so compare CONTENT, not raw bytes.\n  diff <(grep -v '^\\[ID' d1.run$n.p) <(grep -v '^\\[ID' d2.run$n.p) >/dev/null || DET=no\n  diff <(grep -v '^\\[ID' d1.run$n.t) <(grep -v '^\\[ID' d2.run$n.t) >/dev/null || DET=no\ndone\necho \"determinism\\t$DET (same seed, [ID:] header excluded)\"\ntest \"$DET\" = \"yes\" || { echo \"FAIL: a fixed seed did not reproduce\"; exit 1; }\n\n{\n  echo -e \"observable\\tvalue\"\n  echo -e \"mrbayes\\t3.2.8\"\n  echo -e \"nexus_taxa\\t$NTAX\"\n  echo -e \"nexus_sites\\t$NCHAR\"\n  echo -e \"model\\tLG+G4\"\n  echo -e \"ngen\\t100000\"\n  echo -e \"nruns\\t2\"\n  echo -e \"nchains\\t4\"\n  echo -e \"p_rows_per_run\\t1002\"\n  echo -e \"sampled_trees_per_run\\t1001\"\n  echo -e \"trprobs_cumulative_P\\t$LASTP\"\n  echo -e \"distinct_topologies\\t$NTOPO\"\n  echo -e \"newick_labels\\t$NL\"\n  echo -e \"asdsf\\t$ASDSF\"\n  echo -e \"mcmc_wall_s\\t$((E-S))\"\n  echo -e \"determinism\\t$DET\"\n} > score.tsv\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"MRBAYES OK\"\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "destination": "/tmp/aln.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes/fasta2nexus.awk",
+      "destination": "/tmp/fasta2nexus.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes/nexus2newick.awk",
+      "destination": "/tmp/nexus2newick.awk"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/mb.consensus.nwk",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.consensus.nwk"
+    },
+    {
+      "source": "/tmp/mb.con.tre",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.con.tre"
+    },
+    {
+      "source": "/tmp/mb.trprobs",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.trprobs"
+    },
+    {
+      "source": "/tmp/mb.pstat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.pstat"
+    },
+    {
+      "source": "/tmp/mb.tstat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.tstat"
+    },
+    {
+      "source": "/tmp/mb.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes/r1/mb.out"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}
