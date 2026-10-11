@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **124 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **125 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -263,7 +263,13 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | — | 2026-10-11 |
+| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-11 | 2026-10-11 |
+
+## tomography
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | — | 2026-10-11 |
 
 ## viz
 
