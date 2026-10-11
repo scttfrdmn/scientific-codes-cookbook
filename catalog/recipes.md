@@ -127,7 +127,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating â
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-09 | 2026-10-10 |
-| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake â€” a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | build-in-task | 2026-10-02 | 2026-09-13 |
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake â€” a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-02 | 2026-10-11 |
 | [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-08 | 2026-10-09 |
 
 ## geo-ml
@@ -187,7 +187,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating â
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | â€” | 2026-10-11 |
+| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | 2026-10-10 | 2026-10-11 |
 
 ## pipeline
 
