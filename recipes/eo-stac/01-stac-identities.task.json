@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-eo-stac-r2",
+  "container": "quay.io/aarchsci/earth-observation@sha256:e5e8125b307e66301efe15fc3e4340462a112968e299b30fe9421f873688b91f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\n# No credentials are needed or wanted: every asset href is rewritten to a local staged\n# file, so GDAL never reaches for S3 and the container never needs IMDS.\nexport AWS_NO_SIGN_REQUEST=YES GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\necho \"== the scene must have arrived ==\"\nfor f in SCL.tif B01.tif item.json; do\n  test -s \"/tmp/$f\" || { echo \"FAIL: /tmp/$f missing or empty\"; exit 1; }\n  printf \"  %-12s %12s bytes\\n\" \"$f\" \"$(stat -c %s \"/tmp/$f\")\"\ndone\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/SCL.tif",
+      "destination": "/tmp/SCL.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/B01.tif",
+      "destination": "/tmp/B01.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation/item.json",
+      "destination": "/tmp/item.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/eo-stac/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/eo-stac/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}
