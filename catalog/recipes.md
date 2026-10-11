@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **111 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **112 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -153,7 +153,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | — | 2026-10-11 |
+| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-10 | 2026-10-11 |
 
 ## md
 
@@ -182,6 +182,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
 | [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | 2026-10-10 | 2026-10-10 |
+
+## pic
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | — | 2026-10-11 |
 
 ## pipeline
 
