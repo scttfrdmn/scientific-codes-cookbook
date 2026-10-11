@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-fastjet-r1",
+  "container": "quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first (unlike aarchbio).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'FASTJET OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastjet/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastjet/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
