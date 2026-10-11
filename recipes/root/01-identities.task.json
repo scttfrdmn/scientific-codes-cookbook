@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-root-r2",
+  "container": "quay.io/aarchsci/hep@sha256:45441294ef5ef11379cf577ae746ecd91cb0e20e303cf3e557abeb15b84d201d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\n# ROOT needs a writable HOME and no display, or it fails early and opaquely.\nexport DISPLAY=\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# Pin BLAS/OpenMP threads so the seeded fit is reproducible run to run.\nexport OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\n# python3 -u so a killed run still has its output in command.log.\npython3 -u identities.py 2>&1 | tee identities.log\nRC=\"${PIPESTATUS[0]}\"\n# Stage the ROOT file's size out too: the format round-trip is the headline, so evidence\n# that a real file was written belongs in the record.\ntest -s /tmp/out.root && printf 'root_file_bytes\\t%s\\n' \"$(stat -c %s /tmp/out.root)\" >> identities.log\ntest \"$RC\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/root/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/root/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

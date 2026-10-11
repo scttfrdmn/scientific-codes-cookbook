@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **110 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **111 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -149,6 +149,12 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 |---|---|---|---|---|---|
 | [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-03 | 2026-10-03 |
 
+## hep
+
+| Recipe | What it does | Env | Inputs | Updated | Verified |
+|---|---|---|---|---|---|
+| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | — | 2026-10-11 |
+
 ## md
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
@@ -216,7 +222,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | — | 2026-10-11 |
+| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-10 | 2026-10-11 |
 
 ## r
 
