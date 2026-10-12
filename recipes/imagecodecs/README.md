@@ -144,7 +144,7 @@ digest, so verify the tag and pin the arm64 digest.
 
 This gap was named by the catalog itself — [pathology](../pathology/README.md) records that
 "`tifffile`, `imagecodecs`, `zarr` and `dask` are in this env and unexercised". Two of the four
-are now exercised here.
+are exercised here; [zarr-dask](../zarr-dask/README.md) now covers the other two.
 
 One API correction from probing: `lerc_encode` takes no `maxzerror` argument in this build (it is
 lossless by default), so a guessed keyword raises `TypeError`.
@@ -170,8 +170,9 @@ regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 TIFFs and reads them with OpenSlide, but no recipe yet re-encodes genuine tissue through these
 codecs at slide scale, where the ratios would be very different.
 
-**`zarr` and `dask`**, still unexercised in this env — chunked, lazy access to a pyramidal store
-is the half of whole-slide I/O this does not touch. **Pyramidal/multi-resolution TIFF**: one level,
+**Chunked, lazy access to a pyramidal store** — the half of whole-slide I/O this does not
+touch — is covered separately by [zarr-dask](../zarr-dask/README.md).
+**Pyramidal/multi-resolution TIFF**: one level,
 one tile size, no `subifds`. **Throughput**: every codec here is correctness-only, with no
 encode/decode timing, so nothing says which is affordable at terabyte scale. **16-bit and
 multichannel** beyond RGB — fluorescence imagery is commonly 16-bit, where `lerc` and `zfp` matter

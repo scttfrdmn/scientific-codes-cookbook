@@ -182,8 +182,10 @@ detections from a trained model, so nothing here speaks to detection performance
 non-exhaustively annotated slides**, where a mask-vs-annotation check measures the annotation gap.
 `CAMELYON17`, which is in the same bucket and has a different labelling scheme.
 
-Also: `tifffile`, `imagecodecs`, `zarr` and `dask` are in this env and unexercised — tiled
-out-of-core access over a WSI is a real workload this recipe does not attempt; stain
+All four of `tifffile`, `imagecodecs`, `zarr` and `dask` are in this env and now exercised —
+by [imagecodecs](../imagecodecs/README.md) and [zarr-dask](../zarr-dask/README.md), though
+on synthetic arrays rather than on these slides. Still untried here: tiled
+out-of-core access over a WSI, a real workload this recipe does not attempt; stain
 normalisation; tissue/background segmentation (the bucket ships a `background_tissue/` directory
 this recipe ignores); patch extraction pipelines, which are what most pathology users actually
 run; and multi-slide throughput, since this is one slide on one box.
