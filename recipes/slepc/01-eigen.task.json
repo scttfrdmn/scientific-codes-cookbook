@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-slepc-r1",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:acf6b57d76a151adf351f3cb4bd811188db40967b42fef4985a5e307aa6ee718",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\nexport OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: aarchsci env images already have their python first (unlike aarchbio).\n\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\n\necho \"== pass 1: serial ==\"\npython3 -u identities.py 2>&1 | tee serial.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: the serial pass failed\"; exit 1; }\ngrep -q 'SLEPC OK (serial)' serial.log || { echo \"FAIL: no serial sentinel\"; exit 1; }\n\necho\necho \"== pass 2: mpiexec -n 2, which also compares against the serial values ==\"\nmpiexec -n 2 python3 -u identities.py 2>&1 | tee mpi.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: the 2-rank pass failed\"; exit 1; }\ngrep -q 'SLEPC OK (mpi2)' mpi.log || { echo \"FAIL: no mpi sentinel\"; exit 1; }\n\n# one score table: the serial rows plus the parallel-only rows\ncp score-serial.tsv score.tsv\nawk -F'\\t' 'NR>1 && ($1 ~ /^(mpi_ranks|distribution|ownership_rank0|serial_vs_parallel)/)' score-mpi2.tsv >> score.tsv\ncat score.tsv\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/slepc/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/slepc/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/slepc/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/score-serial.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/slepc/r1/score-serial.tsv"
+    },
+    {
+      "source": "/tmp/score-mpi2.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/slepc/r1/score-mpi2.tsv"
+    },
+    {
+      "source": "/tmp/serial.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/slepc/r1/serial.log"
+    },
+    {
+      "source": "/tmp/mpi.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/slepc/r1/mpi.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}
