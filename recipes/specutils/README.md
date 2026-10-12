@@ -168,8 +168,8 @@ most of a reduction.
 deblending, which is how equivalent widths are actually measured on noisy data. **Uncertainties**:
 every flux here is exact, so propagation through resampling and the `snr` machinery is untested.
 **Continuum fitting** (`fit_generic_continuum`) — the continuum is handed in as a constant, which
-is the easy case. **`sunpy`**, still unexercised in this env, and the solar coordinate frames it
-brings. **Multi-dimensional spectra** (`SpectrumCollection`, spectral cubes), where the resampling
+is the easy case. The solar coordinate frames this env also carries are covered separately by
+[sunpy](../sunpy/README.md). **Multi-dimensional spectra** (`SpectrumCollection`, spectral cubes), where the resampling
 question above matters most and costs most.
 
 </details>
