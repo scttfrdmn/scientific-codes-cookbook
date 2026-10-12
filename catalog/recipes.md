@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **132 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **133 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -59,6 +59,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 | [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
 | [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-08 | 2026-10-08 |
 | [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-12 | 2026-10-12 |
+| [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | — | 2026-10-12 |
 | [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-10 | 2026-10-11 |
 
 ## bayes
@@ -236,7 +237,7 @@ Every recipe here runs one tool on a Graviton4 box, verified, self-terminating �
 
 | Recipe | What it does | Env | Inputs | Updated | Verified |
 |---|---|---|---|---|---|
-| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | — | 2026-10-12 |
+| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-12 | 2026-10-12 |
 | [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-03 | 2026-10-03 |
 
 ## popgen
