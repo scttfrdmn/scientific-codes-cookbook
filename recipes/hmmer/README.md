@@ -116,11 +116,11 @@ cosign-signed, so the digest is the pin). Same staged Pfam and proteome:
 | rows whose scores differ | — | 85 of 65,607, full-sequence score by ≤ 0.2 bits |
 
 **Every assertion is exact on both, and the tblout is not byte-identical.** HMMER compiles a
-different SIMD implementation per ISA (SSE on x86, NEON on ARM), and the floating-point scores come
-out of it: 85 rows differ in the last printed digit of an E-value or bitscore, a few in the domain
-envelope statistics, and 8 rows swap order where two near-tied hits sort differently. It is the ISA,
-not the chip — the arm64 tblout is identical, comment lines aside, across four Graviton generations
-(c6g, c7g, c8g, c9g). No hit crosses a gathering threshold, which is why every count holds and why
+different SIMD implementation per ISA (SSE on x86, NEON on ARM), and that is the likely source of
+the score differences — inferred from how HMMER is built, not separately tested: 85 rows differ in the last printed digit of an E-value or bitscore, a few in the domain
+envelope statistics, and 8 rows swap order where two near-tied hits sort differently. That it is the ISA
+and not the chip *is* measured: the arm64 tblout is byte-identical, comment lines aside, across four
+Graviton generations (c6g, c7g, c8g, c9g — [the generation sweep](../../measurements/hmmer-real/README.md)). No hit crosses a gathering threshold, which is why every count holds and why
 [mafft](../mafft/README.md), which takes the 7tm_1 member *set*, gets the same 906 proteins.
 
 ### Run + verify
