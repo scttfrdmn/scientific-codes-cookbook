@@ -4,6 +4,10 @@ tool_version: "3.2.8"
 images:
   - quay.io/aarchbio/mrbayes@sha256:a320f21c5742641ec3db1bd6b443df81bb513589acfe1f8974640fcd1c6556ab
   - quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/mrbayes@sha256:9f19aafb555767e28c53df9692d63e126cb27e8273f4b13b0f217fad852ebd1c
+  - quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---
@@ -162,11 +166,34 @@ residue-for-residue, then asserts the headers need no quoting. That last check i
 sanitised label would turn the topology comparison into a label-matching exercise without
 anything failing. These Pfam headers are `[0-9A-Z_]` only, so they pass through untouched.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i.large`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/mrbayes@sha256:9f19aafb…` (3.2.8) and
+`quay.io/biocontainers/iqtree@sha256:3a7fc305…` (3.1.3), both `linux/amd64`; not cosign-signed, so
+the digest is the pin. Task 2 reads the x86 IQ-TREE and RAxML-NG trees:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| sampled trees per run / cumulative P | 1001 / 1.000 | 1001 / 1.000 |
+| distinct topologies / ASDSF | 1,302 / 0.038156 | 1,302 / 0.038156 |
+| RF vs IQ-TREE / RAxML-NG / caterpillar | 16 / 16 / 446 | 16 / 16 / 446 |
+| `mb.consensus.nwk`, `compare.log` | — | **byte-identical** to arm64 |
+
+**The same chain, not merely the same summaries.** The two builds use different likelihood
+calculators (`non-SSE` on arm64, `SSE` on x86, both single-precision), and the starting
+log-likelihoods differ in the fifth decimal (−92947.187471 vs −92947.187482) — yet every chain
+log-likelihood the log prints is identical, and `mb.tstat`, `mb.trprobs`, `mb.pstat` and `mb.con.tre` differ
+only in their per-run `[ID: …]` header: a difference that small evidently never flipped a Metropolis
+accept/reject under the same seed. `mb.out` otherwise differs only in the build banner, that
+calculator line and timings.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=iqtree && make stage RECIPE=mrbayes
 for s in $(make -s spec RECIPE=mrbayes); do spawn task run --spec "$s" --wait; done
+make run RECIPE=mrbayes ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/mrbayes/r1/score.tsv" -
 aws s3 cp "s3://$(make -s print-bucket)/runs/mrbayes/r1/compare.log" -
 ```
