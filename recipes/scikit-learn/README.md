@@ -72,11 +72,11 @@ files, run with the project's own installed-package model rather than one invent
 "0 failed" is not enough on its own, because a missing optional import that drops a whole module
 shows up as *fewer tests*, not as a failure. So the run counts collection in a **separate**
 `--collect-only` process and records every report from inside pytest with a 20-line plugin
-(`account.py`), then asserts that each collected test produced exactly one outcome. The first
-version added up the summary line instead, and was off by one: the summary's `skipped` includes a
-skip raised while **collecting** (`tests/test_docstrings.py`, which needs `numpydoc`), and that is
-not a test. Two exact statements replace it — per-test accounting, and summary = tests +
-collection-time skips.
+(`account.py`), then asserts that each collected test produced exactly one outcome. The summary
+line cannot be used as that count: its `skipped` includes a skip raised while **collecting**
+(`tests/test_docstrings.py`, which needs `numpydoc`), and that is not a test — so it reads 47,446
+against 47,445 tests. The run asserts both exact statements: per-test accounting, and summary =
+tests + collection-time skips.
 
 The 10,222 skips are reported by reason, not waved through. They are almost all **optional
 backends this env does not carry**: array-API checks for `torch` (3,605), `dpnp`, `array_api_strict`

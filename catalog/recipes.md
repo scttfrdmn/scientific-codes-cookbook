@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **135 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **136 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -144,7 +144,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
 | [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-03 | gap |
 | [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
-| [scikit-learn](../recipes/scikit-learn/README.md) | Runs scikit-learn's own test suite on Graviton4 with every test accounted for, then checks a logistic MLE against statsmodels, PCA against an eigensolver, and KMeans against planted clusters. For anyone doing machine learning on ARM. | geo-ml | stage | — | 2026-10-13 | gap |
+| [scikit-learn](../recipes/scikit-learn/README.md) | Runs scikit-learn's own test suite on Graviton4 with every test accounted for, then checks a logistic MLE against statsmodels, PCA against an eigensolver, and KMeans against planted clusters. For anyone doing machine learning on ARM. | geo-ml | stage | 2026-10-13 | 2026-10-13 | gap |
 
 ## geoscience
 
@@ -183,6 +183,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
 | [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-10 | gap |
+| [nilearn](../recipes/nilearn/README.md) | Holds four of Nilearn's main APIs to exact identities on Graviton4: a masker round trip, a first-level GLM against least squares, connectivity against Pearson, and detrending against a projection. For anyone doing fMRI analysis on ARM. | neuroimaging | stage | — | 2026-10-13 | gap |
 | [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## optimization

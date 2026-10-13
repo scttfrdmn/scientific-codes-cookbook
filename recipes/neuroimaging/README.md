@@ -152,7 +152,7 @@ distribution. That is the honest reason the cross-check is about NIfTI interpret
 Beyond that: real diffusion data (everything here is synthetic, so nothing speaks to motion,
 eddy-current or susceptibility correction), tractography and connectomes, DIPY's other
 reconstruction models (CSD, DKI, free water), registration and spatial normalisation, nilearn's
-whole first-level/second-level GLM surface — nilearn is in this env and unexercised — and AFNI's
+whole first-level/second-level GLM surface — covered separately by [nilearn](../nilearn/README.md) — and AFNI's
 preprocessing pipelines (`afni_proc.py`), which are what most AFNI users actually run.
 
 </details>

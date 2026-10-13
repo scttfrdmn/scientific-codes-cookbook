@@ -173,6 +173,6 @@ these two, and Round Two here regardless. **Categorical features**, LightGBM's n
 xgboost's `enable_categorical`, both untouched. **Early stopping, cross-validation and
 hyperparameter search** — the workflow most users actually run. **`datashader`, `statsmodels` and
 `fiona`**, also in this env and unexercised; `scikit-learn` only via these two estimators'
-interfaces.
+interfaces here — its own suite and closed forms are [scikit-learn](../scikit-learn/README.md).
 
 </details>
