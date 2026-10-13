@@ -4,6 +4,10 @@ tool_version: "piscem 0.23.0 / alevin-fry 0.9.0"
 images:
   - quay.io/aarchbio/piscem@sha256:40c8a261dc5d152a1aa9c5db58aa14287a56580f42a483cc1ffec9c5b6e21603
   - quay.io/aarchbio/alevin-fry@sha256:a786a69ea67e2234f6d2a600314bd1ba79b4647958d419025a1dfa9a37cefd79
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/alevin-fry@sha256:2b3e3aa6fc7d8961ce4008ca7369abf6a52969d874b36061b18c139d8b69c4bc
+  - quay.io/biocontainers/piscem@sha256:7eb9f7cd54f0f1238eb50ee9f3897a23247f24ff1a146f958facbc943a4f3c18
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -80,10 +84,29 @@ This recipe was blocked on exactly that: alevin-fry was available while piscem h
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before either tool is callable.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/piscem@sha256:7eb9f7cd…` (0.23.0) and
+`quay.io/biocontainers/alevin-fry@sha256:2b3e3aa6…` (0.9.0), both `linux/amd64`; not cosign-signed,
+so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| cells at `--min-reads 1` / at the default | 3 / 2 | 3 / 2 |
+| matrix exact / Σ counts | yes / 58 of 58 | yes / 58 of 58 |
+| `smoke-check.txt`, `truth.tsv`, `barcodes.txt`, `t2g.tsv` | — | **byte-identical** to arm64 |
+
+The transcript sequences and read positions come from awk's `srand(11); rand()`, and the two images ship different
+awks (mawk in the ARM image, BusyBox awk in bioconda's x86 one) with different generators, so
+`txome.fa` — and the mapping in `rad.tar` built from it — are different bytes. The barcodes, UMIs
+and planted counts are not random, so the matrix and every assertion are the same.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=single-cell
+make run RECIPE=single-cell             # Graviton4
+make run RECIPE=single-cell ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=single-cell
 ```
 
