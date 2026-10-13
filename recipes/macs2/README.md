@@ -62,7 +62,7 @@ and `smoke-check.txt` are **byte-identical** to arm64.
 That pin is deliberately not the newest x86 build. The newer ones tested (py311 `_2`, `_4`, `_5`;
 py310 `_5`) die on import with `ScoreTrack…so: undefined symbol: __log_finite` before reading a
 single read: their compiled extensions reference glibc's old `-ffast-math` entry points, which the
-image's glibc 2.36 does not provide. `_1` imports cleanly.
+image's glibc 2.36 does not provide. `_1` imports cleanly. Filed as [bioconda-recipes#70217](https://github.com/bioconda/bioconda-recipes/issues/70217).
 
 **Run + verify.**
 ```sh
