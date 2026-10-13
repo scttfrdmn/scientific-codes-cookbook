@@ -5,6 +5,11 @@ images:
   - quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/whatshap@sha256:2cfeba1f120ca6ef706d244cac8f4957a6952e78d859e497e6da64eac9a0fa4a
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
+  - quay.io/biocontainers/whatshap@sha256:d63cdf64c29f99016ace7f8a4ace72d7a1dbbec262831e65d1a97d6a57960a30
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -109,10 +114,31 @@ Three images, three tasks: whatshap reads a BAM and cannot make one, and `bwa me
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in every task.
 
+### On x86_64
+
+All three tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — bwa `@sha256:99a35e5e…` (0.7.19), samtools `@sha256:a1304475…` (1.24), WhatsHap
+`@sha256:d63cdf64…` (2.8), all `quay.io/biocontainers`, `linux/amd64`; not cosign-signed, so the
+digest is the pin:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| reads spanning ≥2 sites | 88 | 88 |
+| phased / phase sets | 6 of 6 / 1 | 6 of 6 / 1 |
+| switch errors / Hamming, as emitted and flipped | 0 / 0, 0 | 0 / 0, 0 |
+| `smoke-check.txt`, `cmp.txt`, `cmpflip.txt` | — | **byte-identical** to arm64 |
+
+The fixture is not the same sequence on both: the reference and the alleles at the six sites come
+from awk's `srand(29)`, and the two bwa images ship different awks (mawk on ARM, BusyBox on
+bioconda's x86) with different generators — so x86 plants, e.g., `C>G` at 5000 where arm64 plants
+`A>C`. The positions, depth and planted phase pattern are built, not drawn, so they match, and
+WhatsHap recovers the phase exactly on both.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=phasing
+make run RECIPE=phasing                 # Graviton4
+make run RECIPE=phasing ARCH=x86_64     # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=phasing
 ```
 
