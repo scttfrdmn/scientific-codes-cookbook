@@ -5,8 +5,12 @@ image: quay.io/aarchbio/bwa-mem2@sha256:f9759b09a39aab57d879babbcb5a876a9ed4a55a
 images:
   - quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
   - quay.io/aarchbio/bwa-mem2@sha256:f9759b09a39aab57d879babbcb5a876a9ed4a55a698eb10b476f70a9cec81c15
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bwa-mem2@sha256:374f4b910b4b04d32772fccd4cab1cdcd0758356856a960cfa8b1edebfd38c9f
+  - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
 spawn_version: 0.111.4
-last_verified: 2026-09-30
+last_verified: 2026-10-13
 ---
 # bwa-mem2 — 1.6× faster than bwa, and it did not make the run cheaper
 
@@ -75,7 +79,7 @@ consuming task untars it. Build once and reuse: at 831 s plus $0.23 it is not so
 per sample.
 
 A detail worth knowing before you expect x86 numbers here: bioconda's x86 bwa-mem2 ships
-`bwa-mem2.avx512bw`, `.avx2` and `.sse41` binaries and dispatches on CPU features at run time.
+`bwa-mem2.avx512bw`, `.avx2`, `.avx`, `.sse42` and `.sse41` binaries and dispatches on CPU features at run time.
 The arm64 build ships **one** binary — there is no AVX to dispatch to. The 1.6× above is therefore
 what bwa-mem2's re-engineering buys *without* its x86 vector kernels, which is the number that
 matters on Graviton and is not the number its README quotes.
@@ -91,7 +95,7 @@ returned the same 48,817,006 records, so the variance is timing, not science.
 
 | | data tier |
 |---|---|
-| bwa-mem2 | `quay.io/aarchbio/bwa-mem2@sha256:f9759b09…` (2.3, `linux/arm64`, asserted from inside via ELF `e_machine` 183) |
+| bwa-mem2 | `quay.io/aarchbio/bwa-mem2@sha256:f9759b09…` (2.3, `linux/arm64`, asserted from inside via ELF `e_machine` == the host's: 183 on arm64) |
 | bwa | `quay.io/aarchbio/bwa@sha256:19f0ecea…` (0.7.19-r1273) |
 | reference | `s3://1000genomes/technical/reference/GRCh38_reference_genome/` — published, copied server-side |
 | reads | `s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz` |
@@ -100,10 +104,32 @@ The reference `.fa` is staged here because bwa-mem2 needs it to build its index;
 never stages it, reading only `.amb/.ann/.bwt/.pac/.sa`. Both aligners read the same `.alt`, which
 is what makes the ALT-aware counts comparable.
 
+### On x86_64
+
+All three tasks on same-generation Intel (`r8i.4xlarge`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/bwa-mem2@sha256:374f4b91…` (2.3) and
+`quay.io/biocontainers/bwa@sha256:99a35e5e…` (0.7.19), both `linux/amd64`; not cosign-signed, so
+the digest is the pin. The index was rebuilt on x86 from the same staged reference:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| ELF `e_machine` (asserted == host) | 183 | 62 |
+| bwa-mem2 kernel that ran | the one arm64 binary | `bwa-mem2.avx512bw` |
+| mem2 index bytes (5 files) | 17695876677 | 17695876677 |
+| ALT contigs read, both aligners | 3171 | 3171 |
+| SAM records, bwa / bwa-mem2 | 48817006 / 48817006 | 48817006 / 48817006 |
+
+The cross-implementation identity holds on x86 as well: the dispatched AVX-512 kernel and the
+arm64 build give the same record count as `bwa mem` on either chip. The x86 package ships five
+kernels (`.avx`, `.avx2`, `.avx512bw`, `.sse41`, `.sse42`). The `aln.sam.gz` and index-tar sizes
+differ from arm64 only because bioconda's x86 images use BusyBox `gzip` and `tar`; the ARM
+images use GNU's.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=bwa-mem2
+make run RECIPE=bwa-mem2                  # Graviton4
+make run RECIPE=bwa-mem2 ARCH=x86_64      # same specs, x86 pins; derived files go to inputs-x86_64/
 make ls  RECIPE=bwa-mem2
 ```
 
