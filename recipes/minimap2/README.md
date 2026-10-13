@@ -12,7 +12,7 @@ images_x86_64:
   - quay.io/biocontainers/minimap2@sha256:f7e4a9a17912eea542500988ee96013e37a887b3746673636f2773cc81052590
   - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
 spawn_version: 0.111.4
-last_verified: 2026-10-01
+last_verified: 2026-10-13
 ---
 # minimap2 — 33× PacBio HiFi across a chromosome, checked against the GIAB truth set
 
