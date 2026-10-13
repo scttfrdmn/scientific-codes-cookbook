@@ -3,6 +3,7 @@ tool: astra-toolbox
 tool_version: "2.5.0"
 env: tomography
 image: quay.io/aarchsci/tomography@sha256:ea7b4900500f3eb23d3060611f1737175f4a6421cb24b4f29a809765b2754026
+gap_x86_64: the aarch.science `tomography` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

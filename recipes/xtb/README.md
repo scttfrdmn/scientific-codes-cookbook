@@ -3,6 +3,7 @@ tool: xtb
 tool_version: "6.7.1"
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:f22ef7a3b0d6e506782596e297472fb355338502aaba668ba64d6e3a3cebe031
+gap_x86_64: the aarch.science `comp-chem` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---

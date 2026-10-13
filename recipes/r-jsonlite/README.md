@@ -3,6 +3,7 @@ tool: r-jsonlite
 tool_version: "2.0.0"
 env: r
 image: quay.io/aarchsci/r@sha256:db2fcb3c8d707afe6cccb5796f78964dc79ff4c648d9eb75a5e1c09608a9a54f
+gap_x86_64: the aarch.science `r` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

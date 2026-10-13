@@ -3,6 +3,7 @@ tool: slepc
 tool_version: "3.25.2"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:acf6b57d76a151adf351f3cb4bd811188db40967b42fef4985a5e307aa6ee718
+gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---

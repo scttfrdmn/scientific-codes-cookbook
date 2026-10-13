@@ -3,6 +3,7 @@ tool: openslide
 tool_version: "4.0.1"
 env: pathology
 image: quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867fe936f9a5b962455e6f5a8e80
+gap_x86_64: the aarch.science `pathology` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 ---

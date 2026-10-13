@@ -3,6 +3,7 @@ tool: gsw
 tool_version: "3.6.23"
 env: climate
 image: quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428
+gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---

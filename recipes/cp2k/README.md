@@ -3,6 +3,7 @@ tool: cp2k
 tool_version: "2026.2"
 env: cp2k
 image: quay.io/aarchsci/cp2k@sha256:a2b70e16570c46a30ee44f6567668cd10610db77c7f48017721845c9a81d8c6f
+gap_x86_64: the aarch.science `cp2k` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 ---

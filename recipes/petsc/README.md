@@ -3,6 +3,7 @@ tool: petsc
 tool_version: "3.25.5"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:6cadf382f817fb3967b0bda58c561114dce1ae3176fd7bbf25c5e70d56392e79
+gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.123.0
 last_verified: 2026-10-09
 ---

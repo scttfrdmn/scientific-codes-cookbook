@@ -3,6 +3,7 @@ tool: msprime
 tool_version: "1.4.4"
 env: popgen
 image: quay.io/aarchsci/popgen@sha256:aac6868e30955dc02250502f7c282625be12093081af943f48f2cbe90ae8760c
+gap_x86_64: the aarch.science `popgen` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

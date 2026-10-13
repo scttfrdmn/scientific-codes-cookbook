@@ -3,6 +3,7 @@ tool: quantum-espresso
 tool_version: 7.5
 env: dft
 image: quay.io/aarchsci/dft@sha256:7574f6b15d6b0ec2d1bc27ebaabf97298e1ac619711754eb10da8b1f54600d03
+gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.104.0
 last_verified: 2026-09-12
 ---

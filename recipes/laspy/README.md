@@ -3,6 +3,7 @@ tool: laspy
 tool_version: "2.7.0"
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:7817e0291f05f6bc209aa5999363503897647daf4eb9d6df153b1965629d6ffc
+gap_x86_64: the aarch.science `pointcloud` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---

@@ -3,6 +3,7 @@ tool: geopandas
 tool_version: 1.1.4
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23bb00d083c6f163b25529e0
+gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---

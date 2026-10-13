@@ -3,6 +3,7 @@ tool: calculix
 tool_version: "2.23"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:dd8638389359818beeeb4e626cda21107dee9dc87e180bb4e5ae9f95444cd14f
+gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 ---

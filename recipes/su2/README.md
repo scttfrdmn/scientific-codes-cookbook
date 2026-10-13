@@ -3,6 +3,7 @@ tool: su2
 tool_version: 8.5.0
 env: cfd-fv
 image: quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46
+gap_x86_64: the aarch.science `cfd-fv` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.104.0
 last_verified: 2026-09-13
 ---

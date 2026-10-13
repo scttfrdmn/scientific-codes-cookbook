@@ -3,6 +3,7 @@ tool: dipy
 tool_version: "1.12.1"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:cb8a08c524d7aff435432265a8c9ffce81429b0dc8c4685653b8557691529277
+gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 ---

@@ -3,6 +3,7 @@ tool: arviz
 tool_version: "1.3.0"
 env: bayes
 image: quay.io/aarchsci/bayes@sha256:583447048ee2ed011ec822aa15a68c5248842c5b22959bdf98da5d3e9302b46d
+gap_x86_64: the aarch.science `bayes` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

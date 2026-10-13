@@ -3,6 +3,7 @@ tool: nipype
 tool_version: "1.10.0"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:6ede8870c83b095c25c9f08db34e56f66318e2cb6b668391d9d5642147856457
+gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

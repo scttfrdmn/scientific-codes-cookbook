@@ -3,6 +3,7 @@ tool: psi4
 tool_version: 1.12a4
 env: dft
 image: quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049
+gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.104.0
 last_verified: 2026-09-10
 ---

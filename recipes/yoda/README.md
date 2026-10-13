@@ -3,6 +3,7 @@ tool: yoda
 tool_version: "2.1.4"
 env: hep
 image: quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7
+gap_x86_64: the aarch.science `hep` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

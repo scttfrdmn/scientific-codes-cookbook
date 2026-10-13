@@ -3,6 +3,7 @@ tool: cdo
 tool_version: 2.6.1
 env: climate
 image: quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7963c1418b87a7f30767b5fe
+gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.104.0
 last_verified: 2026-09-13
 ---

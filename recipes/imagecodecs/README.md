@@ -3,6 +3,7 @@ tool: imagecodecs
 tool_version: "2026.8.16"
 env: pathology
 image: quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df293666277497bccb297d966797fc5a
+gap_x86_64: the aarch.science `pathology` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---

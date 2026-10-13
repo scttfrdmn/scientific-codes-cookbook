@@ -3,6 +3,7 @@ tool: warpx
 tool_version: "26.10"
 env: pic
 image: quay.io/aarchsci/pic@sha256:e02db0b494ce602c6948104fe4a9085b6fc004611f501c48c27eed1874100b95
+gap_x86_64: the aarch.science `pic` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

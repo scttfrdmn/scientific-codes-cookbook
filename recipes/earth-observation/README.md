@@ -3,6 +3,7 @@ tool: rasterio
 tool_version: 1.5.0
 env: earth-observation
 image: quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337
+gap_x86_64: the aarch.science `earth-observation` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---

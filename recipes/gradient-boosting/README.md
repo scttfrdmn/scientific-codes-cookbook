@@ -3,6 +3,7 @@ tool: xgboost-lightgbm
 tool_version: "xgboost 3.4.2 / lightgbm 4.7.0"
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:14aeb6be84be41b991aab8bd262197044b7c351b067ef9199ae22c4fc6ccde20
+gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

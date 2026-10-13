@@ -3,6 +3,7 @@ tool: cftime
 tool_version: "1.6.5"
 env: climate
 image: quay.io/aarchsci/climate@sha256:7c6b07a02ca6e5b8907c19b0a930d177f137a58783b89135d84ae4d9b9a3a63b
+gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

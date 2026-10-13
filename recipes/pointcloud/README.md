@@ -2,6 +2,7 @@
 tool: pdal
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823
+gap_x86_64: the aarch.science `pointcloud` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---

@@ -3,6 +3,7 @@ tool: fenicsx
 tool_version: 0.11.0
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:941bdafc519347a600fa4c2805971a3beec8cce561f52b9152b8676277978c68
+gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

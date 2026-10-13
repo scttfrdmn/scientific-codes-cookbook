@@ -3,6 +3,7 @@ tool: gromacs
 tool_version: 2026.3
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
+gap_x86_64: the aarch.science `md` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.111.4
 last_verified: 2026-09-30
 ---

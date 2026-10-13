@@ -3,6 +3,7 @@ tool: stackstac-odc-stac
 tool_version: "stackstac 0.5.1 / odc-stac 0.5.3"
 env: earth-observation
 image: quay.io/aarchsci/earth-observation@sha256:e5e8125b307e66301efe15fc3e4340462a112968e299b30fe9421f873688b91f
+gap_x86_64: the aarch.science `earth-observation` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 ---

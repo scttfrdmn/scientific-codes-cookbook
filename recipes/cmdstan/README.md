@@ -3,6 +3,7 @@ tool: cmdstan
 tool_version: "2.40"
 env: bayes
 image: quay.io/aarchsci/bayes@sha256:cfa7cc144c6118155b4c3da60a5623a9eaa71db80c22fdbf67f811949c92a2fb
+gap_x86_64: the aarch.science `bayes` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.126.1
 last_verified: 2026-10-09
 ---

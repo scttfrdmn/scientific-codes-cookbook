@@ -3,6 +3,7 @@ tool: rebound
 tool_version: "5.0.1"
 env: astro
 image: quay.io/aarchsci/astro@sha256:9568095c64864dbcf4ad2759ad1aa5457bfa4e12530282378f706c3d394dc753
+gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---
