@@ -2,6 +2,9 @@
 tool: bowtie2
 tool_version: 2.5.5
 image: quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bowtie2@sha256:d568130f2f569f7ea2e2453e5f22e82d960d644b9a533b74f8ac737da6faf556
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -52,11 +55,29 @@ Bowtie 2 is deterministic, so counts reproduce exactly; bands exist only to surv
 
 **Pins.** Image `quay.io/aarchbio/bowtie2@sha256:a6807f0611a1…` (2.5.5, cosign-signed, `linux/arm64`). Reads + reference are [bwa](../bwa-samtools/README.md)'s pinned `inputs/bwa-samtools/` bytes (chr20 slice + 400k-pair HG00096 from the 1000G RODA mirror); cross-check against `runs/bwa-samtools/r1/aln_chr20smoke.sam`, which bwa-samtools' `03-baseline-chr20.task.json` exists to produce for exactly this comparison — borrowing that recipe's *main* output broke the moment it moved to the whole genome. Reused — no `stage-inputs.sh`.
 
+**On x86_64.** The same task on same-generation Intel (`c8i`), from bioconda's own x86 build of
+the same version — `quay.io/biocontainers/bowtie2@sha256:d568130f…` (2.5.5, `linux/amd64`; not
+cosign-signed, so the digest is the pin), against the x86 bwa-samtools run's chr20 baseline
+(byte-identical to arm64's):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| primary records / mapped | 800000 / 206155 | 800000 / 206155 |
+| alignment rate (`--local`) | 25.77% | 25.77% |
+| concordance vs bwa | 0.9461 | 0.9461 |
+| `smoke-check.txt` | — | **byte-identical** to arm64 |
+
+`build.log` differs only in timings and the interleaving of its multi-threaded progress lines. On
+x86, `align.log` opens with `[WARNING] Failed to launch x86-64-v3 version, staying with default`:
+bowtie2 tries a `-v3` binary that bioconda's package does not ship, so the baseline x86-64 build
+runs — harmless, and the numbers above are from that build.
+
 **Run + verify.**
 ```sh
 make stage RECIPE=bwa-samtools   # bowtie2 reuses bwa's chr20 fixture
 make run   RECIPE=bwa-samtools   # includes the chr20 baseline this compares against
 make run RECIPE=bowtie2
+make run RECIPE=bowtie2 ARCH=x86_64   # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=bowtie2   # expect smoke-check.txt, align.log, build.log
 ```
 Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
