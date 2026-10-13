@@ -2,6 +2,10 @@
 tool: freebayes
 tool_version: "1.3.10"
 image: quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/freebayes@sha256:212b2e7182fec427e0d6956ac8e9636e87de9a19c92cb7a20326a9ce8f99a9c6
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
 spawn_version: 0.111.4
 last_verified: 2026-09-30
 ---
@@ -87,10 +91,32 @@ The 36× chr20 BAM is built once by `gatk4`'s prep task and shared by all three 
 comparison is on identical bytes. BAM sha256
 `0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c`.
 
+### On x86_64
+
+Both tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same versions —
+`quay.io/biocontainers/freebayes@sha256:212b2e71…` (1.3.10) and
+`quay.io/biocontainers/bcftools@sha256:186c45de…` (1.24), both `linux/amd64`; not cosign-signed,
+so the digest is the pin. Same staged BAM, truth set and BED:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| variants called | 385,371 | 385,371 |
+| SNV TP / FP / FN, `QUAL≥30` | 66,119 / 202 / 3,091 | 66,119 / 202 / 3,091 |
+| SNV precision / recall / F1 | 0.99695 / 0.95534 / 0.97570 | 0.99695 / 0.95534 / 0.97570 |
+| `concordance.txt` | — | **byte-identical** to arm64 |
+
+The VCF has the same 385,371 sites in the same order but is not byte-identical, for two reasons,
+neither of which reaches the scoring. **QUAL's last digits:** 176,849 records differ, and all but
+one have QUAL < 1 — values like `1.81023e-15` vs `1.81212e-15`, a vanishing posterior where the
+two compiled binaries' floating point disagrees in the last bits (the one record ≥ 1 moved by
+1.3e-6 relative; none crosses `QUAL≥30`). **Seven complex alleles** in homopolymer runs, all below
+QUAL 30, have their alleles spelled or ordered differently at identical QUAL.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=freebayes
+make run RECIPE=freebayes               # Graviton4
+make run RECIPE=freebayes ARCH=x86_64   # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=freebayes
 ```
 
