@@ -2,6 +2,9 @@
 tool: cromwell
 tool_version: "0.40"
 image: quay.io/aarchbio/cromwell@sha256:0d86efb43d8df392362fb54c0ef1ea2a6449b776cabe5089dd1b5a0cafce230e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/cromwell@sha256:71738c6e849f45197f746e5aeb9a80d607498ae48d87ebb923ab61faf8f5199b
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -73,10 +76,28 @@ The arithmetic is deliberately trivial. Cromwell cannot get `sum(1..1000)` wrong
 
 **Version note:** bioconda's `cromwell` is at **0.40** (2018) while upstream Cromwell is far newer. That is a packaging lag, not a choice — worth knowing before writing WDL that depends on recent features. Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before `cromwell` is callable.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.large`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/cromwell@sha256:71738c6e…` (0.40, `linux/amd64`; not
+cosign-signed, so the digest is the pin):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| shards materialised | 8 | 8 |
+| per-shard partials | identical to closed form | identical to closed form |
+| gathered total | 500500 | 500500 |
+| `smoke-check.txt` | `a2103ca2…` | `a2103ca2…` — **byte-identical** |
+
+The workflow's tasks declare an empty `runtime { }`, so Cromwell's local backend runs every shard
+as a subprocess inside the one pinned image — the x86 run pulls no container but the Cromwell
+pin, and the shards' `seq`/`awk` are the x86 image's own.
+
 ### Run + verify
 
 ```sh
 make run RECIPE=cromwell-wdl
+make run RECIPE=cromwell-wdl ARCH=x86_64   # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=cromwell-wdl
 ```
 

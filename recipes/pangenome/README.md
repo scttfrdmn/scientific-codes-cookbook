@@ -4,6 +4,10 @@ tool_version: "1.76.1"
 images:
   - quay.io/aarchbio/vg@sha256:0c9767627faac4a98586fe99ffebb4e701903deb8cd5983ff12746344e8b0ccf
   - quay.io/aarchbio/odgi@sha256:51b2b70d3162e83453f95626932cfee54f10f5c63f679d41f6572371d1a1755d
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/vg@sha256:562f804563f42458c5457b6ebca31ad39a0ba79810d4d30814b6cf6e1bda6cdd
+  - quay.io/biocontainers/odgi@sha256:20f70608a427b99bc3dde21d96f6fa4b02ef2d0b5b7fa66c3bdf820fb9f27ea6
 spawn_version: 0.123.0
 last_verified: 2026-10-09
 ---
@@ -118,9 +122,28 @@ the reference by [bwa](../bwa-samtools/README.md), the VCF by [gatk4](../gatk4/R
 Both images cosign-verified; signatures cover the **manifest-list** digest, so verify the tag and
 pin the arm64 digest.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`m8i.2xlarge`, then `m8i.xlarge`), from bioconda's
+own x86 builds of the same versions — `quay.io/biocontainers/vg@sha256:562f8045…` (1.76.1) and
+`quay.io/biocontainers/odgi@sha256:20f70608…` (0.9.4), both `linux/amd64`; not cosign-signed, so
+the digest is the pin. Same staged chr20 and GIAB VCF:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| reference path sha256 | `24427012…` = input | `24427012…` = input |
+| nodes / edges | 2,206,602 / 2,290,966 | 2,206,602 / 2,290,966 |
+| total graph sequence (vg = odgi) | 64,535,868 | 64,535,868 |
+| `chr20.gfa` (160.8 MB) | `964143d3…` | `964143d3…` — **byte-identical** |
+
+Not just the same counts: the same graph, byte for byte, from a multi-threaded `vg construct`.
+Every score and stats file matches too; the only differing file is odgi's `build.log`, whose
+progress lines carry throughput and percent-done snapshots.
+
 ### Run + verify
 
 ```sh
+make run RECIPE=pangenome ARCH=x86_64   # same specs, x86 pins, writes runs-x86_64/
 for s in $(make -s spec RECIPE=pangenome); do spawn task run --spec "$s" --wait; done
 aws s3 cp "s3://$(make -s print-bucket)/runs/pangenome/r1/score.tsv" -
 ```

@@ -2,8 +2,11 @@
 tool: relion
 tool_version: 5.1.0
 image: quay.io/aarchbio/relion@sha256:74aef38176ce4b9929f1312bb977c54c06994329e63c94fc3accce44ea844119
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/relion@sha256:1a60aa8fc33c91ae51027ee9956c1dbde80deca53d011975afe35baa06f793bc
 spawn_version: 0.115.0
-last_verified: 2026-10-03
+last_verified: 2026-10-13
 ---
 # RELION — cryo-EM post-processing of a real 2.75 Å reconstruction
 
@@ -79,11 +82,35 @@ All four from one prefix (KEK SBRC, CC0, `ap-northeast-1`); `stage-inputs.sh` cr
 
 The FSC-table comparison does the real work: the seven header scalars are functions of the curve, so a wrong map/mask/read could land one by luck — it cannot land 1,768 values. **Parsing note:** `postprocess.star` holds `data_general`, then `data_fsc`, then **`data_guinier`** — a parser that reads to EOF counts 442 rows, not 221, and silently compares the wrong tables.
 
+### On x86_64
+
+The same task on same-generation Intel (`m8i.large`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/relion@sha256:1a60aa8f…` (5.1.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged half-maps, mask and reference:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| FSC table vs depositors', 221×8 | max\|diff\| 0.000e+00 | max\|diff\| 0.000e+00 |
+| final resolution / B-factor | 2.747871 Å / −50.25665 | 2.747871 Å / −50.25665 |
+| `postprocess.star`, `smoke-check.txt` | `a56f4f7f…`, `8928ac8b…` | **byte-identical** |
+| `postprocess_masked.mrc` voxels | — | **byte-identical** |
+| `postprocess.mrc` voxels | — | 110 of 85,184,000 differ, by ≤ 9.3e-10 |
+
+**Every asserted quantity is identical to the bit on both architectures** — the FSC curve and the
+seven scalars derived from it are what the check compares, and they match the depositors' own
+x86 RELION 5.0.0 run exactly. The one content difference is in the sharpened, *unmasked* map:
+110 voxels each differ in a single byte of the mantissa (median relative difference 7.5e-8,
+about one float32 ULP), a last-bit rounding difference between builds that touches none of the
+reported values; the masked map is identical. MRC headers differ only in the timestamp label.
+The x86 image ships `gs`, so RELION writes its PDF and the log carries **no** Ghostscript
+`ERROR` lines — the check counts non-Ghostscript errors and gets 0 either way.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=relion          # once; cross-region copy, ~1 GiB
 make run RECIPE=relion
+make run RECIPE=relion ARCH=x86_64  # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=relion
 ```
 

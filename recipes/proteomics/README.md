@@ -4,8 +4,12 @@ tool_version: "3.5.0"
 images:
   - quay.io/aarchbio/openms@sha256:8e9f3d4b0a80c509dc94229a2f02bfd45b6f4375eb6ec7d9e2032e08f4c0e725
   - quay.io/aarchbio/percolator@sha256:4cc39404eeba4f8093fdd380c1bd4f615d0e97c5e0efe4fe0e44bac63fbd6df6
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/openms@sha256:665df95060bdb8144ac45b83ea5da6d7c43d30fd169069078daa2d51f4e4f0c2
+  - quay.io/biocontainers/percolator@sha256:efb3c71cdf6b37686815a5746cadbb946ef3852dc889e0a28cbb1012e391ca94
 spawn_version: 0.126.1
-last_verified: 2026-10-09
+last_verified: 2026-10-13
 ---
 # OpenMS + Percolator — peptide identification and FDR on Graviton
 
@@ -194,9 +198,37 @@ and rejected the database. Staging now asserts the pairing and the convention, b
 Both images cosign-verified; signatures cover the **manifest-list** digest, so verify the tag
 and pin the arm64 digest.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`m8i.large`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/openms@sha256:665df950…` (3.5.0) and
+`quay.io/biocontainers/percolator@sha256:efb3c71c…` (3.09.0), both `linux/amd64`; not
+cosign-signed, so the digest is the pin. Same staged fixtures:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| committed scores, max relative diff | 2.692e-16 (0 of 3 bit-identical) | 2.692e-16 (**1 of 3** bit-identical) |
+| BSA PSMs through FDR / targets / decoys | 957 / 513 / 444 | 957 / 513 / 444 |
+| q recomputed from decoy counts | 513, max diff 5.551e-16 | 513, max diff 5.551e-16 |
+| top protein; reference backbones recovered | ALBU_BOVIN; 9 of 23 | ALBU_BOVIN; 9 of 23 |
+| percolator in = targets + decoys | 19,674 = 9,852 + 9,822 | 19,674 = 9,852 + 9,822 |
+| percolator seed-1 `t_a.tab` | `d740351d…` twice | `25b7b17e…` twice |
+
+**OpenMS's search and FDR are byte-identical across architectures** — `legB_psm.tsv`,
+`q_by_score.tsv`, `fdr_by_score.tsv` and the protein tables match, and `ref_out.idXML` differs
+only in its run date and the one hyperscore that x86 reproduces to the bit (`42.152939453592808`,
+where arm64 gives `…801`). **Percolator's PSM order, SVM scores and q-values are byte-identical;
+only the posterior error probability differs** — on 5,726 of 9,852 target rows, by at most
+3.4e-3 relative, so every assertion holds and each architecture is same-seed reproducible
+against itself. PEP is a smoothed fit over the score distribution; with its input (the scores)
+identical, the difference is that fit's floating-point arithmetic on each build, not the data or
+the ranking. The pin checks filter `pins.sha256` in the shell rather than with GNU
+`--ignore-missing`, which BusyBox `sha256sum` in the x86 images lacks.
+
 ### Run + verify
 
 ```sh
+make run RECIPE=proteomics ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make stage RECIPE=proteomics
 for s in $(make -s spec RECIPE=proteomics); do spawn task run --spec "$s" --wait; done
 aws s3 cp "s3://$(make -s print-bucket)/runs/proteomics/r1/score.tsv" -
