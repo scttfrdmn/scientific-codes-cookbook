@@ -2,287 +2,287 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on a Graviton4 box, verified, self-terminating — **134 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **134 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
-**Updated** is the git date of the page's last change (freshness). **Verified** is the date a real run last confirmed it — `—` means not verified since tracking began, an honest TODO for the next run, never backfilled.
+**Updated** is the git date of the page's last change (freshness). **Verified** is the date a real run last confirmed it on Graviton4 (arm64) — `—` means not verified since tracking began, an honest TODO for the next run, never backfilled. **x86_64** is the same for a same-generation Intel box (`c8i`/`m8i`/`r8i`, `make run ... ARCH=x86_64`): a date, `—` (not yet run), or **gap** (no x86 build of the pinned version exists; the page says why).
 
 ## aarchbio
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [bcftools](../recipes/bcftools/README.md) | Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone choosing a germline caller and what to pay for it. | aarchbio | stage: bcftools, bwa-samtools, gatk4 | 2026-10-02 | 2026-09-30 |
-| [bedtools](../recipes/bedtools/README.md) | Runs the four set-algebra operations on hand-checkable intervals, then `genomecov` over bwa's whole-genome BAM. For anyone building intervals into a pipeline. | aarchbio | stage: bwa-mem2 · run: bwa-samtools | 2026-10-09 | 2026-10-01 |
-| [blast](../recipes/blast/README.md) | Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. For anyone sizing a homology search, or choosing between BLAST+ and DIAMOND. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
-| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-10-09 | 2026-10-01 |
-| [bwa-samtools](../recipes/bwa-samtools/README.md) | Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Graviton, with cost per result measured across four Graviton generations. For anyone aligning short reads and choosing a box. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-02 | 2026-10-01 |
-| [cromwell-wdl](../recipes/cromwell-wdl/README.md) | Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked against a closed-form arithmetic result. For anyone whose pipelines are written in WDL — including GATK's published best-practice workflows. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 |
-| [dada2](../recipes/dada2/README.md) | DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked against the three templates the reads were generated from. The catalog's first 16S/amplicon recipe, for anyone doing microbial community profiling. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 |
-| [diamond](../recipes/diamond/README.md) | Searches 1000 proteins against all 382,428 Ensembl 116 peptides in 19 s, and recovers 99.57% of the self-hits BLAST+ finds. For anyone deciding whether BLAST+ is worth the wait. | aarchbio | run: blast | 2026-10-02 | 2026-10-01 |
-| [fastp](../recipes/fastp/README.md) | Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exactly. For anyone putting read QC in front of an aligner. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-10-01 |
-| [flye](../recipes/flye/README.md) | Assembles a 65× MinION run of *E. coli* into one circular 4.72 Mb chromosome plus its plasmid. For anyone doing long-read de novo assembly. | aarchbio | stage | 2026-10-09 | 2026-10-02 |
-| [foldseek](../recipes/foldseek/README.md) | Searches 16 PDB structures against a database built from themselves on Graviton4, so each must find itself at TM-score 1.0 with nothing scoring higher. For anyone doing structural bioinformatics on ARM. | aarchbio | stage | 2026-10-08 | 2026-10-08 |
-| [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-03 | 2026-09-30 |
-| [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-02 | 2026-09-26 |
-| [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-09 | 2026-10-01 |
-| [humann](../recipes/humann/README.md) | Runs HUMAnN's bundled demo end to end on Graviton4 — gene families, pathway abundance, pathway coverage — and checks the build with the 186 assertions HUMAnN's authors ship with it. For anyone doing metagenomic functional profiling on ARM. | aarchbio | build-in-task | 2026-10-07 | 2026-10-07 |
-| [iqtree](../recipes/iqtree/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, reaching −52706.731 — the same optimum [RAxML-NG finds independently](../recipes/raxml-ng/README.md). For anyone building trees on ARM. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
-| [kallisto](../recipes/kallisto/README.md) | Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier. | aarchbio | stage · run: salmon | 2026-10-02 | 2026-09-30 |
-| [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, bwa-samtools, kraken2 | 2026-10-02 | 2026-10-02 |
-| [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-10-09 | 2026-09-10 |
-| [mafft](../recipes/mafft/README.md) | Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family. | aarchbio | stage · run: hmmer | 2026-10-02 | 2026-10-02 |
-| [mash](../recipes/mash/README.md) | Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale. | aarchbio | stage | 2026-10-02 | 2026-10-01 |
-| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
-| [metaphlan](../recipes/metaphlan/README.md) | Profiles a shotgun metagenome against 23 GB of clade-specific markers on Graviton4, and scores the answer against a mock community whose species list is known in advance. For anyone doing taxonomic profiling on ARM. | aarchbio | stage | 2026-10-07 | 2026-10-07 |
-| [methylation-array](../recipes/methylation-array/README.md) | Recovers each donor's sex from X/Y intensity, each sample's donor from the array's 65 identity probes, and then has a second, independent pipeline agree about which sample is which. For anyone doing array methylation on ARM. | aarchbio | stage | 2026-10-04 | 2026-10-04 |
-| [muscle](../recipes/muscle/README.md) | Aligns the same `7tm_1` family mafft does, from mafft's own extraction, and agrees with it on the family's core. For anyone choosing an aligner. | aarchbio | run: mafft | 2026-10-02 | 2026-10-02 |
-| [picard](../recipes/picard/README.md) | Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s. For anyone putting MarkDuplicates in a real pipeline. | aarchbio | run: bwa-samtools | 2026-10-09 | 2026-10-01 |
-| [plink](../recipes/plink/README.md) | PLINK 1.9 computes allele frequencies and runs a quantitative association scan on Graviton4, checked against integer arithmetic and against a variant whose effect was planted. The catalog's first statistical-genomics recipe, for anyone doing GWAS-style work. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 |
-| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-10-02 | 2026-09-10 |
-| [raxml-ng](../recipes/raxml-ng/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../recipes/iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM. | aarchbio | stage: iqtree | 2026-10-02 | 2026-10-01 |
-| [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-10-03 | 2026-10-03 |
-| [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage: kallisto, salmon | 2026-10-09 | 2026-09-25 |
-| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | 2026-10-07 | 2026-10-07 |
-| [seqkit](../recipes/seqkit/README.md) | Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone reaching for seqkit as the first step of a pipeline. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-10-01 |
-| [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-02 | 2026-10-01 |
-| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 |
-| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: kallisto, salmon, star | 2026-10-02 | 2026-10-01 |
-| [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | 2026-10-08 | 2026-10-08 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [bcftools](../recipes/bcftools/README.md) | Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone choosing a germline caller and what to pay for it. | aarchbio | stage: bcftools, bwa-samtools, gatk4 | 2026-10-02 | 2026-09-30 | — |
+| [bedtools](../recipes/bedtools/README.md) | Runs the four set-algebra operations on hand-checkable intervals, then `genomecov` over bwa's whole-genome BAM. For anyone building intervals into a pipeline. | aarchbio | stage: bwa-mem2 · run: bwa-samtools | 2026-10-09 | 2026-10-01 | — |
+| [blast](../recipes/blast/README.md) | Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. For anyone sizing a homology search, or choosing between BLAST+ and DIAMOND. | aarchbio | stage | 2026-10-02 | 2026-10-01 | — |
+| [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-10-09 | 2026-10-01 | — |
+| [bwa-samtools](../recipes/bwa-samtools/README.md) | Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Graviton, with cost per result measured across four Graviton generations. For anyone aligning short reads and choosing a box. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-02 | 2026-10-01 | — |
+| [cromwell-wdl](../recipes/cromwell-wdl/README.md) | Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked against a closed-form arithmetic result. For anyone whose pipelines are written in WDL — including GATK's published best-practice workflows. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 | — |
+| [dada2](../recipes/dada2/README.md) | DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked against the three templates the reads were generated from. The catalog's first 16S/amplicon recipe, for anyone doing microbial community profiling. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 | — |
+| [diamond](../recipes/diamond/README.md) | Searches 1000 proteins against all 382,428 Ensembl 116 peptides in 19 s, and recovers 99.57% of the self-hits BLAST+ finds. For anyone deciding whether BLAST+ is worth the wait. | aarchbio | run: blast | 2026-10-02 | 2026-10-01 | — |
+| [fastp](../recipes/fastp/README.md) | Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exactly. For anyone putting read QC in front of an aligner. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-10-01 | — |
+| [flye](../recipes/flye/README.md) | Assembles a 65× MinION run of *E. coli* into one circular 4.72 Mb chromosome plus its plasmid. For anyone doing long-read de novo assembly. | aarchbio | stage | 2026-10-09 | 2026-10-02 | — |
+| [foldseek](../recipes/foldseek/README.md) | Searches 16 PDB structures against a database built from themselves on Graviton4, so each must find itself at TM-score 1.0 with nothing scoring higher. For anyone doing structural bioinformatics on ARM. | aarchbio | stage | 2026-10-08 | 2026-10-08 | — |
+| [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-03 | 2026-09-30 | — |
+| [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-02 | 2026-09-26 | — |
+| [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-09 | 2026-10-01 | — |
+| [humann](../recipes/humann/README.md) | Runs HUMAnN's bundled demo end to end on Graviton4 — gene families, pathway abundance, pathway coverage — and checks the build with the 186 assertions HUMAnN's authors ship with it. For anyone doing metagenomic functional profiling on ARM. | aarchbio | build-in-task | 2026-10-07 | 2026-10-07 | — |
+| [iqtree](../recipes/iqtree/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, reaching −52706.731 — the same optimum [RAxML-NG finds independently](../recipes/raxml-ng/README.md). For anyone building trees on ARM. | aarchbio | stage | 2026-10-02 | 2026-10-01 | 2026-10-13 |
+| [kallisto](../recipes/kallisto/README.md) | Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier. | aarchbio | stage · run: salmon | 2026-10-02 | 2026-09-30 | — |
+| [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, bwa-samtools, kraken2 | 2026-10-02 | 2026-10-02 | — |
+| [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-10-09 | 2026-09-10 | — |
+| [mafft](../recipes/mafft/README.md) | Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family. | aarchbio | stage · run: hmmer | 2026-10-02 | 2026-10-02 | — |
+| [mash](../recipes/mash/README.md) | Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale. | aarchbio | stage | 2026-10-02 | 2026-10-01 | — |
+| [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 | — |
+| [metaphlan](../recipes/metaphlan/README.md) | Profiles a shotgun metagenome against 23 GB of clade-specific markers on Graviton4, and scores the answer against a mock community whose species list is known in advance. For anyone doing taxonomic profiling on ARM. | aarchbio | stage | 2026-10-07 | 2026-10-07 | — |
+| [methylation-array](../recipes/methylation-array/README.md) | Recovers each donor's sex from X/Y intensity, each sample's donor from the array's 65 identity probes, and then has a second, independent pipeline agree about which sample is which. For anyone doing array methylation on ARM. | aarchbio | stage | 2026-10-04 | 2026-10-04 | — |
+| [muscle](../recipes/muscle/README.md) | Aligns the same `7tm_1` family mafft does, from mafft's own extraction, and agrees with it on the family's core. For anyone choosing an aligner. | aarchbio | run: mafft | 2026-10-02 | 2026-10-02 | — |
+| [picard](../recipes/picard/README.md) | Marks duplicates in bwa's own 48,817,006-record sorted BAM in 591 s. For anyone putting MarkDuplicates in a real pipeline. | aarchbio | run: bwa-samtools | 2026-10-09 | 2026-10-01 | — |
+| [plink](../recipes/plink/README.md) | PLINK 1.9 computes allele frequencies and runs a quantitative association scan on Graviton4, checked against integer arithmetic and against a variant whose effect was planted. The catalog's first statistical-genomics recipe, for anyone doing GWAS-style work. | aarchbio | build-in-task | 2026-10-02 | 2026-09-20 | 2026-10-13 |
+| [quast](../recipes/quast/README.md) | Score an assembly — contig counts, N50, total length — the standard "how good is this assembly?" | aarchbio | run: megahit, spades | 2026-10-02 | 2026-09-10 | — |
+| [raxml-ng](../recipes/raxml-ng/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../recipes/iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM. | aarchbio | stage: iqtree | 2026-10-02 | 2026-10-01 | — |
+| [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-10-03 | 2026-10-03 | — |
+| [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage: kallisto, salmon | 2026-10-09 | 2026-09-25 | 2026-10-13 |
+| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | 2026-10-07 | 2026-10-07 | gap |
+| [seqkit](../recipes/seqkit/README.md) | Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone reaching for seqkit as the first step of a pipeline. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-10-01 | — |
+| [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-02 | 2026-10-01 | — |
+| [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-02 | 2026-09-10 | — |
+| [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: kallisto, salmon, star | 2026-10-02 | 2026-10-01 | — |
+| [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | 2026-10-08 | 2026-10-08 | — |
 
 ## astro
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
-| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
-| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 |
-| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-08 | 2026-10-08 |
-| [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-12 | 2026-10-12 |
-| [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | 2026-10-12 | 2026-10-12 |
-| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-10 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 | — |
+| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-02 | 2026-09-13 | — |
+| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 | — |
+| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-08 | 2026-10-08 | — |
+| [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | — |
+| [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | — |
+| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-10 | 2026-10-11 | — |
 
 ## bayes
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [arviz](../recipes/arviz/README.md) | Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM. | bayes | stage | 2026-10-10 | 2026-10-11 |
-| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-09 | 2026-10-09 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [arviz](../recipes/arviz/README.md) | Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM. | bayes | stage | 2026-10-10 | 2026-10-11 | — |
+| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-09 | 2026-10-09 | — |
 
 ## cfd
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-10-02 | 2026-09-12 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-10-02 | 2026-09-12 | — |
 
 ## cfd-fv
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-02 | 2026-09-13 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-02 | 2026-09-13 | — |
 
 ## climate
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-02 | 2026-09-13 |
-| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-10 | 2026-10-11 |
-| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-03 | 2026-10-03 |
-| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-08 | 2026-10-08 |
-| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-08 | 2026-10-08 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-02 | 2026-09-13 | — |
+| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-10 | 2026-10-11 | — |
+| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-03 | 2026-10-03 | — |
+| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-08 | 2026-10-08 | — |
+| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-08 | 2026-10-08 | — |
 
 ## comp-chem
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-11 | 2026-10-11 |
-| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-02 | 2026-10-02 |
-| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output. | comp-chem | build-in-task | 2026-10-02 | 2026-10-02 |
-| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-02 | 2026-09-10 |
-| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-02 | 2026-10-02 |
-| [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-02 | 2026-10-02 |
-| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-08 | 2026-10-08 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-11 | 2026-10-11 | — |
+| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-02 | 2026-10-02 | — |
+| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output. | comp-chem | build-in-task | 2026-10-02 | 2026-10-02 | — |
+| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-02 | 2026-09-10 | — |
+| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-02 | 2026-10-02 | — |
+| [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-02 | 2026-10-02 | — |
+| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-08 | 2026-10-08 | — |
 
 ## cp2k
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-10 | 2026-10-10 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-10 | 2026-10-10 | — |
 
 ## dft
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-03 | 2026-10-03 |
-| [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-10-09 | 2026-09-30 |
-| [nwchem](../recipes/nwchem/README.md) | Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM. | dft | build-in-task | 2026-10-09 | 2026-10-03 |
-| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-10-02 | 2026-09-10 |
-| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-10-03 | 2026-10-03 |
-| [quantum-espresso](../recipes/quantum-espresso/README.md) | Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a plane-wave PBE equation of state, and it agrees with GPAW — an independent plane-wave code in the same env — on the identical system. For anyone who runs QE and wants it on Graviton. | dft | build-in-task | 2026-10-02 | 2026-09-12 |
-| [siesta](../recipes/siesta/README.md) | Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's own committed reference energy in the same run. For anyone doing localised-basis DFT on ARM. | dft | stage | 2026-10-02 | 2026-09-30 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-03 | 2026-10-03 | — |
+| [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-10-09 | 2026-09-30 | — |
+| [nwchem](../recipes/nwchem/README.md) | Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM. | dft | build-in-task | 2026-10-09 | 2026-10-03 | — |
+| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-10-02 | 2026-09-10 | — |
+| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-10-03 | 2026-10-03 | — |
+| [quantum-espresso](../recipes/quantum-espresso/README.md) | Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a plane-wave PBE equation of state, and it agrees with GPAW — an independent plane-wave code in the same env — on the identical system. For anyone who runs QE and wants it on Graviton. | dft | build-in-task | 2026-10-02 | 2026-09-12 | — |
+| [siesta](../recipes/siesta/README.md) | Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's own committed reference energy in the same run. For anyone doing localised-basis DFT on ARM. | dft | stage | 2026-10-02 | 2026-09-30 | — |
 
 ## earth-observation
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-03 |
-| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-10 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-03 | — |
+| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-10 | — |
 
 ## fem-cfd
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-09 | 2026-10-10 |
-| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-10 | 2026-10-11 |
-| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-08 | 2026-10-09 |
-| [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-12 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-09 | 2026-10-10 | — |
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-10 | 2026-10-11 | — |
+| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-08 | 2026-10-09 | — |
+| [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-12 | — |
 
 ## geo-ml
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-11 | 2026-10-11 |
-| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-03 |
-| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-11 | 2026-10-11 | — |
+| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-03 | — |
+| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-11 | — |
 
 ## geoscience
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 |
-| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 | — |
+| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 | — |
 
 ## geospatial
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-03 | 2026-10-03 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-03 | 2026-10-03 | — |
 
 ## hep
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-11 | 2026-10-11 |
-| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-10 | 2026-10-11 |
-| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-11 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-11 | 2026-10-11 | — |
+| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-10 | 2026-10-11 | — |
+| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-11 | 2026-10-11 | — |
 
 ## md
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-03 | 2026-10-03 |
-| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | 2026-10-11 | 2026-10-11 |
-| [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-09 | 2026-09-30 |
-| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 |
-| [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 |
-| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-02 | 2026-10-02 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-03 | 2026-10-03 | — |
+| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | 2026-10-11 | 2026-10-11 | — |
+| [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-09 | 2026-09-30 | — |
+| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 | — |
+| [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 | — |
+| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-02 | 2026-10-02 | — |
 
 ## neuroimaging
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-09 | 2026-10-10 |
-| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-10 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-09 | 2026-10-10 | — |
+| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-10 | 2026-10-11 | — |
 
 ## optimization
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-08 | 2026-10-08 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-08 | 2026-10-08 | — |
 
 ## pathology
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [imagecodecs](../recipes/imagecodecs/README.md) | Encodes and decodes a tissue-like image on Graviton4 through every lossless codec this build provides, plus tiled TIFFs, asserting `array_equal` rather than a tolerance. For anyone storing whole-slide imagery on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 |
-| [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | 2026-10-10 | 2026-10-10 |
-| [zarr-dask](../recipes/zarr-dask/README.md) | Writes one array at four chunk shapes on Graviton4 and checks all four read back byte-identical, then measures the two things chunking *does* change: a float sum's last bits, and `argmax` under ties. For anyone doing chunked, lazy array I/O on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [imagecodecs](../recipes/imagecodecs/README.md) | Encodes and decodes a tissue-like image on Graviton4 through every lossless codec this build provides, plus tiled TIFFs, asserting `array_equal` rather than a tolerance. For anyone storing whole-slide imagery on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 | — |
+| [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | 2026-10-12 | 2026-10-10 | — |
+| [zarr-dask](../recipes/zarr-dask/README.md) | Writes one array at four chunk shapes on Graviton4 and checks all four read back byte-identical, then measures the two things chunking *does* change: a float sum's last bits, and `argmax` under ties. For anyone doing chunked, lazy array I/O on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 | — |
 
 ## pic
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | 2026-10-10 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | 2026-10-10 | 2026-10-11 | — |
 
 ## pipeline
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [abundance](../recipes/abundance/README.md) | Bracken turns a kraken2 classification into species abundance on Graviton4, against a four-virus mixture whose proportions were chosen before any read was made. For anyone reporting "what is in this sample, and how much". | pipeline | stage: abundance, kraken2 | 2026-10-02 | 2026-09-22 |
-| [bismark](../recipes/bismark/README.md) | Bismark and bwa-meth align the same bisulfite reads on Graviton4 and MethylDackel calls both, so the caller and the aligner are each varied with the other held fixed — all checked against methylation chosen before the reads existed. The catalog's methylation recipe, for anyone doing WGBS or RRBS. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [bwa-mem2](../recipes/bwa-mem2/README.md) | Aligns a whole sequencing run (24.1M pairs) to all of GRCh38 with both aligners on one box, and prices the trade. For anyone deciding whether to swap `bwa mem` for `bwa-mem2`. | pipeline | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-09-30 |
-| [clair3](../recipes/clair3/README.md) | Calls variants on whole chr20 of NA12878 at 36× and scores them against the GIAB truth set with the same scorer the GATK4 recipe uses. For anyone who wants a neural variant caller on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 |
-| [deeptools](../recipes/deeptools/README.md) | `bamCoverage` turns aligned reads into a coverage track on Graviton4, verified against a coverage profile that was constructed rather than observed. For anyone doing ChIP-seq, ATAC-seq or any coverage-based analysis. | pipeline | stage | 2026-10-09 | 2026-09-20 |
-| [hic](../recipes/hic/README.md) | Deduplicates real Hi-C pairs and loads them into a `.cool` on Graviton4, checking that no contact is created or lost at any step. For anyone doing 3D genome analysis on ARM. | pipeline | stage | 2026-10-08 | 2026-10-09 |
-| [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 |
-| [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
-| [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 |
-| [mrbayes](../recipes/mrbayes/README.md) | Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM. | pipeline | stage · run: iqtree, raxml-ng | 2026-10-11 | 2026-10-11 |
-| [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 |
-| [pangenome](../recipes/pangenome/README.md) | Builds a pangenome graph from chr20 plus 82,818 real variants on Graviton4, then checks the reference path reproduces the input FASTA character for character. For anyone moving from a linear reference to graphs on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 |
-| [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [plink2](../recipes/plink2/README.md) | Runs PLINK 2 and PLINK 1.9 over the identical binary fileset on Graviton4 and checks that their allele counts and missingness match to the integer. For anyone moving a PLINK 1.9 pipeline to PLINK 2 on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 |
-| [polish](../recipes/polish/README.md) | racon and medaka each rebuild a consensus from real Oxford Nanopore reads on Graviton4, scored against the depositors' own plasmid reference. For anyone finishing a long-read assembly and choosing a polisher. | pipeline | stage | 2026-10-05 | 2026-10-05 |
-| [proteomics](../recipes/proteomics/README.md) | Searches a real BSA digest against a target-decoy database on Graviton4, then rescores an independent PSM set with Percolator. For anyone doing bottom-up proteomics on ARM. | pipeline | stage | 2026-10-08 | 2026-10-09 |
-| [qc-aggregate](../recipes/qc-aggregate/README.md) | FastQC measures four samples on Graviton4 and MultiQC rolls them into one cohort report, both checked against read counts, lengths, GC and duplication that were fixed before the FASTQs existed. For anyone QC-ing more than one sample. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [rnaseq-counts](../recipes/rnaseq-counts/README.md) | featureCounts and HTSeq each count the same aligned reads against the same annotation on Graviton4, checked against counts that were planted rather than measured. The step that produces the matrix [differential expression](../recipes/rnaseq-de/README.md) consumes. | pipeline | stage | 2026-10-02 | 2026-09-20 |
-| [rnaseq-de](../recipes/rnaseq-de/README.md) | DESeq2, edgeR and limma-voom each test the same count matrix for differential expression on Graviton4, and are checked against genes whose answer is known by construction. For anyone doing bulk RNA-seq who wants to see the three standard methods agree. | pipeline | stage | 2026-10-02 | 2026-09-20 |
-| [rsem](../recipes/rsem/README.md) | RSEM quantifies two overlapping transcripts on Graviton4 from an expression ratio planted before the reads existed, next to the unique-only count of the same data. For anyone quantifying transcripts where isoforms share sequence. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [single-cell](../recipes/single-cell/README.md) | piscem maps single-cell reads and alevin-fry turns them into a cell × gene count matrix on Graviton4, checked against the matrix the fixture was built from. The catalog's first single-cell recipe, for anyone quantifying scRNA-seq without Cell Ranger. | pipeline | stage | 2026-10-02 | 2026-09-20 |
-| [snakemake](../recipes/snakemake/README.md) | Hands a Snakemake workflow to the `spawn` executor, which dispatches each job to its own ephemeral instance. Four genomes in, four parallel jobs, one join — and the join checks every shard against NCBI. For anyone running Snakemake on spore.host. | pipeline | stage: mash, snakemake | 2026-10-05 | 2026-10-05 |
-| [structural-variants](../recipes/structural-variants/README.md) | delly and manta each call a 1 kb deletion on Graviton4, against a deletion removed from the sample before any read existed. The catalog's first SV recipe, for anyone calling CNVs or rearrangements from short reads. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [transcript-assembly](../recipes/transcript-assembly/README.md) | hisat2 aligns transcript reads across splice junctions and StringTie rebuilds the transcript on Graviton4, scored by gffcompare against the exon structure the reads were generated from. For anyone assembling transcripts rather than counting against a reference. | pipeline | stage | 2026-10-02 | 2026-09-22 |
-| [variant-annotation](../recipes/variant-annotation/README.md) | snpEff, `bcftools csq` and VEP annotate the same VCF against the same reference and GFF on Graviton4, all three checked against consequences chosen before the variants existed. The catalog's annotation recipe, for anyone downstream of a variant caller. | pipeline | stage | 2026-10-02 | 2026-09-22 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [abundance](../recipes/abundance/README.md) | Bracken turns a kraken2 classification into species abundance on Graviton4, against a four-virus mixture whose proportions were chosen before any read was made. For anyone reporting "what is in this sample, and how much". | pipeline | stage: abundance, kraken2 | 2026-10-02 | 2026-09-22 | — |
+| [bismark](../recipes/bismark/README.md) | Bismark and bwa-meth align the same bisulfite reads on Graviton4 and MethylDackel calls both, so the caller and the aligner are each varied with the other held fixed — all checked against methylation chosen before the reads existed. The catalog's methylation recipe, for anyone doing WGBS or RRBS. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [bwa-mem2](../recipes/bwa-mem2/README.md) | Aligns a whole sequencing run (24.1M pairs) to all of GRCh38 with both aligners on one box, and prices the trade. For anyone deciding whether to swap `bwa mem` for `bwa-mem2`. | pipeline | stage: bwa-mem2, bwa-samtools | 2026-10-09 | 2026-09-30 | — |
+| [clair3](../recipes/clair3/README.md) | Calls variants on whole chr20 of NA12878 at 36× and scores them against the GIAB truth set with the same scorer the GATK4 recipe uses. For anyone who wants a neural variant caller on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 | — |
+| [deeptools](../recipes/deeptools/README.md) | `bamCoverage` turns aligned reads into a coverage track on Graviton4, verified against a coverage profile that was constructed rather than observed. For anyone doing ChIP-seq, ATAC-seq or any coverage-based analysis. | pipeline | stage | 2026-10-09 | 2026-09-20 | — |
+| [hic](../recipes/hic/README.md) | Deduplicates real Hi-C pairs and loads them into a `.cool` on Graviton4, checking that no contact is created or lost at any step. For anyone doing 3D genome analysis on ARM. | pipeline | stage | 2026-10-08 | 2026-10-09 | — |
+| [imputation](../recipes/imputation/README.md) | Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about. | pipeline | stage | 2026-10-02 | 2026-09-20 | — |
+| [lineage](../recipes/lineage/README.md) | Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and compares them in one namespace. For anyone doing pathogen surveillance on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 | — |
+| [minimap2](../recipes/minimap2/README.md) | Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads. | pipeline | stage: gatk4, minimap2 · run: bwa-samtools | 2026-10-02 | 2026-10-01 | — |
+| [mrbayes](../recipes/mrbayes/README.md) | Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM. | pipeline | stage · run: iqtree, raxml-ng | 2026-10-11 | 2026-10-11 | — |
+| [nf-spawn](../recipes/nf-spawn/README.md) | Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each process to its *own* ephemeral instance, data moving between them through an S3 work dir. For anyone running a workflow engine on spore.host. | pipeline | stage: mafft | 2026-10-03 | 2026-10-03 | — |
+| [pangenome](../recipes/pangenome/README.md) | Builds a pangenome graph from chr20 plus 82,818 real variants on Graviton4, then checks the reference path reproduces the input FASTA character for character. For anyone moving from a linear reference to graphs on ARM. | pipeline | stage: bwa-samtools, gatk4 | 2026-10-08 | 2026-10-09 | — |
+| [phasing](../recipes/phasing/README.md) | whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [plink2](../recipes/plink2/README.md) | Runs PLINK 2 and PLINK 1.9 over the identical binary fileset on Graviton4 and checks that their allele counts and missingness match to the integer. For anyone moving a PLINK 1.9 pipeline to PLINK 2 on ARM. | pipeline | stage | 2026-10-08 | 2026-10-08 | — |
+| [polish](../recipes/polish/README.md) | racon and medaka each rebuild a consensus from real Oxford Nanopore reads on Graviton4, scored against the depositors' own plasmid reference. For anyone finishing a long-read assembly and choosing a polisher. | pipeline | stage | 2026-10-05 | 2026-10-05 | — |
+| [proteomics](../recipes/proteomics/README.md) | Searches a real BSA digest against a target-decoy database on Graviton4, then rescores an independent PSM set with Percolator. For anyone doing bottom-up proteomics on ARM. | pipeline | stage | 2026-10-08 | 2026-10-09 | — |
+| [qc-aggregate](../recipes/qc-aggregate/README.md) | FastQC measures four samples on Graviton4 and MultiQC rolls them into one cohort report, both checked against read counts, lengths, GC and duplication that were fixed before the FASTQs existed. For anyone QC-ing more than one sample. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [rnaseq-counts](../recipes/rnaseq-counts/README.md) | featureCounts and HTSeq each count the same aligned reads against the same annotation on Graviton4, checked against counts that were planted rather than measured. The step that produces the matrix [differential expression](../recipes/rnaseq-de/README.md) consumes. | pipeline | stage | 2026-10-02 | 2026-09-20 | — |
+| [rnaseq-de](../recipes/rnaseq-de/README.md) | DESeq2, edgeR and limma-voom each test the same count matrix for differential expression on Graviton4, and are checked against genes whose answer is known by construction. For anyone doing bulk RNA-seq who wants to see the three standard methods agree. | pipeline | stage | 2026-10-02 | 2026-09-20 | — |
+| [rsem](../recipes/rsem/README.md) | RSEM quantifies two overlapping transcripts on Graviton4 from an expression ratio planted before the reads existed, next to the unique-only count of the same data. For anyone quantifying transcripts where isoforms share sequence. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [single-cell](../recipes/single-cell/README.md) | piscem maps single-cell reads and alevin-fry turns them into a cell × gene count matrix on Graviton4, checked against the matrix the fixture was built from. The catalog's first single-cell recipe, for anyone quantifying scRNA-seq without Cell Ranger. | pipeline | stage | 2026-10-02 | 2026-09-20 | — |
+| [snakemake](../recipes/snakemake/README.md) | Hands a Snakemake workflow to the `spawn` executor, which dispatches each job to its own ephemeral instance. Four genomes in, four parallel jobs, one join — and the join checks every shard against NCBI. For anyone running Snakemake on spore.host. | pipeline | stage: mash, snakemake | 2026-10-05 | 2026-10-05 | — |
+| [structural-variants](../recipes/structural-variants/README.md) | delly and manta each call a 1 kb deletion on Graviton4, against a deletion removed from the sample before any read existed. The catalog's first SV recipe, for anyone calling CNVs or rearrangements from short reads. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [transcript-assembly](../recipes/transcript-assembly/README.md) | hisat2 aligns transcript reads across splice junctions and StringTie rebuilds the transcript on Graviton4, scored by gffcompare against the exon structure the reads were generated from. For anyone assembling transcripts rather than counting against a reference. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
+| [variant-annotation](../recipes/variant-annotation/README.md) | snpEff, `bcftools csq` and VEP annotate the same VCF against the same reference and GFF on Graviton4, all three checked against consequences chosen before the variants existed. The catalog's annotation recipe, for anyone downstream of a variant caller. | pipeline | stage | 2026-10-02 | 2026-09-22 | — |
 
 ## pointcloud
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-12 | 2026-10-12 |
-| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-03 | 2026-10-03 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-12 | 2026-10-12 | — |
+| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-03 | 2026-10-03 | — |
 
 ## popgen
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [popgen](../recipes/popgen/README.md) | Simulates 40 genomes over 1 Mb on Graviton4 and checks the result against coalescent theory, integer tree invariants, and a second implementation of the same statistics. For anyone doing population genetics on ARM. | popgen | stage | 2026-10-11 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [popgen](../recipes/popgen/README.md) | Simulates 40 genomes over 1 Mb on Graviton4 and checks the result against coalescent theory, integer tree invariants, and a second implementation of the same statistics. For anyone doing population genetics on ARM. | popgen | stage | 2026-10-11 | 2026-10-11 | — |
 
 ## quantum
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-10 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-10 | 2026-10-11 | — |
 
 ## r
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 |
-| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 |
-| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-11 | 2026-10-11 |
-| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 | — |
+| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 | — |
+| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-11 | 2026-10-11 | — |
+| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 | — |
 
 ## single-cell
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-08 | 2026-10-08 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-08 | 2026-10-08 | — |
 
 ## structbio
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-11 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-11 | 2026-10-11 | — |
 
 ## tomography
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-11 | 2026-10-11 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-11 | 2026-10-11 | — |
 
 ## viz
 
-| Recipe | What it does | Env | Inputs | Updated | Verified |
-|---|---|---|---|---|---|
-| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-11 | 2026-10-11 |
-| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-03 | 2026-10-03 |
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-11 | 2026-10-11 | — |
+| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-03 | 2026-10-03 | — |

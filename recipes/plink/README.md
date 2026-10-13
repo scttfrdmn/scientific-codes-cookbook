@@ -2,8 +2,11 @@
 tool: plink
 tool_version: "1.9.0-b.8"
 image: quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a
 spawn_version: 0.111.1
-last_verified: 2026-09-20
+last_verified: 2026-10-13
 ---
 # PLINK — allele counts that add up, and a planted association it has to find
 
@@ -45,7 +48,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — PLINK is I/O-bound here, not compute-b
 |---|---|---|
 | allele counts | PLINK's `--freq counts` A1 count == an independent hand count from the additive matrix, **every SNP** | **0 mismatches of 1000** |
 | planted association | the causal SNP ranks **first** by p-value | `snp500`, p = 7.6e-262 (runner-up 1.9e-4) |
-| arm64 from inside | `plink` ELF `e_machine` == 183 | 183 (AArch64) |
+| native from inside | `plink` ELF `e_machine` == the host's (183 AArch64, 62 x86-64) | 183 on Graviton4, 62 on x86 |
 
 The first check is worth the detail. `--recode A` writes the additive matrix, so summing a column gives the A1 allele count directly; PLINK's own count comes from `--freq counts`. Both are **integers**, so the comparison needs no tolerance at all — it either matches exactly or PLINK's counting is wrong.
 
@@ -68,10 +71,30 @@ The second check is constructed truth, the [photutils](../photutils/README.md) s
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before `plink` is callable.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/plink@sha256:b9fa9861…` (1.90b7.7, `linux/amd64`; not
+cosign-signed, so the digest is the pin):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| allele-count mismatches | 0 of 1000 | 0 of 1000 |
+| planted SNP / its p | `snp500` / 7.6e-262 | `snp500` / 1.4e-257 |
+| runner-up p | 1.9e-4 | 2.3e-4 |
+
+**The p-values differ because the input does, not the arithmetic.** The phenotype's noise comes
+from awk's `srand(NR); rand()`, and the two images ship different awks — mawk 1.3.4 in the ARM
+image, BusyBox awk in bioconda's x86 one — with different generators (`srand(1)` gives 0.840…
+and 0.783…). So x86 tests association on differently-noised data. Both claims hold anyway, which
+is what they were built for: the integer identity is exact on both, and the planted SNP still
+leads by ~253 orders of magnitude.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=plink
+make run RECIPE=plink                   # Graviton4
+make run RECIPE=plink ARCH=x86_64       # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=plink
 ```
 

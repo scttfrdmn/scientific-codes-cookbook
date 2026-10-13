@@ -44,9 +44,24 @@ def _headings(text):
 
 def _outside_details_lines(text):
     """Count lines NOT inside a <details>...</details> block (frontmatter + blanks included,
-    matching the 'lines before <details>' the ceiling was calibrated against)."""
+    matching the 'lines before <details>' the ceiling was calibrated against).
+
+    The x86_64 frontmatter keys are NOT counted. The ceiling was calibrated before they
+    existed, they add the same 2-4 lines to every page, and no reader prose comes with them --
+    counting them would push pages over without a word of new text. Only lines that belong to
+    those keys are excluded (an `images:` list entry under the arm64 key still counts)."""
     depth, outside = 0, 0
-    for line in text.split("\n"):
+    fm_end = text.find("\n---\n", 4) if text.startswith("---\n") else -1
+    fm_lines = text[:fm_end].count("\n") + 1 if fm_end != -1 else 0
+    in_x86 = False
+    for i, line in enumerate(text.split("\n")):
+        if i < fm_lines:
+            if re.match(r"^(images_x86_64:|last_verified_x86_64:|gap_x86_64:)", line):
+                in_x86 = line.startswith("images_x86_64:")
+                continue
+            if in_x86 and re.match(r"^\s+- ", line):
+                continue
+            in_x86 = False
         o, c = line.count("<details"), line.count("</details>")
         if depth == 0 and o == 0:
             outside += 1
@@ -159,7 +174,27 @@ def frontmatter_keys(text):
     end = text.find("\n---\n", 4)
     if end == -1:
         return None
-    return {m.group(1) for m in re.finditer(r"^([a-z_]+):", text[4:end], re.M)}
+    return {m.group(1) for m in re.finditer(r"^([a-z0-9_]+):", text[4:end], re.M)}
+
+
+def check_x86_frontmatter(text, keys, rel):
+    """The x86_64 pins live beside the arm64 ones (scripts/spec_arch.py reads them). A recipe
+    either has x86 pins, or records why there is no x86 build -- never both -- and only a real
+    x86 run may stamp last_verified_x86_64, which therefore needs pins to have run."""
+    has_imgs, has_gap = "images_x86_64" in keys, "gap_x86_64" in keys
+    if has_imgs and has_gap:
+        errors.append(f"{rel}: frontmatter has both images_x86_64 and gap_x86_64 -- one or the other")
+    if "last_verified_x86_64" in keys and not has_imgs:
+        errors.append(f"{rel}: last_verified_x86_64 without images_x86_64 -- nothing to have run")
+    if has_imgs:
+        block = text[4:text.find("\n---\n", 4)]
+        m = re.search(r"^images_x86_64:\s*\n((?:\s+-\s+.*\n?)+)", block, re.M)
+        entries = re.findall(r"^\s+-\s+(\S+)", m.group(1), re.M) if m else []
+        if not entries:
+            errors.append(f"{rel}: images_x86_64 is empty")
+        for e in entries:
+            if "@sha256:" not in e:
+                errors.append(f"{rel}: x86_64 image {e} is not pinned by digest")
 
 
 def check_internal_links(text, path):
@@ -198,6 +233,7 @@ def check(path, needs_fm):
                     warns.append(f"{rel}: frontmatter missing recommended field '{k}' (refresh target fills it)")
             if "last_verified" not in keys:
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
+            check_x86_frontmatter(text, keys, rel)
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
     for i, m in enumerate(fences):
         if i % 2 == 0 and m.group(1) == "":   # opening fence (even index) with no language; closers are odd

@@ -166,13 +166,16 @@ def main():
         if run_deps:
             segs.append("run: " + ", ".join(sorted(run_deps)))
         inputs = " · ".join(segs) if segs else ("build-in-task" if not (prefixes or runs) else "stage")
+        # x86_64: the verifying run's date, or "gap" when the recipe records that no x86
+        # build exists -- so this column IS the list of missing x86 builds, generated.
+        x86 = fm.get("last_verified_x86_64") or ("gap" if fm.get("gap_x86_64") else "—")
         rows.append((domain, name, retarget_links(lede(text), d), env, inputs,
-                     git_updated(os.path.relpath(d, ROOT)), fm.get("last_verified", "—")))
+                     git_updated(os.path.relpath(d, ROOT)), fm.get("last_verified", "—"), x86))
 
     # group by domain, alphabetical within
     domains = sorted({r[0] for r in rows})
     out = [BANNER, "", "# The recipe catalog", "",
-           f"Every recipe here runs one tool on a Graviton4 box, verified, self-terminating "
+           f"Every recipe here runs one tool on an AWS box, verified, self-terminating "
            f"— **{len(rows)} working examples**, generated from the recipes themselves so this "
            f"list is always what actually ships. Each links to its page; run most with "
            f"`make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through "
@@ -183,16 +186,19 @@ def main():
            "reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe "
            "reads X's run output).", "",
            "**Updated** is the git date of the page's last change (freshness). **Verified** is "
-           "the date a real run last confirmed it — `—` means not verified since tracking began, "
-           "an honest TODO for the next run, never backfilled.", ""]
+           "the date a real run last confirmed it on Graviton4 (arm64) — `—` means not verified "
+           "since tracking began, an honest TODO for the next run, never backfilled. **x86_64** is "
+           "the same for a same-generation Intel box (`c8i`/`m8i`/`r8i`, `make run ... ARCH=x86_64`): "
+           "a date, `—` (not yet run), or **gap** (no x86 build of the pinned version exists; the "
+           "page says why).", ""]
     for dom in domains:
         drows = [r for r in rows if r[0] == dom]
         out.append(f"## {dom}")
         out.append("")
-        out.append("| Recipe | What it does | Env | Inputs | Updated | Verified |")
-        out.append("|---|---|---|---|---|---|")
-        for _, name, desc, env, inputs, updated, verified in drows:
-            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} | {updated} | {verified} |")
+        out.append("| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |")
+        out.append("|---|---|---|---|---|---|---|")
+        for _, name, desc, env, inputs, updated, verified, x86 in drows:
+            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} | {updated} | {verified} | {x86} |")
         out.append("")
     content = "\n".join(out).rstrip() + "\n"
 

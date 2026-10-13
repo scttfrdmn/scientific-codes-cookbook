@@ -2,6 +2,7 @@
 tool: scanpy
 tool_version: "1.12.4"
 image: quay.io/aarchbio/scanpy@sha256:5621e1cc9d14fbac0c86d002efd852abf92587a4739d5e32893786b90f87277e
+gap_x86_64: bioconda has no scanpy 1.12.4 x86 build on quay.io/biocontainers (checked 2026-10-13)
 spawn_version: 0.123.0
 last_verified: 2026-10-07
 ---

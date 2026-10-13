@@ -2,6 +2,9 @@
 tool: iqtree
 tool_version: 3.1.3
 image: quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -80,10 +83,28 @@ versus 4 on the same alignments from search stochasticity alone.
 This recipe stages the alignment; [RAxML-NG](../raxml-ng/README.md) reads the same object rather than
 a copy, because the agreement only means something on identical bytes.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/iqtree@sha256:3a7fc305…` (3.1.3, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged alignment, same `-T 4 --seed 12345`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| taxa / tips / columns | 114 / 114 / 477 | 114 / 114 / 477 |
+| best log-likelihood | −52706.731 | −52706.731 |
+| `iqout.treefile`, `iqout.mldist` | — | **byte-identical** to arm64 |
+
+The stochastic-search caveat above is about thread count and version, and both are pinned —
+so the pinned search reaches **the same tree on both architectures**, not merely the same
+likelihood. The `.iqtree` and `.log` files differ only in timestamps, timings and the build
+banner (`Linux ARM 64-bit` vs `Linux x86 64-bit`).
+
 ### Run + verify
 
 ```sh
-make run RECIPE=iqtree
+make run RECIPE=iqtree                  # Graviton4
+make run RECIPE=iqtree ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=iqtree
 ```
 

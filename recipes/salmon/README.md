@@ -2,6 +2,9 @@
 tool: salmon
 tool_version: "2.7.0"
 image: quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/salmon@sha256:85b0addd8a145f0ffda525daa86004e77ee5efe5fae323b7a1167429ecfced46
 spawn_version: 0.111.1
 last_verified: 2026-09-25
 ---
@@ -104,10 +107,27 @@ Also, two things this image does **not** have, both of which cost a run to learn
 stop reading early — a `sed … | head -1` on a small file usually wins the race and SIGPIPEs on a
 large one, which is worse than failing outright, so there is no pipe there at all.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of
+the same version — `quay.io/biocontainers/salmon@sha256:85b0addd…` (2.7.0, `linux/amd64`;
+biocontainers images are not cosign-signed, so the digest is the pin). Same staged bytes:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| `tpm_sum` / `numreads_sum` | 1000000.00 / 14913565 | 1000000.00 / 14913565 |
+| reads processed / mapped | 15800127 / 14913565 | 15800127 / 14913565 |
+| `quant.sf` sha256 | `7ea70b61…` | `7ea70b61…` — **byte-identical** |
+
+Not just the same assertions: the same 453,553-row output, bit for bit, from a 16-thread EM on
+two architectures. (The output file is still named `quant-c8g-16t.sf` on the x86 run; the name is
+the spec's, and x86 runs write under `runs-x86_64/`, so nothing collides.)
+
 ### Run + verify
 
 ```sh
-make run RECIPE=salmon
+make run RECIPE=salmon                  # Graviton4
+make run RECIPE=salmon ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=salmon
 ```
 

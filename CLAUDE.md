@@ -4,15 +4,18 @@
 
 A cookbook: working, runnable recipes for the ~50 common research-computing codes
 on spore.host. **Round One builds working examples** — does each code run cleanly
-on a Graviton4 box, producing real output. Not benchmarks. Cost measurement is a
+on an AWS box — Graviton4 and x86 — producing real output. Not benchmarks. Cost measurement is a
 later phase and is out of scope now.
 
 **Every recipe runs the application on AWS, through the spore.host tools.** That is
 the subject and the whole point: `truffle` sizes the box, `spawn` runs the pinned
 container on it under a TTL and a cost cap, `lagotto` handles capacity, and the
-instance self-terminates. Graviton4 (`c8g`/`m8g`/`r8g`) is the target now; other
-instance types — x86, GPU — come later. A recipe that has not run on AWS is not a
-recipe yet, whatever it does anywhere else.
+instance self-terminates. **This is an AWS cookbook, not an ARM one:** Graviton4
+(`c8g`/`m8g`/`r8g`) and same-generation x86 (`c8i`/`m8i`/`r8i`, via `ARCH=x86_64`) are
+both targets, from one recipe — the x86 pins live in the frontmatter beside the arm64 ones
+(`images_x86_64`, `last_verified_x86_64`, or `gap_x86_64` with the reason), and
+`scripts/spec_arch.py` rewrites the same specs rather than keeping a second copy. GPU comes
+later. A recipe that has not run on AWS is not a recipe yet, whatever it does anywhere else.
 
 The recipe is the product. Read CHARTER.md for the why. State and progress live on
 the GitHub project board — this file holds only standing rules.
@@ -32,8 +35,21 @@ memory-bound, EFA-capable 8g for multi-node — pick by fit), pinned arm64 conta
 runs to completion, self-terminates, and a **smoke check** confirms the output is
 real: it exists, is non-empty, is the right shape. That's done. Don't gold-plate it.
 
-GPU-bound codes are **Round Two** (an x86 pass) — the only Graviton GPU is g7g,
-too small to be representative. Don't force them onto Graviton now.
+GPU-bound codes are **Round Two** — the only Graviton GPU is g7g, too small to be
+representative. Don't force them onto Graviton now.
+
+**An x86 verification asserts the same claims, and a failure is reported, never edited.**
+A pinned digest does not pin the numerics (see the OpenBLAS rule below), so an exact
+assertion on a *path* may legitimately differ on x86 while a *fixed point* must not —
+sorting which is which is the finding. Loosening a bound until x86 passes is the false
+green this project exists to avoid. The one sanctioned edit is an architecture assertion
+written as "ARM" (ELF `e_machine == 183`, `R_ARCH == aarch64`): make it host-relative
+(binary architecture == `uname -m`), which proves "not emulated" on either chip. The other
+is shell glue the x86 image cannot run: bioconda's x86 images (`quay.io/biocontainers`) have
+a BusyBox userland, so `join`, `numfmt` and `perl` — present in aarchbio's — are absent
+(measured: plink died `join: command not found`, exit 127, before any science ran). Rewrite
+the glue to compute the same thing portably, and re-run **both** architectures, since the
+spec changed. Either edit changes how a value is computed, never what is asserted about it.
 
 ## The shape of a recipe: one tool per task, S3 between them
 
@@ -378,7 +394,12 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
 - **arm64 images: if a real arm64 container already exists upstream, use it.** aarch.bio
   (bioconda layer) / aarch.science (conda-forge) exist to fill the many gaps where one
   does not — **or where a "multi-arch" tag does not actually contain an arm64 entry.**
-  Never fall back to x86 or an emulated image; a missing image is still a gap to record.
+  Never substitute an x86 or emulated image for a missing arm64 one; a missing image is
+  still a gap to record. (x86 *as a target* is first-class — see the top; the rule is about
+  an x86 image standing in for an ARM run.) **aarch.\* are ARM-only registries — never ask
+  them for x86 builds.** An x86 pin is the same version from its upstream channel
+  (bioconda → `quay.io/biocontainers`), verified `linux/amd64`; where none exists, record
+  `gap_x86_64` and stop.
 - **Walk the manifest list's entries; a manifest list is not evidence of arm64.**
   `docker manifest inspect <img>` returning a list means multi-arch was *intended*, not
   that arm64 is in it. Measured: `gromacs/gromacs:latest` and `psi4/psi4:latest` are both

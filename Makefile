@@ -34,11 +34,14 @@ stage: ## build a recipe's inputs into your bucket from public sources: make sta
 	  bash recipes/$(RECIPE)/stage-inputs.sh $(COOKBOOK_BUCKET); \
 	else echo "recipe '$(RECIPE)' builds its input in the task — no staging needed"; fi
 
-spec: ## resolve a recipe's spec(s) for spawn and print the path(s): spawn task run --spec "$(make -s spec RECIPE=bwa-samtools)"
+spec: ## resolve a recipe's spec(s) for spawn and print the path(s); ARCH=x86_64 for the x86 run: spawn task run --spec "$(make -s spec RECIPE=bwa-samtools)"
 	@test -n "$(RECIPE)" || { echo "usage: make spec RECIPE=<name>" >&2; exit 1; }
 	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'make bootstrap' first" >&2; exit 1; }
 	@ls recipes/$(RECIPE)/*.task.json >/dev/null 2>&1 || { echo "recipe '$(RECIPE)' has no TaskSpec — see its page for how it runs" >&2; exit 1; }
 	@nonce="$$(date +%Y%m%d%H%M%S)"; \
+	if [ -n "$(ARCH)" ] && [ "$(ARCH)" != "arm64" ]; then \
+	  python3 scripts/spec_arch.py "$(RECIPE)" "$(ARCH)" "$(COOKBOOK_BUCKET)" "$$nonce"; exit $$?; \
+	fi; \
 	for s in recipes/$(RECIPE)/*.task.json; do \
 	  out="$${TMPDIR:-/tmp}/$$(basename $$s .task.json).$$nonce.json"; \
 	  sed -e 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' \
@@ -46,10 +49,17 @@ spec: ## resolve a recipe's spec(s) for spawn and print the path(s): spawn task 
 	  echo "$$out"; \
 	done
 
-run: ## run a recipe against your bucket: make run RECIPE=r
+run: ## run a recipe against your bucket (ARCH=x86_64 for the x86 run): make run RECIPE=r
 	@test -n "$(RECIPE)" || { echo "usage: make run RECIPE=<name>"; exit 1; }
 	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'make bootstrap' first"; exit 1; }
 	@nonce="$$(date +%Y%m%d%H%M%S)"; \
+	if [ -n "$(ARCH)" ] && [ "$(ARCH)" != "arm64" ]; then \
+	  specs="$$(python3 scripts/spec_arch.py "$(RECIPE)" "$(ARCH)" "$(COOKBOOK_BUCKET)" "$$nonce")" || exit 1; \
+	  for out in $$specs; do \
+	    echo "== $$out ($(ARCH))  →  s3://$(COOKBOOK_BUCKET)/runs-$(ARCH) (run $$nonce) =="; \
+	    spawn task run --spec "$$out" --wait || exit 1; \
+	  done; exit 0; \
+	fi; \
 	for spec in recipes/$(RECIPE)/*.task.json; do \
 	  out="$$(mktemp -t cookbook.XXXXXX)"; \
 	  sed -e 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' \
@@ -60,4 +70,4 @@ run: ## run a recipe against your bucket: make run RECIPE=r
 
 ls: ## list a recipe's outputs in your bucket: make ls RECIPE=r
 	@test -n "$(RECIPE)" || { echo "usage: make ls RECIPE=<name>"; exit 1; }
-	aws s3 ls s3://$(COOKBOOK_BUCKET)/runs/$(RECIPE)/ --recursive
+	aws s3 ls s3://$(COOKBOOK_BUCKET)/runs$(if $(filter-out arm64,$(ARCH)),-$(ARCH))/$(RECIPE)/ --recursive
