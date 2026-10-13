@@ -4,8 +4,12 @@ tool_version: "3.22.0"
 images:
   - quay.io/aarchbio/nextclade@sha256:7cbf30abb4fa7fbc9b9a2c608b9ed361d8527514af139fb6c1883dce16e16f62
   - quay.io/aarchbio/pangolin@sha256:32551903d08cbe39fc70fcf924326fec08c100b8416346acd0302bb0e7f2a03a
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/nextclade@sha256:801a4c7b176d3c9c2359ad0a2c03e52cd113d8d5cbf006ff611e310ef4d74571
+  - quay.io/biocontainers/pangolin@sha256:409ee2c0f9c5d38fc407435a1a7ce487187deca17bf3fba91e1f9ea1f0810df7
 spawn_version: 0.123.0
-last_verified: 2026-10-08
+last_verified: 2026-10-13
 ---
 # Nextclade vs pangolin — two lineage callers, 163 of 163 compatible
 
@@ -133,11 +137,28 @@ binary, so the dataset-tag check uses `grep` rather than a JSON parser — and t
 redirect stderr, or `command not found` surfaces as an empty value and the failure message blames
 the dataset.
 
+### On x86_64
+
+Both tasks on same-generation Intel (`m8i`), from bioconda's own x86 builds of the same versions
+(nextclade and pangolin from `quay.io/biocontainers`, `linux/amd64`; not cosign-signed, so the
+digests are the pins). Same pinned dataset and sequences:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| shared / both assigned | 165 / 163 | 165 / 163 |
+| exact agreement / hierarchy-compatible | 156 (0.9571) / 163 (1.0000) | 156 (0.9571) / 163 (1.0000) |
+| `score.tsv`, `pangolin.csv`, `nc_calls.tsv` | — | **byte-identical** |
+| `nextclade.tsv` | — | identical once sorted — row order only |
+
+Every lineage call is the same on both architectures. Nextclade writes its 165 rows in completion
+order across threads, so the file's *order* moves while its content does not.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=lineage
 for s in $(make -s spec RECIPE=lineage); do spawn task run --spec "$s" --wait; done
+make run RECIPE=lineage ARCH=x86_64     # same specs, x86 pins, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/lineage/r1/score.tsv" -
 ```
 
