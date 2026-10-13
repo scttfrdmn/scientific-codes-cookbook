@@ -2,6 +2,9 @@
 tool: metaphlan
 tool_version: "4.2.5"
 image: quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/metaphlan@sha256:c06f80ecf8097ea1df8763d50e39da850d647ec0dcab82328443e1d860482505
 spawn_version: 0.123.0
 last_verified: 2026-10-07
 ---
@@ -14,6 +17,7 @@ Profiles a shotgun metagenome against 23 GB of clade-specific markers on Gravito
 ```bash
 make stage RECIPE=metaphlan     # once: 3.3 GB markers + 23 GB index + 117 MB reads
 spawn task run --spec "$(make -s spec RECIPE=metaphlan)" --wait
+spawn task run --spec "$(make -s spec RECIPE=metaphlan ARCH=x86_64 | grep 03-profile)" --wait   # x86: writes runs-x86_64/
 make ls RECIPE=metaphlan        # score.tsv is the answer
 
 metaphlan reads_1.fastq.gz,reads_2.fastq.gz --input_type fastq \
@@ -135,6 +139,25 @@ cheap. Hence a 117 MB fixture.
 **`curl -C -` corrupts under retry.** A 1.55 GB fetch returned `rc=0` with the *right byte count*
 and a *wrong md5*. Resume-across-retries produced a plausible-looking, corrupt file. The published
 md5 is the gate; the byte count is not.
+
+### On x86_64
+
+The profile task on same-generation Intel (`r8i.4xlarge`), from bioconda's own x86 build of the
+same version — `quay.io/biocontainers/metaphlan@sha256:c06f80ec…` (4.2.6, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged index, markers and reads; the three fetch
+tasks are staging and were not re-run:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| reads processed | 1,588,558 | 1,588,558 |
+| Zymo bacteria detected / unexpected >1% | 8/8 / 0 | 8/8 / 0 |
+| `score.tsv` sha256 | `3956df39…` | `3956df39…` — **byte-identical** |
+
+`profile.txt` differs in one line only: its `#` header echoes the command line, and the binary
+lives at `/opt/conda/bin/metaphlan` in the ARM image and `/usr/local/bin/metaphlan` in bioconda's.
+Every clade row and abundance is identical. `metaphlan.log` on x86 adds four `Failed to launch
+x86-64-v3 version, staying with default` lines — bowtie2 falling back to its baseline x86-64
+build — which changes nothing in the output.
 
 ### Run + verify
 
