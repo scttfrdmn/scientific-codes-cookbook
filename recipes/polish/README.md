@@ -5,6 +5,11 @@ images:
   minimap2: quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a
   racon: quay.io/aarchbio/racon@sha256:75020311bdb6a635ee67718984db28029e95ee2272e32de9d0def8a9826ed4ee
   medaka: quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/minimap2@sha256:f7e4a9a17912eea542500988ee96013e37a887b3746673636f2773cc81052590
+  - quay.io/biocontainers/racon@sha256:8348069307a3e1bf370fa42f70fc256383215f20d08aade7baae009e13052130
+  - quay.io/biocontainers/medaka@sha256:18d5d73aa7f0aa70d0f623c4d34ce83ca791ba9c14c751bb3ed5d3452a8fb4c3
 spawn_version: 0.122.0
 last_verified: 2026-10-05
 ---
@@ -108,11 +113,31 @@ file.
 looks alarming and means nothing — verify the **tag**, pin the **arm64 digest**. Verified here
 against `playgroundlogic/aarchbio/.github/workflows/publish.yml@refs/heads/main`.
 
+### On x86_64
+
+The same three tasks on same-generation Intel (`c8i.large`, `c8i.xlarge` for medaka), from
+bioconda's own x86 builds of the same versions — minimap2 `quay.io/biocontainers/minimap2@sha256:f7e4a9a1…`
+(2.31), racon `…/racon@sha256:83480693…` (1.5.0) and medaka `…/medaka@sha256:18d5d73a…` (2.2.2),
+all `linux/amd64`; not cosign-signed, so the digests are the pins. Same staged reads and truth:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| draft errors / bp | 21 / 6,358 | 21 / 6,358 |
+| racon edits / bp | 0 / 6,350 | 0 / 6,350 |
+| medaka edits / bp | 0 / 6,361 | 0 / 6,361 |
+| `ov.paf`, `polished-racon.fa`, `polished-medaka.fa`, `score.tsv` | — | **byte-identical** to arm64 |
+
+Every derived file matches bit for bit, including medaka's neural-network consensus, which runs
+PyTorch on CPU at full precision on both. The logs and `*-diag.txt` files differ only in timings
+and temp paths — and in one image-content detail that did not reach the output: the x86 medaka image
+bundles samtools/bcftools/tabix **1.23.1**, the arm64 one **1.24**.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=polish
 for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s" --wait; done
+make run RECIPE=polish ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls RECIPE=polish
 ```
 
