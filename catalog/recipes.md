@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **136 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **137 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -26,6 +26,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-12 | 2026-09-30 | 2026-10-13 |
 | [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-12 | 2026-10-13 | 2026-10-13 |
 | [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-12 | 2026-10-01 | 2026-10-13 |
+| [homer](../recipes/homer/README.md) | Runs HOMER's known-motif enrichment on macs2's CTCF ChIP peaks and de novo discovery on a planted fixture, on Graviton4 and x86, with a control for each. For anyone doing ChIP-seq motif analysis on ARM. | aarchbio | stage: bwa-samtools, homer · run: macs2 | — | 2026-10-13 | 2026-10-13 |
 | [humann](../recipes/humann/README.md) | Runs HUMAnN's bundled demo end to end on Graviton4 — gene families, pathway abundance, pathway coverage — and checks the build with the 186 assertions HUMAnN's authors ship with it. For anyone doing metagenomic functional profiling on ARM. | aarchbio | build-in-task | 2026-10-12 | 2026-10-07 | 2026-10-13 |
 | [iqtree](../recipes/iqtree/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, reaching −52706.731 — the same optimum [RAxML-NG finds independently](../recipes/raxml-ng/README.md). For anyone building trees on ARM. | aarchbio | stage | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [kallisto](../recipes/kallisto/README.md) | Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier. | aarchbio | stage · run: salmon | 2026-10-12 | 2026-10-13 | 2026-10-13 |
@@ -143,7 +144,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 |---|---|---|---|---|---|---|
 | [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
 | [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-03 | gap |
-| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
+| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-13 | 2026-10-11 | gap |
 | [scikit-learn](../recipes/scikit-learn/README.md) | Runs scikit-learn's own test suite on Graviton4 with every test accounted for, then checks a logistic MLE against statsmodels, PCA against an eigensolver, and KMeans against planted clusters. For anyone doing machine learning on ARM. | geo-ml | stage | 2026-10-13 | 2026-10-13 | gap |
 
 ## geoscience
@@ -182,8 +183,8 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-10 | gap |
-| [nilearn](../recipes/nilearn/README.md) | Holds four of Nilearn's main APIs to exact identities on Graviton4: a masker round trip, a first-level GLM against least squares, connectivity against Pearson, and detrending against a projection. For anyone doing fMRI analysis on ARM. | neuroimaging | stage | — | 2026-10-13 | gap |
+| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-13 | 2026-10-10 | gap |
+| [nilearn](../recipes/nilearn/README.md) | Holds four of Nilearn's main APIs to exact identities on Graviton4: a masker round trip, a first-level GLM against least squares, connectivity against Pearson, and detrending against a projection. For anyone doing fMRI analysis on ARM. | neuroimaging | stage | 2026-10-13 | 2026-10-13 | gap |
 | [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## optimization

@@ -1,0 +1,86 @@
+{
+  "task_id": "cookbook-homer-r1",
+  "container": "quay.io/aarchbio/homer@sha256:b70d88a0e541fef5a5aa5312da987abccc439f3d1f06c358da272913fa7346c2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No python3 in this image: the glue is awk, and the de novo fixture is staged pre-generated.\nmkdir -p /tmp/preparsed && chmod 1777 /tmp/preparsed\n\n# bioconda-recipes#70249: HOMER's compiled tools record an RPATH into the conda BUILD env,\n# so they find libstdc++ only if the image's base happens to ship one. The library is in the\n# env's own lib/; point the loader there. Prefix found from perl, so it is /opt/conda in\n# aarchbio's image and /usr/local in bioconda's x86 one -- one spec for both.\nPFX=$(dirname \"$(dirname \"$(readlink -f \"$(command -v perl)\")\")\")\nexport LD_LIBRARY_PATH=\"$PFX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\necho \"== HOMER's compiled tools must load before anything runs (it exits 0 when they do not) ==\"\nhomer2 2>&1 | grep -q \"homer2 <command>\" \\\n  || { echo \"FAIL: homer2 does not load ($(homer2 2>&1 | head -1)) -- HOMER would exit 0 with empty results\"; exit 1; }\necho \"homer2 loads (prefix $PFX)\"\n\necho \"== staged fixture must match its pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: the de novo fixture does not match its pins\"; exit 1; }\n\necho \"== CTCF peaks (macs2) -> 200 bp around each summit, and a control 100 kb away ==\"\nCHRLEN=$(awk '!/^>/{n+=length($0)} END{print n}' chr20.fa)\nawk 'BEGIN{OFS=\"\\t\"} !/^#/ {s=$2+$10; print \"p\"NR,$1,s-100,s+100,\"+\"}' peaks.narrowPeak > peaks.txt\nawk -v L=\"$CHRLEN\" 'BEGIN{OFS=\"\\t\"} {if ($4+100000 < L) print $1\"_off\",$2,$3+100000,$4+100000,\"+\"}' peaks.txt > offset.txt\nNP=$(wc -l < peaks.txt | tr -d ' '); NO=$(wc -l < offset.txt | tr -d ' ')\necho \"chr20 length $CHRLEN; peaks $NP; offset control $NO\"\ntest \"$NP\" -eq 1390 || { echo \"FAIL: expected macs2's 1390 CTCF peaks, got $NP\"; exit 1; }\n\nT0=$(date +%s)\nfindMotifsGenome.pl peaks.txt  chr20.fa known_peaks  -size given -nomotif -p 4 -preparsedDir /tmp/preparsed > fmg_peaks.log 2>&1; R1=$?\nT1=$(date +%s)\nfindMotifsGenome.pl offset.txt chr20.fa known_offset -size given -nomotif -p 4 -preparsedDir /tmp/preparsed > fmg_offset.log 2>&1; R2=$?\nT2=$(date +%s)\necho \"known motifs: peaks rc $R1 in $((T1-T0))s, offset control rc $R2 in $((T2-T1))s\"\ntest \"$R1\" = 0 && test \"$R2\" = 0 || { echo \"FAIL: findMotifsGenome.pl did not finish\"; tail -20 fmg_peaks.log fmg_offset.log; exit 1; }\ncp known_peaks/knownResults.txt known_peaks.tsv; cp known_offset/knownResults.txt known_offset.tsv\n\necho \"== de novo: a planted 10-mer, and unplanted control sequences ==\"\nfindMotifs.pl targets.fa fasta denovo  -fasta background.fa -len 10 -noknown -p 4 > fm_denovo.log 2>&1; R3=$?\nfindMotifs.pl control.fa fasta control -fasta background.fa -len 10 -noknown -p 4 > fm_control.log 2>&1; R4=$?\necho \"de novo rc $R3, control rc $R4\"\ntest \"$R3\" = 0 && test \"$R4\" = 0 || { echo \"FAIL: findMotifs.pl did not finish\"; tail -20 fm_denovo.log fm_control.log; exit 1; }\nhead -1 denovo/homerResults/motif1.motif  > denovo_motif1.txt\nhead -1 control/homerResults/motif1.motif > control_motif1.txt\n\nawk -v PLANT=GATTACAGGT -v RC=ACCTGTAATC '\nfunction ctcf_row(file,   l, n, f) {            # first row whose name starts \"CTCF(Zf)/\" (vertebrate CTCF)\n  n = 0\n  while ((getline l < file) > 0) { n++; if (n == 1) continue\n    split(l, f, \"\\t\"); if (f[1] ~ /^CTCF\\(Zf\\)\\/CD4/) { close(file); return n - 1 \"\\t\" l } }\n  close(file); return \"\" }\nfunction pct(x) { gsub(/%/, \"\", x); return x + 0 }\nBEGIN {\n  getline hdr < \"known_peaks.tsv\"; getline top < \"known_peaks.tsv\"; close(\"known_peaks.tsv\")\n  split(top, t, \"\\t\")\n  printf \"known_rank1           %s  logP %s  target %s  background %s\\n\", t[1], t[4], t[7], t[9]\n  ok = 1\n  if (t[1] !~ /^CTCF/) { print \"FAIL: the top known motif for CTCF ChIP peaks is \" t[1] \", not CTCF\"; ok = 0 }\n  split(ctcf_row(\"known_peaks.tsv\"), a, \"\\t\"); ep = pct(a[8]) / (pct(a[10]) > 0 ? pct(a[10]) : 1e-9)\n  split(ctcf_row(\"known_offset.tsv\"), b, \"\\t\"); eo = pct(b[8]) / (pct(b[10]) > 0 ? pct(b[10]) : 1e-9)\n  printf \"ctcf_in_peaks         rank %d  target %s  background %s  enrichment %.1fx\\n\", a[1], a[8], a[10], ep\n  printf \"ctcf_in_offset        rank %d  target %s  background %s  enrichment %.2fx   (control: 100 kb away)\\n\", b[1], b[8], b[10], eo\n  # In regions with no CTCF signal, the motif occurs at about its genomic rate, so enrichment\n  # sits near 1x; in CTCF peaks it is an order of magnitude or more. Bounds are set between.\n  if (ep < 10) { print \"FAIL: CTCF is only \" ep \"x enriched in CTCF ChIP peaks\"; ok = 0 }\n  if (eo > 3)  { print \"FAIL: CTCF is \" eo \"x enriched 100 kb away from any peak, so the peak result does not show specificity\"; ok = 0 }\n  getline d < \"denovo_motif1.txt\"; split(d, dd, \"\\t\"); sub(/^>/, \"\", dd[1])\n  getline c < \"control_motif1.txt\"; split(c, cc, \"\\t\"); sub(/^>/, \"\", cc[1])\n  printf \"denovo_motif1         %s  logP %s   (planted %s)\\n\", dd[1], dd[4], PLANT\n  printf \"control_motif1        %s  logP %s   (nothing planted)\\n\", cc[1], cc[4]\n  if (dd[1] != PLANT && dd[1] != RC) { print \"FAIL: de novo motif 1 is \" dd[1] \", not the planted \" PLANT; ok = 0 }\n  if (cc[1] == PLANT || cc[1] == RC) { print \"FAIL: the planted motif was found in sequences where it was never planted\"; ok = 0 }\n  if (!(dd[4] + 0 < 10 * (cc[4] + 0))) { print \"FAIL: the planted motif is not an order of magnitude more significant (log p) than the best control motif\"; ok = 0 }\n  if (!ok) exit 1\n  print \"HOMER OK\"\n}' 2>&1 | tee smoke-check.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: a HOMER check failed\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/macs2/r1/peaks.narrowPeak",
+      "destination": "/tmp/peaks.narrowPeak"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer/targets.fa",
+      "destination": "/tmp/targets.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer/background.fa",
+      "destination": "/tmp/background.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer/control.fa",
+      "destination": "/tmp/control.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/known_peaks.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/known_peaks.tsv"
+    },
+    {
+      "source": "/tmp/known_offset.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/known_offset.tsv"
+    },
+    {
+      "source": "/tmp/denovo_motif1.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/denovo_motif1.txt"
+    },
+    {
+      "source": "/tmp/control_motif1.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/control_motif1.txt"
+    },
+    {
+      "source": "/tmp/fmg_peaks.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/fmg_peaks.log"
+    },
+    {
+      "source": "/tmp/fmg_offset.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/fmg_offset.log"
+    },
+    {
+      "source": "/tmp/fm_denovo.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/fm_denovo.log"
+    },
+    {
+      "source": "/tmp/fm_control.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer/r1/fm_control.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
