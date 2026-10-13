@@ -4,6 +4,10 @@ tool_version: "DESeq2 1.50.2 / edgeR 4.8.2 / limma 3.66.0"
 images:
   - quay.io/aarchbio/bioconductor-deseq2@sha256:6d87efaf6ff4691c2adfd1416c2a40444709d870408ca0ef9cced378cff042a3
   - quay.io/aarchbio/bioconductor-edger@sha256:09169b359eedcda2bd9f83366d993c2024dc40ac15441cdf68cf34f32befdd02
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bioconductor-deseq2@sha256:de4543b77eba3d5b4b774a50bf2539b9adb0ba7451c9d909bf8def4a1b1dd56d
+  - quay.io/biocontainers/bioconductor-edger@sha256:6b2154b169512344d163ea5c9d5d5293fb4cbb67ea22ffa0e3d4aa8a8c0dde84
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -80,10 +84,31 @@ Why direction is exact while recovery is a band: recovery depends on statistical
 
 **Two image gotchas, both recorded because they cost real debugging:** R dies with `cannot create 'R_TempDir'` unless `TMPDIR` and `HOME` point somewhere writable; and spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before `Rscript` is callable.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/bioconductor-deseq2@sha256:de4543b7…` (1.50.2) and
+`quay.io/biocontainers/bioconductor-edger@sha256:6b2154b1…` (4.8.2), both `linux/amd64`; not
+cosign-signed, so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| recovery (DESeq2 / edgeR / limma) | 199 / 197 / 197 | 199 / 197 / 197 |
+| planted direction / sign agreement | 200, 200, 200 / 199 of 199 | 200, 200, 200 / 199 of 199 |
+| Spearman (de-ed / de-li / ed-li) | 1.0000 / 0.9814 / 0.9814 | 1.0000 / 0.9814 / 0.9814 |
+| `counts.tsv`, `truth.tsv`, `smoke-check.txt` | — | **byte-identical** to arm64 |
+
+R's seeded generator is portable, so the matrix is the same bytes on both. `res_deseq2.tsv` differs
+only in the last digits: log2FC by at most 2.0e-12 relative and padj by 2.4e-13, across 1,482 and
+1,876 of 2,000 genes. DESeq2's per-gene GLM fit is iterated to a convergence tolerance, and two
+builds of the same version reach that fixed point through different floating-point last bits;
+nothing that is asserted moves.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=rnaseq-de
+make run RECIPE=rnaseq-de               # Graviton4
+make run RECIPE=rnaseq-de ARCH=x86_64   # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=rnaseq-de
 ```
 
