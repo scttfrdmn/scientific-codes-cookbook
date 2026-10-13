@@ -2,6 +2,9 @@
 tool: mash
 tool_version: "2.3"
 image: quay.io/aarchbio/mash@sha256:abad0c5f4d3365661ffc5533bc6eb5f1bd07d773ea61b1abd1bfc00c1df813fe
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/mash@sha256:5ec679a567729361c247addb9725a7b2de4aa3697d2c7220a58b01921fe5e953
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -103,11 +106,28 @@ assembly *name*, so `stage-inputs.sh` resolves that from NCBI's index rather tha
 `ASM584v2` — a guessed path is how a staging script rots. The 20 genomes travel as one flat tar
 because [a directory output cannot work on the container path](../../practices/container-path.md).
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/mash@sha256:5ec679a5…` (2.3, `linux/amd64`; not cosign-signed, so
+the digest is the pin). Same staged tar, same `-k 21 -s 10000`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| nearest neighbour same species | 20 / 20 | 20 / 20 |
+| max within / min between species | 0.047498 / 0.158119 | 0.047498 / 0.158119 |
+| `dist.tsv` sha256 | `f99107bc…` | `f99107bc…` — **byte-identical** |
+
+All 400 distances agree bit for bit: sketching is integer hashing, so both builds count the same
+shared hashes, and each distance is a closed-form function of that count. `smoke-check.txt` differs
+only in its `wall_s` line.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=mash
 make run   RECIPE=mash
+make run   RECIPE=mash ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=mash
 ```
 
