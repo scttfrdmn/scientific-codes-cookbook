@@ -2,6 +2,9 @@
 tool: kraken2
 tool_version: 2.17.1
 image: quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/kraken2@sha256:c5eb4764f23e9db975cbc3e545d330e1fe468307f5e59a99c0ce8f4c1f6f09e2
 spawn_version: 0.111.4
 last_verified: 2026-10-02
 ---
@@ -96,11 +99,27 @@ sha256. Staging is a server-side S3 copy from the public `genome-idx` bucket int
 `--no-sign-request` cannot be used, because it would make the *destination* write anonymous too and
 multipart upload then fails.
 
+### On x86_64
+
+The same task on same-generation Intel (`r8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/kraken2@sha256:c5eb4764…` (2.17.1, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged index and reads:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| pairs processed / classified | 24148993 / 21047258 | 24148993 / 21047258 |
+| human clade / EBV clade pairs | 20928455 / 5133 | 20928455 / 5133 |
+| `out.report` sha256 | `c017acb3…` | `c017acb3…` — **byte-identical** |
+
+The whole 134 KB report — every clade count at every rank — is the same bytes on both chips.
+`kraken2.log` and `smoke-check.txt` differ only in wall time and host-memory peak.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=kraken2
-make run   RECIPE=kraken2
+make run   RECIPE=kraken2                # Graviton4
+make run   RECIPE=kraken2 ARCH=x86_64    # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=kraken2
 ```
 

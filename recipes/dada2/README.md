@@ -2,6 +2,9 @@
 tool: dada2
 tool_version: "1.38.0"
 image: quay.io/aarchbio/bioconductor-dada2@sha256:1dbe837ab143941ae1864da332632f2fca92b1c191a1c8f8644c6a2267148478
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bioconductor-dada2@sha256:a51eeb35b252786cabe0653c3ef88ff6075fa7115f5442a7153c039e79d54d32
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -75,10 +78,26 @@ The fix is to make quality **vary** the way a real instrument does: sampled per 
 
 Two image notes, the same pair as the other conda-image recipes: R needs `TMPDIR`/`HOME` writable or it dies with `cannot create 'R_TempDir'`, and spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before `Rscript` is callable.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.large`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/bioconductor-dada2@sha256:a51eeb35…` (1.38.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| ASVs inferred / exact matches / spurious | 3 / 3 of 3 / 0 | 3 / 3 of 3 / 0 |
+| abundances | 4000,2500,1500 | 4000,2500,1500 |
+| `smoke-check.txt` sha256 | `3c7e2c69…` | `3c7e2c69…` — **byte-identical** |
+
+The reads are synthesised in-task by R's own `set.seed(42)` generator, which is the same algorithm
+in both images — so unlike an awk `rand()` fixture, x86 infers from exactly the reads arm64 did.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=dada2
+make run RECIPE=dada2                 # Graviton4
+make run RECIPE=dada2 ARCH=x86_64     # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=dada2
 ```
 

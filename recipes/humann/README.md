@@ -2,6 +2,9 @@
 tool: humann
 tool_version: "3.9"
 image: quay.io/aarchbio/humann@sha256:c614308013fd2a7f7cef181d18ad0ce3c785b1b3243f62f0428fa313c1852ac6
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/humann@sha256:5d4ad5983b133477b1738c0cc3505f60245836c3790db39361fa7a2c0fa84abf
 spawn_version: 0.123.0
 last_verified: 2026-10-07
 ---
@@ -124,10 +127,33 @@ Fixed and republished under the same tag ([aarchbio#66](https://github.com/playg
 the version lines in the checks table are the evidence, since an x86 binary could not print them
 here.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/humann@sha256:5d4ad598…` (humann 3.9, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Every check passes:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| aligners in the image | diamond 2.2.8, bowtie2 2.5.5 | **diamond 2.0.15, bowtie2 2.2.3** |
+| unit tests / functional tests | 186 `OK` / `rc=0` | 186 `OK` / `rc=0` |
+| gene families / pathways | 1,486 / 15 | 1,486 / 15 — the same identifiers |
+| `UNMAPPED` | 17,406.0 | 17,406.0 |
+| determinism (two runs) | byte-identical | byte-identical |
+
+**The three tables are not byte-identical, and the aligners are why.** humann is the same version,
+but the x86 image's `conda-meta` records diamond 2.1.9 and bowtie2 2.5.4 while `humann-3.9` also
+claims `bin/diamond` and `bin/bowtie2-align-s` — the same path collision described under Pins — and
+its older bundled copies are the binaries on disk. So x86 aligns
+the demo with different search code: the gene-family and pathway *sets* match exactly, and 78 of
+1,485 RPK values move, by at most 7.7e-4 relative (pathways ≤2.4e-4). That is an image-content
+difference, not an architecture one — and the recipe asserts nothing those values could break.
+
 ### Run + verify
 
 ```sh
 spawn task run --spec "$(make -s spec RECIPE=humann)" --wait
+spawn task run --spec "$(make -s spec RECIPE=humann ARCH=x86_64)" --wait   # x86: writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/humann/r1/humann-diag.txt" -
 ```
 

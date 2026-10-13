@@ -4,8 +4,12 @@ tool_version: "FastQC 0.12.1 / MultiQC 1.35"
 images:
   - quay.io/aarchbio/fastqc@sha256:a4a8edb4754d731a0fd513cb4594a14766d662d5156c4e93299bdd57ef4b2fc3
   - quay.io/aarchbio/multiqc@sha256:69df62f478fd50e624ab0c9af81fc23f36afd8c049fd7b3221f8d444cb0c9ffc
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/fastqc@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900
+  - quay.io/biocontainers/multiqc@sha256:ceace1ca5329886d92600c225d34a523020c163b1599403e44c8d895d2dfb2a2
 spawn_version: 0.111.1
-last_verified: 2026-09-22
+last_verified: 2026-10-13
 ---
 # QC and aggregation — a cohort report checked against metrics we chose
 
@@ -100,10 +104,32 @@ MultiQC parses `*_fastqc.zip` directly, so the four zips travel between tasks as
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in both tasks.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i.large`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/fastqc@sha256:e194048d…` (0.12.1) and
+`quay.io/biocontainers/multiqc@sha256:ceace1ca…` (1.35), both `linux/amd64`; not cosign-signed,
+so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| rows in report / values round-trip | 4 of 4 / yes | 4 of 4 / yes |
+| cohort reads, FastQC == MultiQC | 3800 == 3800 | 3800 == 3800 |
+| missing-sample exit / rows | 0 / 3 | 0 / 3 |
+| every `.txt`/`.tsv` output, and every member of the four zips | — | **byte-identical** to arm64 |
+
+The fixture comes out the same on both: BusyBox awk (bioconda's x86 image) and mawk 1.3.4 (the ARM
+image) give the same `rand()` stream from `srand(53)`, so FastQC sees the same reads, down to the
+same duplicated sequence. The `_fastqc.zip` files differ only as archives — the member timestamps —
+not in any file inside them. The generator writes each base through a temporary
+rather than as `s = s (…)`, because BusyBox awk parses an identifier followed by `(` as a function
+call.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=qc-aggregate
+make run RECIPE=qc-aggregate                # Graviton4
+make run RECIPE=qc-aggregate ARCH=x86_64    # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=qc-aggregate
 ```
 
