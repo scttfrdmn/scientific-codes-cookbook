@@ -107,9 +107,9 @@ index build is the memory-bound step, which is why it runs on `r8g` while the qu
 
 ### On x86_64
 
-The quant task on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of the
+Both tasks on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of the
 same version — `quay.io/biocontainers/kallisto@sha256:6efe9570…` (0.52.0, `linux/amd64`; not
-cosign-signed, so the digest is the pin). Same staged index and reads, and salmon's x86 table,
+cosign-signed, so the digest is the pin). Same staged transcriptome and reads, and salmon's x86 table,
 which is byte-identical to its arm64 one:
 
 | | arm64 | x86_64 |
@@ -124,7 +124,9 @@ fragment-length estimate, not the architecture. kallisto estimates it from the f
 pseudoalign, which with `-t 16` depends on thread order, so every `eff_length` shifts by the same
 0.06 and the EM follows. The same arm64 pin gave both outcomes: the shipped 2026-09-30 run produced
 the x86 run's numbers (87,169, 0.9083, a 17,715,728-byte table), both arm64 re-runs on 2026-10-13 the
-others. (The index is the staged one on both — it is staging, built once.)
+others. The whole chain also runs on x86: `make run ... ARCH=x86_64` builds its own index into
+`inputs-x86_64/` (931,288,520 bytes against arm64's 931,285,390 — the build is not byte-stable), and
+quant on it reproduces the same 0.9083 over 87,169 and the same 17,715,728-byte table.
 
 ### Run + verify
 
