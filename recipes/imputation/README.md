@@ -4,6 +4,10 @@ tool_version: "Beagle 5.5 (27Feb25.75f) / Minimac4 4.1.6"
 images:
   - quay.io/aarchbio/minimac4@sha256:cea08321a8ab3632633b2ba0f2b68c98d7e6fcfb1c9c624f9b790a61a0e4b3c2
   - quay.io/aarchbio/beagle@sha256:7a22203b34a80d9b832ea84c3c46d9fdf83f4f679b6e53fcf1baebeeba06ce63
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/minimac4@sha256:cdf67fb7fe83cc2aeeb4dac927777e68d6edc4d95bff79a969326d4b49b80f08
+  - quay.io/biocontainers/beagle@sha256:503733eb23bdb0509e75298cf6524ac65437830bcceb7f7acef22e7ee6ea581d
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -78,10 +82,32 @@ Of the genotypes each tool got wrong, **11 were wrong in both**. That is the maj
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before either tool is callable.
 
+### On x86_64
+
+Both tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same versions —
+`quay.io/biocontainers/minimac4@sha256:cdf67fb7…` (4.1.6) and
+`quay.io/biocontainers/beagle@sha256:503733eb…` (5.5, 27Feb25.75f), both `linux/amd64`; not
+cosign-signed, so the digest is the pin:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| masked genotypes filled, Beagle / Minimac4 | 1600 / 1600 | 1600 / 1600 |
+| concordance, Beagle / Minimac4 | 0.9900 / 0.9875 | 0.9875 / 0.9888 |
+| tool agreement | 0.9912 | 0.9900 |
+| errors shared by both | 11 | 11 |
+| observed genotypes changed, Beagle / Minimac4 | 0 / 20 | 0 / 15 |
+
+**The values differ because the input does, not the arithmetic.** Panel, targets, mask and truth
+come from awk's `srand(42)`, and the two Minimac4 images ship different awks — mawk on ARM, BusyBox
+on bioconda's x86 — with different generators, so x86 imputes a different random panel. Every
+exact claim holds on both (no holes, Beagle changes nothing it was given), and every banded one
+clears its floor; Minimac4's re-estimation of typed markers shows up on both.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=imputation
+make run RECIPE=imputation              # Graviton4
+make run RECIPE=imputation ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=imputation
 ```
 
