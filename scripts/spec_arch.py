@@ -96,18 +96,22 @@ def resolve(recipe, arch, bucket, nonce):
     # same second (two recipes both with an 01-call spec) would otherwise write the same file
     # and one would launch the other's spec. Measured -- gatk4 and clair3 collided.
     outdir = tempfile.mkdtemp(prefix="cookbook-spec.", dir=os.environ.get("TMPDIR", "/tmp"))
-    # Objects this recipe's own tasks WRITE under inputs/ (a prepared BAM, a built index).
-    # On x86 they go to inputs-<arch>/ instead -- per OBJECT, not per prefix, because the same
+    # Objects this recipe's own tasks WRITE outside runs/ (a prepared BAM, a built index, a
+    # measurement). On x86 they go to <prefix>-<arch>/ instead -- per OBJECT, not per prefix, because the same
     # prefix also holds staged files that must stay shared -- and this recipe's reads of those
     # exact objects follow them. Without this an x86 run overwrites the arm64 copy in place:
     # gatk4's task 00 rewrites the 966 MB 30x BAM that five other recipes read, and the bucket
     # keeps no versions. Other recipes keep reading the arm64-written object, so a cross-arch
     # comparison downstream stays on identical bytes.
+    # Not only inputs/: bwa-mem2 also writes measurements/bwa-mem2-real/, and the rule has to
+    # be "anything a recipe writes outside runs/", or the next such prefix is the next overwrite.
     written = set()
     for f in specs:
         for o in json.load(open(os.path.join(ROOT, "recipes", recipe, f), encoding="utf-8")).get("outputs", []):
-            if "/inputs/" in o.get("destination", ""):
-                written.add(o["destination"])
+            d = o.get("destination", "")
+            m = re.match(r"s3://[^/]+/([^/]+)/", d)
+            if m and m.group(1) != "runs":
+                written.add(d)
     for f in specs:
         text = open(os.path.join(ROOT, "recipes", recipe, f), encoding="utf-8").read()
         text = text.replace("${COOKBOOK_BUCKET}", bucket)
@@ -132,7 +136,7 @@ def resolve(recipe, arch, bucket, nonce):
                     for k in ("source", "destination"):
                         if k in io:
                             if io[k] in written_here:
-                                io[k] = io[k].replace("/inputs/", "/inputs-%s/" % arch)
+                                io[k] = re.sub(r"^(s3://[^/]+/)([^/]+)/", r"\g<1>\g<2>-%s/" % arch, io[k])
                             io[k] = io[k].replace("/runs/", "/runs-%s/" % arch)
         out = os.path.join(outdir, "%s.%s%s.json" % (f[:-len(".task.json")], nonce,
                                                       "" if arch == "arm64" else "." + arch))
