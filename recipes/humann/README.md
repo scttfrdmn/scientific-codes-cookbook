@@ -148,6 +148,9 @@ its older bundled copies are the binaries on disk. So x86 aligns
 the demo with different search code: the gene-family and pathway *sets* match exactly, and 78 of
 1,485 RPK values move, by at most 7.7e-4 relative (pathways ≤2.4e-4). That is an image-content
 difference, not an architecture one — and the recipe asserts nothing those values could break.
+The cause is in bioconda's recipe: HUMAnN's `setup.py` downloads its own x86-64 aligners when none
+are on `PATH` at build time, and the recipe lists them as run-only dependencies, so the `noarch`
+package ships them — filed as [bioconda-recipes#70213](https://github.com/bioconda/bioconda-recipes/issues/70213).
 
 ### Run + verify
 
