@@ -4,6 +4,10 @@ tool_version: "4.0.0"
 images:
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/deeptools@sha256:91c028a26e85579dde0eadb0efd06c662bcdcb52956e48c941cdeea6c3016ca8
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/deeptools@sha256:59b35677305fca387aabecfa3f2fb9c79dab82c94dbe30d2e8ead3db99781a6d
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -88,10 +92,27 @@ The inserted-base subtraction is the part that is easy to miss: `bases mapped (c
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before either tool is callable.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/samtools@sha256:a1304475…` (1.24) and
+`quay.io/biocontainers/deeptools@sha256:59b35677…` (4.0.0), both `linux/amd64`; not cosign-signed,
+so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| coverage integral / max depth / intervals | 1000 / 5 / 5 | 1000 / 5 / 5 |
+| whole profile identical / overlap depth | yes / 4 | yes / 4 |
+| every output (`reads.bam`, `.bai`, expected track, `smoke-check.txt`) | — | **byte-identical** to arm64 |
+
+The fixture is deterministic (no `rand()`), so both architectures start from the same bytes, and the
+BAM, its index and the coverage track come out bit for bit the same.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=deeptools
+make run RECIPE=deeptools               # Graviton4
+make run RECIPE=deeptools ARCH=x86_64   # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=deeptools
 ```
 
