@@ -2,6 +2,9 @@
 tool: megahit
 tool_version: 1.2.9
 image: quay.io/aarchbio/megahit@sha256:d82953bf0096098b0b892edf7180f99b599e8ad17be14c47b1e8c2e1b6a8bdfd
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/megahit@sha256:a1e51b68962e54eb5b0576db7dc366d05f81ee1aa5d56a983133a8675e905c75
 spawn_version: 0.104.0
 last_verified: 2026-09-10
 ---
@@ -45,9 +48,24 @@ MEGAHIT (`-t 1 --min-count 2`) is **deterministic at a fixed single thread** —
 
 **Pins.** Image `quay.io/aarchbio/megahit@sha256:d82953bf0096…` (1.2.9, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` (the shared 30× fixture, same bytes SPAdes assembles; `make stage RECIPE=bcftools` derives them — repinned to that reproducible build, since the prior sha256 came from an unrecorded command).
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/megahit@sha256:a1e51b68…` (1.2.9, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged reads, same `-t 1 --min-count 2`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| contigs / total bp | 1 / 400429 | 1 / 400429 |
+| `contigs.fa` sha256 | `e11123f8…` | `e11123f8…` — **byte-identical** |
+
+The single-thread determinism that makes the exact assertion safe holds across architectures too:
+the same assembly, bit for bit.
+
 **Run + verify.**
 ```sh
-make run RECIPE=megahit
+make run RECIPE=megahit                  # Graviton4
+make run RECIPE=megahit ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=megahit   # expect contigs.fa, smoke-check.txt
 ```
 [QUAST](../quast/README.md) reads `contigs.fa` from this prefix. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
