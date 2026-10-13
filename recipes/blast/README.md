@@ -2,6 +2,9 @@
 tool: blast
 tool_version: 2.16.0
 image: quay.io/aarchbio/blast@sha256:377bfb5dc686ed9df1ce95f31835225c573bb6b75c17b0da80dfeb0c3b747b0c
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/blast@sha256:9dfc69f990c0aeb936276ee591ed32919a79f46dfa34060055e05a050a17959c
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -89,10 +92,28 @@ measuring the same artifact.
 | proteome | Ensembl 116 `Homo_sapiens.GRCh38.pep.all.fa.gz`, sha256 `9b43da9265…` — versioned release |
 | queries | its own first 1000 records, sha256 `e6732c4cf4…` — derived deterministically by the stage script |
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/blast@sha256:9dfc69f9…` (2.16.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged proteome and queries:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| database sequences | 382,428 | 382,428 |
+| queries with any hit / self-rows / at 100% | 931 / 931 / 931 | 931 / 931 / 931 |
+| full-length self-alignments | 829 | 829 |
+| `hits.tsv` (320,305 rows) sha256 | `1e0fbf94…` | `1e0fbf94…` — **byte-identical** |
+
+The whole 16-thread hit table matches bit for bit, including the 102 one-residue-short
+self-alignments, so that truncation is a property of BLAST+ on this data, not of either chip.
+`dbinfo.txt` differs only in the `makeblastdb` build date; `smoke-check.txt` only in the wall time.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=blast
+make run RECIPE=blast                  # Graviton4
+make run RECIPE=blast ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=blast
 ```
 

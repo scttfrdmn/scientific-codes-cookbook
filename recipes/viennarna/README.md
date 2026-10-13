@@ -2,6 +2,9 @@
 tool: viennarna
 tool_version: "2.7.2"
 image: quay.io/aarchbio/viennarna@sha256:df02a2dc5052d8afdba41acbf18b69df253a2ca7d93b070df247bd4cdd47c51e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/viennarna@sha256:b60deaa93a17b6b7d6a37aa2993078dc39137cae26315edad5f8c3d87d22edf0
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---
@@ -108,11 +111,28 @@ Staging a pinned file is permitted where a package's build constraints exclude t
 cosign-verified against `playgroundlogic/aarchbio`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.large`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/viennarna@sha256:b60deaa9…` (2.7.2, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged sequences and golds:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| modes byte-identical to their gold | 7 of 7 | 7 of 7 |
+| distinct outputs / malformed structures | 7 / 0 | 7 / 0 |
+| first MFE, `-d 2` / `-d 0` | −19.40 / −17.30 | −19.40 / −17.30 |
+| `out.d2`, `score.tsv` | — | **byte-identical** to arm64 |
+
+Every mode reproduces ViennaRNA's own committed golds on both architectures, so the x86 build and
+the ARM build are each byte-identical to the reference, and therefore to each other.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=viennarna
 spawn task run --spec "$(make -s spec RECIPE=viennarna)" --wait
+make run RECIPE=viennarna ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/viennarna/r1/score.tsv" -
 ```
 

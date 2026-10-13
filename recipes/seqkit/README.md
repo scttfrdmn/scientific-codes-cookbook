@@ -2,6 +2,9 @@
 tool: seqkit
 tool_version: 2.13.0
 image: quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/seqkit@sha256:0e14f53b486c6b6e199e525f3f1e7494b59b580f835f7835e497b46f99267b6a
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -89,11 +92,28 @@ FASTA this writes. That fits the 8 GiB tmpfs of a 16 GiB box
 The FASTA is deliberately not uploaded: nothing in the catalog consumes it, so storing it would be
 paying to keep something unread.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/seqkit@sha256:0e14f53b…` (2.13.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged reads:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| total records / bases | 48,297,986 / 4,829,798,600 | 48,297,986 / 4,829,798,600 |
+| after `fq2fa` | 48,297,986 / 4,829,798,600 | 48,297,986 / 4,829,798,600 |
+| read length min / max | 100 / 100 | 100 / 100 |
+| `stats.tsv`, `fa_stats.tsv` | — | **byte-identical** to arm64 |
+
+Same counts on a fifth chip, so the three-tool agreement holds on x86 too. `smoke-check.txt`
+differs only in the wall time; the tmpfs high-water mark is the same 5,612 MB.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=bwa-samtools
-make run   RECIPE=seqkit
+make run   RECIPE=seqkit                  # Graviton4
+make run   RECIPE=seqkit ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=seqkit
 ```
 

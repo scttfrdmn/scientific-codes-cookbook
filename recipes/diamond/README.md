@@ -2,6 +2,9 @@
 tool: diamond
 tool_version: 2.2.6
 image: quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/diamond@sha256:9332914da176d757220e9a9bbce9cd681ab00dc804e8ce97a4b3dcb8a018fa87
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -86,10 +89,29 @@ aimed at the same question should not differ by more than a few percent; a DIAMO
 Nothing is staged twice, and `make run RECIPE=blast` must run first because the cross-check reads its
 output.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/diamond@sha256:9332914d…` (2.2.6, `linux/amd64`; not
+cosign-signed, so the digest is the pin). The cross-check reads the x86 BLAST+ run
+(`runs-x86_64/blast/r1/hits.tsv`, itself byte-identical to arm64's):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| queries with any hit / self-rows / at 100% | 927 / 927 / 927 | 927 / 927 / 927 |
+| full-length self-alignments | 820 | 820 |
+| self-hit set agreement with BLAST+ | 0.9957 | 0.9957 |
+| `dmnd_hits.tsv` (131,047 rows) sha256 | `d850d6b8…` | `d850d6b8…` — **byte-identical** |
+
+The heuristic search returns the same hit table on both architectures, bit for bit, so the 0.9957
+agreement is a property of the two tools, not of the chip. `smoke-check.txt` differs only in the
+wall time.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=diamond
+make run RECIPE=diamond                  # Graviton4
+make run RECIPE=diamond ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=diamond
 ```
 

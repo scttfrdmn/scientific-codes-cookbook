@@ -2,6 +2,9 @@
 tool: mafft
 tool_version: 7.525
 image: quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/mafft@sha256:b8ccc402a9156868fefda5caa8693f847b47dcc69aae848557f7115850e60790
 spawn_version: 0.111.4
 last_verified: 2026-10-02
 ---
@@ -112,12 +115,31 @@ is why occupancy thresholds replaced it.
 `awk` and `gzip` do the extraction; both are base-image utilities, not a second scientific tool, so
 this is still one tool per task.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/mafft@sha256:b8ccc402…` (7.525, `linux/amd64`; not
+cosign-signed, so the digest is the pin). The family comes from the x86 hmmer run's own tblout:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| family members / input residues | 906 / 311,969 | 906 / 311,969 |
+| aligned residues / row length | 311,969 / 4340 | 311,969 / 4340 |
+| strategy | FFT-NS-2 | FFT-NS-2 |
+| `gpcr906.fa`, `aln.fa`, `smoke-check.txt` | — | **byte-identical** to arm64 |
+
+The x86 hmmer tblout differs from arm64's in a few last-digit scores, but not in which proteins hit
+7tm_1, so the extracted family is the same bytes — and with `--thread 8` pinned, MAFFT returns the
+same alignment on both architectures, bit for bit.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=hmmer
 make run   RECIPE=hmmer
-make run   RECIPE=mafft
+make run   RECIPE=mafft                  # Graviton4
+make run   RECIPE=hmmer ARCH=x86_64      # x86: upstream first, then
+make run   RECIPE=mafft ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=mafft
 ```
 

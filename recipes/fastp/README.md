@@ -2,6 +2,9 @@
 tool: fastp
 tool_version: 1.3.6
 image: quay.io/aarchbio/fastp@sha256:061ee7c6b8e5af265dfed6f25c51e482e3bb403c51f167561405010e5c5f632a
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/fastp@sha256:cbbe2402b6b6704df470d7d77dcb498eefd5bcd01f4c38be0ec69899e79ac134
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -99,11 +102,30 @@ The trimmed FASTQs are deliberately **not** uploaded: nothing in the catalog con
 aligns the untrimmed reads, by its own pin), so storing 3.4 GiB would be paying to keep something
 unread. Add them to the spec's `outputs` if your next step needs them.
 
+### On x86_64
+
+The same task on same-generation Intel (`m8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/fastp@sha256:cbbe2402…` (1.3.6, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged reads (sha256 `01b9c92f…` / `ec1bc284…`):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| reads in / accounted for | 48,297,986 / 48,297,986 | 48,297,986 / 48,297,986 |
+| passed / low-quality / too-many-N | 45,545,886 / 2,741,150 / 10,950 | 45,545,886 / 2,741,150 / 10,950 |
+| out1 = out2 | 22,772,943 | 22,772,943 |
+| Q30 / duplication (observations) | 0.90576 / 0.00274475 | 0.90576 / 0.00274475 |
+| `fastp.json` | — | **byte-identical** to arm64 |
+
+The whole 8-thread QC report matches bit for bit, quality curves and duplication histogram
+included. `fastp.html` differs only in the two report timestamps; `smoke-check.txt` only in wall
+time and the tmpfs high-water mark (7,154 vs 7,201 MB).
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=bwa-samtools
-make run   RECIPE=fastp
+make run   RECIPE=fastp                  # Graviton4
+make run   RECIPE=fastp ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=fastp
 ```
 

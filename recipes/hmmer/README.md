@@ -2,6 +2,9 @@
 tool: hmmer
 tool_version: "3.4"
 image: quay.io/aarchbio/hmmer@sha256:ecae1325123858761f0d744aacae948a89368440fd6d91f69c178402294fc792
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/hmmer@sha256:8ca0dc3bd55a8db881dff34511f5f4ba92eda00aa4c757b01083c002cc5d68d1
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -99,11 +102,33 @@ Ensembl `current_*/` — are deliberately not used, because they cannot be pinne
 readable gzipped by `hmmsearch`, so the task decompresses both; `gzip` is a base-image utility, not a
 second scientific tool.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/hmmer@sha256:8ca0dc3b…` (3.4, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged Pfam and proteome:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| models / targets / trailer | 30,134 / 23,879 / `[ok]` | 30,134 / 23,879 / `[ok]` |
+| tblout hits / families / proteins | 65,607 / 9,473 / 22,740 | 65,607 / 9,473 / 22,740 |
+| (protein, family) pairs reported | — | **the identical 65,607** |
+| rows whose scores differ | — | 85 of 65,607, full-sequence score by ≤ 0.2 bits |
+
+**Every assertion is exact on both, and the tblout is not byte-identical.** HMMER compiles a
+different SIMD implementation per ISA (SSE on x86, NEON on ARM), and the floating-point scores come
+out of it: 85 rows differ in the last printed digit of an E-value or bitscore, a few in the domain
+envelope statistics, and 8 rows swap order where two near-tied hits sort differently. It is the ISA,
+not the chip — the arm64 tblout is identical, comment lines aside, across four Graviton generations
+(c6g, c7g, c8g, c9g). No hit crosses a gathering threshold, which is why every count holds and why
+[mafft](../mafft/README.md), which takes the 7tm_1 member *set*, gets the same 906 proteins.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=hmmer
-make run   RECIPE=hmmer
+make run   RECIPE=hmmer                  # Graviton4
+make run   RECIPE=hmmer ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=hmmer
 ```
 
