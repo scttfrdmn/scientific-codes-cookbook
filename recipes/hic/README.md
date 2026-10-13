@@ -4,6 +4,10 @@ tool_version: "0.10.4"
 images:
   - quay.io/aarchbio/pairtools@sha256:2b4ce4761b3e6acf9739ebbd598fbe5b4a9a42ab58fa35b23ae28733efaf913e
   - quay.io/aarchbio/cooler@sha256:5f665b9b2c94e5ca6812216309cb2e8d462d7d4498d4b25206ac0515e89a7dd0
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/cooler@sha256:95ef864cd6fc3a4bf8487d300de8d80f4abcd90e4d545823d8194d60547c2cf7
+  - quay.io/biocontainers/pairtools@sha256:29e06e1791a809300c29abd8dea482eca573f2b9d0f8b8e2dddc0c749f561ba4
 spawn_version: 0.123.0
 last_verified: 2026-10-09
 ---
@@ -123,11 +127,32 @@ prove nothing at scale.
 Both images cosign-verified; signatures cover the **manifest-list** digest, so verify the tag and
 pin the arm64 digest.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`m8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/pairtools@sha256:29e06e17…` (1.1.3) and
+`quay.io/biocontainers/cooler@sha256:95ef864c…` (0.10.4), both `linux/amd64`; not cosign-signed, so
+the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| valid pairs / `.cool` total / dups | 9,998 / 9,998 / 0 | 9,998 / 9,998 / 0 |
+| totals at 2M / 4M / 8M | 9,998 each | 9,998 each |
+| symmetry: max abs diff over nonzeros | 0.0 over 13,869 | 0.0 over 13,869 |
+| `score.tsv`, `identities.log`, `dedup_score.tsv`, `denominator.tsv` | — | **byte-identical** to arm64 |
+
+The deduplicated pairs are the same records (byte-identical once decompressed; only the `.gz`
+wrapper differs). `dedup.stats` holds the same values in a different line order, except one that is
+undefined here: with zero duplicates pairtools' `complexity_naive` divides by zero, and the x86
+image (Python 3.10) reports `inf` where the ARM one (Python 3.12) prints `-1937304874880.6`. Nothing
+asserts on it. The logs differ only in temp-file names and site-packages paths.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=hic
 for s in $(make -s spec RECIPE=hic); do spawn task run --spec "$s" --wait; done
+make run RECIPE=hic ARCH=x86_64   # same specs, x86 pins, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/hic/r1/score.tsv" -
 ```
 
