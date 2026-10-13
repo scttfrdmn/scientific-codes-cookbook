@@ -92,6 +92,18 @@ def resolve(recipe, arch, bucket, nonce):
         sys.exit("recipe '%s' has no TaskSpec -- see its page for how it runs" % recipe)
     mapping = x86_map(recipe) if arch != "arm64" else None
     outdir = os.environ.get("TMPDIR", "/tmp")
+    # Objects this recipe's own tasks WRITE under inputs/ (a prepared BAM, a built index).
+    # On x86 they go to inputs-<arch>/ instead -- per OBJECT, not per prefix, because the same
+    # prefix also holds staged files that must stay shared -- and this recipe's reads of those
+    # exact objects follow them. Without this an x86 run overwrites the arm64 copy in place:
+    # gatk4's task 00 rewrites the 966 MB 30x BAM that five other recipes read, and the bucket
+    # keeps no versions. Other recipes keep reading the arm64-written object, so a cross-arch
+    # comparison downstream stays on identical bytes.
+    written = set()
+    for f in specs:
+        for o in json.load(open(os.path.join(ROOT, "recipes", recipe, f), encoding="utf-8")).get("outputs", []):
+            if "/inputs/" in o.get("destination", ""):
+                written.add(o["destination"])
     for f in specs:
         text = open(os.path.join(ROOT, "recipes", recipe, f), encoding="utf-8").read()
         text = text.replace("${COOKBOOK_BUCKET}", bucket)
@@ -110,10 +122,13 @@ def resolve(recipe, arch, bucket, nonce):
             life = spec.get("lifecycle", {})
             if "cost_limit" in life:
                 life["cost_limit"] = round(float(life["cost_limit"]) * COST_FACTOR[arch], 2)
+            written_here = {w.replace("${COOKBOOK_BUCKET}", bucket) for w in written}
             for io_key in ("inputs", "outputs"):
                 for io in spec.get(io_key, []):
                     for k in ("source", "destination"):
                         if k in io:
+                            if io[k] in written_here:
+                                io[k] = io[k].replace("/inputs/", "/inputs-%s/" % arch)
                             io[k] = io[k].replace("/runs/", "/runs-%s/" % arch)
         out = os.path.join(outdir, "%s.%s%s.json" % (f[:-len(".task.json")], nonce,
                                                       "" if arch == "arm64" else "." + arch))
