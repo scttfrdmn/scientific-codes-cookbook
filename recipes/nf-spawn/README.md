@@ -7,6 +7,11 @@ images:
   mafft: quay.io/aarchbio/mafft@sha256:f23e4545b6c186ffa31ebbb0a70a051c06ff3e7dcc91853e84f6eced74fa3df9
   muscle: quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4
   iqtree: quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
+images_x86_64:
+  - mafft=quay.io/biocontainers/mafft@sha256:b8ccc402a9156868fefda5caa8693f847b47dcc69aae848557f7115850e60790
+  - muscle=quay.io/biocontainers/muscle@sha256:d8a60b266ec5ff7c3be76e2ed3ffb8d42cb4ecc882d5d6e0af6d5c54a428bcdb
+  - iqtree=quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d
+last_verified_x86_64: 2026-10-13
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---
@@ -111,6 +116,25 @@ unzip -o /tmp/nf-spawn-0.10.1.zip -d ~/.nextflow/plugins/nf-spawn-0.10.1/
 export JAVA_HOME=/path/to/jdk17    # Nextflow 26.04.x needs JDK 17+
 ```
 
+### On x86_64
+
+The same DAG on same-generation Intel, from an `x86_64` profile in `nextflow.config` — no change to
+`main.nf`. Config `withName` settings take precedence over a process's own directives, so the profile
+overrides each process's container (bioconda's x86 builds of the same versions, `linux/amd64`, not
+cosign-signed so the digests are the pins), instance type (`c8g`→`c8i`; nf-spawn passes only the
+type, and spawn picks the AMI's architecture from the family), work dir and publish path — so an x86
+run cannot overwrite the arm64 one.
+
+| | arm64 | x86_64 |
+|---|---|---|
+| stages | 5 completed, 0 failed | 5 completed, 0 failed |
+| seqs / residues, both aligners | 114 / 49,098 | 114 / 49,098 |
+| tree logL, mafft / muscle | −52637.6674 / −52828.9975 | −52637.6674 / −52828.9975 |
+| `rf-observation.txt` (RF 26) | — | **byte-identical** |
+
+Every per-stage identity holds and both trees reach the same likelihood to the printed digits —
+iqtree's search is pinned, so the RF observation of 26 comes out the same on either chip.
+
 ### Run + verify
 
 ```sh
@@ -119,7 +143,8 @@ export COOKBOOK_BUCKET=$(make print-bucket)   # main.nf + nextflow.config read t
 export AWS_REGION=$(aws configure get region) # REQUIRED — where the instances launch; main.nf errors if unset
 cd recipes/nf-spawn
 JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
-aws s3 ls "s3://$COOKBOOK_BUCKET/runs/nf-spawn/r3/"   # expect rf-observation.txt
+JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config -profile x86_64   # same DAG on c8i
+aws s3 ls "s3://$COOKBOOK_BUCKET/runs/nf-spawn/r3/"   # expect rf-observation.txt (x86: runs-x86_64/)
 ```
 
 **Verify from S3, not Nextflow's summary.** Recorded run (2026-10-03, spawn 0.115.0, instances in `us-west-2`): `completed=5, failed=0, cached=0`, all five `.exitcode` objects `0`, `rf-observation.txt` published with RF 26 — confirmed by reading the S3 objects, and `cached=0` confirms nothing was reused from an earlier attempt. That earned its place: an earlier failed run showed Nextflow `completed=1` while that task's S3 `.exitcode` was `126` with no output — the executor-path version of [exit code isn't proof](../../practices/container-path.md). Re-run: bump the `-r3` suffix in `nextflow.config`'s `workDir` and the `OBSERVE_RF` `publishDir`, or a stale work dir resumes cached tasks.
