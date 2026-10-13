@@ -2,6 +2,9 @@
 tool: star
 tool_version: "2.7.11b"
 image: quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/star@sha256:c43295cdbc28a7be7d88296775a29cc65b30296c996d8242ef90c031c8b9739b
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -133,10 +136,30 @@ exists** — "the spawn task path gets an 8 GiB root disk, and a full human STAR
 RAM rather than the root disk ([the container path](../../practices/container-path.md)). A
 constraint recorded as a reason is worth re-checking before it outlives the platform.
 
+### On x86_64
+
+The same task on same-generation Intel (`r8i.8xlarge`), from bioconda's own x86 build of the
+same version — `quay.io/biocontainers/star@sha256:c43295cd…` (2.7.11b, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged genome, annotation and reads:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| input reads / uniquely mapped | 15800127 / 14610289 | 15800127 / 14610289 |
+| `pct_unique` | 92.47 | 92.47 |
+| `Log.final.out` mapping statistics | — | **identical** to arm64 |
+
+Every count in `Log.final.out` matches; only its timestamps and mapping speed differ. The BAM
+differs in size (2864081358 vs 2864068970 bytes) because `--outSAMtype BAM Unsorted` at 32
+threads writes records in whatever order the threads finish. The same alignment on arm64 already
+spans 2864062815–2864099200 bytes across the runs in
+[the data-path measurement](../../measurements/star-real/README.md). The index directory differs
+by 61 of 30.7 GB because it also holds STAR's own run log.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=star
+make run RECIPE=star                  # Graviton4
+make run RECIPE=star ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=star
 ```
 
