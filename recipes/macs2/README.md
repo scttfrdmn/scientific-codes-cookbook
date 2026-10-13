@@ -2,6 +2,9 @@
 tool: macs2
 tool_version: 2.2.9.1
 image: quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/macs2@sha256:e8275df9bac43b07adca4fee041ad8e51f5cb92c8bed14875f5afc6fd8ab7e98
 spawn_version: 0.104.0
 last_verified: 2026-09-10
 ---
@@ -49,9 +52,22 @@ MACS2 `callpeak -t CTCF -c input -f BAM -g hs` on chr20 calls **1390** peaks —
 
 **Pins** (data tier: ENCODE on AWS Open Data — `s3://encode-public`, immutable). Image `quay.io/aarchbio/macs2@sha256:ca577fd2e650…` (2.2.9.1, cosign-verified, `linux/arm64`). Treatment: ENCODE **ENCFF933NSJ** (CTCF ChIP, HCT116, GRCh38) chr20 subset (`sha256:0522950d…`, 864,347 reads); control: ENCODE **ENCFF768XTH** (matched input) chr20 subset (`sha256:ddacb169…`, 1,297,910 reads). `make stage RECIPE=macs2` downloads the full BAMs and slices chr20 in the pinned samtools — *derived* from an immutable source. Repinned to that derivation: an earlier samtools serialized the same reads to different bytes, so the read counts (864,347 / 1,297,910, unchanged) are the science check — identical reads in, still exactly 1390 peaks out.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i`), from bioconda's own x86 build of the same version —
+`quay.io/biocontainers/macs2@sha256:e8275df9…` (2.2.9.1, tag `py311hdad781d_1`, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged BAMs: **1390 peaks**, and `peaks.narrowPeak`
+and `smoke-check.txt` are **byte-identical** to arm64.
+
+That pin is deliberately not the newest x86 build. The newer ones tested (py311 `_2`, `_4`, `_5`;
+py310 `_5`) die on import with `ScoreTrack…so: undefined symbol: __log_finite` before reading a
+single read: their compiled extensions reference glibc's old `-ffast-math` entry points, which the
+image's glibc 2.36 does not provide. `_1` imports cleanly.
+
 **Run + verify.**
 ```sh
-make run RECIPE=macs2
+make run RECIPE=macs2                  # Graviton4
+make run RECIPE=macs2 ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=macs2   # expect peaks.narrowPeak, smoke-check.txt
 ```
 Smoke check runs inside the task; bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.

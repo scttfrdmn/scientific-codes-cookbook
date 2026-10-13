@@ -4,6 +4,10 @@ tool_version: "featureCounts v2.1.1 (subread 2.1.1) / HTSeq 2.1.2"
 images:
   - quay.io/aarchbio/subread@sha256:0c2f26ea5f115a11e0178d6f9680001015bddd1fd1339e8f706e68bcd8fe306a
   - quay.io/aarchbio/htseq@sha256:a578d1c21dffe43dfc0075ade4f1862881ec825eab61b67197993bb609aa9811
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/htseq@sha256:abbbb81dbd70f8f29aba47834f0eee8ad1e68785f8f1cf56fc36a5ecc9d75e1d
+  - quay.io/biocontainers/subread@sha256:a0f7ea960dd0f55240b330b5c4515388a493e266a7b427d6a59a39164bc14865
 spawn_version: 0.111.1
 last_verified: 2026-09-20
 ---
@@ -70,10 +74,30 @@ So `-s no` is passed to HTSeq deliberately. But the honest finding is that **it 
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before either tool is callable.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/subread@sha256:a0f7ea96…` (2.1.1) and
+`quay.io/biocontainers/htseq@sha256:abbbb81d…` (2.1.2), both `linux/amd64`; not cosign-signed, so
+the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| featureCounts / HTSeq vs planted | 50 / 30 / 20, both | 50 / 30 / 20, both |
+| `__no_feature` / accounting sum | 10 / 110 of 110 | 10 / 110 of 110 |
+| `genes.gtf`, `truth.txt`, `fc_counts.txt` | — | **byte-identical** to arm64 |
+
+`reads.sam` differs because the read positions come from awk's `srand(7); rand()`, and the two
+images ship different awks (mawk in the ARM image, BusyBox awk in bioconda's x86 one) with different
+generators. Every read still lies wholly inside its gene, so the counts are the planted ones on both.
+`smoke-check.txt` differs only in its featureCounts version line: the stored arm64 file carries the
+`line` artefact described above, the current spec writes the version from the image tag.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=rnaseq-counts
+make run RECIPE=rnaseq-counts           # Graviton4
+make run RECIPE=rnaseq-counts ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=rnaseq-counts
 ```
 
