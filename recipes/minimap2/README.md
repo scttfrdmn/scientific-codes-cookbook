@@ -6,6 +6,11 @@ images:
   - quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
+  - quay.io/biocontainers/minimap2@sha256:f7e4a9a17912eea542500988ee96013e37a887b3746673636f2773cc81052590
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -124,10 +129,32 @@ all-mapped concordance is 0.43 on a repeat-heavy subsample, and 0.9921 once gate
 The reference, truth VCF and BED are the same objects the [caller recipes](../gatk4/README.md)
 read, so long- and short-read results are anchored to identical bytes.
 
+### On x86_64
+
+All five tasks on same-generation Intel (`c8i` / `m8i`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/minimap2@sha256:f7e4a9a1…` (2.31), `samtools@sha256:a1304475…`
+(1.24) and `bcftools@sha256:186c45de…` (1.24), all `linux/amd64`; not cosign-signed, so the digest
+is the pin. The reads were re-extracted from the GIAB deposit on x86, and the short-read check
+reads the x86 bwa-samtools baseline (byte-identical to arm64's):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| reads / bases extracted | 217281 / 2159335308 | 217281 / 2159335308 |
+| primary / pct mapped / identity | 217281 / 97.459 / 98.7056% | 217281 / 97.459 / 98.7056% |
+| truth SNV recall (TP / FN) | 0.99961 (69210 / 27) | 0.99961 (69210 / 27) |
+| short-read concordance vs bwa | 0.9921 | 0.9921 |
+| `hifi.sorted.bam` + `.bai`, `sr-mm.sam`, `sr-smoke-check.txt` | — | **byte-identical** to arm64 |
+
+The alignment is the same, bit for bit, at 16 threads. The two gzipped intermediates differ in
+size (`hifi.chr20.fq.gz` 1.81 vs 1.37 GB, `aln.sam.gz` 1.89 vs 1.19 GB) only because the
+compressor does — GNU gzip 1.12 in the ARM images, BusyBox gzip in bioconda's x86 ones; the
+sorted BAM built from them is identical. The logs and check files differ only in wall times.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=minimap2
+make run RECIPE=minimap2                  # Graviton4
+make run RECIPE=minimap2 ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=minimap2
 ```
 

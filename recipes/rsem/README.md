@@ -4,6 +4,10 @@ tool_version: "1.3.1"
 images:
   - quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847
   - quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bowtie2@sha256:d568130f2f569f7ea2e2453e5f22e82d960d644b9a533b74f8ac737da6faf556
+  - quay.io/biocontainers/rsem@sha256:05b9a0be934d1ac7fe894d965fbe45deff8d4fb1bbbfddb31b339541116b7420
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -105,10 +109,33 @@ The version mismatch is the usual reminder that [a package version is not the bi
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in every task. And `awk` here defines its function at top level rather than inside `BEGIN`, because not every `awk` accepts the latter.
 
+### On x86_64
+
+The same three tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the
+same versions — `quay.io/biocontainers/rsem@sha256:05b9a0be…` (1.3.3 package, `v1.3.1` binary)
+and `quay.io/biocontainers/bowtie2@sha256:d568130f…` (2.5.5), both `linux/amd64`; not
+cosign-signed, so the digest is the pin:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| count / TPM conservation | 2000.00 / 1000000.00 | 2000.00 / 1000000.00 |
+| recovered vs planted ratio (3.0) | 3.0201 | 3.0353 |
+| TPM ratio == count ratio × effB/effA | 5.6593 == 5.6594 | 5.6880 == 5.6879 |
+| naive unique-only ratio (must be < 1) | 0.6412 | 0.6818 |
+
+**The values differ because the input does, not the arithmetic.** The two transcripts are random
+sequence from awk's `srand(67); rand()`, and the images ship different awks: mawk 1.3.4 in the
+ARM image, BusyBox awk in bioconda's x86 one. Each awk reproduces its own run's `txome.fa`
+exactly, and the two files differ. So x86 quantifies a different fixture with the same lengths,
+the same 1500/500 planted reads and the same truth table. Every claim holds anyway: both
+conservation identities are exact, the recovered ratio is within 2% of planted, the TPM identity
+is exact to four decimals, and unique-only counting still puts txA below txB.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=rsem
+make run RECIPE=rsem                  # Graviton4
+make run RECIPE=rsem ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=rsem
 ```
 
