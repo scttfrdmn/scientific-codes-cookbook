@@ -7,6 +7,13 @@ images:
   - quay.io/aarchbio/delly@sha256:c1d0492cb7d52d56f0a01e790dd1434ba9ddbb47cc5c95cf90dc12c20d5aaeb5
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
   - quay.io/aarchbio/manta@sha256:0cae7f334d4a0929f985dfdbf24801de50c421e29fc529d71ba35f342ea1e0d5
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
+  - quay.io/biocontainers/delly@sha256:4b6978924509c19272a77e98d58f2c77401349005251c288f2567321e369d641
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
+  - quay.io/biocontainers/manta@sha256:48d0c2464fa0129935438c5cddec5f67c4b3d65e8f7a647f95164ee51662cc70
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -148,10 +155,34 @@ It is recorded here rather than filed, because a hang without a root cause is no
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in every task.
 
+### On x86_64
+
+All five tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — bwa `@sha256:99a35e5e…` (0.7.19), samtools `@sha256:a1304475…` (1.24), delly
+`@sha256:4b697892…` (2.6.0), bcftools `@sha256:186c45de…` (1.24), manta `@sha256:48d0c246…` (1.6.0),
+all `quay.io/biocontainers`, `linux/amd64`; not cosign-signed, so the digest is the pin:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| delly calls / type / breakpoints | 1 / DEL PASS PRECISE / 8001–9000 | 1 / DEL PASS PRECISE / 8001–9000 |
+| delly evidence | PE 51, split 13, `1/1` | PE 51, split 13, `1/1` |
+| manta deleted interval | 8001–9000 | 8001–9000 |
+| coverage gap | 8005–8998 (994 bp) | 8001–9000 (1000 bp) |
+| `sv.tsv`, `smoke-check-manta.txt` | — | **byte-identical** to arm64 |
+
+**The genome differs because the input does, not the callers.** The reference, sample and reads are
+generated in-task by awk from `srand(13)`, and the two bwa images ship different awks — mawk in
+the ARM image, BusyBox awk in bioconda's x86 one — with different generators, so x86 plants the
+same 1,000 bp deletion at the same coordinates in a different random sequence. Both callers
+recover it exactly on both. Only the coverage gap moves: the 4 bp and 2 bp inset on arm64 is
+micro-homology between that sequence's flanks and the deletion edges, which x86's sequence
+happens not to have — the lower-bound behaviour described above, not a change in it.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=structural-variants
+make run RECIPE=structural-variants                # Graviton4
+make run RECIPE=structural-variants ARCH=x86_64    # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=structural-variants
 ```
 
