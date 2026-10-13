@@ -2,6 +2,9 @@
 tool: muscle
 tool_version: "5.3"
 image: quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/muscle@sha256:d8a60b266ec5ff7c3be76e2ed3ffb8d42cb4ecc882d5d6e0af6d5c54a428bcdb
 spawn_version: 0.111.4
 last_verified: 2026-10-02
 ---
@@ -105,11 +108,34 @@ occupancy thresholds replaced it; a comparison that cannot come out any other wa
 Nothing is staged twice. The family traces back to [hmmer](../hmmer/README.md)'s `hits.tbl.gz`, so the
 sequences being aligned are ones hmmsearch found.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/muscle@sha256:d8a60b26…` (5.3, `linux/amd64`; not
+cosign-signed, so the digest is the pin). It reads the x86 mafft run, whose `gpcr906.fa` and
+`aln.fa` are byte-identical to arm64's:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| input sequences / residues | 906 / 311,969 | 906 / 311,969 |
+| aligned residues | 311,969 | 311,969 |
+| ungapped sequences vs mafft | 906 / 906 | 906 / 906 |
+| row length (observation) | 5,636 | 5,565 |
+| columns ≥50% / ≥90% occupied | 316 / 281 | 316 / 282 |
+
+**Both assertions hold exactly; the alignment itself differs, and is expected to.** The column count
+is the quantity this page already declines to assert because `-super5` moves it run to run on one
+architecture (5,633 then 5,636 on arm64); x86's 5,565 is another draw from the same randomised
+subset selection. The core occupancy agrees to within a column, and the content identity — every
+ungapped sequence equal to mafft's — is unchanged.
+
 ### Run + verify
 
 ```sh
 make run RECIPE=mafft
-make run RECIPE=muscle
+make run RECIPE=muscle                  # Graviton4
+make run RECIPE=mafft  ARCH=x86_64      # x86: upstream first, then
+make run RECIPE=muscle ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=muscle
 ```
 
