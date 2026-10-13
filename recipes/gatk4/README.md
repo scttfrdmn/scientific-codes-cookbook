@@ -2,8 +2,13 @@
 tool: gatk4
 tool_version: 4.6.2.0
 image: quay.io/aarchbio/gatk4@sha256:92065598dde922a2223eb57863606c4bf8558b11af938ada9637efb9d0d8d0fc
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
+  - quay.io/biocontainers/gatk4@sha256:7311332e4d565d2356bbc0540cf582b505d1969a5f088a2c065302b13b10f5ee
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
 spawn_version: 0.111.4
-last_verified: 2026-09-26
+last_verified: 2026-10-13
 ---
 # GATK4 — HaplotypeCaller on a 36× genome, scored against the GIAB truth set
 
@@ -53,7 +58,7 @@ Whole chr20 on `c8g.xlarge`: **7,929 s of HaplotypeCaller inside a 7,982 s bille
 ### The checks
 
 Structural, in task 1 — a VCF that is single-sample, entirely on chr20, indexed, and produced by
-a genuinely AArch64 GATK:
+a GATK running natively on the host's architecture:
 
 | observable | assertion | observed |
 |---|---|---|
@@ -61,7 +66,7 @@ a genuinely AArch64 GATK:
 | records off chr20 | 0 | **0** |
 | sample columns | 1 | **1** |
 | VCF index written | yes | **yes** |
-| arm64 Java PairHMM | ≥1 `LOGLESS_CACHING` | **1** |
+| PairHMM matches the host | arm64: Java `LOGLESS_CACHING` fallback, no native; x86-64: native AVX, no fallback | **Java on arm64, native on x86-64** |
 | variants / SNVs | recorded | **131,730 / 109,467** |
 
 ### Accuracy against a published truth set — the identity that earns the recipe
@@ -142,10 +147,37 @@ what is pinned is the release plus asserted content — **82,818 records, 71,316
 HG001, 13,529 BED intervals, 56,000,154 bases**. The BAM is pinned by sha256
 `0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c`.
 
+### On x86_64
+
+All three tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — gatk4 `@sha256:7311332e…` (4.6.2.0), samtools `@sha256:a1304475…` (1.24), bcftools
+`@sha256:186c45de…` (1.24), all `quay.io/biocontainers`, `linux/amd64`; not cosign-signed, so the
+digest is the pin. Here the Intel GKL **loads**: AVX-512 PairHMM and SmithWaterman, Intel
+inflater/deflater — so the task 1 check asserts the native path on x86 and the Java fallback on
+arm64.
+
+| | arm64 | x86_64 |
+|---|---|---|
+| prep BAM sha256 | `0ad228c1…` | `0ad228c1…` — **byte-identical** |
+| PairHMM | Java `LOGLESS_CACHING` | native AVX-512 |
+| variants / SNVs | 131,730 / 109,467 | 131,730 / 109,467 |
+| SNV TP / FP / FN | 68,895 / 696 / 315 | 68,895 / 696 / 315 |
+| SNV precision / recall / F1 | 0.99000 / 0.99545 / 0.99272 | 0.99000 / 0.99545 / 0.99272 |
+| `concordance.txt` | — | **byte-identical** to arm64 |
+
+**Two sets of kernels, the same calls.** Every site, allele and genotype matches. 51 of 131,730
+records differ in annotations only: QUAL on 31 (largest 108.6 → 150.6, none across 30), PL and QD,
+and on 13–21 records the read counts (`DP`, `AD`) and MQ. The cause is the GKL itself: native AVX-512 PairHMM (single precision
+with a double-precision retry, flush-to-zero on) and SmithWaterman on x86 against GATK's Java
+implementations on arm64. Each is deterministic — two runs per architecture gave identical VCF
+bodies. Task 0 writes the shared BAM, so on x86 it writes to `inputs-x86_64/` and the x86 run
+reads it back from there.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=gatk4
+make run RECIPE=gatk4                   # Graviton4
+make run RECIPE=gatk4 ARCH=x86_64       # same specs, x86 pins, writes runs-x86_64/ (and inputs-x86_64/ for the BAM)
 make ls  RECIPE=gatk4
 ```
 
