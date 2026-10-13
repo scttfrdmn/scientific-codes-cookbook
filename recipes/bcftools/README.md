@@ -2,6 +2,9 @@
 tool: bcftools
 tool_version: "1.24"
 image: quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
 spawn_version: 0.111.4
 last_verified: 2026-09-30
 ---
@@ -99,10 +102,31 @@ The 36× chr20 BAM is built once by `gatk4`'s prep task and shared by all three 
 copy would be a second thing to keep true, and the comparison only means something on identical
 bytes. BAM sha256 `0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c`.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/bcftools@sha256:186c45de…` (1.24, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged BAM, truth set and BED:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| variants called | 127,616 | 127,617 |
+| SNV TP / FP / FN, `QUAL≥30` | 68,701 / 328 / 509 | 68,701 / 328 / 509 |
+| SNV precision / recall / F1 | 0.99525 / 0.99265 / 0.99395 | 0.99525 / 0.99265 / 0.99395 |
+| indel precision / recall | 0.99415 / 0.97077 | 0.99415 / 0.97077 |
+
+The scores are identical; the VCF is not. The two images link different htslib builds —
+the header reads `1.24+htslib-1.23.1` on arm64 and `1.24+htslib-1.24` on x86 — and the
+differences are pileup read counts: ~130 records carry one read more or less in `DP4`/`AD`
+(with QUAL shifting accordingly), and one extra low-QUAL site appears on x86 (6.2 at
+chr20:1763688). That is an image-content difference, not arithmetic, and it leaves every scored
+count unchanged.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=bcftools
+make run RECIPE=bcftools                # Graviton4
+make run RECIPE=bcftools ARCH=x86_64    # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=bcftools
 ```
 

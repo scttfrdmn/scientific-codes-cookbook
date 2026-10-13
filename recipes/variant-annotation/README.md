@@ -5,6 +5,11 @@ images:
   - quay.io/aarchbio/snpeff@sha256:2183d4c0c4a11d58aa6c4cc5939ca26359fa07ba8e444ac4b9de297257eccf3a
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
   - quay.io/aarchbio/ensembl-vep@sha256:48593f3f9f40cd15c77adcf68f83fb7ee00d7fa35849d449cece48a504c76e01
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/snpeff@sha256:832e86061ab3c1ef4339ec42f10fb98c4eaaecd498cd37d2bbe747e6bcc14de7
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
+  - quay.io/biocontainers/ensembl-vep@sha256:fde86b9f4fc1c4b816c7c124d995a664d1711c7513f83920418afdd1fc2bbffa
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -119,10 +124,31 @@ The designed protein is written once by task 1 and staged to task 2, so the fram
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before either tool is callable.
 
+### On x86_64
+
+All three tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — snpEff `@sha256:832e8606…` (5.4c), bcftools `@sha256:186c45de…` (1.24), VEP
+`@sha256:fde86b9f…` (116.2), all `quay.io/biocontainers`, `linux/amd64`; not cosign-signed, so the
+digest is the pin:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| snpEff CDS check | `OK: 1 / Errors: 0` | `OK: 1 / Errors: 0` |
+| each annotator vs planted | exact ×3 | exact ×3 |
+| frameshift codon snpEff / VEP / bcftools | 34 / 34 / 33 | 34 / 34 / 33 |
+| `ann.vcf`, all three `.norm` files, `conventions*.txt`, all three smoke checks | — | **byte-identical** to arm64 |
+
+Only `chrA.fa` differs, and only away from the gene: the filler outside the designed exons comes
+from awk's `srand(7)`, and the two snpEff images ship different awks (mawk on ARM, BusyBox on
+bioconda's x86) with different generators. The gene, GFF, VCF and truth are built rather than drawn,
+so they are identical — and so is every annotation. `csq.vcf` and `vep.vcf` differ only in their
+header's run date and htslib build string.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=variant-annotation
+make run RECIPE=variant-annotation                # Graviton4
+make run RECIPE=variant-annotation ARCH=x86_64    # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=variant-annotation
 ```
 

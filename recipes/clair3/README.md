@@ -4,8 +4,12 @@ tool_version: "2.0.3"
 images:
   - quay.io/aarchbio/clair3@sha256:b464803435a71829228bedd4641d994018106952d746517188761d7dbd7bd289
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/clair3@sha256:60fef37a5798efacd68118545becd6085694f9b12c022aa15b0ba96dd952a31b
+  - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
 spawn_version: 0.123.0
-last_verified: 2026-10-09
+last_verified: 2026-10-13
 ---
 # Clair3 — deep-learning variant calling on Graviton, F1 0.99530 against GIAB
 
@@ -17,6 +21,7 @@ Calls variants on whole chr20 of NA12878 at 36× and scores them against the GIA
 # nothing new to stage -- reuses the GIAB fixture from recipes/gatk4,
 # and task 2 reads task 1's VCF from this recipe's own run prefix
 for s in $(make -s spec RECIPE=clair3); do spawn task run --spec "$s" --wait; done
+make run RECIPE=clair3 ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls RECIPE=clair3
 
 run_clair3.sh --bam_fn=NA12878.chr20.30x.bam --ref_fn=chr20.fa \
@@ -133,6 +138,28 @@ the two.
 Both cosign-verified. **The `ilmn` model was confirmed present by a $0.01 probe before this recipe
 was designed** — which models a build ships is a property of the image, and discovering a missing
 one on a 921 MB BAM is the expensive order.
+
+### On x86_64
+
+Both tasks on same-generation Intel (`m8i`), from bioconda's own x86 builds of the same versions —
+`quay.io/biocontainers/clair3@sha256:60fef37a…` (2.0.3) and `quay.io/biocontainers/bcftools@sha256:186c45de…`
+(1.24), both `linux/amd64`; not cosign-signed, so the digest is the pin. Same BAM (sha256 asserted),
+truth set and BED:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| records / PASS / `RefCall` | 297,788 / 118,312 / 179,453 | 297,788 / 118,312 / 179,453 |
+| SNV TP / FP / FN | 68,877 / 318 / 333 | 68,877 / 318 / 333 |
+| SNV precision / recall / F1 | 0.99540 / 0.99519 / 0.99530 | 0.99540 / 0.99519 / 0.99530 |
+| truth-side SNV denominator | 69,210 | 69,210 |
+| `score.tsv`, `snps.kv`, `indels.kv` | — | **byte-identical** to arm64 |
+
+Every site, allele, genotype and FILTER is the same on both architectures. The VCF differs only in
+the network's scores: 184 QUAL values move in the last printed digit (`32.99` vs `32.98`; at most
+0.18% relative, none across 30) and 3 GQ values by 1 — inference arithmetic in two different
+compiled builds, landing on the same decisions. The bundled model lives under the image's conda
+prefix, `/opt/conda/bin/models` on aarchbio and `/usr/local/bin/models` on biocontainers, so the
+call task resolves it from `run_clair3.sh`'s location instead of hard-coding either.
 
 ### Run + verify
 
