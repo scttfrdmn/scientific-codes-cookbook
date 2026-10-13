@@ -22,7 +22,11 @@ SAMPLES = [
 
 BUCKET = config["bucket"]
 IN     = f"s3://{BUCKET}/inputs/snakemake"
-SEQKIT = "quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5"
+# One digest per architecture, both pinned here. The job picks by `uname -m`, so the instance
+# family alone decides the chip (--spawn-instance-type c8i.large for x86) and the same
+# Snakefile is correct on either -- an arm64 digest pulled on x86 would just fail to start.
+SEQKIT_ARM64 = "quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5"
+SEQKIT_X86_64 = "quay.io/biocontainers/seqkit@sha256:0e14f53b486c6b6e199e525f3f1e7494b59b580f835f7835e497b46f99267b6a"
 
 # Idempotent, and quiet about it: every job runs on a fresh bare instance, so this is the
 # per-job cost of having a pinned image at all.
@@ -50,7 +54,13 @@ rule stats:
         DOCKER + r"""
         mkdir -p stats
         cp {input.fna} /tmp/in.fna.gz
-        sudo docker run --rm -v /tmp:/w {seqkit} \
+        case "$(uname -m)" in
+            aarch64) IMG="{seqkit_arm64}" ;;
+            x86_64)  IMG="{seqkit_x86_64}" ;;
+            *) echo "no seqkit pin for $(uname -m)"; exit 1 ;;
+        esac
+        echo "arch $(uname -m)  image $IMG"
+        sudo docker run --rm -v /tmp:/w "$IMG" \
             bash -lc 'export PATH=/opt/conda/bin:$PATH; seqkit stats -T -a /w/in.fna.gz' \
             > /tmp/raw.tsv
         # -T is tabular, -a adds N50 etc. Relabel the filename column with the sample so the
@@ -59,7 +69,7 @@ rule stats:
             NR==1{{print "sample",$2,$3,$4,$5,$6,$7,$8; next}}
             {{print s,$2,$3,$4,$5,$6,$7,$8}}' /tmp/raw.tsv > {output.tsv}
         cat {output.tsv}
-        """.replace("{seqkit}", SEQKIT)
+        """.replace("{seqkit_arm64}", SEQKIT_ARM64).replace("{seqkit_x86_64}", SEQKIT_X86_64)
 
 
 rule aggregate:

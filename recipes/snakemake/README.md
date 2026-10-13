@@ -5,8 +5,11 @@ shape: pipeline
 depends_on: stage:mash
 images:
   seqkit: quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5
+images_x86_64:
+  - quay.io/biocontainers/seqkit@sha256:0e14f53b486c6b6e199e525f3f1e7494b59b580f835f7835e497b46f99267b6a
+last_verified_x86_64: 2026-10-13
 spawn_version: 0.122.0
-last_verified: 2026-10-05
+last_verified: 2026-10-13
 ---
 # Snakemake — a wildcard fan-out where the job count comes from the data (Shape F)
 
@@ -15,13 +18,14 @@ Hands a Snakemake workflow to the `spawn` executor, which dispatches each job to
 ## Run it
 
 ```bash
+pip install "git+https://github.com/spore-host/snakemake-executor-plugin-spawn@a8482c7b4f416e9743050193d1713f14572872ee" snakemake-storage-plugin-s3   # v0.4.0; not on PyPI
 make stage RECIPE=snakemake      # once: 4 genomes as separate objects + NCBI's lengths
 B=$(make -s print-bucket)
 mkdir -p /tmp/smwork && cp recipes/snakemake/Snakefile /tmp/smwork/ && cd /tmp/smwork
 
 snakemake -s Snakefile --config bucket="$B" \
   --executor spawn --shared-fs-usage none \
-  --spawn-region us-west-2 --spawn-ttl 30m --spawn-cost-limit 0.05 \
+  --spawn-region us-west-2 --spawn-ttl 30m --spawn-cost-limit 0.05 --spawn-instance-type c8g.large \
   --default-storage-provider s3 --default-storage-prefix "s3://$B/runs/snakemake/r1" \
   --jobs 2
 ```
@@ -34,14 +38,15 @@ Five remote jobs: `stats` × 4 (one per genome, from the wildcard) then `aggrega
 |---|---|---|
 | 4 genomes | your samples, any number | the job count is **discovered from the wildcard**, not written in the Snakefile — that's the difference from [nf-spawn](../nf-spawn/README.md)'s fixed DAG. |
 | `--shared-fs-usage none` | **keep it** | **load-bearing.** Without it the node receives a Snakefile path relative to *your* machine and dies before any work ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)). |
-| `--jobs 2` | more, with care | `--jobs N` on one rule shares a single completion record ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)) — and [truffle#175](https://github.com/spore-host/truffle/issues/175) refuses concurrent Graviton launches carrying a cost limit. |
-| `docker run <digest>` in the shell | your tool's image | the executor emits no `container` field, so **the rule names the digest** — see below. |
+| `--jobs 2` | more, with care | `--jobs N` on one rule shares a single completion record ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)) — and wide concurrent launches carrying a cost limit stall silently on AWS pricing before they launch ([truffle#175](https://github.com/spore-host/truffle/issues/175)). |
+| `--spawn-instance-type c8g.large` | `c8i.large` for x86 | **this one flag picks the chip** — it becomes the TaskSpec's family. Leave it out and truffle picks the cheapest family, which put the first run on Graviton2 `t4g`. |
+| `docker run <digest>` in the shell | your tool's image | the executor emits no `container` field, so **the rule names the digest** — one per architecture, picked by `uname -m` — see below. |
 
 **Leave the fixture.** Four complete bacterial genomes, each a single contig, is the smallest thing that makes the fan-out *checkable*: NCBI publishes each assembly's length, so every shard has an independent answer and their sum is a conservation identity. **Scale it** by adding samples — the DAG widens on its own.
 
 ## Shape, size, cost
 
-Shape F costs **per job**, not one flat instance. Five instances, auto-sized from each rule's `threads`/`mem_mb` (the join landed on `t4g.small`); measured **112 s** for a `stats` job and **64 s** for the join, inside a **15m43s** wall at `--jobs 2`. Caps were `--spawn-cost-limit 0.05` per job, so **$0.25 worst case** and about **$0.01 actual**. Nearly all of each job is boot, `dnf install docker`, and image pull — **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+Shape F costs **per job**, not one flat instance. Five instances, sized within the pinned family from each rule's `threads`/`mem_mb` (`c8g.large` per `stats` job, `c8g.medium` for the join); the first run measured **112 s** for a `stats` job and **64 s** for the join, and the workflow takes **~15 min** wall at `--jobs 2` on either architecture. Caps were `--spawn-cost-limit 0.05` per job, so **$0.25 worst case** and about **$0.01 actual**. Nearly all of each job is boot, `dnf install docker`, and image pull — **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: four NCBI checks plus a sum identity, and why the rule runs docker itself</summary>
@@ -89,12 +94,26 @@ So the rule's shell installs docker idempotently and runs the cosign-verified im
 
 Four separate objects rather than the tar, because a tar would collapse four jobs into one — the wildcard is the unit of parallelism.
 
+### On x86_64
+
+The same Snakefile with `--spawn-instance-type c8i.large` and the storage prefix moved to
+`runs-x86_64/`. The `stats` rule picks its seqkit digest by `uname -m` — aarchbio's on Graviton,
+bioconda's own x86 build of the same version on Intel (`linux/amd64`, not cosign-signed, so the
+digest is the pin) — so the family alone decides the chip. EC2's records show all five x86 jobs on
+`c8i.large`; the arm64 re-run (needed, since the Snakefile changed) on `c8g`.
+
+| | arm64 (`c8g`) | x86_64 (`c8i`) |
+|---|---|---|
+| genomes matching NCBI | 4 of 4 | 4 of 4 |
+| total length vs NCBI | 18,220,173 = 18,220,173 | 18,220,173 = 18,220,173 |
+| all four `stats/*.tsv` and `summary.tsv` | — | **byte-identical** |
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=snakemake
-# ... the invocation above ...
-aws s3 cp "s3://$B/runs/snakemake/r1/summary.tsv" -
+# ... the invocation above ...                       # x86: --spawn-instance-type c8i.large,
+aws s3 cp "s3://$B/runs/snakemake/r1/summary.tsv" -  #      --default-storage-prefix ".../runs-x86_64/snakemake/r1"
 ```
 
 `summary.tsv` is the artifact that settles it; the workflow exits non-zero if any shard disagrees with NCBI or the total is off.
