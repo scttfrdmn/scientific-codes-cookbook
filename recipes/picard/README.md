@@ -2,6 +2,9 @@
 tool: picard
 tool_version: 3.5.0
 image: quay.io/aarchbio/picard@sha256:c6a742e8277b9010df9aa3b9a6bb40651792ff319627cc1c2bf8a70ac633e6bd
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/picard@sha256:84923e37c5a43b0984fdb152a89f8ac952878fafc3e6076c534e5e5c82e278be
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -100,10 +103,27 @@ library, not of Picard.
 This recipe is the third link in a chain rather than a standalone: `bwa mem` → `samtools sort` →
 `MarkDuplicates`, each reading the previous step's staged output.
 
+### On x86_64
+
+The same task on same-generation Intel (`r8i`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/picard@sha256:84923e37…` (3.5.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin), reading the x86 bwa-samtools run's BAM (byte-identical
+to arm64's):
+
+| | arm64 | x86_64 |
+|---|---|---|
+| `partition_total` / `reads_examined` | 48817006 / 48184934 | 48817006 / 48184934 |
+| read-pair duplicates / optical | 206518 / 0 | 206518 / 0 |
+| `percent_duplication` / library size | 0.008684 / 1393194376 | 0.008684 / 1393194376 |
+
+`dup_metrics.txt` matches arm64 line for line except the `# Started on:` timestamp, and the smoke
+check differs only in wall time.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=picard
+make run RECIPE=picard                  # Graviton4
+make run RECIPE=picard ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=picard
 ```
 
