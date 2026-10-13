@@ -6,6 +6,12 @@ images:
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/stringtie@sha256:e0eb6ef15f2c8d329c3b24381b7614b80e97f056dece5fbd2f4ec2f6121b6964
   - quay.io/aarchbio/gffcompare@sha256:9674f300816f52f289453f514c14ebcc8dd6ab1361b2f29ac1c1b283e66e3547
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/gffcompare@sha256:2a8868cca6c21b413a83a5f16299ec0e3bcd86dcc31a218d7da921640f5f2175
+  - quay.io/biocontainers/hisat2@sha256:dd9d15d12d46a3c49e7aa1cbf12cf49b2f80b54483fea1756b3fda4dde67e385
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
+  - quay.io/biocontainers/stringtie@sha256:221523fd04f7ffaf76e78617cbb6069e002ee0f16b0068c3033e4bb0869014ee
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -113,10 +119,34 @@ Four tools, four images, four tasks: hisat2 cannot sort, StringTie cannot align,
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported in every task.
 
+### On x86_64
+
+The same four tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/hisat2@sha256:dd9d15d1…` (2.2.3), `samtools@sha256:a1304475…`
+(1.24), `stringtie@sha256:221523fd…` (3.0.3) and `gffcompare@sha256:2a8868cc…` (0.12.10), all
+`linux/amd64`; not cosign-signed, so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| alignment rate / spliced alignments | 99.25% / 51 | 99.25% / 51 |
+| assembled transcript | 1027–4400, introns exact | 1027–4400, introns exact |
+| gffcompare intron / chain / exon | 100.0 / 100.0 each | 100.0 / 100.0 each |
+| base sensitivity / precision | 97.1 / 100.0 | 97.1 / 100.0 |
+| both smoke checks, `gffcmp.stats`, the planted and found intron/exon tables | — | **byte-identical** to arm64 |
+
+The genome is not the same bytes: its sequence comes from awk's `srand(41); rand()`, and the two
+images ship different awks (mawk in the ARM image, BusyBox awk in bioconda's x86 one) with different
+generators. The planted gene structure is fixed, so every structural result matches. What the
+sequence does change is read-level detail: reads ending a few bases into an intron soft-clip by
+different amounts, depending on whether the next random bases happen to match. That moves
+StringTie's FPKM in `assembled.gtf` (1138301.66 vs 1138730.72), and with it the BAM, `aln.sam` and
+the `.tmap`. Coverage, TPM and every asserted value are identical.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=transcript-assembly
+make run RECIPE=transcript-assembly     # Graviton4
+make run RECIPE=transcript-assembly ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=transcript-assembly
 ```
 
