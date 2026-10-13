@@ -6,6 +6,12 @@ images:
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586
   - quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bismark@sha256:86d39c42efab92a444949bc3a738e609b4787c1aad4285cfbceb2b54ed431e1b
+  - quay.io/biocontainers/bwameth@sha256:dc7921711d58d014d17619e01ca68773d6f6b226dadcf4e5fa9ba2d72d323301
+  - quay.io/biocontainers/methyldackel@sha256:60779fbde67cfa644e102008aa54dabe9a9a2cd28daf0fb87a89f0c70e78bf10
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -136,10 +142,33 @@ The bwa-meth side is the exception that shows what the model actually means: its
 
 Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin` must be exported before any of these tools is callable.
 
+### On x86_64
+
+The same five tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
+versions — `quay.io/biocontainers/bismark@sha256:86d39c42…` (3.1.0), `samtools@sha256:a1304475…`
+(1.24), `methyldackel@sha256:60779fbd…` (0.6.1) and `bwameth@sha256:dc792171…` (0.2.10), all
+`linux/amd64`; not cosign-signed, so the digests are the pins:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| per-site calls, all three cells of the 2×2 | 10/0, 5/5, 0/10 | 10/0, 5/5, 0/10 |
+| callers agree / aligners agree | yes / yes | yes / yes |
+| bwa-meth mapped / `XM`-tagged reads | 30 of 30 / 0 | 30 of 30 / 0 |
+| `smoke-check.txt`, `-bismark`, `-aligners`, all three call tables | — | **byte-identical** to arm64 |
+
+The reference and reads come from awk's `srand(5); rand()`, and the two images ship different awks
+(mawk in the ARM image, BusyBox awk in bioconda's x86 one) with different generators, so `chrS.fa`,
+`reads.fq` and the BAMs aligned from them are different bytes. The three planted CpGs and their
+states are fixed, so every call is the same. One reporting line differs: the x86 bwa-meth image's
+`toolshed` prints a Python `SyntaxWarning` to stderr at startup, which the version probe reads as
+the version, so `smoke-check-bwameth.txt` says `bwameth_version SyntaxWarning:` there. Nothing
+asserts on that line.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=bismark
+make run RECIPE=bismark                 # Graviton4
+make run RECIPE=bismark ARCH=x86_64     # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=bismark
 ```
 
