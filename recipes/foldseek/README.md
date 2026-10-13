@@ -2,6 +2,9 @@
 tool: foldseek
 tool_version: "8.ef4e960"
 image: quay.io/aarchbio/foldseek@sha256:871c61cc7c37557742972ef4f57fecf47a9eb3494f95f5fb28b9edc132b3644b
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/foldseek@sha256:f194c34439f5110fa12d5fffdd8947a8d7c6f1a0b4761bb67ecd87e13656dcaa
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---
@@ -14,6 +17,7 @@ Searches 16 PDB structures against a database built from themselves on Graviton4
 ```bash
 make stage RECIPE=foldseek      # once: 16 pinned mmCIF entries, 3 MB
 spawn task run --spec "$(make -s spec RECIPE=foldseek)" --wait
+make run RECIPE=foldseek ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=foldseek
 
 foldseek createdb structures/ db
@@ -108,6 +112,24 @@ looks alive.
 
 cosign-verified against `playgroundlogic/aarchbio`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+### On x86_64
+
+The same task on same-generation Intel (`c8i.xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/foldseek@sha256:f194c344…` (8.ef4e960, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged structures:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| structures / chains / alignment rows | 16 / 21 / 138 | 16 / 21 / 138 |
+| missing self-alignment / self TM < 1 / outscored | 0 / 0 / 0 | 0 / 0 / 0 |
+| 1pga vs 2gb1 TM-score | 0.9115 | 0.9115 |
+| `score.tsv` | — | **byte-identical** to arm64 |
+| `aln.tsv`, sorted | — | **byte-identical** to arm64 |
+
+`aln.tsv` differs as a file only in the order of its per-query blocks: every one of the 138 rows —
+TM-score, E-value, bits — is identical, but the 4-thread search writes queries in whichever order
+they finish. `search.log` differs only in temp-dir names and timings.
 
 ### Run + verify
 
