@@ -42,8 +42,9 @@ spec: ## resolve a recipe's spec(s) for spawn and print the path(s); ARCH=x86_64
 	if [ -n "$(ARCH)" ] && [ "$(ARCH)" != "arm64" ]; then \
 	  python3 scripts/spec_arch.py "$(RECIPE)" "$(ARCH)" "$(COOKBOOK_BUCKET)" "$$nonce"; exit $$?; \
 	fi; \
+	dir="$$(mktemp -d "$${TMPDIR:-/tmp}/cookbook-spec.XXXXXX")"; \
 	for s in recipes/$(RECIPE)/*.task.json; do \
-	  out="$${TMPDIR:-/tmp}/$$(basename $$s .task.json).$$nonce.json"; \
+	  out="$$dir/$$(basename $$s .task.json).$$nonce.json"; \
 	  sed -e 's|$${COOKBOOK_BUCKET}|$(COOKBOOK_BUCKET)|g' \
 	      -e 's|\("task_id": "[^"]*\)"|\1-'"$$nonce"'"|' "$$s" > "$$out"; \
 	  echo "$$out"; \

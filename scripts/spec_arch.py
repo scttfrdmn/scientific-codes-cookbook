@@ -25,6 +25,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FAMILY = {"x86_64": {"c8g": "c8i", "m8g": "m8i", "r8g": "r8i"}}
@@ -91,7 +92,10 @@ def resolve(recipe, arch, bucket, nonce):
     if not specs:
         sys.exit("recipe '%s' has no TaskSpec -- see its page for how it runs" % recipe)
     mapping = x86_map(recipe) if arch != "arm64" else None
-    outdir = os.environ.get("TMPDIR", "/tmp")
+    # A directory per invocation: the nonce is seconds-resolution, so two runs started in the
+    # same second (two recipes both with an 01-call spec) would otherwise write the same file
+    # and one would launch the other's spec. Measured -- gatk4 and clair3 collided.
+    outdir = tempfile.mkdtemp(prefix="cookbook-spec.", dir=os.environ.get("TMPDIR", "/tmp"))
     # Objects this recipe's own tasks WRITE under inputs/ (a prepared BAM, a built index).
     # On x86 they go to inputs-<arch>/ instead -- per OBJECT, not per prefix, because the same
     # prefix also holds staged files that must stay shared -- and this recipe's reads of those
