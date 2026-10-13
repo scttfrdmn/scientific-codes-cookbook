@@ -2,6 +2,9 @@
 tool: bedtools
 tool_version: 2.31.1
 image: quay.io/aarchbio/bedtools@sha256:cd1e72a29500369c5576c10e98b2c1723a09a73bde9fb50d80bf4022096b449b
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bedtools@sha256:ffcd7aa5cd028e8156b8412cc4c88e4f7c4bfa44c4da24ac2737f82116940559
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -104,10 +107,28 @@ Measured tmpfs high-water mark is **4,359 MB** — essentially just the staged B
 histogram output is 3 MB. That fits the 8 GiB tmpfs of a 16 GiB box
 ([staging is half of RAM](../../practices/container-path.md)), which is why this runs on a 2xlarge.
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/bedtools@sha256:ffcd7aa5…` (2.31.1, `linux/amd64`; not
+cosign-signed, so the digest is the pin). The genomecov task reads the x86 bwa-samtools run's
+BAM, which is itself byte-identical to the arm64 one:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| set-algebra integers (merge / intersect / subtract bp) | 250 / 125 / 175 | 250 / 125 / 175 |
+| `genome_bases` == `.fai` total | 3217346917 | 3217346917 |
+| covered bases / mean depth | 2164818308 / 1.4875 | 2164818308 / 1.4875 |
+| all five set-op outputs, `genomecov-wgs.txt` | — | **byte-identical** to arm64 |
+
+Every output bedtools wrote matches arm64 bit for bit. `genomecov-smoke-check.txt` differs only
+in its wall time and tmpfs high-water mark.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=bedtools
+make run RECIPE=bedtools                  # Graviton4
+make run RECIPE=bedtools ARCH=x86_64      # same specs, x86 pin, writes runs-x86_64/
 make ls  RECIPE=bedtools
 ```
 
