@@ -2,8 +2,11 @@
 tool: kallisto
 tool_version: 0.52.0
 image: quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/kallisto@sha256:6efe95704074d76fec299e4848185ccb1dc2b6805f48695b73717743dc22ca81
 spawn_version: 0.111.4
-last_verified: 2026-09-30
+last_verified: 2026-10-13
 ---
 # kallisto — a complete RNA-seq run quantified, and how it compares to salmon
 
@@ -99,13 +102,35 @@ produced, because the comparison only means something on identical bytes.
 
 Two things about this image that cost a run to learn elsewhere and apply here: it has **no `python3`
 and no `jq`**, so `run_info.json` is parsed with awk and the correlation is computed with
-`awk`+`sort`+`join`; and the index build is the memory-bound step, which is why it runs on `r8g` while
-the quant runs on `c8g`.
+`awk`+`sort` (the join on transcript id is awk too — bioconda's x86 image has no `join`); and the
+index build is the memory-bound step, which is why it runs on `r8g` while the quant runs on `c8g`.
+
+### On x86_64
+
+The quant task on same-generation Intel (`c8i.4xlarge`), from bioconda's own x86 build of the
+same version — `quay.io/biocontainers/kallisto@sha256:6efe9570…` (0.52.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged index and reads, and salmon's x86 table,
+which is byte-identical to its arm64 one:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| `tpm_sum` / fragments processed | 1000000 / 15800127 | 1000000 / 15800127 |
+| transcripts in output | 465,769 | 465,769 |
+| Spearman vs salmon (n both detected) | 0.9084 (87,156) | 0.9083 (87,169) |
+| mean fragment length (`length − eff_length`) | 154.64 | 154.70 |
+
+Every assertion holds on both; `abundance.tsv` is not byte-identical, and the cause is the
+fragment-length estimate, not the architecture. kallisto estimates it from the first pairs to
+pseudoalign, which with `-t 16` depends on thread order, so every `eff_length` shifts by the same
+0.06 and the EM follows. The same arm64 pin gave both outcomes: the shipped 2026-09-30 run produced
+the x86 run's numbers (87,169, 0.9083, a 17,715,728-byte table), both arm64 re-runs on 2026-10-13 the
+others. (The index is the staged one on both — it is staging, built once.)
 
 ### Run + verify
 
 ```sh
-make run RECIPE=kallisto
+make run RECIPE=kallisto                # Graviton4
+make run RECIPE=kallisto ARCH=x86_64    # same specs, x86 pin, writes runs-x86_64/
 make ls  RECIPE=kallisto
 ```
 
