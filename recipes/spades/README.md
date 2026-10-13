@@ -2,6 +2,9 @@
 tool: spades
 tool_version: 4.3.0
 image: quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/spades@sha256:90a6d8d2fef8eb932e2e2712ed2ef797cce7117f7dd0403cc6e62c349408ba9a
 spawn_version: 0.104.0
 last_verified: 2026-09-10
 ---
@@ -47,9 +50,24 @@ Exact-or-wrong: a deterministic function of fixed reads + fixed threads.
 
 **Pins.** Image `quay.io/aarchbio/spades@sha256:f8b7ad9acda7…` (4.3.0, cosign-verified, `linux/arm64`). Reads: `inputs/highcov/HG00096.chr20_2.0-2.4Mb.30x_reads_{1,2}.fq.gz` — `samtools fastq` of the shared 30× fixture (`make stage RECIPE=bcftools`) — repinned to that reproducible derivation, since the prior sha256 came from an unrecorded command.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/spades@sha256:90a6d8d2…` (4.3.0, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged reads, same `--isolate -t 4`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| contigs / total bp | 237 / 428168 | 237 / 428168 |
+| `contigs.fasta` sha256 | `2f979141…` | `2f979141…` — **byte-identical** |
+
+Four threads and two architectures, one assembly, bit for bit — the determinism the exact
+assertion relies on is not a property of the chip.
+
 **Run + verify.**
 ```sh
-make run RECIPE=spades
+make run RECIPE=spades                  # Graviton4
+make run RECIPE=spades ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls RECIPE=spades   # expect contigs.fasta, smoke-check.txt
 ```
 [QUAST](../quast/README.md) reads `contigs.fasta` from this prefix. Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.

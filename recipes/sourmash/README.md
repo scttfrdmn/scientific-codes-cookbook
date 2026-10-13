@@ -2,6 +2,9 @@
 tool: sourmash
 tool_version: 4.9.4
 image: quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/sourmash@sha256:cf32bc7e7039340772184a79333a88d7988a2213a1209716b6e11977fa0d6719
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -104,12 +107,30 @@ Nothing is staged twice: both tools read the same tar, and the comparison reads 
 `dist.tsv`. Signatures are named with `--name <accession>` so the `compare --csv` header is
 predictable — sourmash otherwise names a signature after the first sequence in the file.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/sourmash@sha256:cf32bc7e…` (4.9.4, `linux/amd64`; not
+cosign-signed, so the digest is the pin). The cross-check reads mash's **x86** `dist.tsv`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| nearest neighbour same species | 20 / 20 | 20 / 20 |
+| min within / max between species | 0.241442 / 0.018844 | 0.241442 / 0.018844 |
+| Spearman vs mash: signal / within-species | −0.9590 / −1.0000 | −0.9590 / −1.0000 |
+| `sim.csv` sha256 | `1fb48d76…` | `1fb48d76…` — **byte-identical** |
+
+Both sides of the cross-check are byte-identical across architectures (mash's `dist.tsv` too), so the
+rank agreement is the same computation on the same numbers. `smoke-check.txt` differs only in its
+`wall_s` line.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=mash
 make run   RECIPE=mash       # produces dist.tsv
 make run   RECIPE=sourmash
+make run   RECIPE=mash ARCH=x86_64 && make run RECIPE=sourmash ARCH=x86_64   # reads mash's x86 dist.tsv
 make ls    RECIPE=sourmash
 ```
 

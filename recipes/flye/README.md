@@ -2,6 +2,9 @@
 tool: flye
 tool_version: 2.9.6
 image: quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/flye@sha256:2a75bea2cb11b7b05fbaefe0cbeb5227fa6e8606a86bd07c9e313c187411e5ad
 spawn_version: 0.111.4
 last_verified: 2026-10-02
 ---
@@ -102,11 +105,28 @@ accession built the path by hand and 404'd. The script then checks the downloade
 counts against ENA's own reported values: a truncated download is still valid gzip and still
 assembles, into a worse genome, silently.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the same
+version — `quay.io/biocontainers/flye@sha256:2a75bea2…` (2.9.6, `linux/amd64`; not cosign-signed,
+so the digest is the pin). Same staged run, same `--nano-hq -t 8`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| contigs / circular | 2 / 2 | 2 / 2 |
+| total / largest contig | 4,754,056 / 4,722,868 | 4,754,056 / 4,722,868 |
+| `assembly.fasta`, `assembly_info.txt` | — | **byte-identical** to arm64 |
+
+An eighth run, a second architecture, the same genome bit for bit — so the fixed-thread determinism
+the exact assertion relies on is not a property of Graviton. `flye.log` is identical once its
+timestamps are stripped; `smoke-check.txt` differs only in wall time and the memory/tmpfs peaks.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=flye
 make run   RECIPE=flye
+make run   RECIPE=flye ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls    RECIPE=flye
 ```
 

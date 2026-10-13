@@ -2,6 +2,9 @@
 tool: raxml-ng
 tool_version: 2.0.2
 image: quay.io/aarchbio/raxml-ng@sha256:3a6bbc162ff43249ada42bd92828ac0024855c33b614c0cdbaaa1e3e3eed89e5
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/raxml-ng@sha256:e27292d42400cb03d3f8e070836e7048a5f9bf3ff68bd979c19e883b426f2bb0
 spawn_version: 0.111.4
 last_verified: 2026-10-01
 ---
@@ -94,10 +97,28 @@ what pinning threads and the seed buys: the search is deterministic, so the chip
 Both tools read the same staged object; a second copy would be a second thing to keep true, and the
 agreement only means something on identical bytes.
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i.2xlarge`), from bioconda's own x86 build of the
+same version — `quay.io/biocontainers/raxml-ng@sha256:e27292d4…` (2.0.2, `linux/amd64`; not
+cosign-signed, so the digest is the pin). Same staged alignment, same `--threads 8 --seed 12345`:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| searches / best of them | 13 / −52706.731409 | 13 / −52706.731409 |
+| AIC / AICc / BIC | 105865.462818 / 106275.878818 / 106807.321545 | identical |
+| `bestTree`, `mlTrees`, `startTree`, `bestModel`, `smoke-check.txt` | — | **byte-identical** to arm64 |
+
+Not only the optimum: every intermediate likelihood the log prints — each SPR round of all 13
+searches — is the same to six decimals, although the two builds run different SIMD likelihood
+kernels (`SSE3` on arm64, `AVX2` on x86). The `.log` differs only in timestamps, elapsed time, the
+CPU banner and that kernel line.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=raxml-ng
+make run RECIPE=raxml-ng                  # Graviton4
+make run RECIPE=raxml-ng ARCH=x86_64      # same spec, x86 pin, writes runs-x86_64/
 make ls  RECIPE=raxml-ng
 ```
 
