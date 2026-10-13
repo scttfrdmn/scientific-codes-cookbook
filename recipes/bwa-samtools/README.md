@@ -2,6 +2,10 @@
 tool: bwa
 tool_version: "0.7.19-r1273"
 image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
+  - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
 spawn_version: 0.111.1
 last_verified: 2026-10-01
 ---
@@ -157,10 +161,31 @@ flag unset and reports **99.77%**. The gap is 48,774,176 − 48,703,954 = **70,2
 flagstat's singleton count: unmapped mates placed at their partner's coordinates carry a reference
 name while still being flagged unmapped. Different questions, not a discrepancy.
 
+### On x86_64
+
+The same three tasks on same-generation Intel (`c8i.4xlarge` / `m8i.4xlarge`), from bioconda's own
+x86 builds of the same versions — `quay.io/biocontainers/bwa@sha256:99a35e5e…` (0.7.19) and
+`quay.io/biocontainers/samtools@sha256:a1304475…` (1.24), both `linux/amd64`; not cosign-signed,
+so the digest is the pin. Same staged bytes:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| `sam_records` / mapped | 48817006 / 48774176 | 48817006 / 48774176 |
+| `pct_mapped` (align / flagstat) | 99.91 / 99.77 | 99.91 / 99.77 |
+| chr20 baseline primary / mapped | 800000 / 233313 | 800000 / 233313 |
+| `aln.sorted.bam` + `.bai`, `flagstat.txt`, `aln_chr20smoke.sam` | — | **byte-identical** to arm64 |
+
+The alignment is the same, bit for bit: the coordinate-sorted BAM and its index match exactly.
+`aln.sam.gz` alone differs (5.82 GB vs 5.00 GB) because the compressor does — the ARM image ships
+GNU gzip 1.12, bioconda's x86 image BusyBox gzip — so the bytes inside it, which the sorted BAM is
+built from, are the same. The logs and smoke-check files differ only in wall times and tmpfs
+high-water marks.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=bwa-samtools
+make run RECIPE=bwa-samtools                  # Graviton4
+make run RECIPE=bwa-samtools ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=bwa-samtools
 ```
 
