@@ -4,6 +4,10 @@ tool_version: "3.0.1"
 images:
   - quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455
   - quay.io/aarchbio/bracken@sha256:f2cf8671bef1b9892efeadfa4ee0a9c9b7c961704e0b2991ea1fb2258c838abd
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - quay.io/biocontainers/kraken2@sha256:c5eb4764f23e9db975cbc3e545d330e1fe468307f5e59a99c0ce8f4c1f6f09e2
+  - quay.io/biocontainers/bracken@sha256:b86467a34e157dfa086a40e8e7ca7d6f4af1c559030024efbab76381e448d097
 spawn_version: 0.111.1
 last_verified: 2026-09-22
 ---
@@ -109,11 +113,29 @@ The shared index and SARS-CoV-2 genome are read from the [kraken2](../kraken2/RE
 
 Also: the staged index tar is never `rm`-ed inside the task. Host `/tmp` is sticky `1777` and stage-in runs as a different user, so the container gets `EPERM`, which `rm -f` does not suppress ([why](../../practices/container-path.md)).
 
+### On x86_64
+
+The same two tasks on same-generation Intel (`c8i.xlarge`, `c8i.large`), from bioconda's own x86
+builds of the same versions — `quay.io/biocontainers/kraken2@sha256:c5eb4764…` (2.17.1) and
+`quay.io/biocontainers/bracken@sha256:b86467a3…` (3.1p1), both `linux/amd64`; not cosign-signed,
+so the digests are the pins. Same staged index and genomes:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| `dominant_est_reads` / `sum_new_est_reads` | 1000 / 1920 | 1000 / 1920 |
+| hepadnavirus recovered | 29 across 5 siblings | 29 across 5 siblings |
+| all 8 outputs (`mix.report`, `mix.bracken`, …) | — | **byte-identical** to arm64 |
+
+Every file both tasks write is the same bytes on both chips, including the synthesised mixture's
+`planted.tsv` and `fixture.txt` — the reads are cut from the genomes deterministically, with no
+`rand()`, so x86 classifies exactly the reads arm64 did.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=abundance      # once: the three extra genomes
-make run   RECIPE=abundance
+make run   RECIPE=abundance                # Graviton4
+make run   RECIPE=abundance ARCH=x86_64    # same specs, x86 pins, writes runs-x86_64/
 make ls    RECIPE=abundance
 ```
 
