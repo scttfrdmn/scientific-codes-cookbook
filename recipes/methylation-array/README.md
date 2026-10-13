@@ -5,7 +5,7 @@ env: aarchbio
 images:
   minfi: quay.io/aarchbio/bioconductor-minfidata@sha256:afec63a77f9e2662e44104f1d5f17aded9ad6aa9e6ff0f07b494d9e972bb300b
   sesame: quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b
-gap_x86_64: bioconda's x86 bioconductor-preprocesscore 1.72.0 (r45h01b2380_0) fails inside SeSAMe's normalisation with 'return code from pthread_create() is 22' on both Intel and AMD, before any assertion; minfi's task passes on x86 (checked 2026-10-13)
+gap_x86_64: bioconda's x86 bioconductor-preprocesscore 1.72.0 (r45h01b2380_0) fails inside SeSAMe's normalisation with 'return code from pthread_create() is 22' on Intel (AVX-512, AMX), AMD Zen 5 and AMD Zen 3 (no AVX-512) alike, so it is the build and not the host, before any assertion; minfi's task passes on x86 (checked 2026-10-13)
 spawn_version: 0.116.0
 last_verified: 2026-10-13
 ---
