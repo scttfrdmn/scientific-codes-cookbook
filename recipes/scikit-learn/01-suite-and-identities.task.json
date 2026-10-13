@@ -1,0 +1,86 @@
+{
+  "task_id": "cookbook-scikit-learn-r1",
+  "container": "quay.io/aarchsci/geo-ml@sha256:83ca6331cd84cbae0f60987e9536704ce201904bdfe98d3398aff57e8061aae9",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\nmkdir -p wh && mv ./*.whl wh/ && (cd wh && sha256sum -c ../wheels.sha256) \\\n  || { echo \"FAIL: a staged wheel does not match its pin\"; exit 1; }\n\necho \"== pytest from the staged wheels, offline (the env ships the tests but not pytest) ==\"\npython3 -m pip install -q --no-index --find-links wh --no-deps wh/*.whl 2>&1 | grep -v \"not on PATH\" | tail -2\npython3 -c \"import pytest, xdist; print('pytest', pytest.__version__, ' pytest-xdist', xdist.__version__)\" \\\n  || { echo \"FAIL: pytest did not install from the staged wheels\"; exit 1; }\n\necho \"== scikit-learn's own installed-package test model (build_tools/wheels/test_wheels.sh) ==\"\npython3 -c \"import sklearn; sklearn.show_versions()\" > show.txt 2>&1; cat show.txt\nN=$(python3 -c \"import joblib; print(joblib.cpu_count(only_physical_cores=True))\")\n# Count collection in a SEPARATE process, so \"every test is accounted for\" is a check between\n# two counts rather than one log agreeing with itself. (-q suppresses xdist's item count.)\nexport PYTHONPATH=/tmp\nACCOUNT_OUT=collect.json python3 -m pytest --pyargs sklearn --collect-only -q -p no:cacheprovider -p account > collect.log 2>&1\nT0=$(date +%s)\nACCOUNT_OUT=run.json python3 -u -m pytest --pyargs sklearn -n \"$N\" -p no:cacheprovider -p account -q -rs --durations=10 > suite.log 2>&1\nRC=$?\nWALL=$(( $(date +%s) - T0 ))\necho \"suite exit $RC, ${WALL}s on $N workers\"\n\npython3 -u - \"$RC\" \"$WALL\" \"$N\" <<'PYEOF' 2>&1 | tee suite-summary.txt\nimport re, sys, json, collections\nrc, wall, n = int(sys.argv[1]), sys.argv[2], sys.argv[3]\nlog = open(\"suite.log\", errors=\"replace\").read()\ncol, run = json.load(open(\"collect.json\")), json.load(open(\"run.json\"))\nitems, cskips = col[\"items\"], col[\"collect_skips\"]\nsumm = [l for l in log.splitlines() if re.search(r\"\\d+ (passed|failed)\", l) and \" in \" in l]\ncounts = collections.Counter()\nfor num, kind in re.findall(r\"(\\d+) (passed|failed|skipped|xfailed|xpassed|errors?)\", summ[-1] if summ else \"\"):\n    counts[\"errors\" if kind.startswith(\"error\") else kind] += int(num)\nprint(\"suite_items        %d collected, %d unique (separate --collect-only), run on %s workers\" % (len(items), len(set(items)), n))\nfor k in (\"passed\", \"skipped\", \"xfailed\", \"xpassed\", \"failed\", \"errors\"):\n    print(\"suite_%-12s %d\" % (k, counts[k]))\nprint(\"suite_wall_s       %s\" % wall)\n# One counted outcome per item: the call report, or a setup/teardown report that did not pass.\nper = collections.defaultdict(int)\nfor nid, when, outcome in run[\"reports\"]:\n    if when == \"call\" or outcome != \"passed\":\n        per[nid] += 1\nids = set(items)\nmissing = [i for i in items if per.get(i, 0) == 0]\nextra = [i for i in per if i not in ids]\nmulti = [i for i, k in per.items() if k != 1]\nsummary_total = sum(counts[k] for k in (\"passed\", \"skipped\", \"xfailed\", \"xpassed\", \"failed\", \"errors\"))\nprint(\"suite_accounting   %d items -> %d with exactly one outcome; %d missing, %d uncollected, %d multiple\"\n      % (len(items), sum(1 for i in items if per.get(i) == 1), len(missing), len(extra), len(multi)))\nprint(\"suite_summary_sum  %d = %d items + %d collection-time skip(s) %s\"\n      % (summary_total, len(items), len(cskips), \", \".join(c[:60] for c in cskips)))\nfails = []\nif rc != 0: fails.append(\"pytest exited %d\" % rc)\nif counts[\"failed\"]: fails.append(\"%d tests FAILED\" % counts[\"failed\"])\nif counts[\"errors\"]: fails.append(\"%d ERRORS\" % counts[\"errors\"])\nif len(set(items)) != len(items): fails.append(\"duplicate collected ids\")\nif missing: fails.append(\"%d collected tests never reported, e.g. %s\" % (len(missing), missing[0][:100]))\nif extra: fails.append(\"%d reports for tests that were not collected\" % len(extra))\nif multi: fails.append(\"%d tests reported more than one outcome\" % len(multi))\nif summary_total != len(items) + len(cskips):\n    fails.append(\"summary %d != %d items + %d collection-time skips\" % (summary_total, len(items), len(cskips)))\n# A floor against a collapsing collection: 47,445 items on this pin.\nif len(items) < 47000: fails.append(\"only %d items collected; this pin collects 47,445\" % len(items))\nreasons = collections.Counter()\nfor num, why in re.findall(r\"SKIPPED \\[(\\d+)\\] [^:]+:\\d+: (.*)\", log):\n    reasons[re.sub(r\"\\d+\", \"N\", why)[:90]] += int(num)\nprint(\"top skip reasons (so the skips are explained, not waved through):\")\nfor why, k in reasons.most_common(8):\n    print(\"  %6d  %s\" % (k, why))\nif fails:\n    print(\"FAIL: \" + \"; \".join(fails)); sys.exit(1)\nprint(\"SUITE OK\")\nPYEOF\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: scikit-learn's own suite did not pass cleanly\"; tail -40 suite.log; exit 1; }\n\necho \"== closed forms, a cross-code MLE, planted truth ==\"\npython3 -u identities.py 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'SKLEARN IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\n\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels/pytest-9.1.1-py3-none-any.whl",
+      "destination": "/tmp/pytest-9.1.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels/pluggy-1.6.0-py3-none-any.whl",
+      "destination": "/tmp/pluggy-1.6.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels/iniconfig-2.3.1-py3-none-any.whl",
+      "destination": "/tmp/iniconfig-2.3.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels/pytest_xdist-3.8.0-py3-none-any.whl",
+      "destination": "/tmp/pytest_xdist-3.8.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels/execnet-2.1.2-py3-none-any.whl",
+      "destination": "/tmp/execnet-2.1.2-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/wheels.sha256",
+      "destination": "/tmp/wheels.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn/account.py",
+      "destination": "/tmp/account.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/suite-summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/suite-summary.txt"
+    },
+    {
+      "source": "/tmp/suite.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/suite.log"
+    },
+    {
+      "source": "/tmp/show.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/show.txt"
+    },
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/identities.log"
+    },
+    {
+      "source": "/tmp/collect.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn/r1/collect.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
