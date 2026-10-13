@@ -3,8 +3,11 @@ tool: openfoam
 tool_version: v2412
 env: cfd
 image: docker.io/opencfd/openfoam-default@sha256:b8b674f7d634a7b272efa00beabfe13eefdfe9d83b28281522544d06d47a17e4
+last_verified_x86_64: 2026-10-13
+images_x86_64:
+  - docker.io/opencfd/openfoam-default@sha256:adbf625ac47ed81b34018602a6caeb4076bfacc2046b2f8cd36f82adb376946b
 spawn_version: 0.104.0
-last_verified: 2026-09-12
+last_verified: 2026-10-13
 ---
 # OpenFOAM — lid-driven cavity flow on Graviton
 
@@ -58,7 +61,7 @@ Every observed value below was **bit-identical on Apple arm64 (local) and Gravit
 | image | `docker.io/opencfd/openfoam-default@sha256:b8b674…a17e4` (tag `2412`, OpenFOAM v2412, upstream ESI multi-arch — the `linux/arm64` manifest, platform `linuxARM64GccDPInt32Opt`) |
 | input | the `cavity` tutorial shipped in the image (`$FOAM_TUTORIALS/incompressible/icoFoam/cavity/cavity`) — nothing staged |
 
-`opencfd/openfoam-default:2412` is a multi-arch manifest list; this recipe pins the arm64 entry by digest so the pull can't drift to amd64 or emulate ([a manifest list is not evidence of arm64](../../practices/container-path.md)) — and the run asserts `readelf Machine=AArch64` from inside, so arm64 is verified, not trusted.
+`opencfd/openfoam-default:2412` is a multi-arch manifest list; this recipe pins the arm64 entry by digest so the pull can't drift to amd64 or emulate ([a manifest list is not evidence of arm64](../../practices/container-path.md)) — and the run asserts from inside that `readelf`'s Machine is the host's own (AArch64 on Graviton, X86-64 on x86), so the architecture is verified, not trusted.
 
 **Provenance — the catalog's first upstream, non-conda source.** Every other recipe pulls from aarch.bio/aarch.science (conda-built, cosign-signed) or is a pipeline of those; this one pulls an **official image published by OpenCFD**, the OpenFOAM project itself. The digest pin is reproducibility-of-record — the pull is byte-identical while that digest exists — but its **durability is Docker Hub's best-effort retention**, which we don't control, unlike aarch.* where GC-proof tag-keeping can be requested. Not cosign-verified (an upstream image). For perpetual reproducibility, mirror the digest. Same tier as any [moving-registry artifact](../../practices/what-this-does-not-cover.md): the bytes reproduce until the publisher's registry drops them.
 
@@ -72,10 +75,28 @@ Every observed value below was **bit-identical on Apple arm64 (local) and Gravit
 | lid BC respected | max \|U\| ≈ 1.0 (lid speed) | 1.00000 |
 | vortex developed | pressure spans past ±1 | [−4.37, 4.85] |
 
+### On x86_64
+
+The same task on same-generation Intel (`c8i`), from the **same upstream manifest list** — the
+`2412` tag's amd64 entry, `docker.io/opencfd/openfoam-default@sha256:adbf625a…`, sibling of the
+arm64 pin. One build, two architectures, so there is no build-channel confound at all:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| solver completed / lid max\|U\| | End / 1.00000 | End / 1.00000 |
+| max Courant / pressure range | 0.8521 / [−4.367, 4.849] | 0.8521 / [−4.367, 4.849] |
+| cumulative continuity error | 4.19e-18 | 1.22e-17 |
+
+Every assertion holds on both, and the solution matches to the printed digits. The one number that
+moves is the continuity error, and it moves at machine zero — it is an accumulated round-off, a
+path value, so different floating-point evaluation is expected to change its last digits and
+cannot move it anywhere near the `1e-6` bound.
+
 ### Run + verify
 
 ```sh
-make run RECIPE=openfoam
+make run RECIPE=openfoam                # Graviton4
+make run RECIPE=openfoam ARCH=x86_64    # same manifest list's amd64 entry, writes runs-x86_64/
 make ls  RECIPE=openfoam
 ```
 

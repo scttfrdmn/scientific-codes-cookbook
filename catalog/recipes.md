@@ -54,141 +54,141 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 | gap |
-| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-02 | 2026-09-13 | gap |
-| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-02 | 2026-09-13 | gap |
-| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-08 | 2026-10-08 | gap |
+| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
+| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
+| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
+| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-12 | 2026-10-08 | gap |
 | [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | gap |
 | [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | gap |
-| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-10 | 2026-10-11 | gap |
+| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## bayes
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [arviz](../recipes/arviz/README.md) | Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM. | bayes | stage | 2026-10-10 | 2026-10-11 | gap |
-| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-09 | 2026-10-09 | gap |
+| [arviz](../recipes/arviz/README.md) | Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM. | bayes | stage | 2026-10-12 | 2026-10-11 | gap |
+| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-12 | 2026-10-09 | gap |
 
 ## cfd
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-10-02 | 2026-09-12 | — |
+| [openfoam](../recipes/openfoam/README.md) | `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64. | cfd | build-in-task | 2026-10-02 | 2026-10-13 | 2026-10-13 |
 
 ## cfd-fv
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-02 | 2026-09-13 | gap |
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-12 | 2026-09-13 | gap |
 
 ## climate
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-02 | 2026-09-13 | gap |
-| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-10 | 2026-10-11 | gap |
-| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-03 | 2026-10-03 | gap |
-| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-08 | 2026-10-08 | gap |
-| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-08 | 2026-10-08 | gap |
+| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-12 | 2026-09-13 | gap |
+| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-12 | 2026-10-11 | gap |
+| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-12 | 2026-10-03 | gap |
+| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-12 | 2026-10-08 | gap |
+| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-12 | 2026-10-08 | gap |
 
 ## comp-chem
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-11 | 2026-10-11 | gap |
-| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-02 | 2026-10-02 | gap |
-| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output. | comp-chem | build-in-task | 2026-10-02 | 2026-10-02 | gap |
-| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-02 | 2026-09-10 | gap |
-| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-02 | 2026-10-02 | gap |
-| [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-02 | 2026-10-02 | gap |
-| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-08 | 2026-10-08 | gap |
+| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-12 | 2026-10-11 | gap |
+| [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-12 | 2026-10-02 | gap |
+| [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output. | comp-chem | build-in-task | 2026-10-12 | 2026-10-02 | gap |
+| [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-12 | 2026-09-10 | gap |
+| [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-12 | 2026-10-02 | gap |
+| [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-12 | 2026-10-02 | gap |
+| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-12 | 2026-10-08 | gap |
 
 ## cp2k
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-10 | 2026-10-10 | gap |
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-12 | 2026-10-10 | gap |
 
 ## dft
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-03 | 2026-10-03 | gap |
-| [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-10-09 | 2026-09-30 | gap |
-| [nwchem](../recipes/nwchem/README.md) | Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM. | dft | build-in-task | 2026-10-09 | 2026-10-03 | gap |
-| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-10-02 | 2026-09-10 | gap |
-| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-10-03 | 2026-10-03 | gap |
-| [quantum-espresso](../recipes/quantum-espresso/README.md) | Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a plane-wave PBE equation of state, and it agrees with GPAW — an independent plane-wave code in the same env — on the identical system. For anyone who runs QE and wants it on Graviton. | dft | build-in-task | 2026-10-02 | 2026-09-12 | gap |
-| [siesta](../recipes/siesta/README.md) | Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's own committed reference energy in the same run. For anyone doing localised-basis DFT on ARM. | dft | stage | 2026-10-02 | 2026-09-30 | gap |
+| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-12 | 2026-10-03 | gap |
+| [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-10-12 | 2026-09-30 | gap |
+| [nwchem](../recipes/nwchem/README.md) | Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM. | dft | build-in-task | 2026-10-12 | 2026-10-03 | gap |
+| [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-10-12 | 2026-09-10 | gap |
+| [pymatgen](../recipes/pymatgen/README.md) | pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling. | dft | build-in-task | 2026-10-12 | 2026-10-03 | gap |
+| [quantum-espresso](../recipes/quantum-espresso/README.md) | Quantum ESPRESSO computes bulk silicon's equilibrium lattice constant from a plane-wave PBE equation of state, and it agrees with GPAW — an independent plane-wave code in the same env — on the identical system. For anyone who runs QE and wants it on Graviton. | dft | build-in-task | 2026-10-12 | 2026-09-12 | gap |
+| [siesta](../recipes/siesta/README.md) | Scans the Si equation of state to get a₀ = 5.4042 Å, and reproduces SIESTA's own committed reference energy in the same run. For anyone doing localised-basis DFT on ARM. | dft | stage | 2026-10-12 | 2026-09-30 | gap |
 
 ## earth-observation
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-03 | gap |
-| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-10 | 2026-10-10 | gap |
+| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-12 | 2026-10-03 | gap |
+| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-12 | 2026-10-10 | gap |
 
 ## fem-cfd
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-09 | 2026-10-10 | gap |
-| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-10 | 2026-10-11 | gap |
-| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-08 | 2026-10-09 | gap |
+| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-10 | gap |
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-12 | 2026-10-11 | gap |
+| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-12 | 2026-10-09 | gap |
 | [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-12 | gap |
 
 ## geo-ml
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-11 | 2026-10-11 | gap |
-| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-03 | gap |
-| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-10 | 2026-10-11 | gap |
+| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
+| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-03 | gap |
+| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## geoscience
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 | gap |
-| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-09 | 2026-10-09 | gap |
+| [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-12 | 2026-10-09 | gap |
+| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-12 | 2026-10-09 | gap |
 
 ## geospatial
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-03 | 2026-10-03 | gap |
+| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-12 | 2026-10-03 | gap |
 
 ## hep
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-11 | 2026-10-11 | gap |
-| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-10 | 2026-10-11 | gap |
-| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-11 | 2026-10-11 | gap |
+| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
+| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
+| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## md
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-03 | 2026-10-03 | gap |
-| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | 2026-10-11 | 2026-10-11 | gap |
-| [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-09 | 2026-09-30 | gap |
-| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-02 | 2026-09-30 | gap |
-| [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-02 | 2026-10-02 | gap |
-| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-02 | 2026-10-02 | gap |
+| [ambertools](../recipes/ambertools/README.md) | `tleap` builds a solvated peptide, `sander` runs a 100 ps NVE production trajectory, and the same force field is cross-checked against a second MD engine. For anyone running Amber force fields on ARM. | md | build-in-task | 2026-10-12 | 2026-10-03 | gap |
+| [gemmi](../recipes/gemmi/README.md) | Checks crystallographic symmetry on Graviton4 against published space-group orders, a group axiom, and three independent structure parsers. For anyone handling mmCIF/PDB coordinates on ARM. | md | stage | 2026-10-12 | 2026-10-11 | gap |
+| [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-12 | 2026-09-30 | gap |
+| [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-12 | 2026-09-30 | gap |
+| [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | build-in-task | 2026-10-12 | 2026-10-02 | gap |
+| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-12 | 2026-10-02 | gap |
 
 ## neuroimaging
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-09 | 2026-10-10 | gap |
-| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-10 | 2026-10-11 | gap |
+| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-10 | gap |
+| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## optimization
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-08 | 2026-10-08 | gap |
+| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-12 | 2026-10-08 | gap |
 
 ## pathology
 
@@ -202,7 +202,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | 2026-10-10 | 2026-10-11 | gap |
+| [warpx](../recipes/warpx/README.md) | Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the analytic solution at upstream's tolerance, and sweeps threads for a cost figure. For anyone doing particle-in-cell on ARM. | pic | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## pipeline
 
@@ -239,50 +239,50 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
 | [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-12 | 2026-10-12 | gap |
-| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-03 | 2026-10-03 | gap |
+| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-12 | 2026-10-03 | gap |
 
 ## popgen
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [popgen](../recipes/popgen/README.md) | Simulates 40 genomes over 1 Mb on Graviton4 and checks the result against coalescent theory, integer tree invariants, and a second implementation of the same statistics. For anyone doing population genetics on ARM. | popgen | stage | 2026-10-11 | 2026-10-11 | gap |
+| [popgen](../recipes/popgen/README.md) | Simulates 40 genomes over 1 Mb on Graviton4 and checks the result against coalescent theory, integer tree invariants, and a second implementation of the same statistics. For anyone doing population genetics on ARM. | popgen | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## quantum
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-10 | 2026-10-11 | gap |
+| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## r
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-02 | 2026-09-10 | gap |
-| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 | gap |
-| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-11 | 2026-10-11 | gap |
-| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-10 | 2026-10-10 | gap |
+| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-12 | 2026-09-10 | gap |
+| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-12 | 2026-10-10 | gap |
+| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-12 | 2026-10-11 | gap |
+| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-12 | 2026-10-10 | gap |
 
 ## single-cell
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-08 | 2026-10-08 | gap |
+| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-12 | 2026-10-08 | gap |
 
 ## structbio
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-11 | 2026-10-11 | gap |
+| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## tomography
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-11 | 2026-10-11 | gap |
+| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-12 | 2026-10-11 | gap |
 
 ## viz
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-11 | 2026-10-11 | gap |
-| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-03 | 2026-10-03 | gap |
+| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-12 | 2026-10-11 | gap |
+| [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-12 | 2026-10-03 | gap |
