@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-gw-r1",
+  "container": "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl OMP_NUM_THREADS=1\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\nmkdir -p outdir\npython3 -u identities.py 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'GW IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ntest -s outdir/inj_result.json && test -s outdir/noise_result.json || { echo \"FAIL: no Bilby result files\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw/r1/identities.log"
+    },
+    {
+      "source": "/tmp/outdir/inj_result.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw/r1/inj_result.json"
+    },
+    {
+      "source": "/tmp/outdir/noise_result.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw/r1/noise_result.json"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.10
+  }
+}
