@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **146 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **147 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -276,6 +276,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
+| [glmnet](../recipes/glmnet/README.md) | Fits glmnet's gaussian and binomial elastic-net paths on Graviton4 and checks every solution against the KKT conditions, the ridge closed form, `lm()` and `glm()`. For anyone fitting penalised regression in R on ARM. | r | stage | 2026-10-16 | 2026-10-16 | gap |
 | [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-12 | 2026-09-10 | gap |
 | [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-12 | 2026-10-10 | gap |
 | [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-12 | 2026-10-11 | gap |
