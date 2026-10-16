@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **151 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **152 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -20,6 +20,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [bowtie2](../recipes/bowtie2/README.md) | Build an index, align paired reads — checked against bwa on identical bytes. | aarchbio | run: bwa-samtools | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [bwa-samtools](../recipes/bwa-samtools/README.md) | Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Graviton, with cost per result measured across four Graviton generations. For anyone aligning short reads and choosing a box. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [cromwell-wdl](../recipes/cromwell-wdl/README.md) | Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked against a closed-form arithmetic result. For anyone whose pipelines are written in WDL — including GATK's published best-practice workflows. | aarchbio | build-in-task | 2026-10-12 | 2026-09-20 | 2026-10-13 |
+| [cutadapt](../recipes/cutadapt/README.md) | Trims TruSeq adapters from paired reads and low-quality ends from single reads, on Graviton4 and x86. For anyone putting adapter trimming in front of an aligner. | aarchbio | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 | [dada2](../recipes/dada2/README.md) | DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked against the three templates the reads were generated from. The catalog's first 16S/amplicon recipe, for anyone doing microbial community profiling. | aarchbio | build-in-task | 2026-10-12 | 2026-09-20 | 2026-10-13 |
 | [diamond](../recipes/diamond/README.md) | Searches 1000 proteins against all 382,428 Ensembl 116 peptides in 19 s, and recovers 99.57% of the self-hits BLAST+ finds. For anyone deciding whether BLAST+ is worth the wait. | aarchbio | run: blast | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [fastp](../recipes/fastp/README.md) | Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exactly. For anyone putting read QC in front of an aligner. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-12 | 2026-10-01 | 2026-10-13 |
