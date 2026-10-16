@@ -68,14 +68,17 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   from S3 and writes its outputs to S3, so a failed task 2 is rerun alone. That
   falls out of the shape for free — just don't design it out by having a task
   depend on a previous task's local disk. **Build no machinery for it.**
-- **Every staged path is flat in `/tmp`, and directory intermediates travel as a
-  tar.** Host `/tmp` is `1777` and the one mount writable whatever user the image
-  runs as. `spawn` advertises directory staging (a manifest source ending in `/`
-  gets `--recursive`) but a **directory output cannot work on the container path**:
-  output parents are never `mkdir`-ed, so dockerd creates them as root and the
-  container can't write there (spawn#564). An index is a directory, so `tar -cf` it
-  to one flat file, `rm -rf` the dir to stay inside the ~6.1 GiB budget, and untar
-  in the consuming task. (Unlaunchable recipe, or worse, a green check over nothing.)
+- **Every staged path lives in `/tmp`, and a directory may now travel as a directory.**
+  Host `/tmp` is `1777` and the one mount writable whatever user the image runs as. A
+  manifest source ending in `/` gets `--recursive` in both directions. Directory
+  **outputs** used to be impossible on the container path (output parents were never
+  `mkdir`-ed, so dockerd created them as root and the container could not write —
+  spawn#564); that was fixed 2026-10-04, and measured 2026-10-16: a nested tree written
+  as uid 1000 inside a non-root image staged out completely. So a tool whose output is a
+  tree (fMRIPrep's BIDS derivatives) can declare the tree. **Tar is still the right
+  shape for a big intermediate** — one object, and `rm -rf` the directory afterwards to
+  stay inside the tmpfs budget (½ instance RAM) — but it is a budget choice now, not a
+  platform workaround. (Unlaunchable recipe, or worse, a green check over nothing.)
 - **Never `rm` a staged input; only files the container itself created.** Host `/tmp`
   is sticky (`1777`) and stage-in runs as the **instance** user while the container
   runs as the **image's** user, so the container gets `EPERM` unlinking a staged file
