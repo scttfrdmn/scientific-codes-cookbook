@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **148 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **149 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -35,6 +35,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [kraken2](../recipes/kraken2/README.md) | Classifies a complete human WGS run against the 8 GB standard index and finds the cell line's virus. For anyone running taxonomic classification at scale. | aarchbio | stage: bwa-mem2, bwa-samtools, kraken2 | 2026-10-12 | 2026-10-02 | 2026-10-13 |
 | [macs2](../recipes/macs2/README.md) | Call enriched peaks from a ChIP-seq treatment against its matched input control. | aarchbio | stage | 2026-10-12 | 2026-09-10 | 2026-10-13 |
 | [mafft](../recipes/mafft/README.md) | Aligns every human member of Pfam's `7tm_1` family, taken straight from hmmer's own search output. For anyone aligning a real protein family. | aarchbio | stage · run: hmmer | 2026-10-12 | 2026-10-02 | 2026-10-13 |
+| [mageck](../recipes/mageck/README.md) | Runs `mageck count`, `mageck test` (RRA) and `mageck mle` on a pooled knockout screen whose per-sgRNA read counts and hit genes are planted, on Graviton4 and x86. For anyone analysing CRISPR screens. | aarchbio | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 | [mash](../recipes/mash/README.md) | Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale. | aarchbio | stage | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [megahit](../recipes/megahit/README.md) | A fast, memory-lean assembler — the go-to when SPAdes is too heavy for the data. | aarchbio | stage: bcftools | 2026-10-12 | 2026-09-10 | 2026-10-13 |
 | [metaphlan](../recipes/metaphlan/README.md) | Profiles a shotgun metagenome against 23 GB of clade-specific markers on Graviton4, and scores the answer against a mock community whose species list is known in advance. For anyone doing taxonomic profiling on ARM. | aarchbio | stage | 2026-10-12 | 2026-10-07 | 2026-10-13 |
