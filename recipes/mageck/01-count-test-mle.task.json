@@ -1,0 +1,154 @@
+{
+  "task_id": "cookbook-mageck-r1",
+  "container": "quay.io/aarchbio/mageck@sha256:92a0f37e3ebe2deb7186eaaed15cb9803caf4fa1a8302d6b6c70d71d913edcba",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"== staged screen must match its pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: the staged screen does not match its pins\"; exit 1; }\necho \"mageck $(mageck --version 2>&1 | tail -1); $(python3 -c 'import numpy,scipy;print(\"numpy\",getattr(numpy,\"__version__\",\"?\"),\"scipy\",getattr(scipy,\"__version__\",\"?\"))' 2>&1)\"\nT0=$(date +%s)\nmageck count -l library.txt -n screen --sample-label ctrl1,ctrl2,treat1,treat2,null1,null2 \\\n  --fastq ctrl1.fastq.gz ctrl2.fastq.gz treat1.fastq.gz treat2.fastq.gz null1.fastq.gz null2.fastq.gz > count.stdout 2>&1; R1=$?\nT1=$(date +%s)\nmageck test -k screen.count.txt -t treat1,treat2 -c ctrl1,ctrl2 --control-sgrna controls.txt --normcounts-to-file -n rra > rra.stdout 2>&1; R2=$?\nmageck test -k screen.count.txt -t treat1,treat2 -c ctrl1,ctrl2 --control-sgrna controls.txt -n rra_rep > rra_rep.stdout 2>&1; R3=$?\nmageck test -k screen.count.txt -t null1,null2 -c ctrl1,ctrl2 --control-sgrna controls.txt -n null > null.stdout 2>&1; R4=$?\nT2=$(date +%s)\nprintf 'Samples\\tbaseline\\ttreatment\\nctrl1\\t1\\t0\\nctrl2\\t1\\t0\\ntreat1\\t1\\t1\\ntreat2\\t1\\t1\\n' > design.txt\nmageck mle -k screen.count.txt -d design.txt --control-sgrna controls.txt --threads 2 -n mle > mle.stdout 2>&1; R5=$?\nT3=$(date +%s)\necho \"rc: count $R1 ($((T1-T0))s), test $R2 rep $R3 null $R4 ($((T2-T1))s), mle $R5 ($((T3-T2))s)\"\nfor r in $R1 $R2 $R3 $R4 $R5; do test \"$r\" = 0 || { echo \"FAIL: a mageck step did not finish\"; tail -20 *.stdout; exit 1; }; done\ncat > check.py <<'PY'\nimport math, re, sys\nok = True\ndef rec(name, val, note=\"\"):\n    print(\"%-34s %s%s\" % (name, str(val), (\"   \" + note) if note else \"\"))\ndef fail(msg):\n    global ok\n    print(\"FAIL: \" + msg); ok = False\ndef table(path):\n    rows = [l.rstrip(\"\\n\").split(\"\\t\") for l in open(path)]\n    return rows[0], rows[1:]\n\n# ---- count: the table must equal the planted counts exactly -------------------------------\nth, tr = table(\"truth_counts.txt\")\nmh, mr = table(\"screen.count.txt\")\nSAMPLES = th[2:]\ntruth = {r[0]: (r[1], [int(x) for x in r[2:]]) for r in tr}\ngot = {r[0]: (r[1], [int(float(x)) for x in r[2:]]) for r in mr}\nif mh[2:] != SAMPLES: fail(\"count table columns %s, expected %s\" % (mh[2:], SAMPLES))\ndiff = [k for k in truth if got.get(k) != truth[k]] + [k for k in got if k not in truth]\nrec(\"count_table_vs_planted\", \"%d sgRNAs, %d differ\" % (len(got), len(diff)))\nif len(got) != len(truth) or diff: fail(\"count table differs from the planted counts at %d sgRNAs (e.g. %s)\" % (len(diff), diff[:3]))\n\n# summary: reads, mapped, zero-count sgRNAs and Gini recomputed from the truth, not from MAGeCK\nreads = {l.split(\"\\t\")[0]: int(l.split(\"\\t\")[1]) for l in open(\"truth_reads.txt\").read().splitlines()[1:]}\nsh, sr = table(\"screen.countsummary.txt\")\nlogtxt = open(\"screen.log\").read()\nginis = [float(x) for x in re.findall(r\"giniindex\\t(\\S+)\", logtxt)]\ntrims = re.findall(r\"Auto determination of trim5 results: (\\S+)\", logtxt)\nrec(\"auto_trim5\", \",\".join(trims), \"(guide planted at offset 23)\")\nif trims != [\"23\"] * len(SAMPLES): fail(\"auto trim-5 did not find offset 23 in every sample\")\nfor j, s in enumerate(SAMPLES):\n    row = [r for r in sr if r[1] == s][0]\n    col = [truth[k][1][j] for k in truth]\n    mapped, zeros = sum(col), sum(1 for c in col if c == 0)\n    # Gini as mean absolute difference, x n/(n-1) -- the sample form MAGeCK reports, on log(count+1)\n    x = sorted(math.log(c + 1.0) for c in col); n = len(x)\n    pre, mad = 0.0, 0.0\n    for i, v in enumerate(x):\n        mad += v * i - pre; pre += v\n    g = (mad / (n * n * (sum(x) / n))) * n / (n - 1)\n    gl = ginis[j]\n    rec(\"summary_\" + s, \"reads %s mapped %s zero %s gini %s\" % (row[2], row[3], row[6], row[7]),\n        \"(expect %d %d %d %.4g; |gini-log - mine| %.1e)\" % (reads[s], mapped, zeros, g, abs(gl - g)))\n    if int(row[2]) != reads[s] or int(row[3]) != mapped or int(row[6]) != zeros or int(row[5]) != len(col):\n        fail(\"%s summary does not match the planted reads/mapped/zero counts\" % s)\n    if reads[s] - mapped != 3 * (mapped // 100):\n        fail(\"%s: the unmapped reads are not exactly the planted mismatch + late + junk reads\" % s)\n    if row[7] != \"{:.4g}\".format(g) or not abs(gl - g) <= 1e-12 * g:\n        fail(\"%s Gini %s / %r does not equal an independent recompute %r\" % (s, row[7], gl, g))\n\n# ---- test (RRA): median normalisation factors, recomputed ----------------------------------\ndef factors(cols):\n    idx = [SAMPLES.index(c) for c in cols]\n    m = {k: [v[1][i] for i in idx] for k, v in got.items()}\n    gm = {k: math.exp(sum(math.log(c + 1.0) for c in v) / len(v)) for k, v in m.items() if sum(v) > 0}\n    out = []\n    for j in range(len(idx)):\n        r = sorted(m[k][j] / gm[k] for k in gm)\n        out.append(1.0 / r[len(r) // 2])\n    return out\nfor name, cols in ((\"rra\", [\"ctrl1\", \"ctrl2\", \"treat1\", \"treat2\"]), (\"null\", [\"ctrl1\", \"ctrl2\", \"null1\", \"null2\"])):\n    lt = open(name + \".log\").read()\n    f = [float(x) for x in re.search(r\"Final size factor: (.*)\", lt).group(1).split()]\n    mine = factors(cols)\n    rel = max(abs(a - b) / b for a, b in zip(f, mine))\n    rec(\"size_factors_\" + name, \" \".join(\"%.6f\" % v for v in f), \"(max rel diff vs recompute %.1e)\" % rel)\n    if len(f) != 4 or not rel <= 1e-12: fail(\"%s median size factors do not equal an independent recompute\" % name)\n# normalised counts are raw x factor\nnh, nr = table(\"rra.normalized.txt\")\nf = [float(x) for x in re.search(r\"Final size factor: (.*)\", open(\"rra.log\").read()).group(1).split()]\nfac = dict(zip([\"ctrl1\", \"ctrl2\", \"treat1\", \"treat2\"], f))   # count-table column order\nworst = max(abs(float(r[2 + j]) - got[r[0]][1][SAMPLES.index(c)] * fac[c]) / max(1.0, float(r[2 + j]))\n            for r in nr for j, c in enumerate(nh[2:]))\nrec(\"normalized_eq_raw_x_factor\", \"%.1e\" % worst, \"(max rel diff)\")\nif not worst <= 1e-12: fail(\"normalised counts are not raw counts x size factor\")\n\n# ---- test (RRA): planted genes rank first; null comparison discovers nothing ----------------\nplanted = {l.split(\"\\t\")[0]: l.split(\"\\t\")[1] for l in open(\"truth_genes.txt\").read().splitlines()[1:]}\nDEP = {g for g, p in planted.items() if p == \"depleted\"}; ENR = {g for g, p in planted.items() if p == \"enriched\"}\ngh, gr = table(\"rra.gene_summary.txt\"); H = {h: i for i, h in enumerate(gh)}\nneg = sorted(gr, key=lambda r: int(r[H[\"neg|rank\"]])); pos = sorted(gr, key=lambda r: int(r[H[\"pos|rank\"]]))\ntop_neg = {r[0] for r in neg[:20]}; top_pos = {r[0] for r in pos[:20]}\nrec(\"rra_neg_top20_planted_depleted\", \"%d/20\" % len(top_neg & DEP))\nrec(\"rra_pos_top20_planted_enriched\", \"%d/20\" % len(top_pos & ENR))\nif top_neg != DEP: fail(\"neg ranks 1-20 are not exactly the 20 planted depleted genes\")\nif top_pos != ENR: fail(\"pos ranks 1-20 are not exactly the 20 planted enriched genes\")\nmx_dep = max(float(r[H[\"neg|fdr\"]]) for r in gr if r[0] in DEP)\nmx_enr = max(float(r[H[\"pos|fdr\"]]) for r in gr if r[0] in ENR)\nfd_neg = sorted(r[0] for r in gr if planted.get(r[0]) == \"null\" and float(r[H[\"neg|fdr\"]]) < 0.05)\nfd_pos = sorted(r[0] for r in gr if planted.get(r[0]) == \"null\" and float(r[H[\"pos|fdr\"]]) < 0.05)\nrec(\"rra_planted_max_fdr\", \"depleted %g, enriched %g\" % (mx_dep, mx_enr))\nrec(\"rra_null_genes_fdr_lt_0.05\", \"neg %d %s, pos %d %s\" % (len(fd_neg), fd_neg, len(fd_pos), fd_pos), \"(observation)\")\nif not (mx_dep < 0.05 and mx_enr < 0.05): fail(\"a planted gene is not at FDR < 0.05 in its direction\")\nif \"NonTargeting\" in {r[0] for r in gr}: fail(\"non-targeting controls were scored as a gene\")\nnh2, nr2 = table(\"null.gene_summary.txt\"); N = {h: i for i, h in enumerate(nh2)}\nmn = min(float(r[N[\"neg|fdr\"]]) for r in nr2); mp = min(float(r[N[\"pos|fdr\"]]) for r in nr2)\npn = sum(1 for r in nr2 if float(r[N[\"neg|p-value\"]]) < 0.05) / len(nr2)\nrec(\"null_control_min_fdr\", \"neg %g, pos %g\" % (mn, mp), \"(no effect planted; nominal p<0.05 in %.1f%% of genes)\" % (100 * pn))\nif not (mn >= 0.05 and mp >= 0.05): fail(\"the null comparison found a gene at FDR < 0.05\")\nsame = open(\"rra.gene_summary.txt\").read() == open(\"rra_rep.gene_summary.txt\").read()\nrec(\"rra_rerun_byte_identical\", same)\nif not same: fail(\"RRA gave a different gene summary on an identical rerun\")\n\n# ---- mle: beta signs and order recover the planted design --------------------------------\nmh2, mr2 = table(\"mle.gene_summary.txt\"); M = {h: i for i, h in enumerate(mh2)}\nbeta = {r[0]: float(r[M[\"treatment|beta\"]]) for r in mr2}\nfdr = {r[0]: float(r[M[\"treatment|fdr\"]]) for r in mr2}\norder = sorted(beta, key=lambda g: beta[g])\ndep_b = [beta[g] for g in DEP]; enr_b = [beta[g] for g in ENR]\nrec(\"mle_beta_depleted\", \"%.3f .. %.3f\" % (min(dep_b), max(dep_b)), \"(planted ln(1/4) = -1.386)\")\nrec(\"mle_beta_enriched\", \"%.3f .. %.3f\" % (min(enr_b), max(enr_b)), \"(planted ln 4 = +1.386)\")\nrec(\"mle_beta_null_absmax\", \"%.3f\" % max(abs(beta[g]) for g in beta if planted.get(g) == \"null\"))\nrec(\"mle_planted_max_perm_fdr\", \"%g\" % max(fdr[g] for g in DEP | ENR))\nif not (max(dep_b) < 0 and min(enr_b) > 0): fail(\"an MLE beta has the wrong sign for a planted gene\")\nif set(order[:20]) != DEP or set(order[-20:]) != ENR: fail(\"the 20 most negative / positive MLE betas are not the planted genes\")\nif not max(fdr[g] for g in DEP | ENR) < 0.05: fail(\"a planted gene is not at MLE permutation FDR < 0.05\")\nif math.isnan(sum(beta.values())): fail(\"NaN in MLE betas\")\n\nif not ok: sys.exit(1)\nprint(\"MAGeCK OK\")\nPY\npython3 -u check.py 2>&1 | tee smoke-check.txt\ntest \"${PIPESTATUS[0]}\" = 0 || { echo \"FAIL: a MAGeCK check failed\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/library.txt",
+      "destination": "/tmp/library.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/controls.txt",
+      "destination": "/tmp/controls.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/truth_counts.txt",
+      "destination": "/tmp/truth_counts.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/truth_genes.txt",
+      "destination": "/tmp/truth_genes.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/truth_reads.txt",
+      "destination": "/tmp/truth_reads.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/ctrl1.fastq.gz",
+      "destination": "/tmp/ctrl1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/ctrl2.fastq.gz",
+      "destination": "/tmp/ctrl2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/treat1.fastq.gz",
+      "destination": "/tmp/treat1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/treat2.fastq.gz",
+      "destination": "/tmp/treat2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/null1.fastq.gz",
+      "destination": "/tmp/null1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/null2.fastq.gz",
+      "destination": "/tmp/null2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/screen.count.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/screen.count.txt"
+    },
+    {
+      "source": "/tmp/screen.countsummary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/screen.countsummary.txt"
+    },
+    {
+      "source": "/tmp/screen.count_normalized.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/screen.count_normalized.txt"
+    },
+    {
+      "source": "/tmp/rra.gene_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra.gene_summary.txt"
+    },
+    {
+      "source": "/tmp/rra.sgrna_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra.sgrna_summary.txt"
+    },
+    {
+      "source": "/tmp/rra.normalized.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra.normalized.txt"
+    },
+    {
+      "source": "/tmp/rra_rep.gene_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra_rep.gene_summary.txt"
+    },
+    {
+      "source": "/tmp/null.gene_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/null.gene_summary.txt"
+    },
+    {
+      "source": "/tmp/mle.gene_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/mle.gene_summary.txt"
+    },
+    {
+      "source": "/tmp/mle.sgrna_summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/mle.sgrna_summary.txt"
+    },
+    {
+      "source": "/tmp/screen.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/screen.log"
+    },
+    {
+      "source": "/tmp/rra.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra.log"
+    },
+    {
+      "source": "/tmp/rra_rep.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra_rep.log"
+    },
+    {
+      "source": "/tmp/null.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/null.log"
+    },
+    {
+      "source": "/tmp/mle.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/mle.log"
+    },
+    {
+      "source": "/tmp/count.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/count.stdout"
+    },
+    {
+      "source": "/tmp/rra.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/rra.stdout"
+    },
+    {
+      "source": "/tmp/null.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/null.stdout"
+    },
+    {
+      "source": "/tmp/mle.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck/r1/mle.stdout"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
