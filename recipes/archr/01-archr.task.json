@@ -1,0 +1,98 @@
+{
+  "task_id": "cookbook-archr-r1",
+  "container": "quay.io/aarchbio/r-archr@sha256:a71267afe8ca5a73e10e62b563d88b959bdec10cc0faedfc71d2410652376c6a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# spawn's task shell drops the image PATH; aarchbio's prefix is /opt/conda, bioconda's x86 /usr/local.\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\n: > smoke-check.txt; : > archr.log\necho \"== staged fixture and script must match their pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: the ArchR fixture does not match its pins\" | tee -a smoke-check.txt; exit 1; }\necho \"fixture                      $(wc -l < fixture.sha256 | tr -d ' ') of $(wc -l < fixture.sha256 | tr -d ' ') staged files match their pins\" >> smoke-check.txt\nT0=$(date +%s)\nRscript archr.R > archr.log 2>&1; RC=$?\nT1=$(date +%s)\necho \"Rscript rc $RC in $((T1-T0))s\" | tee -a smoke-check.txt\ntar -czf archr-logs.tar.gz ArchRLogs QualityControl 2>/dev/null\ngrep -E \"^  (ok|FAIL)\" smoke-check.txt | awk '{n[$1]++} END{print \"checks: \" n[\"ok\"]+0 \" ok, \" n[\"FAIL\"]+0 \" failed\"}' | tee -a smoke-check.txt\ncat smoke-check.txt\ntest \"$RC\" = 0 || { echo \"FAIL: an ArchR check failed or ArchR died\"; tail -40 archr.log; exit 1; }\ngrep -q \"^ArchR OK\" smoke-check.txt || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/archr.R",
+      "destination": "/tmp/archr.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/planted.fragments.tsv.gz",
+      "destination": "/tmp/planted.fragments.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/planted.fragments.tsv.gz.tbi",
+      "destination": "/tmp/planted.fragments.tsv.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/flat.fragments.tsv.gz",
+      "destination": "/tmp/flat.fragments.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/flat.fragments.tsv.gz.tbi",
+      "destination": "/tmp/flat.fragments.tsv.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/cells.tsv",
+      "destination": "/tmp/cells.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/genes.tsv",
+      "destination": "/tmp/genes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/tiles.tsv",
+      "destination": "/tmp/tiles.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/genome.tsv",
+      "destination": "/tmp/genome.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/blacklist.tsv",
+      "destination": "/tmp/blacklist.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/archr.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/archr.log"
+    },
+    {
+      "source": "/tmp/archr-logs.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/archr-logs.tar.gz"
+    },
+    {
+      "source": "/tmp/cell_qc.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/cell_qc.tsv"
+    },
+    {
+      "source": "/tmp/clusters.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/clusters.tsv"
+    },
+    {
+      "source": "/tmp/lsi_dims1-5.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/lsi_dims1-5.tsv"
+    },
+    {
+      "source": "/tmp/markers_tiles.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr/r1/markers_tiles.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.35
+  }
+}
