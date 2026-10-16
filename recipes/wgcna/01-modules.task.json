@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-wgcna-r1",
+  "container": "quay.io/aarchbio/r-wgcna@sha256:8f54c6548dd6938819c9ce47ffc1092561195c1f90b3d0a75b02bbbe40d83546",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# PATH: aarchbio's image keeps R in /opt/conda/bin, bioconda's x86 one in /usr/local/bin.\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\n: > wgcna.log; : > smoke-check.txt; : > modules.tsv\necho \"== staged fixture must match its pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: the planted-module fixture does not match its pins\"; exit 1; }\ncat > wgcna.R <<'RSCRIPT'\nsuppressMessages(library(WGCNA))\noptions(stringsAsFactors = FALSE)\nver <- function(p) tryCatch(as.character(utils::packageVersion(p)), error = function(e) \"unknown\")\ncat(sprintf(\"version\\tWGCNA %s  dynamicTreeCut %s  fastcluster %s  %s\\n\",\n            ver(\"WGCNA\"), ver(\"dynamicTreeCut\"), ver(\"fastcluster\"), R.version.string))\nNT <- 2L\nenableWGCNAThreads(nThreads = NT)\ncat(sprintf(\"threads\\t%s\\n\", WGCNAnThreads()))\n\n# Tolerances: every exact claim compares two computations of the same quantity in [-1, 1] or\n# [0, 1] that differ only in summation order, so 1e-12 is ~4500 machine epsilons of headroom\n# and still far tighter than any real disagreement. The 4x4 TOM is dyadic, so it is exact.\nout <- character(0); fails <- character(0)\nrec <- function(label, ok, detail) {\n  line <- sprintf(\"%-30s %s\", label, paste(sapply(detail, as.character), collapse = \" \"))\n  if (!is.na(ok)) line <- paste(line, if (isTRUE(ok)) \"  ok\" else \"  FAIL\")\n  cat(line, \"\\n\"); out <<- c(out, line)\n  if (!is.na(ok) && !isTRUE(ok)) fails <<- c(fails, label)\n}\n# NaN trap: a one-sided bound passes NaN, so every numeric check goes through this.\nle <- function(x, tol) is.finite(x) && x <= tol\nge <- function(x, tol) is.finite(x) && x >= tol\n\nX  <- as.matrix(read.csv(\"expr.csv\", row.names = 1, check.names = FALSE))\nXC <- as.matrix(read.csv(\"control.csv\", row.names = 1, check.names = FALSE))\nE  <- as.matrix(read.csv(\"latent.csv\", row.names = 1, check.names = FALSE))\nlab <- read.delim(\"labels.tsv\")\nstopifnot(identical(colnames(X), lab$gene))\nrec(\"matrix\", all(dim(X) == c(60, 600)) && all(is.finite(X)), sprintf(\"%d samples x %d genes\", nrow(X), ncol(X)))\n\nari <- function(a, b) {        # Hubert-Arabie adjusted Rand index from the contingency table\n  t <- table(a, b); n <- sum(t); c2 <- function(x) sum(x * (x - 1) / 2)\n  s <- c2(t); sa <- c2(rowSums(t)); sb <- c2(colSums(t)); e <- sa * sb / (n * (n - 1) / 2)\n  (s - e) / ((sa + sb) / 2 - e)\n}\n\n# ---- 1. WGCNA's own cor() vs stats::cor -- two implementations of Pearson\nCw <- WGCNA::cor(X); Cs <- stats::cor(X)\nd <- max(abs(Cw - Cs))\nrec(\"cor_vs_stats_cor\", le(d, 1e-12), sprintf(\"max|diff| %.3e  (assert <= 1e-12)\", d))\n\n# ---- 2. adjacency closed forms\nbeta <- 6\nAu <- adjacency(X, type = \"unsigned\", power = beta)\nAs <- adjacency(X, type = \"signed\", power = beta)\ndu <- max(abs(Au - abs(Cs)^beta)); ds <- max(abs(As - ((1 + Cs) / 2)^beta))\nrec(\"adjacency_unsigned\", le(du, 1e-12), sprintf(\"max|A - |cor|^6| %.3e  (assert <= 1e-12)\", du))\nrec(\"adjacency_signed\", le(ds, 1e-12), sprintf(\"max|A - ((1+cor)/2)^6| %.3e  (assert <= 1e-12)\", ds))\n\n# ---- 3. TOM: a 4-node matrix worked by hand, then the closed form on the full network\nH <- matrix(c(1, .5, .5, 0,   .5, 1, .5, 0,   .5, .5, 1, 1,   0, 0, 1, 1), 4, 4)\nThand <- matrix(c(1, .5, .5, .25,  .5, 1, .5, .25,  .5, .5, 1, 1,  .25, .25, 1, 1), 4, 4)\nTh <- TOMsimilarity(H, TOMType = \"unsigned\", verbose = 0)\ndh <- max(abs(Th - Thand))\nrec(\"tom_hand_4x4\", le(dh, 1e-15), sprintf(\"max|diff| %.3e vs values worked by hand  (assert <= 1e-15)\", dh))\ntomclosed <- function(A) {\n  A0 <- A; diag(A0) <- 0; k <- rowSums(A0); L <- A0 %*% A0\n  T <- (L + A0) / (outer(k, k, pmin) + 1 - A0); diag(T) <- 1; T\n}\nTw <- TOMsimilarity(Au, TOMType = \"unsigned\", verbose = 0)\ndt <- max(abs(Tw - tomclosed(Au)))\nrec(\"tom_closed_form_600\", le(dt, 1e-12), sprintf(\"max|diff| %.3e  (assert <= 1e-12)\", dt))\n# threads: the TOM is the threaded kernel; 1 thread vs 2 must agree exactly before anything is called exact\ndisableWGCNAThreads(); Tw1 <- TOMsimilarity(Au, TOMType = \"unsigned\", verbose = 0)\nenableWGCNAThreads(nThreads = NT)\nrec(\"tom_1_vs_2_threads\", identical(unclass(Tw), unclass(Tw1)), sprintf(\"identical: %s\", identical(unclass(Tw), unclass(Tw1))))\n\n# ---- 4. pickSoftThreshold (observation)\nsft <- pickSoftThreshold(X, powerVector = 1:12, verbose = 0)\nfi <- sft$fitIndices\nr2 <- -sign(fi$slope) * fi$SFT.R.sq\nrec(\"pickSoftThreshold\", NA, sprintf(\"powerEstimate %s; signed R^2 by power 1..12: %s\", sft$powerEstimate,\n    paste(sprintf(\"%.3f\", r2), collapse = \" \")))\n\n# ---- 5. modules: blockwiseModules, twice, then planted truth\nbwm <- function(M, type) blockwiseModules(M, power = beta, networkType = type, TOMType = type,\n  minModuleSize = 30, maxBlockSize = 5000, mergeCutHeight = 0.25, deepSplit = 2,\n  numericLabels = TRUE, pamRespectsDendro = FALSE, randomSeed = 12345, saveTOMs = FALSE, verbose = 0)\nnu <- bwm(X, \"unsigned\"); nu2 <- bwm(X, \"unsigned\")\nrec(\"bwm_two_runs_identical\", identical(nu$colors, nu2$colors) && identical(nu$MEs, nu2$MEs),\n    sprintf(\"colors %s, MEs %s\", identical(nu$colors, nu2$colors), identical(nu$MEs, nu2$MEs)))\n# Planted truth, exactly: every planted module lands whole in ONE detected (non-grey) module, and\n# no two planted modules share one. Noise genes may join a module by chance correlation; that is\n# reported, not asserted, since 200 random genes at n=60 carry no planted answer.\nrecovery <- function(planted, got) {\n  pm <- sort(setdiff(unique(planted), 0))\n  tgt <- sapply(pm, function(p) { g <- unique(got[planted == p]); if (length(g) == 1 && g != 0) g else NA })\n  list(ok = all(!is.na(tgt)) && !anyDuplicated(tgt), n = sum(!is.na(tgt)), of = length(pm),\n       noise_in = sum(planted == 0 & got != 0), noise = sum(planted == 0))\n}\nsizes <- function(cl) paste(sort(table(cl[cl != 0]), decreasing = TRUE), collapse = \",\")\nru <- recovery(lab$unsigned, nu$colors); nmod <- length(setdiff(unique(nu$colors), 0))\nrec(\"unsigned_modules\", nmod == 4, sprintf(\"%d non-grey, sizes %s  (planted 4 x 100; assert 4)\", nmod, sizes(nu$colors)))\nrec(\"unsigned_planted_recovered\", ru$ok, sprintf(\"%d of %d planted modules whole and one-to-one; noise genes absorbed %d of %d; ARI %.4f\",\n    ru$n, ru$of, ru$noise_in, ru$noise, ari(lab$unsigned, nu$colors)))\nns <- bwm(X, \"signed\")\nrs <- recovery(lab$signed, ns$colors); nsm <- length(setdiff(unique(ns$colors), 0))\nrec(\"signed_modules\", nsm == 6, sprintf(\"%d non-grey, sizes %s  (planted 60+40, 60+40, 100, 100 by sign; assert 6)\", nsm, sizes(ns$colors)))\nrec(\"signed_planted_recovered\", rs$ok, sprintf(\"%d of %d sign-split modules whole and one-to-one; noise absorbed %d of %d; ARI %.4f\",\n    rs$n, rs$of, rs$noise_in, rs$noise, ari(lab$signed, ns$colors)))\nrec(\"signed_splits_anticorrelated\", !recovery(lab$unsigned, ns$colors)$ok,\n    \"the signed network must NOT keep the anticorrelated halves of modules 1-2 together\")\n\n# planted eigengenes: each detected ME tracks exactly one latent factor\nmes <- nu$MEs[, setdiff(colnames(nu$MEs), \"ME0\"), drop = FALSE]\nR <- abs(stats::cor(mes, E))\nbest <- apply(R, 1, max); which_ <- apply(R, 1, which.max)\nrec(\"ME_tracks_planted_factor\", length(unique(which_)) == 4 && ge(min(best), 0.95),\n    sprintf(\"|cor(ME, E_m)| %s, factors %s  (assert one-to-one, each >= 0.95)\",\n            paste(sprintf(\"%.4f\", best), collapse = \" \"), paste(which_, collapse = \",\")))\n\n# ---- 6. module eigengene == first PC of the scaled module expression\ndmax <- 0\nfor (m in sort(setdiff(unique(nu$colors), 0))) {\n  Z <- scale(X[, nu$colors == m])\n  pc <- svd(Z, nu = 1, nv = 0)$u[, 1]\n  me <- moduleEigengenes(X, nu$colors)$eigengenes[[paste0(\"ME\", m)]]\n  pc <- pc * sign(sum(pc * me))\n  dmax <- max(dmax, max(abs(as.numeric(scale(me)) - as.numeric(scale(pc)))))\n}\nrec(\"ME_eq_first_PC\", le(dmax, 1e-12), sprintf(\"max|scale(ME) - scale(PC1)| %.3e  (assert <= 1e-12)\", dmax))\n\n# ---- 7. control: every gene permuted independently -> no co-expression to find\nnc <- bwm(XC, \"unsigned\")\nac <- ari(lab$unsigned, nc$colors)\nncm <- length(setdiff(unique(nc$colors), 0))\nrec(\"control_ARI\", is.finite(ac) && abs(ac) <= 0.05, sprintf(\"%.4f, %d non-grey modules  (assert |ARI| <= 0.05)\", ac, ncm))\n\nwrite.table(data.frame(gene = colnames(X), planted = lab$unsigned, unsigned = nu$colors, signed = ns$colors, control = nc$colors),\n            \"modules.tsv\", sep = \"\\t\", quote = FALSE, row.names = FALSE)\ncat(sprintf(\"digest\\tTOM sum %.15e  colors %s\\n\", sum(Tw), paste(nu$colors[c(1, 101, 201, 301, 401)], collapse = \",\")))\nout <- c(out, sprintf(\"arch                           %s (R_ARCH %s)\", Sys.info()[[\"machine\"]], R.version$arch))\nif (length(fails)) { out <- c(out, paste(\"FAILED:\", paste(fails, collapse = \", \"))); writeLines(out, \"smoke-check.txt\"); quit(status = 1) }\nout <- c(out, \"WGCNA OK\"); writeLines(out, \"smoke-check.txt\")\nRSCRIPT\nT0=$(date +%s)\nRscript wgcna.R > wgcna.log 2>&1; RC=$?\necho \"Rscript rc $RC in $(( $(date +%s) - T0 ))s\"\ncat wgcna.log\ntest \"$RC\" = 0 || { echo \"FAIL: a WGCNA check failed (see smoke-check.txt / wgcna.log)\"; exit 1; }\ngrep -q \"^WGCNA OK$\" smoke-check.txt || { echo \"FAIL: smoke check did not complete\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna/expr.csv",
+      "destination": "/tmp/expr.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna/control.csv",
+      "destination": "/tmp/control.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna/latent.csv",
+      "destination": "/tmp/latent.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna/labels.tsv",
+      "destination": "/tmp/labels.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/wgcna/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/modules.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/wgcna/r1/modules.tsv"
+    },
+    {
+      "source": "/tmp/wgcna.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/wgcna/r1/wgcna.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
