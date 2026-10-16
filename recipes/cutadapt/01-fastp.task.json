@@ -1,0 +1,78 @@
+{
+  "task_id": "cookbook-cutadapt-fastp",
+  "container": "quay.io/aarchbio/fastp@sha256:061ee7c6b8e5af265dfed6f25c51e482e3bb403c51f167561405010e5c5f632a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nsha256sum -c fixture.sha256 || { echo \"FAIL: the staged fixture does not match its pins\"; exit 1; }\nAD1=AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC\nAD2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT\n# Mode matched to the cutadapt run: the same adapter sequences, no quality/length/N filter,\n# no polyG, one thread. fastp's paired-end overlap analysis stays on -- it is how fastp trims PE.\nfastp -i R1.fq -I R2.fq -o fastp_R1.fq -O fastp_R2.fq \\\n      --adapter_sequence \"$AD1\" --adapter_sequence_r2 \"$AD2\" \\\n      -Q -L -G -w 1 -j fastp.json -h fastp.html > fastp.log 2>&1; RC=$?\necho \"fastp rc $RC\"; tail -5 fastp.log\ntest \"$RC\" = 0 || { echo \"FAIL: fastp did not finish\"; exit 1; }\nN1=$(awk 'END{print NR/4}' fastp_R1.fq); N2=$(awk 'END{print NR/4}' fastp_R2.fq)\necho \"fastp wrote $N1 / $N2 reads of 1890 pairs (it drops inserts under 3 bp even with -L)\"\ntest \"$N1\" = \"$N2\" && test \"$N1\" -gt 0 || { echo \"FAIL: fastp output is empty or unpaired\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/R1.fq",
+      "destination": "/tmp/R1.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/R2.fq",
+      "destination": "/tmp/R2.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/expected_R1.fq",
+      "destination": "/tmp/expected_R1.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/expected_R2.fq",
+      "destination": "/tmp/expected_R2.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/control_adapters.txt",
+      "destination": "/tmp/control_adapters.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/qual.fq",
+      "destination": "/tmp/qual.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/fastp_R1.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp_R1.fq"
+    },
+    {
+      "source": "/tmp/fastp_R2.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp_R2.fq"
+    },
+    {
+      "source": "/tmp/fastp.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp.json"
+    },
+    {
+      "source": "/tmp/fastp.html",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp.html"
+    },
+    {
+      "source": "/tmp/fastp.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

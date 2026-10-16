@@ -1,0 +1,114 @@
+{
+  "task_id": "cookbook-cutadapt-trim",
+  "container": "quay.io/aarchbio/cutadapt@sha256:434a8a2384580ec718463bac3723a5c407b083855af7bab5f802f9100033781d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# The image's PATH is dropped by the task shell; both prefixes, so one spec serves aarchbio's\n# image (/opt/conda) and bioconda's x86 one (/usr/local).\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"== staged fixture must match its pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: the staged fixture does not match its pins\"; exit 1; }\nAD1=AGATCGGAAGAGCACACGTCTGAACTCCAGTCAC\nAD2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT\nCTRL1=$(sed -n 1p control_adapters.txt); CTRL2=$(sed -n 2p control_adapters.txt)\necho \"cutadapt $(cutadapt --version 2>&1)  control adapters $CTRL1 $CTRL2\"\n\nT0=$(date +%s)\ncutadapt -a \"$AD1\" -A \"$AD2\" -e 0.1 -O 3 -m 10 --max-n 0 -j 1 --json=trim_j1.json \\\n  -o trim_R1.fq -p trim_R2.fq R1.fq R2.fq > cutadapt_j1.log 2>&1; R1=$?\ncutadapt -a \"$AD1\" -A \"$AD2\" -e 0.1 -O 3 -m 10 --max-n 0 -j 4 --json=trim_j4.json \\\n  -o j4_R1.fq -p j4_R2.fq R1.fq R2.fq > cutadapt_j4.log 2>&1; R2=$?\ncutadapt -a \"$CTRL1\" -A \"$CTRL2\" -e 0.1 -O 3 -j 1 --json=control.json \\\n  -o ctrl_R1.fq -p ctrl_R2.fq R1.fq R2.fq > cutadapt_control.log 2>&1; R3=$?\ncutadapt -q 15,20 -j 1 --json=qual.json -o qual_out.fq qual.fq > cutadapt_qual.log 2>&1; R4=$?\nT1=$(date +%s)\necho \"cutadapt rc: trim $R1, -j 4 $R2, control $R3, quality $R4 ($((T1-T0)) s for all four)\"\ntest \"$R1$R2$R3$R4\" = 0000 || { echo \"FAIL: a cutadapt run did not finish\"; tail -20 cutadapt_*.log; exit 1; }\n\npython3 -u - <<'PY' 2>&1 | tee smoke-check.txt\nimport hashlib, json, os, platform, subprocess, sys\nfrom collections import Counter, defaultdict\n\nok = True\ndef say(*a):\n    print(*[str(x) for x in a])\ndef fail(msg):\n    global ok\n    ok = False\n    say(\"FAIL:\", msg)\n\ndef fq(path):\n    out = []\n    with open(path) as f:\n        while True:\n            h = f.readline()\n            if not h:\n                break\n            s, _, q = f.readline().rstrip(\"\\n\"), f.readline(), f.readline().rstrip(\"\\n\")\n            out.append((h.rstrip(\"\\n\"), s, q))\n    return out\ndef rid(h): return h[1:].split()[0]\ndef sha(path): return hashlib.sha256(open(path, \"rb\").read()).hexdigest()\ndef rep(path): return json.load(open(path))\n\ntruth = {}\nfor line in list(open(\"truth.tsv\"))[1:]:\n    i, cat, L, exp = line.rstrip(\"\\n\").split(\"\\t\")\n    truth[i] = (cat, int(L), exp)\nR1, R2 = fq(\"R1.fq\"), fq(\"R2.fq\")\nwant = Counter(e for _, _, e in truth.values())\n\nsay(\"== 1. every trimmed read equals its planted insert, sequence and quality, byte for byte ==\")\nT1, T2 = fq(\"trim_R1.fq\"), fq(\"trim_R2.fq\")\nE1, E2 = fq(\"expected_R1.fq\"), fq(\"expected_R2.fq\")\nfor name, got, exp in ((\"R1\", T1, E1), (\"R2\", T2, E2)):\n    gd, ed = {rid(r[0]): r for r in got}, {rid(r[0]): r for r in exp}\n    bad = Counter()\n    for k, e in ed.items():\n        if gd.get(k) != e:\n            bad[truth[k][0]] += 1\n    extra = set(gd) - set(ed)\n    say(\"  %s  %d reads written, %d expected, %d differ from the planted truth, %d unexpected\"\n        % (name, len(got), len(exp), sum(bad.values()), len(extra)))\n    for c, n in sorted(bad.items()):\n        say(\"      %-18s %d wrong\" % (c, n))\n    if bad or extra or len(got) != len(exp):\n        fail(\"%s output is not the planted truth\" % name)\nb1, b2 = open(\"trim_R1.fq\", \"rb\").read() == open(\"expected_R1.fq\", \"rb\").read(), \\\n         open(\"trim_R2.fq\", \"rb\").read() == open(\"expected_R2.fq\", \"rb\").read()\nsay(\"  trim_R1.fq == expected_R1.fq (bytes): %s   trim_R2.fq == expected_R2.fq: %s\" % (b1, b2))\nsay(\"  sha256 trim_R1.fq %s\" % sha(\"trim_R1.fq\"))\nsay(\"  sha256 trim_R2.fq %s\" % sha(\"trim_R2.fq\"))\nif not (b1 and b2):\n    fail(\"trimmed FASTQs are not byte-identical to the staged expected output\")\nby_cat = defaultdict(Counter)\nfor k, (c, L, e) in truth.items():\n    by_cat[c][e] += 1\nfor c in sorted(by_cat):\n    say(\"      %-18s %s\" % (c, dict(by_cat[c])))\n\nsay(\"== 2. the report's books balance, and equal counts taken from the files ==\")\nJ = rep(\"trim_j1.json\")\nrc, bp, flt = J[\"read_counts\"], J[\"basepair_counts\"], J[\"read_counts\"][\"filtered\"]\nnflt = sum(v for v in flt.values() if v)\nsay(\"  pairs in %d (file %d) = out %d (file %d) + too_short %s + too_many_n %s + other %d\"\n    % (rc[\"input\"], len(R1), rc[\"output\"], len(T1), flt[\"too_short\"], flt[\"too_many_n\"],\n       nflt - (flt[\"too_short\"] or 0) - (flt[\"too_many_n\"] or 0)))\nif rc[\"input\"] != len(R1) or rc[\"output\"] != len(T1) or rc[\"input\"] != rc[\"output\"] + nflt:\n    fail(\"read conservation: in != out + filtered, or the report disagrees with the files\")\nif flt[\"too_short\"] != want[\"too_short\"] or flt[\"too_many_n\"] != want[\"too_many_n\"]:\n    fail(\"filter counts are not the planted ones (too_short %d, too_many_n %d)\" % (want[\"too_short\"], want[\"too_many_n\"]))\nadapt = {}\nfor side in (\"adapters_read1\", \"adapters_read2\"):\n    a = J[side][0][\"three_prime_end\"]\n    adapt[side] = sum(t[\"len\"] * c for t in a[\"trimmed_lengths\"] for c in [sum(t[\"counts\"])])\nwith_ad = sum(1 for c, L, e in truth.values() if e in (\"trim\", \"too_short\"))\nsay(\"  read1_with_adapter %d  read2_with_adapter %d   planted (trim + too_short) %d\"\n    % (rc[\"read1_with_adapter\"], rc[\"read2_with_adapter\"], with_ad))\nif rc[\"read1_with_adapter\"] != with_ad or rc[\"read2_with_adapter\"] != with_ad:\n    fail(\"reads-with-adapter count is not the planted count\")\nbin_ = sum(len(r[1]) for r in R1 + R2)\nbout = sum(len(r[1]) for r in T1 + T2)\n# Filtered pairs leave as what is left after adapter removal: too_short pairs keep their\n# (short) insert, too_many_n pairs are full length.\nbfilt = sum(2 * (L if e == \"too_short\" else 100) for c, L, e in truth.values() if e in (\"too_short\", \"too_many_n\"))\nsay(\"  bases in %d (file %d) = out %d (file %d) + adapter-trimmed %d + quality-trimmed %s + in filtered pairs %d -> %d\"\n    % (bp[\"input\"], bin_, bp[\"output\"], bout, adapt[\"adapters_read1\"] + adapt[\"adapters_read2\"],\n       bp[\"quality_trimmed\"], bfilt, bp[\"output\"] + adapt[\"adapters_read1\"] + adapt[\"adapters_read2\"] + (bp[\"quality_trimmed\"] or 0) + bfilt))\nif bp[\"input\"] != bin_ or bp[\"output\"] != bout or \\\n   bp[\"input\"] != bp[\"output\"] + adapt[\"adapters_read1\"] + adapt[\"adapters_read2\"] + (bp[\"quality_trimmed\"] or 0) + bfilt:\n    fail(\"base conservation: in != out + trimmed + filtered\")\n\nsay(\"== 3. -j 4 writes the same reads as -j 1 ==\")\nfor a, b in ((\"trim_R1.fq\", \"j4_R1.fq\"), (\"trim_R2.fq\", \"j4_R2.fq\")):\n    sa, sb = sorted(fq(a)), sorted(fq(b))\n    same_bytes = open(a, \"rb\").read() == open(b, \"rb\").read()\n    say(\"  %s vs %s: %d vs %d reads, sorted-equal %s, byte-identical %s (observation)\" % (a, b, len(sa), len(sb), sa == sb, same_bytes))\n    if sa != sb:\n        fail(\"-j 4 output differs from -j 1\")\nJ4 = rep(\"trim_j4.json\")\nif J4[\"read_counts\"] != J[\"read_counts\"] or J4[\"basepair_counts\"] != J[\"basepair_counts\"]:\n    fail(\"-j 4 report counts differ from -j 1\")\nsay(\"  -j 4 report counts == -j 1: %s (cores %s vs %s)\" % (J4[\"read_counts\"] == J[\"read_counts\"], J4[\"cores\"], J[\"cores\"]))\n\nsay(\"== 4. control: an adapter planted nowhere trims nothing ==\")\nC = rep(\"control.json\")\ncs = (open(\"ctrl_R1.fq\", \"rb\").read() == open(\"R1.fq\", \"rb\").read(), open(\"ctrl_R2.fq\", \"rb\").read() == open(\"R2.fq\", \"rb\").read())\nsay(\"  with adapter %s / %s, bases out %s of %s, outputs byte-identical to inputs %s\"\n    % (C[\"read_counts\"][\"read1_with_adapter\"], C[\"read_counts\"][\"read2_with_adapter\"], C[\"basepair_counts\"][\"output\"], C[\"basepair_counts\"][\"input\"], cs))\nif C[\"read_counts\"][\"read1_with_adapter\"] or C[\"read_counts\"][\"read2_with_adapter\"] or not all(cs):\n    fail(\"the control adapter trimmed something\")\n\nsay(\"== 5. -q 15,20 equals an independent implementation of the BWA trimming rule ==\")\ndef bwa(q, front, back):\n    # cutadapt's documented algorithm (guide, \"Quality trimming algorithm\"): subtract the cutoff\n    # from every quality, take partial sums from the end inward, cut where the sum is extreme;\n    # stop scanning once the running sum goes negative. Written from the docs, not imported.\n    n = len(q); start, stop = 0, n\n    s = best = 0\n    for i in range(n):\n        s += front - q[i]\n        if s < 0:\n            break\n        if s > best:\n            best, start = s, i + 1\n    s = best = 0\n    for i in range(n - 1, -1, -1):\n        s += back - q[i]\n        if s < 0:\n            break\n        if s > best:\n            best, stop = s, i\n    return (0, 0) if start >= stop else (start, stop)\nQI, QO = fq(\"qual.fq\"), fq(\"qual_out.fq\")\nbad = 0; trimmed = 0; nchanged = 0; nempty = 0\nfor (h, s, q), (h2, s2, q2) in zip(QI, QO):\n    a, b = bwa([ord(c) - 33 for c in q], 15, 20)\n    trimmed += len(s) - (b - a)\n    nchanged += (b - a) != len(s); nempty += b == a\n    if (h, s[a:b], q[a:b]) != (h2, s2, q2):\n        bad += 1\nQJ = rep(\"qual.json\")\nsay(\"  %d reads, %d trimmed (%d to empty), %d differ from the reimplementation\" % (len(QI), nchanged, nempty, bad))\nsay(\"  quality_trimmed bases: report %s, reimplementation %d\" % (QJ[\"basepair_counts\"][\"quality_trimmed\"], trimmed))\nif len(QI) != len(QO) or bad or QJ[\"basepair_counts\"][\"quality_trimmed\"] != trimmed:\n    fail(\"quality trimming disagrees with the BWA rule\")\nif nchanged < 100 or nempty < 1:\n    fail(\"the quality fixture did not exercise trimming\")\n\nsay(\"== 6. fastp on the same staged bytes: both tools against the planted insert ==\")\n# Not \"fastp == cutadapt\" on every read: the two find the insert by different methods, so the\n# comparison is made per category, against the planted insert, and asserted only where BOTH are\n# designed to recover it. fastp trims a pair by overlap analysis (its 30 bp overlap requirement:\n# measured, an insert of exactly 30 is missed, so the asserted indel group is > 30) and\n# otherwise by adapter sequence with substitutions only; cutadapt aligns the adapter with\n# indels, and by design leaves an adapter with more errors than -e, or under -O 3 bp, alone.\nF1, F2 = {rid(r[0]): r for r in fq(\"fastp_R1.fq\")}, {rid(r[0]): r for r in fq(\"fastp_R2.fq\")}\nX1, X2 = {rid(r[0]): r for r in T1}, {rid(r[0]): r for r in T2}\nI1, I2 = {rid(r[0]): r for r in R1}, {rid(r[0]): r for r in R2}\ndef group(c, L):\n    if c == \"partial\":\n        return \"partial, overlap >= 3\" if 100 - L >= 3 else \"partial, overlap 1-2\"\n    if c in (\"ins_within_e\", \"del_within_e\"):\n        return \"indel, insert > 30\" if L > 30 else \"indel, insert <= 30\"\n    return c\nASSERT = {\"full\", \"partial, overlap >= 3\", \"no_adapter\", \"sub_within_e\", \"indel, insert > 30\"}\nfz, cz, tot = Counter(), Counter(), Counter()\nfor k, (c, L, e) in truth.items():\n    g = group(c, L)\n    ins = (I1[k][1][:L], I1[k][2][:L], I2[k][1][:L], I2[k][2][:L])\n    tot[g] += 1\n    fz[g] += k in F1 and (F1[k][1], F1[k][2], F2[k][1], F2[k][2]) == ins\n    cz[g] += k in X1 and (X1[k][1], X1[k][2], X2[k][1], X2[k][2]) == ins\nsay(\"  %-24s %8s %9s %6s\" % (\"planted\", \"fastp\", \"cutadapt\", \"pairs\"))\nfor g in sorted(tot):\n    tag = \"[both asserted]\" if g in ASSERT else \"(observation)\"\n    say(\"  %-24s %8d %9d %6d   %s\" % (g, fz[g], cz[g], tot[g], tag))\n    if g in ASSERT and not (fz[g] == cz[g] == tot[g]):\n        fail(\"fastp and cutadapt do not both recover the planted insert on %s\" % g)\nnboth = sum(tot[g] for g in ASSERT)\nsay(\"  -> on %d pairs both tools write the planted insert, i.e. byte-identical to each other\" % nboth)\n\n\nsay(\"== run ==\")\num = subprocess.run([\"uname\", \"-m\"], capture_output=True, text=True).stdout.strip()\nsay(\"  cutadapt %s, python %s, arch %s (uname -m %s)\" % (J.get(\"cutadapt_version\"), platform.python_version(), platform.machine(), um))\nif platform.machine() != um:\n    fail(\"python runs as %s on a %s host -- emulated\" % (platform.machine(), um))\nsay(\"CUTADAPT OK\" if ok else \"CUTADAPT FAILED\")\nsys.exit(0 if ok else 1)\nPY\ntest \"${PIPESTATUS[0]}\" = 0 || { echo \"FAIL: a cutadapt check failed\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/R1.fq",
+      "destination": "/tmp/R1.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/R2.fq",
+      "destination": "/tmp/R2.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/expected_R1.fq",
+      "destination": "/tmp/expected_R1.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/expected_R2.fq",
+      "destination": "/tmp/expected_R2.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/control_adapters.txt",
+      "destination": "/tmp/control_adapters.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/qual.fq",
+      "destination": "/tmp/qual.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cutadapt/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp_R1.fq",
+      "destination": "/tmp/fastp_R1.fq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/fastp/fastp_R2.fq",
+      "destination": "/tmp/fastp_R2.fq"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/trim_R1.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/trim_R1.fq"
+    },
+    {
+      "source": "/tmp/trim_R2.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/trim_R2.fq"
+    },
+    {
+      "source": "/tmp/trim_j1.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/trim_j1.json"
+    },
+    {
+      "source": "/tmp/trim_j4.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/trim_j4.json"
+    },
+    {
+      "source": "/tmp/control.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/control.json"
+    },
+    {
+      "source": "/tmp/qual.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/qual.json"
+    },
+    {
+      "source": "/tmp/qual_out.fq",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/qual_out.fq"
+    },
+    {
+      "source": "/tmp/cutadapt_j1.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/cutadapt_j1.log"
+    },
+    {
+      "source": "/tmp/cutadapt_j4.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/cutadapt_j4.log"
+    },
+    {
+      "source": "/tmp/cutadapt_control.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/cutadapt_control.log"
+    },
+    {
+      "source": "/tmp/cutadapt_qual.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cutadapt/r1/cutadapt_qual.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}
