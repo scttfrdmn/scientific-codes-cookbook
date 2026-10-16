@@ -1,0 +1,42 @@
+{
+ "task_id": "cookbook-mne-r1",
+ "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl MNE_DONTWRITE_HOME=true\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.py does not match its pin\"; exit 1; }\npython3 -u identities.py 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'MNE IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+ ],
+ "resources": {
+  "cpu": 2,
+  "memory_gib": 8,
+  "architecture": "arm64",
+  "families": [
+   "m8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/mne/identities.py",
+   "destination": "/tmp/identities.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/mne/pins.sha256",
+   "destination": "/tmp/pins.sha256"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/score.tsv",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/mne/r1/score.tsv"
+  },
+  {
+   "source": "/tmp/identities.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/mne/r1/identities.log"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "30m",
+  "on_complete": "terminate",
+  "cost_limit": 0.12
+ }
+}
