@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-glmnet-r1",
+  "container": "quay.io/aarchsci/r@sha256:f224ffc9bff58dd405c5bc9a201e41137cea3c5670ac5302768191128c6ced38",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# R needs a writable TMPDIR *and* HOME or it fails early and opaquely.\nexport TMPDIR=/tmp HOME=/tmp\n# spawn's task shell drops the image PATH.\nexport PATH=/opt/conda/bin:$PATH\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\necho \"== staged bytes must match their pin ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: identities.R does not match its pin\"; exit 1; }\nRscript identities.R 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'GLMNET IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ntest -s score.tsv || { echo \"FAIL: score.tsv missing or empty\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet/identities.R",
+      "destination": "/tmp/identities.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/glmnet/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/glmnet/r1/identities.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}
