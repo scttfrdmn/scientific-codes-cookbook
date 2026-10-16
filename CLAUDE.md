@@ -14,8 +14,10 @@ instance self-terminates. **This is an AWS cookbook, not an ARM one:** Graviton4
 (`c8g`/`m8g`/`r8g`) and same-generation x86 (`c8i`/`m8i`/`r8i`, via `ARCH=x86_64`) are
 both targets, from one recipe — the x86 pins live in the frontmatter beside the arm64 ones
 (`images_x86_64`, `last_verified_x86_64`, or `gap_x86_64` with the reason), and
-`scripts/spec_arch.py` rewrites the same specs rather than keeping a second copy. GPU comes
-later. A recipe that has not run on AWS is not a recipe yet, whatever it does anywhere else.
+`scripts/spec_arch.py` rewrites the same specs rather than keeping a second copy. The mirror
+case — a code with **no arm64 build anywhere** — is an x86-only recipe: `gap_arm64: <reason>` plus
+`images_x86_64`, specs written for x86 directly, outputs under `runs-x86_64/`; the catalog's arm64
+column shows the gap (`recipes/ants` is the first). GPU comes later. A recipe that has not run on AWS is not a recipe yet, whatever it does anywhere else.
 
 The recipe is the product. Read CHARTER.md for the why. State and progress live on
 the GitHub project board — this file holds only standing rules.

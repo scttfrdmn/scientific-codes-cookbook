@@ -56,7 +56,7 @@ def _outside_details_lines(text):
     in_x86 = False
     for i, line in enumerate(text.split("\n")):
         if i < fm_lines:
-            if re.match(r"^(images_x86_64:|last_verified_x86_64:|gap_x86_64:)", line):
+            if re.match(r"^(images_x86_64:|last_verified_x86_64:|gap_x86_64:|gap_arm64:)", line):
                 in_x86 = line.startswith("images_x86_64:")
                 continue
             if in_x86 and re.match(r"^\s+- ", line):
@@ -182,6 +182,10 @@ def check_x86_frontmatter(text, keys, rel):
     either has x86 pins, or records why there is no x86 build -- never both -- and only a real
     x86 run may stamp last_verified_x86_64, which therefore needs pins to have run."""
     has_imgs, has_gap = "images_x86_64" in keys, "gap_x86_64" in keys
+    if "gap_arm64" in keys and (has_gap or not has_imgs):
+        errors.append(f"{rel}: gap_arm64 needs images_x86_64 and no gap_x86_64 -- an x86-only recipe must have an x86 route")
+    if "gap_arm64" in keys and "image" in keys:
+        errors.append(f"{rel}: gap_arm64 and an arm64 image: -- one or the other")
     if has_imgs and has_gap:
         errors.append(f"{rel}: frontmatter has both images_x86_64 and gap_x86_64 -- one or the other")
     if "last_verified_x86_64" in keys and not has_imgs:
@@ -226,12 +230,16 @@ def check(path, needs_fm):
                 # tool, under `images:` — accept it in place of a single `image:`.
                 if k == "image" and "images" in keys:
                     continue
+                # An x86-only recipe (no arm64 build exists) records gap_arm64 and pins its
+                # image under images_x86_64 -- the mirror of gap_x86_64.
+                if k == "image" and "gap_arm64" in keys and "images_x86_64" in keys:
+                    continue
                 if k not in keys:
                     errors.append(f"{rel}: frontmatter missing required field '{k}'")
             for k in RECOMMENDED_FM:
                 if k not in keys:
                     warns.append(f"{rel}: frontmatter missing recommended field '{k}' (refresh target fills it)")
-            if "last_verified" not in keys:
+            if "last_verified" not in keys and "gap_arm64" not in keys:
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
             check_x86_frontmatter(text, keys, rel)
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
@@ -558,9 +566,13 @@ def inventory():
         del errors[before_e:], warns[before_w:]        # inventory reports, it does not accuse
         keys = frontmatter_keys(text)          # a set of key names
         missing = [k for k in REQUIRED_FM
-                   if k not in keys and not (k == "image" and "images" in keys)]
+                   if k not in keys and not (k == "image" and ("images" in keys
+                       or ("gap_arm64" in keys and "images_x86_64" in keys)))]
         m = re.search(r"^last_verified:\s*(\S+)", text, re.M)
         lv = m.group(1) if m else ""
+        if not lv and "gap_arm64" in keys:            # x86-only: its verification is the x86 one
+            m = re.search(r"^last_verified_x86_64:\s*(\S+)", text, re.M)
+            lv = (m.group(1) + " (x86)") if m else ""
         meas = ",".join(f"{n}:{x}" for n, x in state.get(rec, [])) or "-"
         rows.append((rec, "ok" if not missing else "MISSING:" + ",".join(missing),
                      "".join("." if st.get(k, True) else k for k in ("R2", "R3", "R5", "R6")) or ".",

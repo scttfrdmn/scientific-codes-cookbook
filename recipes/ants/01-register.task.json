@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-ants-r1",
+  "container": "docker.io/antsx/ants@sha256:59c45f54a1f1dc69134f63bec91a726e41c71c64a16cc21cda0b54526910a3c3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=2\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# The ANTs image has no python: transforms are written with printf, results parsed with awk.\necho \"== staged fixture must match its pins ==\"\nsha256sum -c fixture.sha256 || { echo \"FAIL: fixture does not match its pins\"; exit 1; }\nantsRegistration --version 2>&1 | head -1 | sed 's/^/binary: /'\n\n# total |a - b| over the volume, via ANTs' own ImageMath\nabsdiff() { ImageMath 3 /tmp/_d.nii.gz - \"$1\" \"$2\" >/dev/null 2>&1; ImageMath 3 /tmp/_a.nii.gz abs /tmp/_d.nii.gz >/dev/null 2>&1\n            ImageMath 3 /tmp/_t.txt total /tmp/_a.nii.gz 2>&1 | awk '{for(i=NF;i>0;i--) if ($i ~ /^-?[0-9.]+(e[-+]?[0-9]+)?$/) {print $i; exit}}'; }\npearson() { ImageMath 3 /tmp/_p.txt PearsonCorrelation \"$1\" \"$2\" 2>&1 | awk '{for(i=NF;i>0;i--) if ($i ~ /^-?[0-9.]+(e[-+]?[0-9]+)?$/) {print $i; exit}}'; }\n# ITK affine text transform: 9 matrix entries row-major, then translation; centre at the world origin\nxfm() { printf '#Insight Transform File V1.0\\n#Transform 0\\nTransform: AffineTransform_double_3_3\\nParameters: %s\\nFixedParameters: 0 0 0\\n' \"$2\" > \"$1\"; }\n\necho \"== 1. identity and an exact integer shift: interpolation must not invent anything ==\"\nantsApplyTransforms -d 3 -i fixed.nii -r fixed.nii -t identity -n Linear -o id.nii.gz >/dev/null 2>&1\nID=$(absdiff id.nii.gz fixed.nii); echo \"identity, linear:            sum|out - in| = $ID\"\nxfm shift.txt \"1 0 0 0 1 0 0 0 1 2 0 0\"\nantsApplyTransforms -d 3 -i fixed.nii -r fixed.nii -t shift.txt -n NearestNeighbor -o sh.nii.gz >/dev/null 2>&1\nSH=$(absdiff sh.nii.gz shift2.nii); echo \"2 mm along ITK x, nearest:   sum|out - numpy shift| = $SH\"\n\necho \"== 2. a planted fractional translation, and registration must undo it ==\"\nxfm plant_t.txt \"1 0 0 0 1 0 0 0 1 3.3 -2.1 1.7\"\nantsApplyTransforms -d 3 -i fixed.nii -r fixed.nii -t plant_t.txt -n Linear -o moving_t.nii.gz >/dev/null 2>&1\nantsRegistration -d 3 --float 0 -o [rt_,rt_warped.nii.gz] -m MeanSquares[fixed.nii,moving_t.nii.gz,1] \\\n  -t Translation[0.5] -c [200x100x50,1e-9,10] -s 2x1x0vox -f 2x1x1 -n Linear > reg_t.log 2>&1\nConvertTransformFile 3 rt_0GenericAffine.mat rt.txt >/dev/null 2>&1\necho \"== 3. a planted rotation about z, and a rigid registration must undo it ==\"\nTH=0.09\nxfm plant_r.txt \"$(awk -v t=$TH 'BEGIN{c=cos(t); s=sin(t); printf \"%.17g %.17g 0 %.17g %.17g 0 0 0 1 0 0 0\", c, -s, s, c}')\"\nantsApplyTransforms -d 3 -i fixed.nii -r fixed.nii -t plant_r.txt -n Linear -o moving_r.nii.gz >/dev/null 2>&1\nantsRegistration -d 3 --float 0 -o [rr_,rr_warped.nii.gz] -m MeanSquares[fixed.nii,moving_r.nii.gz,1] \\\n  -t Rigid[0.1] -c [300x200x100,1e-10,10] -s 2x1x0vox -f 2x1x1 -n Linear > reg_r.log 2>&1\nConvertTransformFile 3 rr_0GenericAffine.mat rr.txt >/dev/null 2>&1\necho \"== 4. registering an image to itself must return the identity ==\"\nantsRegistration -d 3 --float 0 -o [r0_,r0_warped.nii.gz] -m MeanSquares[fixed.nii,fixed.nii,1] \\\n  -t Rigid[0.1] -c [100x50,1e-10,10] -s 1x0vox -f 2x1 -n Linear > reg_0.log 2>&1\nConvertTransformFile 3 r0_0GenericAffine.mat r0.txt >/dev/null 2>&1\nP_T0=$(pearson fixed.nii moving_t.nii.gz); P_T1=$(pearson fixed.nii rt_warped.nii.gz)\nP_R0=$(pearson fixed.nii moving_r.nii.gz); P_R1=$(pearson fixed.nii rr_warped.nii.gz)\n\nawk -v ID=\"$ID\" -v SH=\"$SH\" -v TH=\"$TH\" -v pt0=\"$P_T0\" -v pt1=\"$P_T1\" -v pr0=\"$P_R0\" -v pr1=\"$P_R1\" '\nfunction params(file,   l, n, p, i) { while ((getline l < file) > 0) if (l ~ /^Parameters:/) { n = split(l, p, \" \"); for (i = 2; i <= n; i++) P[file, i - 1] = p[i] + 0 } close(file) }\nfunction ab(x) { return x < 0 ? -x : x }\nBEGIN {\n  ok = 1\n  printf \"identity_linear       sum|diff| %s\\n\", ID\n  printf \"integer_shift_nearest sum|diff vs numpy| %s\\n\", SH\n  if (ID == \"\" || ID + 0 != 0) { print \"FAIL: an identity transform with linear interpolation changed the image\"; ok = 0 }\n  if (SH == \"\" || SH + 0 != 0) { print \"FAIL: a 2-voxel shift with nearest-neighbour is not the numpy shift (LPS sign or interpolation)\"; ok = 0 }\n\n  params(\"rt.txt\"); q1 = P[\"rt.txt\",10]; q2 = P[\"rt.txt\",11]; q3 = P[\"rt.txt\",12]\n  e = ab(q1 + 3.3); if (ab(q2 - 2.1) > e) e = ab(q2 - 2.1); if (ab(q3 + 1.7) > e) e = ab(q3 + 1.7)\n  printf \"translation_recovered (%.5f, %.5f, %.5f) mm; planted (3.3, -2.1, 1.7), so expect its negative; max err %.5f mm\\n\", q1, q2, q3, e\n  # A failed or sign-flipped registration misses by the planted motion itself (>= 1.7 mm); a\n  # converged one on a smooth image is sub-voxel. 0.1 mm is 0.1 voxel and ~6% of the smallest component.\n  if (!(e < 0.1)) { print \"FAIL: the translation was recovered to only \" e \" mm\"; ok = 0 }\n\n  params(\"rr.txt\"); m11 = P[\"rr.txt\",1]; m12 = P[\"rr.txt\",2]; m13 = P[\"rr.txt\",3]; m21 = P[\"rr.txt\",4]; m22 = P[\"rr.txt\",5]\n  m23 = P[\"rr.txt\",6]; m31 = P[\"rr.txt\",7]; m32 = P[\"rr.txt\",8]; m33 = P[\"rr.txt\",9]\n  phi = atan2(m21, m11); off = ab(m13); if (ab(m23) > off) off = ab(m23); if (ab(m31) > off) off = ab(m31); if (ab(m32) > off) off = ab(m32)\n  printf \"rotation_recovered    %.6f rad about z (planted %+.2f, so expect %.2f); largest off-axis term %.2e\\n\", phi, TH, -TH, off\n  # 0.002 rad is ~2% of the planted angle; a sign error would be off by 0.18, a wrong axis by 0.09.\n  if (!(ab(phi + TH) < 0.002)) { print \"FAIL: the rotation was recovered as \" phi \" rad, not \" -TH; ok = 0 }\n  if (!(off < 0.002)) { print \"FAIL: the recovered rotation is not about z (off-axis \" off \")\"; ok = 0 }\n\n  params(\"r0.txt\"); s = 0; for (i = 1; i <= 9; i++) { d = P[\"r0.txt\",i] - ((i == 1 || i == 5 || i == 9) ? 1 : 0); if (ab(d) > s) s = ab(d) }\n  for (i = 10; i <= 12; i++) if (ab(P[\"r0.txt\",i]) > s) s = ab(P[\"r0.txt\",i])\n  printf \"self_registration     max |T - I| = %.3e\\n\", s\n  if (!(s < 1e-6)) { print \"FAIL: registering an image to itself did not return the identity (\" s \")\"; ok = 0 }\n\n  printf \"similarity            Pearson before/after: translation %s -> %s, rotation %s -> %s\\n\", pt0, pt1, pr0, pr1\n  if (!(pt1 + 0 > pt0 + 0 && pr1 + 0 > pr0 + 0)) { print \"FAIL: registration did not increase similarity to the fixed image\"; ok = 0 }\n  if (!ok) exit 1\n  print \"ANTS OK\"\n}' 2>&1 | tee smoke-check.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an ANTs check failed\"; for f in rt.txt rr.txt r0.txt; do echo \"-- $f\"; cat $f; done; tail -5 reg_t.log reg_r.log; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c8i"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants/fixed.nii",
+      "destination": "/tmp/fixed.nii"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants/shift2.nii",
+      "destination": "/tmp/shift2.nii"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants/fixture.sha256",
+      "destination": "/tmp/fixture.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/rt.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/rt.txt"
+    },
+    {
+      "source": "/tmp/rr.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/rr.txt"
+    },
+    {
+      "source": "/tmp/r0.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/r0.txt"
+    },
+    {
+      "source": "/tmp/reg_t.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/reg_t.log"
+    },
+    {
+      "source": "/tmp/reg_r.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/reg_r.log"
+    },
+    {
+      "source": "/tmp/reg_0.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants/r1/reg_0.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.12
+  }
+}

@@ -170,7 +170,8 @@ def main():
         # build exists -- so this column IS the list of missing x86 builds, generated.
         x86 = fm.get("last_verified_x86_64") or ("gap" if fm.get("gap_x86_64") else "—")
         rows.append((domain, name, retarget_links(lede(text), d), env, inputs,
-                     git_updated(os.path.relpath(d, ROOT)), fm.get("last_verified", "—"), x86))
+                     git_updated(os.path.relpath(d, ROOT)),
+                     fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "—"), x86))
 
     # group by domain, alphabetical within
     domains = sorted({r[0] for r in rows})
@@ -187,7 +188,8 @@ def main():
            "reads X's run output).", "",
            "**Updated** is the git date of the page's last change (freshness). **Verified** is "
            "the date a real run last confirmed it on Graviton4 (arm64) — `—` means not verified "
-           "since tracking began, an honest TODO for the next run, never backfilled. **x86_64** is "
+           "since tracking began, an honest TODO for the next run, never backfilled; **gap** means "
+           "no arm64 build exists, so the recipe is x86-only. **x86_64** is "
            "the same for a same-generation Intel box (`c8i`/`m8i`/`r8i`, `make run ... ARCH=x86_64`): "
            "a date, `—` (not yet run), or **gap** (no x86 build of the pinned version exists; the "
            "page says why).", ""]
