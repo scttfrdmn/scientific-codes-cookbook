@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-fsl-r1",
+  "container": "docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358557db8a0d9a7d11a07d1d224f1b2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MAMBA_ROOT_PREFIX=/tmp/mamba\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nSUB=linux-$( [ \"$(uname -m)\" = aarch64 ] && echo aarch64 || echo 64 )\necho \"== FSL from the staged packages, offline ($SUB) ==\"\nawk -v d=/tmp/pkgs/$SUB '/^https?:/{n=split($0,a,\"/\"); split(a[n],b,\"#\"); print \"file://\" d \"/\" b[1] \"#\" b[2]; next} {print}' \"/tmp/locks/fsl-$SUB.lock\" > local.lock\nmicromamba create -y -q -p /tmp/fsl --offline -f local.lock > install.log 2>&1 \\\n  || { echo \"FAIL: FSL did not install from the staged, lock-verified packages\"; tail -20 install.log; exit 1; }\nexport FSLDIR=/tmp/fsl PATH=/tmp/fsl/bin:$PATH FSLOUTPUTTYPE=NIFTI_GZ\n. $FSLDIR/etc/fslconf/fsl.sh\nS=$FSLDIR/data/standard\nvol() { fslstats \"$1\" -V | awk '{print $1}'; }\n\necho \"== 1. BET against FSL's own MNI152 brain mask, and a graded control on -f ==\"\nfor f in 0.2 0.5 0.8; do bet $S/MNI152_T1_1mm.nii.gz bet_$f -m -f $f >/dev/null 2>&1; done\nREF=$(vol $S/MNI152_T1_1mm_brain_mask); A=$(vol bet_0.5_mask)\nfslmaths bet_0.5_mask -mul $S/MNI152_T1_1mm_brain_mask ov; O=$(vol ov)\nV2=$(vol bet_0.2_mask); V8=$(vol bet_0.8_mask)\n\necho \"== 2. FLIRT undoes a planted rigid motion on the MNI152 template ==\"\nT=$S/MNI152_T1_2mm_brain\n# 6 deg about z through the image centre, plus (4.0, -2.5, 3.0) mm: M = T(c+t) R T(-c), FSL mm coordinates\nawk -v th=6 -v cx=90 -v cy=108 -v cz=90 -v tx=4.0 -v ty=-2.5 -v tz=3.0 'BEGIN{\n  r = th * 3.14159265358979323846 / 180; c = cos(r); s = sin(r)\n  ox = cx - (c*cx - s*cy) + tx; oy = cy - (s*cx + c*cy) + ty; oz = tz\n  printf \"%.12f %.12f 0 %.12f\\n%.12f %.12f 0 %.12f\\n0 0 1 %.12f\\n0 0 0 1\\n\", c, -s, ox, s, c, oy, oz }' > planted.mat\nflirt -in $T -ref $T -applyxfm -init planted.mat -interp trilinear -out moving >/dev/null 2>&1\nflirt -in moving -ref $T -dof 6 -omat recovered.mat -out recovered >/dev/null 2>&1 \\\n  || { echo \"FAIL: flirt did not run\"; exit 1; }\nconvert_xfm -omat residual.mat -concat recovered.mat planted.mat\nflirt -in $T -ref $T -dof 6 -omat self.mat >/dev/null 2>&1\n\nawk -v REF=$REF -v A=$A -v O=$O -v V2=$V2 -v V8=$V8 '\nfunction rd(file, M,   l, i, n, f) { i = 0; while ((getline l < file) > 0) { n = split(l, f, \" \"); if (n >= 4) { i++; M[i,1]=f[1]; M[i,2]=f[2]; M[i,3]=f[3]; M[i,4]=f[4] } } close(file) }\nfunction ab(x) { return x < 0 ? -x : x }\nfunction cornerdisp(M,   x, y, z, i, j, k, d, dx, dy, dz, best) {   # max |(M - I) p| over the 2 mm volume corners, mm\n  best = 0\n  for (i = 0; i <= 1; i++) for (j = 0; j <= 1; j++) for (k = 0; k <= 1; k++) {\n    x = i * 180; y = j * 216; z = k * 180\n    dx = M[1,1]*x + M[1,2]*y + M[1,3]*z + M[1,4] - x; dy = M[2,1]*x + M[2,2]*y + M[2,3]*z + M[2,4] - y; dz = M[3,1]*x + M[3,2]*y + M[3,3]*z + M[3,4] - z\n    d = sqrt(dx*dx + dy*dy + dz*dz); if (d > best) best = d }\n  return best }\nBEGIN {\n  ok = 1\n  dice = 2 * O / (A + REF); recall = O / REF\n  printf \"bet_vs_fsl_mask       Dice %.4f; contains %.4f of FSL'\"'\"'s mask (%d of %d voxels); BET mask %d voxels\\n\", dice, recall, O, REF, A\n  printf \"bet_f_ladder          -f 0.2: %d   0.5: %d   0.8: %d voxels\\n\", V2, A, V8\n  if (!(recall >= 0.99)) { print \"FAIL: BET'\"'\"'s brain does not contain FSL'\"'\"'s published brain mask (\" recall \")\"; ok = 0 }\n  if (!(dice >= 0.95))   { print \"FAIL: BET agrees with FSL'\"'\"'s mask at Dice \" dice \" only\"; ok = 0 }\n  if (!(V2 > A && A > V8)) { print \"FAIL: BET'\"'\"'s brain volume is not monotone decreasing in -f, which is what -f controls\"; ok = 0 }\n  rd(\"planted.mat\", P); rd(\"residual.mat\", R); rd(\"self.mat\", Sf)\n  pd = cornerdisp(P); rdisp = cornerdisp(R); sd = cornerdisp(Sf)\n  printf \"flirt_planted         moves the volume corners by up to %.3f mm\\n\", pd\n  printf \"flirt_residual        recovered . planted moves them by %.4f mm (bound 0.5 mm = a quarter voxel)\\n\", rdisp\n  printf \"flirt_self            self-registration moves them by %.4f mm\\n\", sd\n  if (!(rdisp < 0.5)) { print \"FAIL: FLIRT left \" rdisp \" mm of the planted motion\"; ok = 0 }\n  if (!(pd > 10))     { print \"FAIL: the planted motion is too small (\" pd \" mm) to test recovery\"; ok = 0 }\n  if (!(sd < 0.5))    { print \"FAIL: registering the template to itself moved it \" sd \" mm\"; ok = 0 }\n  if (!ok) exit 1\n  print \"FSL OK\"\n}' 2>&1 | tee smoke-check.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an FSL check failed\"; for f in planted.mat recovered.mat residual.mat; do echo \"-- $f\"; cat $f; done; exit 1; }\ncp bet_0.5_mask.nii.gz bet_mask.nii.gz\n# Versions from the install itself, written unconditionally: a minimal install has no\n# $FSLDIR/etc/fslversion, and a missing declared output fails stage-out -- a descriptive line\n# must never be able to fail the run.\n{ micromamba list -p /tmp/fsl 2>/dev/null | awk '$1 ~ /^fsl/ {printf \"%s\\t%s\\n\", $1, $2}'; echo \"arch\t$(uname -m)\"; } > fslversion.txt\ntest -s fslversion.txt || echo \"versions unavailable\" > fslversion.txt\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl/pkgs/",
+      "destination": "/tmp/pkgs/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl/fsl-linux-64.lock",
+      "destination": "/tmp/locks/fsl-linux-64.lock"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl/fsl-linux-aarch64.lock",
+      "destination": "/tmp/locks/fsl-linux-aarch64.lock"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/planted.mat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/planted.mat"
+    },
+    {
+      "source": "/tmp/recovered.mat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/recovered.mat"
+    },
+    {
+      "source": "/tmp/residual.mat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/residual.mat"
+    },
+    {
+      "source": "/tmp/self.mat",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/self.mat"
+    },
+    {
+      "source": "/tmp/bet_mask.nii.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/bet_mask.nii.gz"
+    },
+    {
+      "source": "/tmp/install.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/install.log"
+    },
+    {
+      "source": "/tmp/fslversion.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl/r1/fslversion.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

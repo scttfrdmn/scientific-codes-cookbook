@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **138 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **139 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -12,7 +12,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [ants](../recipes/ants/README.md) | Moves a synthetic volume by a known translation and a known rotation, then has `antsRegistration` undo them on same-generation Intel — plus two exact interpolation identities. The catalog's first x86-only recipe. For anyone registering brain images on AWS. | aarchbio | stage | — | gap | 2026-10-16 |
+| [ants](../recipes/ants/README.md) | Moves a synthetic volume by a known translation and a known rotation, then has `antsRegistration` undo them on same-generation Intel — plus two exact interpolation identities. The catalog's first x86-only recipe. For anyone registering brain images on AWS. | aarchbio | stage | 2026-10-16 | gap | 2026-10-16 |
 | [bcftools](../recipes/bcftools/README.md) | Pileup-calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone choosing a germline caller and what to pay for it. | aarchbio | stage: bcftools, bwa-samtools, gatk4 | 2026-10-12 | 2026-09-30 | 2026-10-13 |
 | [bedtools](../recipes/bedtools/README.md) | Runs the four set-algebra operations on hand-checkable intervals, then `genomecov` over bwa's whole-genome BAM. For anyone building intervals into a pipeline. | aarchbio | stage: bwa-mem2 · run: bwa-samtools | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [blast](../recipes/blast/README.md) | Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. For anyone sizing a homology search, or choosing between BLAST+ and DIAMOND. | aarchbio | stage | 2026-10-12 | 2026-10-01 | 2026-10-13 |
@@ -25,6 +25,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [flye](../recipes/flye/README.md) | Assembles a 65× MinION run of *E. coli* into one circular 4.72 Mb chromosome plus its plasmid. For anyone doing long-read de novo assembly. | aarchbio | stage | 2026-10-12 | 2026-10-02 | 2026-10-13 |
 | [foldseek](../recipes/foldseek/README.md) | Searches 16 PDB structures against a database built from themselves on Graviton4, so each must find itself at TM-score 1.0 with nothing scoring higher. For anyone doing structural bioinformatics on ARM. | aarchbio | stage | 2026-10-12 | 2026-10-08 | 2026-10-13 |
 | [freebayes](../recipes/freebayes/README.md) | Calls all of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running freebayes and wanting to know where it stands. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-12 | 2026-09-30 | 2026-10-13 |
+| [fsl](../recipes/fsl/README.md) | Installs FSL from its publisher's own conda channel and checks brain extraction against FSL's published MNI152 mask and rigid registration against a planted motion, on Graviton4 and x86. For anyone running FSL on AWS — including on ARM, which no image provides. | aarchbio | stage | — | 2026-10-16 | 2026-10-16 |
 | [gatk4](../recipes/gatk4/README.md) | Calls variants across the whole of chr20 in NA12878 at 36× on Graviton, then measures precision and recall against NIST's published benchmark. For anyone running GATK and choosing what to rent. | aarchbio | stage: bwa-samtools, gatk4 | 2026-10-12 | 2026-10-13 | 2026-10-13 |
 | [hmmer](../recipes/hmmer/README.md) | Searches all 30,134 Pfam-A 38.2 families against one protein per human gene at Pfam's own thresholds, in 28 minutes. For anyone running domain annotation for real. | aarchbio | stage | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [homer](../recipes/homer/README.md) | Runs HOMER's known-motif enrichment on macs2's CTCF ChIP peaks and de novo discovery on a planted fixture, on Graviton4 and x86, with a control for each. For anyone doing ChIP-seq motif analysis on ARM. | aarchbio | stage: bwa-samtools, homer · run: macs2 | 2026-10-13 | 2026-10-13 | 2026-10-13 |
