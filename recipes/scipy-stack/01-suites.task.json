@@ -1,0 +1,126 @@
+{
+  "task_id": "cookbook-scipy-stack-r1",
+  "container": "quay.io/aarchsci/geo-ml@sha256:14ef7fe13ceffac286f44cd7b576a471d13144dd3e462199e01962ac4efc008c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# /tmp/.local/bin: where the offline user install puts `meson`, which numpy's f2py tests call by name.\nexport PATH=/tmp/.local/bin:/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl MPLBACKEND=Agg\n# xdist's documented remedy for parametrizations that iterate a set (each worker hashes differently).\nexport PYTHONHASHSEED=0\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged check does not match its pin\"; exit 1; }\nmkdir -p wh && mv ./*.whl ./*.conda wh/ && (cd wh && sha256sum -c ../packages.sha256) \\\n  || { echo \"FAIL: a staged package does not match its pin\"; exit 1; }\n\necho \"== pytest from the staged wheels, offline (the env ships no test runner) ==\"\npython3 -m pip install -q --no-index --find-links wh --no-deps wh/*.whl 2>&1 | grep -v \"not on PATH\" | tail -2\npython3 -c \"import pytest, xdist, hypothesis, pytest_timeout; print('pytest', pytest.__version__, ' xdist', xdist.__version__, ' hypothesis', hypothesis.__version__)\" \\\n  || { echo \"FAIL: the test runner did not install from the staged wheels\"; exit 1; }\n\necho \"== a writable copy of the three packages, byte-identical, plus scipy's tests from its companion build ==\"\n# The suites write beside their own test files, and site-packages is read-only to the image user.\nSP=$(python3 -c \"import numpy, os; print(os.path.dirname(os.path.dirname(numpy.__file__)))\")\nmkdir -p /tmp/sp /tmp/plug /tmp/scipy-tests && cp account.py /tmp/plug/\ncp -a \"$SP/numpy\" \"$SP/scipy\" \"$SP/pandas\" /tmp/sp/\nfor p in numpy scipy pandas; do\n  diff -r -q \"$SP/$p\" \"/tmp/sp/$p\" || { echo \"FAIL: the copy of $p is not byte-identical\"; exit 1; }\ndone\n# conda-forge splits scipy's tests into `scipy-tests`, which pins this exact scipy build; the env lacks it.\npython3 -u - <<'PYEOF' || { echo \"FAIL: scipy-tests did not unpack\"; exit 1; }\nimport glob, json, tarfile, zipfile\npkg = glob.glob(\"wh/scipy-tests-*.conda\")[0]\nwith zipfile.ZipFile(pkg) as z:\n    for n in z.namelist():\n        if n.endswith(\".tar.zst\"):\n            z.extract(n, \"/tmp/scipy-tests\")\ninfo = glob.glob(\"/tmp/scipy-tests/info-*.tar.zst\")[0]\nwith tarfile.open(info, \"r:zst\") as t:\n    idx = json.load(t.extractfile(\"info/index.json\"))\ndep = [d for d in idx[\"depends\"] if d.startswith(\"scipy \")][0]\nimport scipy, importlib.metadata as md\nprint(\"scipy-tests\", idx[\"version\"], idx[\"build\"], \"depends on\", repr(dep))\ninstalled = glob.glob(\"/opt/conda/conda-meta/scipy-1*.json\")[0].rsplit(\"/\", 1)[1][:-5]\nwant = \"scipy-\" + dep.split()[1] + \"-\" + dep.split()[2]\nprint(\"installed\", installed, \"| required\", want)\nassert installed == want, \"scipy-tests was built for a different scipy build\"\nn = 0\nwith tarfile.open(glob.glob(\"/tmp/scipy-tests/pkg-*.tar.zst\")[0], \"r:zst\") as t:\n    for m in t.getmembers():\n        pre = \"lib/python3.14/site-packages/\"\n        assert m.name.startswith(pre), m.name\n        m.name = m.name[len(pre):]\n        if m.name.startswith(\"scipy_tests-1.18.1.dist-info/\"):\n            continue   # the test package's own metadata, not part of scipy\n        assert m.name.startswith(\"scipy/\"), m.name\n        t.extract(m, \"/tmp/sp\", filter=\"data\"); n += m.isfile()\nprint(\"unpacked\", n, \"files into /tmp/sp/scipy\")\nPYEOF\n# Every difference from the installed scipy must be a file scipy-tests added -- nothing overwritten.\ndiff -r -q \"$SP/scipy\" /tmp/sp/scipy | grep -v \"^Only in /tmp/sp/scipy\" && { echo \"FAIL: scipy-tests changed an installed scipy file\"; exit 1; }\nexport PYTHONPATH=/tmp/sp:/tmp/plug\npython3 -c \"import numpy, scipy, pandas; [print(m.__name__, m.__version__, m.__file__) for m in (numpy, scipy, pandas)]; assert all(m.__file__.startswith('/tmp/sp/') for m in (numpy, scipy, pandas)), 'not the copy'\" \\\n  || { echo \"FAIL: the suites would not import the copy\"; exit 1; }\n\necho \"== BLAS: what the same digest selects on this host ==\"\npython3 -u - > show.txt 2>&1 <<'PYEOF'\nimport ctypes, numpy, threadpoolctl\nnumpy.show_config()\nfor i in threadpoolctl.threadpool_info():\n    print({k: str(v) for k, v in i.items()})\n    if i.get(\"internal_api\") == \"openblas\":\n        try:\n            lib = ctypes.CDLL(str(i.get(\"filepath\")))\n            lib.openblas_get_corename.restype = ctypes.c_char_p\n            print(\"openblas_get_corename\", lib.openblas_get_corename())\n        except Exception as e:\n            print(\"corename unavailable:\", type(e).__name__)\nPYEOF\ncat show.txt\ngrep -q \"filepath': '/opt/conda/lib/libopenblas\" show.txt || { echo \"FAIL: OpenBLAS did not load from the image\"; exit 1; }\n\nN=$(nproc)\nrun_group() {   # name, python code calling the project's own test entry point, then its pytest args\n  local g=$1 code=$2; shift 2\n  T0=$(date +%s)\n  ACCOUNT_OUT=run-$g.json python3 -u -c \"$code\" \"$@\" -p account > suite-$g.log 2>&1\n  echo \"$? $(( $(date +%s) - T0 ))\" > rc-$g\n  echo \"group $g: exit/wall $(cat rc-$g)\"\n  grep -E \"^(FAILED|ERROR) \" suite-$g.log | head -40\n  grep -E \"[0-9]+ (passed|failed)\" suite-$g.log | grep \" in \" | tail -1\n}\ncollect() {   # name, python code, pytest args -- a SEPARATE serial --collect-only process\n  local g=$1 code=$2; shift 2\n  ACCOUNT_OUT=collect-$g.json python3 -u -c \"$code\" \"$@\" --collect-only -p account > collect-$g.log 2>&1\n  echo \"collect $g: exit $? -- $(grep -E 'tests? collected|collected [0-9]' collect-$g.log | tail -1)\"\n}\n\necho \"== NumPy's own wheel test (tools/wheels/cibw_test_command.sh), with its CI's --timeout=600 ==\"\nexport NPY_AVAILABLE_MEM=\"4 GB\"\nNP=\"import sys, numpy; sys.exit(not numpy.test(label='full', extra_argv=sys.argv[1:]))\"\ncollect   numpy \"$NP\"\nrun_group numpy \"$NP\" -n=$N --durations=10 --timeout=600 -rfEs\n\necho \"== SciPy's own wheel test (scipy.test()), on $N workers, with its CI's --timeout=60 ==\"\nSC=\"import sys, scipy; p = int(sys.argv[1]); sys.exit(not scipy.test(extra_argv=sys.argv[2:], parallel=p or None))\"\ncollect   scipy \"$SC\" 0\nrun_group scipy \"$SC\" $N --durations=10 --timeout=60 -rfEs\n\necho \"== pandas' own wheel test (pyproject [tool.cibuildwheel] test-command): parallel, then single_cpu serially ==\"\nexport PANDAS_CI=1\nM=\"not clipboard and not slow and not network and not db\"\nPD=\"import sys, pandas as pd; pd.test(extra_args=sys.argv[1:])\"\ncollect   pandas-all    \"$PD\" \"-m $M\" --no-strict-data-files -q\ncollect   pandas-par    \"$PD\" \"-m $M and not single_cpu\" --no-strict-data-files -q\ncollect   pandas-single \"$PD\" \"-m $M and single_cpu\" --no-strict-data-files -q\nrun_group pandas-par    \"$PD\" \"-m $M and not single_cpu\" \"-n $N\" --no-strict-data-files --timeout=600 -q -rfEs\nrun_group pandas-single \"$PD\" \"-m $M and single_cpu\" --no-strict-data-files --timeout=600 -q -rfEs\n\npython3 -u suite_check.py numpy scipy pandas-par pandas-single 2>&1 | tee suite-summary.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: a suite did not pass cleanly\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/execnet-2.1.2-py3-none-any.whl",
+      "destination": "/tmp/execnet-2.1.2-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/hypothesis-6.152.1-py3-none-any.whl",
+      "destination": "/tmp/hypothesis-6.152.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/iniconfig-2.3.1-py3-none-any.whl",
+      "destination": "/tmp/iniconfig-2.3.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/meson-1.12.1-py3-none-any.whl",
+      "destination": "/tmp/meson-1.12.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/pluggy-1.6.0-py3-none-any.whl",
+      "destination": "/tmp/pluggy-1.6.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/pytest_timeout-2.4.0-py3-none-any.whl",
+      "destination": "/tmp/pytest_timeout-2.4.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/pytest_xdist-3.8.0-py3-none-any.whl",
+      "destination": "/tmp/pytest_xdist-3.8.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/pytest-9.0.3-py3-none-any.whl",
+      "destination": "/tmp/pytest-9.0.3-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/tzdata-2026.5-py2.py3-none-any.whl",
+      "destination": "/tmp/tzdata-2026.5-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pkgs/scipy-tests-1.18.1-py314hb3ba6a9_1.conda",
+      "destination": "/tmp/scipy-tests-1.18.1-py314hb3ba6a9_1.conda"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/packages.sha256",
+      "destination": "/tmp/packages.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/account.py",
+      "destination": "/tmp/account.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/suite_check.py",
+      "destination": "/tmp/suite_check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/suite-summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/suite-summary.txt"
+    },
+    {
+      "source": "/tmp/show.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/show.txt"
+    },
+    {
+      "source": "/tmp/suite-numpy.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/suite-numpy.log"
+    },
+    {
+      "source": "/tmp/collect-numpy.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/collect-numpy.log"
+    },
+    {
+      "source": "/tmp/suite-scipy.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/suite-scipy.log"
+    },
+    {
+      "source": "/tmp/collect-scipy.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/collect-scipy.log"
+    },
+    {
+      "source": "/tmp/suite-pandas-par.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/suite-pandas-par.log"
+    },
+    {
+      "source": "/tmp/collect-pandas-par.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/collect-pandas-par.log"
+    },
+    {
+      "source": "/tmp/suite-pandas-single.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/suite-pandas-single.log"
+    },
+    {
+      "source": "/tmp/collect-pandas-single.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/collect-pandas-single.log"
+    },
+    {
+      "source": "/tmp/collect-pandas-all.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack/r1/collect-pandas-all.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.8
+  }
+}
