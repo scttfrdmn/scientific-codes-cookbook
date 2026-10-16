@@ -2,7 +2,7 @@
 
 # The recipe catalog
 
-Every recipe here runs one tool on an AWS box, verified, self-terminating — **141 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
+Every recipe here runs one tool on an AWS box, verified, self-terminating — **144 working examples**, generated from the recipes themselves so this list is always what actually ships. Each links to its page; run most with `make run RECIPE=<name>` — a **pipeline** recipe (Env `pipeline`) launches through its own workflow engine instead, as its page shows, not `make run`.
 
 **Inputs** — what a clean-account reader runs *before* `make run`, and the two kinds are different actions: **build-in-task** (nothing to stage) · **stage** (`make stage RECIPE=<this>`) · **stage: X** (`make stage RECIPE=X` — this recipe reuses X's staged input) · **run: X** (`make run RECIPE=X` and wait — this recipe reads X's run output).
 
@@ -162,6 +162,12 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 |---|---|---|---|---|---|---|
 | [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-12 | 2026-10-03 | gap |
 
+## gw
+
+| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
+|---|---|---|---|---|---|---|
+| [gw](../recipes/gw/README.md) | A binary-black-hole signal is planted in simulated LIGO noise; PyCBC's matched filter finds it at the planted sample and Bilby's sampler brackets the planted chirp mass, with LALSuite underneath both. For anyone running CBC searches or parameter estimation on ARM. | gw | stage | 2026-10-16 | 2026-10-16 | gap |
+
 ## hep
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
@@ -273,7 +279,9 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
+| [scvelo](../recipes/scvelo/README.md) | Simulates spliced/unspliced counts from the splicing ODEs with planted per-gene rates, runs scVelo's steady-state and dynamical models on Graviton4, and checks each against a closed form or the planted truth. For anyone doing RNA velocity on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | gap |
 | [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-12 | 2026-10-08 | gap |
+| [squidpy](../recipes/squidpy/README.md) | Builds kNN, radius and Visium-style hex graphs, scores neighbourhood enrichment and spatial autocorrelation on Graviton4, and checks each against brute force, a closed form or a planted tissue layout. For anyone doing spatial omics on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | gap |
 
 ## structbio
 
