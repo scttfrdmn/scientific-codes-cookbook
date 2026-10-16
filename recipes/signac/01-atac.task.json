@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-signac-r1",
+  "container": "quay.io/aarchbio/r-signac@sha256:80fffb0fa5c788d0cae11b64b273b7eb335c12a03d291838ec0921220907d283",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# spawn's task shell drops the image PATH; R needs a writable TMPDIR and HOME.\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\n: > smoke-check.txt; : > qc.tsv; : > peaks.mtx\necho \"Rscript: $(command -v Rscript)  arch: $(uname -m)\"\n\necho \"== the staged fixture and signac.R must match their pins ==\"\nprintf '8f7c8d49cc21a9d9df4e3a7f58b74a2852fa5dff44335d4099e8869c8880430e  fragments.tsv.gz\\n488ac54d6dad6b6114815d2f947e0047362cec55ce6a07dc69af385b64887553  fragments.tsv.gz.tbi\\n223798646021dce6b1333346142190f993afc27d71817166be718906a8df5549  peaks.bed\\n878b9a0ff3ce8556dee57bf290272e7567f440670db98e931078fcb4e9a0da56  genes.tsv\\n83921e7bb394b00967379d61edd68a4647672709ee784a347c5a2db9235a0c44  truth.tsv\\n3e8ae15c18e677d49437823afe945abe14cbe24c6af6726f60b9fdb20c202cb4  signac.R\\n' > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: the staged fixture does not match its pins\"; exit 1; }\n\nT0=$(date +%s)\nRscript signac.R > smoke-check.txt 2>&1; RC=$?\nT1=$(date +%s)\ncat smoke-check.txt\necho \"signac.R rc $RC in $((T1-T0))s\"\ntest \"$RC\" = 0 || { echo \"FAIL: a Signac check failed\"; exit 1; }\ngrep -q \"^SIGNAC OK\" smoke-check.txt || { echo \"FAIL: signac.R did not reach completion\"; exit 1; }\ntest -s qc.tsv && test -s peaks.mtx || { echo \"FAIL: outputs are empty\"; exit 1; }\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/fragments.tsv.gz",
+      "destination": "/tmp/fragments.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/fragments.tsv.gz.tbi",
+      "destination": "/tmp/fragments.tsv.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/peaks.bed",
+      "destination": "/tmp/peaks.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/genes.tsv",
+      "destination": "/tmp/genes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac/signac.R",
+      "destination": "/tmp/signac.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac/r1/smoke-check.txt"
+    },
+    {
+      "source": "/tmp/qc.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac/r1/qc.tsv"
+    },
+    {
+      "source": "/tmp/peaks.mtx",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac/r1/peaks.mtx"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}
