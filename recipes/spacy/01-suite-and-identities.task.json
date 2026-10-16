@@ -1,0 +1,114 @@
+{
+  "task_id": "cookbook-spacy-r1",
+  "container": "quay.io/aarchsci/nlp@sha256:436dc03828933d9e176ee751038a8a63e4d41b393ed693bfed9f442efe90e397",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged check does not match its pin\"; exit 1; }\nmkdir -p wh && mv ./*.whl wh/ && (cd wh && sha256sum -c ../wheels.sha256) \\\n  || { echo \"FAIL: a staged wheel does not match its pin\"; exit 1; }\n\necho \"== spaCy's test requirements from the staged wheels, offline (the env ships the tests, not these) ==\"\npython3 -m pip install -q --no-index --find-links wh --no-deps wh/*.whl 2>&1 | grep -v \"not on PATH\" | tail -2\npython3 -c \"import pytest, hypothesis, mock, pytest_timeout, ml_datasets; print('pytest', pytest.__version__, ' hypothesis', hypothesis.__version__)\" \\\n  || { echo \"FAIL: the test requirements did not install from the staged wheels\"; exit 1; }\npython3 -m spacy info > show.txt 2>&1; cat show.txt\n\necho \"== spaCy's own suite, its CI invocation (.github/workflows/tests.yml, release-v3.8.16) ==\"\nexport PYTHONPATH=/tmp\nP=\"--pyargs spacy -p no:cacheprovider -p account\"\n# Count collection in a SEPARATE process, so \"every test is accounted for\" is a check between\n# two counts rather than one log agreeing with itself.\nACCOUNT_OUT=collect.json python3 -m pytest $P --collect-only -q > collect.log 2>&1\nT0=$(date +%s)\nACCOUNT_OUT=run.json python3 -u -m pytest $P -W error -W 'ignore:Core Pydantic V1:UserWarning:pydantic' -q -rsxX --durations=10 > suite.log 2>&1\necho \"$? $(( $(date +%s) - T0 ))s\" > rc; echo \"suite exit/wall $(cat rc)\"\npython3 -u suite_check.py 4800 4,855 2>&1 | tee suite-summary.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: spaCy's own suite did not pass cleanly\"; grep -E \"^(FAILED|ERROR) \" suite.log; exit 1; }\n\necho \"== exact claims on tokenization, spans, hashing, serialization, batching, matching ==\"\npython3 -u identities.py 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'SPACY IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/pytest-9.1.1-py3-none-any.whl",
+      "destination": "/tmp/pytest-9.1.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/pluggy-1.6.0-py3-none-any.whl",
+      "destination": "/tmp/pluggy-1.6.0-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/iniconfig-2.3.1-py3-none-any.whl",
+      "destination": "/tmp/iniconfig-2.3.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/pytest_timeout-1.4.2-py2.py3-none-any.whl",
+      "destination": "/tmp/pytest_timeout-1.4.2-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/mock-2.0.0-py2.py3-none-any.whl",
+      "destination": "/tmp/mock-2.0.0-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/pbr-7.1.3-py2.py3-none-any.whl",
+      "destination": "/tmp/pbr-7.1.3-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/six-1.17.0-py2.py3-none-any.whl",
+      "destination": "/tmp/six-1.17.0-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/hypothesis-6.155.7-py3-none-any.whl",
+      "destination": "/tmp/hypothesis-6.155.7-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/sortedcontainers-2.4.0-py2.py3-none-any.whl",
+      "destination": "/tmp/sortedcontainers-2.4.0-py2.py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels/ml_datasets-0.2.1-py3-none-any.whl",
+      "destination": "/tmp/ml_datasets-0.2.1-py3-none-any.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/wheels.sha256",
+      "destination": "/tmp/wheels.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/identities.py",
+      "destination": "/tmp/identities.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/account.py",
+      "destination": "/tmp/account.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/suite_check.py",
+      "destination": "/tmp/suite_check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/pytest.ini",
+      "destination": "/tmp/pytest.ini"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/score.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/score.tsv"
+    },
+    {
+      "source": "/tmp/identities.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/identities.log"
+    },
+    {
+      "source": "/tmp/suite-summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/suite-summary.txt"
+    },
+    {
+      "source": "/tmp/show.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/show.txt"
+    },
+    {
+      "source": "/tmp/collect.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/collect.log"
+    },
+    {
+      "source": "/tmp/suite.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy/r1/suite.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}
