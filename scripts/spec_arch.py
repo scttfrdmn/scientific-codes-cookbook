@@ -53,11 +53,16 @@ ENV_PREAMBLE = r'''set +e
 # packages (scripts/spec_arch.py + envs-x86_64/%(name)s.linux-64.lock). Same versions as arm64.
 export MAMBA_ROOT_PREFIX=/var/tmp/mamba
 _T0=$(date +%%s)
-awk -v d=/tmp/xenv-pkgs '/^https?:/{n=split($0,a,"/"); split(a[n],b,"#"); print "file://" d "/" b[1] "#" b[2]; next} {print}' /tmp/xenv.lock > /var/tmp/xenv.local.lock
+# the staged file keeps the URL's %%-encoded basename (x264-1%%21164...), and file:// decodes it,
+# so escape %% as %%25 or the file is "not found" (and micromamba 2.9.0 then segfaults)
+awk -v d=/tmp/xenv-pkgs '/^https?:/{n=split($0,a,"/"); split(a[n],b,"#"); f=b[1]; gsub(/%%/,"%%25",f); print "file://" d "/" f "#" b[2]; next} {print}' /tmp/xenv.lock > /var/tmp/xenv.local.lock
 micromamba create -y -q -p /var/tmp/env --offline -f /var/tmp/xenv.local.lock > /var/tmp/xenv-install.log 2>&1 \
   || { echo "FAIL: the x86 env twin %(name)s did not install from its staged packages"; tail -25 /var/tmp/xenv-install.log; exit 1; }
 echo "x86 env twin %(name)s: $(grep -c '^https' /tmp/xenv.lock) packages installed offline in $(( $(date +%%s) - _T0 ))s"
 export PATH=/var/tmp/env/bin:$PATH CONDA_PREFIX=/var/tmp/env
+# what `conda activate` would also do: packages set their variables in activate.d (cmdstan's
+# CMDSTAN, GDAL_DATA, PROJ_DATA, compiler CC/CXX), which an install alone never runs
+for _f in /var/tmp/env/etc/conda/activate.d/*.sh; do [ -r "$_f" ] && . "$_f"; done
 # --- the recipe's own script follows, unchanged
 '''
 
