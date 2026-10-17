@@ -6,7 +6,7 @@ image: quay.io/aarchsci/neuroimaging@sha256:6ede8870c83b095c25c9f08db34e56f66318
 env_x86_64: neuroimaging-add4ba1f213a
 spawn_version: 0.126.1
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # Nipype — a workflow engine held to order, data flow and cardinality
 

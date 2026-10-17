@@ -6,7 +6,7 @@ image: quay.io/aarchsci/earth-observation@sha256:e5e8125b307e66301efe15fc3e43404
 env_x86_64: earth-observation-6a5be4ba03fa
 spawn_version: 0.126.1
 last_verified: 2026-10-10
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # stackstac + odc-stac — two STAC loaders, one pinned item, and a silent 5% grid error
 

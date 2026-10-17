@@ -6,7 +6,7 @@ image: quay.io/aarchsci/nlp@sha256:436dc03828933d9e176ee751038a8a63e4d41b393ed69
 env_x86_64: nlp-60b4d70cf1b7
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # spaCy — its own 4,855 tests, then exact claims on tokenization, hashing, serialization and matching
 

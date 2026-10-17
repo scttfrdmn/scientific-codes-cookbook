@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geo-ml@sha256:83ca6331cd84cbae0f60987e9536704ce201904bdf
 env_x86_64: geo-ml-ffc4dc5282aa
 spawn_version: 0.127.0
 last_verified: 2026-10-13
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # scikit-learn — its own 47,445 tests, then closed forms you can lift
 

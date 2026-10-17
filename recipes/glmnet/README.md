@@ -6,7 +6,7 @@ image: quay.io/aarchsci/r@sha256:f224ffc9bff58dd405c5bc9a201e41137cea3c5670ac530
 env_x86_64: r-e23b8fc37d59
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # glmnet — lasso, ridge and logistic paths held to their own optimality conditions
 

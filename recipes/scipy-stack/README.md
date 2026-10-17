@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geo-ml@sha256:14ef7fe13ceffac286f44cd7b576a471d13144dd3e
 env_x86_64: geo-ml-d3f7ea36e8bf
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # NumPy, SciPy and pandas — their own 369,149 tests on Graviton4, every one accounted for
 

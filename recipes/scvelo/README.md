@@ -6,7 +6,7 @@ image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206a
 env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # scVelo — RNA velocity on counts with known kinetics, steady-state and dynamical
 

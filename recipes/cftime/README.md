@@ -6,7 +6,7 @@ image: quay.io/aarchsci/climate@sha256:7c6b07a02ca6e5b8907c19b0a930d177f137a5878
 env_x86_64: climate-8c7f1e0cc15d
 spawn_version: 0.127.0
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # cftime — CF calendar arithmetic against published constants
 

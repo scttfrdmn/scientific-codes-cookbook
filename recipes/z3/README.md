@@ -6,7 +6,7 @@ image: quay.io/aarchsci/optimization@sha256:29abbb67fb16c16292ec38ccbc65c099e722
 env_x86_64: optimization-f8c54d155671
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # Z3 — SAT, SMT, bit-vectors and Optimize, every verdict checked outside the solver
 

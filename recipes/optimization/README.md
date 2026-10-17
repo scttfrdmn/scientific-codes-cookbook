@@ -6,7 +6,7 @@ image: quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c2
 env_x86_64: optimization-05f6d9c11f8d
 spawn_version: 0.123.0
 last_verified: 2026-10-08
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # HiGHS / SCIP / CBC — LP strong duality, and three solvers on one netlib instance
 

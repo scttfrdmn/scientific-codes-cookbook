@@ -4,7 +4,7 @@ tool_version: "2.5.0"
 env: tomography
 image: quay.io/aarchsci/tomography@sha256:ea7b4900500f3eb23d3060611f1737175f4a6421cb24b4f29a809765b2754026
 env_x86_64: tomography-9897b62718c6
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

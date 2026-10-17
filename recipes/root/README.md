@@ -6,7 +6,7 @@ image: quay.io/aarchsci/hep@sha256:45441294ef5ef11379cf577ae746ecd91cb0e20e303cf
 env_x86_64: hep-4f0bac796086
 spawn_version: 0.126.1
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # ROOT — its own file format read back by an independent implementation, on Graviton
 

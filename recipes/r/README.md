@@ -6,7 +6,7 @@ image: quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250
 env_x86_64: r-813f6d1c2008
 spawn_version: 0.130.1
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 

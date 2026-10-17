@@ -6,7 +6,7 @@ image: quay.io/aarchsci/neuroimaging@sha256:cb8a08c524d7aff435432265a8c9ffce8142
 env_x86_64: neuroimaging-ec8bd2598bdb
 spawn_version: 0.126.1
 last_verified: 2026-10-10
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # DIPY + AFNI — diffusion tensors against a closed form, on Graviton
 

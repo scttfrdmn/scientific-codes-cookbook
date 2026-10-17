@@ -4,7 +4,7 @@ tool_version: 1.20.0
 env: astro
 image: quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82
 env_x86_64: astro-903b8d412bd4
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 spawn_version: 0.104.0
 last_verified: 2026-09-13
 ---

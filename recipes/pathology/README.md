@@ -6,7 +6,7 @@ image: quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867
 env_x86_64: pathology-a15bfc8c58e5
 spawn_version: 0.126.1
 last_verified: 2026-10-10
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # OpenSlide — a CAMELYON16 slide against the publisher's own annotations, on Graviton
 

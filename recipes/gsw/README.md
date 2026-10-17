@@ -6,7 +6,7 @@ image: quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ec
 env_x86_64: climate-b7b5178faf93
 spawn_version: 0.123.0
 last_verified: 2026-10-08
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # GSW (TEOS-10) — seawater thermodynamics, against the official check values
 

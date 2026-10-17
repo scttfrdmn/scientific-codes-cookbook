@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23
 env_x86_64: geo-ml-5ca5b99c000d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # geopandas + libpysal — recover Census's published county areas, then do spatial statistics
 
@@ -133,9 +133,9 @@ three of 381 versions differ (c-blosc2, charls, unicodedata2), all outside this
 computation. Every count, the Census-area residuals (6.710e-07 / 5.242e-08 / 6.372e-08), the
 projected-CRS observations, Moran's I (`0.605172627597`) and both invariances are **identical**
 across chips. Only the OLS cross-route difference moves (8.88e-15 → 5.33e-15): rounding in three
-separate solves, under a 1e-12 bound either way. GDAL prints one `PROJ: proj_create_from_database`
-error on x86 because the twin is not conda-activated, so `PROJ_DATA` is unset; pyproj finds its
-database regardless, and no CRS value changes.
+separate solves, under a 1e-12 bound either way. (An early x86 run printed a
+`PROJ: proj_create_from_database` error because the twin skipped conda's activation hooks; the
+installer now runs them, the error is gone, and no CRS value ever changed.)
 
 ### Run + verify
 

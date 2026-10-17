@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geo-ml@sha256:14aeb6be84be41b991aab8bd262197044b7c351b06
 env_x86_64: geo-ml-1876b553ab9b
 spawn_version: 0.126.1
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # xgboost + lightgbm — five exact checks on Graviton, and no comparison between them
 

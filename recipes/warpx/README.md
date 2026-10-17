@@ -6,7 +6,7 @@ image: quay.io/aarchsci/pic@sha256:e02db0b494ce602c6948104fe4a9085b6fc004611f501
 env_x86_64: pic-bf42d7d6c3f2
 spawn_version: 0.130.1
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # WarpX — a Langmuir wave against its own closed form, and what 16 threads actually buy
 

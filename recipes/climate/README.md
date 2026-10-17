@@ -5,7 +5,7 @@ image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696
 env_x86_64: climate-60e8dca4df0d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # xESMF (climate env) — conservative regridding between global grids
 

@@ -6,7 +6,7 @@ image: quay.io/aarchsci/fem-cfd@sha256:acf6b57d76a151adf351f3cb4bd811188db40967b
 env_x86_64: fem-cfd-1950e1068faa
 spawn_version: 0.127.0
 last_verified: 2026-10-12
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # SLEPc — eigenvalues against a closed form, on 1 rank and on 2
 

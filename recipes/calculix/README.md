@@ -6,7 +6,7 @@ image: quay.io/aarchsci/fem-cfd@sha256:dd8638389359818beeeb4e626cda21107dee9dc87
 env_x86_64: fem-cfd-1d4e4b5ee82a
 spawn_version: 0.126.1
 last_verified: 2026-10-10
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # CalculiX — 225 static FE cases against their committed references, exactly
 

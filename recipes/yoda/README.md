@@ -6,7 +6,7 @@ image: quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7
 env_x86_64: hep-327e2aedf1d0
 spawn_version: 0.127.0
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # YODA — histogram accounting, cross-checked against numpy
 

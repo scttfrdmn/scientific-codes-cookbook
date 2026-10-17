@@ -6,7 +6,7 @@ image: quay.io/aarchsci/fem-cfd@sha256:941bdafc519347a600fa4c2805971a3beec8cce56
 env_x86_64: fem-cfd-49dfa59a2aff
 spawn_version: 0.126.1
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # FEniCSx — a Poisson solve verified by patch test and convergence order
 

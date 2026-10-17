@@ -6,7 +6,7 @@ image: quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7
 env_x86_64: climate-8bc38c951a40
 spawn_version: 0.104.0
 last_verified: 2026-09-13
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # CDO + NCO — netCDF operators, one toolchain checking the other
 

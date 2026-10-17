@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geo-ml@sha256:7414b1df7c155b7d820cc062d88b61e5081b3d2ba4
 env_x86_64: geo-ml-32594bd95edd
 spawn_version: 0.127.0
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # datashader — 50M points rasterized, counted exactly
 

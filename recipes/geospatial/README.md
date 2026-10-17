@@ -6,7 +6,7 @@ image: quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a7
 env_x86_64: geospatial-07484bd0bf42
 spawn_version: 0.115.0
 last_verified: 2026-10-03
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # GDAL + PROJ — 6,191 upstream reference coordinates, and a warp checked against arithmetic
 

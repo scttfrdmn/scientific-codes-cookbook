@@ -6,7 +6,7 @@ image: quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df29366
 env_x86_64: pathology-c817c8dd8540
 spawn_version: 0.127.0
 last_verified: 2026-10-12
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # zarr + dask — the chunk shape is a storage decision, and the two places it isn't
 

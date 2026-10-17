@@ -222,6 +222,11 @@ def check_lock_immutable(text, rel):
     not dates (merges land after runs): the last commit that changed the lock's PACKAGE lines must
     not come after the last commit that set last_verified_x86_64. Header-only edits don't count."""
     m = re.search(r"^env_x86_64:\s*(\S+)", text, re.M)
+    if m:
+        arm = os.path.join(ROOT, "envs-arm64", m.group(1) + ".linux-aarch64.lock")
+        if not os.path.exists(arm):
+            warns.append(f"{rel}: no envs-arm64/{m.group(1)}.linux-aarch64.lock -- the arm64 env as the image ships it, "
+                         f"so a reader can rebuild it without a solve (practices/environment-durability.md)")
     if not m or not re.search(r"^last_verified_x86_64:", text, re.M):
         return
     lock = "envs-x86_64/%s.linux-64.lock" % m.group(1)

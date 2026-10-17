@@ -6,7 +6,7 @@ image: quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd58
 env_x86_64: r-d98eb9641259
 spawn_version: 0.126.1
 last_verified: 2026-10-10
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # sf + terra — Census's areas and ESA's class percentages, recovered in R on Graviton
 

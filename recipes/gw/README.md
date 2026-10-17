@@ -6,7 +6,7 @@ image: quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f3
 env_x86_64: gw-ab3a5857bd21
 spawn_version: 0.127.0
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # Gravitational waves — PyCBC finds a planted chirp, Bilby recovers its chirp mass
 

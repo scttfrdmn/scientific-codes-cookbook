@@ -6,7 +6,7 @@ image: quay.io/aarchsci/popgen@sha256:aac6868e30955dc02250502f7c282625be12093081
 env_x86_64: popgen-39c447dd4e42
 spawn_version: 0.127.0
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # msprime + tskit — coalescent simulation against closed forms
 

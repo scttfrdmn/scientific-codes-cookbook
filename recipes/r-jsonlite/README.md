@@ -6,7 +6,7 @@ image: quay.io/aarchsci/r@sha256:db2fcb3c8d707afe6cccb5796f78964dc79ff4c648d9eb7
 env_x86_64: r-d98eb9641259
 spawn_version: 0.127.0
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # jsonlite — a lossless JSON round-trip needs `digits = I(17)`
 

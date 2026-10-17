@@ -6,7 +6,7 @@ image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206a
 env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.130.1
 last_verified: 2026-10-16
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # PyTorch (CPU) — autograd against finite differences, linear algebra against its inputs, LBFGS against two other codes
 

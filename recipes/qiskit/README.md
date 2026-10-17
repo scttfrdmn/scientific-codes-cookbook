@@ -6,7 +6,7 @@ image: quay.io/aarchsci/quantum@sha256:4f22a72396c229660587b4be43bf7f832046dcf90
 env_x86_64: quantum-0134d92cdcd5
 spawn_version: 0.126.1
 last_verified: 2026-10-11
-last_verified_x86_64: 2026-10-16
+last_verified_x86_64: 2026-10-17
 ---
 # Qiskit — exact amplitudes, the DFT matrix, and a bit-identical cross-check against qutip
 
