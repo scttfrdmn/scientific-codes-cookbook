@@ -149,11 +149,11 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-12 | 2026-10-11 | gap |
-| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-12 | 2026-10-03 | gap |
-| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-13 | 2026-10-11 | gap |
-| [scikit-learn](../recipes/scikit-learn/README.md) | Runs scikit-learn's own test suite on Graviton4 with every test accounted for, then checks a logistic MLE against statsmodels, PCA against an eigensolver, and KMeans against planted clusters. For anyone doing machine learning on ARM. | geo-ml | stage | 2026-10-13 | 2026-10-13 | gap |
-| [scipy-stack](../recipes/scipy-stack/README.md) | Runs the three projects' own test suites, each the way its own wheel build tests an installed package, on one Graviton4 box. Every other Python recipe here sits on these three, so this is the foundation check. | geo-ml | stage | 2026-10-16 | 2026-10-16 | gap |
+| [datashader](../recipes/datashader/README.md) | Aggregates 50 million points into a 1024² raster on Graviton4 and checks every cell against `np.histogram2d`. For anyone rasterizing point clouds too big to plot. | geo-ml | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [geo-ml](../recipes/geo-ml/README.md) | Reads 3,235 US counties (8.2M vertices), recomputes the areas Census published alongside them, and builds contiguity weights and Moran's I. For spatial analysis on ARM. | geo-ml | stage | 2026-10-16 | 2026-10-03 | 2026-10-16 |
+| [gradient-boosting](../recipes/gradient-boosting/README.md) | Checks both boosters against guarantees they document rather than against each other, because their predictions are not supposed to match. For anyone training gradient-boosted trees on ARM. | geo-ml | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [scikit-learn](../recipes/scikit-learn/README.md) | Runs scikit-learn's own test suite on Graviton4 with every test accounted for, then checks a logistic MLE against statsmodels, PCA against an eigensolver, and KMeans against planted clusters. For anyone doing machine learning on ARM. | geo-ml | stage | 2026-10-16 | 2026-10-13 | 2026-10-16 |
+| [scipy-stack](../recipes/scipy-stack/README.md) | Runs the three projects' own test suites, each the way its own wheel build tests an installed package, on one Graviton4 box. Every other Python recipe here sits on these three, so this is the foundation check. | geo-ml | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 
 ## geoscience
 
@@ -219,9 +219,9 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [imagecodecs](../recipes/imagecodecs/README.md) | Encodes and decodes a tissue-like image on Graviton4 through every lossless codec this build provides, plus tiled TIFFs, asserting `array_equal` rather than a tolerance. For anyone storing whole-slide imagery on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 | gap |
-| [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | 2026-10-12 | 2026-10-10 | gap |
-| [zarr-dask](../recipes/zarr-dask/README.md) | Writes one array at four chunk shapes on Graviton4 and checks all four read back byte-identical, then measures the two things chunking *does* change: a float sum's last bits, and `argmax` under ties. For anyone doing chunked, lazy array I/O on ARM. | pathology | stage | 2026-10-12 | 2026-10-12 | gap |
+| [imagecodecs](../recipes/imagecodecs/README.md) | Encodes and decodes a tissue-like image on Graviton4 through every lossless codec this build provides, plus tiled TIFFs, asserting `array_equal` rather than a tolerance. For anyone storing whole-slide imagery on ARM. | pathology | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
+| [pathology](../recipes/pathology/README.md) | Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour mask its publisher derived from the annotation polygons. For anyone doing digital pathology on ARM. | pathology | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
+| [zarr-dask](../recipes/zarr-dask/README.md) | Writes one array at four chunk shapes on Graviton4 and checks all four read back byte-identical, then measures the two things chunking *does* change: a float sum's last bits, and `argmax` under ties. For anyone doing chunked, lazy array I/O on ARM. | pathology | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
 
 ## pic
 
@@ -276,7 +276,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-12 | 2026-10-11 | gap |
+| [qiskit](../recipes/qiskit/README.md) | Runs Qiskit and Aer on Graviton4 against closed forms and against an independent quantum library. For anyone doing quantum simulation on ARM. | quantum | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## r
 
@@ -301,7 +301,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-12 | 2026-10-11 | gap |
+| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## tomography
 
