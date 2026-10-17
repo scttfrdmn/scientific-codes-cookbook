@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write the x86_64 twin of the aarch.science env a recipe pins: same versions, linux-64 builds.
 
-    python3 scripts/lock_env_x86.py <recipe>
+    python3 scripts/lock_env_x86.py <recipe> [--repin]
 
 aarch.science builds ARM only, so a recipe on one of its envs has no x86 image. This solves the
 SAME environment for linux-64 from conda-forge and writes an explicit lock (URL + sha256 per
@@ -16,6 +16,11 @@ pass pins every other locked version that also exists on linux-64. Whatever stil
 written into the lock's header, so a version drift is visible rather than silent.
 
 Writes envs-x86_64/<env>-<lockhash>.linux-64.lock and prints the `env_x86_64:` value to use.
+
+A committed lock is never re-solved (practices/environment-durability.md): conda-forge patches
+repodata after the fact, so a re-solve can silently change the env a verified run used, or fail
+outright. This refuses to overwrite an existing lock; --repin is for a deliberate repin, which is a
+pin swap and needs re-verification on both chips.
 """
 import json
 import os
@@ -154,11 +159,17 @@ def solve(specs, channels):
 
 
 def main():
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:] if a != "--repin"]
+    if len(args) != 1:
         sys.exit(__doc__)
-    recipe = sys.argv[1]
+    recipe, repin = args[0], "--repin" in sys.argv
     env, repo, digest = frontmatter(recipe)
     lock_hash, index = lock_hash_for(repo, digest)
+    early = os.path.join(ROOT, "envs-x86_64", "%s-%s.linux-64.lock" % (env, lock_hash))
+    if os.path.exists(early) and not repin:   # before the solve: refusing should not cost a solve
+        print("%s exists -- a committed lock is never re-solved (practices/environment-durability.md)" % os.path.relpath(early, ROOT))
+        print("env_x86_64: %s-%s" % (env, lock_hash))
+        return
     commit, lock, channels, declared = env_at(env, lock_hash)
     def pin(n, b):
         v = lock.get(n)
@@ -217,6 +228,10 @@ def main():
     arm_only = sorted(n for n in lock if n not in got)
     name = "%s-%s" % (env, lock_hash)
     out = os.path.join(ROOT, "envs-x86_64", name + ".linux-64.lock")
+    if os.path.exists(out) and not repin:
+        print("%s exists -- a committed lock is never re-solved (practices/environment-durability.md)" % os.path.relpath(out, ROOT))
+        print("env_x86_64: %s" % name)
+        return
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as fh:
         fh.write("# x86_64 twin of aarch.science `%s` (image %s, index %s, lock-hash %s)\n" % (env, digest[:19], index[:19], lock_hash))

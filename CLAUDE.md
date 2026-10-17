@@ -412,6 +412,13 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   frontmatter makes `spec_arch.py` install it offline into a pinned micromamba image (FSL's
   model; 294 packages in 4 s on c8i). Only where *that* solve or run fails, record `gap_x86_64`
   with the measured reason.
+- **A committed env lock is never re-solved; repinning is a pin swap.** conda-forge patches
+  repodata after the fact, so the versions an image was built from can stop being installable on
+  *every* chip (measured: mdtraj 1.11.1 later capped at numpy<2.5 broke 10 recipes' twins). An
+  `@EXPLICIT` lock consults no solver and survives that. The reasoning and the reader's rebuild
+  path are [practices/environment-durability.md](practices/environment-durability.md); the
+  enforcement is `lock_env_x86.py` (refuses to overwrite without `--repin`) and `make check` (fails a
+  recipe whose lock's packages changed after its verifying run). Don't restate it; point there.
 - **Walk the manifest list's entries; a manifest list is not evidence of arm64.**
   `docker manifest inspect <img>` returning a list means multi-arch was *intended*, not
   that arm64 is in it. Measured: `gromacs/gromacs:latest` and `psi4/psi4:latest` are both

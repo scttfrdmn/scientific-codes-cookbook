@@ -210,6 +210,31 @@ def check_x86_frontmatter(text, keys, rel):
                 errors.append(f"{rel}: x86_64 image {e} is not pinned by digest")
 
 
+def _git(*args):
+    r = subprocess.run(["git", "-C", ROOT] + list(args), capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else ""
+
+
+def check_lock_immutable(text, rel):
+    """practices/environment-durability.md: a committed env lock is never re-solved. The lock a
+    verifying x86 run used must not change afterwards -- conda-forge patches repodata, so a
+    re-solve can silently swap the env out from under the verification. Compared by git ancestry,
+    not dates (merges land after runs): the last commit that changed the lock's PACKAGE lines must
+    not come after the last commit that set last_verified_x86_64. Header-only edits don't count."""
+    m = re.search(r"^env_x86_64:\s*(\S+)", text, re.M)
+    if not m or not re.search(r"^last_verified_x86_64:", text, re.M):
+        return
+    lock = "envs-x86_64/%s.linux-64.lock" % m.group(1)
+    body = _git("log", "-1", "--format=%H", "-G", "^https?://", "--", lock)
+    verified = _git("log", "-1", "--format=%H", "-G", "^last_verified_x86_64:", "--", rel)
+    if not body or not verified:
+        return   # uncommitted work in progress: nothing to compare yet
+    if body != verified and subprocess.run(["git", "-C", ROOT, "merge-base", "--is-ancestor", body, verified]).returncode != 0:
+        errors.append(f"{rel}: {lock} changed its packages after the run that verified it on x86 "
+                      f"(commit {body[:8]} is not before {verified[:8]}) -- a committed lock is never re-solved; "
+                      f"re-run x86 to re-verify, or restore the lock (practices/environment-durability.md)")
+
+
 def check_internal_links(text, path):
     """Link text + internal-link existence for one file, relative to its own dir. Factored out
     so the generated catalog and the landing docs get the same check the recipe pages do."""
@@ -251,6 +276,7 @@ def check(path, needs_fm):
             if "last_verified" not in keys and "gap_arm64" not in keys:
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
             check_x86_frontmatter(text, keys, rel)
+            check_lock_immutable(text, rel)
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
     for i, m in enumerate(fences):
         if i % 2 == 0 and m.group(1) == "":   # opening fence (even index) with no language; closers are odd
