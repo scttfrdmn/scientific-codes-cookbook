@@ -78,9 +78,7 @@ check(){ # $1 = res dir: per-cell totals from the matrix must equal quant's own 
   rec "${r}_umis_matrix" "$TS"
   rec "${r}_umis_featuredump" "$TU"
   rec "${r}_mapped_reads" "$TM"
-  # alevin-fry 0.9.0 reads unmapped_bc_count.bin as headerless (u64, u32) pairs; piscem 0.23.0 writes
-  # a newer layout, so the unmapped half of CorrectedReads (and MappingRate) is garbage. Never asserted.
-  rec "${r}_corrected_reads_UNRELIABLE" "$TC"
+  rec "${r}_corrected_reads" "$TC"
   rec "${r}_cells_rowsum_ne_dedup" "$BS"
   rec "${r}_cells_nnz_ne_genes" "$BZ"
   rec "${r}_triples_sha256" "$(sha256sum < "$r.triples" | cut -c1-64)"
@@ -91,6 +89,48 @@ check(){ # $1 = res dir: per-cell totals from the matrix must equal quant's own 
   [ "$TS" = "$TU" ] || { rec CHECKFAIL "$r: matrix total $TS != featureDump total $TU"; fails=$((fails+1)); }
 }
 check res_raw; check res_knee; check res_filt
+
+# ---- unmapped reads: piscem's own file, decoded here, brackets featureDump's CorrectedReads ----
+# piscem 0.23.0 writes unmapped_bc_count.bin as a 3-byte header (version 1, 1 field, type 3 = u32),
+# then (u32 barcode, u32 count) records, little-endian, 2 bits/base with the first base high (the
+# recipe's fixture checks this decoder against planted counts). alevin-fry adds the unmapped reads
+# of every raw barcode it corrects to a cell into that cell's CorrectedReads, so per cell
+#   CorrectedReads - MappedReads  >=  unmapped reads whose raw barcode IS the cell   (exact matches)
+# and, summed over cells, it can be no more than every unmapped read in the file. alevin-fry 0.9.0
+# misread this file (as headerless (u64, u32) pairs) and fails the lower bound.
+UB=rad/unmapped_bc_count.bin
+UHDR=$(od -An -v -tu1 -N3 "$UB" | tr -s ' ' | sed 's/^ //; s/ $//')
+rec unmapped_bin_header "$UHDR"
+[ "$UHDR" = "1 1 3" ] || { rec CHECKFAIL "unmapped_bc_count.bin header is '$UHDR', not '1 1 3'"; fails=$((fails+1)); }
+od -An -v -tu4 -j3 "$UB" | awk '{for(i=1;i<=NF;i++){ if(h){c[b]+=$i; h=0} else {b=$i; h=1} }}
+  END{ if(h){print "ODD"; exit} for(v in c){ s=""; for(p=15;p>=0;p--) s=s substr("ACGT", int(v/2^(2*p))%4+1, 1); print s"\t"c[v] } }' > bin_unmapped.tsv
+UTOT=$(awk -F'\t' '{s+=$2} END{printf "%.0f", s}' bin_unmapped.tsv)
+rec unmapped_bin_barcodes "$(wc -l < bin_unmapped.tsv | tr -d ' ')"
+rec unmapped_bin_reads "$UTOT"
+grep -q ODD bin_unmapped.tsv && { rec CHECKFAIL "unmapped_bc_count.bin is not whole (u32, u32) records"; fails=$((fails+1)); }
+# the two halves of piscem's own read count: mapped + unmapped-with-a-valid-barcode <= reads processed
+NREADS_P=$(awk -F: '$1 ~ /"num_reads"/ {gsub(/[ ",]/,"",$2); print $2; exit}' rad/map_info.json)
+NMAPPED_P=$(awk -F: '$1 ~ /"num_mapped"/ {gsub(/[ ",]/,"",$2); print $2; exit}' rad/map_info.json)
+[ "$UTOT" -gt 0 ] && [ $((NMAPPED_P + UTOT)) -le "$NREADS_P" ] \
+  || { rec CHECKFAIL "unmapped reads $UTOT + mapped $NMAPPED_P vs piscem's $NREADS_P reads"; fails=$((fails+1)); }
+uncheck(){ # $1 = res dir
+  awk -F'\t' 'NR==FNR{e[$1]=$2; next} FNR==1{for(i=1;i<=NF;i++)c[$i]=i; next}
+    { n++; u=$c["CorrectedReads"]-$c["MappedReads"]; x=e[$1]+0
+      if (u >= x) ge++; su+=u; sx+=x
+      r=$c["MappedReads"]/$c["CorrectedReads"]; d=$c["MappingRate"]-r; if(d<0)d=-d; if (d<=1e-6) rok++ }
+    END{ printf "%d %d %d %.0f %.0f\n", n, ge+0, rok+0, su, sx }' bin_unmapped.tsv "$1/featureDump.txt"; }
+for n in raw knee filt; do
+  read -r UN UGE UROK USU USX < <(uncheck res_$n)
+  rec "res_${n}_unmapped_in_corrected" "$USU"
+  rec "res_${n}_unmapped_exact_barcode" "$USX"
+  rec "res_${n}_cells_corrected_ge_exact" "$UGE of $UN"
+  rec "res_${n}_cells_mappingrate_consistent" "$UROK of $UN"
+  [ "$UGE" -eq "$UN" ] || { rec CHECKFAIL "res_$n: $((UN-UGE)) cells credit fewer unmapped reads than piscem wrote for their own barcode"; fails=$((fails+1)); }
+  [ "$UROK" -eq "$UN" ] || { rec CHECKFAIL "res_$n: $((UN-UROK)) cells whose MappingRate != MappedReads/CorrectedReads"; fails=$((fails+1)); }
+  [ "$USX" -gt 0 ] || { rec CHECKFAIL "res_$n: no unmapped read carries a cell's own barcode -- decoder or file wrong"; fails=$((fails+1)); }
+  awk -v a="$USU" -v b="$UTOT" 'BEGIN{exit !(a <= b)}' \
+    || { rec CHECKFAIL "res_$n: $USU unmapped reads credited, the file holds $UTOT"; fails=$((fails+1)); }
+done
 
 # ---- read conservation across the tool boundary: piscem wrote N records, alevin-fry read N ----
 NMAPPED=$(awk -F: '$1 ~ /"num_mapped"/ {gsub(/[ ",]/,"",$2); print $2; exit}' rad/map_info.json)
@@ -149,7 +189,7 @@ pair r1.tsv r2.tsv | awk -F'\t' '{n++; x+=$2; y+=$3; xx+=$2*$2; yy+=$3*$3; xy+=$
 rec spearman_umis_vs_published "$(cat rho.txt)"
 
 # the tool's own logs out, raw matrix kept compact as its triples
-tar -czf fry-logs.tgz gpl_*.log col_*.log q_*.log qd_*/*.json res_*/quant.json
+tar -czf fry-logs.tgz gpl_*.log col_*.log q_*.log qd_*/*.json res_*/quant.json res_*/featureDump.txt
 gzip -c res_filt.triples > filt.triples.gz
 rec checks_failed "$fails"
 [ "$fails" -eq 0 ] || die "$fails identity checks failed"

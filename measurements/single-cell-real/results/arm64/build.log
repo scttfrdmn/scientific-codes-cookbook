@@ -1,153 +1,153 @@
-[2m2026-10-17T21:15:52.634917Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m starting piscem build
-[2m2026-10-17T21:15:52.634931Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m Computing and recording reference signatures...
-[2m2026-10-17T21:15:55.330221Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m done.
-[2m2026-10-17T21:15:55.330255Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m starting cDBG construction with cf1-rs
-[2m2026-10-17T21:15:55.331101Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS at start: current=0 MB, peak=18 MB
-[2m2026-10-17T21:15:55.331110Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 1: Counting minimizer frequencies...
-[2m2026-10-17T21:15:55.331112Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Counting minimizer frequencies with m=15, w=17, k=31
-[2m2026-10-17T21:15:56.536335Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Histogram: 100778617 total minimizer occurrences across 65536 non-empty buckets
-[2m2026-10-17T21:15:56.536690Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P1: current=0 MB, peak=78 MB
-[2m2026-10-17T21:15:56.536694Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 2: Partitioning minimizers and routing super k-mers...
-[2m2026-10-17T21:15:56.536748Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Partitioned into 128 bins (target 787332/bin)
-[2m2026-10-17T21:15:56.536794Z[0m [32m INFO[0m [2mcf1_rs::superkmer[0m[2m:[0m Routing super k-mers to 128 bins with m=15, w=17
-[2m2026-10-17T21:15:58.460166Z[0m [32m INFO[0m [2mcf1_rs::superkmer[0m[2m:[0m Finished routing super k-mers to bin files
-[2m2026-10-17T21:15:58.460569Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P2: current=0 MB, peak=533 MB
-[2m2026-10-17T21:15:58.460574Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 3: Building global MPHF...
-[2m2026-10-17T21:15:58.460585Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Reading canonical k-mers from 128 bins
-[2m2026-10-17T21:15:58.460808Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3a: RSS before dedup: current=0 MB, peak=533 MB
-[2m2026-10-17T21:16:00.936858Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Total 129048045 distinct canonical k-mers across 128 bins (per-bin: min=851606, max=1027456, avg=1008187)
-[2m2026-10-17T21:16:00.937175Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3a: RSS after dedup: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:01.269029Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3b: RSS after consolidation: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:01.269038Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Building global MPHF for 129048045 distinct canonical k-mers (in-memory, threads=16)
-[2m2026-10-17T21:16:02.660925Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m MPHF construction complete
-[2m2026-10-17T21:16:02.726887Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P3 MPHF: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:02.734885Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P3 StateVector: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:02.821217Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 4: Classifying k-mer vertices...
-[2m2026-10-17T21:16:02.821226Z[0m [32m INFO[0m [2mcf1_rs::classify[0m[2m:[0m Phase 4: Classifying k-mer vertices
-[2m2026-10-17T21:16:10.752437Z[0m [32m INFO[0m [2mcf1_rs::classify[0m[2m:[0m Classification complete
-[2m2026-10-17T21:16:10.752842Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P4: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:10.752845Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 5: Extracting unitigs and writing output...
-[2m2026-10-17T21:16:10.752856Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Phase 5: Extracting unitigs and writing output
-[2m2026-10-17T21:16:17.605310Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Extracted 1329841 unitigs, 129048045 vertices, avg length 127
-[2m2026-10-17T21:16:17.605683Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P5: current=0 MB, peak=2338 MB
-[2m2026-10-17T21:16:17.605735Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Wrote JSON output to idx/mm116_cfish.json
-[2m2026-10-17T21:16:17.605738Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Pipeline complete.
-[2m2026-10-17T21:16:17.605805Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m cDBG construction complete: 1329841 unitigs, 129048045 vertices
-[2m2026-10-17T21:16:17.605821Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Parsing segment file: idx/mm116_cfish.cf_seg
-[2m2026-10-17T21:16:17.966712Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   1329841 segments
-[2m2026-10-17T21:16:17.968268Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Building SSHash dictionary (k=31, m=19)
-[2m2026-10-17T21:16:17.968506Z[0m [32m INFO[0m [2mpiscem_rs::index::mem_budget[0m[2m:[0m sshash minimizer-sort RAM budget: 30 GiB (auto-detected; 61 GiB usable)
-[2m2026-10-17T21:16:17.968759Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m Build Configuration:
-[2m2026-10-17T21:16:17.968769Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   k = 31
-[2m2026-10-17T21:16:17.968771Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   m = 19
-[2m2026-10-17T21:16:17.968773Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   num_threads = 16
-[2m2026-10-17T21:16:17.968774Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Building SSHash Dictionary
-[2m2026-10-17T21:16:17.968777Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 1: Encoding sequences...
-[2m2026-10-17T21:16:19.089173Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Encoded 1329841 sequences
-[2m2026-10-17T21:16:19.089188Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Total bases: 168943275
-[2m2026-10-17T21:16:19.089190Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 2: Extracting and coalescing minimizer tuples (in-memory)...
-[2m2026-10-17T21:16:19.752088Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Extracted and coalesced 19600170 tuples
-[2m2026-10-17T21:16:19.752103Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 3: Classifying buckets (in-place)...
-[2m2026-10-17T21:16:19.958182Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m Bucket Statistics:
-[2m2026-10-17T21:16:19.958196Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total buckets: 17703021
-[2m2026-10-17T21:16:19.958198Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total k-mers: 129048045
-[2m2026-10-17T21:16:19.958199Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total positions: 19600170
-[2m2026-10-17T21:16:19.958200Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Singleton buckets: 16947705 (95.73%)
-[2m2026-10-17T21:16:19.958203Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Light buckets (2-64): 754593 (4.26%)
-[2m2026-10-17T21:16:19.958204Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Heavy buckets (>64): 723 (0.00%)
-[2m2026-10-17T21:16:19.958207Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Max bucket size: 8617
-[2m2026-10-17T21:16:19.958208Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Positions in light buckets: 2525398 (12.88%)
-[2m2026-10-17T21:16:19.958209Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Positions in heavy buckets: 127067 (0.65%)
-[2m2026-10-17T21:16:19.958211Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 4: Building minimizers control map...
-[2m2026-10-17T21:16:21.714583Z[0m [32m INFO[0m [2msshash_lib::minimizers_control_map[0m[2m:[0m Building PHast MPHF for 17703021 minimizers (partitioned=true)
-[2m2026-10-17T21:16:23.802602Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Built MPHF for 17703021 minimizers
-[2m2026-10-17T21:16:23.802624Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 5: Building sparse and skew index...
-[2m2026-10-17T21:16:24.258192Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 1 (EF build): 0.46s — 17703021 buckets, 19600170 total super-kmers, max_bucket_size=8617
-[2m2026-10-17T21:16:24.686654Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 2 (fill offsets): 0.43s — 723 heavy buckets collected
-[2m2026-10-17T21:16:24.686697Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m     SkewIndex: max_bucket_size=8617, num_partitions=8
-[2m2026-10-17T21:16:24.976638Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 3 (skew index): 0.29s
-[2m2026-10-17T21:16:24.976651Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Index built successfully
-[2m2026-10-17T21:16:24.976653Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Dictionary Build Complete
-[2m2026-10-17T21:16:24.976655Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Total memory: 120.18 MB
-[2m2026-10-17T21:16:24.976769Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   Dictionary built: 1329841 strings
-[2m2026-10-17T21:16:25.028623Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m First pass over idx/mm116_cfish.cf_seq
-[2m2026-10-17T21:16:25.028719Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   44 short references from JSON
-[2m2026-10-17T21:16:25.078342Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 10000 references
-[2m2026-10-17T21:16:25.118364Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 20000 references
-[2m2026-10-17T21:16:25.161379Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 30000 references
-[2m2026-10-17T21:16:25.199087Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 40000 references
-[2m2026-10-17T21:16:25.238282Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 50000 references
-[2m2026-10-17T21:16:25.286237Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 60000 references
-[2m2026-10-17T21:16:25.329181Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 70000 references
-[2m2026-10-17T21:16:25.369496Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 80000 references
-[2m2026-10-17T21:16:25.411611Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 90000 references
-[2m2026-10-17T21:16:25.452568Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 100000 references
-[2m2026-10-17T21:16:25.492652Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 110000 references
-[2m2026-10-17T21:16:25.536095Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 120000 references
-[2m2026-10-17T21:16:25.585345Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 130000 references
-[2m2026-10-17T21:16:25.623424Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 140000 references
-[2m2026-10-17T21:16:25.659307Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 150000 references
-[2m2026-10-17T21:16:25.697475Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 160000 references
-[2m2026-10-17T21:16:25.734469Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 170000 references
-[2m2026-10-17T21:16:25.772069Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 180000 references
-[2m2026-10-17T21:16:25.817961Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 190000 references
-[2m2026-10-17T21:16:25.856563Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 200000 references
-[2m2026-10-17T21:16:25.894116Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 210000 references
-[2m2026-10-17T21:16:25.931533Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 220000 references
-[2m2026-10-17T21:16:25.967405Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 230000 references
-[2m2026-10-17T21:16:26.008142Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 240000 references
-[2m2026-10-17T21:16:26.045295Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 250000 references
-[2m2026-10-17T21:16:26.082629Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 260000 references
-[2m2026-10-17T21:16:26.123810Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 270000 references
-[2m2026-10-17T21:16:26.165697Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 280000 references
-[2m2026-10-17T21:16:26.204834Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 290000 references
-[2m2026-10-17T21:16:26.241901Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 300000 references
-[2m2026-10-17T21:16:26.282947Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 310000 references
-[2m2026-10-17T21:16:26.319406Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   319954 references, max_ref_len=123193
-[2m2026-10-17T21:16:26.319414Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Second pass over idx/mm116_cfish.cf_seq to fill contig entries
-[2m2026-10-17T21:16:26.352575Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #0
-[2m2026-10-17T21:16:26.422871Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #10000
-[2m2026-10-17T21:16:26.477052Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #20000
-[2m2026-10-17T21:16:26.534051Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #30000
-[2m2026-10-17T21:16:26.584031Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #40000
-[2m2026-10-17T21:16:26.635625Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #50000
-[2m2026-10-17T21:16:26.698839Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #60000
-[2m2026-10-17T21:16:26.756205Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #70000
-[2m2026-10-17T21:16:26.811915Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #80000
-[2m2026-10-17T21:16:26.869854Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #90000
-[2m2026-10-17T21:16:26.927059Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #100000
-[2m2026-10-17T21:16:26.983889Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #110000
-[2m2026-10-17T21:16:27.043321Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #120000
-[2m2026-10-17T21:16:27.112070Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #130000
-[2m2026-10-17T21:16:27.162805Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #140000
-[2m2026-10-17T21:16:27.211713Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #150000
-[2m2026-10-17T21:16:27.261978Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #160000
-[2m2026-10-17T21:16:27.310096Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #170000
-[2m2026-10-17T21:16:27.360963Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #180000
-[2m2026-10-17T21:16:27.412839Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #190000
-[2m2026-10-17T21:16:27.466560Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #200000
-[2m2026-10-17T21:16:27.518013Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #210000
-[2m2026-10-17T21:16:27.569764Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #220000
-[2m2026-10-17T21:16:27.618858Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #230000
-[2m2026-10-17T21:16:27.670019Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #240000
-[2m2026-10-17T21:16:27.719156Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #250000
-[2m2026-10-17T21:16:27.767294Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #260000
-[2m2026-10-17T21:16:27.819061Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #270000
-[2m2026-10-17T21:16:27.874920Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #280000
-[2m2026-10-17T21:16:27.928244Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #290000
-[2m2026-10-17T21:16:27.977179Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #300000
-[2m2026-10-17T21:16:28.032510Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #310000
-[2m2026-10-17T21:16:28.082001Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   ContigTable: 1329841 contigs, 18148228 entries
-[2m2026-10-17T21:16:28.082011Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Building equivalence class table
-[2m2026-10-17T21:16:28.913552Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   EqClassMap: 1329841 tiles, 1056427 ECs, 15952694 label entries
-[2m2026-10-17T21:16:28.913580Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving SSHash dictionary to idx/mm116.ssi
-[2m2026-10-17T21:16:28.960342Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving contig table to idx/mm116.ctab
-[2m2026-10-17T21:16:28.978102Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving reference info to idx/mm116.refinfo
-[2m2026-10-17T21:16:28.983160Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving equivalence class table to idx/mm116.ectab
-[2m2026-10-17T21:16:28.992985Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Index saved to idx/mm116
-[2m2026-10-17T21:16:28.992994Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Index built and saved to idx/mm116
-[2m2026-10-17T21:16:28.992997Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m auto dict selection: 129048045 canonical k-mers (100000000 threshold), emitting Tiny artifacts: false
-[2m2026-10-17T21:16:28.994316Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removing intermediate cdBG files produced by cf1-rs.
-[2m2026-10-17T21:16:29.006481Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removed segment file idx/mm116_cfish.cf_seg
-[2m2026-10-17T21:16:29.019487Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removed tiling file idx/mm116_cfish.cf_seq
-[2m2026-10-17T21:16:29.019530Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m piscem build finished.
+[2m2026-10-17T23:34:54.354143Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m starting piscem build
+[2m2026-10-17T23:34:54.354157Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m Computing and recording reference signatures...
+[2m2026-10-17T23:34:57.047036Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m done.
+[2m2026-10-17T23:34:57.047069Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m starting cDBG construction with cf1-rs
+[2m2026-10-17T23:34:57.047937Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS at start: current=0 MB, peak=18 MB
+[2m2026-10-17T23:34:57.047945Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 1: Counting minimizer frequencies...
+[2m2026-10-17T23:34:57.047947Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Counting minimizer frequencies with m=15, w=17, k=31
+[2m2026-10-17T23:34:58.249740Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Histogram: 100778617 total minimizer occurrences across 65536 non-empty buckets
+[2m2026-10-17T23:34:58.250105Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P1: current=0 MB, peak=76 MB
+[2m2026-10-17T23:34:58.250109Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 2: Partitioning minimizers and routing super k-mers...
+[2m2026-10-17T23:34:58.250165Z[0m [32m INFO[0m [2mcf1_rs::minimizer[0m[2m:[0m Partitioned into 128 bins (target 787332/bin)
+[2m2026-10-17T23:34:58.250210Z[0m [32m INFO[0m [2mcf1_rs::superkmer[0m[2m:[0m Routing super k-mers to 128 bins with m=15, w=17
+[2m2026-10-17T23:35:00.171119Z[0m [32m INFO[0m [2mcf1_rs::superkmer[0m[2m:[0m Finished routing super k-mers to bin files
+[2m2026-10-17T23:35:00.171455Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P2: current=0 MB, peak=549 MB
+[2m2026-10-17T23:35:00.171458Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 3: Building global MPHF...
+[2m2026-10-17T23:35:00.171468Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Reading canonical k-mers from 128 bins
+[2m2026-10-17T23:35:00.171667Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3a: RSS before dedup: current=0 MB, peak=549 MB
+[2m2026-10-17T23:35:02.594905Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Total 129048045 distinct canonical k-mers across 128 bins (per-bin: min=851606, max=1027456, avg=1008187)
+[2m2026-10-17T23:35:02.595255Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3a: RSS after dedup: current=0 MB, peak=2074 MB
+[2m2026-10-17T23:35:02.919092Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m P3b: RSS after consolidation: current=0 MB, peak=2074 MB
+[2m2026-10-17T23:35:02.919101Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m Building global MPHF for 129048045 distinct canonical k-mers (in-memory, threads=16)
+[2m2026-10-17T23:35:04.230124Z[0m [32m INFO[0m [2mcf1_rs::mphf[0m[2m:[0m MPHF construction complete
+[2m2026-10-17T23:35:04.295309Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P3 MPHF: current=0 MB, peak=2184 MB
+[2m2026-10-17T23:35:04.303276Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P3 StateVector: current=0 MB, peak=2184 MB
+[2m2026-10-17T23:35:04.387511Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 4: Classifying k-mer vertices...
+[2m2026-10-17T23:35:04.387521Z[0m [32m INFO[0m [2mcf1_rs::classify[0m[2m:[0m Phase 4: Classifying k-mer vertices
+[2m2026-10-17T23:35:11.977230Z[0m [32m INFO[0m [2mcf1_rs::classify[0m[2m:[0m Classification complete
+[2m2026-10-17T23:35:11.977673Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P4: current=0 MB, peak=2228 MB
+[2m2026-10-17T23:35:11.977678Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Phase 5: Extracting unitigs and writing output...
+[2m2026-10-17T23:35:11.977688Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Phase 5: Extracting unitigs and writing output
+[2m2026-10-17T23:35:18.498327Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Extracted 1329841 unitigs, 129048045 vertices, avg length 127
+[2m2026-10-17T23:35:18.498686Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m RSS after P5: current=0 MB, peak=2228 MB
+[2m2026-10-17T23:35:18.498736Z[0m [32m INFO[0m [2mcf1_rs::output[0m[2m:[0m Wrote JSON output to idx/mm116_cfish.json
+[2m2026-10-17T23:35:18.498740Z[0m [32m INFO[0m [2mcf1_rs::pipeline[0m[2m:[0m Pipeline complete.
+[2m2026-10-17T23:35:18.498992Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m cDBG construction complete: 1329841 unitigs, 129048045 vertices
+[2m2026-10-17T23:35:18.499013Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Parsing segment file: idx/mm116_cfish.cf_seg
+[2m2026-10-17T23:35:18.864167Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   1329841 segments
+[2m2026-10-17T23:35:18.866082Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Building SSHash dictionary (k=31, m=19)
+[2m2026-10-17T23:35:18.866498Z[0m [32m INFO[0m [2mpiscem_rs::index::mem_budget[0m[2m:[0m sshash minimizer-sort RAM budget: 30 GiB (auto-detected; 61 GiB usable)
+[2m2026-10-17T23:35:18.866761Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m Build Configuration:
+[2m2026-10-17T23:35:18.866776Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   k = 31
+[2m2026-10-17T23:35:18.866779Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   m = 19
+[2m2026-10-17T23:35:18.866780Z[0m [32m INFO[0m [2msshash_lib::builder::config[0m[2m:[0m   num_threads = 16
+[2m2026-10-17T23:35:18.866783Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Building SSHash Dictionary
+[2m2026-10-17T23:35:18.866787Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 1: Encoding sequences...
+[2m2026-10-17T23:35:19.995927Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Encoded 1329841 sequences
+[2m2026-10-17T23:35:19.995942Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Total bases: 168943275
+[2m2026-10-17T23:35:19.995944Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 2: Extracting and coalescing minimizer tuples (in-memory)...
+[2m2026-10-17T23:35:20.676097Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Extracted and coalesced 19600170 tuples
+[2m2026-10-17T23:35:20.676113Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 3: Classifying buckets (in-place)...
+[2m2026-10-17T23:35:20.888997Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m Bucket Statistics:
+[2m2026-10-17T23:35:20.889012Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total buckets: 17703021
+[2m2026-10-17T23:35:20.889014Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total k-mers: 129048045
+[2m2026-10-17T23:35:20.889015Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Total positions: 19600170
+[2m2026-10-17T23:35:20.889016Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Singleton buckets: 16947705 (95.73%)
+[2m2026-10-17T23:35:20.889018Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Light buckets (2-64): 754593 (4.26%)
+[2m2026-10-17T23:35:20.889020Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Heavy buckets (>64): 723 (0.00%)
+[2m2026-10-17T23:35:20.889022Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Max bucket size: 8617
+[2m2026-10-17T23:35:20.889023Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Positions in light buckets: 2525398 (12.88%)
+[2m2026-10-17T23:35:20.889024Z[0m [32m INFO[0m [2msshash_lib::builder::buckets[0m[2m:[0m   Positions in heavy buckets: 127067 (0.65%)
+[2m2026-10-17T23:35:20.889026Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 4: Building minimizers control map...
+[2m2026-10-17T23:35:22.444957Z[0m [32m INFO[0m [2msshash_lib::minimizers_control_map[0m[2m:[0m Building PHast MPHF for 17703021 minimizers (partitioned=true)
+[2m2026-10-17T23:35:24.531818Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Built MPHF for 17703021 minimizers
+[2m2026-10-17T23:35:24.531843Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Step 5: Building sparse and skew index...
+[2m2026-10-17T23:35:24.951116Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 1 (EF build): 0.42s — 17703021 buckets, 19600170 total super-kmers, max_bucket_size=8617
+[2m2026-10-17T23:35:25.346494Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 2 (fill offsets): 0.40s — 723 heavy buckets collected
+[2m2026-10-17T23:35:25.346544Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m     SkewIndex: max_bucket_size=8617, num_partitions=8
+[2m2026-10-17T23:35:25.638562Z[0m [32m INFO[0m [2msshash_lib::sparse_and_skew_index[0m[2m:[0m   Pass 3 (skew index): 0.29s
+[2m2026-10-17T23:35:25.638575Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m   Index built successfully
+[2m2026-10-17T23:35:25.638578Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Dictionary Build Complete
+[2m2026-10-17T23:35:25.638580Z[0m [32m INFO[0m [2msshash_lib::builder::dictionary_builder[0m[2m:[0m Total memory: 120.18 MB
+[2m2026-10-17T23:35:25.638685Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   Dictionary built: 1329841 strings
+[2m2026-10-17T23:35:25.683863Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m First pass over idx/mm116_cfish.cf_seq
+[2m2026-10-17T23:35:25.683958Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   44 short references from JSON
+[2m2026-10-17T23:35:25.729442Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 10000 references
+[2m2026-10-17T23:35:25.766443Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 20000 references
+[2m2026-10-17T23:35:25.805307Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 30000 references
+[2m2026-10-17T23:35:25.840112Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 40000 references
+[2m2026-10-17T23:35:25.877030Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 50000 references
+[2m2026-10-17T23:35:25.919432Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 60000 references
+[2m2026-10-17T23:35:25.957745Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 70000 references
+[2m2026-10-17T23:35:25.993236Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 80000 references
+[2m2026-10-17T23:35:26.028862Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 90000 references
+[2m2026-10-17T23:35:26.065467Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 100000 references
+[2m2026-10-17T23:35:26.104229Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 110000 references
+[2m2026-10-17T23:35:26.142556Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 120000 references
+[2m2026-10-17T23:35:26.184729Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 130000 references
+[2m2026-10-17T23:35:26.222201Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 140000 references
+[2m2026-10-17T23:35:26.255461Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 150000 references
+[2m2026-10-17T23:35:26.289421Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 160000 references
+[2m2026-10-17T23:35:26.322512Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 170000 references
+[2m2026-10-17T23:35:26.357264Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 180000 references
+[2m2026-10-17T23:35:26.401141Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 190000 references
+[2m2026-10-17T23:35:26.437174Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 200000 references
+[2m2026-10-17T23:35:26.471881Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 210000 references
+[2m2026-10-17T23:35:26.505697Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 220000 references
+[2m2026-10-17T23:35:26.538564Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 230000 references
+[2m2026-10-17T23:35:26.572601Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 240000 references
+[2m2026-10-17T23:35:26.605121Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 250000 references
+[2m2026-10-17T23:35:26.638394Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 260000 references
+[2m2026-10-17T23:35:26.679009Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 270000 references
+[2m2026-10-17T23:35:26.716164Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 280000 references
+[2m2026-10-17T23:35:26.751776Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 290000 references
+[2m2026-10-17T23:35:26.784782Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 300000 references
+[2m2026-10-17T23:35:26.821891Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processed 310000 references
+[2m2026-10-17T23:35:26.855949Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   319954 references, max_ref_len=123193
+[2m2026-10-17T23:35:26.855954Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Second pass over idx/mm116_cfish.cf_seq to fill contig entries
+[2m2026-10-17T23:35:26.888731Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #0
+[2m2026-10-17T23:35:26.950910Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #10000
+[2m2026-10-17T23:35:26.999420Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #20000
+[2m2026-10-17T23:35:27.050570Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #30000
+[2m2026-10-17T23:35:27.095297Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #40000
+[2m2026-10-17T23:35:27.142423Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #50000
+[2m2026-10-17T23:35:27.196416Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #60000
+[2m2026-10-17T23:35:27.245266Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #70000
+[2m2026-10-17T23:35:27.291785Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #80000
+[2m2026-10-17T23:35:27.339864Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #90000
+[2m2026-10-17T23:35:27.389528Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #100000
+[2m2026-10-17T23:35:27.441442Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #110000
+[2m2026-10-17T23:35:27.493012Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #120000
+[2m2026-10-17T23:35:27.550327Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #130000
+[2m2026-10-17T23:35:27.601751Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #140000
+[2m2026-10-17T23:35:27.646103Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #150000
+[2m2026-10-17T23:35:27.691182Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #160000
+[2m2026-10-17T23:35:27.735448Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #170000
+[2m2026-10-17T23:35:27.781894Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #180000
+[2m2026-10-17T23:35:27.827712Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #190000
+[2m2026-10-17T23:35:27.875777Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #200000
+[2m2026-10-17T23:35:27.922594Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #210000
+[2m2026-10-17T23:35:27.968016Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #220000
+[2m2026-10-17T23:35:28.012164Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #230000
+[2m2026-10-17T23:35:28.058033Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #240000
+[2m2026-10-17T23:35:28.102274Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #250000
+[2m2026-10-17T23:35:28.147497Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #260000
+[2m2026-10-17T23:35:28.195287Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #270000
+[2m2026-10-17T23:35:28.245308Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #280000
+[2m2026-10-17T23:35:28.293122Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #290000
+[2m2026-10-17T23:35:28.337783Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #300000
+[2m2026-10-17T23:35:28.388331Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   processing reference #310000
+[2m2026-10-17T23:35:28.434479Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   ContigTable: 1329841 contigs, 18148228 entries
+[2m2026-10-17T23:35:28.434488Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Building equivalence class table
+[2m2026-10-17T23:35:29.206269Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m   EqClassMap: 1329841 tiles, 1056427 ECs, 15952694 label entries
+[2m2026-10-17T23:35:29.206295Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving SSHash dictionary to idx/mm116.ssi
+[2m2026-10-17T23:35:29.253539Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving contig table to idx/mm116.ctab
+[2m2026-10-17T23:35:29.271006Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving reference info to idx/mm116.refinfo
+[2m2026-10-17T23:35:29.275954Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Saving equivalence class table to idx/mm116.ectab
+[2m2026-10-17T23:35:29.285702Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Index saved to idx/mm116
+[2m2026-10-17T23:35:29.285712Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m Index built and saved to idx/mm116
+[2m2026-10-17T23:35:29.285714Z[0m [32m INFO[0m [2mpiscem_rs::index::build[0m[2m:[0m auto dict selection: 129048045 canonical k-mers (100000000 threshold), emitting Tiny artifacts: false
+[2m2026-10-17T23:35:29.287059Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removing intermediate cdBG files produced by cf1-rs.
+[2m2026-10-17T23:35:29.298833Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removed segment file idx/mm116_cfish.cf_seg
+[2m2026-10-17T23:35:29.311016Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m removed tiling file idx/mm116_cfish.cf_seq
+[2m2026-10-17T23:35:29.311055Z[0m [32m INFO[0m [2mpiscem[0m[2m:[0m piscem build finished.

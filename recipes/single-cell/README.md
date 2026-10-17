@@ -1,15 +1,12 @@
 ---
 tool: piscem-alevin-fry
-tool_version: "piscem 0.23.0 / alevin-fry 0.9.0"
+tool_version: "piscem 0.23.0 / alevin-fry 0.18.3"
 images:
   - quay.io/aarchbio/piscem@sha256:40c8a261dc5d152a1aa9c5db58aa14287a56580f42a483cc1ffec9c5b6e21603
-  - quay.io/aarchbio/alevin-fry@sha256:a786a69ea67e2234f6d2a600314bd1ba79b4647958d419025a1dfa9a37cefd79
-last_verified_x86_64: 2026-10-13
-images_x86_64:
-  - quay.io/biocontainers/alevin-fry@sha256:2b3e3aa6fc7d8961ce4008ca7369abf6a52969d874b36061b18c139d8b69c4bc
-  - quay.io/biocontainers/piscem@sha256:7eb9f7cd54f0f1238eb50ee9f3897a23247f24ff1a146f958facbc943a4f3c18
-spawn_version: 0.111.1
-last_verified: 2026-09-20
+  - quay.io/aarchbio/alevin-fry@sha256:1c5b8393d66e206e44cdaa928b63ffed2b798a323a5c04b3bed1349a216aeb6d
+gap_x86_64: bioconda publishes alevin-fry 0.18.3 for linux-64 (hd612981_0, 2026-09-14) but quay.io/biocontainers has no 0.18.3 image (newest 0.18.2, checked 2026-10-17); the x86 pins were piscem 0.23.0 7eb9f7cd and alevin-fry 0.9.0 2b3e3aa6, verified 2026-10-13 before the repin, and 0.9.0 misreads piscem 0.23.0's unmapped-barcode file
+spawn_version: 0.131.0
+last_verified: 2026-10-17
 ---
 # Single-cell quantification — a count matrix checked against one we planted
 
@@ -46,10 +43,9 @@ Two tasks: piscem builds the fixture, indexes it and maps to a RAD file, then al
 
 | chip | instance | tool wall | billed (2 tasks) | peak RSS | **billed $/sample** |
 |---|---|---|---|---|---|
-| **Graviton4** | `m8g.4xlarge` | **138 s** | 452 s | 3.6 GiB | **0.090** |
-| Intel | `m8i.4xlarge` | 149 s | 455 s | 3.6 GiB | 0.107 |
+| **Graviton4** | `m8g.4xlarge` | **115 s** | 452 s | 3.8 GiB | **0.090** |
 
-The matrices are **bit-identical across chips**, and every per-cell and raw→filtered identity holds at 1,814 cells. Graviton4 is 16% cheaper per sample, but two-thirds of either bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (RAD plus collation, ~20 GB), not for the tools. **Don't read featureDump's `CorrectedReads`/`MappingRate`**: alevin-fry 0.9.0 misreads piscem 0.23.0's unmapped-barcode file ([why](../../measurements/single-cell-real/README.md#a-field-you-should-not-read-correctedreads--mappingrate)).
+Every per-cell, raw→filtered and unmapped-read identity holds at 1,814 cells. Three-quarters of the bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (the RAD plus its collation), not for the tools. There is no x86 row at these pins: bioconda has no x86 image of alevin-fry 0.18.3 yet (below). Pinned to 0.9.0 before 2026-10-17, this recipe's featureDump `CorrectedReads` and `MappingRate` were garbage ([why](../../measurements/single-cell-real/README.md#correctedreads--mappingrate-wrong-under-alevin-fry-090-checked-now)).
 
 <details>
 <summary>As shipped: exact matrix recovery, a conservation identity, the silent cell-drop, why piscem and not salmon, pins</summary>
@@ -62,6 +58,10 @@ The matrices are **bit-identical across chips**, and every per-cell and raw→fi
 | the count matrix | **every** (cell, gene, count) triple equals the planted value | **exact** |
 | conservation | Σ counts == read count | **58 of 58** |
 | cells at the default `--min-reads` | 2 — the 8-read cell is gone | **2** |
+| piscem's `unmapped_bc_count.bin`, decoded in-task | header `1 1 3`, per-barcode counts == the planted 3 / 6 / 1 unmapped reads | **exact** |
+| featureDump, every cell, both runs | `MappedReads` == planted mapped, `CorrectedReads` == mapped + unmapped, `MappingRate` == their ratio | **3 of 3**, **2 of 2** |
+
+**The unmapped reads are planted so `CorrectedReads` can be checked.** Ten reads carry a cell's barcode and random cDNA that shares no 31-mer with the transcriptome, so piscem maps 58 of 68. alevin-fry adds each cell's unmapped reads back into `CorrectedReads` from piscem's `unmapped_bc_count.bin`. alevin-fry 0.9.0 misread that file's layout, and with the same RAD its featureDump says `corrected 30 / 20 / 8, rate 1`: **0 of 3**, a failed task (measured on Graviton4, 2026-10-17). 0.18.3 says 33 / 26 / 9. The matrix is the same under both versions, so only this check tells them apart.
 
 **Why conservation works here, and the fixture detail that makes it possible:** every read is given a **unique UMI**. alevin-fry deduplicates by UMI, so repeated UMIs would legitimately collapse into single counts and the sum would drop below the read count for entirely correct reasons. Unique UMIs make "one read → one count" true by construction, which turns the total into an exact identity that catches dropped or double-counted reads.
 
@@ -82,8 +82,8 @@ This recipe was blocked on exactly that: alevin-fry was available while piscem h
 | | |
 |---|---|
 | piscem | `quay.io/aarchbio/piscem@sha256:40c8a261…` (0.23.0) |
-| alevin-fry | `quay.io/aarchbio/alevin-fry@sha256:a786a69e…` (0.9.0) |
-| input | none — transcriptome, barcodes, reads, UMIs and the planted matrix are generated in-task by awk from `srand(11)` |
+| alevin-fry | `quay.io/aarchbio/alevin-fry@sha256:1c5b8393…` (0.18.3; repinned from 0.9.0 on 2026-10-17, cosign-verified against `playgroundlogic/aarchbio/.github/workflows/publish.yml@refs/heads/main`) |
+| input | none — transcriptome, barcodes, reads, UMIs, unmapped reads and the planted matrix are generated in-task by awk from `srand(11)` |
 
 **Staging note:** piscem's RAD output is a **directory**, and a directory output cannot be staged on the container path — so it travels between tasks as a single flat `rad.tar` and is untarred by the consumer, per the [container-path](../../practices/container-path.md) rule.
 
@@ -91,30 +91,23 @@ Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin
 
 ### On x86_64
 
-The same two tasks on same-generation Intel (`c8i`), from bioconda's own x86 builds of the same
-versions — `quay.io/biocontainers/piscem@sha256:7eb9f7cd…` (0.23.0) and
-`quay.io/biocontainers/alevin-fry@sha256:2b3e3aa6…` (0.9.0), both `linux/amd64`; not cosign-signed,
-so the digests are the pins:
+**Not currently runnable.** bioconda has alevin-fry 0.18.3 for linux-64, but `quay.io/biocontainers`
+has no 0.18.3 image (its newest is 0.18.2), and an x86 pin has to be the same version. Until that
+image exists the frontmatter records `gap_x86_64`.
 
-| | arm64 | x86_64 |
-|---|---|---|
-| cells at `--min-reads 1` / at the default | 3 / 2 | 3 / 2 |
-| matrix exact / Σ counts | yes / 58 of 58 | yes / 58 of 58 |
-| `smoke-check.txt`, `truth.tsv`, `barcodes.txt`, `t2g.tsv` | — | **byte-identical** to arm64 |
-
-The transcript sequences and read positions come from awk's `srand(11); rand()`, and the two images ship different
-awks (mawk in the ARM image, BusyBox awk in bioconda's x86 one) with different generators, so
-`txome.fa` — and the mapping in `rad.tar` built from it — are different bytes. The barcodes, UMIs
-and planted counts are not random, so the matrix and every assertion are the same.
+Before the repin, the same two tasks ran on `c8i` from bioconda's piscem 0.23.0 (`7eb9f7cd…`) and
+alevin-fry 0.9.0 (`2b3e3aa6…`) on 2026-10-13. The matrix and every assertion matched arm64. That run
+predates the `CorrectedReads` check, which 0.9.0 fails. The fixture's random sequences differ
+across chips anyway: mawk in the ARM image and BusyBox awk in bioconda's x86 one give `srand(11)`
+different generators. The barcodes, UMIs and planted counts are not random.
 
 ### Run + verify
 
 ```sh
 make run RECIPE=single-cell             # Graviton4
-make run RECIPE=single-cell ARCH=x86_64  # same specs, x86 pins, writes runs-x86_64/
 make ls  RECIPE=single-cell
 ```
 
-Assertions are `test` calls inside the second task ([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt` with `matrix_exact yes`, `count_sum 58 of 58`, and `cells_default_minreads 2`.
+Assertions are `test` calls inside the second task ([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt` with `matrix_exact yes`, `count_sum 58 of 58`, `cells_default_minreads 2`, `unmapped_bin_exact yes` and `featuredump_A_exact 3 of 3 cells`.
 
 </details>

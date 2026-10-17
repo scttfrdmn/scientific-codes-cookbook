@@ -1,10 +1,10 @@
 {
   "task_id": "cookbook-single-cell-real-quant",
-  "container": "quay.io/aarchbio/alevin-fry@sha256:a786a69ea67e2234f6d2a600314bd1ba79b4647958d419025a1dfa9a37cefd79",
+  "container": "quay.io/aarchbio/alevin-fry@sha256:1c5b8393d66e206e44cdaa928b63ffed2b798a323a5c04b3bed1349a216aeb6d",
   "command": [
     "bash",
     "-c",
-    "set +e\necho \"2914b83e20513692275eef0b4af709ca26b435a7deeabf86ddcceb792a01295d  /tmp/quant.sh\" | sha256sum -c || { echo \"FAIL: quant.sh does not match its pin\"; exit 1; }\nTHREADS=16 bash /tmp/quant.sh\n"
+    "set +e\necho \"654a037c55d9a082e78828ee4dd8fafff53b8ef08c7bea769ee3a46835d2dc81  /tmp/quant.sh\" | sha256sum -c || { echo \"FAIL: quant.sh does not match its pin\"; exit 1; }\nTHREADS=16 bash /tmp/quant.sh\n"
   ],
   "resources": {
     "cpu": 16,
