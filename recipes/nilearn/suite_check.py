@@ -24,9 +24,13 @@ for g in GROUPS:
     counts = collections.Counter()
     for num, kind in re.findall(r"(\d+) (passed|failed|skipped|xfailed|xpassed|errors?)", summ[-1] if summ else ""):
         counts["errors" if kind.startswith("error") else kind] += int(num)
-    per = collections.defaultdict(int)
+    # pytest-rerunfailures (Nilearn's `flaky` marker) reports each retry as outcome "rerun";
+    # a test's outcome is its final report, and the retries are counted on their own.
+    per, reruns = collections.defaultdict(int), collections.Counter()
     for nid, when, outcome in run["reports"]:
-        if when == "call" or outcome != "passed":
+        if outcome == "rerun":
+            reruns[nid] += 1
+        elif when == "call" or outcome != "passed":
             per[nid] += 1
     ids = set(items)
     missing = [i for i in items if per.get(i, 0) == 0]
@@ -37,6 +41,9 @@ for g in GROUPS:
           "%d missing, %d uncollected, %d multiple; exit %d"
           % (g, len(items), counts["passed"], counts["skipped"], counts["xfailed"], counts["xpassed"],
              counts["failed"], counts["errors"], len(missing), len(extra), len(multi), rc))
+    if reruns:
+        print("    reran %d test(s) %d time(s): %s" % (len(reruns), sum(reruns.values()),
+              ", ".join("%s x%d" % (n.split("::")[-1][:70], k) for n, k in reruns.most_common(3))))
     tag = "group %s: " % g
     if rc != 0: fails.append(tag + "pytest exited %d" % rc)
     if counts["failed"]: fails.append(tag + "%d tests FAILED" % counts["failed"])

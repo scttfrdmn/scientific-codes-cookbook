@@ -3,9 +3,10 @@ tool: nilearn
 tool_version: "0.14.1"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c
-gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: neuroimaging-d0a05a385703
+last_verified_x86_64: 2026-10-17
 spawn_version: 0.127.0
-last_verified: 2026-10-16
+last_verified: 2026-10-17
 ---
 # Nilearn — its own 8,211 tests, plus masking, a GLM, connectivity and cleaning against closed forms
 
@@ -126,7 +127,13 @@ and skips are explained in `suite-summary.txt`; the largest causes are `SCIPY_AR
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`6cd4f404…`), so verify the tag and pin the arm64 digest. The four identities give the same values to every printed digit on this digest as on the previous one (`a1216a86…`). A newer digest than
 [neuroimaging](../neuroimaging/README.md) pins — that recipe stays on the image it was verified
-against. No x86 run: `neuroimaging` has no x86 build.
+against.
+
+### x86_64
+
+The same suite and identities run on `c8i` (Intel) through the env's [locked x86 twin](../../envs-x86_64/neuroimaging-d0a05a385703.linux-64.lock): the same versions, linux-64 builds, installed offline in 4 s (289 of 294 package versions identical; the four that differ, glib, sqlite and charset-normalizer, are listed in the lock). **All 8,211 tests: 0 failures on both chips**, the same counts in every group. Of the identities, the exact ones (masker 0, Pearson 2.220e-16) and every control are identical; only round-off residuals move, e.g. GLM vs `lstsq` 5.995e-15 → 6.328e-15, all far inside their bounds.
+
+One `flaky`-marked check, `check_img_estimator_dtype_bool`, needed Nilearn's own reruns on **both** chips (estimator10 4 retries on Graviton4; CanICA 7 on Intel). That is what its `@pytest.mark.flaky(reruns=10)` is for, and `suite-summary.txt` reports retries per test rather than counting them as outcomes.
 
 ### Run + verify
 
