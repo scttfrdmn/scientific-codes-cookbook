@@ -3,9 +3,10 @@ tool: xtb
 tool_version: "6.7.1"
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:f22ef7a3b0d6e506782596e297472fb355338502aaba668ba64d6e3a3cebe031
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.1 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.1-py311h6619805_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`)
-spawn_version: 0.123.0
-last_verified: 2026-10-08
+env_x86_64: comp-chem-823f1ef5e11e
+spawn_version: 0.131.0
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # xtb — GFN2 on water, against xtb's own committed test value
 
@@ -40,7 +41,7 @@ xtb coord --gfn 2 --etemp 300.0 --acc 1.0 --grad
 One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. The SCF converges in 8 iterations in milliseconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
-<summary>As shipped: a version-matched committed reference, a bit-exact symmetry identity, and one number that cannot be reproduced from the CLI</summary>
+<summary>As shipped: a version-matched committed reference, a symmetry identity, and a gradient norm that matches upstream on x86 but not on arm64</summary>
 
 ### The checks
 
@@ -74,25 +75,35 @@ This is the check worth copying, because it holds **whatever the reference value
 bump that moves the energies leaves it intact, and a build with a broken gradient fails it even
 when the energy is right.
 
-### The gradient norm cannot be reproduced from the CLI
+### The gradient norm: x86 reproduces upstream's, arm64 does not
 
-`test_gfn2.f90` also pins `res%gnorm = 0.006457420125`. The CLI reports **0.134752018160** — a
-factor of ~21 apart — and that is not a defect in either:
+`test_gfn2.f90` also pins `res%gnorm = 0.006457420125`. The same pinned xtb 6.7.1 reports:
 
 ```text
-total energy   agrees to 2.810e-10      <- geometry and method are right
-HOMO-LUMO gap  agrees to 6.706e-06
-gradient norm  differs by 1.283e-01
+                 total energy        HOMO-LUMO gap      gradient norm
+arm64 (c8g)      -5.070451354837     14.450365663200    0.134752018160
+x86_64 (c8i)     -5.070451354837     14.450365663200    0.006457413619
+upstream test    -5.070451355118     14.450372368833    0.006457420125
 ```
 
-The energy agreement rules out geometry, method and parameterisation, leaving only that the two
-numbers are **different quantities**: the unit test calls xtb's internal `scf()` driver directly,
-while the CLI runs the full single-point driver. Asserting it would require widening the tolerance
-20,000-fold, which would check nothing.
+The energy, gap, SCC iterations, charges and multipoles agree across chips to every printed digit;
+only the gradient differs, ~21×, with the O `gz` changing sign (+8.28e-02 on arm64, −5.07e-03 on
+x86). x86 lands 6.5e-9 from upstream's committed norm, so the earlier reading here, that the CLI
+and the unit test compute different quantities, does not hold: on x86 they agree. arm64 gives
+0.134752018160 on both its runs (2026-10-08 and 2026-10-17), so it is reproducible, not noise. A
+gradient is a derivative of a converged energy, a fixed point, so a 21× gap between chips is not
+kernel roundoff; the arm64 gradient is the one that disagrees with upstream, and the cause is not
+established. Both chips pass the C2v symmetry checks, which a gradient wrong by a symmetric field
+still satisfies. The norm stays reported, not asserted, on both chips. **Use the arm64 gradient
+with care until this is resolved.**
 
-So it is reported with its provenance and the gradient is verified by symmetry instead. **If you
-are trying to reproduce xtb's test values from the command line, the energies transfer and the
-gradient norm does not.**
+### x86_64
+
+Passes on `c8i.large` (2026-10-17) through the env's linux-64 twin
+(`envs-x86_64/comp-chem-823f1ef5e11e`, 203 of 207 versions identical, xtb 6.7.1, tblite 0.6.0 and
+dftd4 4.2.0 among them; `cuda-version` 13.4 where arm64 pins 11.8, unused by xtb). Energy and gap
+deviations are identical to arm64 (2.810e-10, 6.706e-06). The symmetry residuals are roundoff on
+both: x86 `gy` 8.686e-17, `gx(O)` 9.154e-17, mirror sums 1.002e-16 / 9.975e-17.
 
 ### Pins
 

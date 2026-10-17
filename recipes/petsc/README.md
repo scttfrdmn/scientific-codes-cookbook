@@ -4,8 +4,9 @@ tool_version: "3.25.5"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:6cadf382f817fb3967b0bda58c561114dce1ae3176fd7bbf25c5e70d56392e79
 env_x86_64: fem-cfd-9ae4b72449df
-spawn_version: 0.123.0
-last_verified: 2026-10-09
+spawn_version: 0.131.0
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # PETSc — reproducing its own committed KSP output, serial and on 2 ranks
 
@@ -14,7 +15,8 @@ Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration c
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=petsc)" --wait   # nothing to stage
+make stage RECIPE=petsc                                       # the two scripts
+spawn task run --spec "$(make -s spec RECIPE=petsc)" --wait
 make ls RECIPE=petsc
 
 # the committed reference, src/ksp/ksp/tutorials/output/ex2_1.out:
@@ -23,7 +25,7 @@ mpiexec -n 1 python3 ex2.py ex2     # 4 iterations, 0.000392700601
 mpiexec -n 2 python3 ex2.py ex2     # 7 iterations, 0.000292348878
 ```
 
-**Nothing is staged.** The problem is built in `petsc4py`; the reference values come from PETSc's repository at the version tag matching the env.
+**No data is staged.** The problem is built in `petsc4py` (`ex2.py`, with the checks in `ksp.sh`, both staged and pinned by sha256 to keep the spec inside EC2's 16 KiB user data); the reference values come from PETSc's repository at the version tag matching the env.
 
 ## Make it yours
 
@@ -140,15 +142,17 @@ in git and an image in a registry are two different artifacts.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
-**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/fem-cfd-9ae4b72449df`,
-every version identical to arm64: petsc 3.25.5, openmpi 5.0.10). The spec cannot launch on
-spawn 0.130.1 on **either** chip: EC2 rejects the generated user data
-(`User data is limited to 16384 bytes`) before any instance exists. This spec is the largest in
-the `fem-cfd` set (12.5 kB), and the x86 install step adds ~1.9 kB to it.
+**x86_64.** Passes on `c8i.xlarge` (2026-10-17) through the env's linux-64 twin
+(`envs-x86_64/fem-cfd-9ae4b72449df`: petsc 3.25.5, openmpi 5.0.10, the arm64 versions).
+**Every value in `score.tsv` is identical on both chips**: 4 and 7 iterations, error norms
+0.000392700601 and 0.000292348878, both unpreconditioned residuals, and the ladder's errors to
+the printed seven digits (p = 1.992, 1.998, 1.999). The KSP results are fixed points of a
+converged solve; the ladder is a CG solve to rtol 1e-13, so it is too.
 
 ### Run + verify
 
 ```sh
+make stage RECIPE=petsc
 spawn task run --spec "$(make -s spec RECIPE=petsc)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/petsc/r1/score.tsv" -
 ```

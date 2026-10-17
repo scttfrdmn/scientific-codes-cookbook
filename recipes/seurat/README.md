@@ -4,8 +4,9 @@ tool_version: "5.5.1"
 env: single-cell
 image: quay.io/aarchsci/single-cell@sha256:1105adf7bab6db433787255ca16101f0474214f0a46ab63af102b0863d541e43
 env_x86_64: single-cell-ff275bd07c2f
-spawn_version: 0.123.0
-last_verified: 2026-10-08
+spawn_version: 0.131.0
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # Seurat vs Scanpy — the same 2,700 cells, clustered twice, compared by ARI
 
@@ -14,7 +15,8 @@ Runs Seurat and Scanpy over identical cells, genes, features and graph parameter
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=seurat)" --wait   # reuses scanpy's staged matrix
+make stage RECIPE=seurat                                       # the scripts; the matrix is scanpy's
+spawn task run --spec "$(make -s spec RECIPE=seurat)" --wait
 make ls RECIPE=seurat
 
 # both tools in ONE image, so no S3 hop between them
@@ -38,7 +40,7 @@ python3 -c "import scanpy as sc; sc.tl.leiden(A, flavor='igraph')"
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m, cap $0.15. Both pipelines plus the comparison finish inside a few minutes, mostly image pull. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
-<summary>As shipped: the result that inverts the expectation, what had to be matched, and four failures</summary>
+<summary>As shipped: the cross-tool agreement, an unseeded louvain, what had to be matched, and four failures</summary>
 
 ### The checks
 
@@ -48,36 +50,40 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m, cap $0.15. Both pipelines p
 | **cells clustered** | **identical sets, exactly** | **2700 both sides** |
 | gene IDs | unique on both sides (join key is sound) | asserted, passed |
 | HVGs | the same 2000 genes used by both | 2000 |
-| cluster counts | — (reported) | scanpy 10 / 10, Seurat 11 |
+| cluster counts | — (reported) | scanpy leiden 10 / louvain 9, Seurat 11 |
 | **Seurat ↔ Scanpy (leiden)** | — (reported) | **0.7318** |
-| **Seurat ↔ Scanpy (louvain)** | **ARI ≥ 0.45** | **0.5994** |
-| Scanpy internal (louvain↔leiden) | — (reference scale) | 0.6736 |
+| **Seurat ↔ Scanpy (louvain)** | **ARI ≥ 0.45** | **0.5780** (0.5780–0.6833 over three runs) |
+| Scanpy internal (louvain↔leiden) | — (reference scale) | 0.6287 (0.6287–0.7510) |
 | **marker biology, all 3 partitions** | **CD3D/LYZ/MS4A1 in 3 distinct clusters** | **3, 3, 3** |
 
-### The result inverts the obvious expectation
-
-**Two different tools agree with each other more than two algorithms inside one tool.**
+### Across the tool boundary is stable; louvain is not
 
 ```text
-Seurat        vs  Scanpy leiden     0.7318     <- across the tool boundary
-Scanpy leiden vs  Scanpy louvain    0.6736     <- inside one tool
-Seurat        vs  Scanpy louvain    0.5994
+                                  arm64 10-08   arm64 10-17   x86_64 10-17
+Seurat        vs  Scanpy leiden     0.7318        0.7318        0.7318
+Scanpy leiden vs  Scanpy louvain    0.6736        0.6287        0.7510
+Seurat        vs  Scanpy louvain    0.5994        0.5780        0.6833
 ```
 
-So the R/Python boundary is **not** the dominant source of variation here — the clustering
-algorithm is. A reader worried that switching ecosystems will change their biology has the
-answer: it changes it less than switching `leiden` for `louvain` within the ecosystem they
-already have.
+Seurat and Scanpy's leiden give the same ARI on every run and both chips: those two partitions
+are pinned by their seeds, so the cross-tool agreement is a stable number. Scanpy's louvain is not
+pinned by `random_state=0`: two arm64 runs on the same digest disagree (9 or 10 clusters), so
+every number involving it is one draw, and its spread across runs is wider than the gap between
+the two algorithms. The earlier reading here, that two tools agree more than two algorithms
+inside one tool, held on both arm64 runs and not on x86 (0.7510 > 0.7318). It is not a stable
+result. What the recipe can say is narrower: Seurat's partition sits as close to Scanpy's leiden as
+leiden sits to louvain, so switching ecosystems moves the answer about as much as switching
+algorithm within one.
 
 That is also why the Scanpy-internal number is computed **in this recipe** rather than cited
-from [scanpy](../scanpy/README.md)'s 0.6452 (0.6633 on x86; Louvain is a path). Internal agreement depends on the HVG set, PC
+from [scanpy](../scanpy/README.md)'s 0.7665. Internal agreement depends on the HVG set, PC
 count and k, which differ between the two recipes, so the reference scale has to be measured
 under *these* parameters to mean anything.
 
 ### "Both called Louvain" does not mean the same algorithm
 
 Pairing Scanpy's **louvain** with Seurat's `FindClusters` default looks like the algorithm-matched
-comparison, and it gives the **lowest** of the three numbers (0.5994). Seurat implements its own
+comparison, and it gives the **lowest** of the three numbers on every run (0.5780–0.6833). Seurat implements its own
 modularity optimisation; Scanpy calls igraph's multilevel. Empirically Seurat's clustering sits
 closer to Scanpy's **leiden** (0.7318).
 
@@ -141,16 +147,17 @@ cosign-verified; signature covers the **manifest-list** digest, so verify the ta
 arm64 digest. Lock `Built: 2026.10.08.144556` against a tag pushed 14:49:12 the same day — same
 build, the staleness check [gsw](../gsw/README.md) exists because of.
 
-**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/single-cell-ff275bd07c2f`,
-316 of 345 versions identical; among the 16 that differ are `r-future` 1.80.0 vs 1.76.0,
-`r-future.apply`, `r-globals`, `zarr` and `pydantic`). The x86 spec cannot launch: with the
-install step prepended, EC2 rejects its user data (`User data is limited to 16384 bytes`) before
-any instance exists, and on spawn 0.130.1 the arm64 spec of a smaller recipe
-([petsc](../petsc/README.md)) is rejected the same way.
+**x86_64.** Passes on `m8i.xlarge` (2026-10-17) through the env's linux-64 twin
+(`envs-x86_64/single-cell-ff275bd07c2f`, 316 of 345 versions identical; among the 16 that differ
+are `r-future` 1.80.0 vs 1.76.0, `r-future.apply`, `r-globals`, `zarr` and `pydantic`). The same
+2700 cells, Seurat's 11 clusters, leiden's 10 and the leiden↔Seurat ARI **0.7318** match arm64
+exactly; the louvain values differ, as they do between two arm64 runs (above). The marker check
+puts CD3D/LYZ/MS4A1 in three distinct clusters for all three partitions on both chips.
 
 ### Run + verify
 
 ```sh
+make stage RECIPE=seurat
 spawn task run --spec "$(make -s spec RECIPE=seurat)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/seurat/r1/score.tsv" -
 ```

@@ -3,9 +3,10 @@ tool: cantera
 tool_version: "3.2.0"
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.1 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.1-py311h6619805_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`)
+env_x86_64: comp-chem-1243f25ebfec
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-17
 ---
 # Cantera — thermochemistry held to exact identities and detailed balance
 
@@ -150,6 +151,18 @@ python 3.13.16 for an unrelated reason (psi4's old py313 ceiling, which is why p
 `dft`), and cantera has aarch64 builds for py310–py314, so it fitted the env's python rather than
 moving it. The six older comp-chem recipes still pin the pre-cantera digest, which is correct —
 repinning them is a change to their input and would need a re-run, not a hash edit.
+
+### x86_64
+
+Passes on `m8i.large` (2026-10-17) through the env's linux-64 twin
+(`envs-x86_64/comp-chem-1243f25ebfec`, 219 of 223 versions identical, cantera 3.2.0 and numpy 2.5.4
+among them). linux-64 has no CPU-only openmm 8.6.1, so the twin carries `cuda-version` 13.4 and the
+CUDA runtime libraries where arm64 pins 11.8; cantera does not touch them. What holds exactly: 53
+species / 325 reactions, the flame temperature **2225.52 K**, idempotence 1.204e-12, the
+non-equilibrium control 1.781221, determinism. What moves is roundoff at the float64 floor, inside
+every bound: `h=u+pv` 5.4e-16 (arm64 1.3e-16), detailed balance **9.090e-15** (1.352e-14), element
+drift 1.829e-11 (1.830e-11), `HP` enthalpy drift 1.791e-10 (1.790e-10). The flame temperature is a
+fixed point (an equilibrium solve) and agrees; the residuals are what each chip's arithmetic leaves.
 
 ### Run + verify
 

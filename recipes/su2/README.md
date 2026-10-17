@@ -5,7 +5,8 @@ env: cfd-fv
 image: quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46
 env_x86_64: cfd-fv-4ac4ff422132
 spawn_version: 0.130.1
-last_verified: 2026-10-16
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # SU2 — finite-volume Euler flow, verified by free-stream preservation
 
@@ -18,7 +19,7 @@ SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right w
 ```bash
 spawn task run --spec "$(make -s spec RECIPE=su2)" --wait
 SU2_CFD euler.cfg                 # Euler solve; uniform Mach 0.5 is the exact solution
-mpirun -n 2 SU2_CFD euler.cfg     # same case, domain-decomposed across 2 ranks (ParMETIS)
+mpirun --oversubscribe -n 2 SU2_CFD euler.cfg   # same case, 2 ranks (ParMETIS)
 ```
 
 The recipe writes the config and a distorted channel mesh, runs both legs, and checks that the uniform flow is preserved to machine zero — the finite-volume analog of a patch test.
@@ -54,9 +55,14 @@ The 2-rank run reaches the same machine-zero residual **and** calls ParMETIS to 
 
 `SU2_CFD`'s ELF `e_machine` must match the host (`uname -m`): **183 (AArch64)** on Graviton4, 62 on x86 — read from the binary, not trusted from an image tag.
 
-### x86_64: does not pass yet
+### x86_64
 
-On `c8i.large` (the `cfd-fv` env's linux-64 twin, all 56 locked versions identical, 2026-10-16), `su2_native` (62) and `serial_freestream` (**−14.476211**, against −14.463453 on Graviton4; both a residual floor at machine zero, not a fixed point) pass, but **`mpi2_freestream` and `mpi2_decomposed` fail**: `mpirun -n 2` never starts SU2 — `There are not enough slots available in the system to satisfy the 2 slots`. A `c8i.large`'s 2 vCPUs are one hyperthreaded core and Open MPI 5 counts cores, where a `c8g.large` has two real cores; the spec's `OMPI_MCA_rmaps_base_oversubscribe` is an Open MPI 4 name that 5.0.10 ignores. So the failure is the launch on a 1-core box, not SU2. `last_verified_x86_64` is withheld until a 2-rank x86 run passes.
+Passes on `c8i.large` (the `cfd-fv` env's linux-64 twin, all 56 locked versions identical,
+2026-10-17): `su2_native` 62, serial **−14.476211**, 2-rank **−14.464655**, ParMETIS in the 2-rank
+leg only. Graviton4 gives −14.463453 / −14.430081. The residuals differ across chips because each is
+a floor at machine zero reached along a path, not a fixed point; both clear the `≤ −12` bound by two
+orders. A `c8i.large`'s 2 vCPUs are one hyperthreaded core, so Open MPI 5 sees one slot:
+`--oversubscribe` is what lets `mpirun -n 2` start there.
 
 ### Pins (data tier: synthetic / in-code)
 

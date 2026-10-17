@@ -4,8 +4,8 @@ tool_version: "2026.2"
 env: cp2k
 image: quay.io/aarchsci/cp2k@sha256:a2b70e16570c46a30ee44f6567668cd10610db77c7f48017721845c9a81d8c6f
 env_x86_64: cp2k-d4f840224c26
-spawn_version: 0.130.1
-last_verified: 2026-10-16
+spawn_version: 0.131.0
+last_verified: 2026-10-17
 ---
 # CP2K — 52 of its own committed references, reproduced on Graviton
 
@@ -39,7 +39,7 @@ done
 
 ## Shape, size, cost
 
-One task on `c8g.xlarge` (4 vCPU / 16 GiB), TTL 120m as a **backstop** with `cost_limit` $0.50 as the real guard. 25 directories run twice (serial and 2-rank) in **7m51s** of the 9m04s billed, so boot and image pull are the smaller half here for once — but **these timings are still not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `c8g.2xlarge` (the spec asks 4 vCPU / 16 GiB; 16 GiB picks the 2xlarge), TTL 120m as a **backstop** with `cost_limit` $0.50 as the real guard. 25 directories run twice (serial and 2-rank) in **7m51s** of the 9m04s billed, so boot and image pull are the smaller half here for once — but **these timings are still not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: 52 references at upstream's own tolerances, why the bound needs two clauses, and the restart ordering that cost six runs</summary>
@@ -175,10 +175,18 @@ The twin has no Dockerfile, so the spec points `CP2K_DATA_DIR` at the same 68 fi
 prefix. **It fails**, on `QS/regtest-lsroks/ch2o_hf.inp`: **2.695e-08 Ha** from upstream's
 `-22.0854638839`, against upstream's own tolerance of 2e-08, so 1.35× over, and over 1e-9 Ha too.
 arm64 lands 1.7e-11 from the same reference. On x86 the serial and 2-rank legs agree to 4.5e-12,
-so the result is reproducible on that chip, not noise. Diagnosis, from the input rather than a run:
-this case is a path, not a fixed point. It is `RUN_TYPE GEO_OPT` with one step, on forces from an
-SCF converged only to `EPS_SCF 5.0E-6` with `MAX_SCF 20`, with Schwarz-screened exact exchange.
-Upstream's 2e-08 tolerance, wide for a −22 Ha energy, says its author knew that. Every other
+so the result is reproducible on that chip, not noise; a second x86 run (2026-10-17) gave the same
+2.695e-08. The case is a path, not a fixed point, and CP2K's own output shows where the paths part
+(both chips' `.out` for this case are staged to `keep-out/`). It is `RUN_TYPE GEO_OPT` with one BFGS
+step. At the starting geometry both chips do the same thing: the inner SCF stops at `MAX_SCF 20`,
+the outer SCF converges in 2 iterations to `EPS_SCF 5.0E-6`, and the energies agree to 3.8e-13 Ha
+(−22.110133714292928 arm64, …544 x86). The forces from that loosely converged SCF differ in the
+eighth digit (max gradient 0.2184564250 vs …298), so the BFGS step does too (RMS step 0.2504316327
+vs …723 bohr, a step that raises the energy by 0.0247 Ha). At the new geometry both chips again run 20
+inner steps, then converge the outer SCF in 2 iterations (the second inner loop in 10 steps), and
+the two chips sit 2.5–2.7e-08 Ha apart from the very first SCF iteration on. So the SCF converged
+on both; the offset is in the geometry, set by the forces from the step before. Upstream's
+2e-08 tolerance, wide for a −22 Ha energy, says its author knew this case is sensitive. Every other
 assertion passes: 42 of 52 within upstream's tolerance and 9 more inside 1e-9 Ha (arm64: 44 and 8), the same
 bit-level hybrid cases over upstream's 2e-14 (worst 1.553e-11 Ha, 2.1e-13 relative), and serial
 vs 2-rank within the bound (worst 7.1e-08 Ha, on a case allowed 5e-06). Not loosened, so there is

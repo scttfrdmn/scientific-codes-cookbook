@@ -139,6 +139,11 @@ the platform improved. `backends.txt` is staged out either way.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
+**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/viz-0fe5dabecafa`,
+231 of 244 versions identical; mesalib, VTK and numpy among them). On `m8i.large` (2026-10-17) the
+twin does not install: the offline install of its one `%`-encoded package file
+(`x264-1%21164.3095…`) exits 1 before anything renders, so no check was reached on x86.
+
 ### Run + verify
 
 ```sh

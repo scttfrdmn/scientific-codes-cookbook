@@ -6,6 +6,7 @@ image: quay.io/aarchsci/bayes@sha256:cfa7cc144c6118155b4c3da60a5623a9eaa71db80c2
 env_x86_64: bayes-941a349fd7db
 spawn_version: 0.126.1
 last_verified: 2026-10-09
+last_verified_x86_64: 2026-10-17
 ---
 # CmdStan — Bayesian inference on Graviton, against a closed-form posterior
 
@@ -64,11 +65,11 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost
 | **same seed** | **bit-identical draws** | **yes** (4000×4×8) |
 | different seed differs | *reported, not asserted* | yes |
 
-**x86_64: not yet verified.** On m8i the `bayes` linux-64 twin installs and supplies the toolchain
-(`g++`, `make` from the env), but the run stops at the version probe: `cmdstanpy.cmdstan_path()`
-raises `No CmdStan installation found`. `CMDSTAN` is set only by cmdstan's own conda activation
-hook (`etc/conda/activate.d/cmdstan_activate.sh`), and the twin's install step does not run
-activation hooks. No model was compiled, so nothing in the table above was reached on x86.
+**x86_64.** Passes on `m8i.xlarge` (the `bayes` linux-64 twin, 2026-10-17): the model compiles
+with the twin's own `g++` 15.3 and `make` in 9 s and samples, and **every value in the table above
+is the same on both chips** to the digits `score.tsv` prints, including the sampled mean, sd and
+R-hat. The MAP values are fixed points; the sampled statistics are a path (NUTS draws), so their
+agreement across chips is more than the checks ask, and is stated only to the printed precision.
 
 ### The strongest check is the gradient, because constants cannot touch it
 

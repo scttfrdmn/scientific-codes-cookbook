@@ -71,6 +71,9 @@ CP2K = os.environ.get("CP2K_BIN", "cp2k.psmp")
 TESTS = os.environ.get("CP2K_TESTS", "")
 TEST_DIRS = os.environ.get("CP2K_TEST_DIRS", "")
 MAX_DIRS = int(os.environ.get("MAX_DIRS", "25"))
+# "dir/input" entries whose CP2K .out files are kept in /tmp/keep-out for staging, so a case
+# that misses its reference can be read (SCF converged or not) without a rerun.
+KEEP = set(os.environ.get("CP2K_KEEP_OUT", "").split())
 
 ver = subprocess.run([CP2K, "--version"], capture_output=True, text=True).stdout
 m = re.search(r"CP2K version ([\d.]+)", ver)
@@ -152,6 +155,13 @@ def run_directory(d, full, inputs, ranks):
             texts[inp] = ""
             continue
         texts[inp] = open(outp, errors="replace").read() if os.path.exists(outp) else ""
+        if "%s/%s" % (d, inp) in KEEP and os.path.exists(outp):
+            try:                                   # a diagnostic must never fail the run
+                os.makedirs("/tmp/keep-out", exist_ok=True)
+                shutil.copy(outp, "/tmp/keep-out/%s_%s.%drank.out"
+                            % (d.replace("/", "_"), inp, ranks))
+            except OSError as e:
+                print("   keep-out copy of %s/%s failed: %s" % (d, inp, e))
     shutil.rmtree(work, ignore_errors=True)
     return texts
 
