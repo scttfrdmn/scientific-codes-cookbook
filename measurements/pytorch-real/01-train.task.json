@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-pytorch-real-train",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=$PATH:/opt/conda/bin TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nsha256sum -c pins.sha256 || { echo \"FAIL: staged bytes do not match their pins\"; exit 1; }\n# ResNet-20, full CIFAR-10, 15 epochs, 16 threads, seeded -- trained twice in fresh processes.\nfor T in A B; do\n  EPOCHS=15 THREADS=16 python3 -u cifar.py train $T > train-$T.log 2>&1; rc=$?\n  cat train-$T.log\n  test $rc = 0 || { echo \"FAIL: training $T exited $rc\"; exit 1; }\n  grep -q \"TRAIN $T OK\" train-$T.log || { echo \"FAIL: no completion sentinel for $T\"; exit 1; }\ndone\npython3 -u cifar.py compare A B 2>&1 | tee compare.log\ntest \"${PIPESTATUS[0]}\" = 0 && grep -q 'REPEAT BIT-IDENTICAL OK' compare.log || { echo \"FAIL: the repeat is not bit-identical\"; exit 1; }\ntest -s A.json && test -s A.trace || { echo \"FAIL: results missing\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/cifar10.tgz",
+      "destination": "/tmp/cifar10.tgz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/cifar.py",
+      "destination": "/tmp/cifar.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/train-A.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/train-A.log"
+    },
+    {
+      "source": "/tmp/train-B.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/train-B.log"
+    },
+    {
+      "source": "/tmp/A.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/A.json"
+    },
+    {
+      "source": "/tmp/B.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/B.json"
+    },
+    {
+      "source": "/tmp/A.trace",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/A.trace"
+    },
+    {
+      "source": "/tmp/compare.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/train/compare.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 1.00
+  }
+}

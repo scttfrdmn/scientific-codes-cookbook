@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-pytorch-real-probe",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=$PATH:/opt/conda/bin TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nsha256sum -c pins.sha256 || { echo \"FAIL: staged bytes do not match their pins\"; exit 1; }\n# Sizing probe: 2,560 training images, one epoch, at 8 and 16 threads; then which oneDNN conv kernel runs.\n( for T in 8 16; do LIMIT=2560 EPOCHS=1 THREADS=$T python3 -u cifar.py train p$T; done\n  ONEDNN_VERBOSE=1 python3 -u -c 'import torch; c=torch.nn.Conv2d(16,16,3,1,1,bias=False); x=torch.randn(128,16,32,32,requires_grad=True); c(x).sum().backward()' ) > probe.log 2>&1\ncat probe.log\ngrep -q 'TRAIN p16 OK' probe.log || { echo \"FAIL: probe did not finish\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/cifar10.tgz",
+      "destination": "/tmp/cifar10.tgz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/cifar.py",
+      "destination": "/tmp/cifar.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/probe.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/probe/probe.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.40
+  }
+}

@@ -35,6 +35,15 @@ torch.optim.LBFGS([w], tolerance_grad=1e-12, line_search_fn="strong_wolfe")     
 
 **Leave the fixtures.** Every check is an identity, a planted value, or a second code solving the same problem, so the data only has to be well-posed. Synthesising it keeps the run offline. **Scale it** to your model: the determinism recipe (threads + seed + deterministic algorithms) and the LBFGS cross-check carry over unchanged.
 
+## Which box — [measured](../../measurements/pytorch-real/README.md) (ResNet-20, full CIFAR-10, 15 epochs, 16 threads)
+
+| chip | instance | samples/s train | samples/s infer | $/epoch | test acc |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 1,004 | **7,071** | 0.0088 | 0.8871 |
+| x86 | `c8i.4xlarge` | **2,099** | 3,280 | **0.0050** | 0.8880 |
+
+**Train on x86, infer on Graviton4.** The cause is one kernel in this build: on aarch64 oneDNN computes the conv weight gradient with its reference GEMM (`gemm:ref`, about 15× slower than x86's), while its SVE forward pass beats AVX-512. The run is bit-identical on a repeat within each chip, and a path across them: the two chips diverge at step 1 and finish 0.09 points apart.
+
 ## Shape, size, cost
 
 One task on `c8g.2xlarge` (8 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost_limit` $0.30 as the real guard. The checks take about 25 s of a 2-minute task window, and most of that window is the image pull ([layout](../../patterns/layout-and-effective-cost.md)), so **these timings are not compute cost**.
@@ -161,7 +170,8 @@ directory, only seven helper modules named `test_*.py`, so the
 [reference-from-tests](../../practices/reference-from-tests.md) shape is not available from this
 image. **A dedicated PyTorch env**: PyTorch is here only because `spatialdata` depends on it. A
 `pytorch` env on aarch.science, without Scanpy and R, would be the natural ask (not filed).
-**`torch.compile`/Inductor**, quantisation, bfloat16, and real models or datasets. **Training at
-scale**: the thread observation above says nothing about large layers. **GPU** is Round Two.
+**`torch.compile`/Inductor**, quantisation and bfloat16. A real model and dataset (ResNet-20 on
+CIFAR-10) is [measured separately](../../measurements/pytorch-real/README.md). It is bit-identical
+on a repeat at 16 threads on both chips. **GPU** is Round Two.
 
 </details>
