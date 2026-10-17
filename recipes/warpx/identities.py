@@ -66,7 +66,8 @@ def die(msg):
     sys.exit("FAIL: %s" % msg)
 
 
-EXAMPLES = "/opt/conda/etc/conda/test-files/warpx/1/Examples"
+# The env prefix, not a hardcoded /opt/conda: the x86 twin installs to /var/tmp/env.
+EXAMPLES = os.path.join(sys.prefix, "etc/conda/test-files/warpx/1/Examples")
 BASE = os.path.join(EXAMPLES, "Tests/langmuir/inputs_base_2d")
 WARPX = "warpx.2d"
 UPSTREAM_FIELD_TOL = 0.0503      # analysis_2d.py, particle_shape != 4

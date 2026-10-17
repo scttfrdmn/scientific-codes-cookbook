@@ -3,9 +3,10 @@ tool: warpx
 tool_version: "26.10"
 env: pic
 image: quay.io/aarchsci/pic@sha256:e02db0b494ce602c6948104fe4a9085b6fc004611f501c48c27eed1874100b95
-gap_x86_64: the aarch.science `pic` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.126.1
-last_verified: 2026-10-11
+env_x86_64: pic-bf42d7d6c3f2
+spawn_version: 0.130.1
+last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # WarpX — a Langmuir wave against its own closed form, and what 16 threads actually buy
 
@@ -18,7 +19,7 @@ make stage RECIPE=warpx     # once: the checks only — the deck ships inside th
 spawn task run --spec "$(make -s spec RECIPE=warpx)" --wait
 make ls RECIPE=warpx
 
-D=/opt/conda/etc/conda/test-files/warpx/1/Examples/Tests/langmuir
+D="$(python3 -c 'import sys; print(sys.prefix)')/etc/conda/test-files/warpx/1/Examples/Tests/langmuir"
 printf 'FILE = %s\nalgo.current_deposition = esirkepov\n' "$D/inputs_base_2d" > inputs
 OMP_NUM_THREADS=16 warpx.2d inputs        # 128², 80 steps, 0.26 s
 yt.load("diags/diag1000080")              # mesh plotfile; species have their own Headers
@@ -54,14 +55,24 @@ One task on `c8g.4xlarge` (16 vCPU / 32 GiB, $0.6381/hr), TTL 60m as a **backsto
 | plasma frequency, derived not typed | — | **1.128292e+14 rad/s** |
 | elapsed time | ≈1 oscillation | **1.0589** plasma periods |
 | **field vs the closed form** | **< 0.0503, upstream's own** | **1.2201e-02** |
-| **ε₀·div(E) == ρ, esirkepov** | **< 1e-11, upstream's own** | **3.559e-12** |
+| **ε₀·div(E) == ρ, esirkepov** | **< 1e-11, upstream's own** | **3.549e-12** |
 | **the same with `direct`** | **must be WORSE** | **1.025e-03** (2.9e8×) |
 | **yt vs openPMD, same step** | **== 0 exactly** | **0.000e+00** |
 | the same ignoring `axisLabels` | *reported* | **5.733e+08** |
 | **OpenMP threads reported** | **== what was launched** | **1, 2, 4, 8, 16** |
-| **field error across 5 thread counts** | **spread < 1e-6** | **2.1e-15** |
+| **field error across 5 thread counts** | **spread < 1e-6** | **2.7e-15** |
 | thread sweep wall / cost | *reported* | 1.36 s → 0.26 s, $0.00024 → $0.00005 |
-| WarpX's own logs staged | — | 38,631 B |
+| WarpX's own logs staged | — | 38,605 B |
+
+**x86_64** (`c8i.4xlarge`, the `pic-bf42d7d6c3f2` twin): every assertion holds. The field error
+(1.2201e-02), yt-vs-openPMD (0.000e+00), the 7 deck parameters and the 5 reported thread counts are
+identical to arm64. What differs is what also differs run to run on one chip: the esirkepov residual
+(3.514e-12, OpenMP reduction order) and the thread spread (3.3e-15). The sweep runs 1.05 s → 0.28 s and
+is flat from 8 to 16 threads (3.81×, 24%) where Graviton4 keeps scaling to 5.2×; the spec's
+`INSTANCE_HOURLY_USD` is the c8g rate, so the x86 $/run figures are not c8i costs. linux-64 WarpX is
+`nompi` too, and requires `_x86_64-microarch-level >= 3`, so the lock was solved with
+`CONDA_OVERRIDE_ARCHSPEC=x86_64_v3`; it differs from arm64 only in executing, fonttools, jedi, libcurl,
+libglib, libsqlite and more-itertools.
 
 ### The reference is upstream's, and so are both tolerances
 
@@ -101,7 +112,7 @@ the esirkepov result would be a property of PIC in general rather than of a char
 deposition, and the identity would be testing nothing. Upstream's gating is the reason it exists;
 measuring the gap is what makes it a check.
 
-The esirkepov residual moves about 1% run to run (3.535e-12, 3.566e-12, 3.559e-12 across three
+The esirkepov residual moves about 1% run to run (3.535e-12, 3.566e-12, 3.559e-12, 3.549e-12 across four
 runs) from OpenMP reduction ordering in the deposition. It sits ~3× inside the bound, so the
 assertion is safe — but it is not a fixed number and is not quoted as one.
 

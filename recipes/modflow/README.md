@@ -3,7 +3,8 @@ tool: modflow6
 tool_version: "6.8.1"
 env: geoscience
 image: quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70
-gap_x86_64: the aarch.science `geoscience` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geoscience-0ac81cc7b2f4
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.126.1
 last_verified: 2026-10-09
 ---
@@ -47,20 +48,27 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pins | model.py matches |
-| mf6 / flopy | read from the running binary, not the env lock | **6.8.1** / 3.11.0 |
-| fixed-head cells hold | structural | 10.000000 / 2.000000 |
-| **heads vs analytical line** | **max abs error < 1e-8** | **1.510e-14** |
-| **through-flow vs Darcy** | **relative error < 1e-9** | **0.000e+00** (1.600000 m³/d both) |
-| budget records present | else the conservation check is vacuous | `FLOW-JA-FACE`, `CHD` |
-| gross boundary flow | > 0 | 3.200000 m³/d |
-| **water conserved** | **net/gross < 1e-10, from the binary budget** | **2.776e-15** |
-| mf6's printed discrepancy | \|%\| < 1e-6 | -0.000e+00 |
-| **completion markers** | **listing carries both closing markers** | present |
-| **convergence order** | **1.8 < p < 2.2 on every rung** | **1.998, 2.000, 2.000** |
-| conservation at every rung | net/gross < 1e-10 | 1.6e-15 … 1.3e-14 |
+| observable | assertion | observed (arm64) | x86_64 |
+|---|---|---|---|
+| staged bytes | match pins | model.py matches | identical |
+| mf6 / flopy | read from the running binary, not the env lock | **6.8.1** / 3.11.0 | identical |
+| fixed-head cells hold | structural | 10.000000 / 2.000000 | identical |
+| **heads vs analytical line** | **max abs error < 1e-8** | **1.510e-14** | identical |
+| **through-flow vs Darcy** | **relative error < 1e-9** | **0.000e+00** (1.600000 m³/d both) | identical |
+| budget records present | else the conservation check is vacuous | `FLOW-JA-FACE`, `CHD` | identical |
+| gross boundary flow | > 0 | 3.200000 m³/d | identical |
+| **water conserved** | **net/gross < 1e-10, from the binary budget** | **2.776e-15** | **0.000e+00** |
+| mf6's printed discrepancy | \|%\| < 1e-6 | -0.000e+00 | 0.000e+00 |
+| **completion markers** | **listing carries both closing markers** | present | identical |
+| **convergence order** | **1.8 < p < 2.2 on every rung** | **1.998, 2.000, 2.000** | identical |
+| conservation at every rung | net/gross < 1e-10 | 1.6e-15 … 1.3e-14 | passes |
+
+**x86_64 (m8i, the `geoscience` env's linux-64 twin)** reproduces every head, flux, error and order
+above digit for digit; the converged solution is a fixed point, so it must. The one value that moved
+is case 1's net boundary flow, `-8.882e-15` m³/d on arm64 against `0.000e+00` on x86: a sum whose
+exact value is zero, rounded differently by the two builds, and far inside the bound on both. The
+twin differs from arm64 in backports.zstd, charset-normalizer, fonttools, libglib and libsqlite
+([lock](../../envs-x86_64/geoscience-0ac81cc7b2f4.linux-64.lock)).
 
 ### Why this geometry: the answer is known, so there is nothing to calibrate
 

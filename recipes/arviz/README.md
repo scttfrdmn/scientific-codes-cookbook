@@ -3,7 +3,8 @@ tool: arviz
 tool_version: "1.3.0"
 env: bayes
 image: quay.io/aarchsci/bayes@sha256:583447048ee2ed011ec822aa15a68c5248842c5b22959bdf98da5d3e9302b46d
-gap_x86_64: the aarch.science `bayes` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: bayes-f84fca06ee06
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---
@@ -45,7 +46,7 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
+| observable | assertion | observed (arm64 = x86_64) |
 |---|---|---|
 | staged bytes | match pin | 1 of 1 |
 | arviz / numpy | read from the running install | **1.3.0** / 2.5.3 |
@@ -57,6 +58,11 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 | **antithetic ρ = −0.5** | **ESS/N > 1** | **2.774** (closed form 3.0) |
 | **`mcse` vs `sd/√ess`** | **< 1e-3 relative** | **7.592e-05** |
 | "ESS ≤ total draws" | *deliberately **not** asserted* | false — see below |
+
+**x86_64 (m8i, the `bayes` env's linux-64 twin): `score.tsv` is byte-identical to arm64's**, to the
+17th digit of R̂. The chains are seeded draws and the estimators are deterministic arithmetic on
+them, so there is no path here to diverge. The twin differs from arm64 only in fonttools, libglib
+and libsqlite ([lock](../../envs-x86_64/bayes-f84fca06ee06.linux-64.lock)).
 
 ### The exact one: R̂ cannot move under a monotone map
 

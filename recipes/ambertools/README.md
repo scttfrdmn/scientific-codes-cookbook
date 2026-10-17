@@ -3,7 +3,7 @@ tool: ambertools
 tool_version: "26.0"
 env: md
 image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-gap_x86_64: the aarch.science `md` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+gap_x86_64: the linux-64 twin of the pinned `md` env (lock-hash 8c7d773ba75d) does not solve; mamba on 2026-10-16 says "package mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0, but none of the providers can be installed" against the env's numpy 2.5.2. The cap is a conda-forge repodata patch (the package's own index.json says numpy >=1.25.0), so the same pins now fail on linux-aarch64 too; this is not a missing x86 build
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---

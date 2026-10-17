@@ -3,7 +3,7 @@ tool: cmdstan
 tool_version: "2.40"
 env: bayes
 image: quay.io/aarchsci/bayes@sha256:cfa7cc144c6118155b4c3da60a5623a9eaa71db80c22fdbf67f811949c92a2fb
-gap_x86_64: the aarch.science `bayes` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: bayes-941a349fd7db
 spawn_version: 0.126.1
 last_verified: 2026-10-09
 ---
@@ -63,6 +63,12 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost
 | CmdStan's own diagnostics | "no problems detected" | yes |
 | **same seed** | **bit-identical draws** | **yes** (4000×4×8) |
 | different seed differs | *reported, not asserted* | yes |
+
+**x86_64: not yet verified.** On m8i the `bayes` linux-64 twin installs and supplies the toolchain
+(`g++`, `make` from the env), but the run stops at the version probe: `cmdstanpy.cmdstan_path()`
+raises `No CmdStan installation found`. `CMDSTAN` is set only by cmdstan's own conda activation
+hook (`etc/conda/activate.d/cmdstan_activate.sh`), and the twin's install step does not run
+activation hooks. No model was compiled, so nothing in the table above was reached on x86.
 
 ### The strongest check is the gradient, because constants cannot touch it
 

@@ -3,7 +3,7 @@ tool: paraview
 tool_version: 6.1.1
 env: viz
 image: quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6
-gap_x86_64: the aarch.science `viz` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: viz-c97c5af10411
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---

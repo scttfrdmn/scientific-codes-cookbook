@@ -3,7 +3,7 @@ tool: cantera
 tool_version: "3.2.0"
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
-gap_x86_64: the aarch.science `comp-chem` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.1 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.1-py311h6619805_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`)
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

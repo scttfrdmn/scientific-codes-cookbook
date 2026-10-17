@@ -3,9 +3,10 @@ tool: msprime
 tool_version: "1.4.4"
 env: popgen
 image: quay.io/aarchsci/popgen@sha256:aac6868e30955dc02250502f7c282625be12093081af943f48f2cbe90ae8760c
-gap_x86_64: the aarch.science `popgen` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: popgen-39c447dd4e42
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # msprime + tskit — coalescent simulation against closed forms
 
@@ -65,6 +66,11 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 | **θ ratio == num_mutations/num_sites** | **< 1e-9** | **0.000e+00** |
 | **mean π / 4·Ne·μ** | **within 4 SE of 1.0** | **1.37 SE** (mean 0.9804) |
 | single-replicate spread | *reported* | 0.8104 – 1.0897 |
+
+**x86_64** (`m8i.large`, the `popgen-39c447dd4e42` twin installed offline): `score.tsv` is
+**byte-identical** to arm64's, every row above. Nothing here is a BLAS path — msprime's RNG and the
+tree algorithms are integer, and π/θ are sums over them. The twin differs from the arm64 env only in
+filelock, fonttools, libcurl, libglib, libsqlite and wrapt, none on the computation.
 
 ### Integers a coalescent simulator cannot fake
 

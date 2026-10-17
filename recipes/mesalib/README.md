@@ -3,7 +3,7 @@ tool: mesalib
 tool_version: "26.2.4"
 env: viz
 image: quay.io/aarchsci/viz@sha256:dda63dc2dcbd830258017f93df6cafe37ff3afbfc0a843fd7690bd5e6be166a7
-gap_x86_64: the aarch.science `viz` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: viz-0fe5dabecafa
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

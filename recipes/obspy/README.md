@@ -3,7 +3,8 @@ tool: obspy
 tool_version: "1.5.1"
 env: geoscience
 image: quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70
-gap_x86_64: the aarch.science `geoscience` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geoscience-0ac81cc7b2f4
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.126.1
 last_verified: 2026-10-09
 ---
@@ -47,20 +48,27 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pins, count asserted so it can't pass vacuously | 3 of 3 |
-| **obspy version** | **== 1.5.1, the tag the reference came from** | **1.5.1** |
-| reference arrivals parsed | ≥ 20 per table, P and S present | 33 + 33 |
-| **arrivals reproduced** | **every Java TauP arrival, both models** | **66 of 66** |
-| **max travel-time difference** | **≤ 0.01 s (the reference's print quantum)** | **0.0050 s** |
-| max ray-parameter difference | ≤ 0.01 s/deg | 0.0008 |
-| extra arrivals found by obspy | *reported, not asserted* | 0 / 0 |
-| **MiniSEED + SAC round-trips** | **bit-identical, dtype preserved** | **5 of 5** |
-| **filter superposition** | **relative error < 1e-10** | **8.484e-15** |
-| **Parseval's identity** | **relative error < 1e-12** | **1.290e-16** |
-| **split / merge** | **bit-identical, sample count unchanged** | **3,000 → 3,000** |
-| time arithmetic | `endtime − starttime == (npts−1)/rate` | **0.000e+00** |
+| observable | assertion | observed (arm64) | x86_64 |
+|---|---|---|---|
+| staged bytes | match pins, count asserted so it can't pass vacuously | 3 of 3 | identical |
+| **obspy version** | **== 1.5.1, the tag the reference came from** | **1.5.1** | identical |
+| reference arrivals parsed | ≥ 20 per table, P and S present | 33 + 33 | identical |
+| **arrivals reproduced** | **every Java TauP arrival, both models** | **66 of 66** | identical |
+| **max travel-time difference** | **≤ 0.01 s (the reference's print quantum)** | **0.0050 s** | identical |
+| max ray-parameter difference | ≤ 0.01 s/deg | 0.0008 | identical |
+| extra arrivals found by obspy | *reported, not asserted* | 0 / 0 | identical |
+| **MiniSEED + SAC round-trips** | **bit-identical, dtype preserved** | **5 of 5** | identical |
+| **filter superposition** | **relative error < 1e-10** | **8.484e-15** | identical |
+| **Parseval's identity** | **relative error < 1e-12** | **1.290e-16** | **3.869e-16** |
+| **split / merge** | **bit-identical, sample count unchanged** | **3,000 → 3,000** | identical |
+| time arithmetic | `endtime − starttime == (npts−1)/rate` | **0.000e+00** | identical |
+
+**x86_64 (m8i, the `geoscience` env's linux-64 twin)** matches arm64 on every travel time, ray
+parameter, round-trip byte and filter residual. Only Parseval's residual moved, `1.290e-16` to
+`3.869e-16`: two roundings of an identity whose exact value is zero, a few machine epsilons apart
+and over three orders inside the bound on both. The twin differs from arm64 in backports.zstd,
+charset-normalizer, fonttools, libglib and libsqlite
+([lock](../../envs-x86_64/geoscience-0ac81cc7b2f4.linux-64.lock)).
 
 ### The reference is another implementation, in another language
 

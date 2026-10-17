@@ -3,7 +3,8 @@ tool: gemmi
 tool_version: "0.7.5"
 env: md
 image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
-gap_x86_64: the aarch.science `md` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: md-f7ed8789d24e
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---
@@ -45,7 +46,7 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
+| observable | assertion | observed (arm64 = x86_64) |
 |---|---|---|
 | staged bytes | match pin | 1 of 1 |
 | gemmi / biopython / MDAnalysis / MDTraj | read from the running install | **0.7.5** / 1.88 / 2.10.0 / 1.11.2 |
@@ -59,6 +60,12 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 | **coordinates vs 3 referees** | **≤ one float32 ULP (3.815e-06)** | 1.892e-06 / 1.892e-06 / 2.327e-06 |
 | control: 0.01 Å shift | must be caught | 1.000e-02 — **2621×** the ULP |
 | determinism | two writes, one hash | byte-identical |
+
+**x86_64 (m8i, the `md` env's linux-64 twin): `score.tsv` is byte-identical to arm64's**, the PDB
+file's sha256 included. Every value here is an exact integer, a closed form or a format bound, so
+nothing is a trajectory and nothing was allowed to move. The twin differs from arm64 in nine minor
+versions (filelock, fonttools, libcurl, libglib, libsqlite, libzip, pydantic, pydantic-core,
+wrapt) and links MKL where arm64 links OpenBLAS ([lock](../../envs-x86_64/md-f7ed8789d24e.linux-64.lock)); not one byte of the result moved.
 
 ### A reference this code had no part in choosing
 
