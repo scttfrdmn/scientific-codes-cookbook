@@ -3,9 +3,10 @@ tool: yoda
 tool_version: "2.1.4"
 env: hep
 image: quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7
-gap_x86_64: the aarch.science `hep` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: hep-327e2aedf1d0
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # YODA — histogram accounting, cross-checked against numpy
 
@@ -148,6 +149,15 @@ genuinely exact and still asserted with `==`.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest. The written `h.yoda` is staged out so a
 round-trip failure is inspectable without a rerun.
+
+### On x86_64
+
+The same task on `m8i.large`, through the `hep` env's linux-64 twin
+(`envs-x86_64/hep-327e2aedf1d0.linux-64.lock`: 331 of 352 versions identical, yoda and numpy among
+them; the 13 that differ are off this path). `score.tsv` and `identities.log` are
+**byte-identical** to arm64 — the same seeded draws, every bin, every exact ratio, the 0.5 ULP
+`normalize` and the 2.204e-16 `xStdDev` residual. Counting and exact scaling cannot differ; that
+the two round-off values also agree is an observation, not an assertion.
 
 ### Not covered
 

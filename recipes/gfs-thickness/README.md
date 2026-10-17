@@ -3,9 +3,10 @@ tool: metpy
 tool_version: "1.7.1"
 env: climate
 image: quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428
-gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: climate-b7b5178faf93
 spawn_version: 0.123.0
 last_verified: 2026-10-08
+last_verified_x86_64: 2026-10-16
 ---
 # MetPy + eccodes — GFS in GRIB2, checked against its own geopotential
 
@@ -124,6 +125,16 @@ sha256 for the in-task gate.
 **ERA5 was the obvious alternative and does not work here:** `nsf-ncar-era5` on the Open Data
 Registry is NetCDF throughout and 1.37 GB per file — wrong format for an eccodes recipe and too
 large for a cheap proof run.
+
+### On x86_64
+
+The same task on `m8i.large`, same staged GFS bytes, through the `climate` env's linux-64 twin
+(`envs-x86_64/climate-b7b5178faf93.linux-64.lock`: 247 of 262 versions identical; cfgrib, eccodes,
+metpy, xarray, pint and numpy match, and the 14 that differ are off the decode path, the largest
+being `shapely` 2.2.0 vs 2.1.2 and `cytoolz` 1.2.0 vs 1.1.0). `score.tsv` and `grib.log` are
+**byte-identical** to arm64: the same 696-message inventory, the same 33-level identity, all five
+hypsometric points to the centimetre (max 0.24%), and θ's involution at 0.000e+00. The thickness
+integral is a deterministic sum over decoded values, not a path, so agreement is expected.
 
 ### Run + verify
 

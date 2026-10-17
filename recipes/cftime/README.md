@@ -3,9 +3,10 @@ tool: cftime
 tool_version: "1.6.5"
 env: climate
 image: quay.io/aarchsci/climate@sha256:7c6b07a02ca6e5b8907c19b0a930d177f137a58783b89135d84ae4d9b9a3a63b
-gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: climate-8c7f1e0cc15d
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # cftime — CF calendar arithmetic against published constants
 
@@ -153,6 +154,16 @@ disagree on both 1900 and 2100. A single year could not tell them apart.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+### On x86_64
+
+The same task on `m8i.large`, through the `climate` env's linux-64 twin
+(`envs-x86_64/climate-8c7f1e0cc15d.linux-64.lock`: 251 of 262 versions identical; the 10 that
+differ are libraries off cftime's path — `libcurl`, `libsqlite`/`sqlite`, `libglib`, `libzip`,
+`magics`, `fonttools`, `platformdirs`, `charset-normalizer`, `backports.zstd`). cftime, numpy and
+python are the same versions, and `score.tsv` is **byte-identical** to arm64: both published
+constants, 292,194 of 292,194 days against stdlib and numpy, every control offset. Calendar
+arithmetic is integer, so nothing here may differ.
 
 ### Run + verify
 

@@ -2,9 +2,10 @@
 tool: xesmf
 env: climate
 image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7
-gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: climate-60e8dca4df0d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-16
 ---
 # xESMF (climate env) — conservative regridding between global grids
 
@@ -74,6 +75,14 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from t
 | MetPy wind speed | 5.0 (3-4-5) | 5.0 |
 
 No thresholds: the mean and wind speed are reference values, the regrid is exact conservation, the shape is exact.
+
+### On x86_64
+
+The same task on `c8i.large`, through the `climate` env's linux-64 twin
+(`envs-x86_64/climate-60e8dca4df0d.linux-64.lock`: 245 of 249 versions identical; `deprecated`
+3.0.0 vs 1.3.1, `unicodedata2` 18.0.0 vs 17.0.1 and `wrapt` 2.5.1 vs 2.4.0 differ, none on the
+regrid or reader path). Same staged `air.nc`; `smoke-check.txt` is **byte-identical** to arm64,
+including the six-decimal mean 281.255037 and the [1.0, 1.0] conservation.
 
 ### Run + verify
 

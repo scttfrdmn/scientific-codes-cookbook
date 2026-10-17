@@ -3,9 +3,10 @@ tool: fastjet
 tool_version: "3.5.2.0"
 env: hep
 image: quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7
-gap_x86_64: the aarch.science `hep` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: hep-327e2aedf1d0
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # FastJet — infrared and collinear safety, which is why these algorithms exist
 
@@ -155,6 +156,18 @@ Staging computes the fixture's separations in **rapidity–φ** — the variable
 in, not the Cartesian momenta the fixture is written in — and asserts the closest pair is 1.5051
 apart against `R = 0.4`, that every particle clears the 5 GeV threshold, and that the widest
 control split exceeds `R`. Without those, "one jet per particle" would be an assumption.
+
+### On x86_64
+
+The same task on `m8i.large`, through the `hep` env's linux-64 twin
+(`envs-x86_64/hep-327e2aedf1d0.linux-64.lock`: 331 of 352 versions identical, fastjet, pythia8,
+awkward and numpy among them; the 13 that differ are off this path — `libcurl`, `libglib`,
+`libsqlite`, `fonttools`, `jedi`, `nbconvert-core` and the like). Every assertion holds, and
+`score.tsv` is identical to arm64 except one line: Pythia's momentum residual is **8.697e-14**
+against arm64's 7.741e-14. That is round-off in a sum of hundreds of terms, a path that may move
+between chips; the bound it is held to (< 1e-11) and everything exact — both zero invariances, the
+IR ratios, algorithm agreement, the same 613-particle event with 3 jets and leading pt 113.6598 —
+is unchanged.
 
 ### Run + verify
 

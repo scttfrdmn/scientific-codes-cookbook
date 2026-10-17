@@ -3,9 +3,10 @@ tool: z3
 tool_version: "5.1.0"
 env: optimization
 image: quay.io/aarchsci/optimization@sha256:29abbb67fb16c16292ec38ccbc65c099e722935fae02cb7fccc77c14febb7f86
-gap_x86_64: the aarch.science `optimization` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: optimization-f8c54d155671
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # Z3 — SAT, SMT, bit-vectors and Optimize, every verdict checked outside the solver
 
@@ -86,7 +87,17 @@ integer program has an exact optimum.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`sha256:dc6ee5c0…`), so verify that and pin the arm64 entry. A newer digest than
 [optimization](../optimization/README.md) pins — that recipe stays on the image it was verified
-against. No x86 run: `optimization` has no x86 build.
+against.
+
+### On x86_64
+
+The same task on `c8i.large`, through the `optimization` env's linux-64 twin
+(`envs-x86_64/optimization-f8c54d155671.linux-64.lock`: 63 packages, every versioned package
+identical to arm64; the BLAS provider is BLIS on linux-64 where arm64 has OpenBLAS, which nothing
+here calls). `score.tsv` is **identical** to arm64 line for line except `wall_s` (2.6 s vs 3.0 s):
+every verdict, every core size, all eight N-queens counts, the same midpoint counterexample, and
+both optima (342, −43) from Z3, brute force and HiGHS. Verdicts and integer optima are exact, so
+nothing here may differ.
 
 ### Run + verify
 

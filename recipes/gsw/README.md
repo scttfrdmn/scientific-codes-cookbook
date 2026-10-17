@@ -3,9 +3,10 @@ tool: gsw
 tool_version: "3.6.23"
 env: climate
 image: quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428
-gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: climate-b7b5178faf93
 spawn_version: 0.123.0
 last_verified: 2026-10-08
+last_verified_x86_64: 2026-10-16
 ---
 # GSW (TEOS-10) — seawater thermodynamics, against the official check values
 
@@ -43,22 +44,22 @@ One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. The arithmetic is 
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| check-value file present | it *is* the reference — assert, don't assume | `gsw/tests/gsw_cv_v3_0.npz`, 641,918 B |
-| arrays in the table | — | **822** |
-| **`rho`** | **≤ published tol 2.946763e-10** | **2.273737e-13** |
-| **`specvol`** | ≤ 2.821094e-16 | 2.168404e-19 |
-| **`alpha`** | ≤ 8.251075e-15 | 4.336809e-19 |
-| **`beta`** | ≤ 1.839674e-15 | 4.662069e-18 |
-| **`sound_speed`** | ≤ 2.591833e-09 | 6.821210e-13 |
-| **`internal_energy`** | ≤ 2.499342e-06 | 1.455192e-11 |
-| **`enthalpy`** | ≤ 2.499357e-06 | 2.182787e-11 |
-| **`dynamic_enthalpy`** | ≤ 2.288826e-07 | 2.182787e-11 |
-| **`pt_from_CT`** | ≤ 6.054037e-10 | 1.065814e-14 |
-| functions failed | **0** | 0 of 9 |
-| **involution** SA→SP→SA | exact to float | **7.105e-15** |
-| **involution** CT→pt→CT | exact to float | **3.553e-15** |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| check-value file present | it *is* the reference — assert, don't assume | `gsw/tests/gsw_cv_v3_0.npz`, 641,918 B | same |
+| arrays in the table | — | **822** | **822** |
+| **`rho`** | **≤ published tol 2.946763e-10** | **2.273737e-13** | **0** |
+| **`specvol`** | ≤ 2.821094e-16 | 2.168404e-19 | 0 |
+| **`alpha`** | ≤ 8.251075e-15 | 4.336809e-19 | 0 |
+| **`beta`** | ≤ 1.839674e-15 | 4.662069e-18 | 0 |
+| **`sound_speed`** | ≤ 2.591833e-09 | 6.821210e-13 | 0 |
+| **`internal_energy`** | ≤ 2.499342e-06 | 1.455192e-11 | 7.275958e-12 |
+| **`enthalpy`** | ≤ 2.499357e-06 | 2.182787e-11 | 7.275958e-12 |
+| **`dynamic_enthalpy`** | ≤ 2.288826e-07 | 2.182787e-11 | 7.275958e-12 |
+| **`pt_from_CT`** | ≤ 6.054037e-10 | 1.065814e-14 | 1.065814e-14 |
+| functions failed | **0** | 0 of 9 | 0 of 9 |
+| **involution** SA→SP→SA | exact to float | **7.105e-15** | **7.105e-15** |
+| **involution** CT→pt→CT | exact to float | **3.553e-15** | **3.553e-15** |
 
 **Every tolerance here is the depositors', not ours.** The `.npz` carries `<name>` (expected) and
 `<name>_ca` (acceptable deviation) side by side, so the recipe asserts a published number at a
@@ -68,6 +69,14 @@ tuned.
 
 `sample_rho` is printed so one value is checkable by eye:
 `rho(SA=34.4682364305, CT=27.9964364121, p=0.0) = 1021.8863044505`, matching the table exactly.
+
+**On x86_64** (`c8i.large`, the `climate` env's linux-64 twin
+`envs-x86_64/climate-b7b5178faf93.linux-64.lock`: gsw 3.6.23 and numpy 2.5.3 as on arm64; the 14
+versions that differ are off gsw's path) the same 9 functions pass, and five of them land on the
+published values **exactly** where arm64 sits a few ULP off. The residuals are round-off in a
+polynomial evaluation, so they may move between chips; the tolerances and the involutions, which
+are what is asserted, hold on both. `score.tsv` is byte-identical, because it records only the
+asserted summary.
 
 **The involutions need no table at all.** Practical↔absolute salinity and conservative↔potential
 temperature are round trips, so they must return the input to float precision whatever the

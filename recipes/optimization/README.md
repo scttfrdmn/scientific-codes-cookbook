@@ -3,9 +3,10 @@ tool: highs
 tool_version: "1.15.1"
 env: optimization
 image: quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c284a34d4bb864d4f18820bd8837d4
-gap_x86_64: the aarch.science `optimization` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: optimization-05f6d9c11f8d
 spawn_version: 0.123.0
 last_verified: 2026-10-08
+last_verified_x86_64: 2026-10-16
 ---
 # HiGHS / SCIP / CBC — LP strong duality, and three solvers on one netlib instance
 
@@ -133,6 +134,14 @@ verify the tag and pin the arm64 digest. Staleness checked too: the env lock rep
 `highspy.__version__` is absent in this build and reports `unknown` through a `getattr` fallback;
 the version above is from the env lock. The fallback is deliberate — a line describing the run must
 not be able to fail it.
+
+### On x86_64
+
+The same task on `c8i.large`, through the `optimization` env's linux-64 twin
+(`envs-x86_64/optimization-05f6d9c11f8d.linux-64.lock`: 61 packages, every version identical to the
+arm64 image's, installed offline). `score.tsv` and `lp.log` are **byte-identical** to arm64: all
+three objectives, every certificate at `0.000e+00`, and the 4.286e-08 spread. An LP optimum is a
+fixed point, so this is the expected result, not a lucky one.
 
 ### Run + verify
 

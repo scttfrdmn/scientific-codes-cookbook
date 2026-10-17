@@ -3,9 +3,10 @@ tool: cdo
 tool_version: 2.6.1
 env: climate
 image: quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7963c1418b87a7f30767b5fe
-gap_x86_64: the aarch.science `climate` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: climate-8bc38c951a40
 spawn_version: 0.104.0
 last_verified: 2026-09-13
+last_verified_x86_64: 2026-10-16
 ---
 # CDO + NCO — netCDF operators, one toolchain checking the other
 
@@ -66,6 +67,15 @@ A constant field (288) regridded with `remapbil` to a coarser grid keeps `fldmea
 | cross_tool_min | cdo == nco == −8979 | −8979 / −8979 |
 | conservation_regrid | const `fldmean` == 288 after regrid | 288 |
 | exact_arithmetic | const + 12 → `fldmean` == 300 | 300 |
+
+### On x86_64
+
+The same task on `c8i.large`, through the `climate` env's linux-64 twin
+(`envs-x86_64/climate-8bc38c951a40.linux-64.lock`: 259 of 262 versions identical; `deprecated`
+3.0.0 vs 1.3.1 and `wrapt` 2.5.1 vs 2.4.0 differ, neither on CDO's or NCO's path).
+`smoke-check.txt` is **byte-identical** to arm64 — 5761 / −8979 / 288 / 300 from both tools — and
+`topo.nc` is the same 67,688 bytes. Extrema, a regridded constant and exact arithmetic are all
+fixed values, so they must agree.
 
 ### Run + verify
 

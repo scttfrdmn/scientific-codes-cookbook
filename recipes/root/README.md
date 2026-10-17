@@ -3,9 +3,10 @@ tool: root
 tool_version: "6.40.04"
 env: hep
 image: quay.io/aarchsci/hep@sha256:45441294ef5ef11379cf577ae746ecd91cb0e20e303cf3e557abeb15b84d201d
-gap_x86_64: the aarch.science `hep` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: hep-4f0bac796086
 spawn_version: 0.126.1
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # ROOT — its own file format read back by an independent implementation, on Graviton
 
@@ -143,6 +144,18 @@ reported MCSE instead of inventing a tolerance.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`f7d374cfb0c3`), so verify the tag and pin the arm64 digest.
+
+### On x86_64
+
+The same task on `m8i.xlarge`, through the `hep` env's linux-64 twin
+(`envs-x86_64/hep-4f0bac796086.linux-64.lock`: 330 of 352 versions identical, ROOT, uproot, scipy
+and numpy among them; the 14 that differ are off this path — `libcurl`, `libglib`, `libsqlite`,
+`fonttools`, `jsonpointer` and the like). Every assertion holds and `score.tsv` is identical to
+arm64 except one value: the invariant mass under boosts moves by **3.740e-15** relative, against
+arm64's 1.870e-16. That is round-off in `E² − p²` after a boost, a path that may differ by chip,
+and it stays 27× inside its 1e-13 bound. The bit-identical round-trip, `Integral()`, the raw
+moments to the last printed digit, Erf/LnGamma at 0.000e+00, the BesselI0 figure and the fit
+(0.04σ / 0.50σ, χ²/ndf 0.9155) are all unchanged.
 
 ### Run + verify
 
