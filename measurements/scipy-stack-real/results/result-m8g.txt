@@ -1,0 +1,70 @@
+label	m8g
+version numpy	2.5.4
+version scipy	1.18.1
+version pandas	3.0.6
+version pyarrow	25.0.0
+openblas_corename	neoversev2
+openblas	0.3.34 threads=8
+time_s count_lines	0.84
+time_s read_csv	2.03
+rows	38470120
+CHECK rows parsed == data lines in the file	PASS 38470120 vs 38470120
+stations_in_year	44882
+elements	74
+time_s duplicate_scan	4.44
+CHECK one value per (station, date, element)	PASS 0 duplicates
+rows_qc_flagged	36860
+CHECK QC partition: kept + flagged == all	PASS 38433260 + 36860
+CHECK value sum partitions under QC	PASS total 6193848593
+time_s groupby_station_element	1.70
+groups_station_element	202591
+CHECK groupby conservation: sum of group sums == column sum (int64, exact)	PASS 
+CHECK groupby conservation: sum of group counts == rows	PASS 
+time_s numpy_route	2.49
+CHECK NumPy route == pandas groupby, every group (counts and int64 sums)	PASS 202591 groups
+sha256 groupby_station_element	2d40f16fb7fb0a2ce76c850cc1dbaf8bbefa07ff858a19e6487588f63612bdd2
+time_s parse_dates	9.50
+CHECK groupby conservation by (month, element)	PASS 
+CHECK every date lies in the file's year	PASS [np.int32(2024)]
+sha256 groupby_month_element	305b1885dece4a028c9d33c14e01b775150f042d2cff5ebd8d9840518606bd3e
+time_s read_stations	0.39
+stations_in_table	133039
+CHECK station table keys are unique	PASS 
+time_s merge_left_m1	8.39
+CHECK merge cardinality: left m:1 keeps every row	PASS 38470120 rows
+CHECK merge cardinality: matched == rows whose ID is in the table (independent isin)	PASS 38470120 matched, 0 unmatched
+CHECK merge cardinality: inner == matched	PASS 
+CHECK groupby conservation by country after merge	PASS 195 countries
+sha256 sum_by_country	a6cf329d6ffd70fd7cc53b27f4a76e9818f1b82d27b12df73e97772f03128dc1
+time_s resample_monthly_tmax	8.47
+tmax_rows_qc	4364237
+station_months	156636
+CHECK resample conservation: monthly sums == TMAX sum, monthly counts == TMAX rows	PASS 
+sha256 resample_monthly_tmax	a7ea3aad294a347ff5c31b1dfccd9274629ce992d3e59e2d65df4c10ec4aa58e
+stations_gridded	10770
+CHECK stations to grid	PASS 10770, all finite
+grid	0.25deg 1440x720
+CHECK Laplacian rows sum to zero	PASS 
+unknowns	1036800
+nnz	5181120
+kappa2_upper_bound	1.700100e+04
+longdouble	float128 (eps 1.926e-34)
+time_s superlu_factor	12.25
+lu_fill_nnz	127988944
+time_s superlu_solve	0.11
+relres_lu	2.752e-15
+CHECK SuperLU solution finite, residual finite	PASS 
+CHECK gridding conserves the total: |sum(b) - sum(w x)| <= sqrt(n) ||r||	PASS 1.478e-10 vs bound 6.597e-09
+time_s cg_jacobi	6.78
+cg_info	0
+cg_iterations	892
+relres_cg	9.964e-11
+CHECK CG converged to rtol 1e-10	PASS 9.964e-11
+CHECK SuperLU vs CG: |x_lu-x_cg|/|x_lu| <= kappa |A(x_lu-x_cg)|/|A x_lu|	PASS 2.146e-09 vs bound 1.694e-06
+lu_cg_reldiff	2.146e-09
+CHECK forward error <= kappa * relative residual (known solution)	PASS 1.265e-13 vs bound 4.768e-11
+forward_error_lu	1.265e-13
+grid_mean_tmax_at_station_cells_C	16.682887
+time_s total_python	71.30
+peak_rss_gib_self	11.26
+checks_failed	0

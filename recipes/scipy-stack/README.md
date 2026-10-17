@@ -35,7 +35,15 @@ pd.test(extra_args=['-m not clipboard and not single_cpu and not slow and not ne
 | `PYTHONHASHSEED=0` | unset | xdist aborts collection when workers hash a set-iterating parametrization differently. |
 | `geo-ml` | another aarch.science env | 13 envs carry these exact versions, but a different env has different optional dependencies, so the skips and the attributed failures below must be re-derived. |
 
-**Leave it.** The suites are the fixture and there is nothing to scale. **Widen it** by running scipy's slow tests (`label='full'`, 11,669 deselected here) or by adding the optional readers pandas skips for (numexpr, openpyxl, lxml: ~12,500 skips).
+**Leave it.** The suites are the fixture and there is nothing to scale; the real-data run is below. **Widen it** by running scipy's slow tests (`label='full'`, 11,669 deselected here) or by adding the optional readers pandas skips for (numexpr, openpyxl, lxml: ~12,500 skips).
+
+## Which box — [measured](../../measurements/scipy-stack-real/README.md) on all of GHCN-Daily 2024 (38.5M rows, then a 1M-unknown sparse solve)
+| chip | instance | wall | peak RSS | compute $/result | billed $/result |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 72 s | 11.3 GiB | **0.0072** | 0.0225 |
+| Intel | `m8i.2xlarge` | 70 s | 11.2 GiB | 0.0082 | **0.0196** |
+
+Same wall, so Graviton4 is 12% cheaper in compute; the 3.1 GB image pull makes the *bill* 13% cheaper on x86 at this length. Every groupby, merge and resample conserves exactly and is byte-identical across chips; the solved grid differs by 2.9e-15 relative, inside its condition bound.
 
 ## Shape, size, cost
 

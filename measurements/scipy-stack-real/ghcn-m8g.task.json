@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-scipy-stack-real-m8g",
+  "container": "quay.io/aarchsci/geo-ml@sha256:14ef7fe13ceffac286f44cd7b576a471d13144dd3e462199e01962ac4efc008c",
+  "command": [
+    "bash",
+    "-c",
+    "export LBL=m8g\nset +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nsha256sum -c data.sha256 || { echo \"FAIL: staged GHCN bytes do not match their pins\"; exit 1; }\nsha256sum -c pins.sha256 || { echo \"FAIL: the workload script does not match its pin\"; exit 1; }\nCG=/sys/fs/cgroup\nsample(){ : > /tmp/samp.tsv\n  while :; do printf '%s\\t%s\\t%s\\n' \"$(date +%s)\" \"$(cat $CG/memory.current 2>/dev/null || echo 0)\" \\\n    \"$(awk '/^usage_usec/{print $2}' $CG/cpu.stat 2>/dev/null || echo 0)\" >> /tmp/samp.tsv; sleep 1; done; }\nsample & SP=$!\nT0=$(date +%s)\npython3 -u ghcn_workload.py 2024.csv ghcnd-stations.txt \"$LBL\" > workload-$LBL.log 2>&1\nRC=$?\nWALL=$(( $(date +%s) - T0 ))\nkill $SP 2>/dev/null\ncat workload-$LBL.log\nPEAK=$(cat $CG/memory.peak 2>/dev/null || awk -F'\\t' '{if($2+0>m)m=$2+0} END{print m}' /tmp/samp.tsv)\nCORES=$(awk -F'\\t' 'NR==1{u=$3;t=$1} END{if($1>t) printf \"%.2f\", ($3-u)/1e6/($1-t); else print \"na\"}' /tmp/samp.tsv)\n{ printf 'label\\t%s\\n' \"$LBL\"; printf 'arch\\t%s\\n' \"$(uname -m)\"; printf 'nproc\\t%s\\n' \"$(nproc)\"\n  printf 'workload_wall_s\\t%s\\n' \"$WALL\"; printf 'workload_exit\\t%s\\n' \"$RC\"\n  printf 'cgroup_peak_gib\\t%s\\n' \"$(awk -v p=\"$PEAK\" 'BEGIN{printf \"%.2f\", p/1073741824}')\"\n  printf 'avg_cores\\t%s\\n' \"$CORES\"; } | tee size-$LBL.txt\ntest \"$RC\" = 0 || { echo \"FAIL: a workload check failed (exit $RC)\"; exit 1; }\ngrep -q \"^checks_failed\t0$\" result-$LBL.txt || { echo \"FAIL: result file does not report 0 failed checks\"; exit 1; }\necho \"SMOKE CHECK PASSED\"\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack-real/2024.csv",
+      "destination": "/tmp/2024.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack-real/ghcnd-stations.txt",
+      "destination": "/tmp/ghcnd-stations.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack-real/data.sha256",
+      "destination": "/tmp/data.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack-real/ghcn_workload.py",
+      "destination": "/tmp/ghcn_workload.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scipy-stack-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/size-m8g.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack-real/r1/size-m8g.txt"
+    },
+    {
+      "source": "/tmp/result-m8g.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack-real/r1/result-m8g.txt"
+    },
+    {
+      "source": "/tmp/digest-m8g.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack-real/r1/digest-m8g.txt"
+    },
+    {
+      "source": "/tmp/workload-m8g.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack-real/r1/workload-m8g.log"
+    },
+    {
+      "source": "/tmp/grid-m8g.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scipy-stack-real/r1/grid-m8g.npy"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}
