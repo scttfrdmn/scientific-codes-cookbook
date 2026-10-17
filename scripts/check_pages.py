@@ -215,6 +215,40 @@ def _git(*args):
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
+def _mpi_flavours(path):
+    """{package: 'nompi' | 'mpi_openmpi' | ...} from the build strings of an @EXPLICIT lock."""
+    out = {}
+    for line in open(path, encoding="utf-8"):
+        if not line.startswith("http"):
+            continue
+        stem = re.sub(r"\.(conda|tar\.bz2)$", "", line.split("#")[0].rsplit("/", 1)[1])
+        parts = stem.rsplit("-", 2)
+        if len(parts) == 3:
+            m = re.search(r"(^|_)(nompi|mpi_[a-z]+)", parts[2])
+            if m:
+                out[parts[0]] = m.group(2)
+    return out
+
+
+def check_twin_mpi_flavour(text, rel):
+    """An x86 twin that resolves a package's serial (nompi) build where the arm64 image ships an
+    MPI build makes an x86 rank-count assertion fail for the twin's sake, not the chip's
+    (measured twice: dft gpaw/siesta, md gromacs/lammps/plumed). Warn, naming the packages: a
+    recipe on that twin may not use them, which only its page can say."""
+    m = re.search(r"^env_x86_64:\s*(\S+)", text, re.M)
+    if not m:
+        return
+    x = os.path.join(ROOT, "envs-x86_64", m.group(1) + ".linux-64.lock")
+    a = os.path.join(ROOT, "envs-arm64", m.group(1) + ".linux-aarch64.lock")
+    if not (os.path.exists(x) and os.path.exists(a)):
+        return
+    fa, fx = _mpi_flavours(a), _mpi_flavours(x)
+    bad = sorted("%s (arm64 %s, x86 %s)" % (n, fa[n], fx[n]) for n in fa if n in fx and fa[n] != fx[n])
+    if bad:
+        warns.append(f"{rel}: its x86 twin's MPI flavour differs from the arm64 image's for {', '.join(bad)} "
+                     f"-- fine only if this recipe does not run them")
+
+
 def check_lock_immutable(text, rel):
     """practices/environment-durability.md: a committed env lock is never re-solved. The lock a
     verifying x86 run used must not change afterwards -- conda-forge patches repodata, so a
@@ -282,6 +316,7 @@ def check(path, needs_fm):
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
             check_x86_frontmatter(text, keys, rel)
             check_lock_immutable(text, rel)
+            check_twin_mpi_flavour(text, rel)
     fences = list(re.finditer(r"^```(\S*)", text, re.M))
     for i, m in enumerate(fences):
         if i % 2 == 0 and m.group(1) == "":   # opening fence (even index) with no language; closers are odd
