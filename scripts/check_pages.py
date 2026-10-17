@@ -268,7 +268,14 @@ def check_lock_immutable(text, rel):
     verified = _git("log", "-1", "--format=%H", "-G", "^last_verified_x86_64:", "--", rel)
     if not body or not verified:
         return   # uncommitted work in progress: nothing to compare yet
-    if body != verified and subprocess.run(["git", "-C", ROOT, "merge-base", "--is-ancestor", body, verified]).returncode != 0:
+    # Re-verifying on the SAME date leaves the last_verified_x86_64 line unchanged, so git has no newer
+    # commit for it; then the verified date itself is the evidence. A lock whose packages last changed
+    # on or before the date the recipe says it was verified passes (measured: gemmi re-run on a
+    # re-locked md twin the same day as its clean-pass run).
+    vdate = re.search(r"^last_verified_x86_64:\s*(\S+)", text, re.M).group(1)
+    bdate = _git("log", "-1", "--format=%cs", body)
+    if body != verified and bdate > vdate and \
+            subprocess.run(["git", "-C", ROOT, "merge-base", "--is-ancestor", body, verified]).returncode != 0:
         errors.append(f"{rel}: {lock} changed its packages after the run that verified it on x86 "
                       f"(commit {body[:8]} is not before {verified[:8]}) -- a committed lock is never re-solved; "
                       f"re-run x86 to re-verify, or restore the lock (practices/environment-durability.md)")
