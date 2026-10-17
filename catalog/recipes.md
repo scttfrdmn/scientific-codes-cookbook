@@ -49,7 +49,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [raxml-ng](../recipes/raxml-ng/README.md) | Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../recipes/iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM. | aarchbio | stage: iqtree | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [relion](../recipes/relion/README.md) | `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got. | aarchbio | stage | 2026-10-12 | 2026-10-13 | 2026-10-13 |
 | [salmon](../recipes/salmon/README.md) | Quantifies a full **15.8M-read** Geuvadis run against all **453,553** Ensembl 116 transcripts on Graviton, with cost per result measured across four Graviton generations. For anyone quantifying RNA-seq. | aarchbio | stage: kallisto, salmon | 2026-10-12 | 2026-09-25 | 2026-10-13 |
-| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | 2026-10-12 | 2026-10-07 | gap |
+| [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | aarchbio | stage | 2026-10-16 | 2026-10-07 | gap |
 | [seqkit](../recipes/seqkit/README.md) | Summarises and converts the whole SRR062634 run (4.83 Gbp) in 93 s. For anyone reaching for seqkit as the first step of a pipeline. | aarchbio | stage: bwa-mem2, bwa-samtools | 2026-10-12 | 2026-10-01 | 2026-10-13 |
 | [signac](../recipes/signac/README.md) | Runs Signac's fragment-file pipeline (counting, FRiP, nucleosome signal, TSS enrichment, gene activity, TF-IDF, LSI) on a planted two-population fixture, on Graviton4 and x86. For anyone analysing scATAC-seq in R. | aarchbio | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 | [sourmash](../recipes/sourmash/README.md) | Sketches 20 complete RefSeq genomes, recovers all ten species, and agrees with mash on pair ordering. For anyone choosing between MinHash implementations. | aarchbio | run: mash | 2026-10-12 | 2026-10-01 | 2026-10-13 |
@@ -115,7 +115,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-12 | 2026-10-10 | gap |
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-16 | 2026-10-16 | — |
 
 ## dft
 
@@ -197,10 +197,10 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [mne](../recipes/mne/README.md) | Plants a known answer in each step of an EEG/MEG pipeline and has MNE recover it on Graviton4: frequencies, filter response, average reference, triggers, epochs, independent sources and a source dipole. For anyone analysing MEG/EEG on ARM. | neuroimaging | stage | 2026-10-16 | 2026-10-16 | gap |
-| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-13 | 2026-10-10 | gap |
+| [mne](../recipes/mne/README.md) | Plants a known answer in each step of an EEG/MEG pipeline and has MNE recover it on Graviton4: frequencies, filter response, average reference, triggers, epochs, independent sources and a source dipole. For anyone analysing MEG/EEG on ARM. | neuroimaging | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
+| [neuroimaging](../recipes/neuroimaging/README.md) | Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it against the analytic FA, then checks AFNI and nibabel agree on the same NIfTI. For anyone doing neuroimaging on ARM. | neuroimaging | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
 | [nilearn](../recipes/nilearn/README.md) | Runs Nilearn's own test suite the way its `tox.ini` does, then holds four main APIs to exact identities on Graviton4: a masker round trip, a GLM against least squares, connectivity against Pearson, detrending against a projection. For anyone doing fMRI analysis on ARM. | neuroimaging | stage | 2026-10-16 | 2026-10-17 | 2026-10-17 |
-| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-12 | 2026-10-11 | gap |
+| [nipype](../recipes/nipype/README.md) | Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually be held to: execution order, exact composition, and fan-out counts. For anyone building neuroimaging pipelines on ARM. | neuroimaging | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## nlp
 
@@ -282,11 +282,11 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [glmnet](../recipes/glmnet/README.md) | Fits glmnet's gaussian and binomial elastic-net paths on Graviton4 and checks every solution against the KKT conditions, the ridge closed form, `lm()` and `glm()`. For anyone fitting penalised regression in R on ARM. | r | stage | 2026-10-16 | 2026-10-16 | gap |
-| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-12 | 2026-09-10 | gap |
-| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-12 | 2026-10-10 | gap |
-| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-12 | 2026-10-11 | gap |
-| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-12 | 2026-10-10 | gap |
+| [glmnet](../recipes/glmnet/README.md) | Fits glmnet's gaussian and binomial elastic-net paths on Graviton4 and checks every solution against the KKT conditions, the ridge closed form, `lm()` and `glm()`. For anyone fitting penalised regression in R on ARM. | r | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
+| [r](../recipes/r/README.md) | `Rscript` fits an ordinary-least-squares linear model to the bundled `cars` dataset — R's numerical and statistical stack (LAPACK via `lm()`, plus the tidyverse). | r | build-in-task | 2026-10-16 | 2026-10-16 | 2026-10-16 |
+| [r-arrow](../recipes/r-arrow/README.md) | Reads Apache's own Parquet conformance files in R and compares every cell against the expected contents they ship. For anyone moving columnar data in R on ARM. | r | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
+| [r-jsonlite](../recipes/r-jsonlite/README.md) | Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back. | r | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [r-spatial](../recipes/r-spatial/README.md) | Runs R's spatial stack on Graviton4 against two references published inside the data, on the exact bytes two Python recipes here already used. For anyone doing spatial work in R on ARM. | r | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
 
 ## single-cell
 
