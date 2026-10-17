@@ -3,9 +3,10 @@ tool: pytorch
 tool_version: "2.14.1"
 env: single-cell
 image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a
-gap_x86_64: the aarch.science `single-cell` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.127.0
+env_x86_64: single-cell-957f8c9c38e0
+spawn_version: 0.130.1
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # PyTorch (CPU) — autograd against finite differences, linear algebra against its inputs, LBFGS against two other codes
 
@@ -43,34 +44,47 @@ One task on `c8g.2xlarge` (8 vCPU / 16 GiB), TTL 40m as a **backstop** with `cos
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| torch / numpy / sklearn / statsmodels | read from the running install | **2.14.1** / 2.5.4 / 1.9.1 / 0.15.0 |
-| CPU build | `torch.version.cuda is None` | None |
-| backend | recorded | ATen `SVE128`, OpenMP, oneDNN available, no MKL, OpenBLAS 0.3.34 `neoversev2` |
-| **gradcheck + gradgradcheck**: matmul, conv2d, NLL∘log_softmax, softmax, layer_norm, `nn.LSTMCell` (weights as inputs), a custom composition | **all `True`** | **7 of 7** |
-| control: a backward that is 0.1% wrong | gradcheck must reject it | rejected |
-| **∂‖XW−Y‖²/∂W vs 2Xᵀ(XW−Y)** | **rel `< 1e-13`** | **0** |
-| **Hessian of xᵀAx vs A+Aᵀ** | **rel `< 1e-14`** | **0** |
-| `nn.LSTMCell` vs its gate equations | `< 1e-14` | 2.2e-16 |
-| **solve: backward error** ‖Ax−b‖/(‖A‖‖x‖), cond 1e3 | **`< 1e-14`** | **3.2e-16** |
-| **svd: ‖USVᵀ−A‖/‖A‖, ‖UᵀU−I‖, σ vs planted** | **`< 1e-13`** | **2.8e-15, 3.3e-15, 1.1e-15** |
-| **eigh: ‖VΛVᵀ−S‖/‖S‖, λ vs planted** | **`< 1e-13`** | **2.6e-15, 8.9e-16** |
-| **cholesky: ‖LLᵀ−A‖/‖A‖**, strictly lower, positive diagonal | **`< 1e-14`** | **8.2e-17** |
-| **lstsq: residual ⟂ columns** | **`< 1e-13`** | **6.2e-16** |
-| solve / svd / eigh / cholesky / lstsq vs numpy | `< 1e-10` … `1e-13` | 0, 1.5e-15, 8.9e-16, 0, 0 |
-| control: `solve(Aᵀ)` vs numpy `solve(A)` | must differ by > 1e-3 | 1.47 |
-| **logistic MLE: torch LBFGS vs statsmodels and vs sklearn** | **max \|diff\| `< 1e-6`** | **3.5e-9, 3.5e-9** |
-| **score equation max\|Xᵀ(y−p)\|/N at torch's optimum** | **`< 1e-7`** | **5.1e-10** |
-| planted β recovered | max \|z\| `< 5` | 1.60 |
-| **OLS by LBFGS vs `numpy.linalg.lstsq`** | **`< 1e-8`** | **3.8e-10** |
-| **MLP held-out MSE / σ²** | **`> 0.8` and `< 1.5`** | **1.183** |
-| control: linear model on the same data | held-out MSE / σ² `> 3` | 17.43 |
-| **same seed, 8 threads, deterministic algorithms: params and loss trajectory** | **bit-identical** | **identical** |
-| control: different seed | params must differ by > 1e-3 | 1.40 |
-| 1 thread vs 8 threads, same seed | reported | **bit-identical** (max \|diff\| 0) |
-| fp32 2048³ matmul | reported, not a benchmark | 73.8 GFLOP/s (1 thread), 341.6 (8) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | 1 of 1 |
+| torch / numpy / sklearn / statsmodels | read from the running install | **2.14.1** / 2.5.4 / 1.9.1 / 0.15.0 | identical |
+| CPU build | `torch.version.cuda is None` | None | None |
+| backend | recorded | ATen `SVE128`, OpenMP, oneDNN available, no MKL, OpenBLAS 0.3.34 `neoversev2` | ATen `AVX512`, OpenMP, oneDNN available, no MKL, OpenBLAS 0.3.34 `Cooperlake` |
+| **gradcheck + gradgradcheck**: matmul, conv2d, NLL∘log_softmax, softmax, layer_norm, `nn.LSTMCell` (weights as inputs), a custom composition | **all `True`** | **7 of 7** | **7 of 7** |
+| control: a backward that is 0.1% wrong | gradcheck must reject it | rejected | rejected |
+| **∂‖XW−Y‖²/∂W vs 2Xᵀ(XW−Y)** | **rel `< 1e-13`** | **0** | **0** |
+| **Hessian of xᵀAx vs A+Aᵀ** | **rel `< 1e-14`** | **0** | **0** |
+| `nn.LSTMCell` vs its gate equations | `< 1e-14` | 2.2e-16 | 2.2e-16 |
+| **solve: backward error** ‖Ax−b‖/(‖A‖‖x‖), cond 1e3 | **`< 1e-14`** | **3.2e-16** | **2.3e-16** |
+| **svd: ‖USVᵀ−A‖/‖A‖, ‖UᵀU−I‖, σ vs planted** | **`< 1e-13`** | **2.8e-15, 3.3e-15, 1.1e-15** | **2.8e-15, 2.9e-15, 1.0e-15** |
+| **eigh: ‖VΛVᵀ−S‖/‖S‖, λ vs planted** | **`< 1e-13`** | **2.6e-15, 8.9e-16** | **2.6e-15, 1.0e-15** |
+| **cholesky: ‖LLᵀ−A‖/‖A‖**, strictly lower, positive diagonal | **`< 1e-14`** | **8.2e-17** | **1.8e-16** |
+| **lstsq: residual ⟂ columns** | **`< 1e-13`** | **6.2e-16** | **4.6e-16** |
+| solve / svd / eigh / cholesky / lstsq vs numpy | `< 1e-10` … `1e-13` | 0, 1.5e-15, 8.9e-16, 0, 0 | 1.8e-14, 2.5e-15, 9.5e-16, 0, 0 |
+| control: `solve(Aᵀ)` vs numpy `solve(A)` | must differ by > 1e-3 | 1.47 | 1.47 |
+| **logistic MLE: torch LBFGS vs statsmodels and vs sklearn** | **max \|diff\| `< 1e-6`** | **3.5e-9, 3.5e-9** | identical, β to 10 digits |
+| **score equation max\|Xᵀ(y−p)\|/N at torch's optimum** | **`< 1e-7`** | **5.1e-10** | identical |
+| planted β recovered | max \|z\| `< 5` | 1.60 | identical |
+| **OLS by LBFGS vs `numpy.linalg.lstsq`** | **`< 1e-8`** | **3.8e-10** | identical |
+| **MLP held-out MSE / σ²** | **`> 0.8` and `< 1.5`** | **1.183** | **1.183** |
+| control: linear model on the same data | held-out MSE / σ² `> 3` | 17.43 | 17.43 |
+| **same seed, 8 threads, deterministic algorithms: params and loss trajectory** | **bit-identical** | **identical** | **identical** |
+| control: different seed | params must differ by > 1e-3 | 1.40 | 1.40 |
+| 1 thread vs 8 threads, same seed | reported | **bit-identical** (max \|diff\| 0) | **bit-identical** (max \|diff\| 0) |
+| fp32 2048³ matmul | reported, not a benchmark | 73.8 GFLOP/s (1 thread), 341.6 (8) | 186.6 (1 thread), 700.0 (8) |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/single-cell-957f8c9c38e0`,
+535 packages installed offline in 31 s on `c8i.2xlarge`; the nine version differences, listed on
+[scvelo](../scvelo/README.md), include no torch, BLAS or LAPACK package). The linux-64 PyTorch is
+the same `cpu_generic` 2.14.1 build, **not** MKL-backed: `torch.__config__.show()` reports
+`BLAS_INFO=open`, `MKL not found`, the same MKL-DNN v3.12.0 (oneDNN), `CPU capability usage:
+AVX512` against `SVE128`, and `-march=nocona -mtune=haswell` against no `-march` on arm64. Every
+assertion holds on both chips. The gradients, the LBFGS fixed points and the MLP's held-out score
+agree to every printed digit; the LAPACK reconstructions move by a few ulps, because OpenBLAS picks
+a different kernel per host. Seeded training is bit-identical **within** each chip, at 1 and 8
+threads alike. Across chips the trained parameters are not compared: that is a path, and only its
+held-out score (1.183 on both) is reported. Two runs per chip gave the same numbers apart from the
+throughput line.
 
 ### Why these bounds
 
@@ -115,8 +129,8 @@ cosign-verified against `playgroundlogic/aarchsci`. The signature covers the **m
 digest (`c422f5f8c974…`), so verify that digest and pin the arm64 entry, the same image
 [squidpy](../squidpy/README.md) and [scvelo](../scvelo/README.md) pin. `torch.__config__.show()`
 reports `MKL-DNN v3.12.0` (the version libtorch was compiled against) while the env ships oneDNN
-3.13.4. The full config is staged out as `torch-config.txt`. No x86 run: `single-cell` has no x86
-build.
+3.13.4. The full config is staged out as `torch-config.txt`, and the installed builds as `packages.txt`
+(read from `$CONDA_PREFIX`, so it lists the linux-64 builds on x86).
 
 ### Run + verify
 
@@ -149,6 +163,5 @@ image. **A dedicated PyTorch env**: PyTorch is here only because `spatialdata` d
 `pytorch` env on aarch.science, without Scanpy and R, would be the natural ask (not filed).
 **`torch.compile`/Inductor**, quantisation, bfloat16, and real models or datasets. **Training at
 scale**: the thread observation above says nothing about large layers. **GPU** is Round Two.
-**x86**, because this env has no x86 build.
 
 </details>

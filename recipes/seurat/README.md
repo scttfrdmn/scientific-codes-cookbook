@@ -3,7 +3,7 @@ tool: seurat
 tool_version: "5.5.1"
 env: single-cell
 image: quay.io/aarchsci/single-cell@sha256:1105adf7bab6db433787255ca16101f0474214f0a46ab63af102b0863d541e43
-gap_x86_64: the aarch.science `single-cell` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: single-cell-ff275bd07c2f
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---
@@ -140,6 +140,13 @@ as "add `r-seurat` to the `r` env" and delivered as a dedicated env carrying bot
 cosign-verified; signature covers the **manifest-list** digest, so verify the tag and pin the
 arm64 digest. Lock `Built: 2026.10.08.144556` against a tag pushed 14:49:12 the same day — same
 build, the staleness check [gsw](../gsw/README.md) exists because of.
+
+**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/single-cell-ff275bd07c2f`,
+316 of 345 versions identical; among the 16 that differ are `r-future` 1.80.0 vs 1.76.0,
+`r-future.apply`, `r-globals`, `zarr` and `pydantic`). The x86 spec cannot launch: with the
+install step prepended, EC2 rejects its user data (`User data is limited to 16384 bytes`) before
+any instance exists, and on spawn 0.130.1 the arm64 spec of a smaller recipe
+([petsc](../petsc/README.md)) is rejected the same way.
 
 ### Run + verify
 

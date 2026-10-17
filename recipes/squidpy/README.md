@@ -3,9 +3,10 @@ tool: squidpy
 tool_version: "1.8.2"
 env: single-cell
 image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a
-gap_x86_64: the aarch.science `single-cell` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # Squidpy — spatial graphs, neighbourhood enrichment and Moran's I, each against a known answer
 
@@ -44,21 +45,28 @@ One task on `c8g.large` (2 vCPU / 4 GiB; 0.7 GB peak RSS measured), TTL 30m as a
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| squidpy / scanpy / anndata / numpy | read from the running install | **1.8.2** / 1.12.4 / 0.13.4 / 2.5.4 |
-| **kNN graph (k=6) vs brute force** | **edge set equal; distances `< 1e-12`** | **0** differing entries of 12,000; **0.000e+00** |
-| **radius graph (r=4) vs brute force** | **edge set equal, symmetric** | **0** differing of 19,318; **0** asymmetric |
-| **hex grid interior degree, k = 1, 2, 3 rings** | **exactly 3k(k+1), no self-loops** | **6 / 18 / 36** on every interior spot |
-| **enrichment counts vs M'AM** | **equal as integers, sum = edges** | **equal** |
-| **planted A–B / A–C / B–C z** | **> +5 / < −5 / < −5** | **+36.10 / −54.74 / −55.30** |
-| control: same cells, labels shuffled | every \|z\| `< 5` | max 2.94 |
-| **Moran's I / Geary's C vs closed form** | **`< 1e-10`** | **2.109e-15 / 1.332e-15** |
-| **analytic var, Moran / Geary vs Cliff & Ord** | **rel `< 1e-5`; Geary ≠ Moran** | **2.9e-07 / 1.1e-06**; 15% apart |
-| **I(y) vs I(−y)** | **`== 0` exactly** | **0.000e+00** |
-| **I(y) vs I(3.7y + 112.5)** | **`< 1e-12`** | **1.887e-15** |
-| planted spatial gene / random gene | z `> 5` / \|z\| `< 5` | **+67.8** / −0.99 |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | 1 of 1 |
+| squidpy / scanpy / anndata / numpy | read from the running install | **1.8.2** / 1.12.4 / 0.13.4 / 2.5.4 | identical |
+| **kNN graph (k=6) vs brute force** | **edge set equal; distances `< 1e-12`** | **0** differing entries of 12,000; **0.000e+00** | identical |
+| **radius graph (r=4) vs brute force** | **edge set equal, symmetric** | **0** differing of 19,318; **0** asymmetric | identical |
+| **hex grid interior degree, k = 1, 2, 3 rings** | **exactly 3k(k+1), no self-loops** | **6 / 18 / 36** on every interior spot | identical |
+| **enrichment counts vs M'AM** | **equal as integers, sum = edges** | **equal** | identical |
+| **planted A–B / A–C / B–C z** | **> +5 / < −5 / < −5** | **+36.10 / −54.74 / −55.30** | identical |
+| control: same cells, labels shuffled | every \|z\| `< 5` | max 2.94 | identical |
+| **Moran's I / Geary's C vs closed form** | **`< 1e-10`** | **2.109e-15 / 1.332e-15** | **2.331e-15 / 1.998e-15** |
+| **analytic var, Moran / Geary vs Cliff & Ord** | **rel `< 1e-5`; Geary ≠ Moran** | **2.9e-07 / 1.1e-06**; 15% apart | identical |
+| **I(y) vs I(−y)** | **`== 0` exactly** | **0.000e+00** | identical |
+| **I(y) vs I(3.7y + 112.5)** | **`< 1e-12`** | **1.887e-15** | identical |
+| planted spatial gene / random gene | z `> 5` / \|z\| `< 5` | **+67.8** / −0.99 | identical |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/single-cell-957f8c9c38e0`,
+535 packages installed offline in 58 s on `c8i.large`; the nine version differences, listed on
+[scvelo](../scvelo/README.md), include none of squidpy, scanpy, anndata, numba or numpy). Every
+graph, every integer count, every permutation z-score and both invariances are identical across
+chips, the seeded permutations included. Only the closed-form residuals move, by a few ulps: they
+are float64 summation order, and sit five orders inside the bound on both.
 
 ### Why these bounds
 
@@ -86,8 +94,7 @@ the affine one carries a `1e-12` bound.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`c422f5f8c974…`), so verify that and pin the arm64 entry. A newer digest than
-[seurat](../seurat/README.md) pins — that recipe stays on the image it was verified against. No
-x86 run: `single-cell` has no x86 build.
+[seurat](../seurat/README.md) pins — that recipe stays on the image it was verified against.
 
 ### Run + verify
 

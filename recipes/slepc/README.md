@@ -3,9 +3,10 @@ tool: slepc
 tool_version: "3.25.2"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:acf6b57d76a151adf351f3cb4bd811188db40967b42fef4985a5e307aa6ee718
-gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: fem-cfd-1950e1068faa
 spawn_version: 0.127.0
 last_verified: 2026-10-12
+last_verified_x86_64: 2026-10-16
 ---
 # SLEPc — eigenvalues against a closed form, on 1 rank and on 2
 
@@ -46,23 +47,30 @@ One task on `c8g.large` (4 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| petsc / slepc / numpy | read from the running install | **3.25.6** / 3.25.2 / 2.5.4 |
-| scalar type | real | float64 |
-| matrix symmetric | required for HEP | yes |
-| converged | ≥ 6 requested | 7, in 44 iterations |
-| **eigenvalues vs `4sin²(kπ/2(n+1))`** | **< 1e-11 relative** | **5.166e-13** serial, **3.477e-13** on 2 ranks |
-| worst reported residual | < 1e-9 | 1.039e-11 |
-| ordering | strictly increasing, matched k-for-k | yes |
-| control: `[-1,3,-1]` operator | must not match | **9.913e-01** |
-| scipy vs closed form | *recorded* | 1.227e-12 |
-| **SLEPc vs scipy** | **< 1e-10** | **1.422e-12** |
-| **eigenvector orthonormality** | **`XXᵀ = I` < 1e-12** | **2.554e-15** |
-| **MPI ranks** | **== 2, read from inside** | **2** |
-| **rank 0 ownership** | **strict subset of the rows** | **rows 0..100 of 200** |
-| **serial vs 2-rank spectrum** | **< 1e-11 relative** | **7.428e-13** |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | 1 of 1 |
+| petsc / slepc / numpy | read from the running install | **3.25.6** / 3.25.2 / 2.5.4 | identical |
+| scalar type | real | float64 | float64 |
+| matrix symmetric | required for HEP | yes | yes |
+| converged | ≥ 6 requested | 7, in 44 iterations | 7, in 44 (42 on 2 ranks, both chips) |
+| **eigenvalues vs `4sin²(kπ/2(n+1))`** | **< 1e-11 relative** | **5.166e-13** serial, **3.477e-13** on 2 ranks | **1.913e-12** serial, **2.077e-13** on 2 ranks |
+| worst reported residual | < 1e-9 | 1.039e-11 | 1.230e-11 |
+| ordering | strictly increasing, matched k-for-k | yes | yes |
+| control: `[-1,3,-1]` operator | must not match | **9.913e-01** | **9.913e-01** |
+| scipy vs closed form | *recorded* | 1.227e-12 | 3.935e-13 |
+| **SLEPc vs scipy** | **< 1e-10** | **1.422e-12** | **2.307e-12** |
+| **eigenvector orthonormality** | **`XXᵀ = I` < 1e-12** | **2.554e-15** | **7.550e-15** |
+| **MPI ranks** | **== 2, read from inside** | **2** | **2** |
+| **rank 0 ownership** | **strict subset of the rows** | **rows 0..100 of 200** | **rows 0..100 of 200** |
+| **serial vs 2-rank spectrum** | **< 1e-11 relative** | **7.428e-13** | **1.903e-12** |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/fem-cfd-1950e1068faa`,
+installed offline, all 131 versions identical to arm64, including the openmpi build of PETSc). The
+rank count, the ownership split and the iteration counts are identical. The eigenvalues are a
+converged fixed point and agree with the closed form on both chips; the last few digits move, as
+does scipy's dense LAPACK, because the OpenBLAS kernels differ by host. All of it stays inside the
+bounds, which are set by the requested tolerance and not by either chip.
 
 ### A reference that is mathematics, verified without the solver
 

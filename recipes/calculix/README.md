@@ -3,9 +3,10 @@ tool: calculix
 tool_version: "2.23"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:dd8638389359818beeeb4e626cda21107dee9dc87e180bb4e5ae9f95444cd14f
-gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: fem-cfd-1d4e4b5ee82a
 spawn_version: 0.126.1
 last_verified: 2026-10-10
+last_verified_x86_64: 2026-10-16
 ---
 # CalculiX — 225 static FE cases against their committed references, exactly
 
@@ -44,21 +45,30 @@ One task on `c8g.xlarge` (4 vCPU / 16 GiB), TTL 60m as a **backstop** with `cost
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pins | 2 of 2 |
-| suite contents | 629 `.dat.ref`, path encodes `ccx_2.23` | asserted at staging |
-| achtel2 canary | reference line present before paying for a box | asserted at staging |
-| **ccx version** | **== 2.23, read from the binary** | **2.23** |
-| perl present | `datcheck.pl` cannot run without it | 5.40.1 |
-| cases excluded, no usable reference | — | 131 |
-| cases excluded, declare a prerequisite | — | 10 |
-| **static cases run** | — | **225** |
-| **static cases deviating** | **== 0** | **0** |
-| path-like cases run | — | 272 |
-| path-like cases deviating | *reported, not asserted* | **12** |
-| **achtel2 node 3** | **byte-equal to the committed line** | **exact** |
-| suite wall | — | 137 s (slowest `thermomech`, 13 s) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match pins | 2 of 2 | 2 of 2 |
+| suite contents | 629 `.dat.ref`, path encodes `ccx_2.23` | asserted at staging | — |
+| achtel2 canary | reference line present before paying for a box | asserted at staging | — |
+| **ccx version** | **== 2.23, read from the binary** | **2.23** | **2.23** |
+| perl present | `datcheck.pl` cannot run without it | 5.40.1 | 5.40.1 |
+| cases excluded, no usable reference | — | 131 | 131 |
+| cases excluded, declare a prerequisite | — | 10 | 10 |
+| **static cases run** | — | **225** | **225** |
+| **static cases deviating** | **== 0** | **0** | **0** |
+| path-like cases run | — | 272 | 272 |
+| path-like cases deviating | *reported, not asserted* | **12** | **11** |
+| **achtel2 node 3** | **byte-equal to the committed line** | **exact** | **exact** |
+| suite wall | — | 137 s (slowest `thermomech`, 13 s) | 152 s (`thermomech`, 20 s) |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/fem-cfd-1d4e4b5ee82a`,
+installed offline, all 131 versions identical to arm64). The static suite reproduces exactly on
+both chips. The path-like set moves at the edges: `beamfsh1` and `beamt6` (both errors below
+1e-9, values near zero) deviate only on arm64, `potied` only on x86. **`beamptied5` and
+`beamptied6` deviate by the same absolute error on both chips** (1.139080e+05 and 8.546700e+04),
+as do `beamdynamic`, `beamimpdy1nodirect`, `beamimpdy2` and `scheibejc`, so the 5.7% below is not
+host-CPU rounding: it reproduces across two architectures, so it belongs to the conda build or
+the algorithm, not the chip.
 
 ### The result: a clean split by analysis type
 

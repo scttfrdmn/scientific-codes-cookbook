@@ -3,7 +3,7 @@ tool: petsc
 tool_version: "3.25.5"
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:6cadf382f817fb3967b0bda58c561114dce1ae3176fd7bbf25c5e70d56392e79
-gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: fem-cfd-9ae4b72449df
 spawn_version: 0.123.0
 last_verified: 2026-10-09
 ---
@@ -139,6 +139,12 @@ in git and an image in a registry are two different artifacts.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/fem-cfd-9ae4b72449df`,
+every version identical to arm64: petsc 3.25.5, openmpi 5.0.10). The spec cannot launch on
+spawn 0.130.1 on **either** chip: EC2 rejects the generated user data
+(`User data is limited to 16384 bytes`) before any instance exists. This spec is the largest in
+the `fem-cfd` set (12.5 kB), and the x86 install step adds ~1.9 kB to it.
 
 ### Run + verify
 

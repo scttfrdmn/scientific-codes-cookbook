@@ -3,9 +3,10 @@ tool: fenicsx
 tool_version: 0.11.0
 env: fem-cfd
 image: quay.io/aarchsci/fem-cfd@sha256:941bdafc519347a600fa4c2805971a3beec8cce561f52b9152b8676277978c68
-gap_x86_64: the aarch.science `fem-cfd` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: fem-cfd-49dfa59a2aff
 spawn_version: 0.126.1
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # FEniCSx — a Poisson solve verified by patch test and convergence order
 
@@ -69,15 +70,20 @@ On the Graviton verifying run the L2 errors and rates came back **bit-identical 
 
 ### Smoke check (inside the task; measured before launch)
 
-| observable | assertion | observed |
-|---|---|---|
-| mpi_ranks | exactly 2, read from `MPI.COMM_WORLD` | 2 |
-| **patch test, P2 / P3** | **L2 < 1e-12 (the space contains the quadratic)** | **1.21e-14** / 1.83e-14 |
-| **patch test, P1 — the control** | **must be WORSE than 1e-4** | **8.235098e-03** (6.8e11×) |
-| **convergence rate, P2** | **finest ratio within 0.05 of 3** | **2.995, 2.999, 3.000** |
-| **convergence rate, P1** | **finest ratio within 0.05 of 2** | **1.974, 1.993, 1.998** |
-| error falls monotonically | every rung, both degrees | yes |
-| **serial vs 2 ranks** | **< 1e-6 relative on every error** | **2.434e-09** (411× inside) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| mpi_ranks | exactly 2, read from `MPI.COMM_WORLD` | 2 | 2 |
+| **patch test, P2 / P3** | **L2 < 1e-12 (the space contains the quadratic)** | **1.21e-14** / 1.83e-14 | **9.46e-15** / 7.12e-15 |
+| **patch test, P1 — the control** | **must be WORSE than 1e-4** | **8.235098e-03** (6.8e11×) | identical |
+| **convergence rate, P2** | **finest ratio within 0.05 of 3** | **2.995, 2.999, 3.000** | identical, errors to 5 digits |
+| **convergence rate, P1** | **finest ratio within 0.05 of 2** | **1.974, 1.993, 1.998** | identical, errors to 5 digits |
+| error falls monotonically | every rung, both degrees | yes | yes |
+| **serial vs 2 ranks** | **< 1e-6 relative on every error** | **2.434e-09** (411× inside) | **1.858e-09** (538× inside) |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/fem-cfd-49dfa59a2aff`,
+installed offline, all 131 versions identical to arm64, openmpi 5.0.11). The rank count, the
+discretisation errors, the rates and the P1 control agree across chips; only the machine-zero
+patch-test residuals and the serial-vs-parallel difference move, both LU round-off.
 
 ### Run + verify
 

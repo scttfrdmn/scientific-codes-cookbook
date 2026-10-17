@@ -3,9 +3,10 @@ tool: spacy
 tool_version: "3.8.16"
 env: nlp
 image: quay.io/aarchsci/nlp@sha256:436dc03828933d9e176ee751038a8a63e4d41b393ed693bfed9f442efe90e397
-gap_x86_64: the aarch.science `nlp` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: nlp-60b4d70cf1b7
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # spaCy — its own 4,855 tests, then exact claims on tokenization, hashing, serialization and matching
 
@@ -71,6 +72,13 @@ One task on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 40m as a **backstop** with `cost_
 | **static vectors** | **`(0, 0)`, and `has_vector` True** | **(0, 0)**, True (96-d from `doc.tensor`) |
 | entity labels / POS | recorded, never asserted | PERSON 170, ORG 81, GPE 63, DATE 35, CARDINAL 33, MONEY 17 |
 
+**x86_64 (`c8i`): every row above is identical.** The same spec on the env's linux-64 twin
+(`envs-x86_64/nlp-60b4d70cf1b7`, installed offline, all 91 versions identical to arm64) gives a
+`score.tsv` byte-identical to Graviton4's, down to the recorded entity counts, POS counts and the
+0.8840 context similarity, and the same suite outcome: 4,855 accounted, 3,591 / 1,233 / 24 / 7,
+0 failed, 5 subtests. The small pipeline's inference is not chip-sensitive at the precision it
+reports.
+
 ### The suite is the verdict, with every test counted
 
 spaCy ships its tests inside the package, so the suite is the
@@ -119,8 +127,7 @@ so "exactly the planted spans" is shown to be able to fail.
 | image | `quay.io/aarchsci/nlp@sha256:436dc0382893…` — spaCy 3.8.16, `en_core_web_sm` 3.8.0, thinc 8.3.13, numpy 2.5.4, python 3.14.8 |
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest (`sha256:b04882e5c37c…`), so verify the tag and pin the arm64 digest. No x86 run: `nlp`
-is an aarch.science env and has no x86 build.
+digest (`sha256:b04882e5c37c…`), so verify the tag and pin the arm64 digest.
 
 ### Run + verify
 
@@ -147,6 +154,6 @@ spaCy's CI too, and the second need tokenizer packages this env does not carry. 
 steps** (download, convert, debug, train and assemble CLIs), which fetch models at run time.
 **Training** (`spacy train`, config, GPU) and
 **accuracy** against a labelled corpus. **Larger models and transformers** (`md`, `lg`, `trf`), not
-in this env. **Multiprocess `nlp.pipe(n_process=...)`**. **x86**, because this env has no x86 build.
+in this env. **Multiprocess `nlp.pipe(n_process=...)`**.
 
 </details>

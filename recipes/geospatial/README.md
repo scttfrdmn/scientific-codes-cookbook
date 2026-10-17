@@ -3,9 +3,10 @@ tool: gdal
 tool_version: 3.12.4
 env: geospatial
 image: quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb
-gap_x86_64: the aarch.science `geospatial` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geospatial-07484bd0bf42
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-16
 ---
 # GDAL + PROJ — 6,191 upstream reference coordinates, and a warp checked against arithmetic
 
@@ -51,15 +52,22 @@ Float64 output is what sets 8 GiB.
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| gie completed | the `Grand total` line is present | present |
-| **reference vectors** | **exactly 6191, 0 failed, 0 skipped** | **6191 / 0 / 0** |
-| aligned grid | 10980² → 1830² at an exact integer factor | yes |
-| **`-r sum` vs numpy** | **max\|diff\| < 1e-5 over 3,348,900 cells** | **3.242e-07** |
-| total conserved | `sum(out)/sum(in)` = 1 to 1e-9 | **1.0000000000** |
-| **`-r average` vs nodata-aware numpy** | **max\|diff\| < 1e-5** | **3.908e-08** |
-| reprojection round-trip | corners recovered to < 1e-6 m | **1.11e-09** |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| gie completed | the `Grand total` line is present | present | present |
+| **reference vectors** | **exactly 6191, 0 failed, 0 skipped** | **6191 / 0 / 0** | **6191 / 0 / 0** |
+| aligned grid | 10980² → 1830² at an exact integer factor | yes | yes |
+| **`-r sum` vs numpy** | **max\|diff\| < 1e-5 over 3,348,900 cells** | **3.242e-07** | **0** |
+| total conserved | `sum(out)/sum(in)` = 1 to 1e-9 | **1.0000000000** | **1.0000000000** |
+| **`-r average` vs nodata-aware numpy** | **max\|diff\| < 1e-5** | **3.908e-08** | **5.457e-12** |
+| reprojection round-trip | corners recovered to < 1e-6 m | **1.11e-09** | **1.11e-09** |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/geospatial-07484bd0bf42`,
+installed offline; 122 of 125 versions identical; `c-blosc2` 3.3.5 vs 3.3.3 and `charls` 2.4.5 vs
+2.4.4 differ, both compression codecs, and `ld_impl` is per-platform). The 6,191 reference
+coordinates, the round-trip and the conserved total are identical across chips. The two warp
+residuals differ, and are allowed to: both are float64 accumulation order inside GDAL's resampler
+versus numpy's, a path, and both sit far inside the bound.
 
 **The conda `proj` package ships `gie` but not the tests, so the tests are staged** from the PROJ
 source at the tag matching the image — the same sourcing move as SIESTA's pseudopotentials

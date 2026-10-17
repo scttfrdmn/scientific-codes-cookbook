@@ -3,9 +3,10 @@ tool: scvelo
 tool_version: "0.3.4"
 env: single-cell
 image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a
-gap_x86_64: the aarch.science `single-cell` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # scVelo — RNA velocity on counts with known kinetics, steady-state and dynamical
 
@@ -43,21 +44,30 @@ One task on `c8g.large` (2 vCPU / 4 GiB; 0.6 GB peak RSS measured), TTL 30m as a
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| scvelo / scanpy / pandas / numpy | read from the running install | **0.3.4** / 1.12.4 / 3.0.6 / 2.5.4 |
-| cell and switch times, reconstructed | `== 0` vs `true_t`, `true_t_` | 0.0e+00 / 0.0e+00 |
-| **noise-free simulator vs closed-form ODE solution** | **rel `< 1e-12`** | **u 0.00e+00, s 2.75e-16** |
-| **Ms, Mu vs neighbourhood means** | **rel `< 1e-6`** | **1.06e-07 / 1.07e-07** |
-| **steady-state γ vs numpy extreme-quantile slope** | **rel `< 1e-5`** | **3.69e-07** over 100 genes |
-| **velocity vs Mu − γ·Ms** | **`== 0` exactly** | **0.000e+00** |
-| **steady-state γ ranks planted γ/β** | **Spearman `> 5/√(G−1)` = 0.503** | **0.9885** |
-| **dynamical γ/β ranks planted γ/β** | **Spearman `> 0.503`** | **0.9977** |
-| **induction/repression calls vs planted phase** | **beat constant guess + 5σ** (0.5724) | **0.8442** of 100,000 |
-| **velocity sign vs true ds/dt**, steady-state / dynamical | **`> 0.5 + 5σ`** (0.5079) | **0.8715 / 0.9270** |
-| probe: `recover_dynamics` as documented | recorded, not asserted | raises `TypeError` |
-| probe: with alignment / `mode="dynamical"` | recorded, not asserted | raise `ValueError` (read-only) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | 1 of 1 |
+| scvelo / scanpy / pandas / numpy | read from the running install | **0.3.4** / 1.12.4 / 3.0.6 / 2.5.4 | identical |
+| cell and switch times, reconstructed | `== 0` vs `true_t`, `true_t_` | 0.0e+00 / 0.0e+00 | identical |
+| **noise-free simulator vs closed-form ODE solution** | **rel `< 1e-12`** | **u 0.00e+00, s 2.75e-16** | identical |
+| **Ms, Mu vs neighbourhood means** | **rel `< 1e-6`** | **1.06e-07 / 1.07e-07** | identical |
+| **steady-state γ vs numpy extreme-quantile slope** | **rel `< 1e-5`** | **3.69e-07** over 100 genes | identical |
+| **velocity vs Mu − γ·Ms** | **`== 0` exactly** | **0.000e+00** | identical |
+| **steady-state γ ranks planted γ/β** | **Spearman `> 5/√(G−1)` = 0.503** | **0.9885** | identical |
+| **dynamical γ/β ranks planted γ/β** | **Spearman `> 0.503`** | **0.9977** | identical |
+| **induction/repression calls vs planted phase** | **beat constant guess + 5σ** (0.5724) | **0.8442** of 100,000 | **0.8445** |
+| **velocity sign vs true ds/dt**, steady-state / dynamical | **`> 0.5 + 5σ`** (0.5079) | **0.8715 / 0.9270** | identical |
+| probe: `recover_dynamics` as documented | recorded, not asserted | raises `TypeError` | identical |
+| probe: with alignment / `mode="dynamical"` | recorded, not asserted | raise `ValueError` (read-only) | identical |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/single-cell-957f8c9c38e0`,
+535 packages installed offline in 57 s on `c8i.large`). 509 of 533 versions match arm64; the nine
+that differ (`numpy_groupies` 0.14.1 vs 0.13.2, `ome-zarr`, `pydantic`/`pydantic-core`,
+`libsqlite`/`sqlite`, `libglib`, `charset-normalizer`, `r-future.apply`) include none of scVelo,
+scanpy, pandas or numpy. Every exact identity and every rank is identical across chips, and the
+pandas-3 shim and both probes behave the same. Only the phase-call fraction moves, by 3 calls in
+100,000: it comes from the dynamical model's per-gene likelihood fit, an iterative optimisation,
+so it is a path and may differ. It clears its null by the same margin on both.
 
 ### Why these bounds
 
@@ -85,7 +95,7 @@ time alignment skipped above rescales β and γ together.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`c422f5f8c974…`), so verify that and pin the arm64 entry. Same image as
-[squidpy](../squidpy/README.md). No x86 run: `single-cell` has no x86 build.
+[squidpy](../squidpy/README.md).
 
 ### Run + verify
 
