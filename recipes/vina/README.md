@@ -2,10 +2,10 @@
 tool: vina
 tool_version: 1.2.7
 env: comp-chem
-image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.0 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.0-py310hc82e367_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`); and its mdtraj 1.11.1 + numpy 2.5.2 pair no longer co-solves on either arch (`mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0`)
-spawn_version: 0.111.4
-last_verified: 2026-10-02
+image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
+env_x86_64: comp-chem-1243f25ebfec
+spawn_version: 0.130.1
+last_verified: 2026-10-17
 ---
 # AutoDock Vina — reproduce the published imatinib/Abl docking result
 
@@ -15,7 +15,7 @@ Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own p
 
 ```bash
 make stage RECIPE=vina   # once: the 1iep receptor + ligand from the v1.2.7 tag
-spawn task run --spec "$(make -s spec RECIPE=vina)" --wait   # ~1 min on c8g.large, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=vina)" --wait   # ~6 min on c8g.large, self-terminating
 make ls    RECIPE=vina   # smoke-check.txt + dock.json
 
 python3 -c "
@@ -42,19 +42,27 @@ runtime. A screen needs a drug-likeness filter and its own sizing pass.
 
 ## Shape, size, cost
 
-`c8g.large` (2 vCPU): **~1 min billed, ~$0.01** for two 32-exhaustiveness docks.
+`c8g.large` (2 vCPU): **5 min 52 s command window, ~$0.01** for two 32-exhaustiveness docks.
 
 <details>
 <summary>As shipped: a published number, and why the seed alone was not enough</summary>
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| **top affinity** | **−13.207 ± 0.001** (seed+cpu pinned) | **−13.207** |
-| **vs published v1.2.7** | **within 0.05 kcal/mol of −13.234** | **0.027** |
-| same seed twice | identical to 1e-6 | **identical** |
-| poses | ≥ 3 | **4** |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| **top affinity** | **−13.207 ± 0.001** (seed+cpu pinned) | **−13.207** | **−13.286 — fails** |
+| **vs published v1.2.7** | **within 0.05 kcal/mol of −13.234** | **0.027** | **0.052 — fails** |
+| same seed twice | identical to 1e-6 | **identical** | identical |
+| poses | ≥ 3 | **4** | 5 |
+
+**x86_64 does not verify.** The same spec on the env's linux-64 twin
+(`envs-x86_64/comp-chem-1243f25ebfec`; three versions differ from arm64, none of them Vina's), on
+`c8i.large` with the same `seed=42` and `cpu=2`, docks to **−13.286**, identically twice on the box,
+with 5 poses. Both affinity claims fail: the pinned value is a property of the Graviton4 run, and the
+published-reference distance is 0.052 against a 0.05 bound. The top affinity is a **path**: a
+seeded Monte Carlo search, whose trajectory a different chip's build is free to change while staying
+deterministic on its own box. The assertion is left as written.
 
 **Two claims, separated because they fail for different reasons.** The reproducibility assertion
 breaks if the search stops being pinned — someone changes `cpu`, or a resolver swaps the build. The
@@ -102,9 +110,14 @@ Python task should run `python3 -u`, because buffered stdout is lost when a proc
 
 | | data tier |
 |---|---|
-| Vina | 1.2.7, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| Vina | 1.2.7, in `quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cf…` (`linux/arm64`) |
 | receptor | `AutoDock-Vina` @ `v1.2.7` → `example/basic_docking/solution/1iep_receptor.pdbqt`, sha256 `f13cf3b36f61d87c…` |
 | ligand | same tag → `1iep_ligand.pdbqt`, sha256 `15fb35648d8c18c7…` |
+
+The previous pin, `comp-chem@sha256:a06f130ca3c8…` (lock-hash `c8cd4a3c4c30`), can no longer be
+re-solved: conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5`, and it shipped numpy 2.5.2
+(found 2026-10-17). It still runs, and its arm64 lock still installs without a solve
+([why](../../practices/environment-durability.md)); this recipe moved to the 2026.10.11 env.
 
 conda-forge's `vina` ships no example data, so the inputs come from the code's own
 version-matched tutorial — [the sourcing move](../../practices/reference-from-tests.md) that turns

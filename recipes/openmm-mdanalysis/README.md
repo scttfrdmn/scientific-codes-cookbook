@@ -1,15 +1,16 @@
 ---
 tool: openmm
-tool_version: 8.6.0.dev-c6173db
+tool_version: 8.6.1.dev-b399af4
 env: comp-chem
-image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.0 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.0-py310hc82e367_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`); and its mdtraj 1.11.1 + numpy 2.5.2 pair no longer co-solves on either arch (`mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0`)
-spawn_version: 0.111.4
-last_verified: 2026-10-02
+image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
+env_x86_64: comp-chem-1243f25ebfec
+spawn_version: 0.130.1
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # OpenMM — 20 ps of NVE on 1,728 atoms, read back by MDAnalysis
 
-Conserves energy to 3e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output.
+Conserves energy to 2.5e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output.
 
 ## Run it
 
@@ -49,21 +50,22 @@ four-chip ladder would measure boot ([same call as mash](../mash/README.md)).
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| **NVE conserved** | **drift < 1e-5 relative** | **2.96e-07** over 20 ps (1.5e-11/step) |
-| atoms | 1,728 = 12³, OpenMM == MDAnalysis | **1,728** |
-| frames | 100 (every 200 of 20,000 steps) | **100** |
-| box | MDAnalysis == OpenMM's box | **45.840 Å** |
-| **lattice spacing** | **nearest neighbour == 3.820 Å** | **3.820** |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| **NVE conserved** | **drift < 1e-5 relative** | **2.50e-07** over 20 ps (1.3e-11/step) | **5.32e-09** (2.7e-13/step) |
+| platform | the context ran on `CPU` | **CPU** (loaded: Reference, CPU) | identical |
+| atoms | 1,728 = 12³, OpenMM == MDAnalysis | **1,728** | identical |
+| frames | 100 (every 200 of 20,000 steps) | **100** | identical |
+| box | MDAnalysis == OpenMM's box | **45.840 Å** | identical |
+| **lattice spacing** | **nearest neighbour == 3.820 Å** | **3.820** | identical |
 
 **Energy conservation is the right identity for an integrator.** With no thermostat, total energy
 must be constant, and the error *accumulates* — so the test sharpens with system size and run
 length. The previous version of this recipe ran 27 atoms for 200 steps, where there is barely time
-to drift; 1,728 atoms over 20,000 steps conserves to 2.96e-07 relative, or 1.5e-11 per step.
+to drift; 1,728 atoms over 20,000 steps conserves to 2.50e-07 relative, or 1.3e-11 per step.
 
-**The threshold is 1e-5, not the observed value, and that is deliberate.** Two runs of the identical
-spec gave 2.21e-07 and 2.96e-07 — OpenMM's CPU platform reduces forces in a thread-dependent order,
+**The threshold is 1e-5, not the observed value, and that is deliberate.** Runs of the identical
+spec gave 2.21e-07, 2.96e-07 and 2.50e-07 — OpenMM's CPU platform reduces forces in a thread-dependent order,
 so accumulated round-off is not reproducible. Pinning 2.21e-07 would have been exact once and flaky
 after ([the rule](../../practices/cross-checks.md)). 1e-5 catches a broken integrator or a thermostat
 left enabled; the per-step figure is what transfers to a different run length, since the total
@@ -85,11 +87,25 @@ checks cannot.
 
 | | data tier |
 |---|---|
-| OpenMM 8.6.0.dev / MDAnalysis 2.10.0 | both in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| OpenMM 8.6.1.dev / MDAnalysis 2.10.0 | both in `quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cf…` (`linux/arm64`) |
 | system | built in Python: 12³ argon, 0.382 nm spacing, σ=0.34 nm, ε=0.996 kJ/mol |
 
 Nothing is staged, so there is no `stage-inputs.sh` — the trade is that the system is pinned by the
 *image* rather than by a hash. Versions are read from inside the run rather than recorded by hand.
+
+The previous pin, `comp-chem@sha256:a06f130ca3c8…` (lock-hash `c8cd4a3c4c30`), can no longer be
+re-solved: conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5`, and it shipped numpy 2.5.2
+(found 2026-10-17). It still runs, and its arm64 lock still installs without a solve
+([why](../../practices/environment-durability.md)); this recipe moved to the 2026.10.11 env.
+
+### x86_64
+
+The same spec on the env's linux-64 twin (`envs-x86_64/comp-chem-1243f25ebfec`, 228 packages; three
+versions differ from arm64, none of them OpenMM's or MDAnalysis's, and it adds `cuda-nvrtc` and `libcufft`). conda-forge's linux-64 OpenMM
+is a CUDA build, so the platform check is the one that matters here: on a GPU-less `c8i.2xlarge`
+only `Reference` and `CPU` load, and the context ran on `CPU`. Every structural value is identical
+across chips. The drift is not, and should not be: it is a **path**, accumulated round-off over
+20,000 steps, already different run to run on one chip. Both sit well inside 1e-5. 20 ps took 9 s.
 
 ### Run + verify
 

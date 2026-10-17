@@ -70,7 +70,7 @@ answer: it changes it less than switching `leiden` for `louvain` within the ecos
 already have.
 
 That is also why the Scanpy-internal number is computed **in this recipe** rather than cited
-from [scanpy](../scanpy/README.md)'s 0.7665. Internal agreement depends on the HVG set, PC
+from [scanpy](../scanpy/README.md)'s 0.6452 (0.6633 on x86; Louvain is a path). Internal agreement depends on the HVG set, PC
 count and k, which differ between the two recipes, so the reference scale has to be measured
 under *these* parameters to mean anything.
 

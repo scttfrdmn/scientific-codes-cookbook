@@ -2,20 +2,21 @@
 tool: rdkit
 tool_version: 2026.03.1
 env: comp-chem
-image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.0 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.0-py310hc82e367_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`); and its mdtraj 1.11.1 + numpy 2.5.2 pair no longer co-solves on either arch (`mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0`)
-spawn_version: 0.111.4
-last_verified: 2026-10-02
+image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
+env_x86_64: comp-chem-1243f25ebfec
+spawn_version: 0.130.1
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # RDKit — reproduce ChEMBL's published InChIKeys for 100,000 compounds
 
-Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 37 seconds. For anyone running RDKit over a real compound library.
+Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 35 seconds. For anyone running RDKit over a real compound library.
 
 ## Run it
 
 ```bash
 make stage RECIPE=rdkit   # once: 100,000 ChEMBL 37 compounds WITH their published keys
-spawn task run --spec "$(make -s spec RECIPE=rdkit)" --wait   # 37 s on c8g.xlarge, self-terminating
+spawn task run --spec "$(make -s spec RECIPE=rdkit)" --wait   # 35 s on c8g.xlarge, self-terminating
 make ls    RECIPE=rdkit   # rdkit_keys.tsv + smoke-check.txt
 
 python3 -c "from rdkit import Chem; from rdkit.Chem import inchi; \
@@ -28,15 +29,15 @@ python3 -c "from rdkit import Chem; from rdkit.Chem import inchi; \
 |---|---|---|
 | ChEMBL 37's first 100k | your own library | the input must carry a reference identifier, or there is nothing to check against. |
 | InChIKey + formula | `Descriptors`, fingerprints, substructure | those have no published reference, so a check becomes self-consistency — which is why this recipe does not use them. |
-| 100,000 compounds | more | 0.37 ms each, so the whole of ChEMBL is minutes, not hours. |
+| 100,000 compounds | more | 0.35 ms each, so the whole of ChEMBL is minutes, not hours. |
 
 **Leave the library** — it ships the answer alongside the question, which is what makes an exact
 check possible. **Scale it** by compound count; it is linear and cheap.
 
 ## Shape, size, cost
 
-`c8g.xlarge` (4 vCPU): **37 s, ~$0.01.** Single-threaded Python over 100k molecules, ~6 MB in.
-No generation table: at 37 s a four-chip ladder would measure boot, not RDKit
+`c8g.xlarge` (4 vCPU): **35 s, ~$0.01.** Single-threaded Python over 100k molecules, ~6 MB in.
+No generation table: at 35 s a four-chip ladder would measure boot, not RDKit
 ([the same call as mash](../mash/README.md)).
 
 <details>
@@ -44,14 +45,19 @@ No generation table: at 37 s a four-chip ladder would measure boot, not RDKit
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| compounds | exactly 100,000 | **100,000** |
-| parsed | exactly 99,997 | **99,997** |
-| rows written | == compounds | **100,000** |
-| **element counts** | **== comparable count, no exceptions** | **97,665 / 97,665** |
-| **connectivity block** | **exactly 99,996** | **99,996** (99.999%) |
-| full InChIKey | exactly 99,914 | **99,914** (99.917%) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| compounds | exactly 100,000 | **100,000** | identical |
+| parsed | exactly 99,997 | **99,997** | identical |
+| rows written | == compounds | **100,000** | identical |
+| **element counts** | **== comparable count, no exceptions** | **97,665 / 97,665** | identical |
+| **connectivity block** | **exactly 99,996** | **99,996** (99.999%) | identical |
+| full InChIKey | exactly 99,914 | **99,914** (99.917%) | identical |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/comp-chem-1243f25ebfec`;
+three versions differ from arm64, none of them RDKit's). Nothing here is floating point, so there is
+no fixed-point-versus-path question: `rdkit_keys.tsv` is **byte-identical** across chips (sha256
+`67597e13cc2d4aad…`), in 35 s on both.
 
 **Three claims of different strength against one source, which is more informative than one rate.**
 An InChIKey is `<14-char skeleton>-<8-char stereo/isotope/proto>-<charge>`, and the first block is
@@ -96,13 +102,18 @@ than convenient, the same move [sourmash](../sourmash/README.md) needed for its 
 
 | | data tier |
 |---|---|
-| RDKit | 2026.03.1, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| RDKit | 2026.03.1, in `quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cf…` (`linux/arm64`) |
 | compounds | ChEMBL `releases/chembl_37/chembl_37_chemreps.txt.gz`, first 100,000 data rows; sha256 `6fa986de4223948a…` |
 
 The release directory is immutable, so the release is the durable id; the subset is the first 100,000
 rows, which anyone can reproduce from the same release. ChEMBL ids are roughly registration-ordered,
 so this is an older slice rather than a random sample. The version is read from inside the run
 because a package version is not a binary version.
+
+The previous pin, `comp-chem@sha256:a06f130ca3c8…` (lock-hash `c8cd4a3c4c30`), can no longer be
+re-solved: conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5`, and it shipped numpy 2.5.2
+(found 2026-10-17). It still runs, and its arm64 lock still installs without a solve
+([why](../../practices/environment-durability.md)); this recipe moved to the 2026.10.11 env.
 
 [Open Babel](../openbabel-pdbfixer/README.md) reads this same subset and this recipe's own
 `rdkit_keys.tsv`, and the asymmetry there is worth knowing before trusting either rate.

@@ -2,10 +2,11 @@
 tool: openbabel
 tool_version: 3.2.1
 env: comp-chem
-image: quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8b514de1aa872536c9822c3ccb5322d594b935ae11627c5c80b09
-gap_x86_64: the linux-64 solve of the pinned aarch.science `comp-chem` env fails (measured 2026-10-16, scripts/lock_env_x86.py): conda-forge has no CPU-only openmm 8.6.0 for linux-64 -- every build needs cuda-version >=12.9 and cuda-nvrtc -- while the env pins cuda-version=11.8 to select arm64's CPU build (`package openmm-8.6.0-py310hc82e367_0 requires cuda-version >=12.9,<13, but none of the providers can be installed`); and its mdtraj 1.11.1 + numpy 2.5.2 pair no longer co-solves on either arch (`mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0`)
-spawn_version: 0.111.4
-last_verified: 2026-10-02
+image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
+env_x86_64: comp-chem-1243f25ebfec
+spawn_version: 0.130.1
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # Open Babel — 100,000 InChIKeys, checked against RDKit and against ChEMBL
 
@@ -18,7 +19,7 @@ Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits
 
 ```bash
 for s in $(make -s spec RECIPE=openbabel-pdbfixer); do spawn task run --spec "$s" --wait; done   # produces rdkit_keys.tsv; this recipe reads it
-make run RECIPE=openbabel-pdbfixer   # 24 s + the structure-prep task
+make run RECIPE=openbabel-pdbfixer   # 22 s + the structure-prep task
 make ls  RECIPE=openbabel-pdbfixer
 
 python3 -c "from openbabel import pybel; \
@@ -34,26 +35,32 @@ python3 -c "from openbabel import pybel; \
 | InChIKey | canonical SMILES | SMILES canonicalisation is algorithm-specific, so two engines legitimately differ — there is nothing to assert. |
 
 **Leave the library** — 100k compounds with a published key is what makes a two-engine comparison
-checkable. **Scale it** freely: 0.24 ms per molecule.
+checkable. **Scale it** freely: 0.22 ms per molecule.
 
 ## Shape, size, cost
 
-`c8g.xlarge` (4 vCPU): **24 s, ~$0.01**, plus a sub-second structure-prep task. No generation table —
-at 24 s a ladder would measure boot ([same call as mash](../mash/README.md)).
+`c8g.xlarge` (4 vCPU): **22 s, ~$0.01**, plus a sub-second structure-prep task. No generation table —
+at 22 s a ladder would measure boot ([same call as mash](../mash/README.md)).
 
 <details>
 <summary>As shipped: the CLI trap measured, and why the published-reference rate is not neutral</summary>
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| compounds / rows written | exactly 100,000 each | **100,000** |
-| parsed by Open Babel | exactly 100,000 | **100,000** (RDKit: 99,997) |
-| vs ChEMBL, full key | exactly 99,846 | **99,846** (99.846%) |
-| vs ChEMBL, connectivity | exactly 99,930 | **99,930** (99.930%) |
-| **vs RDKit, full key** | **exactly 99,926** | **99,926** (99.929%) |
-| **vs RDKit, connectivity** | **exactly 99,928** | **99,928** (99.931%) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| compounds / rows written | exactly 100,000 each | **100,000** | identical |
+| parsed by Open Babel | exactly 100,000 | **100,000** (RDKit: 99,997) | identical |
+| vs ChEMBL, full key | exactly 99,846 | **99,846** (99.846%) | identical |
+| vs ChEMBL, connectivity | exactly 99,930 | **99,930** (99.930%) | identical |
+| **vs RDKit, full key** | **exactly 99,926** | **99,926** (99.929%) | identical |
+| **vs RDKit, connectivity** | **exactly 99,928** | **99,928** (99.931%) | identical |
+
+**x86_64** runs both specs on the env's linux-64 twin (`envs-x86_64/comp-chem-1243f25ebfec`; three
+versions differ from arm64, none of them Open Babel's, RDKit's, pdbfixer's or OpenMM's), reading
+RDKit's *x86* `rdkit_keys.tsv`. Nothing is floating point: `ob_keys.tsv` is **byte-identical**
+across chips (sha256 `5d5eae4fa17096c9…`), and the structure-prep task's seven checks give the same
+values. 21 s on `c8i.xlarge`.
 
 No tolerance is involved anywhere: InChI is canonical by construction, so each comparison is a
 27-character string that matches or does not.
@@ -104,11 +111,16 @@ would run the same code paths while proving less.
 
 | | data tier |
 |---|---|
-| Open Babel | 3.2.1, in `quay.io/aarchsci/comp-chem@sha256:a06f130ca3c8…` (`linux/arm64`) |
+| Open Babel | 3.2.1, in `quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cf…` (`linux/arm64`) |
 | compounds | ChEMBL 37 first 100,000 rows, sha256 `6fa986de4223948a…` — staged by [rdkit](../rdkit/README.md) |
 | RDKit's keys | `runs/rdkit/r1/rdkit_keys.tsv` — the comparison reads the real run's output |
 
 Nothing is staged twice, and the cross-check reads RDKit's actual output rather than recomputing it.
+
+The previous pin, `comp-chem@sha256:a06f130ca3c8…` (lock-hash `c8cd4a3c4c30`), can no longer be
+re-solved: conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5`, and it shipped numpy 2.5.2
+(found 2026-10-17). It still runs, and its arm64 lock still installs without a solve
+([why](../../practices/environment-durability.md)); this recipe moved to the 2026.10.11 env.
 
 ### Run + verify
 

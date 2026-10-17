@@ -1,10 +1,12 @@
 ---
 tool: scanpy
 tool_version: "1.12.4"
-image: quay.io/aarchbio/scanpy@sha256:5621e1cc9d14fbac0c86d002efd852abf92587a4739d5e32893786b90f87277e
-gap_x86_64: quay.io/biocontainers/scanpy stops at 1.7.2 (bioconda's last; scanpy 1.12.x is conda-forge noarch), so no x86 build of 1.12.4 exists there, and the pinned image is aarch.bio's, not an aarch.science env, so the env-twin route does not apply (checked 2026-10-16)
-spawn_version: 0.123.0
-last_verified: 2026-10-07
+env: single-cell
+image: quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a
+env_x86_64: single-cell-957f8c9c38e0
+spawn_version: 0.130.1
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # Scanpy — clustering 2,700 PBMCs, checked three ways that aren't the clustering
 
@@ -42,30 +44,38 @@ One task on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 30m, cap $0.12. The whole pipelin
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match the pin | `847d6ebd…` |
-| **input dimensions** | **exactly 32,738 × 2,700 (published)** | **2,700 cells, 32,738 genes** |
-| **planted control** | **3 blobs → 3 clusters, ARI exactly 1.0** | **3, `1.0000`** |
-| after QC | — | 2,700 × 13,714; 1,872 HVG |
-| cluster count | 5–20 is plausible for PBMCs | 10 (Leiden), 8 (Louvain) |
-| **Leiden ↔ Louvain** | **ARI ≥ 0.5 — two algorithms, one graph** | **0.7665** |
-| **determinism** | **same seed → identical labels** | **identical** |
-| **lineage markers** | **CD3D, LYZ, MS4A1 peak in 3 *distinct* clusters** | **yes** (0, 6, 2) |
+| observable | assertion | observed (Graviton4) | x86_64 (`c8i`) |
+|---|---|---|---|
+| staged bytes | match the pin | `847d6ebd…` | identical |
+| **input dimensions** | **exactly 32,738 × 2,700 (published)** | **2,700 cells, 32,738 genes** | identical |
+| **planted control** | **3 blobs → 3 clusters, ARI exactly 1.0** | **3, `1.0000`** | identical |
+| after QC | — | 2,700 × 13,714; 1,872 HVG | identical |
+| cluster count | 5–20 is plausible for PBMCs | 10 (Leiden), 7 (Louvain) | 10, **8** |
+| **Leiden ↔ Louvain** | **ARI ≥ 0.5 — two algorithms, one graph** | **0.6452** | **0.6633** |
+| **determinism** | **same seed → identical labels** | **identical** | identical |
+| **lineage markers** | **CD3D, LYZ, MS4A1 peak in 3 *distinct* clusters** | **yes** (0, 6, 2) | identical, same means |
+
+**x86_64** runs the same spec on the env's linux-64 twin (`envs-x86_64/single-cell-957f8c9c38e0`,
+the one [squidpy](../squidpy/README.md) verified; its nine version differences include none of
+scanpy, anndata, leidenalg, python-igraph or numpy). Leiden, the planted control and all three
+marker peaks and means are identical across chips. Louvain is not: 7 clusters on Graviton4 and 8 on
+x86, so its ARI against Leiden moves 0.6452 → 0.6633. Louvain's greedy multilevel optimisation is a
+**path**, and its partition depends on the last bits of the graph weights; both values clear the 0.5
+floor, which is why the floor is not a band on it.
 
 **Clustering has no closed-form answer, so none of the checks is a band on a cluster count.**
 Each comes from somewhere outside the clustering itself:
 
 - **The planted control is exact.** Three well-separated Gaussian blobs must come back as three
   clusters with ARI `1.0` — no tolerance. It isolates a broken `leidenalg` from a merely
-  surprising biological result, which matters because this image shipped without `leidenalg` and
-  `igraph` until recently and failed *late*: `sc.pp.pca` and `sc.pp.neighbors` passed and only
+  surprising biological result, which matters because the aarch.bio image this recipe first
+  pinned shipped without `leidenalg` and `igraph` and failed *late*: `sc.pp.pca` and `sc.pp.neighbors` passed and only
   `sc.tl.leiden` broke.
 - **Leiden ↔ Louvain is a cross-method check.** Two independent community-detection algorithms
   partition the *same* kNN graph — Leiden via `leidenalg`, Louvain via igraph's multilevel. ARI
-  0.7665 says they find the same structure. The 0.5 floor is deliberately loose: a tight band
+  0.6452 says they find the same structure. The 0.5 floor is deliberately loose: a tight band
   here would be a band on an algorithmic difference, not on correctness, and the two genuinely
-  disagree about granularity (10 clusters vs 8).
+  disagree about granularity (10 clusters vs 7).
 - **The marker check is categorical.** PBMCs contain T cells, monocytes and B cells; CD3D, LYZ
   and MS4A1 are textbook markers for exactly those three. "Three distinct peak clusters" asserts
   no threshold on any expression value.
@@ -96,7 +106,7 @@ Worth stating plainly because a reader seeing 2.173 vs 2.088 should otherwise di
 | | |
 |---|---|
 | matrix | `pbmc3k_filtered_gene_bc_matrices.tar.gz` from 10x Genomics' CDN, `847d6ebd…` (7.6 MB) |
-| image | `@sha256:5621e1cc…` — scanpy 1.12.4, anndata 0.13.4, igraph 1.0.0, leidenalg 0.12.0 |
+| image | `quay.io/aarchsci/single-cell@sha256:14d4af5bbd86…` (tag `2026.10.16`) — scanpy 1.12.4, anndata 0.13.4, python-igraph 1.0.0, leidenalg 0.12.0 |
 
 Fetched from **10x**, the data's originator, rather than through `sc.datasets.pbmc3k()`: that
 downloads at run time, which a recipe here may not do, and it reads from a mirror that has moved
@@ -107,7 +117,7 @@ header (`32738 2700 2286884`) and the line counts of `genes.tsv` and `barcodes.t
 checks the three markers exist before the box is ever started, since a missing marker would fail
 the biological check for a reason unrelated to clustering.
 
-cosign-verified against `playgroundlogic/aarchbio`. The signature covers the **manifest-list**
+cosign-verified against `playgroundlogic/aarchsci`. The signature covers the **manifest-list**
 digest, so verifying the per-architecture digest directly returns `no signatures found` — verify
 the tag, pin the arm64 digest.
 
@@ -122,6 +132,12 @@ problem. Both are present now
 [aarchsci#17](https://github.com/playgroundlogic/aarchsci/issues/17) closed as superseded), and
 the planted control exists so that a regression shows up as a broken control rather than as
 confusing biology.
+
+**Repinned 2026-10-17** from `quay.io/aarchbio/scanpy@sha256:5621e1cc…` to the aarch.science
+`single-cell` env, which ships the same scanpy, anndata, leidenalg and python-igraph versions and
+has a linux-64 twin, so the recipe gained an x86 route; biocontainers stops at scanpy 1.7.2. Under
+the swap Leiden, the planted control and the markers were unchanged, and Louvain went from 8
+clusters (ARI 0.7665) to 7 (ARI 0.6452).
 
 ### Run + verify
 
