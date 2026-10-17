@@ -1,0 +1,39 @@
+subjects                      125
+BET mask bytes identical      102 / 125
+BET mask voxel count equal    102 / 125
+bet_raw_dice   identical  42/125   max |arm-x86| 0.055752   median 0.000495
+bet_dice       identical 102/125   max |arm-x86| 0.023639   median 0.000000
+resid_mm       identical   0/125   max |arm-x86| 0.149548   median 0.000168
+dice_flirt     identical   0/125   max |arm-x86| 0.021336   median 0.000119
+dice_fnirt     identical   0/125   max |arm-x86| 0.003634   median 0.000269
+  BET differs  A00037511  vox 1195100 vs 1193944  dice 0.883616 vs 0.883225
+  BET differs  A00037848  vox 1028507 vs 1028584  dice 0.870127 vs 0.870158
+  BET differs  A00040151  vox 1081507 vs 1081030  dice 0.888851 vs 0.887463
+  BET differs  A00040628  vox 1255348 vs 1252008  dice 0.901680 vs 0.902783
+  BET differs  A00043520  vox 1166003 vs 1165115  dice 0.897390 vs 0.897192
+  BET differs  A00043677  vox 1203705 vs 1205193  dice 0.906196 vs 0.906763
+  BET differs  A00043722  vox 1164658 vs 1163593  dice 0.889656 vs 0.888972
+  BET differs  A00051539  vox 1087340 vs 1087283  dice 0.898358 vs 0.898019
+  BET differs  A00054857  vox 1026298 vs 968097  dice 0.929945 vs 0.906306
+  BET differs  A00056452  vox 929665 vs 930061  dice 0.895206 vs 0.895371
+  BET differs  A00057203  vox 1101615 vs 1104911  dice 0.894104 vs 0.895689
+  BET differs  A00057808  vox 924242 vs 924241  dice 0.883278 vs 0.883295
+  BET differs  A00058667  vox 972254 vs 973530  dice 0.882978 vs 0.883137
+  BET differs  A00058952  vox 1041631 vs 1046176  dice 0.903835 vs 0.905840
+  BET differs  A00059344  vox 1417488 vs 1414606  dice 0.927372 vs 0.926013
+  BET differs  A00060093  vox 1397333 vs 1402059  dice 0.928750 vs 0.928052
+  BET differs  A00060259  vox 1098077 vs 1099042  dice 0.883882 vs 0.883989
+  BET differs  A00060407  vox 1211194 vs 1215284  dice 0.897544 vs 0.897909
+  BET differs  A00060632  vox 1179073 vs 1174315  dice 0.897694 vs 0.897019
+  BET differs  A00062282  vox 1283913 vs 1282986  dice 0.912856 vs 0.913576
+  BET differs  A00062942  vox 1037912 vs 1037001  dice 0.934056 vs 0.932941
+  BET differs  A00063326  vox 1193030 vs 1193456  dice 0.890698 vs 0.891608
+  BET differs  A00064081  vox 1164207 vs 1166121  dice 0.926527 vs 0.926995
+t_bet      sum arm      990 s   x86     1356 s   x86/arm 1.37
+t_flirt6   sum arm     3513 s   x86     6871 s   x86/arm 1.96
+t_flirt12  sum arm     2352 s   x86     4022 s   x86/arm 1.71
+t_fnirt    sum arm    26548 s   x86    40367 s   x86/arm 1.52
+robustfov improves BET Dice on 125/125 (arm64); min gain 0.0041
+arm64: FNIRT beats its affine start on 125/125, min gain 0.0110; max planted-motion residual 0.1981 mm (bound 0.25)
+x86_64: FNIRT beats its affine start on 125/125, min gain 0.0107; max planted-motion residual 0.2055 mm (bound 0.25)
+naive BET below Dice 0.80: 75/125 (arm64)

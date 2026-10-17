@@ -35,6 +35,15 @@ flirt -in moving -ref fixed -dof 6 -omat recovered.mat
 
 **Leave the fixture.** FSL's published brain mask is an external reference for BET, and a planted motion is an exact one for FLIRT. **Scale it** to your own scans: the registration check transfers directly — plant a motion, recover it.
 
+## Which box — [measured](../../measurements/fsl-real/README.md) (125 real T1s: robustfov, BET, FLIRT, FNIRT to MNI152)
+
+| chip | instance | cohort wall | $/hr | **billed $/subject** |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | **39 min** | 0.6381 | **0.0034** |
+| Intel | `c8i.4xlarge` | 60 min | 0.7497 | 0.0061 |
+
+**Take Graviton4: 1.53× faster, 44% cheaper per subject.** Run `robustfov` before `bet` on any scan with a neck — without it BET falls below Dice 0.80 on 75 of 125 subjects.
+
 ## Shape, size, cost
 
 One task on `m8g.xlarge` / `m8i.xlarge` (4 vCPU / 16 GiB), TTL 45m as a **backstop** with `cost_limit` $0.25 as the real guard. Install, three BETs and two FLIRTs take seconds of a ~1.3-minute window on either chip ([layout](../../patterns/layout-and-effective-cost.md)).
@@ -86,6 +95,10 @@ on each chip moves the last digits; the residual it leaves (0.1261 vs 0.1268 mm)
 fraction of a micron, and an order of magnitude inside the bound. Neither assertion depends on
 those digits.
 
+On real scans BET is a path too: across 125 NFBS subjects its mask is byte-identical on 102
+([measured](../../measurements/fsl-real/README.md)). The template's identity is a property of the
+template, not of BET.
+
 ### Pins
 
 | | |
@@ -115,9 +128,9 @@ too small to test, or a self-registration that moves the image. Check the bucket
 ### Not covered
 
 **FAST** (tissue segmentation) is installed but not checked here, and FSL ships tissue priors that
-would make a reference for it. **FNIRT** (non-linear registration), **FEAT/MELODIC** (fMRI
-analysis), **FDT/BEDPOSTX** (diffusion) and **FIRST** (subcortical) — most of what FSL is used
-for. **Real scans**: only FSL's own template. And the cross-tool check this sets up but does not
+would make a reference for it. **FEAT/MELODIC** (fMRI analysis), **FDT/BEDPOSTX** (diffusion)
+and **FIRST** (subcortical) — most of what FSL is used for. FNIRT and real scans are covered by
+the [measurement](../../measurements/fsl-real/README.md), not by this recipe's task. And the cross-tool check this sets up but does not
 take: [ants](../ants/README.md) registers the same kind of planted motion, so both could be pointed
 at one fixture and their recoveries compared.
 

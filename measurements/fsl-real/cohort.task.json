@@ -1,0 +1,82 @@
+{
+  "task_id": "fslreal-cohort",
+  "container": "docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358557db8a0d9a7d11a07d1d224f1b2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '%s  run.sh\\n%s  subject.sh\\n' ead60f7aab68bf2c4da6e5061bb4a5d664e7654c635b41751f563f92030189b4 f0a9b2db05a70794d10c1711066ab757d560d56ba4e175b6225abbb56002d2ae | sha256sum -c --quiet || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nbash /tmp/run.sh 16 0\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl/pkgs/",
+      "destination": "/tmp/pkgs/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/pkgs/",
+      "destination": "/tmp/xpkgs/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/fsl-real-linux-aarch64.lock",
+      "destination": "/tmp/locks/fsl-real-linux-aarch64.lock"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/fsl-real-linux-64.lock",
+      "destination": "/tmp/locks/fsl-real-linux-64.lock"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/NFBS_Dataset.tar.gz",
+      "destination": "/tmp/NFBS_Dataset.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/nfbs.sha256",
+      "destination": "/tmp/nfbs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/subject.sh",
+      "destination": "/tmp/subject.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/summary.txt"
+    },
+    {
+      "source": "/tmp/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/results.tsv"
+    },
+    {
+      "source": "/tmp/samples.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/samples.tsv"
+    },
+    {
+      "source": "/tmp/subjects.err",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/subjects.err"
+    },
+    {
+      "source": "/tmp/install.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/install.log"
+    },
+    {
+      "source": "/tmp/bet-masks.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fsl-real/cohort/bet-masks.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "150m",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}
