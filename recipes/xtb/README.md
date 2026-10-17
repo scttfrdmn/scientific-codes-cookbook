@@ -5,12 +5,11 @@ env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:f22ef7a3b0d6e506782596e297472fb355338502aaba668ba64d6e3a3cebe031
 env_x86_64: comp-chem-823f1ef5e11e
 spawn_version: 0.131.0
-last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
 ---
-# xtb — GFN2 on water, against xtb's own committed test value
+# xtb — GFN2 on water, against xtb's own committed test values
 
-Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM.
+Reproduces the total energy, gradient norm and HOMO-LUMO gap that xtb's own unit test asserts, on x86. **On Graviton it fails: conda-forge's linux-aarch64 xtb 6.7.1 computes wrong gradients with right energies** ([xtb-feedstock#50](https://github.com/conda-forge/xtb-feedstock/issues/50)), so don't optimise or run dynamics with it on ARM yet.
 
 ## Run it
 
@@ -31,7 +30,7 @@ xtb coord --gfn 2 --etemp 300.0 --acc 1.0 --grad
 |---|---|---|
 | Turbomole `coord` | your geometry | **`coord` is Bohr, `.xyz` is Ångström.** Converting units rounds, and that rounding moves the total energy at the 1e-7 level this recipe asserts. Keep `coord` for reference work. |
 | `--gfn 2` | `--gfn 1`, `--gfn 0`, `--gfnff` | GFN2 is the default and the best general-purpose choice; GFN-FF is a force field, orders of magnitude faster and much less accurate. |
-| single point | `--opt`, `--hess`, `--omd` | geometry optimisation, frequencies, dynamics. A non-zero gradient norm here is expected — this is a fixed geometry, not a minimum. |
+| single point | `--opt`, `--hess`, `--omd` | geometry optimisation, frequencies, dynamics — all built on the gradient, so **x86 only** until the aarch64 build is fixed. A non-zero gradient norm here is expected — this is a fixed geometry, not a minimum. |
 | `--etemp 300 --acc 1.0` | tighter `--acc` | passed explicitly so the recipe does not depend on defaults staying put; they happen to be xtb's current defaults. |
 
 **Leave the fixture.** Three atoms is the point: the energy is a *published* number in xtb's own repository, which no larger molecule here would give you, and C2v water makes the symmetry identity below available for free. **Scale it** to real molecules once the check passes — GFN2 handles hundreds of atoms in seconds.
@@ -41,22 +40,22 @@ xtb coord --gfn 2 --etemp 300.0 --acc 1.0 --grad
 One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. The SCF converges in 8 iterations in milliseconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
-<summary>As shipped: a version-matched committed reference, a symmetry identity, and a gradient norm that matches upstream on x86 but not on arm64</summary>
+<summary>As shipped: xtb's own committed energy, gradient norm and gap — all three reproduced on x86; on arm64 the gradient norm is 21× off and the recipe fails</summary>
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| SCF convergence | converged | 8 iterations |
-| **total energy** | **within 1.0e-7 of −5.070451355118** | **dev 2.810e-10** |
-| **HOMO-LUMO gap** | **within 1.0e-4 of 14.450372368833 eV** | **dev 6.706e-06** |
-| gradient norm | *reported, not asserted* — see below | 0.134752018160 |
-| **gradient: out-of-plane** | **gy = 0 for all atoms** | **3.220e-18** |
-| **gradient: C2 axis** | **gx(O) = 0** | **7.729e-18** |
-| **gradient: mirror** | **gx(H1) + gx(H2) = 0** | **0.000e+00** |
-| **gradient: mirror** | **gz(H1) − gz(H2) = 0** | **0.000e+00** |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| SCF convergence | converged | 8 iterations | 8 iterations |
+| **total energy** | **within 1.0e-7 of −5.070451355118** | **dev 2.810e-10** | **dev 2.810e-10** |
+| **gradient norm** | **within 1.0e-7 of 0.006457420125** | **FAIL: 0.134752018160** | **dev 6.506e-09** |
+| **HOMO-LUMO gap** | **within 1.0e-4 of 14.450372368833 eV** | **dev 6.706e-06** | **dev 6.706e-06** |
+| **gradient: out-of-plane** | **gy = 0 for all atoms** | **3.220e-18** | **8.686e-17** |
+| **gradient: C2 axis** | **gx(O) = 0** | **7.729e-18** | **9.154e-17** |
+| **gradient: mirror** | **gx(H1) + gx(H2) = 0** | **0.000e+00** | **1.002e-16** |
+| **gradient: mirror** | **gz(H1) − gz(H2) = 0** | **0.000e+00** | **9.975e-17** |
 
-**Both reference values and both tolerances are xtb's own**, from `test/unit/test_gfn2.f90` at
+**All three reference values and their tolerances are xtb's own**, from `test/unit/test_gfn2.f90` at
 `v6.7.1` — the same version as the `xtb` in this env, which is load-bearing because a reference
 from another release is a different number. The geometry is lines 78–81 of that file, verbatim.
 
@@ -71,13 +70,15 @@ gradient *must* satisfy `gy = 0` everywhere, `gx(O) = 0`, `gx(H1) = −gx(H2)` a
 merely small — and the two that involve summing different contributions land at machine epsilon
 (~3e-18, ~8e-18).
 
-This is the check worth copying, because it holds **whatever the reference values are**. A version
-bump that moves the energies leaves it intact, and a build with a broken gradient fails it even
-when the energy is right.
+It holds **whatever the reference values are**, so a version bump that moves the energies leaves
+it intact. But it is not enough on its own, and this recipe is the proof: the arm64 gradient is
+wrong by 21× and **still exactly C2v**. Symmetry catches a gradient with the wrong shape, not one
+with the wrong size — which is why the gradient norm is asserted against upstream's value too.
 
-### The gradient norm: x86 reproduces upstream's, arm64 does not
+### The gradient norm: x86 reproduces upstream's, arm64 does not, and the recipe asserts it
 
-`test_gfn2.f90` also pins `res%gnorm = 0.006457420125`. The same pinned xtb 6.7.1 reports:
+`test_gfn2.f90` pins `res%gnorm = 0.006457420125` at `thr = 1.0e-7`, the same tolerance as the
+energy. The same pinned xtb 6.7.1 (`edcfbbe`) reports:
 
 ```text
                  total energy        HOMO-LUMO gap      gradient norm
@@ -86,16 +87,15 @@ x86_64 (c8i)     -5.070451354837     14.450365663200    0.006457413619
 upstream test    -5.070451355118     14.450372368833    0.006457420125
 ```
 
-The energy, gap, SCC iterations, charges and multipoles agree across chips to every printed digit;
-only the gradient differs, ~21×, with the O `gz` changing sign (+8.28e-02 on arm64, −5.07e-03 on
-x86). x86 lands 6.5e-9 from upstream's committed norm, so the earlier reading here, that the CLI
-and the unit test compute different quantities, does not hold: on x86 they agree. arm64 gives
-0.134752018160 on both its runs (2026-10-08 and 2026-10-17), so it is reproducible, not noise. A
-gradient is a derivative of a converged energy, a fixed point, so a 21× gap between chips is not
-kernel roundoff; the arm64 gradient is the one that disagrees with upstream, and the cause is not
-established. Both chips pass the C2v symmetry checks, which a gradient wrong by a symmetric field
-still satisfies. The norm stays reported, not asserted, on both chips. **Use the arm64 gradient
-with care until this is resolved.**
+Energy, gap, SCC iterations, charges and multipoles agree across chips to every printed digit; only
+the gradient differs, ~21×, with the O `gz` changing sign (+8.28e-02 on arm64, −5.07e-03 on x86).
+A gradient at a converged SCF is a fixed point, so this is not kernel round-off — and it is not
+the BLAS: forcing `OPENBLAS_CORETYPE` to `NEOVERSEV2`, `NEOVERSEN1` and generic `ARMV8` gives a
+bit-identical wrong gradient. The fault is in the aarch64 build, which conda-forge cross-compiles
+from linux-64 and never runs xtb's unit tests on. Filed as
+[conda-forge/xtb-feedstock#50](https://github.com/conda-forge/xtb-feedstock/issues/50) and
+[aarchsci#46](https://github.com/playgroundlogic/aarchsci/issues/46). **Re-run arm64 when either
+publishes a fixed build;** that run, and only that run, restores `last_verified`.
 
 ### x86_64
 
@@ -133,8 +133,8 @@ spawn task run --spec "$(make -s spec RECIPE=xtb)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/xtb/r1/score.tsv" -
 ```
 
-Fails on non-convergence, either energy outside xtb's own tolerance, or any broken symmetry
-relation — but check the bucket regardless
+Fails on non-convergence, the energy, gradient norm or gap outside xtb's own tolerance, or any
+broken symmetry relation — but check the bucket regardless
 ([exit 0 isn't proof](../../practices/container-path.md)).
 
 ### Not covered
