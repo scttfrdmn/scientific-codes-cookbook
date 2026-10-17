@@ -3,7 +3,8 @@ tool: photutils
 tool_version: 3.0.0
 env: astro
 image: quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82
-gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: astro-903b8d412bd4
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.104.0
 last_verified: 2026-09-13
 ---
@@ -65,17 +66,20 @@ All four reproduced **bit-identically on the Graviton verifying run** — includ
 
 ### Smoke check (inside the task; measured before launch)
 
-| observable | assertion | observed |
-|---|---|---|
-| aperture_flux | rel err vs analytic within-R < 1e-6 | 6.5e-8 |
-| detect_count | exactly 5 (injected 5) | 5 |
-| detect_positions | max centroid error < 0.1 px | 0.0000 |
-| background_const | recovers 123.5, max dev ~0 | 123.5 / 0 |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| aperture_flux | rel err vs analytic within-R < 1e-6 | 6.5e-8 | 6.46e-08, identical |
+| detect_count | exactly 5 (injected 5) | 5 | 5 |
+| detect_positions | max centroid error < 0.1 px | 0.0000 | 0.0000 |
+| background_const | recovers 123.5, max dev ~0 | 123.5 / 0 | 123.5 / 0 |
+
+**On x86_64** (`c8i.large`, the `astro-903b8d412bd4` twin: 361 of 363 versions identical; `deprecated` 3.0.0 vs 1.3.1): `smoke-check.txt` is **byte-identical** to the Graviton run, including the one numerical value (aperture rel_err 6.46e-08).
 
 ### Run + verify
 
 ```sh
 make run RECIPE=photutils
+make run RECIPE=photutils ARCH=x86_64   # same spec, x86 twin, writes runs-x86_64/
 make ls  RECIPE=photutils
 ```
 

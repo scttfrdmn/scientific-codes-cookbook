@@ -3,7 +3,8 @@ tool: laspy
 tool_version: "2.7.0"
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:7817e0291f05f6bc209aa5999363503897647daf4eb9d6df153b1965629d6ffc
-gap_x86_64: the aarch.science `pointcloud` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: pointcloud-93bbd77d2902
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---
@@ -44,7 +45,7 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 30m as a **backstop** with `cost
 
 ### The checks
 
-| observable | assertion | observed |
+| observable | assertion | observed — arm64 = x86_64 |
 |---|---|---|
 | staged cloud | **sha256 == the pointcloud pin** | `944b9475…` (56,350,988 B) |
 | laspy / lazrs | read from the running install | **2.7.0** / present (`laszip` absent) |
@@ -59,6 +60,8 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 30m as a **backstop** with `cost
 | **control: off-grid write/read** | **`0 < diff ≤ scale/2`** | **4.998678e-03** of 5.0e-03 |
 | LAZ vs LAS | identical integers, smaller file | 4.86×, identical |
 | determinism | two reads agree | exact |
+
+**On x86_64** (`m8i.xlarge`, the `pointcloud-93bbd77d2902` twin: 227 of 234 versions identical, laspy 2.7.0 and lazrs among them; the six that differ are `eigen-abi`, `libcurl`, `libntlm`, `libsqlite`, `sqlite` and `tifffile`): `score.tsv` and `identities.log` are **byte-identical** to the Graviton run, including the 2.159e-07 mean-Z difference from PDAL and the 4.998678e-03 off-grid control. The same staged bytes decode to the same 10,653,336 points on both chips.
 
 ### Two readers, one file
 
@@ -137,6 +140,7 @@ digest, so verify the tag and pin the arm64 digest.
 ```sh
 make stage RECIPE=pointcloud && make stage RECIPE=laspy
 spawn task run --spec "$(make -s spec RECIPE=laspy)" --wait
+spawn task run --spec "$(make -s spec RECIPE=laspy ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/laspy/r1/score.tsv" -
 ```
 

@@ -3,7 +3,8 @@ tool: sunpy
 tool_version: "8.0.0"
 env: astro
 image: quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c
-gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: astro-e2ee19affec3
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---
@@ -46,39 +47,41 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| sunpy / astropy / numpy | read from the running install | **8.0.0** / 8.0.1 / 2.5.4 |
-| **network** | **must be off before sunpy is imported** | `auto_download=False`, `allow_internet=False` |
-| **`radius`, `luminosity`, `mean distance`** | **exact, zero uncertainty, cited source unchanged** | 695700000 m, 3.828e26 W, 149597870700 m |
-| **`mean distance` == astropy's `au`** | **exact** | exact |
-| **astropy `R_sun` == sunpy `radius`** | **exact** (separate objects) | exact |
-| **`angular_radius` == `arcsin(R/d)`** | **`== 0` exactly** | **0.000e+00** |
-| control: flat-disc `arctan(R/d)` | must differ, by the series' `x²/2` | **1.085e-05**, ratio to prediction **1.000002** |
-| control: small-angle `R/d` | must differ, by the series' `x²/6` | **3.617e-06**, ratio **1.000010** |
-| **`sin(angular_radius)·d == R_sun`**, 53 epochs | **< 1e-12** while the angle swings > 2% | **3.347e-16**, swing **3.33%** |
-| **disc centre → Stonyhurst lon** | **exactly 0** | **0** |
-| **disc centre → lat == `B0`** | **< 1e-12** | **8.882e-16** |
-| **disc centre → radius == `R_sun`** | **< 1e-11** | **7.575e-13** |
-| **frame round-trip**, 5 on-disc points | **< 1e-10 arcsec** | **1.137e-13** |
-| control: round-trip with a +6 h observer | must move > 0.1 arcsec | **2.46–4.19 arcsec** (2e+13 apart) |
-| **off-disc rays (1.05/1.5/2.0×)** | **must be non-finite** | `nan` ×3 |
-| **limb boundary == `arcsin(R/d)`** | **< 1e-6, and inside the arctan gap** | **1.946e-12** (5,575,885× inside) |
-| **axial tilt: ICRF pole vs a year of `B0`** | **< 5e-3 deg** | **4.655e-04 deg** (1.7″) |
-| control: the same pole vs the *equatorial* pole | must differ by > 1 deg | **26.130** vs 7.252 |
-| **howard / snodgrass / allen / rigid** | **== published coefficients, < 1e-9 deg/day, 6 latitudes** | all four match |
-| **`rigid` == the table's sidereal rate** | **every latitude** | 14.1844 °/day, flat to **0** |
-| control: the three differential laws | must fall > 1 deg/day, monotone poleward | 2.80–3.63 °/day |
-| sidereal − synodic == Earth's mean motion | < 1e-4 deg/day | 9.121e-06 |
-| **Carrington `n` → time → `n`**, 1,000 rotations | **< 1e-7**, monotone | **3.530e-08** |
-| mean interval == cited synodic period | < 1e-3 d | **1.835e-04 d** |
-| control: the intervals must scatter | > 0.05 d | **0.1445 d** (787× the error) |
-| **rotation 1 vs Meeus' JD** | **within its stated ±0.1 d** | **0.011 d** |
-| WCS pixel→world→pixel | < 1e-9 pix | 1.066e-11 |
-| `average angular size` | *recorded, not asserted* | 959.63″ vs 959.231″ derived |
-| `get_sun` vs `earth_distance` | *recorded* — a shared ephemeris | 1.112e-16 |
-| determinism | repeat calls bit-identical | identical |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| sunpy / astropy / numpy | read from the running install | **8.0.0** / 8.0.1 / 2.5.4 | identical |
+| **network** | **must be off before sunpy is imported** | `auto_download=False`, `allow_internet=False` | identical |
+| **`radius`, `luminosity`, `mean distance`** | **exact, zero uncertainty, cited source unchanged** | 695700000 m, 3.828e26 W, 149597870700 m | identical |
+| **`mean distance` == astropy's `au`** | **exact** | exact | identical |
+| **astropy `R_sun` == sunpy `radius`** | **exact** (separate objects) | exact | identical |
+| **`angular_radius` == `arcsin(R/d)`** | **`== 0` exactly** | **0.000e+00** | identical |
+| control: flat-disc `arctan(R/d)` | must differ, by the series' `x²/2` | **1.085e-05**, ratio to prediction **1.000002** | identical |
+| control: small-angle `R/d` | must differ, by the series' `x²/6` | **3.617e-06**, ratio **1.000010** | identical |
+| **`sin(angular_radius)·d == R_sun`**, 53 epochs | **< 1e-12** while the angle swings > 2% | **3.347e-16**, swing **3.33%** | identical |
+| **disc centre → Stonyhurst lon** | **exactly 0** | **0** | identical |
+| **disc centre → lat == `B0`** | **< 1e-12** | **8.882e-16** | **0.000e+00** |
+| **disc centre → radius == `R_sun`** | **< 1e-11** | **7.575e-13** | identical |
+| **frame round-trip**, 5 on-disc points | **< 1e-10 arcsec** | **1.137e-13** | **1.137e-13** |
+| control: round-trip with a +6 h observer | must move > 0.1 arcsec | **2.46–4.19 arcsec** (2e+13 apart) | identical |
+| **off-disc rays (1.05/1.5/2.0×)** | **must be non-finite** | `nan` ×3 | identical |
+| **limb boundary == `arcsin(R/d)`** | **< 1e-6, and inside the arctan gap** | **1.946e-12** (5,575,885× inside) | identical |
+| **axial tilt: ICRF pole vs a year of `B0`** | **< 5e-3 deg** | **4.655e-04 deg** (1.7″) | identical |
+| control: the same pole vs the *equatorial* pole | must differ by > 1 deg | **26.130** vs 7.252 | identical |
+| **howard / snodgrass / allen / rigid** | **== published coefficients, < 1e-9 deg/day, 6 latitudes** | all four match | identical |
+| **`rigid` == the table's sidereal rate** | **every latitude** | 14.1844 °/day, flat to **0** | identical |
+| control: the three differential laws | must fall > 1 deg/day, monotone poleward | 2.80–3.63 °/day | identical |
+| sidereal − synodic == Earth's mean motion | < 1e-4 deg/day | 9.121e-06 | identical |
+| **Carrington `n` → time → `n`**, 1,000 rotations | **< 1e-7**, monotone | **3.530e-08** | identical |
+| mean interval == cited synodic period | < 1e-3 d | **1.835e-04 d** | identical |
+| control: the intervals must scatter | > 0.05 d | **0.1445 d** (787× the error) | identical |
+| **rotation 1 vs Meeus' JD** | **within its stated ±0.1 d** | **0.011 d** | identical |
+| WCS pixel→world→pixel | < 1e-9 pix | 1.066e-11 | identical |
+| `average angular size` | *recorded, not asserted* | 959.63″ vs 959.231″ derived | identical |
+| `get_sun` vs `earth_distance` | *recorded* — a shared ephemeris | 1.112e-16 | 2.224e-16 |
+| determinism | repeat calls bit-identical | identical | identical |
+
+**On x86_64** (`m8i.large`, the `astro-e2ee19affec3` twin: 349 of 364 versions identical, sunpy 8.0.0, astropy 8.0.1 and numpy 2.5.4 among them; the 14 that differ are minor bumps listed in the lock header). Every assertion holds, and every defined constant, closed form, control and published law is identical. Only last-ulp residuals of the coordinate transforms move: the disc-centre latitude lands exactly on `B0` (arm64 8.882e-16), the per-point frame round-trips shuffle among 0, 5.7e-14 and 1.1e-13 arcsec with the same worst case, and `get_sun` vs `earth_distance` is 2.224e-16 (arm64 1.112e-16). Each is one or two doubles of round-off in a chain of trigonometry, the same size on both chips, so these are neither a fixed point that must agree nor a trajectory, and nothing asserted is near its bound.
 
 ### The apparent radius of a sphere, and two ways to get it wrong
 
@@ -245,6 +248,7 @@ verified against, since repinning is a change to the input rather than a text ed
 ```sh
 make stage RECIPE=sunpy
 spawn task run --spec "$(make -s spec RECIPE=sunpy)" --wait
+spawn task run --spec "$(make -s spec RECIPE=sunpy ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/sunpy/r1/score.tsv" -
 ```
 

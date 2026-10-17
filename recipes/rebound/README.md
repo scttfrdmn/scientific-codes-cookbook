@@ -3,7 +3,8 @@ tool: rebound
 tool_version: "5.0.1"
 env: astro
 image: quay.io/aarchsci/astro@sha256:9568095c64864dbcf4ad2759ad1aa5457bfa4e12530282378f706c3d394dc753
-gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: astro-c7d877c02e6d
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 ---
@@ -46,14 +47,16 @@ One task on `c8g.large` (2 vCPU / 4 GiB), TTL 45m, cap $0.10. Both integrations 
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| particle count | **5** — proves the builtin dataset, not a network fetch | 5 (Sun + 4 giants) |
-| **IAS15 energy drift** | **\|ΔE/E\| < 1e-14 over 1000 Jupiter orbits** | **3.365e-15** |
-| WHFast energy drift | — (reported) | 9.172e-08 |
-| **method ladder** | **WHFast > 100× worse than IAS15** | **2.726e+07×** |
-| **Kepler's third law** | a³/P² == (m₁+m₂)/4π², rel < 1e-12 | **1.414e-16** |
-| **determinism** | two identical runs, identical energy | identical |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| particle count | **5** — proves the builtin dataset, not a network fetch | 5 (Sun + 4 giants) | 5 |
+| **IAS15 energy drift** | **\|ΔE/E\| < 1e-14 over 1000 Jupiter orbits** | **3.365e-15** | identical |
+| WHFast energy drift | — (reported) | 9.172e-08 | identical |
+| **method ladder** | **WHFast > 100× worse than IAS15** | **2.726e+07×** | identical |
+| **Kepler's third law** | a³/P² == (m₁+m₂)/4π², rel < 1e-12 | **1.414e-16** | identical |
+| **determinism** | two identical runs, identical energy | identical | identical |
+
+**On x86_64** (`c8i.large`, the `astro-c7d877c02e6d` twin; 339 of 364 versions identical, rebound 5.0.1 and numpy 2.5.3 among them — the 24 that differ are minor bumps such as `aiohttp`, `zarr`, `tifffile`, `spiceypy`, `libsqlite`, all listed in the lock header): `score.tsv` and `rebound.log` are **byte-identical** to the Graviton run. That is an observation, not an assertion: both integrations are trajectories, a path that may legitimately differ across chips (a different FP contraction or `libm` would move the last digits), so the page asserts only what each chip must satisfy on its own.
 
 **The 1e-14 bound is REBOUND's, not ours.** `rebound/tests/test_integrator.py` ships inside the
 conda package and asserts `fabs((e0-e1)/e1) < 1e-14` for IAS15 on exactly this system and timespan.
@@ -122,6 +125,7 @@ throwing away a finished 2.5-minute simulation on a guessed attribute path.
 
 ```sh
 spawn task run --spec "$(make -s spec RECIPE=rebound)" --wait
+spawn task run --spec "$(make -s spec RECIPE=rebound ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/rebound/r1/score.tsv" -
 ```
 

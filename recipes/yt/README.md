@@ -3,7 +3,8 @@ tool: yt
 tool_version: "4.4.2"
 env: astro
 image: quay.io/aarchsci/astro@sha256:eaa6cb334d95db68662c51646a139c0ff635e9ebf3cb603cf5856ad40c26d066
-gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: astro-ed5afa726bbe
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---
@@ -46,7 +47,7 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
+| observable | assertion | observed — arm64 = x86_64 |
 |---|---|---|
 | staged bytes | match pin | 1 of 1 |
 | yt / numpy / unyt | read from the running install | **4.4.2** / 2.5.3 / 3.1.0 |
@@ -63,6 +64,8 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 | each refinement improves | strictly | 1.56e-2 → 6.20e-3 → 8.36e-4 → 2.66e-5 |
 | sphere convergence **order** | *reported, **not** asserted* | ratios 2.523, 7.414, 31.460 |
 | determinism | two identical loads agree | identical |
+
+**On x86_64** (`m8i.large`, the `astro-ed5afa726bbe` twin: 345 of 364 versions identical, yt 4.4.2, numpy 2.5.3 and unyt 3.1.0 among them; the 18 that differ are minor bumps such as `fonttools`, `tifffile` and `spiceypy`, listed in the lock header): `score.tsv` and `identities.log` are **byte-identical** to the Graviton run, covering the exact `==` masses, the 1e-15 projection and profile residuals, the flipped-image controls and the sphere ladder.
 
 ### Mass, exactly, through three different code paths
 
@@ -155,6 +158,7 @@ x-marginal exactly flat.
 ```sh
 make stage RECIPE=yt
 spawn task run --spec "$(make -s spec RECIPE=yt)" --wait
+spawn task run --spec "$(make -s spec RECIPE=yt ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/yt/r1/score.tsv" -
 ```
 

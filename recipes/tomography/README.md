@@ -3,7 +3,8 @@ tool: astra-toolbox
 tool_version: "2.5.0"
 env: tomography
 image: quay.io/aarchsci/tomography@sha256:ea7b4900500f3eb23d3060611f1737175f4a6421cb24b4f29a809765b2754026
-gap_x86_64: the aarch.science `tomography` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: tomography-9897b62718c6
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---
@@ -21,6 +22,7 @@ Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking
 ```bash
 make stage RECIPE=tomography     # once: the checks only — the phantom is analytic
 spawn task run --spec "$(make -s spec RECIPE=tomography)" --wait
+spawn task run --spec "$(make -s spec RECIPE=tomography ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 make ls RECIPE=tomography
 
 pid = astra.create_projector("linear", proj_geom, vol_geom)   # CPU; no _CUDA suffix
@@ -51,23 +53,25 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 30m as a **backstop** with `cost
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| astra / tomopy / numpy | read from the running install | **2.5.0** / 1.15.3 / 2.5.4 |
-| **`astra.use_cuda()`** | **must be `False`** | **False** |
-| phantom vs `πR²` | within 1% | 0.999493 |
-| **projection sum, angle-independent** | **< 1e-3** | **3.864e-04** |
-| **mean projection sum / mass** | **within 1e-4 of 1** | **7.0e-06** |
-| **linearity `R(af+bg)`** | **< 1e-5** | **1.692e-06** |
-| **forward: astra vs tomopy** | **< 1e-5 relative** | **2.592e-07** |
-| **astra FBP recovers the phantom** | **< 0.10 relative L2** | **0.070257** |
-| control: noise / shifted / uniform | must be far worse | 3.27 / 1.39 / 2.19 — **19.8×** |
-| **more angles must help** | monotone | 0.174 → 0.101 → 0.070 → 0.063 |
-| convergence *order* | *reported, **not** asserted* | ratios 1.728, 1.435, 1.120 |
-| **determinism** | forward + FBP byte-identical | yes |
-| tomopy reconstruction | *reported, **not** asserted* | 0.850 |
-| tomopy `filter_name` effect | *reported* | **byte-identical** across 3 filters |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | 1 of 1 |
+| astra / tomopy / numpy | read from the running install | **2.5.0** / 1.15.3 / 2.5.4 | identical |
+| **`astra.use_cuda()`** | **must be `False`** | **False** | **False** |
+| phantom vs `πR²` | within 1% | 0.999493 | identical |
+| **projection sum, angle-independent** | **< 1e-3** | **3.864e-04** | **3.863e-04** |
+| **mean projection sum / mass** | **within 1e-4 of 1** | **7.0e-06** | **6.9e-06** |
+| **linearity `R(af+bg)`** | **< 1e-5** | **1.692e-06** | identical |
+| **forward: astra vs tomopy** | **< 1e-5 relative** | **2.592e-07** | **1.728e-07** |
+| **astra FBP recovers the phantom** | **< 0.10 relative L2** | **0.070257** | identical |
+| control: noise / shifted / uniform | must be far worse | 3.27 / 1.39 / 2.19 — **19.8×** | identical |
+| **more angles must help** | monotone | 0.174 → 0.101 → 0.070 → 0.063 | identical |
+| convergence *order* | *reported, **not** asserted* | ratios 1.728, 1.435, 1.120 | identical |
+| **determinism** | forward + FBP byte-identical | yes | yes |
+| tomopy reconstruction | *reported, **not** asserted* | 0.850 | 0.850 |
+| tomopy `filter_name` effect | *reported* | **byte-identical** across 3 filters | **byte-identical**, again |
+
+**On x86_64** (`m8i.xlarge`, the `tomography-9897b62718c6` twin: every declared and locked version identical, plus conda-forge's `nomkl` selector on linux-64). Every assertion holds. What moves is only float32 **reduction round-off**: astra's mean projection sum is `11303.921875` against arm64's `11303.920898`, exactly one float32 ulp at that magnitude (2⁻¹⁰), so the per-angle spread (3.863e-04), mass ratio (6.9e-06) and astra-vs-tomopy forward difference (1.728e-07) shift in their last digits, inside bounds that were set from float32 rather than from the run. The FBP reconstruction error (0.070257), linearity residual, controls and angle ladder are identical. None of these is a converged fixed point or a trajectory: they are float32 sums whose order the build chooses, which is why the bounds were written in float32 epsilons to begin with.
 
 ### Mass conservation, with bounds from float32 rather than from the run
 
@@ -181,6 +185,7 @@ compiled core `libtomo` built for aarch64 — not stale since 2022 as previously
 ```sh
 make stage RECIPE=tomography
 spawn task run --spec "$(make -s spec RECIPE=tomography)" --wait
+spawn task run --spec "$(make -s spec RECIPE=tomography ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/tomography/r1/score.tsv" -
 ```
 

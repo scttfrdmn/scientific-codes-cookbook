@@ -3,7 +3,8 @@ tool: specutils
 tool_version: "2.4.0"
 env: astro
 image: quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c
-gap_x86_64: the aarch.science `astro` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: astro-e2ee19affec3
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---
@@ -45,7 +46,7 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
+| observable | assertion | observed — arm64 = x86_64 |
 |---|---|---|
 | staged bytes | match pin | 1 of 1 |
 | specutils / astropy / numpy / scipy | read from the running install | **2.4.0** / 8.0.1 / 2.5.4 / 1.18.1 |
@@ -60,6 +61,8 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 | **EW after `FluxConserving` to 10 Å** | **`== 0`** | **0.000e+00** |
 | control: EW after `LinearInterp` to 10 Å | must lose > 1e-3 | **6.493e-02** |
 | determinism | two calls agree | identical |
+
+**On x86_64** (`m8i.large`, the `astro-e2ee19affec3` twin: 349 of 364 versions identical, specutils 2.4.0, astropy, numpy 2.5.4 and scipy 1.18.1 among them; the 14 that differ are minor bumps such as `fonttools`, `tifffile`, `libsqlite`, listed in the lock header): `score.tsv` and `identities.log` are **byte-identical** to the Graviton run, every exact zero and the 1.476e-16 EW residual included.
 
 ### An analytic reference, verified without the tool
 
@@ -148,6 +151,7 @@ repinning is a change to the input rather than a text edit.
 ```sh
 make stage RECIPE=specutils
 spawn task run --spec "$(make -s spec RECIPE=specutils)" --wait
+spawn task run --spec "$(make -s spec RECIPE=specutils ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 aws s3 cp "s3://$(make -s print-bucket)/runs/specutils/r1/score.tsv" -
 ```
 

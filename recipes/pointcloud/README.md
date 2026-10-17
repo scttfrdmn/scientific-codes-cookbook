@@ -2,7 +2,8 @@
 tool: pdal
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823
-gap_x86_64: the aarch.science `pointcloud` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: pointcloud-792583991793
+last_verified_x86_64: 2026-10-16
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 ---
@@ -56,13 +57,15 @@ The `pointcloud` env's own D3 uses PDAL's synthetic `faux.reader`; a real recipe
 
 ### Smoke check (inside the task; measured before launch)
 
-| observable | assertion | observed |
-|---|---|---|
-| pinned sha256 | matches | OK |
-| **point count** | exactly 10,653,336 (canonical autzen, header) | 10653336 |
-| bounds X / Y / Z | 635577.79…639003.73 / 848882.15…853537.66 / 406.14…615.26 | matches |
-| decoded-point count | == header count (stats pass saw every point) | 10653336 |
-| **mean Z (decode)** | 434.1025 (mean over all decoded points) | 434.1025 |
+| observable | assertion | arm64 | x86_64 |
+|---|---|---|---|
+| pinned sha256 | matches | OK | OK |
+| **point count** | exactly 10,653,336 (canonical autzen, header) | 10653336 | 10653336 |
+| bounds X / Y / Z | 635577.79…639003.73 / 848882.15…853537.66 / 406.14…615.26 | matches | matches |
+| decoded-point count | == header count (stats pass saw every point) | 10653336 | 10653336 |
+| **mean Z (decode)** | 434.1025 (mean over all decoded points) | 434.1025 | 434.1025 |
+
+**On x86_64** (`c8i.large`, the `pointcloud-792583991793` twin: PDAL 2.10.1 on both, but this older pin solves to 197 of 245 versions identical on linux-64, including hdf5 1.14.6 vs 2.1.0, libarrow 22 vs 24 and scipy 1.18.1 vs 1.18.0, all listed in the lock header): `smoke-check.txt` is **byte-identical** to the Graviton run. Every value here is a header field or a decode statistic reported at four decimals.
 
 The count and bounds are the header cross-check; **mean Z is the decode identity** — PDAL must LZ-decompress and apply the header's scale/offset to all 10.6M points to reproduce 434.1025, which neither the header nor the sha256 proves. `z_stat_count` equaling the header count confirms the whole cloud was decoded, not a prefix.
 
@@ -71,6 +74,7 @@ The count and bounds are the header cross-check; **mean Z is the decode identity
 ```sh
 make stage RECIPE=pointcloud    # once; fetch + verify + upload autzen.laz (~56 MB)
 make run RECIPE=pointcloud
+make run RECIPE=pointcloud ARCH=x86_64   # same spec, x86 twin, writes runs-x86_64/
 make ls RECIPE=pointcloud
 ```
 
