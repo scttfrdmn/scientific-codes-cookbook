@@ -3,9 +3,9 @@ tool: su2
 tool_version: 8.5.0
 env: cfd-fv
 image: quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46
-gap_x86_64: the aarch.science `cfd-fv` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.104.0
-last_verified: 2026-09-13
+env_x86_64: cfd-fv-4ac4ff422132
+spawn_version: 0.130.1
+last_verified: 2026-10-16
 ---
 # SU2 — finite-volume Euler flow, verified by free-stream preservation
 
@@ -40,7 +40,7 @@ One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), 
 **Sizing:** the channel mesh is tiny; a real case scales with cell count and moves to a Krylov solver across ranks (SU2 is MPI-parallel via ParMETIS) — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real model on its mesh.
 
 <details>
-<summary>As shipped: why free-stream on a distorted mesh, the MPI check, arm64, pins, smoke check, run + verify</summary>
+<summary>As shipped: why free-stream on a distorted mesh, the MPI check, native check, x86_64, pins, smoke check, run + verify</summary>
 
 ### Why free-stream preservation, on a *distorted* mesh
 
@@ -50,9 +50,13 @@ Uniform flow (constant Mach 0.5) is an exact solution of the Euler equations, so
 
 The 2-rank run reaches the same machine-zero residual **and** calls ParMETIS to partition the mesh (`graph partitioning complete`), which the **serial run does not** — so it's genuine domain decomposition, not a nominal rank count that a serial fallback could fake ([rank-count guard](../../practices/mpi-rank-count.md)).
 
-### arm64 from inside
+### Native from inside
 
-`SU2_CFD`'s ELF header reports `e_machine` **183 (AArch64)**, asserted directly from the binary — genuinely arm64, not trusted from an image tag.
+`SU2_CFD`'s ELF `e_machine` must match the host (`uname -m`): **183 (AArch64)** on Graviton4, 62 on x86 — read from the binary, not trusted from an image tag.
+
+### x86_64: does not pass yet
+
+On `c8i.large` (the `cfd-fv` env's linux-64 twin, all 56 locked versions identical, 2026-10-16), `su2_native` (62) and `serial_freestream` (**−14.476211**, against −14.463453 on Graviton4; both a residual floor at machine zero, not a fixed point) pass, but **`mpi2_freestream` and `mpi2_decomposed` fail**: `mpirun -n 2` never starts SU2 — `There are not enough slots available in the system to satisfy the 2 slots`. A `c8i.large`'s 2 vCPUs are one hyperthreaded core and Open MPI 5 counts cores, where a `c8g.large` has two real cores; the spec's `OMPI_MCA_rmaps_base_oversubscribe` is an Open MPI 4 name that 5.0.10 ignores. So the failure is the launch on a 1-core box, not SU2. `last_verified_x86_64` is withheld until a 2-rank x86 run passes.
 
 ### Pins (data tier: synthetic / in-code)
 
@@ -65,7 +69,7 @@ The 2-rank run reaches the same machine-zero residual **and** calls ParMETIS to 
 
 | observable | assertion | observed |
 |---|---|---|
-| su2_aarch64 | `SU2_CFD` ELF e_machine == 183 | 183 |
+| su2_native | `SU2_CFD` ELF e_machine == host's (183 on aarch64) | 183 |
 | serial_freestream | final log10(RMS ρ) ≤ −12 | −14.46 |
 | mpi2_freestream | final log10(RMS ρ) ≤ −12 | −14.43 |
 | mpi2_decomposed | ParMETIS partitions in 2-rank, absent in serial | ✓ / ✓ |

@@ -3,9 +3,10 @@ tool: rasterio
 tool_version: 1.5.0
 env: earth-observation
 image: quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337
-gap_x86_64: the aarch.science `earth-observation` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: earth-observation-51a38824432a
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-16
 ---
 # Sentinel-2 L2A — recompute ESA's scene classification, and NDVI over the whole tile
 
@@ -53,15 +54,21 @@ arithmetic is memory-bandwidth-bound — Graviton4 did the NDVI **5× faster tha
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| grid vs STAC item | shape + EPSG equal the item's `proj:shape` / `proj:epsg` | 10980² / 5490², EPSG:32611 |
-| grids nest | 10 m is exactly 2× the 20 m grid, shared origin | yes (199980, 4100040) |
-| SCL pixels | exactly 30,140,100 (5490²) | 30,140,100 |
-| **class % vs ESA's own** | **max\|diff\| < 2e-6 pp over 11 classes** | **9.64e-07** |
-| NDVI range | within [−1, 1] by construction | [−1.0000, 1.0000] |
-| **classifier vs index** | **p10(vegetation) > p90(not_vegetated)** | **+0.4788 > +0.3696** |
-| water NDVI | mean < 0 (NIR absorbed) | **−0.2415** |
+| observable | assertion | Graviton4 | x86_64 |
+|---|---|---|---|
+| grid vs STAC item | shape + EPSG equal the item's `proj:shape` / `proj:epsg` | 10980² / 5490², EPSG:32611 | same |
+| grids nest | 10 m is exactly 2× the 20 m grid, shared origin | yes (199980, 4100040) | same |
+| SCL pixels | exactly 30,140,100 (5490²) | 30,140,100 | same |
+| **class % vs ESA's own** | **max\|diff\| < 2e-6 pp over 11 classes** | **9.64e-07** | same |
+| NDVI range | within [−1, 1] by construction | [−1.0000, 1.0000] | same |
+| **classifier vs index** | **p10(vegetation) > p90(not_vegetated)** | **+0.4788 > +0.3696** | same |
+| water NDVI | mean < 0 (NIR absorbed) | **−0.2415** | same |
+
+x86_64 ran on `c8i.xlarge` (2026-10-16) from the env's linux-64 twin: 256 of 261 versions
+identical, rasterio 1.5.0 / GDAL 3.12.4 among them; c-blosc2, charls, deprecated and wrapt
+differ by a patch or minor release, none on the GeoTIFF read path. Every line of the smoke
+check, all eleven class counts and every NDVI statistic included, is identical on both chips;
+only the wall times differ.
 
 **The headline is a reproduction, not a measurement.** The STAC item carries ESA's own
 scene-classification percentages, computed by the L2A processor from the SCL band. Recomputing
@@ -113,7 +120,7 @@ averaging an index is defensible, inventing a classification for a 10 m pixel is
 
 | | |
 |---|---|
-| image | `quay.io/aarchsci/earth-observation@sha256:8e011f38aea1…` (rasterio 1.5.0 / GDAL 3.12.4, cosign-signed, `linux/arm64`) |
+| image | `quay.io/aarchsci/earth-observation@sha256:8e011f38aea1…` (rasterio 1.5.0 / GDAL 3.12.4, cosign-signed, `linux/arm64`); x86_64: the locked twin `envs-x86_64/earth-observation-51a38824432a.linux-64.lock` |
 | B04 (red, 10 m) | `sha256:8786ece1f55d…` — 224,839,341 B |
 | B08 (NIR, 10 m) | `sha256:52030ffc4ba7…` — 220,607,414 B |
 | SCL (20 m) | `sha256:258f36e59c6c…` — 2,571,146 B |

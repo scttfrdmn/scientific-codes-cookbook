@@ -3,9 +3,10 @@ tool: stackstac-odc-stac
 tool_version: "stackstac 0.5.1 / odc-stac 0.5.3"
 env: earth-observation
 image: quay.io/aarchsci/earth-observation@sha256:e5e8125b307e66301efe15fc3e4340462a112968e299b30fe9421f873688b91f
-gap_x86_64: the aarch.science `earth-observation` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: earth-observation-6a5be4ba03fa
 spawn_version: 0.126.1
 last_verified: 2026-10-10
+last_verified_x86_64: 2026-10-16
 ---
 # stackstac + odc-stac — two STAC loaders, one pinned item, and a silent 5% grid error
 
@@ -45,25 +46,29 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| shared scene | sha256 equals earth-observation's pins | 3 of 3 |
-| stackstac / odc-stac | read from the running install | **0.5.1** / 0.5.3 |
-| pystac / pystac-client / rioxarray / xarray | — | 1.15.2 / 0.9.0 / 0.23.0 / 2026.9.0 |
-| **`proj:epsg` after pystac parses** | **is `None`** | `None`; only `proj:code` survives |
-| odc-stac grid | equals the asset's own `proj:shape`/`proj:transform` | 5490², `(20,0,199980,0,-20,4100040)` |
-| **stackstac, unfixed** | **must DIFFER from odc-stac** | **5491² @ 21.138368 m** |
-| route A — restore `proj:epsg` | 0 NaN, and max abs diff **== 0** | 5490² @ 20 m, **0** |
-| route B — pin the grid explicitly | max abs diff **== 0** | **0** |
-| rioxarray on the same file | EPSG 32611, max abs diff **== 0** | **0** |
-| **three readers** | **byte-identical** | **30,140,100 pixels** |
-| **ESA's class percentages** | **max\|diff\| < 2e-6 pp over 12** | **9.642e-07 pp** |
-| 60 m band, both loaders | its own 1830², not the 20 m grid | 1830² / 1830² |
-| pystac-client on a static catalog | returns exactly the pinned item | 1 item, id matches |
-| `conforms_to("ITEM_SEARCH")` | **False** | False |
-| `search()` | **raises `DoesNotConformTo`** | DoesNotConformTo |
-| live-API `/search` | *reported, not covered* | — |
+| observable | assertion | Graviton4 | x86_64 |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| shared scene | sha256 equals earth-observation's pins | 3 of 3 | identical |
+| stackstac / odc-stac | read from the running install | **0.5.1** / 0.5.3 | identical |
+| pystac / pystac-client / rioxarray / xarray | — | 1.15.2 / 0.9.0 / 0.23.0 / 2026.9.0 | identical |
+| **`proj:epsg` after pystac parses** | **is `None`** | `None`; only `proj:code` survives | identical |
+| odc-stac grid | equals the asset's own `proj:shape`/`proj:transform` | 5490², `(20,0,199980,0,-20,4100040)` | identical |
+| **stackstac, unfixed** | **must DIFFER from odc-stac** | **5491² @ 21.138368 m** | identical |
+| route A — restore `proj:epsg` | 0 NaN, and max abs diff **== 0** | 5490² @ 20 m, **0** | identical |
+| route B — pin the grid explicitly | max abs diff **== 0** | **0** | identical |
+| rioxarray on the same file | EPSG 32611, max abs diff **== 0** | **0** | identical |
+| **three readers** | **byte-identical** | **30,140,100 pixels** | identical |
+| **ESA's class percentages** | **max\|diff\| < 2e-6 pp over 12** | **9.642e-07 pp** | identical |
+| 60 m band, both loaders | its own 1830², not the 20 m grid | 1830² / 1830² | identical |
+| pystac-client on a static catalog | returns exactly the pinned item | 1 item, id matches | identical |
+| `conforms_to("ITEM_SEARCH")` | **False** | False | identical |
+| `search()` | **raises `DoesNotConformTo`** | DoesNotConformTo | identical |
+| live-API `/search` | *reported, not covered* | — | — |
+
+x86_64 ran on `m8i.xlarge` (2026-10-16) from the env's linux-64 twin, all 246 locked versions
+identical; its `score.tsv` is byte-identical to Graviton4's, including the silent 21.138368 m
+resample — the trap is in the metadata handling, not the chip.
 
 ### The headline is a disagreement, and the wrong answer is the quiet one
 
@@ -153,7 +158,8 @@ transforms and all 12 class percentages are still present, since those are the g
 held to and the anchor they are measured against.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest, so verify the tag and pin the arm64 digest.
+digest, so verify the tag and pin the arm64 digest. x86_64 installs the same versions from
+`envs-x86_64/earth-observation-6a5be4ba03fa.linux-64.lock`.
 
 ### Run + verify
 

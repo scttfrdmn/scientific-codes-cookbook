@@ -3,9 +3,10 @@ tool: bilby
 tool_version: "2.8.2"
 env: gw
 image: quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5
-gap_x86_64: the aarch.science `gw` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: gw-ab3a5857bd21
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # Gravitational waves — PyCBC finds a planted chirp, Bilby recovers its chirp mass
 
@@ -43,29 +44,35 @@ One task on `c8g.large` (2 vCPU / 4 GiB; peak RSS 273 MiB), TTL 30m as a **backs
 
 ### The checks
 
-Observed on Graviton4 (`c8g.large`, 2026-10-16); every non-timing row was identical on a laptop run of the same digest.
+Observed on Graviton4 (`c8g.large`) and x86_64 (`c8i.large`, the `gw` env's linux-64 twin, all
+215 locked versions identical), both 2026-10-16; "same" is identical to the printed digits.
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| bilby / lal / lalsimulation / pycbc / dynesty | read from the running install | **2.8.2** / 7.6.1 / 6.1.0 / 2.10.0 / 3.1.0 |
-| **matched-filter peak vs planted merger** | **within 1 sample** | **+1 sample** (163841 vs 163840, at 4096 Hz) |
-| **peak SNR vs optimal SNR from the PSD** | **\|ρ − ρ_opt\| < 4** | **24.953 vs 26.143** (−1.19) |
-| control: same filter on the noise alone | max \|ρ\| < 8 | 4.454 over 196,608 samples |
-| filter normalisation: mean \|ρ\|² on noise | in (1.8, 2.2) — expect 2 | **2.003** |
-| **Bilby: injected chirp mass in the 99% interval** | **inside** | **28.0956 in [27.906, 28.210]**, quantile 0.517 |
-| control: a chirp mass 2% off | **outside** the 99% interval | 28.658 — outside |
-| ln Bayes factor, injection | > ρ²/4 = 199 | 391.3 (network ρ_opt 28.22) |
-| control: ln Bayes factor, noise alone | < 5 | −14.67 |
-| **Bilby ln L ratio at the injection vs ⟨d\|h⟩ − ⟨h\|h⟩/2 written out** | **rel < 1e-10** | **0** (403.344532) |
-| **IMRPhenomD h₊: PyCBC and Bilby vs LALSimulation direct** | **rel < 1e-10** | **0** over 4,016 bins, both |
-| **optimal SNR: PyCBC `sigmasq`, Bilby, 4Δf Σ\|h\|²/S** | **rel < 1e-12** | **3.3e-16** |
-| match: self, amplitude × 3700 | \|1 − m\| < 1e-12 | 2.2e-16, 2.2e-16 |
-| control: match vs a 40+29 template | < 0.99 | 0.8226 |
-| LAL constants vs GM☉ (`MTSUN`, `MRSUN`, `MSUN·G`) | ≤ 4 ulp | ≤ 0.77 ulp |
-| chirp mass closed form; (M_c, q) → (m₁, m₂) | rel < 1e-13; < 1e-12 | 2.2e-16; 4.4e-16 |
-| Bilby priors: cdf(rescale(u)) | < 1e-9 | 1.4e-15 over 5 priors |
-| D_L → z → D_L (Planck15) | rel < 1e-5 | PyCBC 8.4e-7, Bilby 5.7e-9 |
+| observable | assertion | Graviton4 | x86_64 |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | same |
+| bilby / lal / lalsimulation / pycbc / dynesty | read from the running install | **2.8.2** / 7.6.1 / 6.1.0 / 2.10.0 / 3.1.0 | same |
+| **matched-filter peak vs planted merger** | **within 1 sample** | **+1 sample** (163841 vs 163840, at 4096 Hz) | same |
+| **peak SNR vs optimal SNR from the PSD** | **\|ρ − ρ_opt\| < 4** | **24.953 vs 26.143** (−1.19) | same |
+| control: same filter on the noise alone | max \|ρ\| < 8 | 4.454 over 196,608 samples | same |
+| filter normalisation: mean \|ρ\|² on noise | in (1.8, 2.2) — expect 2 | **2.003** | same |
+| **Bilby: injected chirp mass in the 99% interval** | **inside** | **28.0956 in [27.906, 28.210]**, quantile 0.517 | same |
+| control: a chirp mass 2% off | **outside** the 99% interval | 28.658 — outside | same |
+| ln Bayes factor, injection | > ρ²/4 = 199 | 391.3 (network ρ_opt 28.22) | same |
+| control: ln Bayes factor, noise alone | < 5 | −14.67 | same |
+| **Bilby ln L ratio at the injection vs ⟨d\|h⟩ − ⟨h\|h⟩/2 written out** | **rel < 1e-10** | **0** (403.344532) | 1.4e-16 |
+| **IMRPhenomD h₊: PyCBC and Bilby vs LALSimulation direct** | **rel < 1e-10** | **0** over 4,016 bins, both | same |
+| **optimal SNR: PyCBC `sigmasq`, Bilby, 4Δf Σ\|h\|²/S** | **rel < 1e-12** | **3.3e-16** | 0 |
+| match: self, amplitude × 3700 | \|1 − m\| < 1e-12 | 2.2e-16, 2.2e-16 | 2.2e-16, 0 |
+| control: match vs a 40+29 template | < 0.99 | 0.8226 | same |
+| LAL constants vs GM☉ (`MTSUN`, `MRSUN`, `MSUN·G`) | ≤ 4 ulp | ≤ 0.77 ulp | same |
+| chirp mass closed form; (M_c, q) → (m₁, m₂) | rel < 1e-13; < 1e-12 | 2.2e-16; 4.4e-16 | same |
+| Bilby priors: cdf(rescale(u)) | < 1e-9 | 1.4e-15 over 5 priors | same |
+| D_L → z → D_L (Planck15) | rel < 1e-5 | PyCBC 8.4e-7, Bilby 5.7e-9 | same |
+
+**Across chips** the seeded sampler took the same path: all 661 posterior samples of every
+sampled parameter are bit-identical, and only derived likelihoods move (ln L by ≤ 1.9e-9 on
+~−8000, ln Z by 7e-12), too little to change an acceptance. The three differing rows are
+round-off, at the last ulp.
 
 ### Why these bounds
 
@@ -99,8 +106,9 @@ two-sided. The rules behind these: [cross-checks](../../practices/cross-checks.m
 | image | `quay.io/aarchsci/gw@sha256:18e0856fcb6c…` — bilby 2.8.2, lalsuite 7.25 (python-lal 7.6.1), pycbc 2.10.0, dynesty 3.1.0, python 3.13 |
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest (`sha256:397f62ba7b40…`), so verify the tag and pin the arm64 digest. No x86 run: `gw`
-has no x86 build.
+digest (`sha256:397f62ba7b40…`), so verify the tag and pin the arm64 digest. x86_64 runs the same versions from the locked linux-64 twin
+`envs-x86_64/gw-ab3a5857bd21.linux-64.lock` (`make stage RECIPE=gw ARCH=x86_64`, then
+`make -s spec RECIPE=gw ARCH=x86_64`; outputs under `runs-x86_64/`).
 
 ### Run + verify
 
