@@ -140,10 +140,10 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-10 | gap |
-| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-12 | 2026-10-11 | gap |
-| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-12 | 2026-10-09 | gap |
-| [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-12 | 2026-10-12 | gap |
+| [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
+| [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-16 | 2026-10-09 | — |
+| [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
 
 ## geo-ml
 
@@ -166,7 +166,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-12 | 2026-10-03 | gap |
+| [geospatial](../recipes/geospatial/README.md) | Runs PROJ's own committed test vectors, then warps a real 120M-pixel Sentinel-2 band and checks GDAL's resampler against a two-line reduction. For anyone whose results depend on a reprojection being right. | geospatial | stage | 2026-10-16 | 2026-10-03 | 2026-10-16 |
 
 ## gw
 
@@ -206,7 +206,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [spacy](../recipes/spacy/README.md) | Runs spaCy's own test suite on Graviton4 with every test accounted for, then holds `en_core_web_sm` to claims that hold whatever the model's weights are. For anyone running NLP pipelines on ARM. | nlp | stage | 2026-10-16 | 2026-10-16 | gap |
+| [spacy](../recipes/spacy/README.md) | Runs spaCy's own test suite on Graviton4 with every test accounted for, then holds `en_core_web_sm` to claims that hold whatever the model's weights are. For anyone running NLP pipelines on ARM. | nlp | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 
 ## optimization
 
@@ -292,10 +292,10 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [pytorch](../recipes/pytorch/README.md) | Checks PyTorch's CPU build on Graviton4: gradients, `torch.linalg`, `torch.optim`, and bit-identical seeded training. For anyone training or fitting models on ARM without a GPU. | single-cell | stage | 2026-10-16 | 2026-10-16 | gap |
-| [scvelo](../recipes/scvelo/README.md) | Simulates spliced/unspliced counts from the splicing ODEs with planted per-gene rates, runs scVelo's steady-state and dynamical models on Graviton4, and checks each against a closed form or the planted truth. For anyone doing RNA velocity on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | gap |
-| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-12 | 2026-10-08 | gap |
-| [squidpy](../recipes/squidpy/README.md) | Builds kNN, radius and Visium-style hex graphs, scores neighbourhood enrichment and spatial autocorrelation on Graviton4, and checks each against brute force, a closed form or a planted tissue layout. For anyone doing spatial omics on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | gap |
+| [pytorch](../recipes/pytorch/README.md) | Checks PyTorch's CPU build on Graviton4: gradients, `torch.linalg`, `torch.optim`, and bit-identical seeded training. For anyone training or fitting models on ARM without a GPU. | single-cell | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
+| [scvelo](../recipes/scvelo/README.md) | Simulates spliced/unspliced counts from the splicing ODEs with planted per-gene rates, runs scVelo's steady-state and dynamical models on Graviton4, and checks each against a closed form or the planted truth. For anyone doing RNA velocity on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
+| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-16 | 2026-10-08 | — |
+| [squidpy](../recipes/squidpy/README.md) | Builds kNN, radius and Visium-style hex graphs, scores neighbourhood enrichment and spatial autocorrelation on Graviton4, and checks each against brute force, a closed form or a planted tissue layout. For anyone doing spatial omics on ARM. | single-cell | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 
 ## structbio
 
