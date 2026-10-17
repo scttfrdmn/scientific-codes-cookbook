@@ -3,9 +3,10 @@ tool: siesta
 tool_version: 5.4.2
 env: dft
 image: quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: dft-c103c83e2eb2
 spawn_version: 0.111.4
 last_verified: 2026-09-30
+last_verified_x86_64: 2026-10-17
 ---
 # SIESTA — bulk Si equilibrium lattice constant, cross-validated against GPAW
 
@@ -92,6 +93,11 @@ not to fail on a basis detail. Full comparison:
 
 a₀ came out **identical to four decimals on all four generations**, as it must: DFT converges to a
 fixed point, so the chip cannot move the answer.
+
+**x86_64** (`c8i.xlarge`, env twin `envs-x86_64/dft-c103c83e2eb2`, siesta `mpi_openmpi` build) gives
+the same result to every printed digit: reference energy −214.377236 eV, `Running on 2 nodes`, and all
+seven scan energies identical to Graviton4's to 1e-6 eV, so a₀ = 5.4042 Å. These are converged-SCF
+energies (fixed points), and nothing differs across chips.
 
 ### Pins
 

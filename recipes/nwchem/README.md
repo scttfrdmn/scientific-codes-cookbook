@@ -3,9 +3,10 @@ tool: nwchem
 tool_version: 7.3.0
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-17
 ---
 # NWChem — caffeine at B3LYP/6-31G*, serial and on 4 MPI ranks
 
@@ -77,6 +78,14 @@ The basis-function count is asserted because a silently different basis is the f
 otherwise look like a wrong energy. Both the regex and the value came from NWChem's output
 (`AO basis - number of functions:`) — an earlier version of this recipe invented both, and the regex
 failing is the only reason a fabricated count never became an assertion.
+
+### x86_64
+
+The same spec on `c8i.2xlarge` (env twin `envs-x86_64/dft-5cb0d94e928d`, nwchem `mpi_ts` build)
+passes every row: `nproc` 4 and 1, 217 basis functions, serial == 4-rank to 4.50e-08 Ha. The serial
+energy is **−625.538048227358** Ha against Graviton4's −625.538048227205, a 1.5e-10 Ha difference.
+That is a converged SCF energy, a fixed point, so a difference at the tenth decimal is BLAS
+reduction order. It sits 6e4× inside the 1e-5 assertion, which holds unchanged on both chips.
 
 ### Packing concurrent jobs: `--bind-to none` is load-bearing
 

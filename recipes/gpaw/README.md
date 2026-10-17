@@ -3,9 +3,10 @@ tool: gpaw
 tool_version: 25.7.0
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.111.4
 last_verified: 2026-09-30
+last_verified_x86_64: 2026-10-17
 ---
 # GPAW — a Pt(111) slab in plane-wave DFT, and the same energy from every box
 
@@ -74,6 +75,14 @@ such line. Asserting the line's presence is what separates a converged result fr
 — the SCF converges to a fixed point — so dividing the work differently must not change it. All nine
 runs agreed to all six printed decimals. The [MD recipes](../gromacs/README.md) cannot assert this
 because trajectories are chaotic; DFT can, and it costs nothing.
+
+### x86_64
+
+The same spec on `c8i.4xlarge` (env twin `envs-x86_64/dft-5cb0d94e928d`, gpaw `mpi_openmpi` build)
+reproduces the identity on a tenth run: `world.size` 16, converged after 27 iterations,
+**−219.541414 eV** and Fermi level **2.050224 eV**, both identical to Graviton4 to every printed
+decimal. The total energy is a converged SCF, a fixed point, so nothing differs across chips. SCF wall
+was 319.4 s (16 ranks on 8 hyperthreaded cores). That is one run, not a cross-chip benchmark.
 
 ### Cross-validated against SIESTA
 

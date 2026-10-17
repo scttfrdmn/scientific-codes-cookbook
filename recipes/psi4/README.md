@@ -3,9 +3,9 @@ tool: psi4
 tool_version: 1.12a4
 env: dft
 image: quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.104.0
-last_verified: 2026-09-10
+env_x86_64: dft-c103c83e2eb2
+spawn_version: 0.131.0
+last_verified: 2026-10-17
 ---
 # Psi4 — Hartree-Fock on H₂, against the textbook energy
 
@@ -59,6 +59,22 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The SCF takes ~3 s. R
 
 Psi4 lives in `dft` (not `comp-chem`) because of a python-version collision: it has no py313 arm64 build and `comp-chem`'s `xtb-python` has no py314 build, while `dft` already runs py314 (catalog issue #2). [siesta](../siesta/README.md) uses the same image under the same digest.
 
+### x86_64: not verified — the linux-64 twin's psi4 does not import
+
+On `c8i.large` with the env twin `envs-x86_64/dft-c103c83e2eb2`, `import psi4` fails before any
+science runs (2026-10-17, `psi4run.log`):
+
+```text
+ImportError: .../psi4/core.cpython-314-x86_64-linux-gnu.so: undefined symbol: _ZN7einsums13random_engineE
+```
+
+This is the twin's packaging, not the chip. linux-64 psi4 1.11 (`py314hb58b17a_1`) depends on
+`einsums >=1.1.5,<1.2.0a0`, which solves to einsums 1.1.6. In 1.1.6, `einsums::random_engine` is
+exported as a function (`_ZN7einsums13random_engineEv`), where 1.1.5's `libEinsums` exports a
+variable (`…engineE`), which is what this psi4 build links against. The arm64 psi4 build has no
+einsums dependency. Graviton4 re-ran on the same spec the same day and gave the same energy to every
+digit (−1.116759307378158 Ha).
+
 ### Smoke check (inside the task; measured before launch)
 
 | observable | assertion | observed | catches |
@@ -74,6 +90,6 @@ make run RECIPE=psi4
 make ls RECIPE=psi4
 ```
 
-The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect three objects (`psi4.out`, `energy.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
+The smoke check runs inside the task; the bucket listing is the second half ([exit 0 isn't proof](../../practices/container-path.md)). Expect four objects (`psi4.out`, `psi4run.log`, `energy.json`, `smoke-check.txt`). Re-run: `make run` launches a fresh task each time and overwrites this prefix — no spec edit needed.
 
 </details>

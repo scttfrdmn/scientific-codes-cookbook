@@ -3,9 +3,10 @@ tool: phonopy
 tool_version: 4.4.0
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-17
 ---
 # ASE → spglib → phonopy — phonons of bulk silicon
 
@@ -78,6 +79,12 @@ Same `dft` image as [gpaw](../gpaw/README.md) and [nwchem](../nwchem/README.md).
 The acoustic band (1e-2 THz) is method-justified — a residual from the 0.03 Å finite displacement and floating point, not a value picked to pass; analytically the modes are exactly zero.
 
 **Why a band and not an exact identity, when the analytic answer is exactly 0.** The residual is pure floating-point noise, and noise is not portable: the same pinned image gives `7.02e-07 / 3.55e-15` on an Apple-Silicon scratch run and `6.99e-07 / 5.33e-15` on Graviton4, because the eigensolver's reduction order differs. Asserting the observed digits would be [exact one run and different the next](../flye/README.md) — the subtlest way a check goes bad. The band is nine orders of magnitude above the observed value and nine below a broken chain's, so it cannot be flaky in either direction.
+
+**x86_64** (`c8i.large`, env twin `envs-x86_64/dft-5cb0d94e928d`): the exact rows are identical
+(2 atoms, Fd-3m (227), 1 displacement, same ASE/phonopy/spglib versions), and the two residuals are
+`7.04e-07 / 3.55e-15` against Graviton4's `6.99e-07 / 5.33e-15` — the predicted shape. Those are
+rounding residuals of quantities that are analytically zero, so they move with the chip's reduction
+order while staying nine orders inside the band; nothing the recipe asserts differs.
 
 ### Run + verify
 

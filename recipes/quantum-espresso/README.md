@@ -3,9 +3,10 @@ tool: quantum-espresso
 tool_version: 7.5
 env: dft
 image: quay.io/aarchsci/dft@sha256:7574f6b15d6b0ec2d1bc27ebaabf97298e1ac619711754eb10da8b1f54600d03
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.104.0
-last_verified: 2026-09-12
+env_x86_64: dft-d47602c11d46
+spawn_version: 0.131.0
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # Quantum ESPRESSO — the silicon lattice constant, cross-checked against GPAW
 
@@ -53,6 +54,14 @@ QE and GPAW both do plane-wave PBE DFT, but their **total energies are not compa
 
 Both a₀ and B₀ came back **bit-identical on local arm64 and Graviton4** (5.4697 / 5.4756 Å to four figures), so the fitted observables are deterministic across machines, not merely close.
 
+**x86_64** (`c8i.large`, env twin `envs-x86_64/dft-d47602c11d46`) gives the same a₀ and B₀ for both
+codes to every printed figure — QE 5.4697 Å / 88.9 GPa, GPAW 5.4756 Å / 88.6 GPa — and the same QE
+total energy at the last strain point to all eight printed decimals (−22.83700708 Ry). All of these
+are converged-SCF fixed points, so chip-independence is the expected result; nothing differs. `pw.x`
+reports 2 MPI processes on x86 as on Graviton4. The spec launches `mpirun --oversubscribe` (a
+`c8i.large` is one hyperthreaded core, and Open MPI 5 counts one slot) and finds the SSSP library
+under `$CONDA_PREFIX`; Graviton4 was re-run on that spec on 2026-10-17 with identical values.
+
 ### QE's own identities
 
 SCF converges; `pw.x` reports **2 processor cores**, asserted from its output so a serial build can't masquerade as parallel ([rank-count guard](../../practices/mpi-rank-count.md)); and the diamond-Si symmetry gives **zero force** exactly.
@@ -62,7 +71,7 @@ SCF converges; `pw.x` reports **2 processor cores**, asserted from its output so
 | | |
 |---|---|
 | image | `quay.io/aarchsci/dft@sha256:7574f6b1…` (`dft` env — QE 7.5 + GPAW 25.7 + SSSP 1.1.2, cosign-signed, `linux/arm64`) |
-| pseudopotential | SSSP efficiency `Si.pbe-n-rrkjus_psl.1.0.0.UPF` (PBE), bundled in the env at `/opt/conda/share/sssp/` — nothing staged |
+| pseudopotential | SSSP efficiency `Si.pbe-n-rrkjus_psl.1.0.0.UPF` (PBE), bundled in the env at `$CONDA_PREFIX/share/sssp/` — nothing staged |
 | structure | 2-atom Si diamond, built in-code by ASE — nothing staged |
 
 ### Smoke check (inside the task; measured before launch)

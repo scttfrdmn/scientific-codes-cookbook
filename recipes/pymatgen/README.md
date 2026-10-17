@@ -3,9 +3,10 @@ tool: pymatgen
 tool_version: 2026.8.30
 env: dft
 image: quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e
-gap_x86_64: the aarch.science `dft` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-17
 ---
 # pymatgen — bulk-silicon structure, symmetry, and a CIF round-trip
 
@@ -73,6 +74,10 @@ pymatgen ships in the `dft` env; same image as [gpaw](../gpaw/README.md), [nwche
 | **CIF round-trip** | sites + formula + lattice recovered | True | writer/reader mismatch |
 
 No fitted bands — structural values exact by construction, density a physical reference, round-trip exact.
+
+**x86_64** (`c8i.large`, the env's linux-64 twin `envs-x86_64/dft-5cb0d94e928d`): every row is
+identical to Graviton4 — 8, Si, 5.4300, 2.3304, Fd-3m (#227), True. All are exact-by-construction
+or symmetry results, so nothing is expected to differ across chips, and nothing does.
 
 ### Run + verify
 
