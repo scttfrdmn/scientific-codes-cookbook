@@ -113,11 +113,24 @@ def env_at(env, lock_hash):
             section = "d"
         elif re.match(r"^\S", line):
             section = None
-        m = re.match(r"\s*-\s*([A-Za-z0-9_.\-]+)", line)
+        m = re.match(r"\s*-\s*([A-Za-z0-9_.\-]+)(.*)$", line)
         if m and section == "c":
             channels.append(m.group(1))
         elif m and section == "d":
-            declared.append(m.group(1))
+            # Keep a declared BUILD constraint (`gpaw >=25.7 py*_mpi_openmpi_*`, `siesta=*=mpi_openmpi*`):
+            # it is what selects the MPI flavour. Dropping it solved serial nompi gpaw/siesta into the
+            # dft twin -- the exact resolver tie aarch.science's dft.yaml exists to prevent -- and an
+            # x86 rank-count assertion would then fail for the twin's sake, not the chip's.
+            rest = m.group(2).split("#")[0].strip()
+            build = None
+            mm = re.match(r"^=[^=\s]*=(\S+)$", rest)
+            if mm:
+                build = mm.group(1)
+            else:
+                toks = rest.split()
+                if len(toks) == 2:
+                    build = toks[1]
+            declared.append((m.group(1), build))
     return c[:12], lock, channels or ["conda-forge"], declared
 
 
@@ -147,13 +160,19 @@ def main():
     env, repo, digest = frontmatter(recipe)
     lock_hash, index = lock_hash_for(repo, digest)
     commit, lock, channels, declared = env_at(env, lock_hash)
-    pins = ["%s=%s" % (n, lock[n]) if n in lock else n for n in declared]
+    def pin(n, b):
+        v = lock.get(n)
+        if b:
+            return "%s=%s=%s" % (n, v or "*", b)
+        return "%s=%s" % (n, v) if v else n
+    pins = [pin(n, b) for n, b in declared]
+    declared = [n for n, _ in declared]
     notes = []
     # `cuda-version` declared in an env is a build SELECTOR, not a dependency: arm64 envs pin an
     # old one to get CPU builds (comp-chem: cuda-version=11.8 -> CPU openmm). linux-64 conda-forge
     # has no CPU openmm at all, so the selector is dropped there and the CUDA build's runtime libs
     # come along (they load nothing without a GPU; the recipe must assert the platform it ran on).
-    if any(n == "cuda-version" for n in declared):
+    if "cuda-version" in declared:
         pins = [p for p in pins if not p.startswith("cuda-version")]
         notes.append("declared cuda-version pin dropped on linux-64 (it selects CPU builds on arm64; linux-64 has none)")
     # Keep the BLAS LIBRARY where linux-64 allows it: conda-forge can resolve libblas to MKL where
@@ -175,7 +194,21 @@ def main():
     drift = [n for n, v in lock.items() if n in got and got[n] != v]
     if drift:  # second pass: pin the drifted ones too, where that version exists on linux-64
         blas = ["libblas=*=*openblas"] if not any("OpenBLAS" in n for n in notes) and "libopenblas" in lock else []
-        link2, _ = solve(pins + blas + ["%s=%s" % (n, lock[n]) for n in drift if n not in declared], channels)
+        extra = ["%s=%s" % (n, lock[n]) for n in drift if n not in declared]
+        link2, _ = solve(pins + blas + extra, channels)
+        if link2 is None and extra:
+            # all-or-nothing threw away every drift pin when ONE was unsatisfiable (dft: 50 drifts kept,
+            # pymatgen-core among them). Add them one at a time instead, keeping each that still solves.
+            kept, refused = [], []
+            for e in extra:
+                trial, _ = solve(pins + blas + kept + [e], channels)
+                if trial is not None:
+                    kept.append(e)
+                    link2 = trial
+                else:
+                    refused.append(e)
+            if refused:
+                notes.append("could not also pin (unsatisfiable with the rest on linux-64): %s" % ", ".join(refused))
         if link2 is not None:
             link = link2
             got = {p["name"]: p["version"] for p in link}
@@ -187,7 +220,8 @@ def main():
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w") as fh:
         fh.write("# x86_64 twin of aarch.science `%s` (image %s, index %s, lock-hash %s)\n" % (env, digest[:19], index[:19], lock_hash))
-        fh.write("# solved for linux-64 from aarch.science %s envs/%s.yaml at commit %s, every locked version pinned where linux-64 has it\n" % (REPO, env, commit))
+        fh.write("# solved for linux-64 from aarch.science %s envs/%s.yaml at commit %s; declared packages at their locked\n" % (REPO, env, commit))
+        fh.write("#   versions and declared build constraints, then each drifted version pinned where linux-64 still solves with it\n")
         fh.write("# %d packages; %d of %d arm64 versions identical\n" % (len(link), len(lock) - len(differ) - len(arm_only), len(lock)))
         for line in differ:
             fh.write("# differs: %s\n" % line)
@@ -195,6 +229,10 @@ def main():
             fh.write("# arm64 only (platform packages): %s\n" % ", ".join(arm_only))
         if x86_only:
             fh.write("# linux-64 only (platform packages): %s\n" % ", ".join(x86_only))
+        mpi = sorted("%s:%s" % (p["name"], re.sub(r"^.*?((?:mpi_\w+?|nompi)(?=_|$)).*$", r"\1", p["build"])) for p in link
+                     if re.search(r"(^|_)(nompi|mpi_\w+)", p["build"]))
+        if mpi:
+            fh.write("# MPI flavour by build: %s\n" % ", ".join(mpi))
         blas = sorted(p["build"] for p in link if p["name"] == "libblas")
         fh.write("# libblas build: %s\n" % (", ".join(blas) or "none"))
         for n in notes:
