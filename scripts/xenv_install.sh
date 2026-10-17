@@ -5,9 +5,11 @@
 # carries the whole task script in EC2 user data, which is capped at 16 KiB (spawn#1063).
 export MAMBA_ROOT_PREFIX=/var/tmp/mamba
 _T0=$(date +%s)
-# the staged file keeps the URL's %-encoded basename (x264-1%21164...), and file:// decodes it,
-# so escape % as %25 or the file is "not found" (and micromamba 2.9.0 then segfaults)
-awk -v d=/tmp/xenv-pkgs '/^https?:/{n=split($0,a,"/"); split(a[n],b,"#"); f=b[1]; gsub(/%/,"%25",f); print "file://" d "/" f "#" b[2]; next} {print}' /tmp/xenv.lock > /var/tmp/xenv.local.lock
+# micromamba URL-decodes a file:// entry both to parse the package and to open the file, so the
+# entry keeps the URL's own %-encoding (x264-1%21164...) and stage_env_x86.sh stores the file under
+# its DECODED name (x264-1!164...). Escaping % instead breaks the version parse (measured: an empty
+# log and exit 1 under -q).
+awk -v d=/tmp/xenv-pkgs '/^https?:/{n=split($0,a,"/"); split(a[n],b,"#"); print "file://" d "/" b[1] "#" b[2]; next} {print}' /tmp/xenv.lock > /var/tmp/xenv.local.lock
 if ! micromamba create -y -q -p /var/tmp/env --offline -f /var/tmp/xenv.local.lock > /var/tmp/xenv-install.log 2>&1; then
   echo "FAIL: the x86 env twin did not install from its staged packages"; tail -25 /var/tmp/xenv-install.log; exit 1
 fi

@@ -29,7 +29,9 @@ tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 n=0; bytes=0
 while IFS= read -r line; do
   case "$line" in ''|'#'*|'@EXPLICIT') continue ;; esac
-  url="${line%%#*}"; sha="${line##*#}"; f="$tmp/$(basename "$url")"
+  url="${line%%#*}"; sha="${line##*#}"
+  # stored under the URL-DECODED basename: micromamba decodes the lock's file:// entry to open it
+  f="$tmp/$(printf '%b' "$(basename "$url" | sed 's/%/\\x/g')")"
   curl -fsSL --retry 5 -o "$f" "$url"
   got=$(shasum -a 256 "$f" | cut -d' ' -f1)
   [ "$got" = "$sha" ] || { echo "  $(basename "$url"): sha256 $got, lock says $sha" >&2; exit 1; }
