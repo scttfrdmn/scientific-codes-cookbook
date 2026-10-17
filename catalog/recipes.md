@@ -62,13 +62,13 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
-| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
-| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-12 | 2026-09-13 | gap |
-| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-12 | 2026-10-08 | gap |
-| [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | gap |
-| [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | 2026-10-12 | 2026-10-12 | gap |
-| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-12 | 2026-10-11 | gap |
+| [astropy](../recipes/astropy/README.md) | Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library. | astro | build-in-task | 2026-10-16 | 2026-09-13 | 2026-10-16 |
+| [healpy](../recipes/healpy/README.md) | healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../recipes/photutils/README.md)' photometry. For anyone who works in HEALPix. | astro | build-in-task | 2026-10-16 | 2026-09-13 | 2026-10-16 |
+| [photutils](../recipes/photutils/README.md) | photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../recipes/astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library. | astro | build-in-task | 2026-10-16 | 2026-09-13 | 2026-10-16 |
+| [rebound](../recipes/rebound/README.md) | Integrates the outer solar system on Graviton4 and checks the integrator against machine precision, a second method, and Kepler's third law. For anyone running N-body dynamics on ARM. | astro | build-in-task | 2026-10-16 | 2026-10-08 | 2026-10-16 |
+| [specutils](../recipes/specutils/README.md) | Measures a synthetic absorption line on Graviton4 against its closed form, then resamples it onto grids coarse enough to separate a flux-conserving resampler from an interpolating one. For anyone doing spectroscopy on ARM. | astro | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
+| [sunpy](../recipes/sunpy/README.md) | Checks sunpy's ephemeris, coordinate frames and rotation laws on Graviton4 against defined constants and closed forms, with two plausible-but-wrong formulas as the controls. For anyone doing solar physics on ARM. | astro | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
+| [yt](../recipes/yt/README.md) | Checks yt's grid, projection, profile and region machinery on Graviton4 against closed forms and independent numpy reductions. For anyone reducing simulation output on ARM. | astro | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## bayes
 
@@ -263,8 +263,8 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-12 | 2026-10-12 | gap |
-| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-12 | 2026-10-03 | gap |
+| [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-16 | 2026-10-12 | 2026-10-16 |
+| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-16 | 2026-10-03 | 2026-10-16 |
 
 ## popgen
 
@@ -307,7 +307,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-12 | 2026-10-11 | gap |
+| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## viz
 
