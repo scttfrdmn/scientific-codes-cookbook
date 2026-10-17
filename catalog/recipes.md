@@ -93,11 +93,11 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-12 | 2026-09-13 | gap |
-| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-12 | 2026-10-11 | gap |
-| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-12 | 2026-10-03 | gap |
-| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-12 | 2026-10-08 | gap |
-| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-12 | 2026-10-08 | gap |
+| [cdo-nco](../recipes/cdo-nco/README.md) | CDO builds and transforms a climate field; NCO — an independent toolchain — reads CDO's output back and confirms it. These are the netCDF command-line operators climate work actually runs on, cross-checked on Graviton. For anyone who reaches for `cdo` and `ncks`, not only xarray. | climate | build-in-task | 2026-10-16 | 2026-09-13 | 2026-10-16 |
+| [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-16 | 2026-10-03 | 2026-10-16 |
+| [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-16 | 2026-10-08 | 2026-10-16 |
+| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-16 | 2026-10-08 | 2026-10-16 |
 
 ## comp-chem
 
@@ -178,9 +178,9 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
-| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
-| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-12 | 2026-10-11 | gap |
+| [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
+| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-16 | 2026-10-11 | 2026-10-16 |
 
 ## md
 
@@ -212,8 +212,8 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-12 | 2026-10-08 | gap |
-| [z3](../recipes/z3/README.md) | Runs Z3's Python API on Graviton4 across Boolean, integer, bit-vector and optimization problems, and checks each answer independently of Z3. For anyone doing verification, constraint solving or program analysis on ARM. | optimization | stage | 2026-10-16 | 2026-10-16 | gap |
+| [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-16 | 2026-10-08 | 2026-10-16 |
+| [z3](../recipes/z3/README.md) | Runs Z3's Python API on Graviton4 across Boolean, integer, bit-vector and optimization problems, and checks each answer independently of Z3. For anyone doing verification, constraint solving or program analysis on ARM. | optimization | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 
 ## pathology
 
