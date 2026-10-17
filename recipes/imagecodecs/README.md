@@ -3,9 +3,10 @@ tool: imagecodecs
 tool_version: "2026.8.16"
 env: pathology
 image: quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df293666277497bccb297d966797fc5a
-gap_x86_64: the aarch.science `pathology` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: pathology-c817c8dd8540
 spawn_version: 0.127.0
 last_verified: 2026-10-12
+last_verified_x86_64: 2026-10-16
 ---
 # imagecodecs — "lossless" checked as byte identity, 25 round-trips
 
@@ -45,22 +46,22 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| imagecodecs / tifffile / numpy | read from the running install | **2026.8.16** / 2026.9.20 / 2.5.4 |
-| test image | ≥ 50 grey levels | 168 |
-| **byte codecs** | **buffer identical, 7 of 7** | deflate, lzma, zstd, lz4, bz2, brotli, snappy |
-| **image codecs** | **array identical, 10 of 10** | png (grey+RGB), webp, jpeg2k, jpegxl, lerc, tiff, jpegls, jpegxr, zfp |
-| **tifffile, tiled** | **identical, 8 of 8** | none, deflate, lzma, zstd, jpeg2000, jpegxl, lzw, packbits |
-| **control: `webp(lossless=False)`** | **must differ, and compress more** | 2.97× → **30.51×**, `max|diff| 25` |
-| **control: `jpeg2k(reversible=False)`** | **must differ, and compress more** | 1.61× → **1044.40×**, `max|diff| 96` |
-| **control: `jpegxl(lossless=False)`** | **must differ, and compress more** | 3.71× → **44.46×**, `max|diff| 27` |
-| **control: jpeg8** | no lossless mode; `0 < max|diff| < 64` | 7.18×, **10** |
-| **control: tifffile `jpeg`** | must differ | 33,560 bytes, `max|diff| 27` |
-| compression effective | > 1.05× for the 5 general compressors | 1.22×–1.50× |
-| lz4 / snappy / packbits | *recorded, not asserted* | 1.00× / 1.00× / **0.99×** |
-| determinism | repeat encode byte-identical | deflate, png, zstd, jpeg8 |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| imagecodecs / tifffile / numpy | read from the running install | **2026.8.16** / 2026.9.20 / 2.5.4 | identical |
+| test image | ≥ 50 grey levels | 168 | identical |
+| **byte codecs** | **buffer identical, 7 of 7** | deflate, lzma, zstd, lz4, bz2, brotli, snappy | identical |
+| **image codecs** | **array identical, 10 of 10** | png (grey+RGB), webp, jpeg2k, jpegxl, lerc, tiff, jpegls, jpegxr, zfp | identical |
+| **tifffile, tiled** | **identical, 8 of 8** | none, deflate, lzma, zstd, jpeg2000, jpegxl, lzw, packbits | identical |
+| **control: `webp(lossless=False)`** | **must differ, and compress more** | 2.97× → **30.51×**, `max|diff| 25` | identical |
+| **control: `jpeg2k(reversible=False)`** | **must differ, and compress more** | 1.61× → **1044.40×**, `max|diff| 96` | identical |
+| **control: `jpegxl(lossless=False)`** | **must differ, and compress more** | 3.71× → **44.46×**, `max|diff| 27` | identical |
+| **control: jpeg8** | no lossless mode; `0 < max|diff| < 64` | 7.18×, **10** | identical |
+| **control: tifffile `jpeg`** | must differ | 33,560 bytes, `max|diff| 27` | identical |
+| compression effective | > 1.05× for the 5 general compressors | 1.22×–1.50× | identical |
+| lz4 / snappy / packbits | *recorded, not asserted* | 1.00× / 1.00× / **0.99×** | identical |
+| determinism | repeat encode byte-identical | deflate, png, zstd, jpeg8 | identical |
 
 ### Identity, not similarity
 
@@ -149,6 +150,14 @@ are exercised here; [zarr-dask](../zarr-dask/README.md) now covers the other two
 
 One API correction from probing: `lerc_encode` takes no `maxzerror` argument in this build (it is
 lossless by default), so a guessed keyword raises `TypeError`.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `pathology-c817c8dd8540`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 7 s).
+imagecodecs, tifffile and numpy are the same versions; 5 of 208 versions differ, and one is in the
+computation: **charls 2.4.5** (arm64 2.4.4), the JPEG-LS codec. `score.tsv` is **byte-identical**
+across chips anyway — every lossless round trip, every encoded size (JPEG-LS 162,464 bytes on
+both), and the lossy controls' `max|diff|`. The others are fonttools, libcurl, libglib,
+libsqlite.
 
 ### Run + verify
 

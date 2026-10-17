@@ -3,9 +3,10 @@ tool: openslide
 tool_version: "4.0.1"
 env: pathology
 image: quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867fe936f9a5b962455e6f5a8e80
-gap_x86_64: the aarch.science `pathology` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: pathology-a15bfc8c58e5
 spawn_version: 0.126.1
 last_verified: 2026-10-10
+last_verified_x86_64: 2026-10-16
 ---
 # OpenSlide — a CAMELYON16 slide against the publisher's own annotations, on Graviton
 
@@ -45,24 +46,24 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 40m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pins | 4 of 4 |
-| **publisher md5, all three objects** | **match `checksums.md5`** | **3 of 3** |
-| openslide / openslide-python | read from the running install | **4.0.1** / 1.4.6 |
-| numpy / scikit-image / scipy | — | 2.5.3 / 0.26.0 / 1.18.1 |
-| **WSI vs mask dimensions** | **identical at all 8 levels** | 61440 × 53760 |
-| WSI vs mask mpp | < 1e-4 relative | **1.162e-05** |
-| **pyramid downsamples** | **exactly `2**k`** | 1, 2, 4 … 128 |
-| **read overlap, two reads** | **max abs diff == 0** | **0** |
-| **mask label set** | **⊆ {0, 1, 2}** | `{0: 7723776, 1: 4991575, 2: 187049}` |
-| annotation groups | ≥1 Tumor present | 6 Tumor, 1 Exclusion |
-| polygon vs mask Dice / IoU | *reported* | **0.999992** / 0.999984 |
-| **polygon interiors, inside→tumour** | **== 0 mismatches** | **0** of 176,339 |
-| **polygon exteriors, outside→not tumour** | **== 0 mismatches** | **0** |
-| **Exclusion interior labelled tumour** | **== 0** | **0** of 962 px |
-| `reference.csv` type vs mask | tumour present iff type==tumor | agrees |
-| slide class | *reported, **not** asserted* | implied `micro`, reference `macro` |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pins | 4 of 4 | identical |
+| **publisher md5, all three objects** | **match `checksums.md5`** | **3 of 3** | identical |
+| openslide / openslide-python | read from the running install | **4.0.1** / 1.4.6 | identical |
+| numpy / scikit-image / scipy | — | 2.5.3 / 0.26.0 / 1.18.1 | identical |
+| **WSI vs mask dimensions** | **identical at all 8 levels** | 61440 × 53760 | identical |
+| WSI vs mask mpp | < 1e-4 relative | **1.162e-05** | identical |
+| **pyramid downsamples** | **exactly `2**k`** | 1, 2, 4 … 128 | identical |
+| **read overlap, two reads** | **max abs diff == 0** | **0** | identical |
+| **mask label set** | **⊆ {0, 1, 2}** | `{0: 7723776, 1: 4991575, 2: 187049}` | identical |
+| annotation groups | ≥1 Tumor present | 6 Tumor, 1 Exclusion | identical |
+| polygon vs mask Dice / IoU | *reported* | **0.999992** / 0.999984 | identical |
+| **polygon interiors, inside→tumour** | **== 0 mismatches** | **0** of 176,339 | identical |
+| **polygon exteriors, outside→not tumour** | **== 0 mismatches** | **0** | identical |
+| **Exclusion interior labelled tumour** | **== 0** | **0** of 962 px | identical |
+| `reference.csv` type vs mask | tumour present iff type==tumor | agrees | identical |
+| slide class | *reported, **not** asserted* | implied `micro`, reference `macro` | identical |
 
 ### The mask is a derived artifact, so it can be reproduced from its source
 
@@ -155,6 +156,13 @@ re-publish fails before an instance is paid for.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest (the list also carries an `unknown/unknown`
 attestation entry, which is not an image).
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `pathology-a15bfc8c58e5`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 7 s),
+reading the same RODA objects. openslide, scikit-image, numpy and scipy are the same versions; 5
+of 208 versions differ (charls, fonttools, libcurl, libglib, libsqlite). `score.tsv` is
+**identical** across chips, Dice and IoU included; only
+peak RSS (629.0 vs 627.7 MiB) and `/tmp` use (781 vs 530 MiB, the twin's staged packages) move.
 
 ### Run + verify
 

@@ -3,9 +3,10 @@ tool: geopandas
 tool_version: 1.1.4
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:ed8c59dedeb4c1bc9d4cfef85f14740947f9b1ed23bb00d083c6f163b25529e0
-gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geo-ml-5ca5b99c000d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
+last_verified_x86_64: 2026-10-16
 ---
 # geopandas + libpysal — recover Census's published county areas, then do spatial statistics
 
@@ -53,21 +54,21 @@ vCPU count.
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| features | exactly 3235 (TIGER2024 county file) | 3235 |
-| CRS | EPSG:4269, as TIGER ships | 4269 |
-| **geodesic area vs Census** | **max rel err < 1e-5 over 3235 counties** | **6.710e-07** (median 5.2e-08) |
-| total area conserved | sum rel err < 1e-6 | **6.372e-08** |
-| CONUS subset | exactly 3109 | 3109 |
-| weights symmetric | every link reciprocated | yes |
-| links even | `s0` = 2 × shared edges | 17762 = 2 × 8881 |
-| no islands | 0 after dropping island states | 0 |
-| row-standardised | `s0` exactly = `n` | 3109.000000 |
-| **Moran's I affine-invariant** | **I(y) == I(3.7y + 112.5) exactly** | **\|diff\| = 0.00e+00** |
-| **Moran's I sign-invariant** | **I(y) == I(−y) exactly** | **\|diff\| = 0.00e+00** |
-| Moran's expectation | `EI` = −1/(n−1) | −0.000321750322 |
-| **three OLS routes agree** | **max pairwise diff < 1e-12** | **8.88e-15** |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| features | exactly 3235 (TIGER2024 county file) | 3235 | identical |
+| CRS | EPSG:4269, as TIGER ships | 4269 | identical |
+| **geodesic area vs Census** | **max rel err < 1e-5 over 3235 counties** | **6.710e-07** (median 5.2e-08) | identical |
+| total area conserved | sum rel err < 1e-6 | **6.372e-08** | identical |
+| CONUS subset | exactly 3109 | 3109 | identical |
+| weights symmetric | every link reciprocated | yes | identical |
+| links even | `s0` = 2 × shared edges | 17762 = 2 × 8881 | identical |
+| no islands | 0 after dropping island states | 0 | identical |
+| row-standardised | `s0` exactly = `n` | 3109.000000 | identical |
+| **Moran's I affine-invariant** | **I(y) == I(3.7y + 112.5) exactly** | **\|diff\| = 0.00e+00** | identical |
+| **Moran's I sign-invariant** | **I(y) == I(−y) exactly** | **\|diff\| = 0.00e+00** | identical |
+| Moran's expectation | `EI` = −1/(n−1) | −0.000321750322 | identical |
+| **three OLS routes agree** | **max pairwise diff < 1e-12** | **8.88e-15** | **5.33e-15** |
 
 **The reference ships inside the data.** TIGER's `.dbf` carries `ALAND` and `AWATER` — Census's own
 computed land and water areas in m² — beside each polygon. Recovering them from the geometry makes
@@ -125,6 +126,16 @@ taste.
 TIGER is versioned by year on a stable path, so `TIGER2024` is a durable id. The zip travels as one
 flat file and geopandas reads it in place, so there is no directory to stage
 ([why](../../practices/container-path.md)).
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `geo-ml-5ca5b99c000d`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 16 s);
+three of 381 versions differ (c-blosc2, charls, unicodedata2), all outside this
+computation. Every count, the Census-area residuals (6.710e-07 / 5.242e-08 / 6.372e-08), the
+projected-CRS observations, Moran's I (`0.605172627597`) and both invariances are **identical**
+across chips. Only the OLS cross-route difference moves (8.88e-15 → 5.33e-15): rounding in three
+separate solves, under a 1e-12 bound either way. GDAL prints one `PROJ: proj_create_from_database`
+error on x86 because the twin is not conda-activated, so `PROJ_DATA` is unset; pyproj finds its
+database regardless, and no CRS value changes.
 
 ### Run + verify
 

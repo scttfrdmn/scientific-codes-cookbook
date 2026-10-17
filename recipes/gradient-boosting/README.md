@@ -3,9 +3,10 @@ tool: xgboost-lightgbm
 tool_version: "xgboost 3.4.2 / lightgbm 4.7.0"
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:14aeb6be84be41b991aab8bd262197044b7c351b067ef9199ae22c4fc6ccde20
-gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geo-ml-1876b553ab9b
 spawn_version: 0.126.1
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # xgboost + lightgbm — five exact checks on Graviton, and no comparison between them
 
@@ -45,18 +46,18 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| xgboost / lightgbm / numpy | read from the running install | **3.4.2** / 4.7.0 / 2.5.3 |
-| **constant target, both** | **predictions `==` 7.25 exactly** | **0.000e+00**, 1 distinct value each |
-| **separable data, both** | **misclassified `== 0`** | **0 of 500**, both |
-| **same seed, one thread** | **two runs bit-identical** | **0.000e+00**, both |
-| **monotone constraint, both** | **no negative step** | **0.000e+00**, both |
-| unconstrained control, both | must be clearly **< −1e-3** | **−1.514e-01** / −1.056e-01 |
-| **importance rank, both** | **x0 first, x1 second** | `[0,1,…]` both |
-| noise feature order | *reported* | `[2,3,4,5]` vs `[2,3,5,4]` |
-| importance scales | *reported, incomparable* | gain 0.979 vs 309 splits |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| xgboost / lightgbm / numpy | read from the running install | **3.4.2** / 4.7.0 / 2.5.3 | identical |
+| **constant target, both** | **predictions `==` 7.25 exactly** | **0.000e+00**, 1 distinct value each | identical |
+| **separable data, both** | **misclassified `== 0`** | **0 of 500**, both | identical |
+| **same seed, one thread** | **two runs bit-identical** | **0.000e+00**, both | identical |
+| **monotone constraint, both** | **no negative step** | **0.000e+00**, both | identical |
+| unconstrained control, both | must be clearly **< −1e-3** | **−1.514e-01** / −1.056e-01 | identical |
+| **importance rank, both** | **x0 first, x1 second** | `[0,1,…]` both | identical |
+| noise feature order | *reported* | `[2,3,4,5]` vs `[2,3,5,4]` | identical |
+| importance scales | *reported, incomparable* | gain 0.979 vs 309 splits | identical |
 
 ### The obvious check is the wrong one
 
@@ -147,6 +148,15 @@ would require re-running its Moran's I assertions rather than editing a hash
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `geo-ml-1876b553ab9b`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 15 s).
+xgboost, lightgbm and numpy are the same versions; 16 of 367 packages differ, none in the
+computation (aiohttp, backports.zstd, charset-normalizer, executing, fonttools, jedi, libcurl,
+libglib, libsqlite/sqlite, libzip, open-radar-data, platformdirs, soupsieve, tifffile, wrapt).
+`score.tsv` is **byte-identical** across chips — not only the exact checks but the reported gain
+importances to five figures and both noise-feature orders, which is what one thread and a fixed
+seed buy.
 
 ### Run + verify
 

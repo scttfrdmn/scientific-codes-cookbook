@@ -18,7 +18,8 @@ set -euo pipefail
 BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=scipy-stack does this}"
 REGION="${AWS_REGION:-us-west-2}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCIPY_TESTS=scipy-tests-1.18.1-py314hb3ba6a9_1.conda
+SCIPY_TESTS=scipy-tests-1.18.1-py314hb3ba6a9_1.conda          # linux-aarch64: pins the image's scipy
+SCIPY_TESTS_X86=scipy-tests-1.18.1-py314h36f0660_1.conda      # linux-64: pins the x86 env twin's scipy build
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 cd "$tmp"
@@ -34,6 +35,7 @@ c42667e5cdadb151aeb5b26d114aff6bdf5a907f176a007a30b940d3d865b5c2  pytest_timeout
 b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac  tzdata-2026.5-py2.py3-none-any.whl
 930bc7542cbd9f57009e182fd014eba48cf1a0180a7b9006d2d32d8f168d8b02  meson-1.12.1-py3-none-any.whl
 046508ea4ff3b8866eef0a7cd67bac63e96783c5279473202cca818596761134  scipy-tests-1.18.1-py314hb3ba6a9_1.conda
+ea7c4e5539e0e3aca9deb6876ffd35e617a9d292ff998fcb0759d887c5475535  scipy-tests-1.18.1-py314h36f0660_1.conda
 PINS
 
 echo "== nine pure-Python wheels and scipy's companion test package, checked against their pins =="
@@ -42,6 +44,7 @@ python3 -m pip download -q --no-deps --only-binary=:all: --python-version 3.14 \
   pytest==9.0.3 pluggy==1.6.0 iniconfig==2.3.1 hypothesis==6.152.1 pytest-xdist==3.8.0 \
   execnet==2.1.2 pytest-timeout==2.4.0 tzdata==2026.5 meson==1.12.1
 curl -sfL -o "$SCIPY_TESTS" "https://conda.anaconda.org/conda-forge/linux-aarch64/$SCIPY_TESTS"
+curl -sfL -o "$SCIPY_TESTS_X86" "https://conda.anaconda.org/conda-forge/linux-64/$SCIPY_TESTS_X86"
 shasum -a 256 -c packages.sha256 || { echo "  a package does not match its pin" >&2; exit 1; }
 
 echo "== the checks =="
@@ -52,7 +55,7 @@ for f in account.py suite_check.py; do
 done
 sha256sum account.py suite_check.py > pins.sha256 2>/dev/null || shasum -a 256 account.py suite_check.py > pins.sha256
 
-for f in *.whl "$SCIPY_TESTS"; do aws s3 cp --region "$REGION" --only-show-errors "$f" "$BUCKET/inputs/scipy-stack/pkgs/$f"; done
+for f in *.whl "$SCIPY_TESTS" "$SCIPY_TESTS_X86"; do aws s3 cp --region "$REGION" --only-show-errors "$f" "$BUCKET/inputs/scipy-stack/pkgs/$f"; done
 for f in packages.sha256 account.py suite_check.py pins.sha256; do
   aws s3 cp --region "$REGION" --only-show-errors "$f" "$BUCKET/inputs/scipy-stack/$f"
 done

@@ -3,9 +3,10 @@ tool: qiskit
 tool_version: "2.5.2"
 env: quantum
 image: quay.io/aarchsci/quantum@sha256:4f22a72396c229660587b4be43bf7f832046dcf9006b3aad8f81cbfd82c6207b
-gap_x86_64: the aarch.science `quantum` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: quantum-0134d92cdcd5
 spawn_version: 0.126.1
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # Qiskit — exact amplitudes, the DFT matrix, and a bit-identical cross-check against qutip
 
@@ -46,26 +47,26 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| qiskit / aer / qutip / numpy | read from the running install | **2.5.2** / 0.17.2 / 5.3.1 / 2.5.3 |
-| Aer methods present | — | 8, incl. `stabilizer`, `extended_stabilizer`, `matrix_product_state` |
-| **Bell amplitudes** | **`== ` float64 `1/√2`, exactly** | **bit-identical** |
-| Bell `\|01⟩`,`\|10⟩` | **exactly 0** | `0j`, `0j` |
-| norm | within 4 eps | 2.220e-16 |
-| **`U†U = I`** | **< 1e-14 on 8×8** | **5.551e-16** |
-| Clifford global phase | *reported* | **exactly `1.0+0.0j`** |
-| **tableau vs dense unitary** | **== 0 after dephasing** | **0.000e+00** |
-| **QFT vs DFT matrix, n=2,3,4** | **< 1e-13, both APIs** | 2.689e-16 / 1.415e-15 / **3.783e-15** |
-| **wrong QFT conventions** | **≥ 0.1 away** | **1.000e+00** (all three) |
-| **`⟨Z⟩` vs `cos θ`, 6 angles** | **< 1e-14** | **1.384e-16** |
-| **Grover, 4 marked states** | **`1−P` < 1e-14** | **8.882e-16** (4 eps) |
-| **qutip vs Qiskit amplitudes** | **== 0** | **0.000e+00** |
-| **un-reversed control** | **≥ 0.1 away** | **7.071e-01** |
-| support, exact / statevector / stabilizer | all three identical | `0000 0111 1000 1111` |
-| sampled frequencies | within 5 binomial σ | **1.837 σ** |
-| same seed | identical counts | yes |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| qiskit / aer / qutip / numpy | read from the running install | **2.5.2** / 0.17.2 / 5.3.1 / 2.5.3 | identical |
+| Aer methods present | — | 8, incl. `stabilizer`, `extended_stabilizer`, `matrix_product_state` | identical |
+| **Bell amplitudes** | **`== ` float64 `1/√2`, exactly** | **bit-identical** | identical |
+| Bell `\|01⟩`,`\|10⟩` | **exactly 0** | `0j`, `0j` | identical |
+| norm | within 4 eps | 2.220e-16 | identical |
+| **`U†U = I`** | **< 1e-14 on 8×8** | **5.551e-16** | identical |
+| Clifford global phase | *reported* | **exactly `1.0+0.0j`** | identical |
+| **tableau vs dense unitary** | **== 0 after dephasing** | **0.000e+00** | identical |
+| **QFT vs DFT matrix, n=2,3,4** | **< 1e-13, both APIs** | 2.689e-16 / 1.415e-15 / **3.783e-15** | identical |
+| **wrong QFT conventions** | **≥ 0.1 away** | **1.000e+00** (all three) | identical |
+| **`⟨Z⟩` vs `cos θ`, 6 angles** | **< 1e-14** | **1.384e-16** | identical |
+| **Grover, 4 marked states** | **`1−P` < 1e-14** | **8.882e-16** (4 eps) | identical |
+| **qutip vs Qiskit amplitudes** | **== 0** | **0.000e+00** | identical |
+| **un-reversed control** | **≥ 0.1 away** | **7.071e-01** | identical |
+| support, exact / statevector / stabilizer | all three identical | `0000 0111 1000 1111` | identical |
+| sampled frequencies | within 5 binomial σ | **1.837 σ** | identical |
+| same seed | identical counts | yes | identical |
 
 ### Nothing is fetched, because the answers are arithmetic
 
@@ -140,6 +141,13 @@ true of `rustworkx`. `qiskit-aer` by contrast is a true per-python extension at 
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest (`e5c1c0d16a91`), so verify the tag and pin the arm64 digest.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `quantum-0134d92cdcd5`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 5 s).
+qiskit, qiskit-aer, qutip and numpy are the same versions; 5 of 165 versions differ, none in the
+computation (charset-normalizer, fonttools, libcurl, libglib, libsqlite). `score.tsv` is
+**byte-identical** across chips — every machine-precision residual, and the seeded Aer sample
+counts (1.837 σ) too.
 
 ### Run + verify
 

@@ -3,9 +3,10 @@ tool: cctbx
 tool_version: "2026.9"
 env: structbio
 image: quay.io/aarchsci/structbio@sha256:9fd80ad08baf5b1f79c0e433d0fb30eec1d2f810b34594ad556d8f4fb8bb5479
-gap_x86_64: the aarch.science `structbio` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: structbio-e0104a505be2
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # cctbx — all 230 space groups, cross-checked against a second implementation
 
@@ -46,24 +47,24 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| cctbx / gemmi / biopython / numpy | read from the running install | **2026.9** / 0.7.5 / 1.88 / 2.5.4 |
-| **space groups compared** | **== 230** | **230** |
-| **cctbx vs gemmi order** | **0 mismatches** | **0** |
-| distinct order values | — | 1,2,3,4,6,8,9,12,16,18,24,32,36,48,96,192 |
-| **control: gemmi index shifted by 1** | **must break** | **66 of 230 differ** |
-| `1yjp.pdb` sha256 | matches pin | `93ad953f…` |
-| **cell, cctbx vs gemmi** | **`== 0` exactly** | **0.000e+00** |
-| space group, both readers | identical | `P 1 21 1` |
-| atom count, both readers | identical | **66** |
-| **coordinates after orthogonalisation** | **< 1e-12 Å** | **1.776e-15** |
-| **reciprocal of reciprocal** | **`== 0` exactly**, 3 lattices | **0.000e+00** |
-| **cell volume, cctbx vs gemmi** | **`==` exactly**, 3 lattices | **0.000e+00** |
-| **d-spacing vs `a/√(h²+k²+l²)`** | < 1e-14 relative | **1.256e-16** |
-| **absences: I / F / C** | **0 violations** | 0 of 71 / 45 / 731 |
-| **control: primitive lattice** | forbidden indices must occur | **70 of 141** odd |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| cctbx / gemmi / biopython / numpy | read from the running install | **2026.9** / 0.7.5 / 1.88 / 2.5.4 | identical |
+| **space groups compared** | **== 230** | **230** | identical |
+| **cctbx vs gemmi order** | **0 mismatches** | **0** | identical |
+| distinct order values | — | 1,2,3,4,6,8,9,12,16,18,24,32,36,48,96,192 | identical |
+| **control: gemmi index shifted by 1** | **must break** | **66 of 230 differ** | identical |
+| `1yjp.pdb` sha256 | matches pin | `93ad953f…` | identical |
+| **cell, cctbx vs gemmi** | **`== 0` exactly** | **0.000e+00** | identical |
+| space group, both readers | identical | `P 1 21 1` | identical |
+| atom count, both readers | identical | **66** | identical |
+| **coordinates after orthogonalisation** | **< 1e-12 Å** | **1.776e-15** | identical |
+| **reciprocal of reciprocal** | **`== 0` exactly**, 3 lattices | **0.000e+00** | identical |
+| **cell volume, cctbx vs gemmi** | **`==` exactly**, 3 lattices | **0.000e+00** | identical |
+| **d-spacing vs `a/√(h²+k²+l²)`** | < 1e-14 relative | **1.256e-16** | identical |
+| **absences: I / F / C** | **0 violations** | 0 of 71 / 45 / 731 | identical |
+| **control: primitive lattice** | forbidden indices must occur | **70 of 141** odd | identical |
 
 ### A second implementation, not a second look at the same one
 
@@ -151,6 +152,13 @@ centred lattices are actually excluding them. Staging separately confirms each r
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `structbio-e0104a505be2`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 5 s).
+cctbx-base, gemmi, biopython and numpy are the same versions; 4 versions differ (charset-normalizer,
+fonttools, libglib, libsqlite), and linux-64's Python is split into `cpython`/`python-gil`
+packages. `score.tsv` is **byte-identical** across chips, the 1.776e-15 Å orthogonalisation and
+1.256e-16 d-spacing residuals included, and `1yjp.pdb` hashes the same out of both builds.
 
 ### Run + verify
 

@@ -3,9 +3,10 @@ tool: scikit-learn
 tool_version: "1.9.1"
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:83ca6331cd84cbae0f60987e9536704ce201904bdfe98d3398aff57e8061aae9
-gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geo-ml-ffc4dc5282aa
 spawn_version: 0.127.0
 last_verified: 2026-10-13
+last_verified_x86_64: 2026-10-16
 ---
 # scikit-learn — its own 47,445 tests, then closed forms you can lift
 
@@ -44,24 +45,24 @@ One task on `c8g.2xlarge` (8 vCPU / 16 GiB), TTL 60m as a **backstop** with `cos
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged wheels / checks | match pins | 5 of 5 / 2 of 2 |
-| sklearn / statsmodels / numpy | read from the running install | **1.9.1** / 0.15.0 / 2.5.4 |
-| BLAS | recorded | OpenBLAS 0.3.34 `neoversev2` |
-| **suite: failed / errors** | **`== 0`** | **0 / 0** |
-| suite: passed / skipped / xfailed / xpassed | recorded | 36,879 / 10,222 / 223 / 122 |
-| **every collected test has one outcome** | **exact: 0 missing, 0 uncollected, 0 multiple** | **47,445 of 47,445** |
-| **summary == items + collection-time skips** | **exact** | **47,446 = 47,445 + 1** |
-| collected | ≥ 47,000 (a floor against a shrinking collection) | 47,445 |
-| **logistic MLE, sklearn vs statsmodels** | **`< 1e-6`** | **2.232e-13** |
-| **score equation `max |X'(y−p)|`** | **`< 1e-6`** | **4.707e-11** |
-| control: L2 penalty (`C=0.01`) | norm must shrink and coefficients move > 1e-3 | 2.4542 → 1.8016 |
-| **PCA vs `eigvalsh` (SVD vs symmetric eig)** | **rel `< 1e-10`** | **5.290e-14** |
-| PCA components orthonormal | `< 1e-12` | 1.443e-15 |
-| **RSS/(n−1) == dropped eigenvalues**, k = 5, 10, 15 | **rel `< 1e-9`** | **1.9e-16, 0, 8.1e-16** |
-| **KMeans, separated planted clusters** | **ARI `== 1.0`** | **1.000000** |
-| control: overlapping clusters | ARI `< 0.9` | 0.288 |
+| observable | assertion | observed | x86_64 (c8i.2xlarge) |
+|---|---|---|---|
+| staged wheels / checks | match pins | 5 of 5 / 2 of 2 | identical |
+| sklearn / statsmodels / numpy | read from the running install | **1.9.1** / 0.15.0 / 2.5.4 | identical |
+| BLAS | recorded | OpenBLAS 0.3.34 `neoversev2` | OpenBLAS 0.3.34 `Cooperlake` |
+| **suite: failed / errors** | **`== 0`** | **0 / 0** | identical |
+| suite: passed / skipped / xfailed / xpassed | recorded | 36,879 / 10,222 / 223 / 122 | 36,879 / 10,222 / **227** / **118** |
+| **every collected test has one outcome** | **exact: 0 missing, 0 uncollected, 0 multiple** | **47,445 of 47,445** | identical |
+| **summary == items + collection-time skips** | **exact** | **47,446 = 47,445 + 1** | identical |
+| collected | ≥ 47,000 (a floor against a shrinking collection) | 47,445 | identical |
+| **logistic MLE, sklearn vs statsmodels** | **`< 1e-6`** | **2.232e-13** | identical |
+| **score equation `max |X'(y−p)|`** | **`< 1e-6`** | **4.707e-11** | **4.711e-11** |
+| control: L2 penalty (`C=0.01`) | norm must shrink and coefficients move > 1e-3 | 2.4542 → 1.8016 | identical |
+| **PCA vs `eigvalsh` (SVD vs symmetric eig)** | **rel `< 1e-10`** | **5.290e-14** | **2.086e-13** |
+| PCA components orthonormal | `< 1e-12` | 1.443e-15 | 1.998e-15 |
+| **RSS/(n−1) == dropped eigenvalues**, k = 5, 10, 15 | **rel `< 1e-9`** | **1.9e-16, 0, 8.1e-16** | **5.8e-16, 1.2e-15, 5.3e-15** |
+| **KMeans, separated planted clusters** | **ARI `== 1.0`** | **1.000000** | identical |
+| control: overlapping clusters | ARI `< 0.9` | 0.288 | identical |
 
 ### The suite is the verdict — and the count needed care
 
@@ -120,8 +121,19 @@ relative at 5, 10 and 15 of 20 components.
 | image | `quay.io/aarchsci/geo-ml@sha256:83ca6331cd84…` — scikit-learn 1.9.1, statsmodels 0.15.0, numpy 2.5.4, scipy 1.18.1, python 3.14 |
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest, so verify the tag and pin the arm64 digest. No x86 run: `geo-ml` is an aarch.science
-env and has no x86 build.
+digest, so verify the tag and pin the arm64 digest.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `c8i.2xlarge` through the `geo-ml-ffc4dc5282aa`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline). sklearn,
+statsmodels, numpy and scipy are the same versions; 11 of 367 packages differ, none in the
+computation (charset-normalizer, fonttools, libcurl, libglib, libsqlite/sqlite, libzip,
+open-radar-data, platformdirs, tifffile, wrapt). The suite collects the same 47,445 tests and
+passes with **0 failed, 0 errors** on 4 workers (`joblib`'s physical-core count; 170 s); four
+non-strict xfails that pass on Graviton4 fail on x86 (xfailed 223 → 227, xpassed 122 → 118), which
+the run records and does not assert. The logistic MLE is a fixed point and its cross-code agreement
+is **identical** (2.232e-13), as are both KMeans ARIs and the L2 control. The rounding-level values
+move — score-equation residual, PCA vs `eigvalsh`, the RSS identity — with OpenBLAS on
+`Cooperlake` here and `neoversev2` on Graviton4; every one stays orders inside its bound.
 
 ### Run + verify
 
@@ -148,6 +160,6 @@ the suite covers its mechanics, not its answers. **The optional backends**: the 
 through torch/cupy/dpnp is 6,000+ of the skipped tests, and GPU execution is Round Two.
 **float32**, opt-in and skipped (811). **Threading and parallel scaling**: the suite runs on 8
 workers, but nothing measures `n_jobs` or BLAS-thread behaviour, which is where an arm64 difference
-would show up as cost rather than correctness. **x86**, because this env has no x86 build.
+would show up as cost rather than correctness.
 
 </details>

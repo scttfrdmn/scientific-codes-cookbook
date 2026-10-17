@@ -3,9 +3,10 @@ tool: datashader
 tool_version: "0.19.1"
 env: geo-ml
 image: quay.io/aarchsci/geo-ml@sha256:7414b1df7c155b7d820cc062d88b61e5081b3d2ba4685c57a29b591cd67748de
-gap_x86_64: the aarch.science `geo-ml` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: geo-ml-32594bd95edd
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # datashader — 50M points rasterized, counted exactly
 
@@ -44,22 +45,22 @@ One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 30m as a **backstop** with `cost
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| datashader / numba / pandas / numpy | read from the running install | **0.19.1** / 0.68.0 / 3.0.6 / 2.5.4 |
-| **orientation**, 3 known corners | **exact array indices** | `[0,0]`, `[3,0]`, `[0,3]` |
-| **bin-edge rule vs `histogram2d`** | **identical binning** | `2,2,0,2` both |
-| points inside the canvas | numpy's count | 5,556,971 of 50,000,000 |
-| outside fraction | fixture must be adversarial | **0.8889** |
-| **raster total** | **`==` numpy inside-count** | **5,556,971, diff 0** |
-| **`sum('w')` with w≡1** | **`==` the count** | **5,556,971** |
-| **`mean − sum/count`** | **`== 0` exactly** | **0.000e+00** |
-| empty cells | `mean` is NaN, not 0 | 5,278 cells, all NaN |
-| **vs `np.histogram2d`** | **every cell equal** | **0 of 1,048,576 differ** |
-| control: as-is / flipud / fliplr | must *not* match | 916,968 / 919,386 / 918,598 differ |
-| **invariance: input row order** | **bit-identical raster** | identical |
-| **invariance: canvas resolution** | **total unchanged** | 5,556,971 at 128, 256, 512, 1024 |
+| observable | assertion | observed | x86_64 (m8i.xlarge) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| datashader / numba / pandas / numpy | read from the running install | **0.19.1** / 0.68.0 / 3.0.6 / 2.5.4 | identical |
+| **orientation**, 3 known corners | **exact array indices** | `[0,0]`, `[3,0]`, `[0,3]` | identical |
+| **bin-edge rule vs `histogram2d`** | **identical binning** | `2,2,0,2` both | identical |
+| points inside the canvas | numpy's count | 5,556,971 of 50,000,000 | identical |
+| outside fraction | fixture must be adversarial | **0.8889** | identical |
+| **raster total** | **`==` numpy inside-count** | **5,556,971, diff 0** | identical |
+| **`sum('w')` with w≡1** | **`==` the count** | **5,556,971** | identical |
+| **`mean − sum/count`** | **`== 0` exactly** | **0.000e+00** | identical |
+| empty cells | `mean` is NaN, not 0 | 5,278 cells, all NaN | identical |
+| **vs `np.histogram2d`** | **every cell equal** | **0 of 1,048,576 differ** | identical |
+| control: as-is / flipud / fliplr | must *not* match | 916,968 / 919,386 / 918,598 differ | identical |
+| **invariance: input row order** | **bit-identical raster** | identical | identical |
+| **invariance: canvas resolution** | **total unchanged** | 5,556,971 at 128, 256, 512, 1024 | identical |
 
 ### Two implementations, 1,048,576 cells, no tolerance
 
@@ -137,6 +138,14 @@ says.
 
 `stage-inputs.sh` reads `SEED`, `N` and `RES` out of `identities.py` rather than restating them,
 so the staging validation cannot drift from the run.
+
+**x86_64.** `make stage RECIPE=datashader ARCH=x86_64` then the same `spawn` line with `ARCH=x86_64`
+runs on `m8i.xlarge` through the `geo-ml-32594bd95edd` twin (`envs-x86_64/`: the pinned image's
+versions as linux-64 builds, installed offline in 7 s). datashader, numba, pandas and numpy are the
+same versions; 15 of 367 packages differ (none in the computation: aiohttp, charset-normalizer,
+executing, fonttools, jedi, libcurl, libglib, libsqlite/sqlite, libzip, open-radar-data,
+platformdirs, soupsieve, tifffile, wrapt). Every value is an integer count, so every row is
+**identical** across chips; only the timing moves (aggregation 0.36 s warm vs 0.18 s on Graviton4).
 
 ### Run + verify
 

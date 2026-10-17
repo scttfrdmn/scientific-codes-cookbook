@@ -3,9 +3,10 @@ tool: zarr
 tool_version: "3.4.1"
 env: pathology
 image: quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df293666277497bccb297d966797fc5a
-gap_x86_64: the aarch.science `pathology` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: pathology-c817c8dd8540
 spawn_version: 0.127.0
 last_verified: 2026-10-12
+last_verified_x86_64: 2026-10-16
 ---
 # zarr + dask — the chunk shape is a storage decision, and the two places it isn't
 
@@ -46,34 +47,34 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 
 ### The checks
 
-| observable | assertion | observed |
-|---|---|---|
-| staged bytes | match pin | 1 of 1 |
-| zarr / dask / numpy / numcodecs | read from the running install | **3.4.1** / 2026.8.0 / 2.5.4 / 0.17.0 |
-| test image | ≥ 1000 levels, entropy in (4, 15) | 25,977 levels, **14.283 bits/px** |
-| **4 chunk shapes** | **byte-identical, pairwise** | 1 / 16 / 64 / **1,240** chunks, all identical |
-| `(17, 13)` ragged | must leave partial edges both axes | 31 × 40 grid |
-| **zarr format 2 vs 3** | **both exact, and equal to each other** | identical |
-| **blosc / gzip / zstd** | **byte-identical** | all, 1.05× |
-| control: `BitRound(6)` / `Quantize(2)` / `FixedScaleOffset(10)` | **must break identity** | 2.8e-02 / 3.9e-03 / 5.0e-02 |
-| **sharded store** | **identical, and fewer objects** | **65 → 5 files** |
-| **region write across chunks** | **exact, fill value elsewhere** | exact |
-| **5 slices on a ragged store** | **== numpy**, incl. strided + corner | 5 of 5 |
-| **elementwise × 4 chunkings** | **array-identical to numpy** | `x*2+1`, transpose, `where` |
-| **integer `sum` / `max`** | **bit-exact at every chunking** | 130,859,506 |
-| **float `min` / `max`** | **bit-exact at every chunking** | exact |
-| `fsum` reference | == exact rational arithmetic (staging) | identical, both arrays |
-| **every sum's backward error** | **< `log2(262144)·ε` = 3.997e-15** | 5.440e-19 / **1.600e-15** |
-| **control: naive left-to-right** | **must miss that bound** | 2.621e-11 — **6,559× outside** |
-| **1 chunk == numpy** | **exact, both arrays** | exact |
-| **control: >1 chunk must differ** | **at least one layout** | **4 of 4** / 2 of 4 |
-| argmax with 275 ties | *recorded, not asserted* | differs at 3 of 4 chunkings |
-| **argmax, unique maximum** | **== numpy at every chunking** | flat index 63,432 |
-| **rechunk (64,64)→(17,13)** | **every element preserved** | exact |
-| **`to_zarr` → `from_zarr`** | **exact** | exact |
-| **pyramid, dask coarsen** | **== numpy blockwise sum** | 2 levels, exact |
-| **pyramid total intensity** | **equal across all levels** | 7,393,804,574 ×3 |
-| determinism | repeat store size, repeat sum | identical |
+| observable | assertion | observed | x86_64 (m8i.large) |
+|---|---|---|---|
+| staged bytes | match pin | 1 of 1 | identical |
+| zarr / dask / numpy / numcodecs | read from the running install | **3.4.1** / 2026.8.0 / 2.5.4 / 0.17.0 | identical |
+| test image | ≥ 1000 levels, entropy in (4, 15) | 25,977 levels, **14.283 bits/px** | identical |
+| **4 chunk shapes** | **byte-identical, pairwise** | 1 / 16 / 64 / **1,240** chunks, all identical | identical |
+| `(17, 13)` ragged | must leave partial edges both axes | 31 × 40 grid | identical |
+| **zarr format 2 vs 3** | **both exact, and equal to each other** | identical | identical |
+| **blosc / gzip / zstd** | **byte-identical** | all, 1.05× | identical |
+| control: `BitRound(6)` / `Quantize(2)` / `FixedScaleOffset(10)` | **must break identity** | 2.8e-02 / 3.9e-03 / 5.0e-02 | identical |
+| **sharded store** | **identical, and fewer objects** | **65 → 5 files** | identical |
+| **region write across chunks** | **exact, fill value elsewhere** | exact | identical |
+| **5 slices on a ragged store** | **== numpy**, incl. strided + corner | 5 of 5 | identical |
+| **elementwise × 4 chunkings** | **array-identical to numpy** | `x*2+1`, transpose, `where` | identical |
+| **integer `sum` / `max`** | **bit-exact at every chunking** | 130,859,506 | identical |
+| **float `min` / `max`** | **bit-exact at every chunking** | exact | identical |
+| `fsum` reference | == exact rational arithmetic (staging) | identical, both arrays | identical |
+| **every sum's backward error** | **< `log2(262144)·ε` = 3.997e-15** | 5.440e-19 / **1.600e-15** | identical |
+| **control: naive left-to-right** | **must miss that bound** | 2.621e-11 — **6,559× outside** | identical |
+| **1 chunk == numpy** | **exact, both arrays** | exact | identical |
+| **control: >1 chunk must differ** | **at least one layout** | **4 of 4** / 2 of 4 | identical |
+| argmax with 275 ties | *recorded, not asserted* | differs at 3 of 4 chunkings | identical |
+| **argmax, unique maximum** | **== numpy at every chunking** | flat index 63,432 | identical |
+| **rechunk (64,64)→(17,13)** | **every element preserved** | exact | identical |
+| **`to_zarr` → `from_zarr`** | **exact** | exact | identical |
+| **pyramid, dask coarsen** | **== numpy blockwise sum** | 2 levels, exact | identical |
+| **pyramid total intensity** | **equal across all levels** | 7,393,804,574 ×3 | identical |
+| determinism | repeat store size, repeat sum | identical | identical |
 
 ### The chunk shape must not be a scientific decision
 
@@ -192,6 +193,14 @@ digest, so verify the tag and pin the arm64 digest.
 This gap was named by the catalog itself — [imagecodecs](../imagecodecs/README.md) records
 that "`zarr` and `dask`, still unexercised in this env" were "the half of whole-slide I/O
 this does not touch". Both are now exercised.
+
+**x86_64.** The same spec with `ARCH=x86_64` runs on `m8i.large` through the `pathology-c817c8dd8540`
+twin (`envs-x86_64/`: the pinned image's versions as linux-64 builds, installed offline in 7 s).
+zarr, dask, numcodecs and numpy are the same versions; 5 of 208 versions differ (charls,
+fonttools, libcurl, libglib, libsqlite). `score.tsv` is **byte-identical** across chips —
+including the two values chunking is allowed to move: each chunked float sum's last bits
+(backward error 1.600e-15) and the tied-`argmax` indices land on the same values on both chips,
+so for these reductions the order of addition is set by the chunking, not by the CPU.
 
 ### Run + verify
 
