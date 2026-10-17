@@ -1,0 +1,54 @@
+{
+  "task_id": "rnaseqdereal-compare",
+  "container": "quay.io/aarchbio/bioconductor-edger@sha256:09169b359eedcda2bd9f83366d993c2024dc40ac15441cdf68cf34f32befdd02",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; set +e so a failure reaches the line that reports it (spawn#707).\necho \"f077ea23f4616e57024a4dfb518bcd94f57cfd91c02a589810bb0039a1283bf1  voom.R\" | sha256sum -c || { echo \"FAIL: voom.R does not match its pin\"; exit 1; }\nnproc | awk '{print \"nproc\\t\"$1}'; uname -m\nT0=$EPOCHREALTIME\nRscript voom.R > voom.log 2>&1\nRC=$?\nT1=$EPOCHREALTIME\ncat voom.log\nawk -v a=\"$T0\" -v b=\"$T1\" 'BEGIN{printf \"wall_s\\t%.2f\\n\", b-a}' | tee -a report.tsv\ntest -s report.tsv || { echo \"FAIL: no report\"; exit 1; }\nexit $RC\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-de-real/voom.R",
+      "destination": "/tmp/voom.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/airway_counts.tsv",
+      "destination": "/tmp/airway_counts.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/airway_coldata.tsv",
+      "destination": "/tmp/airway_coldata.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/res_deseq2_airway.tsv",
+      "destination": "/tmp/res_deseq2_airway.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/report.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/compare/report.tsv"
+    },
+    {
+      "source": "/tmp/voom.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/compare/voom.log"
+    },
+    {
+      "source": "/tmp/de_three_methods.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/compare/de_three_methods.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.06
+  }
+}

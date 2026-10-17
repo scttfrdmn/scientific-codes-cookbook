@@ -1,0 +1,58 @@
+{
+  "task_id": "rnaseqdereal-deseq2",
+  "container": "quay.io/aarchbio/bioconductor-deseq2@sha256:6d87efaf6ff4691c2adfd1416c2a40444709d870408ca0ef9cced378cff042a3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# spawn runs task commands under bash -e; set +e so a failure reaches the line that reports it (spawn#707).\necho \"78f2179b25983313d5450876236f92b58c10d0845d62b7a832329e32c871cad1  airway_1.30.0.tar.gz\" | sha256sum -c || { echo \"FAIL: airway_1.30.0.tar.gz does not match its pin\"; exit 1; }\necho \"5495aa368924b367c26d9c4ccd79e2a100193bb94f36ad5d15e79e6c170673c7  deseq2.R\" | sha256sum -c || { echo \"FAIL: deseq2.R does not match its pin\"; exit 1; }\nnproc | awk '{print \"nproc\\t\"$1}'; uname -m\nT0=$EPOCHREALTIME\nRscript deseq2.R > deseq2.log 2>&1\nRC=$?\nT1=$EPOCHREALTIME\ncat deseq2.log\nawk -v a=\"$T0\" -v b=\"$T1\" 'BEGIN{printf \"wall_s\\t%.2f\\n\", b-a}' | tee -a report.tsv\ntest -s report.tsv || { echo \"FAIL: no report\"; exit 1; }\nexit $RC\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-de-real/airway_1.30.0.tar.gz",
+      "destination": "/tmp/airway_1.30.0.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-de-real/deseq2.R",
+      "destination": "/tmp/deseq2.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/report.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/report.tsv"
+    },
+    {
+      "source": "/tmp/deseq2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/deseq2.log"
+    },
+    {
+      "source": "/tmp/res_deseq2_gse.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/res_deseq2_gse.tsv"
+    },
+    {
+      "source": "/tmp/res_deseq2_airway.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/res_deseq2_airway.tsv"
+    },
+    {
+      "source": "/tmp/airway_counts.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/airway_counts.tsv"
+    },
+    {
+      "source": "/tmp/airway_coldata.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/rnaseq-de-real/deseq2/airway_coldata.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.06
+  }
+}

@@ -26,29 +26,30 @@ for s in $(make -s spec RECIPE=rnaseq-de); do spawn task run --spec "$s" --wait;
 ```r
 dds <- DESeqDataSetFromMatrix(counts, coldata, ~ grp)   # DESeq2
 res <- results(DESeq(dds))
-
 y <- estimateDisp(calcNormFactors(DGEList(counts, group=grp)), design)   # edgeR
 tt <- topTags(glmQLFTest(glmQLFit(y, design), coef=2), n=Inf)$table
-
 v  <- voom(calcNormFactors(DGEList(counts, group=grp)), design)          # limma-voom
 lt <- topTable(eBayes(lmFit(v, design)), coef=2, number=Inf)
 ```
-
-Two tasks: DESeq2 builds the matrix and tests it, then edgeR and limma-voom test the same matrix and the three results are compared.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| synthetic counts, seed 42, 200 planted genes | your own count matrix (genes × samples, integers) | the planted set is what makes this checkable — with real data you have no truth to assert against, only the three methods' agreement. |
+| synthetic counts, seed 42, 200 planted genes | your own count matrix (genes × samples, integers) | the planted set is what makes this checkable; on a real study, check against its published results, as the measurement below does for airway. |
 | 4 samples per group | your design | power falls fast below 3–4; the recovery numbers below are a property of *this* effect size and n, not a general claim. |
 | `~ grp`, one two-level factor | your model matrix | all three take a design matrix; a batch term or covariate changes the formula, not the shape of the recipe. |
 
-**Leave the fixture:** a matrix with planted truth lets the recipe assert *recovery* and *direction*, which no real dataset can. **Scale it** to your counts — the code path is identical, and the three-way agreement below is the thing worth reproducing on your own data.
+**Leave the fixture:** a matrix with planted truth lets the recipe assert *recovery* and *direction*, which a real study can only approximate with its published results. **Scale it** to your counts — the code path is identical, and the three-way agreement below is the thing worth reproducing on your own data.
 
-## Shape, size, cost
+## Which box — [measured](../../measurements/rnaseq-de-real/README.md) (the whole airway study, GSE52778, 8 samples × 63,677 genes)
 
-Two tasks on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 15m each, caps $0.04 each. Recorded windows: **1m19s** (DESeq2 + matrix) and **2m38s** (edgeR + limma + comparison) — mostly R startup and package loading, not statistics. **These timings are not compute cost.**
+| chip | instance | tool wall | billed | **billed $/study** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.large` | 20.0 s | 332 s | **0.0074** |
+| Intel | `c8i.large` | 18.6 s | 332 s | 0.0086 |
+
+**Take the smallest Graviton box.** Both chips reproduce Bioconductor's published DESeq2 workflow to every printed digit, and Graviton4 is 15% cheaper billed. Peak RSS is 1 GB, and 94% of the bill is boot and image pull, which more cores cannot shorten. The two tasks of this recipe (DESeq2 builds the matrix and tests it, then edgeR and limma-voom test the same matrix) recorded **1m19s** and **2m38s** on `c8g.xlarge`; **these timings are not compute cost.**
 
 <details>
 <summary>As shipped: two exact checks, two justified bands, why limma runs in the edgeR image, pins, smoke check</summary>
