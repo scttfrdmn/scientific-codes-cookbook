@@ -56,7 +56,7 @@ def _outside_details_lines(text):
     in_x86 = False
     for i, line in enumerate(text.split("\n")):
         if i < fm_lines:
-            if re.match(r"^(images_x86_64:|last_verified_x86_64:|gap_x86_64:|gap_arm64:)", line):
+            if re.match(r"^(images_x86_64:|env_x86_64:|last_verified_x86_64:|gap_x86_64:|gap_arm64:)", line):
                 in_x86 = line.startswith("images_x86_64:")
                 continue
             if in_x86 and re.match(r"^\s+- ", line):
@@ -180,16 +180,25 @@ def frontmatter_keys(text):
 def check_x86_frontmatter(text, keys, rel):
     """The x86_64 pins live beside the arm64 ones (scripts/spec_arch.py reads them). A recipe
     either has x86 pins, or records why there is no x86 build -- never both -- and only a real
-    x86 run may stamp last_verified_x86_64, which therefore needs pins to have run."""
+    x86 run may stamp last_verified_x86_64, which therefore needs pins to have run. An
+    aarch.science recipe's x86 route is env_x86_64 (a committed linux-64 twin of its env)."""
     has_imgs, has_gap = "images_x86_64" in keys, "gap_x86_64" in keys
+    has_env = "env_x86_64" in keys
+    if has_env:
+        m = re.search(r"^env_x86_64:\s*(\S+)", text, re.M)
+        lock = os.path.join(ROOT, "envs-x86_64", (m.group(1) if m else "") + ".linux-64.lock")
+        if not m or not os.path.exists(lock):
+            errors.append(f"{rel}: env_x86_64 names no committed envs-x86_64/<name>.linux-64.lock")
+        if has_gap:
+            errors.append(f"{rel}: frontmatter has both env_x86_64 and gap_x86_64 -- one or the other")
     if "gap_arm64" in keys and (has_gap or not has_imgs):
         errors.append(f"{rel}: gap_arm64 needs images_x86_64 and no gap_x86_64 -- an x86-only recipe must have an x86 route")
     if "gap_arm64" in keys and "image" in keys:
         errors.append(f"{rel}: gap_arm64 and an arm64 image: -- one or the other")
     if has_imgs and has_gap:
         errors.append(f"{rel}: frontmatter has both images_x86_64 and gap_x86_64 -- one or the other")
-    if "last_verified_x86_64" in keys and not has_imgs:
-        errors.append(f"{rel}: last_verified_x86_64 without images_x86_64 -- nothing to have run")
+    if "last_verified_x86_64" in keys and not (has_imgs or has_env):
+        errors.append(f"{rel}: last_verified_x86_64 without images_x86_64 or env_x86_64 -- nothing to have run")
     if has_imgs:
         block = text[4:text.find("\n---\n", 4)]
         m = re.search(r"^images_x86_64:\s*\n((?:\s+-\s+.*\n?)+)", block, re.M)

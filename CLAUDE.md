@@ -13,7 +13,7 @@ container on it under a TTL and a cost cap, `lagotto` handles capacity, and the
 instance self-terminates. **This is an AWS cookbook, not an ARM one:** Graviton4
 (`c8g`/`m8g`/`r8g`) and same-generation x86 (`c8i`/`m8i`/`r8i`, via `ARCH=x86_64`) are
 both targets, from one recipe — the x86 pins live in the frontmatter beside the arm64 ones
-(`images_x86_64`, `last_verified_x86_64`, or `gap_x86_64` with the reason), and
+(`images_x86_64` or, for aarch.science envs, `env_x86_64`; `last_verified_x86_64`; or `gap_x86_64` with the reason), and
 `scripts/spec_arch.py` rewrites the same specs rather than keeping a second copy. The mirror
 case — a code with **no arm64 build anywhere** — is an x86-only recipe: `gap_arm64: <reason>` plus
 `images_x86_64`, specs written for x86 directly, outputs under `runs-x86_64/`; the catalog's arm64
@@ -403,8 +403,15 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   still a gap to record. (x86 *as a target* is first-class — see the top; the rule is about
   an x86 image standing in for an ARM run.) **aarch.\* are ARM-only registries — never ask
   them for x86 builds.** An x86 pin is the same version from its upstream channel
-  (bioconda → `quay.io/biocontainers`), verified `linux/amd64`; where none exists, record
-  `gap_x86_64` and stop.
+  (bioconda → `quay.io/biocontainers`), verified `linux/amd64`. **An aarch.science env has
+  no x86 image, so its x86 route is a locked twin, not a gap:** `scripts/lock_env_x86.py
+  <recipe>` traces the pinned arm64 digest to the env lock it was built from (its `s<lockhash>`
+  quay tag), solves the same versions for linux-64 into `envs-x86_64/<env>-<hash>.linux-64.lock`
+  (URL + sha256, differing versions listed in its header — measured 289 of 294 identical for
+  neuroimaging), `make stage ARCH=x86_64` stages it once per env, and `env_x86_64:` in the
+  frontmatter makes `spec_arch.py` install it offline into a pinned micromamba image (FSL's
+  model; 294 packages in 4 s on c8i). Only where *that* solve or run fails, record `gap_x86_64`
+  with the measured reason.
 - **Walk the manifest list's entries; a manifest list is not evidence of arm64.**
   `docker manifest inspect <img>` returning a list means multi-arch was *intended*, not
   that arm64 is in it. Measured: `gromacs/gromacs:latest` and `psi4/psi4:latest` are both
