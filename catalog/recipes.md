@@ -87,7 +87,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-12 | 2026-09-13 | gap |
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-16 | 2026-10-16 | — |
 
 ## climate
 
@@ -133,8 +133,8 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-12 | 2026-10-03 | gap |
-| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-12 | 2026-10-10 | gap |
+| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-16 | 2026-10-03 | 2026-10-16 |
+| [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-16 | 2026-10-10 | 2026-10-16 |
 
 ## fem-cfd
 
@@ -172,7 +172,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [gw](../recipes/gw/README.md) | A binary-black-hole signal is planted in simulated LIGO noise; PyCBC's matched filter finds it at the planted sample and Bilby's sampler brackets the planted chirp mass, with LALSuite underneath both. For anyone running CBC searches or parameter estimation on ARM. | gw | stage | 2026-10-16 | 2026-10-16 | gap |
+| [gw](../recipes/gw/README.md) | A binary-black-hole signal is planted in simulated LIGO noise; PyCBC's matched filter finds it at the planted sample and Bilby's sampler brackets the planted chirp mass, with LALSuite underneath both. For anyone running CBC searches or parameter estimation on ARM. | gw | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 |
 
 ## hep
 
