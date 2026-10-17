@@ -74,7 +74,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
 | [arviz](../recipes/arviz/README.md) | Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM. | bayes | stage | 2026-10-17 | 2026-10-11 | 2026-10-17 |
-| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-16 | 2026-10-09 | — |
+| [cmdstan](../recipes/cmdstan/README.md) | Compiles and samples a conjugate Beta-Binomial model on Graviton4, checking Stan's log density, gradients, MAP and posterior against the exact analytical answer. For anyone running Stan on ARM. | bayes | stage | 2026-10-17 | 2026-10-09 | 2026-10-17 |
 
 ## cfd
 
@@ -86,7 +86,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-16 | 2026-10-16 | — |
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 
 ## climate
 
@@ -102,19 +102,19 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-16 | 2026-10-11 | gap |
+| [cantera](../recipes/cantera/README.md) | Equilibrates methane-air on Graviton4 and checks what must be true: atoms conserved, four thermodynamic identities at machine precision, and forward rates equal to reverse at equilibrium. For anyone doing combustion or kinetics on ARM. | comp-chem | stage | 2026-10-17 | 2026-10-11 | 2026-10-17 |
 | [openbabel-pdbfixer](../recipes/openbabel-pdbfixer/README.md) | Regenerates ChEMBL 37's published keys with a second engine, so the two toolkits check each other. For anyone picking a cheminformatics toolkit. | comp-chem | run: rdkit | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [openmm-mdanalysis](../recipes/openmm-mdanalysis/README.md) | Conserves energy to 2.5e-07 over 20,000 steps, then has MDAnalysis recover exactly what OpenMM wrote. For anyone running OpenMM or reading its output. | comp-chem | build-in-task | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [pyscf](../recipes/pyscf/README.md) | `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../recipes/psi4/README.md) — the same SCF from a second quantum-chemistry codebase. | comp-chem | build-in-task | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [rdkit](../recipes/rdkit/README.md) | Regenerates ChEMBL 37's own `standard_inchi_key` and formula from its SMILES, in 35 seconds. For anyone running RDKit over a real compound library. | comp-chem | stage | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [vina](../recipes/vina/README.md) | Docks imatinib into Abl kinase (1iep) and lands 0.027 kcal/mol from Vina's own published v1.2.7 value. For anyone docking on ARM. | comp-chem | stage | 2026-10-17 | 2026-10-17 | — |
-| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-16 | 2026-10-08 | gap |
+| [xtb](../recipes/xtb/README.md) | Reproduces the total energy and HOMO-LUMO gap that xtb's own unit test asserts, then checks the gradient against the molecule's symmetry. For anyone running semiempirical quantum chemistry on ARM. | comp-chem | build-in-task | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 
 ## cp2k
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-16 | 2026-10-16 | — |
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-17 | 2026-10-17 | — |
 
 ## dft
 
@@ -141,7 +141,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 |---|---|---|---|---|---|---|
 | [calculix](../recipes/calculix/README.md) | Runs CalculiX's own regression suite on Graviton4 and compares every result with the author's committed reference using his comparison script, not ours. For anyone doing finite-element analysis on ARM. | fem-cfd | stage | 2026-10-17 | 2026-10-10 | 2026-10-17 |
 | [fenicsx](../recipes/fenicsx/README.md) | FEniCSx (`dolfinx`) solves the Poisson equation by finite elements and checks itself two ways a bug can't fake — a machine-zero patch test and the theoretical convergence rate. The catalog's first finite-element recipe, for anyone doing FEM who wants it on Graviton. | fem-cfd | stage | 2026-10-17 | 2026-10-11 | 2026-10-17 |
-| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | build-in-task | 2026-10-16 | 2026-10-09 | — |
+| [petsc](../recipes/petsc/README.md) | Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration count and error norm committed in its repository, then measures the discretisation order on a manufactured solution. For anyone running sparse solvers on ARM. | fem-cfd | stage | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [slepc](../recipes/slepc/README.md) | Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks them against an exact formula, an independent dense solver, and the same run distributed across two ranks. For anyone doing eigenproblems on ARM. | fem-cfd | stage | 2026-10-17 | 2026-10-12 | 2026-10-17 |
 
 ## geo-ml
@@ -294,7 +294,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [pytorch](../recipes/pytorch/README.md) | Checks PyTorch's CPU build on Graviton4: gradients, `torch.linalg`, `torch.optim`, and bit-identical seeded training. For anyone training or fitting models on ARM without a GPU. | single-cell | stage | 2026-10-17 | 2026-10-16 | 2026-10-17 |
 | [scanpy](../recipes/scanpy/README.md) | Runs the standard single-cell pipeline on Graviton4 — QC, HVG, PCA, kNN, Leiden — and verifies it against a planted control, a second algorithm, and known blood-cell biology. For anyone doing single-cell analysis on ARM. | single-cell | stage | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [scvelo](../recipes/scvelo/README.md) | Simulates spliced/unspliced counts from the splicing ODEs with planted per-gene rates, runs scVelo's steady-state and dynamical models on Graviton4, and checks each against a closed form or the planted truth. For anyone doing RNA velocity on ARM. | single-cell | stage | 2026-10-17 | 2026-10-16 | 2026-10-17 |
-| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-17 | 2026-10-08 | — |
+| [seurat](../recipes/seurat/README.md) | Runs Seurat and Scanpy over identical cells, genes, features and graph parameters on Graviton4, so the only thing differing is the clustering. For anyone deciding whether an R or Python single-cell pipeline changes their answer. | single-cell | stage | 2026-10-17 | 2026-10-17 | 2026-10-17 |
 | [squidpy](../recipes/squidpy/README.md) | Builds kNN, radius and Visium-style hex graphs, scores neighbourhood enrichment and spatial autocorrelation on Graviton4, and checks each against brute force, a closed form or a planted tissue layout. For anyone doing spatial omics on ARM. | single-cell | stage | 2026-10-17 | 2026-10-16 | 2026-10-17 |
 
 ## structbio
@@ -313,5 +313,5 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |
 |---|---|---|---|---|---|---|
-| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-16 | 2026-10-11 | — |
+| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-17 | 2026-10-11 | — |
 | [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | build-in-task | 2026-10-16 | 2026-10-03 | — |
