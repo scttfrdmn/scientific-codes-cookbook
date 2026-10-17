@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-scikit-learn-real",
+  "container": "quay.io/aarchsci/geo-ml@sha256:83ca6331cd84cbae0f60987e9536704ce201904bdfe98d3398aff57e8061aae9",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\nexport OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 SKR_THREADS=8\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nlscpu | grep -iE 'model name|^cpu\\(s\\)|numa node\\(s\\)' > cpu.txt; cat cpu.txt\nT0=$(date +%s)\npython3 -u real.py > real.log 2>&1\nRC=$?\necho \"real.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncat real.log\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'SKLEARN REAL OK' real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn-real/covtype.data.gz",
+      "destination": "/tmp/covtype.data.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scikit-learn-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/real-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn-real/r1/real-results.tsv"
+    },
+    {
+      "source": "/tmp/logreg_coef.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn-real/r1/logreg_coef.npy"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/scikit-learn-real/r1/cpu.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.75
+  }
+}

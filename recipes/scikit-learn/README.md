@@ -40,6 +40,15 @@ PCA().fit(A).explained_variance_  ==  eigvalsh(np.cov(A.T))[::-1] # to 5e-14
 
 One task on `c8g.2xlarge` (8 vCPU / 16 GiB), TTL 60m as a **backstop** with `cost_limit` $0.60 as the real guard. The suite takes **127–151 s** across five runs and the identities a few seconds, inside a ~4-minute window ([layout](../../patterns/layout-and-effective-cost.md)).
 
+## Which box — [measured](../../measurements/scikit-learn-real/README.md) (all 581,012 Covertype rows, 8 threads)
+
+| chip | instance | fit: logreg / HGB / RF | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 49.0 / 85.6 / 10.6 s | **0.0732** |
+| x86 | `c8i.2xlarge` | 63.1 / 88.4 / 10.6 s | 0.0859 |
+
+**Graviton4 is 15–34% cheaper per fit.** The logistic optimum agrees across chips to 1.6e-12 and the forest is bit-identical; boosting differs in the last bits at the same accuracy (0.9698). Set `l2_regularization` for multiclass boosting — the default 0 diverges on this data.
+
 <details>
 <summary>As shipped: 36,879 passing tests with every one accounted for, a cross-code MLE to 2e-13, and two exact identities</summary>
 
@@ -154,9 +163,9 @@ the check cannot tell the difference. Check the bucket regardless
 
 ### Not covered
 
-**Real datasets and model selection.** Nothing here tunes hyperparameters, cross-validates on real
-data, or benchmarks an estimator against a published accuracy — that is the work most users do and
-the suite covers its mechanics, not its answers. **The optional backends**: the array-API path
+**Model selection.** Nothing here tunes hyperparameters or cross-validates; the
+[real-workload measurement](../../measurements/scikit-learn-real/README.md) fits three model
+families on full Covertype, but at fixed settings. **The optional backends**: the array-API path
 through torch/cupy/dpnp is 6,000+ of the skipped tests, and GPU execution is Round Two.
 **float32**, opt-in and skipped (811). **Threading and parallel scaling**: the suite runs on 8
 workers, but nothing measures `n_jobs` or BLAS-thread behaviour, which is where an arm64 difference
