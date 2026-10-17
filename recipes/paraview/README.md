@@ -4,8 +4,9 @@ tool_version: 6.1.1
 env: viz
 image: quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6
 env_x86_64: viz-c97c5af10411
-spawn_version: 0.115.0
-last_verified: 2026-10-03
+spawn_version: 0.131.0
+last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # ParaView — contour, integrate and render, up to 135M points with no GPU
 
@@ -14,7 +15,7 @@ Builds an isosurface on four grids from 65³ to 513³, integrates its area and v
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=paraview)" --wait   # 24 s of compute, nothing staged
+spawn task run --spec "$(make -s spec RECIPE=paraview)" --wait   # 24 s of compute, no data staged
 ```
 
 ```python
@@ -98,11 +99,20 @@ empty and `IntegrateVariables` produced no `Area` array at all.
 | | |
 |---|---|
 | image | `quay.io/aarchsci/viz@sha256:2539c1e42d24…` (ParaView 6.1.1, cosign-signed, `linux/arm64`) |
-| input | the analytic field, built in code — **nothing is staged** |
+| input | the analytic field, built in code — **no data is staged** |
+| task | `render.sh`, staged and pinned by sha256 (inline, the spec exceeds EC2's 16 KiB user data) |
+
+**x86_64** (`c8i.xlarge`, 2026-10-17): every check holds, and the answer is **bit-identical** to
+Graviton4's: the same V and F, the same area and volume to the last digit at all four rungs, and
+the same `render.png` sha256 (`d61fa636…`). Only time and RSS differ (17.8 s vs 21.0 s at 513³;
+4,193 vs 4,185 MiB). The twin is `envs-x86_64/viz-c97c5af10411`: 189 of 245 versions match arm64,
+and the 51 that drifted are outside the render stack (ParaView 6.1.1, VTK 9.6.2, mesalib 26.2.1,
+LLVM 22.1.8, numpy 2.5.2 and the Xvfb server are the same versions on both). Marching cubes and the integrals are deterministic, so nothing here is a path.
 
 ### Run + verify
 
 ```sh
+make stage RECIPE=paraview
 spawn task run --spec "$(make -s spec RECIPE=paraview)" --wait
 make ls RECIPE=paraview
 ```

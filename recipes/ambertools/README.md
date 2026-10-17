@@ -3,9 +3,10 @@ tool: ambertools
 tool_version: "26.0"
 env: md
 image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
-gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+env_x86_64: md-f7ed8789d24e
 spawn_version: 0.130.1
 last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # AmberTools — 100 ps of solvated NVE, and ff14SB checked against GROMACS
 
@@ -170,10 +171,22 @@ The smoke check runs inside the task and the bucket listing is the second half o
 
 ### x86_64
 
-Not verified yet. The committed linux-64 twin of this image resolved GROMACS to its nompi build,
-which has no `gmx_mpi`, so the cross-code single point cannot run on it; it needs re-solving with
-`md.yaml`'s `mpi_openmpi` pin. When it runs, the counts, SHAKE and the cross-code identity must
-hold exactly, while the NVE trajectory and its drift are a path and will differ, reported rather
-than asserted. That twin's BLAS is MKL where arm64's is OpenBLAS, a bigger change than a kernel.
+Verified on `c8i.large` (2026-10-17) from the env's linux-64 twin (`envs-x86_64/md-f7ed8789d24e`,
+228 of 245 versions identical, AmberTools 26.0 and GROMACS 2026.3 `mpi_openmpi` among them). Its
+BLAS is **MKL** where arm64's is OpenBLAS: conda-forge cannot co-install OpenBLAS with this env on
+linux-64 (the lock header records why), a bigger change than a kernel.
+
+| | Graviton4 | x86 | kind |
+|---|---|---|---|
+| atoms vacuum / solvated / waters | 22 / 1864 / 614 | 22 / 1864 / 614 | exact, identical |
+| sander vs GROMACS | −13.3340 vs −13.3351 (0.0011) | −13.3340 vs −13.3351 (0.0011) | fixed point, identical |
+| constraints | 1228 O-H + 614 H-H | 1228 + 614 | exact, identical |
+| SHAKE max\|d − 0.9572\| | 6.85e-06 Å | 6.62e-06 Å | holds (< 1e-3) |
+| T(frame 0) / mean T | 306.5 / 304.4 K | 305.7 / 302.6 K | path |
+| NVE leak, % of *kT* | 0.13% | 0.17% | path, holds (< 5%) |
+| NVE drift | −2.832 kcal/mol/ns | −3.699 | path |
+
+Every assertion holds. The heating and NVE runs are trajectories, so their values differ across
+chips and are reported, not asserted to match.
 
 </details>

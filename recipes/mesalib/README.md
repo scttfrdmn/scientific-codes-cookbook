@@ -6,6 +6,7 @@ image: quay.io/aarchsci/viz@sha256:dda63dc2dcbd830258017f93df6cafe37ff3afbfc0a84
 env_x86_64: viz-0fe5dabecafa
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-17
 ---
 # Mesa llvmpipe — headless GL, checked to the pixel
 
@@ -139,10 +140,12 @@ the platform improved. `backends.txt` is staged out either way.
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
-**x86_64: not yet run.** The route is the env's linux-64 twin (`envs-x86_64/viz-0fe5dabecafa`,
-231 of 244 versions identical; mesalib, VTK and numpy among them). On `m8i.large` (2026-10-17) the
-twin does not install: the offline install of its one `%`-encoded package file
-(`x264-1%21164.3095…`) exits 1 before anything renders, so no check was reached on x86.
+**x86_64** (`m8i.large`, 2026-10-17): every identity holds, from the env's linux-64 twin
+(`envs-x86_64/viz-0fe5dabecafa`, 231 of 244 versions identical; mesalib, VTK and numpy among
+them). The one difference is llvmpipe's vector width, `256 bits` against Graviton4's `128 bits`,
+and it moves no pixel: the render sha256 is the same `8d4a68bc…` on both chips. Every count is an
+integer from fixed geometry, so none of these is a path. With no `DISPLAY`, x86 also has no
+display-free backend (`libOSMesa not found`), same as arm64.
 
 ### Run + verify
 

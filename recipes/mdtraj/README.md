@@ -3,9 +3,10 @@ tool: mdtraj
 tool_version: 1.11.2
 env: md
 image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
-gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
-spawn_version: 0.130.1
+env_x86_64: md-f7ed8789d24e
+spawn_version: 0.131.0
 last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # MDTraj — read a real 100 ps trajectory, checked against MDAnalysis byte for byte
 
@@ -54,7 +55,7 @@ No generation table — the interesting cost here is GROMACS's, which
 | **coordinates** | **max\|MDTraj − MDAnalysis\| < 1e-5 nm** | **2.38e-07** over 34,962,786 values |
 | box volume | max\|diff\| < 1e-3 nm³ | **2.76e-05** |
 | **O-H distance** | **0.09572 ± 0.0005 nm** | **0.09572** |
-| Rg fills the box | within 0.25 nm of L/2 | **3.1007** vs **3.1000** |
+| Rg fills the box | within 0.25 nm of L/2 | **3.1004** vs **3.1000** |
 
 **The coordinate identity is the one that matters, and it works *because* MD is chaotic.** Both
 libraries read the *same file*, so their agreement is a property of the parsers, not of the dynamics:
@@ -70,7 +71,7 @@ the tip3p constraint, and Rg ≈ L/2.
 
 **Why coordinates and not radius of gyration.** The first version compared mass-weighted Rg and
 failed at 4.9e-04 nm. Both libraries *guess* masses from atom names in a `.gro`, and their tables
-differ slightly — confirmed here, MDTraj 3.1007 against MDAnalysis 3.1003 on identical coordinates.
+differ slightly — confirmed here, MDTraj 3.1004 against MDAnalysis 3.1000 on identical coordinates.
 That is a [method difference, not a parser bug](../../practices/cross-checks.md); Rg is reported, not
 asserted. Coordinates admit no model difference at all, which is what makes them the right
 cross-check.
@@ -92,7 +93,7 @@ Nothing in the original check set caught it. The O-H assertion failed, but as a 
 downstream, which sent me looking at indexing and periodic wrapping instead of at the trajectory.
 `rg_fills_box` is the fix: a uniformly filled periodic box must have Rg ≈ L/2, so the number to
 compare against is **3.1000**, derived from the box, not from a previous run. It read 0.796 then and
-3.1007 now.
+3.1004 now.
 
 The protocol is now minimise (`steep`, 2000 steps, PME) → NVT (`v-rescale`, 300 K, `gen-seed 42`),
 and `mdrun.log`, `grompp.log` and `mdrun_em.log` are **staged out**, because the first two failures
@@ -111,13 +112,15 @@ re-solved: conda-forge later capped that mdtraj at `numpy <2.5` while the image 
 ([why that matters](../../practices/environment-durability.md)). Every assertion held on the new
 digest at the same observed values; Rg moved in the fourth decimal, as a trajectory does run to run.
 
-Nothing is staged: `gmx solvate` builds the 6.2 nm box from the packaged 216-water template, so the
-recipe has no `stage-inputs.sh` and no external data to pin. The trade is that the structure is
-pinned by the *image* rather than by a hash.
+No data is staged: `gmx solvate` builds the 6.2 nm box from the packaged 216-water template, so
+there is no external data to pin. The trade is that the structure is pinned by the *image* rather
+than by a hash. Only the task script, `trajectory.sh`, is staged and pinned by sha256 (inline, the
+spec exceeds EC2's 16 KiB user data).
 
 ### Run + verify
 
 ```sh
+make stage RECIPE=mdtraj
 spawn task run --spec "$(make -s spec RECIPE=mdtraj)" --wait
 make ls RECIPE=mdtraj
 ```
@@ -127,10 +130,20 @@ Expect `smoke-check.txt` with `coords_two_libraries` under 1e-5, `oh_constraint 
 
 ### x86_64
 
-Not verified yet. The committed linux-64 twin of this image resolved GROMACS to its nompi build,
-which has no `gmx_mpi`, so the task cannot produce its trajectory; it needs re-solving with
-`md.yaml`'s `mpi_openmpi` pin. When it runs, the parser identity and the constraint must hold
-exactly on x86 too, while the trajectory itself is a path and will differ — more so because that
-twin's BLAS is MKL where arm64's is OpenBLAS.
+Verified on `c8i.2xlarge` (2026-10-17) from the env's linux-64 twin (`envs-x86_64/md-f7ed8789d24e`,
+228 of 245 versions identical, MDTraj 1.11.2, MDAnalysis 2.10.0, GROMACS 2026.3). Its BLAS is
+**MKL** where arm64's is OpenBLAS (the lock header records why).
+
+| | Graviton4 (`c8g.2xlarge`) | x86 (`c8i.2xlarge`) | kind |
+|---|---|---|---|
+| atoms / frames | 23262 / 501 | 23262 / 501 | exact, identical |
+| MDTraj vs MDAnalysis coordinates | 2.38e-07 nm | 2.38e-07 nm | parser identity, identical |
+| box volume, two parsers | 2.76e-05 nm³ | 2.76e-05 nm³ | identical |
+| O-H median | 0.09572 nm | 0.09572 nm | constraint, identical |
+| first water, frame 0 | `0.2320 0.6950 0.0220 …` | `0.2470 0.6760 0.0210 …` | path (minimisation differs) |
+| Rg (MDTraj) | 3.1004 nm | 3.1009 nm | path, holds (L/2 ± 0.25) |
+
+Graviton4's frame 0 repeated exactly across today's two arm64 runs and x86's differs, so the
+minimiser's result already depends on the chip before any dynamics.
 
 </details>

@@ -3,9 +3,10 @@ tool: gromacs
 tool_version: 2026.3
 env: md
 image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
-gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+env_x86_64: md-f7ed8789d24e
 spawn_version: 0.130.1
 last_verified: 2026-10-17
+last_verified_x86_64: 2026-10-17
 ---
 # GROMACS — benchMEM at 82k atoms, in ns/day across four Graviton generations
 
@@ -131,9 +132,20 @@ Expect `smoke-check.txt` with `ranks_used 16`, `simd ARM_NEON_ASIMD`, `confout_a
 
 ### x86_64
 
-Not verified yet. The committed linux-64 twin of this image resolved GROMACS to its nompi build,
-which has no `gmx_mpi`, so the rank-count assertion cannot run on it; it needs re-solving with
-`md.yaml`'s `mpi_openmpi` pin. Expect one more cross-chip difference when it runs: that twin's
-BLAS is MKL where arm64's is OpenBLAS.
+Verified on `c8i.4xlarge` (2026-10-17) from the env's linux-64 twin (`envs-x86_64/md-f7ed8789d24e`,
+228 of 245 versions identical, GROMACS 2026.3 `mpi_openmpi`). Its BLAS is **MKL** where arm64's is
+OpenBLAS (the lock header records why). The box is 8 cores / 16 hardware threads, so the 16 ranks
+land on hyperthreads; `--oversubscribe`, already in the launch, is what lets Open MPI 5 place them.
+
+| | Graviton4 (`c8g.4xlarge`) | x86 (`c8i.4xlarge`) | kind |
+|---|---|---|---|
+| ranks used | 16 | 16 | asserted, holds |
+| steps / atoms out | 10001 / 81743 | 10001 / 81743 | exact, identical |
+| SIMD | `ARM_NEON_ASIMD` | `AVX2_256` (host has `AVX_512`) | build |
+| mean T / mean Epot | 301.998 K / −1.28782e+06 | 301.998 K / −1.28782e+06 | path; equal to the printed 6 figures |
+| ns/day | 26.1 | 29.4 | timing, not compute cost |
+
+conda-forge's x86 GROMACS is compiled for `AVX2_256`, and `bm.log` notes that `AVX_512` was
+available, so the x86 number is not GROMACS' best on that chip.
 
 </details>
