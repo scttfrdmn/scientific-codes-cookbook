@@ -1,0 +1,18 @@
+[2m2026-10-17T21:00:41.176364Z[0m [32m INFO[0m [2mpiscem_rs::cli::map_scrna[0m[2m:[0m Protocol: custom (bc_len=16, umi_len=10)
+[2m2026-10-17T21:00:41.176380Z[0m [32m INFO[0m [2mpiscem_rs::cli::map_scrna[0m[2m:[0m Loading index from idx/mm116
+[2m2026-10-17T21:00:41.176385Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Loading SSHash dictionary from idx/mm116.ssi
+[2m2026-10-17T21:00:41.230934Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m   k=31, 1329841 strings
+[2m2026-10-17T21:00:41.230943Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Loading contig table from idx/mm116.ctab
+[2m2026-10-17T21:00:41.252446Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m   1329841 contigs, 18148228 entries, entry_width=37 bits
+[2m2026-10-17T21:00:41.252452Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Loading reference info from idx/mm116.refinfo
+[2m2026-10-17T21:00:41.262047Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m   319954 references, max_ref_len=123193
+[2m2026-10-17T21:00:41.262060Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Loading equivalence class table from idx/mm116.ectab
+[2m2026-10-17T21:00:41.274123Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m   1329841 tiles, 1056427 ECs, 15952694 label entries
+[2m2026-10-17T21:00:41.274132Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m   ref_shift=18, pos_mask=0x1ffff
+[2m2026-10-17T21:00:41.274140Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m No poison table found at idx/mm116.poison
+[2m2026-10-17T21:00:41.274369Z[0m [32m INFO[0m [2mpiscem_rs::index::reference_index[0m[2m:[0m Loaded reference signatures from idx/mm116.sigs.json
+[2m2026-10-17T21:00:41.274376Z[0m [32m INFO[0m [2mpiscem_rs::cli::map_scrna[0m[2m:[0m Index loaded: k=31, 319954 refs (0.10s)
+[2m2026-10-17T21:00:41.280689Z[0m [32m INFO[0m [2mpiscem_rs::io::calibrate[0m[2m:[0m using the serial decoder: 16 threads for 4 gzip input(s) is below the 8 threads per input needed before parallel decoding adds concurrency the serial path does not already have
+[2m2026-10-17T21:00:41.280804Z[0m [32m INFO[0m [2mpiscem_rs::cli::map_scrna[0m[2m:[0m thread execution plan [3mrequested_budget[0m[2m=[0m16 [3meffective_budget[0m[2m=[0m16 [3mmapping_threads[0m[2m=[0m16 [3mdecode_slots[0m[2m=[0m0 [3mallocation[0m[2m=[0mSerial
+[2m2026-10-17T21:02:00.145277Z[0m [32m INFO[0m [2mpiscem_rs::io::threads[0m[2m:[0m consumer measurement components [3mmodeled_busy_seconds[0m[2m=[0m1179.147491179 [3mcallback_setup_seconds[0m[2m=[0m0.006403726 [3mexcluded_output_seconds[0m[2m=[0m2.174732666 [3mwall_seconds[0m[2m=[0m78.864458643 [3mbudget[0m[2m=[0m16 [3mmodeled_utilization[0m[2m=[0m0.9344731386833505 [3mexcluded_output_fraction[0m[2m=[0m0.0018409309687932734
+[2m2026-10-17T21:02:00.145312Z[0m [32m INFO[0m [2mpiscem_rs::cli::map_scrna[0m[2m:[0m Mapped 86550564/116459032 reads (74.3%), 0 poisoned, 79.0s

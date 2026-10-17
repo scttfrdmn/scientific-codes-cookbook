@@ -29,8 +29,6 @@ alevin-fry collate -i qd -r rad
 alevin-fry quant   -i qd -o res -m t2g.tsv -r cr-like
 ```
 
-Two tasks: piscem builds the fixture, indexes it and maps to a RAD file; alevin-fry then quantifies and the matrix is compared to the planted counts.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -44,7 +42,14 @@ Two tasks: piscem builds the fixture, indexes it and maps to a RAD file; alevin-
 
 ## Shape, size, cost
 
-Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m each, caps $0.05 each. Mapping and quantification take seconds at this size; the windows are mostly image pull. **These timings are not compute cost.**
+Two tasks: piscem builds the fixture, indexes it and maps to a RAD file, then alevin-fry quantifies against the planted counts. Each runs on `c8g.large` (2 vCPU / 4 GiB) with a 15m TTL and a $0.05 cap. At this size the windows are mostly image pull. **These timings are not compute cost.** Which box for real data, [measured](../../measurements/single-cell-real/README.md) on one whole 10x v2 channel (116 M reads, 16 threads):
+
+| chip | instance | tool wall | billed (2 tasks) | peak RSS | **billed $/sample** |
+|---|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | **138 s** | 452 s | 3.6 GiB | **0.090** |
+| Intel | `m8i.4xlarge` | 149 s | 455 s | 3.6 GiB | 0.107 |
+
+The matrices are **bit-identical across chips**, and every per-cell and raw→filtered identity holds at 1,814 cells. Graviton4 is 16% cheaper per sample, but two-thirds of either bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (RAD plus collation, ~20 GB), not for the tools. **Don't read featureDump's `CorrectedReads`/`MappingRate`**: alevin-fry 0.9.0 misreads piscem 0.23.0's unmapped-barcode file ([why](../../measurements/single-cell-real/README.md#a-field-you-should-not-read-correctedreads--mappingrate)).
 
 <details>
 <summary>As shipped: exact matrix recovery, a conservation identity, the silent cell-drop, why piscem and not salmon, pins</summary>

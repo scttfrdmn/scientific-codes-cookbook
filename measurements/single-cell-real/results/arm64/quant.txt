@@ -1,0 +1,57 @@
+inputs_sha256	all 2 match pins-quant.sha256
+label	aarch64
+arch	aarch64
+nproc	16
+threads	16
+alevin_fry_version	alevin-fry 0.9.0 
+raw_wall_s	18
+knee_wall_s	15
+filt_wall_s	2
+fry_wall_s	35
+peak_anon_gib	2.53
+peak_shmem_gib	13.86
+avg_cores	5.58
+res_raw_cells	130375
+res_raw_mtx_header	130375 36130 5151420
+res_raw_umis_matrix	11111743
+res_raw_umis_featuredump	11111743
+res_raw_mapped_reads	81682721
+res_raw_corrected_reads_UNRELIABLE	81682721
+res_raw_cells_rowsum_ne_dedup	0
+res_raw_cells_nnz_ne_genes	0
+res_raw_triples_sha256	903afd73d7adb792ab2e79df5a5e7af97f4a3afab6b4435e05c74d5aef23db9d
+res_knee_cells	1814
+res_knee_mtx_header	1814 36130 3455520
+res_knee_umis_matrix	9136033
+res_knee_umis_featuredump	9136033
+res_knee_mapped_reads	72054428
+res_knee_corrected_reads_UNRELIABLE	72054428
+res_knee_cells_rowsum_ne_dedup	0
+res_knee_cells_nnz_ne_genes	0
+res_knee_triples_sha256	55870311ea74460293d33069466f6b600df59361f135e613033f9253b2f38b24
+res_filt_cells	1814
+res_filt_mtx_header	1814 36130 3432749
+res_filt_umis_matrix	9043752
+res_filt_umis_featuredump	9043752
+res_filt_mapped_reads	71318584
+res_filt_corrected_reads_UNRELIABLE	71318584
+res_filt_cells_rowsum_ne_dedup	0
+res_filt_cells_nnz_ne_genes	0
+res_filt_triples_sha256	fff33213b0f3a1588c003d55cd90d69986ef46792cdda10049e87b011e60a2b9
+piscem_records	86550564
+gpl_observed_raw	86550564
+gpl_observed_knee	86550564
+quant_raw_records	81682721
+quant_knee_records	72054428
+quant_filt_records	71318584
+gpl_orientation_consistent	83780608
+knee_cells	1814
+knee_cells_on_whitelist_and_in_raw	1814
+filt_umis_frac_of_raw	0.8139
+filt_equals_raw_rows	yes (every (cell,gene,count) of the filtered matrix is the raw matrix's)
+knee_vs_filt	cells 1814: equal 0, knee higher 1814, knee lower 0; UMIs filt 9043752 knee 9136033
+published_cells	1078
+published_cells_in_our_knee_set	1078
+spearman_umis_vs_published	0.9266
+checks_failed	0
+QUANT_OK	per-cell totals, matrix totals, and raw->filtered identities all exact

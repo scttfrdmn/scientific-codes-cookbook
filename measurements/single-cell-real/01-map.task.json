@@ -1,0 +1,78 @@
+{
+  "task_id": "cookbook-single-cell-real-map",
+  "container": "quay.io/aarchbio/piscem@sha256:40c8a261dc5d152a1aa9c5db58aa14287a56580f42a483cc1ffec9c5b6e21603",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\necho \"994211e5b6e35ec3ab7e9b51186a10318579c0f0d8107fc33e5f8663c9f75ecf  /tmp/map.sh\" | sha256sum -c || { echo \"FAIL: map.sh does not match its pin\"; exit 1; }\nTHREADS=16 bash /tmp/map.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/10X_P5_13_S14_L001_R1_001.fastq.gz",
+      "destination": "/tmp/10X_P5_13_S14_L001_R1_001.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/10X_P5_13_S14_L002_R1_001.fastq.gz",
+      "destination": "/tmp/10X_P5_13_S14_L002_R1_001.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/10X_P5_13_S14_L001_R2_001.fastq.gz",
+      "destination": "/tmp/10X_P5_13_S14_L001_R2_001.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/10X_P5_13_S14_L002_R2_001.fastq.gz",
+      "destination": "/tmp/10X_P5_13_S14_L002_R2_001.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/Mus_musculus.GRCm39.cdna.all.fa.gz",
+      "destination": "/tmp/Mus_musculus.GRCm39.cdna.all.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/map.sh",
+      "destination": "/tmp/map.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/pins-map.sha256",
+      "destination": "/tmp/pins-map.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/rad/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/rad/"
+    },
+    {
+      "source": "/tmp/t2g.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/t2g.tsv"
+    },
+    {
+      "source": "/tmp/map.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/map.txt"
+    },
+    {
+      "source": "/tmp/build.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/build.log"
+    },
+    {
+      "source": "/tmp/map.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/map.log"
+    },
+    {
+      "source": "/tmp/samp.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/samp-map.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

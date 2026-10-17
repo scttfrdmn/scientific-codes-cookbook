@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-single-cell-real-quant",
+  "container": "quay.io/aarchbio/alevin-fry@sha256:a786a69ea67e2234f6d2a600314bd1ba79b4647958d419025a1dfa9a37cefd79",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\necho \"2914b83e20513692275eef0b4af709ca26b435a7deeabf86ddcceb792a01295d  /tmp/quant.sh\" | sha256sum -c || { echo \"FAIL: quant.sh does not match its pin\"; exit 1; }\nTHREADS=16 bash /tmp/quant.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/rad/",
+      "destination": "/tmp/rad/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/t2g.tsv",
+      "destination": "/tmp/t2g.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/737K-august-2016.txt",
+      "destination": "/tmp/737K-august-2016.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/tabula-muris-senis-full-metadata.csv",
+      "destination": "/tmp/tabula-muris-senis-full-metadata.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/quant.sh",
+      "destination": "/tmp/quant.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/single-cell-real/pins-quant.sha256",
+      "destination": "/tmp/pins-quant.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/quant.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/quant.txt"
+    },
+    {
+      "source": "/tmp/fry-logs.tgz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/fry-logs.tgz"
+    },
+    {
+      "source": "/tmp/filt.triples.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/filt.triples.gz"
+    },
+    {
+      "source": "/tmp/samp.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/single-cell-real/samp-quant.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
