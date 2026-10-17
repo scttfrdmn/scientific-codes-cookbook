@@ -3,9 +3,10 @@ tool: dipy
 tool_version: "1.12.1"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:cb8a08c524d7aff435432265a8c9ffce81429b0dc8c4685653b8557691529277
-gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: neuroimaging-ec8bd2598bdb
 spawn_version: 0.126.1
 last_verified: 2026-10-10
+last_verified_x86_64: 2026-10-16
 ---
 # DIPY + AFNI — diffusion tensors against a closed form, on Graviton
 
@@ -127,12 +128,25 @@ numbers above were taken on `AFNI_25.0.00` and a different build is a different 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
+### On x86_64
+
+The same spec on `m8i.large`, through the `neuroimaging` env's linux-64 twin
+(`envs-x86_64/neuroimaging-ec8bd2598bdb.linux-64.lock`: dipy, nibabel, numpy and AFNI at the image's
+versions; it differs in `backports.zstd`, `charset-normalizer`, `filelock`, `fonttools`, `glib`,
+`libcurl`, `libsqlite`, `narwhals` and `xvfbwrapper`, none on this path). Every assertion passes.
+AFNI's results are identical (3dcalc exact, `3dTstat` 1.029e-07, the scaled read 3.391e-05 and its
+6.584e+07× control). DIPY's tensor fit lands a few ε elsewhere: FA error 2.109e-15 → 2.776e-15, MD
+1.843e-18 → 6.180e-18, isotropic FA 5.839e-13 → 7.351e-13. Those are least-squares residuals at
+rounding level, at least 1,300× inside every bound, and the recovered tensor is the same.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=neuroimaging
 spawn task run --spec "$(make -s spec RECIPE=neuroimaging)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/neuroimaging/r1/score.tsv" -
+make stage RECIPE=neuroimaging ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=neuroimaging ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 Fails on a pin mismatch, a missing AFNI program, an AFNI that is not 25.0.00, a recovered tensor

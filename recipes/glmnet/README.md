@@ -3,9 +3,10 @@ tool: glmnet
 tool_version: "5.0"
 env: r
 image: quay.io/aarchsci/r@sha256:f224ffc9bff58dd405c5bc9a201e41137cea3c5670ac5302768191128c6ced38
-gap_x86_64: the aarch.science `r` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: r-e23b8fc37d59
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # glmnet — lasso, ridge and logistic paths held to their own optimality conditions
 
@@ -109,7 +110,27 @@ held in 13 of 40, so it is reported, not asserted. The permuted null selected no
 cosign-verified against `playgroundlogic/aarchsci`. The signature covers the **manifest-list**
 digest (`sha256:77cd253cfcd8…`), so verify the tag and pin the arm64 digest. This is a newer
 digest than [r](../r/README.md) and [r-spatial](../r-spatial/README.md) pin; those recipes stay
-on the image they were verified against. No x86 run: the `r` env has no x86 build.
+on the image they were verified against.
+
+### On x86_64
+
+The same spec on `c8i.large`, through the `r` env's linux-64 twin (`envs-x86_64/r-e23b8fc37d59.linux-64.lock`:
+the same versions as the pinned image except `r-future.apply` 1.21.0 vs 1.20.2, `libglib` 2.90.0 vs
+2.90.1 and `sqlite`/`libsqlite` 3.54.1 vs 3.54.0, none on glmnet's path). Every assertion passes:
+
+| | arm64 | x86_64 |
+|---|---|---|
+| λ_max, path lengths, supports, null selections, κ | as above | **identical** |
+| gaussian / binomial KKT max violation | 4.160e-08 / 1.263e-08 | **identical** |
+| control (shifted λ), default-thresh KKT | 5.029e-02 / 1.277e-04 | **identical** |
+| gaussian λ_max rel error | 6.373e-16 | 4.249e-16 |
+| ridge vs closed form | 4.663e-15 | 4.108e-15 |
+| λ = 0 vs `lm()` / vs `glm()` | 1.544e-15 / 3.289e-15 | 1.477e-15 / 2.531e-15 |
+
+Everything the method decides (which variables, in what order, how far the solver stops from
+KKT) is the same on both chips. What moves is the last bit of two solvers agreeing, at a few
+ε, a thousand times inside each bound: floating-point rounding, which pinning versions does not fix
+across chips.
 
 ### Run + verify
 
@@ -117,6 +138,8 @@ on the image they were verified against. No x86 run: the `r` env has no x86 buil
 make stage RECIPE=glmnet
 spawn task run --spec "$(make -s spec RECIPE=glmnet)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/glmnet/r1/score.tsv" -
+make stage RECIPE=glmnet ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=glmnet ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 The run fails on any of these:

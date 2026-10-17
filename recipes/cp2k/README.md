@@ -3,9 +3,9 @@ tool: cp2k
 tool_version: "2026.2"
 env: cp2k
 image: quay.io/aarchsci/cp2k@sha256:a2b70e16570c46a30ee44f6567668cd10610db77c7f48017721845c9a81d8c6f
-gap_x86_64: the aarch.science `cp2k` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.126.1
-last_verified: 2026-10-10
+env_x86_64: cp2k-d4f840224c26
+spawn_version: 0.130.1
+last_verified: 2026-10-16
 ---
 # CP2K — 52 of its own committed references, reproduced on Graviton
 
@@ -166,6 +166,23 @@ the first SCF, so it is checked before anything runs.
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
+
+### On x86_64: one reference fails both clauses
+
+The same spec on `c8i.2xlarge`, through the `cp2k` env's linux-64 twin
+(`envs-x86_64/cp2k-d4f840224c26.linux-64.lock`: all 111 versions the image's, OpenBLAS included).
+The twin has no Dockerfile, so the spec points `CP2K_DATA_DIR` at the same 68 files under its own
+prefix. **It fails**, on `QS/regtest-lsroks/ch2o_hf.inp`: **2.695e-08 Ha** from upstream's
+`-22.0854638839`, against upstream's own tolerance of 2e-08, so 1.35× over, and over 1e-9 Ha too.
+arm64 lands 1.7e-11 from the same reference. On x86 the serial and 2-rank legs agree to 4.5e-12,
+so the result is reproducible on that chip, not noise. Diagnosis, from the input rather than a run:
+this case is a path, not a fixed point. It is `RUN_TYPE GEO_OPT` with one step, on forces from an
+SCF converged only to `EPS_SCF 5.0E-6` with `MAX_SCF 20`, with Schwarz-screened exact exchange.
+Upstream's 2e-08 tolerance, wide for a −22 Ha energy, says its author knew that. Every other
+assertion passes: 42 of 52 within upstream's tolerance and 9 more inside 1e-9 Ha (arm64: 44 and 8), the same
+bit-level hybrid cases over upstream's 2e-14 (worst 1.553e-11 Ha, 2.1e-13 relative), and serial
+vs 2-rank within the bound (worst 7.1e-08 Ha, on a case allowed 5e-06). Not loosened, so there is
+no `last_verified_x86_64`.
 
 ### Run + verify
 

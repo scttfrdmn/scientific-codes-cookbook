@@ -2,7 +2,7 @@
 tool: scanpy
 tool_version: "1.12.4"
 image: quay.io/aarchbio/scanpy@sha256:5621e1cc9d14fbac0c86d002efd852abf92587a4739d5e32893786b90f87277e
-gap_x86_64: bioconda has no scanpy 1.12.4 x86 build on quay.io/biocontainers (checked 2026-10-13)
+gap_x86_64: quay.io/biocontainers/scanpy stops at 1.7.2 (bioconda's last; scanpy 1.12.x is conda-forge noarch), so no x86 build of 1.12.4 exists there, and the pinned image is aarch.bio's, not an aarch.science env, so the env-twin route does not apply (checked 2026-10-16)
 spawn_version: 0.123.0
 last_verified: 2026-10-07
 ---

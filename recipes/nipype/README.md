@@ -3,9 +3,10 @@ tool: nipype
 tool_version: "1.10.0"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:6ede8870c83b095c25c9f08db34e56f66318e2cb6b668391d9d5642147856457
-gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: neuroimaging-add4ba1f213a
 spawn_version: 0.126.1
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # Nipype — a workflow engine held to order, data flow and cardinality
 
@@ -118,12 +119,24 @@ alone is satisfiable by a broken engine, which is why neither is asserted on its
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
+### On x86_64
+
+The same spec on `m8i.large`, through the `neuroimaging` env's linux-64 twin
+(`envs-x86_64/neuroimaging-add4ba1f213a.linux-64.lock`: nipype, networkx and traits at the image's
+versions; it differs in `backports.zstd`, `charset-normalizer`, `filelock`, `fonttools`, `glib`,
+`libcurl`, `libsqlite` and `xorg-libxtst`). **Every line of `score.tsv` is identical to the arm64
+run**: the same execution order, 118 and 222 through the chain, 7 MapNode executions, and the same
+re-execution on an identical re-run. The checks are integer equalities, so there was nothing to
+round.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=nipype
 spawn task run --spec "$(make -s spec RECIPE=nipype)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/nipype/r1/score.tsv" -
+make stage RECIPE=nipype ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=nipype ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 Fails on a pin mismatch, a cyclic graph, nodes running out of dependency order, a composed result

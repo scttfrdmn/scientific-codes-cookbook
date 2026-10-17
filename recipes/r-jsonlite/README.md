@@ -3,9 +3,10 @@ tool: r-jsonlite
 tool_version: "2.0.0"
 env: r
 image: quay.io/aarchsci/r@sha256:db2fcb3c8d707afe6cccb5796f78964dc79ff4c648d9eb75a5e1c09608a9a54f
-gap_x86_64: the aarch.science `r` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: r-d98eb9641259
 spawn_version: 0.127.0
 last_verified: 2026-10-11
+last_verified_x86_64: 2026-10-16
 ---
 # jsonlite — a lossless JSON round-trip needs `digits = I(17)`
 
@@ -141,12 +142,24 @@ represented in 15 significant digits, and **1 of 6** (`1e-17`, a clean power of 
 4 digits — kept deliberately, because it shows the loss is a property of the value rather than of
 serialization in general.
 
+### On x86_64
+
+The same spec on `m8i.large`, through the `r` env's linux-64 twin
+(`envs-x86_64/r-d98eb9641259.linux-64.lock`: jsonlite, arrow and R at the same versions; it differs
+from the image only in `curl`/`libcurl`, `libglib`, `sqlite`/`libsqlite`, `r-future`,
+`r-future.apply` and `r-globals`, none of them on this path). **Every line of `score.tsv` is
+identical to the arm64 run except `arch`**: the same JSON bytes for all three serializations
+(50 / 97 / 124), the same `4.885e-15` loss at `digits = NA` from both parsers, the same exact
+`I(17)` round-trip and the same `integer` inference.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=r-jsonlite
 spawn task run --spec "$(make -s spec RECIPE=r-jsonlite)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/r-jsonlite/r1/score.tsv" -
+make stage RECIPE=r-jsonlite ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=r-jsonlite ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 Fails on a pin mismatch, a `digits = I(17)` round-trip that is not `identical()`, a default that

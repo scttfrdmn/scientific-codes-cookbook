@@ -3,9 +3,10 @@ tool: r
 tool_version: 4.5.3
 env: r
 image: quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68
-gap_x86_64: the aarch.science `r` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
-spawn_version: 0.104.0
-last_verified: 2026-09-10
+env_x86_64: r-813f6d1c2008
+spawn_version: 0.130.1
+last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 
@@ -55,27 +56,35 @@ The check avoids R's `tryCatch(warning=…)` idiom deliberately: a warning handl
 
 The `r` env is aarch.science's first without Python, so this smoke check is written in R.
 
-### Smoke check (inside the task; measured before launch)
+### Smoke check (inside the task; observed arm64 · x86_64)
 
 | observable | assertion | observed |
 |---|---|---|
 | R version | exactly 4.5.3 (the `r45` CRAN layer) | 4.5.3 |
-| R arch | aarch64 | aarch64 |
+| R arch | the host's (`uname -m`), i.e. not emulated | aarch64 · x86_64 |
 | observations | exactly 50 (`cars`) | 50 |
 | **OLS intercept** | −17.579095 ± 1e-4 (textbook) | −17.579095 |
 | **OLS slope** | 3.932409 ± 1e-4 (textbook) | 3.932409 |
-| **`lm()` == normal equations** | max coefficient diff < 1e-8 (QR vs `solve`) | 7.1e-14 |
+| **`lm()` == normal equations** | max coefficient diff < 1e-8 (QR vs `solve`) | 1.4e-14 · 2.8e-14 |
 | ecosystem loaded | `library(tidyverse)` + `library(data.table)` attach | TRUE |
+
+**x86_64** runs the same spec on `c8i.large` through the `r` env's linux-64 twin
+(`envs-x86_64/r-813f6d1c2008.linux-64.lock`: the image's versions except `r-readxl` 1.5.0.1 vs
+1.5.0). Every row matches except the two that should: the architecture, and the QR-vs-`solve`
+difference, which is rounding (both over 300,000× inside the 1e-8 bound). The coefficients are
+the textbook values on both chips.
 
 The ecosystem row proves the env is more than bare r-base: `r-tidyverse`/`data.table` are `noarch` metapackages that install on arm64 (a subdir listing is not an availability check).
 
 ### Run + verify
 
-`r` builds its input in the task, so there's nothing to stage:
+`r` builds its input in the task, so there's nothing to stage on arm64:
 
 ```sh
 make run RECIPE=r      # substitutes your COOKBOOK_BUCKET, runs on a Graviton4 box
 make ls  RECIPE=r      # the outputs: fit.txt, smoke-check.txt
+make stage RECIPE=r ARCH=x86_64 # x86 only: stages the env twin, once
+make run RECIPE=r ARCH=x86_64   # same spec on c8i, writes runs-x86_64/
 ```
 
 The smoke check runs *inside* the task (a bad run fails the task); the bucket listing is the second half — an exit code says the command ran, never that its output is real. A re-run overwrites `runs/r/r1/` — `make run` launches a fresh task each time, no spec edit needed.

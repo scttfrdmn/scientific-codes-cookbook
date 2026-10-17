@@ -3,9 +3,10 @@ tool: mne
 tool_version: "1.13.2"
 env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c
-gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: neuroimaging-d0a05a385703
 spawn_version: 0.127.0
 last_verified: 2026-10-16
+last_verified_x86_64: 2026-10-16
 ---
 # MNE-Python — spectra, filters, referencing, events, ICA and a dipole fit, each against a planted answer
 
@@ -87,8 +88,25 @@ millimetre-scale mislocation and three orders above what it does.
 | image | `quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637c…` — mne-base 1.13.2, nilearn 0.14.1, numpy 2.5.4, scipy 1.18.1, python 3.14.8 |
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest (`6cd4f404…`), so verify the tag and pin the arm64 digest. No x86 run: `neuroimaging` has
-no x86 build.
+digest (`6cd4f404…`), so verify the tag and pin the arm64 digest.
+
+### On x86_64
+
+The same spec on `m8i.large`, through the `neuroimaging` env's linux-64 twin
+(`envs-x86_64/neuroimaging-d0a05a385703.linux-64.lock`: mne, numpy and scipy at the image's versions;
+it differs only in `charset-normalizer`, `glib`, and `libsqlite`). Every assertion passes, and
+everything exact stays exact: the PSD peaks, Parseval at 2.2e-16, the referencing and epoching
+identities, the 30 events and the ICA correlations to six digits. Two values move:
+
+| | arm64 | x86_64 | bound |
+|---|---|---|---|
+| FIR linearity, rel | 8.4e-16 | 9.1e-16 | < 1e-12 |
+| dipole position / orientation | 0.0277 mm / 0.0101° | 0.0283 mm / 0.0122° | < 1 mm / < 1° |
+| dipole amplitude | 49.997 nAm | 49.994 nAm | within 1% of 50 |
+
+The filter difference is rounding. The dipole fit is an iterative optimiser, so it is a path, not
+a fixed point: a different last bit takes it to a slightly different stopping point. Both chips
+stay under 3% of the position bound and recover the planted dipole.
 
 ### Run + verify
 
@@ -96,6 +114,8 @@ no x86 build.
 make stage RECIPE=mne
 spawn task run --spec "$(make -s spec RECIPE=mne)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/mne/r1/score.tsv" -
+make stage RECIPE=mne ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=mne ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 Fails on a pin mismatch, a PSD peak off its planted frequency or a silent channel with power, a

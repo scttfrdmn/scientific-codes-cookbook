@@ -3,9 +3,10 @@ tool: sf-terra
 tool_version: "sf 1.1.3 / terra 1.9.50"
 env: r
 image: quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd5869502007cf6c5a56c
-gap_x86_64: the aarch.science `r` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+env_x86_64: r-d98eb9641259
 spawn_version: 0.126.1
 last_verified: 2026-10-10
+last_verified_x86_64: 2026-10-16
 ---
 # sf + terra — Census's areas and ESA's class percentages, recovered in R on Graviton
 
@@ -141,12 +142,26 @@ STAC item still declares the class percentages — because a pin fixes bytes, no
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
 digest, so verify the tag and pin the arm64 digest.
 
+### On x86_64
+
+The same spec on `m8i.xlarge`, through the `r` env's linux-64 twin
+(`envs-x86_64/r-d98eb9641259.linux-64.lock`: R, sf, terra, s2, GEOS, GDAL and PROJ at the image's
+versions; it differs only in `curl`/`libcurl`, `libglib`, `sqlite`/`libsqlite`, `r-future`,
+`r-future.apply` and `r-globals`). **Every asserted value is identical to the arm64 run**, to the
+digits printed: the 6.710e-07 / 5.242e-08 ellipsoidal errors, the 6.372e-08 total, the 10,800×
+spherical control, all 30,140,100 SCL cells, ESA's percentages to 9.642e-07 pp and the
+11,729,019-pixel aggregate. The one value that moves is reported, not asserted: the equal-area
+projection's median error, 5.436134e-08 → 5.436135e-08, a last-digit rounding difference in a
+single projection, which is a direct computation with nothing to converge.
+
 ### Run + verify
 
 ```sh
 make stage RECIPE=r-spatial
 spawn task run --spec "$(make -s spec RECIPE=r-spatial)" --wait
 aws s3 cp "s3://$(make -s print-bucket)/runs/r-spatial/r1/score.tsv" -
+make stage RECIPE=r-spatial ARCH=x86_64   # also stages the env twin, once
+spawn task run --spec "$(make -s spec RECIPE=r-spatial ARCH=x86_64)" --wait   # writes runs-x86_64/
 ```
 
 Fails on a pin mismatch, a shared input whose sha256 is not the sibling's, a county count that is
