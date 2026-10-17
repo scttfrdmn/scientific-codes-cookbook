@@ -15,6 +15,9 @@ LOCK="$ROOT/envs-x86_64/$NAME.linux-64.lock"
 DEST="$BUCKET/inputs/env-x86_64/$NAME"
 [ -s "$LOCK" ] || { echo "  no $LOCK -- run scripts/lock_env_x86.py <recipe> first" >&2; exit 1; }
 
+# the shared installer every env-twin task sources (spec_arch.py pins its sha256 into the spec)
+aws s3 cp --region "$REGION" --only-show-errors "$ROOT/scripts/xenv_install.sh" "$BUCKET/inputs/env-x86_64/xenv_install.sh"
+
 want=$(grep -c '^https' "$LOCK")
 have=$({ aws s3 ls --region "$REGION" "$DEST/pkgs/" 2>/dev/null || true; } | wc -l | tr -d ' ')   # ls exits 1 on a new prefix
 if [ "$have" = "$want" ] && aws s3 cp --region "$REGION" --only-show-errors "$DEST/$NAME.linux-64.lock" - 2>/dev/null | cmp -s - "$LOCK"; then

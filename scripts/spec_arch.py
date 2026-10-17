@@ -32,6 +32,7 @@ the spec becomes a pinned micromamba image whose script first installs that lock
 recipes/fsl's model. The env goes to /var/tmp (container disk), not /tmp, which is the tmpfs
 staging budget of half the RAM.
 """
+import hashlib
 import json
 import os
 import re
@@ -48,23 +49,14 @@ COST_FACTOR = {"x86_64": 1.3}
 # list recipes/fsl already pins (not cosign-signed, so the digest is the pin).
 MICROMAMBA_X86 = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
 ENV_DISK_GIB = 40   # docker image + the installed env on the root volume; big envs reach ~10 GB
-ENV_PREAMBLE = r'''set +e
-# --- x86_64: aarch.science env twin %(name)s, installed offline from staged, lock-verified
-# packages (scripts/spec_arch.py + envs-x86_64/%(name)s.linux-64.lock). Same versions as arm64.
-export MAMBA_ROOT_PREFIX=/var/tmp/mamba
-_T0=$(date +%%s)
-# the staged file keeps the URL's %%-encoded basename (x264-1%%21164...), and file:// decodes it,
-# so escape %% as %%25 or the file is "not found" (and micromamba 2.9.0 then segfaults)
-awk -v d=/tmp/xenv-pkgs '/^https?:/{n=split($0,a,"/"); split(a[n],b,"#"); f=b[1]; gsub(/%%/,"%%25",f); print "file://" d "/" f "#" b[2]; next} {print}' /tmp/xenv.lock > /var/tmp/xenv.local.lock
-micromamba create -y -q -p /var/tmp/env --offline -f /var/tmp/xenv.local.lock > /var/tmp/xenv-install.log 2>&1 \
-  || { echo "FAIL: the x86 env twin %(name)s did not install from its staged packages"; tail -25 /var/tmp/xenv-install.log; exit 1; }
-echo "x86 env twin %(name)s: $(grep -c '^https' /tmp/xenv.lock) packages installed offline in $(( $(date +%%s) - _T0 ))s"
-export PATH=/var/tmp/env/bin:$PATH CONDA_PREFIX=/var/tmp/env
-# what `conda activate` would also do: packages set their variables in activate.d (cmdstan's
-# CMDSTAN, GDAL_DATA, PROJ_DATA, compiler CC/CXX), which an install alone never runs
-for _f in /var/tmp/env/etc/conda/activate.d/*.sh; do [ -r "$_f" ] && . "$_f"; done
-# --- the recipe's own script follows, unchanged
-'''
+INSTALLER = os.path.join(ROOT, "scripts", "xenv_install.sh")
+# Inline, only what must be: the integrity check and the `.` -- spawn carries the task script in EC2
+# user data (16 KiB, spawn#1063), and the full install step inline cost ~1.4 KB of it.
+ENV_PREAMBLE = """set +e
+# x86_64: aarch.science env twin %(name)s (envs-x86_64/%(name)s.linux-64.lock, scripts/xenv_install.sh)
+echo "%(sha)s  /tmp/xenv-install.sh" | sha256sum -c --quiet || { echo "FAIL: xenv-install.sh does not match its pin"; exit 1; }
+. /tmp/xenv-install.sh
+"""
 
 
 def fm_block(text):
@@ -167,11 +159,13 @@ def resolve(recipe, arch, bucket, nonce, *paths):
                     sys.exit("%s/%s: the env route prepends an install step to a `bash -c` script; this command is %r"
                              % (recipe, os.path.basename(f), cmd[:2]))
                 spec["container"] = MICROMAMBA_X86
-                spec["command"] = ["bash", "-c", ENV_PREAMBLE % {"name": env} + cmd[2]]
+                sha = hashlib.sha256(open(INSTALLER, "rb").read()).hexdigest()
+                spec["command"] = ["bash", "-c", ENV_PREAMBLE % {"name": env, "sha": sha} + cmd[2]]
                 stage = "s3://%s/inputs/env-x86_64/%s" % (bucket, env)
                 spec.setdefault("inputs", []).extend([
                     {"source": stage + "/pkgs/", "destination": "/tmp/xenv-pkgs/"},
-                    {"source": "%s/%s.linux-64.lock" % (stage, env), "destination": "/tmp/xenv.lock"}])
+                    {"source": "%s/%s.linux-64.lock" % (stage, env), "destination": "/tmp/xenv.lock"},
+                    {"source": "s3://%s/inputs/env-x86_64/xenv_install.sh" % bucket, "destination": "/tmp/xenv-install.sh"}])
                 res["disk_gib"] = max(int(res.get("disk_gib", 0)), ENV_DISK_GIB)
             elif name in mapping:
                 spec["container"] = mapping[name]
