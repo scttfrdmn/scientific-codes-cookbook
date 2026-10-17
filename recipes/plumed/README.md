@@ -2,10 +2,10 @@
 tool: plumed
 tool_version: 2.9.2
 env: md
-image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-gap_x86_64: the linux-64 twin of the pinned `md` env (lock-hash 8c7d773ba75d) does not solve; mamba on 2026-10-16 says "package mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0, but none of the providers can be installed" against the env's numpy 2.5.2. The cap is a conda-forge repodata patch (the package's own index.json says numpy >=1.25.0), so the same pins now fail on linux-aarch64 too; this is not a missing x86 build
-spawn_version: 0.111.4
-last_verified: 2026-10-02
+image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
+gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+spawn_version: 0.130.1
+last_verified: 2026-10-17
 ---
 # PLUMED — collective variables from a live 23k-atom GROMACS run
 
@@ -43,7 +43,7 @@ by CV expense: a `COORDINATION` over every pair is O(N²) per step and will domi
 
 ## Shape, size, cost
 
-`c8g.2xlarge`: minimisation + **100 ps of coupled NVT in 154 s**, ~$0.02. GROMACS's own
+`c8g.2xlarge`: minimisation + **100 ps of coupled NVT in 153 s**, ~$0.02. GROMACS's own
 generation scaling is measured in [its recipe](../gromacs/README.md); PLUMED adds the CV cost on top.
 
 <details>
@@ -57,8 +57,8 @@ generation scaling is measured in [its recipe](../gromacs/README.md); PLUMED add
 | COLVAR rows | exactly 501 | **501** |
 | **O-H distance** | **0.09572 nm** (TIP3P, via PLUMED `DISTANCE`) | **0.09572** |
 | **H-O-H angle** | **1.82422 rad** = 104.52° (via `ANGLE`) | **1.82422** |
-| distance invariant | spread < 1e-4 nm over 501 frames | **2.0e-06** |
-| angle invariant | spread < 1e-3 rad | **1.5e-05** |
+| distance invariant | spread < 1e-4 nm over 501 frames | **0.0e+00** |
+| angle invariant | spread < 1e-3 rad | **1.3e-05** |
 
 **These are force-field constants, not sampled values.** `constraints = h-bonds` holds every water
 rigid, so TIP3P's O-H bond *is* 0.09572 nm and its angle *is* 104.52° — there is no tolerance to
@@ -75,15 +75,15 @@ this is a bound and not an equality.
 
 | | value |
 |---|---|
-| `COORDINATION` total | **40.802** (sum over 5 central O × all O pairs) |
-| per central atom | **8.160** within R_0 = 0.35 nm |
-| per-atom range | 7.135 … 9.013 |
+| `COORDINATION` total | **40.950** (sum over 5 central O × all O pairs) |
+| per central atom | **8.190** within R_0 = 0.35 nm |
+| per-atom range | 7.283 … 9.020 |
 
 Two reasons it is an observation. PLUMED's `COORDINATION` with `GROUPA`/`GROUPB` sums over **all
 pairs**, so with 5 central oxygens the CV is a total — an earlier version of this recipe printed it
 as "per O" and read 40.686, which is nine times a first-shell count and was a labelling error, not a
 wrong number. And the default `RATIONAL` switching function (NN=6, MM=12) decays slowly, partially
-counting second-shell neighbours past the nominal R_0 — so 8.16 is **not** the hard-cutoff
+counting second-shell neighbours past the nominal R_0 — so 8.19 is **not** the hard-cutoff
 first-shell number (~4.5) and asserting it against that literature value would be
 [comparing a method difference](../../practices/cross-checks.md).
 
@@ -91,8 +91,14 @@ first-shell number (~4.5) and asserting it against that literature value would b
 
 | | data tier |
 |---|---|
-| PLUMED 2.9.2 / GROMACS | both in `quay.io/aarchsci/md@sha256:1ee941664add…` (`linux/arm64`) |
+| PLUMED 2.9.2 / GROMACS 2026.3 | both in `quay.io/aarchsci/md@sha256:285377124854…` (`linux/arm64`) |
 | water template | `spc216.gro` + `amber99sb-ildn`/tip3p — ship inside the GROMACS package |
+
+**Repinned 2026-10-17** from `md@sha256:1ee941664add…`, whose env can no longer be re-solved:
+conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5` while the image ships numpy 2.5.2
+([why that matters](../../practices/environment-durability.md)). PLUMED and GROMACS are the same
+builds on both digests; the coordination number moved (40.802 → 40.950) because it is read off a
+trajectory, which is a path.
 
 Nothing is staged: `gmx solvate` builds the 6.2 nm box from the packaged 216-water template, so the
 recipe has no `stage-inputs.sh`. `PLUMED_KERNEL` must point at `libplumedKernel.so` for the
@@ -110,5 +116,13 @@ make ls RECIPE=plumed
 ```
 
 Expect `smoke-check.txt` with `distance_cv 0.09572`, `angle_cv 1.82422` and `colvar_rows 501`.
+
+### x86_64
+
+Not verified yet. The committed linux-64 twin of this image resolved GROMACS and PLUMED to their
+nompi builds, which have no `gmx_mpi`; it needs re-solving with `md.yaml`'s `mpi_openmpi` pins.
+When it runs, the constraint CVs are force-field constants and must match exactly, while the
+coordination number is a path and will differ — more so because that twin's BLAS is MKL where
+arm64's is OpenBLAS.
 
 </details>

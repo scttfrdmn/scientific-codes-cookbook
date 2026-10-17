@@ -2,10 +2,10 @@
 tool: ambertools
 tool_version: "26.0"
 env: md
-image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-gap_x86_64: the linux-64 twin of the pinned `md` env (lock-hash 8c7d773ba75d) does not solve; mamba on 2026-10-16 says "package mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0, but none of the providers can be installed" against the env's numpy 2.5.2. The cap is a conda-forge repodata patch (the package's own index.json says numpy >=1.25.0), so the same pins now fail on linux-aarch64 too; this is not a missing x86 build
-spawn_version: 0.115.0
-last_verified: 2026-10-03
+image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
+gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+spawn_version: 0.130.1
+last_verified: 2026-10-17
 ---
 # AmberTools — 100 ps of solvated NVE, and ff14SB checked against GROMACS
 
@@ -14,11 +14,12 @@ last_verified: 2026-10-03
 ## Run it
 
 ```bash
-spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait   # ~17 min; nothing staged
+make stage RECIPE=ambertools   # once: the task script only, no data
+spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait   # ~18 min
 ```
 
 ```bash
-tleap -f l.in                       # ACE-ALA-NME + solvateoct TIP3P 10.0 -> 2101 atoms
+tleap -f l.in                       # ACE-ALA-NME + solvateoct TIP3P 10.0 -> 1864 atoms
 sander -O -i nve.in -p sol.parm7 -c heat.rst -o nve.out -x nve.nc   # irest=1 is load-bearing
 ```
 
@@ -26,25 +27,25 @@ sander -O -i nve.in -p sol.parm7 -c heat.rst -o nve.out -x nve.nc   # irest=1 is
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| ACE-ALA-NME in a TIP3P octahedron | your own system | `solvateoct` has no RNG, so the atom count is reproducible and asserted exactly — a different solute needs its own count. |
+| ACE-ALA-NME in a TIP3P octahedron | your own system | `solvateoct` has no RNG, so the atom count is reproducible and asserted exactly — a different solute, or AmberTools version, needs its own count. |
 | `nstlim=100000, dt=0.001` | longer, or `dt=0.002` | the conservation check normalises per ns, so it survives a length change; a larger timestep legitimately leaks more. |
 | ff14SB / TIP3P | ff19SB, OPC, … | ff19SB adds CMAP, which **breaks the ParmEd → GROMACS conversion** the cross-check depends on. |
 | `irest=1, ntx=5` | — | **do not drop these.** Without them sander discards the equilibrated velocities and starts from rest, so the run is not NVE at temperature at all. |
 
 **Leave the system size.** `sander` is serial (and `pmemd`, the scalable engine, is licence-gated and
-never in AmberTools), so 2,101 atoms with PME is about the largest system reaching 100 ps inside a
+never in AmberTools), so 1,864 atoms with PME is about the largest system reaching 100 ps inside a
 sane TTL — and the conservation check sharpens with trajectory *length*, not atom count.
 
 ## Which box
 
 `c8g.large` (2 vCPU / 4 GiB) — `sander` is single-threaded, so cores buy nothing. Measured on
-Graviton4: minimise **18 s**, heat **101 s**, 100 ps NVE **914 s** = **9.45 ns/day**.
+Graviton4: minimise **15 s**, heat **88 s**, 100 ps NVE **799 s** = **10.81 ns/day**.
 
 **Generation matters more here than for any other code in this catalog: 2.50× Gv2→Gv5** (5.36 →
-13.42 ns/day), the same 100 ps costing **49% less** even though `$/hr` rises 27.8% —
-[full ladder](../../measurements/ambertools-real/README.md). And **the local sizing run was 1.6×
-optimistic**, the dangerous direction for a TTL: 14.95 ns/day on a laptop against 9.45 here, so 2× the
-local number leaves 1.45× margin, not 2×. TTL 28m, cap $0.05
+13.42 ns/day, 49% less per 100 ps although `$/hr` rises 27.8%; [full ladder](../../measurements/ambertools-real/README.md),
+measured before the repin on AmberTools 24.8 and 2,101 atoms). **The local sizing run was 1.6×
+optimistic** there, the dangerous direction for a TTL: 14.95 ns/day on a laptop against 9.45 on
+Graviton4, so 2× the local number left 1.45× margin, not 2×. TTL 28m, cap $0.05
 ([why that's a cost cap](../../patterns/layout-and-effective-cost.md)).
 
 <details>
@@ -55,18 +56,18 @@ local number leaves 1.45× margin, not 2×. TTL 28m, cap $0.05
 | observable | assertion | observed |
 |---|---|---|
 | atoms, vacuum | exactly 22 (ACE-ALA-NME) | 22 |
-| atoms, solvated | exactly 2101 (+693 TIP3P) | 2101 |
-| water count consistent | (sol − vac)/3 = 693 | 693 |
+| atoms, solvated | exactly 1864 (+614 TIP3P) | 1864 |
+| water count consistent | (sol − vac)/3 = 614 | 614 |
 | **sander vs GROMACS** | **< 0.01 kcal/mol on identical bytes** | **0.0011** |
 | energy terms matched | 7/7 by name in both outputs | 7/7 |
 | NVE frames | ≥ 100 | 100 |
-| started at temperature | T(frame 0) > 200 K (`irest=1` worked) | **306.3 K** |
-| mean temperature | 240–360 K | 305.2 K |
-| trajectory decodes | mdtraj reads sander's NetCDF + prmtop | 100 × 2101 |
-| water constraints | 1386 O-H + 693 H-H (3 per rigid water) | 1386 + 693 |
-| **SHAKE holds water** | **max\|d(O-H) − 0.9572\| < 1e-3 Å** | **8.88e-06** over 138,600 |
-| water stays rigid | H-H spread < 1e-3 Å | 1.31e-05 over 69,300 |
-| **NVE conserved** | **leak < 5% of *kT* per DoF per ns** | **0.76%** |
+| started at temperature | T(frame 0) > 200 K (`irest=1` worked) | **306.5 K** |
+| mean temperature | 240–360 K | 304.4 K |
+| trajectory decodes | mdtraj reads sander's NetCDF + prmtop | 100 × 1864 |
+| water constraints | 1228 O-H + 614 H-H (3 per rigid water) | 1228 + 614 |
+| **SHAKE holds water** | **max\|d(O-H) − 0.9572\| < 1e-3 Å** | **6.85e-06** over 122,800 |
+| water stays rigid | H-H spread < 1e-3 Å | 1.14e-05 over 61,400 |
+| **NVE conserved** | **leak < 5% of *kT* per DoF per ns** | **0.13%** |
 
 ### Two codes, one force field, the same coordinates
 
@@ -91,31 +92,31 @@ Getting a meaningful comparison took two fixes, both of which look like a force-
 ### Conservation, on a scale that means something
 
 Energy conservation is a law, so the only question is what the integrator's discretisation costs —
-and the meaningful scale is thermal, not a fraction of the total. The run leaks **4.54e-03 kcal/mol
-per degree of freedom per ns**, which is **0.76% of *kT*** at 300 K. The 4,209 degrees of freedom
-are computed from the constraint count mdtraj reports (3 × 2101 − 2091 − 3), not assumed. For
-reference, `|drift|/|Etot| = 3.77e-04` — a number that sounds reassuring and says nothing.
+and the meaningful scale is thermal, not a fraction of the total. The run leaks **7.58e-04 kcal/mol
+per degree of freedom per ns**, which is **0.13% of *kT*** at 300 K. The 3,735 degrees of freedom
+are computed from the constraint count mdtraj reports (3 × 1864 − 1854 − 3), not assumed. For
+reference, `|drift|/|Etot| = 6.28e-05` — a number that sounds reassuring and says nothing.
 
 **SHAKE is a geometric constraint, so it is exact.** TIP3P's O-H length is 0.9572 Å and `ntc=2`
-holds it every step: observed `max|d − 0.9572| = 8.88e-06 Å` across **138,600 measurements** (693
+holds it every step: observed `max|d − 0.9572| = 6.85e-06 Å` across **122,800 measurements** (614
 waters × 2 bonds × 100 frames). Two things had to be right first:
 
 - **AmberTools constrains *three* distances per rigid water, not two** — the two O-H bonds and the
   H-H distance, which is how the HOH angle is held. A "all bonds inside water" filter picks up
-  3 × 693 = 2079 pairs, and the H-H ones sit at 1.514 Å, failing a 0.9572 Å assertion for a reason
+  3 × 614 = 1842 pairs, and the H-H ones sit at 1.514 Å, failing a 0.9572 Å assertion for a reason
   that has nothing to do with SHAKE. They are split by element and each asserted for what it is;
   the H-H *value* follows from the prmtop's angle, so what is asserted there is that it does not
-  move (spread 1.31e-05 Å, implying 104.491°).
+  move (spread 1.14e-05 Å, implying 104.491°).
 - **cpptraj's `distance` over multi-atom masks is a centre-of-mass distance.**
-  `distance :WAT&@O :WAT&@H1` measures the separation of two 693-atom centroids — about 0.008 Å —
+  `distance :WAT&@O :WAT&@H1` measures the separation of two 614-atom centroids — about 0.008 Å —
   not per-water bond lengths. It reported `max|d − 0.9572| = 0.949 Å` and looked like catastrophic
-  SHAKE failure. cpptraj keeps the peptide RMS (1.045 Å max); mdtraj does the bond lengths.
+  SHAKE failure. cpptraj keeps the peptide RMS (0.956 Å max); mdtraj does the bond lengths.
 
 ### What is reproducible here, and what is not
 
 The single-point energies are identical run to run and machine to machine, because they are one
-evaluation on coordinates `tleap` writes deterministically. **The trajectory is not** — the same
-pinned image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop, because
+evaluation on coordinates `tleap` writes deterministically. **The trajectory is not** — on the
+previous digest (AmberTools 24.8, 2,101 atoms) the same image gave `Etot(0) = −5071.2472` kcal/mol on Graviton4 and `−5092.6754` on a laptop, because
 the minimiser's last floating-point bits differ and 100,000 MD steps amplify that.
 
 But "it varies by machine" turned out to be too strong, and the reason is worth knowing if you care
@@ -124,7 +125,9 @@ put this same digest on five machines and got exactly **three** trajectories, pr
 the **OpenBLAS kernel the process picks from the host CPU at load time** (`liblapack.so.3` here is
 `libopenblasp-r0.3.34.so`, built `DYNAMIC_ARCH`). Confirmed by changing one variable on one host:
 `OPENBLAS_CORETYPE=NEOVERSEN1` on **Graviton4** reproduces the laptop's trajectory exactly — drift
-−2.3891 kcal/mol, matching to four decimals — for a 0.4% slowdown.
+−2.3891 kcal/mol, matching to four decimals — for a 0.4% slowdown. On the repinned digest, two
+Graviton4 runs gave the same trajectory to every printed digit (`Etot(0) = −4511.4622`, drift
+−0.2832 kcal/mol).
 
 **So a pinned image digest does not pin the numerics.** Pinning is still necessary; it just isn't
 sufficient. This recipe deliberately does not set `OPENBLAS_CORETYPE`, because its job is to report
@@ -133,21 +136,30 @@ what a normal run does on each chip — set it if you need an exact trajectory b
 Which is the sharper argument for how this recipe is checked: you cannot tell from a trajectory
 number *which group you are in*, so every assertion above is a conservation law, a geometric
 constraint, or a cross-code identity, and none is a remembered value. All of them held on all four
-chips. Asserting the drift itself would be
+chips of the ladder, on the previous digest. Asserting the drift itself would be
 [exact one run and different the next](../flye/README.md).
 
 ### Pins
 
 | | data tier |
 |---|---|
-| AmberTools 26.0 + GROMACS | `quay.io/aarchsci/md@sha256:1ee941664add…` (`linux/arm64`, cosign-signed) |
-| ff14SB, TIP3P, ParmEd 4.3.1, mdtraj | in the image; **nothing is staged** |
+| AmberTools 26.0 + GROMACS 2026.3 | `quay.io/aarchsci/md@sha256:285377124854…` (`linux/arm64`, cosign-signed) — versions read from the run |
+| ff14SB, TIP3P, ParmEd 4.3.1, mdtraj 1.11.2 | in the image; **no data is staged** |
 
-The whole system is built in-task by `tleap`, so there is no `stage-inputs.sh`.
+The whole system is built in-task by `tleap`. `stage-inputs.sh` stages only `md.sh`, the task
+script, which the spec checks by sha256: inline, it exceeds EC2's 16 KiB user-data limit.
+
+**Repinned 2026-10-17** from `md@sha256:1ee941664add…`, whose env can no longer be re-solved:
+conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5` while the image ships numpy 2.5.2
+([why that matters](../../practices/environment-durability.md)). That image shipped **AmberTools
+24.8**, not 26.0. The version moved the system: `solvateoct TIP3PBOX 10.0` on the same peptide adds
+693 waters under 24.8 and **614** under 26.0 (octahedron 25,624 → 23,066 Å³). Each version gave
+identical bytes on two runs, so the count is still asserted exactly, re-derived for 26.0.
 
 ### Run + verify
 
 ```sh
+make stage RECIPE=ambertools
 spawn task run --spec "$(make -s spec RECIPE=ambertools)" --wait
 make ls RECIPE=ambertools
 ```
@@ -155,5 +167,13 @@ make ls RECIPE=ambertools
 The smoke check runs inside the task and the bucket listing is the second half of it
 ([exit 0 isn't proof](../../practices/container-path.md)). Expect `smoke-check.txt`,
 `sander-single-point.out`, `gromacs-single-point.log`, `nve.out`, `tleap.log`, `cpptraj.log`.
+
+### x86_64
+
+Not verified yet. The committed linux-64 twin of this image resolved GROMACS to its nompi build,
+which has no `gmx_mpi`, so the cross-code single point cannot run on it; it needs re-solving with
+`md.yaml`'s `mpi_openmpi` pin. When it runs, the counts, SHAKE and the cross-code identity must
+hold exactly, while the NVE trajectory and its drift are a path and will differ, reported rather
+than asserted. That twin's BLAS is MKL where arm64's is OpenBLAS, a bigger change than a kernel.
 
 </details>

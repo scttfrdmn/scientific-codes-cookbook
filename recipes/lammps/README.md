@@ -2,10 +2,10 @@
 tool: lammps
 tool_version: 2025.07.22
 env: md
-image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-gap_x86_64: the linux-64 twin of the pinned `md` env (lock-hash 8c7d773ba75d) does not solve; mamba on 2026-10-16 says "package mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0, but none of the providers can be installed" against the env's numpy 2.5.2. The cap is a conda-forge repodata patch (the package's own index.json says numpy >=1.25.0), so the same pins now fail on linux-aarch64 too; this is not a missing x86 build
-spawn_version: 0.111.4
-last_verified: 2026-09-30
+image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
+gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+spawn_version: 0.130.1
+last_verified: 2026-10-17
 ---
 # LAMMPS — rhodopsin at 128k atoms, in ns/day across four Graviton generations
 
@@ -34,7 +34,7 @@ mpiexec -n 16 lmp_mpi -in in.rhodo -log lmp.log     # replicate 2 2 1 → 128k a
 
 **Take the newest generation** — faster and cheaper per nanosecond at every step. Unlike GROMACS,
 the ladder here is fairly even (49%, 24%, 22%), so there is no single generation that suddenly pays
-for itself.
+for itself. The ladder predates the repin (`md@1ee941664add…`); the new digest re-ran Graviton4 only, at 3.656 ns/day.
 
 ## Make it yours
 
@@ -58,7 +58,7 @@ size, so ns/day transfers. **Scale it** by replicating further before adding cor
 | steps | 1000 | **1000** |
 | **MPI ranks used** | **== ranks launched (16)** | **16** |
 | final temperature | 280–330 K (NPT at 300 K) | **299.73 K** |
-| ns/day | > 0, recorded | **3.635** |
+| ns/day | > 0, recorded | **3.656** |
 
 **The rank-count assertion is the load-bearing one.** conda-forge ships nompi builds at higher build
 numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that under
@@ -107,9 +107,13 @@ more" would imply. Two codes per side is not a survey.
 
 | | data tier |
 |---|---|
-| LAMMPS | `quay.io/aarchsci/md@sha256:1ee94166…` (2025.07.22, `linux/arm64`) |
+| LAMMPS | `quay.io/aarchsci/md@sha256:285377124854…` (22 Jul 2025 - Update 6, `linux/arm64`) |
 | deck | `bench/in.rhodo` @ `patch_22Jul2025`, sha256 `5599f0388a36…` (upstream, before the two changes) |
 | system | `bench/data.rhodo` @ `patch_22Jul2025`, sha256 `9b14e259b99b…` — verified on the box each run |
+
+**Repinned 2026-10-17** from `md@sha256:1ee941664add…`, whose env can no longer be re-solved:
+conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5` while the image ships numpy 2.5.2
+([why that matters](../../practices/environment-durability.md)). LAMMPS is 2025.07.22 on both digests.
 
 The tag matches the packaged LAMMPS version, which matters because a benchmark deck from another
 release is a different workload. `data.rhodo` is staged (6.3 MB) and its hash re-checked inside the
@@ -124,5 +128,12 @@ make ls  RECIPE=lammps
 
 Expect `smoke-check.txt` with `atoms 128000`, `ranks_used 16`, `final_temp_K` near 300 and
 `ns_per_day` near 3.6 on `c8g.4xlarge`.
+
+### x86_64
+
+Not verified yet. The committed linux-64 twin of this image resolved LAMMPS to its nompi build,
+which ships `lmp` and `lmp_serial` but no `lmp_mpi`, so the rank-count assertion cannot run on it;
+it needs re-solving with `md.yaml`'s `cpu_*mpi_openmpi*` pin. Expect one more cross-chip difference
+when it runs: that twin's BLAS is MKL where arm64's is OpenBLAS.
 
 </details>

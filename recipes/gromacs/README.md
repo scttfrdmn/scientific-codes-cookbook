@@ -2,10 +2,10 @@
 tool: gromacs
 tool_version: 2026.3
 env: md
-image: quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9
-gap_x86_64: the linux-64 twin of the pinned `md` env (lock-hash 8c7d773ba75d) does not solve; mamba on 2026-10-16 says "package mdtraj-1.11.1-np2py311hb255e1c_0 requires numpy >=1.25.0,<2.5.0a0, but none of the providers can be installed" against the env's numpy 2.5.2. The cap is a conda-forge repodata patch (the package's own index.json says numpy >=1.25.0), so the same pins now fail on linux-aarch64 too; this is not a missing x86 build
-spawn_version: 0.111.4
-last_verified: 2026-09-30
+image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
+gap_x86_64: the committed linux-64 twin of this `md` image, envs-x86_64/md-f7ed8789d24e.linux-64.lock, resolves gromacs, lammps and plumed to their nompi builds (gromacs-2026.3-nompi_h26635d9_100 ships `bin/gmx` and no `gmx_mpi`; lammps-2025.07.22-cpu_py314_h4769034_nompi_6 ships `lmp`/`lmp_serial` and no `lmp_mpi`), though md.yaml pins `gromacs=*=mpi_openmpi*` and `lammps=*=cpu_*mpi_openmpi*`; conda-forge has linux-64 mpi_openmpi builds of all three, so this is a twin to re-solve (found 2026-10-17), not a missing x86 build
+spawn_version: 0.130.1
+last_verified: 2026-10-17
 ---
 # GROMACS — benchMEM at 82k atoms, in ns/day across four Graviton generations
 
@@ -32,6 +32,8 @@ mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 | Graviton4 | `c8g.4xlarge` | 25.983 | 69 s | 0.6381 | 0.5894 |
 | **Graviton5** | `c9g.4xlarge` | **35.741** | **50 s** | 0.6955 | **0.4670** |
 
+The ladder was measured on the previous `md` digest (`1ee941664add…`); the repinned image re-ran Graviton4 only, at 26.099 ns/day.
+
 **Take the newest generation** — every step is faster *and* cheaper per nanosecond, and the ladder is uneven: Graviton3→4 buys 12.7%, **Graviton4→5 buys 37.6%**. For contrast the integer-heavy genomics recipes gain 1.84–2.0× across these same chips against MD's 2.43×: one data point that FP-heavy codes benefit more, not yet a rule.
 
 ## Make it yours
@@ -57,7 +59,7 @@ mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 | SIMD path | recorded | **ARM_NEON_ASIMD** |
 | mean temperature | 280–330 K | **301.998 K** |
 | atoms in `confout.gro` | 81,743 — none lost | **81,743** |
-| ns/day | > 0, recorded | **25.983** |
+| ns/day | > 0, recorded | **26.099** |
 
 **The rank-count assertion is the load-bearing one.** conda-forge ships nompi GROMACS builds at
 higher build numbers than the openmpi ones, so an unpinned solve can hand back a serial binary that
@@ -98,8 +100,12 @@ communication start to dominate, is a different question this recipe does not an
 
 | | data tier |
 |---|---|
-| GROMACS | `quay.io/aarchsci/md@sha256:1ee94166…` (2026.3-conda_forge, `linux/arm64`, NEON build) |
+| GROMACS | `quay.io/aarchsci/md@sha256:285377124854…` (2026.3-conda_forge, `linux/arm64`, NEON build) |
 | benchMEM | `https://www.mpinat.mpg.de/benchMEM` — zip sha256 `3c1c8cd4f274…`, tpr sha256 `5099268bf3a3…` |
+
+**Repinned 2026-10-17** from `md@sha256:1ee941664add…`, whose env can no longer be re-solved:
+conda-forge later capped its mdtraj 1.11.1 at `numpy <2.5` while the image ships numpy 2.5.2
+([why that matters](../../practices/environment-durability.md)). GROMACS is 2026.3 on both digests.
 
 The benchmark set is published by the Dept. of Theoretical and Computational Biophysics, Max Planck
 Institute for Multidisciplinary Sciences, Göttingen, under CC-BY 4.0, and is the set used in
@@ -122,5 +128,12 @@ make ls  RECIPE=gromacs
 
 Expect `smoke-check.txt` with `ranks_used 16`, `simd ARM_NEON_ASIMD`, `confout_atoms 81743` and
 `ns_per_day` near 26 on `c8g.4xlarge`.
+
+### x86_64
+
+Not verified yet. The committed linux-64 twin of this image resolved GROMACS to its nompi build,
+which has no `gmx_mpi`, so the rank-count assertion cannot run on it; it needs re-solving with
+`md.yaml`'s `mpi_openmpi` pin. Expect one more cross-chip difference when it runs: that twin's
+BLAS is MKL where arm64's is OpenBLAS.
 
 </details>
