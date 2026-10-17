@@ -9,9 +9,10 @@ Workload: the **complete** 2023 NYC TLC yellow-taxi trip records (12 monthly Par
 box to half, and the next step up (all years, ~1.7 B rows) would no longer be an in-memory R session.
 That would be `arrow::open_dataset`, a different shape of job.
 
-Data tier: RODA lists this dataset as `s3://nyc-tlc`, but that bucket now returns 403 to anonymous
-reads (checked 2026-10-17). So the files come from the TLC's own CloudFront distribution, pinned by
-sha256 as fetched. The TLC has re-issued months before, and a re-issue fails staging rather than
+Data tier: RODA lists this dataset as `s3://nyc-tlc` (account required), but the bucket denies
+signed requests too: list, head-object and requester-pays all return 403 from a configured account
+(checked 2026-10-17; reported upstream, and known since 2024 in open-data-registry#1418). So the
+files come from the TLC's own CloudFront distribution, pinned by sha256 as fetched. The TLC has re-issued months before, and a re-issue fails staging rather than
 quietly changing the year.
 
 ## Run it

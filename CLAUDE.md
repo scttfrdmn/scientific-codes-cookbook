@@ -135,7 +135,10 @@ that provenance. Same trust reason aarch.* doesn't compile from source. So:
   which the rules already refuse. Two practical consequences: check
   `openblas_get_corename()` before blaming a cross-machine difference on the tool; and set
   `OPENBLAS_CORETYPE` only when an exact *path* is the point, leaving it unset otherwise so a recipe
-  reports what a normal run does on each chip. **Third condition, measured afterwards and narrowing
+  reports what a normal run does on each chip. A cross-chip byte-identity seen on a small fixture is a
+  claim about the fixture, not the tool: FSL's BET was byte-identical on the MNI152 template and on
+  only 102 of 125 real scans ([patterns/cross-architecture.md](patterns/cross-architecture.md)).
+  **Third condition, measured afterwards and narrowing
   this: the call also has to be big enough for the dispatcher to reach kernel-specific code.** Five
   distinct kernels — `SkylakeX`, `Zen`, `SapphireRapids`, `Cooperlake`, `neoversev2` — compute a
   200×200 `dgemv` bit-identically, so kernel dispatch is not uniformly dangerous; the risk lives in

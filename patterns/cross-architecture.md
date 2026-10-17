@@ -6,6 +6,17 @@ The catalog runs on Graviton4 (arm64). A reader asking "can I run this on x86, a
 
 The physics is architecture-independent, and that outranks cost — a reader's first question about running elsewhere is "do I still get the right answer," not "what does it cost." OpenFOAM's lid-driven cavity, solved on both boxes from the *same* `opencfd` image, reached **machine-zero mass continuity on each** — cumulative `3.77e-19` (arm64) and `−8.23e-19` (x86) — with **identical max Courant `0.394`**. Same discretization, same solution, either chip. bwa produced the **identical** 808505-record alignment on both; gatk4 called **802 variants** on both. Correctness does not depend on the architecture.
 
+## A cross-chip identity seen on a fixture is a claim about the fixture
+
+"Same answer on both chips" holds for **fixed points**: converged energies, counts, conservation
+totals, optima. Across the 149 recipes verified on both chips, none of those moved. It does not
+extend to bytes along a **path**, and a small fixture can hide which one an output is. FSL's BET mask
+was byte-identical across chips on the MNI152 template, but on 125 real NFBS scans only **102 of 125**
+were, and FLIRT's recovered motion differed on all 125, by up to 0.15 mm, well inside its quarter-voxel
+bound ([fsl-real](../measurements/fsl-real/README.md)). The template was simply too regular for
+rounding to matter. So assert a cross-chip identity at the scale it will be used, or classify the
+output as a path and bound it. Never carry a fixture's bit-equality into a claim about real data.
+
 ## Second: cost — three results, three grades of cleanliness
 
 A cross-arch cost number is only as trustworthy as its conditions, and these three carry *different* confidence. Stating which grade each result holds is the point — most benchmark content presents everything at one confidence level:
