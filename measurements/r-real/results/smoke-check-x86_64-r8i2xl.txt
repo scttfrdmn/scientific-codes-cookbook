@@ -1,0 +1,19 @@
+r_version              ok   4.5.3
+r_arch                 ok   x86_64 == host x86_64
+files                  ok   12
+rows_vs_footers        ok   38310226 decoded == 38310226 in the Parquet footers
+rows_vs_duckdb         ok   38310226 == DuckDB 38310226
+cents_unambiguous      ok   1.863e-09 < 1e-6 (every total_amount is a whole number of cents)
+cents_vs_duckdb        ok   109038341189 == DuckDB 109038341189
+groups_conserve_n      ok   38310226 38310226 == N for both groupings
+groups_conserve_cents  ok   109038341189 109038341189 == total for both groupings
+datatable_eq_dplyr     ok   both tables, tolerance 0
+datatable_eq_base      ok   both tables vs rowsum(), exact
+month_payment_vs_ddb   ok   62 groups, sha256 == DuckDB's table
+zone_vs_duckdb         ok   263 zones, sha256 == DuckDB's table
+model_rows_vs_ddb      ok   34184942 == DuckDB 34184942 (same filters)
+lm_full_rank           ok   32 of 32
+normal_equations       ok   max cos(X_j, r) 3.318e-16 < sqrt(N) eps = 1.30e-12
+qr_vs_normeq           ok   4.188e-13 < sqrt(N) kappa^2 eps = 3.98e-07 (kappa 5.537723e+02)
+r_squared_real         ok   0.9891403682
+SMOKE CHECK PASSED

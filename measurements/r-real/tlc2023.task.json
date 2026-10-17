@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-r-real-tlc2023",
+  "command": [
+    "bash",
+    "-c",
+    "set -euo pipefail\nexport PATH=$PATH:/opt/conda/bin TZ=UTC\ncd /tmp\necho \"== R on a year of NYC yellow-taxi trips (TLC 2023, 38,310,226 rows): arrow + data.table + dplyr + lm ==\"\nnproc; grep MemTotal /proc/meminfo\nsha256sum -c --quiet <<'PINS' || { echo \"FAIL: staged inputs do not match their pins\"; exit 1; }\n32df6f67578fa86c484a6b5ef23a5281992ff085521082340b0f9e5889e9a572  tlc/yellow_tripdata_2023-01.parquet\n4809e6aaac64f05a62d16a25d55713be1537ad64fc261e895eaf2d2120fe750a  tlc/yellow_tripdata_2023-02.parquet\ne7d44943111b007bf0e7084863511886e0db29f862f9a96239383a1f86c6c26e  tlc/yellow_tripdata_2023-03.parquet\n95c01c53c865e06489179bdecce3a59603697a1557c4d5d183c20ae13a144dc6  tlc/yellow_tripdata_2023-04.parquet\n9bd7d1c557bb9d0413619ba296b4828b884852a70bd07f2230b83f080d9a8591  tlc/yellow_tripdata_2023-05.parquet\n3e60e29b5df45683948b68acbfb503aa459d14162c610622585c6580fdbfc73a  tlc/yellow_tripdata_2023-06.parquet\n98504ae351d920e9e0b61241f5707f90ee1588cfb199c378459234b5035805ab  tlc/yellow_tripdata_2023-07.parquet\n84ce36a2f84fa14c12fd976c79a7d4f30c871f1782b08ca7c27bb76ab946e66b  tlc/yellow_tripdata_2023-08.parquet\n091bf156bea5bb10bd217f5f12375f966f8789349af45d5ee4153e3e1e077a87  tlc/yellow_tripdata_2023-09.parquet\ndc5f069476d350df802ed8120f3b39ec321c34cfa905381e87f608c78ca0c645  tlc/yellow_tripdata_2023-10.parquet\naf203de0e73a92d640121f02a34326f25037d62380fc406237c87c2a4231ae58  tlc/yellow_tripdata_2023-11.parquet\nab4f4db11cb31484747f62eb507c13fcfaff290aaf59c13e6465dea0b1166b9c  tlc/yellow_tripdata_2023-12.parquet\n967c32e04b71838bc8eef85d2e3fe0cbbe52d66f62579e993a73fa77d138ea18  analysis.R\nd4815d5cbc5142c77c42e699b4dfdee47da537798aaee572435ed60aa1907c03  check.R\nPINS\necho \"inputs: 12 parquet + 2 scripts match their pins\"\nmkdir -p /tmp/out\nT0=$(date +%s.%N)\nRscript analysis.R /tmp/tlc /tmp/out 2>&1 | tee /tmp/out/r.log\nT1=$(date +%s.%N)\necho \"RSCRIPT_WALL_S $(awk -v a=\"$T0\" -v b=\"$T1\" 'BEGIN{printf \"%.1f\", b-a}')\" | tee -a /tmp/out/results.txt\n( cd /tmp/out && sha256sum agg-month-payment.csv agg-zone.csv > agg.sha256 && cat agg.sha256 )\necho \"== smoke check ==\"\nRscript check.R /tmp/out 2>&1 | tee /tmp/out/smoke-check.txt\n"
+  ],
+  "container": "quay.io/aarchsci/r@sha256:8a6a9624c56ddfc72242eea520335ba7fe8965332d52250c52f0486f1d51cc68",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-real/tlc/",
+      "destination": "/tmp/tlc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-real/analysis.R",
+      "destination": "/tmp/analysis.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-real/check.R",
+      "destination": "/tmp/check.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-real/tlc2023/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

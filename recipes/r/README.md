@@ -36,7 +36,16 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The fit is ~1 s. Recorded command window **83s** — boot, Docker install, and the R image pull are the whole task ([why](../../practices/what-this-does-not-cover.md)). The `r` env is the catalog's largest, **~0.86 GB compressed → ~3.5 GB extracted** (R's compiler toolchain for `Rcpp`), still well within the ~6.1 GiB root; the extraction did not inflate the window. **These timings are not compute cost.**
 
-**Sizing:** no family question — an OLS fit is LAPACK on a small matrix; a bigger model is a longer run on the same box, memory-light. Any 8g box fits.
+**Sizing:** no family question for `cars` — any 8g box fits. At real scale, memory picks the family (below).
+
+## Which box — [measured](../../measurements/r-real/README.md) on a year of NYC taxi trips (38.3 M rows, 8 vCPU / 64 GiB)
+
+| chip | instance | R wall | billed | peak RSS | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | **77.3 s** | 287 s | 31.7 GiB | 0.4713 | **0.0101** | 0.0376 |
+| Intel Xeon 6 | `r8i.2xlarge` | 84.4 s | 226 s | 31.5 GiB | 0.5557 | 0.0130 | **0.0349** |
+
+**Take `r8g`, sized by memory, not cores.** `lm()` on 34 M rows × 32 columns keeps the design matrix and its QR, about 32 GiB peak, so a `c8g` of the same cores would not hold it. Graviton4 does the R work 22% cheaper (`lm`'s QR is 1.8× faster, `crossprod` is 1.4× slower). x86 bills less only because its env installs from staged packages instead of pulling the 0.86 GB image. Counts, cent totals and every group table are bit-identical across chips and with DuckDB. The coefficients agree to 1e-10.
 
 <details>
 <summary>As shipped: the reference identity, the internal cross-validation, pins, smoke check, run + verify</summary>
