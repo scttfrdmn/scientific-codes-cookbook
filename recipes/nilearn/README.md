@@ -2,19 +2,19 @@
 tool: nilearn
 tool_version: "0.14.1"
 env: neuroimaging
-image: quay.io/aarchsci/neuroimaging@sha256:a1216a8657c15061e7d3b7aaf93909194bee8233f60e0f065afd37a39b3a8ba5
-gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-13) and aarch.* builds ARM only; no x86 build of the same env exists
+image: quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c
+gap_x86_64: the aarch.science `neuroimaging` env is arm64-only (manifest list has a linux/arm64 entry and no amd64, checked 2026-10-16) and aarch.* builds ARM only; no x86 build of the same env exists
 spawn_version: 0.127.0
-last_verified: 2026-10-13
+last_verified: 2026-10-16
 ---
-# Nilearn — masking, a GLM, connectivity and cleaning, each against a closed form
+# Nilearn — its own 8,211 tests, plus masking, a GLM, connectivity and cleaning against closed forms
 
-Holds four of Nilearn's main APIs to exact identities on Graviton4: a masker round trip, a first-level GLM against least squares, connectivity against Pearson, and detrending against a projection. For anyone doing fMRI analysis on ARM.
+Runs Nilearn's own test suite the way its `tox.ini` does, then holds four main APIs to exact identities on Graviton4: a masker round trip, a GLM against least squares, connectivity against Pearson, detrending against a projection. For anyone doing fMRI analysis on ARM.
 
 ## Run it
 
 ```bash
-make stage RECIPE=nilearn     # once: the checks only — every image and time series is synthesised
+make stage RECIPE=nilearn     # once: 7 pinned pytest wheels + the checks; every image is synthesised
 spawn task run --spec "$(make -s spec RECIPE=nilearn)" --wait
 make ls RECIPE=nilearn
 
@@ -29,22 +29,28 @@ ConnectivityMeasure(kind="correlation", cov_estimator=EmpiricalCovariance())    
 | `cov_estimator=EmpiricalCovariance()` | the default | **the default `kind="correlation"` is not Pearson.** Its estimator is Ledoit–Wolf, which shrinks toward the identity — here up to **0.085** off, off-diagonals at **0.923** of Pearson on average. Fine for noisy short scans, but say so if you report "correlation". |
 | `signal_scaling=False` | the default | the default rescales each voxel to **percent signal change**, so effect sizes are not in your data's units. Leave it on for group analysis; turn it off to compare against anything else. |
 | `noise_model="ols"` | `"ar1"` (the default) | AR(1) is generalised least squares — a **different estimator**, here 0.037 away from OLS on the same data. Only OLS equals `lstsq`. |
+| one BLAS/OpenMP thread per xdist worker | the default | **parallel processes each bring a pool as wide as the box.** Measured: a test that takes 13 s alone took 3,824 s among 16 workers, while one thread alone cost nothing (199 s vs 206 s). Set `OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1` whenever you fan Nilearn out over processes. |
 | synthetic NIfTI images | your scans | nothing is fetched. [neuroimaging](../neuroimaging/README.md) covers the file side (DIPY, AFNI, nibabel); [nipype](../nipype/README.md) the workflows. |
 
 **Leave the fixtures.** Each check is an identity, so the data only has to be well-posed — a masker hole, a full-rank design, a correlated mixture — and synthesising it keeps the run offline. **Scale it** to real data: all four identities hold at any size.
 
 ## Shape, size, cost
 
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. The checks take seconds of a ~1-minute window ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `c8g.4xlarge` (16 vCPU / 32 GiB), TTL 120m as a **backstop** with `cost_limit` $0.80 as the real guard. The suite's three groups take 40 s, 133 s and 505 s (the serial one) inside a ~13-minute window ([layout](../../patterns/layout-and-effective-cost.md)) — these timings are not compute cost.
 
 <details>
-<summary>As shipped: an exact masker round trip, a GLM equal to least squares to 6e-15, Pearson to 2e-16 — and why Nilearn's own suite is not here yet</summary>
+<summary>As shipped: Nilearn's own 8,211 tests with 0 failures and every one accounted for, an exact masker round trip, a GLM equal to least squares to 6e-15, Pearson to 2e-16</summary>
 
 ### The checks
 
 | observable | assertion | observed |
 |---|---|---|
-| staged bytes | match pin | 1 of 1 |
+| staged bytes | match pins | 7 wheels + 5 checks |
+| **Nilearn's suite, fast group** (`not slow and not flaky and not single_process`, xdist, `--timeout=60`) | **0 failed, 0 errors** | **5,951 passed**, 69 skipped, 1,021 xfailed of 7,039 |
+| **slow group** (`slow and not flaky and not single_process`, xdist) | **0 failed, 0 errors** | **709 passed**, 12 skipped, 225 xfailed of 944 |
+| **serial group** (`flaky or single_process`) | **0 failed, 0 errors** | **224 passed**, 4 skipped, 2 xfailed of 228 |
+| every collected test reports exactly one outcome | 0 missing / uncollected / multiple, per group | 0 / 0 / 0 |
+| the three groups partition the suite | items sum to one `--collect-only` | 7,039 + 944 + 228 = **8,211** |
 | nilearn / nibabel / numpy / sklearn | read from the running install | **0.14.1** / 5.4.2 / 2.5.4 / 1.9.1 |
 | **NiftiMasker round trip, in-mask** | **`== 0` exactly** | **0.000e+00** over 215 voxels × 50 volumes |
 | **inverse_transform, out-of-mask** | **`== 0` exactly** | **0.000e+00** |
@@ -83,37 +89,42 @@ connectivity matrix reported as "correlation" from the default is a regularised 
 comparing it to anything computed with `np.corrcoef` compares two different quantities. The recipe
 uses the default as its control, so the Pearson identity is shown to discriminate.
 
-### Nilearn's own test suite: not runnable in this env yet
+### Nilearn's own suite, the way Nilearn runs it
 
-Nilearn ships 135 test files in the package, and its own suite would be the strongest check — the
-[reference-from-tests](../../practices/reference-from-tests.md) shape, as
-[scikit-learn](../scikit-learn/README.md) uses. Here **26 of those modules fail to import**,
-including every masker, GLM, decoding and connectome module, because a shared helper imports two
-test-only dependencies unconditionally:
+The package ships its tests (135 modules); the [reference-from-tests](../../practices/reference-from-tests.md)
+shape, as [scikit-learn](../scikit-learn/README.md) uses it. The env now carries the suite's
+non-pytest dependencies (`polars`, `pyarrow`, `numpydoc`, from aarchsci#43), and pytest plus the
+two plugins Nilearn's test group names (`pytest-timeout`, `pytest-rerunfailures`) are staged as
+pinned wheels. The three marker groups and their warning-as-error flags come straight from
+`tox.ini` (`testenv:latest` and `testenv:flaky`); `pytest.ini` transcribes Nilearn's own
+`[tool.pytest.ini_options]`, keeping `xfail_strict` and the registered markers.
 
-```text
-nilearn/_utils/estimator_checks.py:34   import polars as pl
-nilearn/_utils/estimator_checks.py:44   from numpydoc.docscrape import NumpyDocString
-E   ModuleNotFoundError: No module named 'polars'
-```
+Three things differ from running it in a checkout, each because the installed package is not one:
 
-Running only the 109 modules that do import would be a green check that skips the core of the
-library, so it is not done. `polars`, `pyarrow` and `numpydoc` — nilearn's declared `test_common`
-dependencies — are requested for this env as
-[playgroundlogic/aarchsci#43](https://github.com/playgroundlogic/aarchsci/issues/43). **Un-defers
-when** they ship: then the suite runs with nilearn's own execution model from its `tox.ini` — the
-fast and slow marker groups in parallel, `flaky`/`single_process` serially.
+- **A byte-identical copy in `/tmp`.** Some tests write beside themselves
+  (`test_as_ndarray_memmap` writes `_utils/tests/data/mmap.dat`), and `site-packages` is read-only
+  to the container user. The task proves the copy with `diff -r` before testing it.
+- **Items sorted by node id** (`order.py`). `test_img_plotting.py` parametrizes over a *set of
+  functions*, whose order follows memory addresses, so xdist workers can disagree and abort the
+  run at collection (8 workers agreed; 16 did not). Reported as
+  [nilearn/nilearn#6662](https://github.com/nilearn/nilearn/issues/6662).
+- **One thread per worker** in the two parallel groups (above, Make it yours).
+
+Every collected item is accounted for (`account.py`, from a separate `--collect-only` process),
+and skips are explained in `suite-summary.txt`; the largest causes are `SCIPY_ARRAY_API` unset
+(34 + 7 + 1) and plotly or kaleido absent (28 + 2 + 3).
 
 ### Pins
 
 | | |
 |---|---|
 | data | **none staged** — a 4-D image with a non-box mask, a 120-scan two-condition design, a 12-region correlated mixture and trended signals, all from `default_rng(20261013)` |
-| checks | `identities.py`, pinned by sha256 |
-| image | `quay.io/aarchsci/neuroimaging@sha256:a1216a8657c1…` — nilearn 0.14.1, nibabel 5.4.2, dipy, afni, nipype, scikit-learn 1.9.1, numpy 2.5.4 |
+| test runner | `pytest 9.1.1`, `pluggy 1.6.0`, `iniconfig 2.3.1`, `pytest-xdist 3.8.0`, `execnet 2.1.2`, `pytest-timeout 2.4.0`, `pytest-rerunfailures 16.7` — pure-Python wheels by exact version, sha256-pinned in `stage-inputs.sh` |
+| checks | `identities.py`, `account.py`, `order.py`, `suite_check.py`, `pytest.ini`, pinned by sha256 |
+| image | `quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637c…` — nilearn 0.14.1, nibabel 5.4.2, scikit-learn 1.9.1, numpy 2.5.4, polars 2.0.0, pyarrow 25.0.0, numpydoc 1.11.0, dipy, afni, nipype, mne |
 
 cosign-verified against `playgroundlogic/aarchsci`; the signature covers the **manifest-list**
-digest, so verify the tag and pin the arm64 digest. A newer digest than
+digest (`6cd4f404…`), so verify the tag and pin the arm64 digest. The four identities give the same values to every printed digit on this digest as on the previous one (`a1216a86…`). A newer digest than
 [neuroimaging](../neuroimaging/README.md) pins — that recipe stays on the image it was verified
 against. No x86 run: `neuroimaging` has no x86 build.
 
@@ -122,10 +133,11 @@ against. No x86 run: `neuroimaging` has no x86 build.
 ```sh
 make stage RECIPE=nilearn
 spawn task run --spec "$(make -s spec RECIPE=nilearn)" --wait
+aws s3 cp "s3://$(make -s print-bucket)/runs/nilearn/r1/suite-summary.txt" -
 aws s3 cp "s3://$(make -s print-bucket)/runs/nilearn/r1/score.tsv" -
 ```
 
-Fails on a pin mismatch, a masker round trip that is not exact or writes outside the mask, a GLM
+Fails on a pin mismatch, any failure or error in Nilearn's suite, a collected test without exactly one outcome, groups that do not partition the suite, a masker round trip that is not exact or writes outside the mask, a GLM
 that misses planted betas or disagrees with least squares beyond `1e-10`, an AR(1) fit too close to
 OLS to show the comparison discriminates, a correlation that is not Pearson with an empirical
 estimator, a default estimator that does not shrink, or a detrend that leaves the constant or the
@@ -134,10 +146,10 @@ trend — or a NaN anywhere a bound is applied. Check the bucket regardless
 
 ### Not covered
 
-**Nilearn's own suite**, until aarchsci#43 lands (above). **Real scans**: nothing here reads a
+**Plotly and kaleido backends**, which the env does not carry (the matplotlib plotting tests do run). **Real scans**: nothing here reads a
 BIDS dataset, so fetchers, confound loading (`load_confounds`) and resampling between real spaces
 are untouched. **Second-level models, decoding and searchlight**, which are where most fMRI
 analyses end up. **Surface data** (`SurfaceImage`, fsaverage): the bundled `fsaverage5` ships in
-the package but is not exercised. **Plotting**, the part of Nilearn most users see first.
+the package and the suite's surface tests use it, but the identities do not.
 
 </details>

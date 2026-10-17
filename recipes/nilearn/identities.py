@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Nilearn on Graviton4: four of its main APIs held to closed forms and exact identities.
 
-Nilearn's own test suite is not runnable in this env yet (26 of its 135 test modules import
-`polars`/`numpydoc`, which the env lacks -- requested as playgroundlogic/aarchsci#43), so
-these checks go straight at the APIs a user calls, each against a statement that holds for
-mathematical reasons:
+Nilearn's own suite runs first, in the same task; these checks go straight at the APIs a user
+calls, each against a statement that holds for mathematical reasons:
 
  1. NiftiMasker is a gather/scatter: transform then inverse_transform reproduces every
     in-mask voxel EXACTLY and writes zeros elsewhere.

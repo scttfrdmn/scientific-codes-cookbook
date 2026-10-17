@@ -1,0 +1,114 @@
+{
+ "task_id": "cookbook-nilearn-r1",
+ "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl MPLBACKEND=Agg\ncd /tmp\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged check does not match its pin\"; exit 1; }\nmkdir -p wh && mv ./*.whl wh/ && (cd wh && sha256sum -c ../wheels.sha256) \\\n  || { echo \"FAIL: a staged wheel does not match its pin\"; exit 1; }\n\necho \"== pytest from the staged wheels, offline (the env ships the tests but not pytest) ==\"\npython3 -m pip install -q --no-index --find-links wh --no-deps wh/*.whl 2>&1 | grep -v \"not on PATH\" | tail -2\npython3 -c \"import pytest, xdist; print('pytest', pytest.__version__, ' pytest-xdist', xdist.__version__)\" \\\n  || { echo \"FAIL: pytest did not install from the staged wheels\"; exit 1; }\npython3 - > show.txt 2>&1 <<'VEOF'\nimport importlib\ntry:\n    from threadpoolctl import threadpool_info\n    for p in threadpool_info():\n        print(\"threadpool\", p.get(\"internal_api\"), p.get(\"num_threads\"), p.get(\"architecture\", \"\"))\nexcept Exception as exc:\n    print(\"threadpool unavailable (%s)\" % type(exc).__name__)\nfor m in (\"nilearn\", \"nibabel\", \"numpy\", \"scipy\", \"sklearn\", \"pandas\", \"polars\", \"pyarrow\", \"numpydoc\", \"pytest\", \"xdist\", \"pytest_timeout\", \"pytest_rerunfailures\"):\n    try:\n        print(m, getattr(importlib.import_module(m), \"__version__\", \"unknown\"))\n    except Exception as exc:\n        print(m, \"unavailable (%s)\" % type(exc).__name__)\nVEOF\ncat show.txt\n\necho \"== Nilearn's own suite, the three groups its tox.ini runs (testenv:latest + testenv:flaky) ==\"\n# Some tests write beside themselves (test_as_ndarray_memmap writes _utils/tests/data/mmap.dat).\n# Nilearn's CI runs from a writable checkout; the installed package is read-only to the\n# container user. So run a copy in /tmp -- and prove it is the same bytes first.\nSRC=$(python3 -c \"import nilearn, os; print(os.path.dirname(nilearn.__file__))\")\nmkdir -p /tmp/pkg && cp -r \"$SRC\" /tmp/pkg/nilearn && diff -r -q \"$SRC\" /tmp/pkg/nilearn \\\n  || { echo \"FAIL: the writable copy of nilearn differs from the installed package\"; exit 1; }\nexport PYTHONPATH=/tmp/pkg:/tmp\npython3 -c \"import nilearn; assert nilearn.__file__.startswith('/tmp/pkg/'), nilearn.__file__; print('testing', nilearn.__file__, '(byte-identical copy of', '$SRC)')\" \\\n  || { echo \"FAIL: the suite would not import the copy\"; exit 1; }\nN=$(nproc)\n# pytest-xdist aborts with \"Different tests were collected between gw0 and gw1\" when a\n# parametrization iterates a set: each worker hashes strings with its own seed. A fixed seed is\n# xdist's documented remedy; it changes iteration order, not what any test asserts.\nexport PYTHONHASHSEED=0\nP=\"--pyargs nilearn -p no:cacheprovider -p order -p account\"\nW=\"-W error::sklearn.exceptions.ConvergenceWarning -W error::FutureWarning\"\nACCOUNT_OUT=collect-all.json python3 -m pytest $P --collect-only -q > collect-all.log 2>&1\nrun_group() {   # name, marker expression, extra args\n  ACCOUNT_OUT=collect-$1.json python3 -m pytest $P -m \"$2\" --collect-only -q > collect-$1.log 2>&1\n  T0=$(date +%s)\n  # Under xdist, each worker gets ONE OpenMP/OpenBLAS thread. Every worker otherwise brings a\n  # pool as wide as the box, and oversubscribed libgomp threads busy-wait against each other:\n  # measured, a check_img_estimator_dtypes test that takes 13 s alone took 3,824 s in a\n  # 16-worker run. Alone, one thread is no slower (199 s vs 206 s for six of them), which is\n  # why the serial group keeps the default.\n  case \"$3\" in *\"-n \"*) TH=\"OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\" ;; *) TH=\"\" ;; esac\n  env $TH ACCOUNT_OUT=run-$1.json python3 -u -m pytest $P -m \"$2\" $3 -q -rfEs > suite-$1.log 2>&1\n  echo \"$? $(( $(date +%s) - T0 ))s\" > rc-$1; echo \"group $1: exit/wall $(cat rc-$1)\"\n  # to stdout too, so a run killed later still leaves this group's verdict in command.log\n  grep -E \"^(FAILED|ERROR)|^=+ .*(passed|failed|error)\" suite-$1.log | tail -25\n}\n# serial before slow: the slow group is the long one, so the serial verdict should not depend on it\nrun_group fast   \"not slow and not flaky and not single_process\" \"$W --timeout=60 -n $N\"\nrun_group serial \"flaky or single_process\"                       \"\"\nrun_group slow   \"slow and not flaky and not single_process\"     \"$W -n $N --durations=40\"\nsed -n '/slowest .* durations/,/^=/p' suite-slow.log | head -45\npython3 -u suite_check.py fast slow serial 2>&1 | tee suite-summary.txt\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: Nilearn's own suite did not pass cleanly\"; for g in fast slow serial; do tail -30 suite-$g.log; done; exit 1; }\n\necho \"== four APIs against closed forms ==\"\npython3 -u identities.py 2>&1 | tee identities.log\ntest \"${PIPESTATUS[0]}\" = \"0\" || { echo \"FAIL: an identity failed\"; exit 1; }\ngrep -q 'NILEARN IDENTITIES OK' identities.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho \"DONE\"\n"
+ ],
+ "resources": {
+  "cpu": 16,
+  "memory_gib": 32,
+  "architecture": "arm64",
+  "families": [
+   "c8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/pytest-9.1.1-py3-none-any.whl",
+   "destination": "/tmp/pytest-9.1.1-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/pluggy-1.6.0-py3-none-any.whl",
+   "destination": "/tmp/pluggy-1.6.0-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/iniconfig-2.3.1-py3-none-any.whl",
+   "destination": "/tmp/iniconfig-2.3.1-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/pytest_xdist-3.8.0-py3-none-any.whl",
+   "destination": "/tmp/pytest_xdist-3.8.0-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/execnet-2.1.2-py3-none-any.whl",
+   "destination": "/tmp/execnet-2.1.2-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/pytest_rerunfailures-16.7-py3-none-any.whl",
+   "destination": "/tmp/pytest_rerunfailures-16.7-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels/pytest_timeout-2.4.0-py3-none-any.whl",
+   "destination": "/tmp/pytest_timeout-2.4.0-py3-none-any.whl"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/wheels.sha256",
+   "destination": "/tmp/wheels.sha256"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/identities.py",
+   "destination": "/tmp/identities.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/account.py",
+   "destination": "/tmp/account.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/suite_check.py",
+   "destination": "/tmp/suite_check.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/pytest.ini",
+   "destination": "/tmp/pytest.ini"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/order.py",
+   "destination": "/tmp/order.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn/pins.sha256",
+   "destination": "/tmp/pins.sha256"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/score.tsv",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/score.tsv"
+  },
+  {
+   "source": "/tmp/identities.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/identities.log"
+  },
+  {
+   "source": "/tmp/suite-summary.txt",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/suite-summary.txt"
+  },
+  {
+   "source": "/tmp/show.txt",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/show.txt"
+  },
+  {
+   "source": "/tmp/collect-all.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/collect-all.log"
+  },
+  {
+   "source": "/tmp/suite-fast.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/suite-fast.log"
+  },
+  {
+   "source": "/tmp/suite-slow.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/suite-slow.log"
+  },
+  {
+   "source": "/tmp/suite-serial.log",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn/r1/suite-serial.log"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "120m",
+  "on_complete": "terminate",
+  "cost_limit": 0.8
+ }
+}
