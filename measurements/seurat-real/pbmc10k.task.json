@@ -1,0 +1,39 @@
+{
+  "task_id": "cookbook-seurat-real-pbmc10k",
+  "container": "quay.io/aarchsci/single-cell@sha256:1105adf7bab6db433787255ca16101f0474214f0a46ab63af102b0863d541e43",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp R_LIBS_USER=/tmp/rlibs MPLCONFIGDIR=/tmp/mpl\nmkdir -p /tmp/rlibs\ncd /tmp\n: > scanpy.log; : > seurat.log; : > compare.log; : > scanpy-r2.log; : > seurat-r2.log\necho \"== the staged matrix and scripts must match their pins ==\"\nprintf '060af9e4370c6ad877e2987cf8cdc63a6d5c84e57875580f2be6c8e90748cf63  pbmc10k.tar.gz\\nef003a5e1b66df09a54b641db5f06e8d0e513081d3687513bd20ef83495cff74  scanpy_leg.py\\n06a923e768e5f4d9fdc65f8c88f7df02585caebd738d622ac9221e58c02dea4b  seurat_leg.R\\naa23db6cb5aab4f67dabba62f7ac1db5e39ebe6a5ed906f354d57510d1cc1f74  compare.py\\nb0c74f7a5d0fb1e1a268978b681f62808046b1e8ac33b2d8478f6e712814f759  run.sh\\n' > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\n. ./run.sh\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/seurat-real/pbmc10k.tar.gz", "destination": "/tmp/pbmc10k.tar.gz"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/seurat-real/scanpy_leg.py", "destination": "/tmp/scanpy_leg.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/seurat-real/seurat_leg.R", "destination": "/tmp/seurat_leg.R"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/seurat-real/compare.py", "destination": "/tmp/compare.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/seurat-real/run.sh", "destination": "/tmp/run.sh"}
+  ],
+  "outputs": [
+    {"source": "/tmp/score.tsv", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/score.tsv"},
+    {"source": "/tmp/labels.csv", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/labels.csv"},
+    {"source": "/tmp/markers_all.tsv", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/markers_all.tsv"},
+    {"source": "/tmp/scanpy.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/scanpy.log"},
+    {"source": "/tmp/seurat.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/seurat.log"},
+    {"source": "/tmp/scanpy-r2.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/scanpy-r2.log"},
+    {"source": "/tmp/seurat-r2.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/seurat-r2.log"},
+    {"source": "/tmp/compare.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/seurat-real/r1/compare.log"}
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 0.75
+  }
+}

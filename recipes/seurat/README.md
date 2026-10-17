@@ -39,6 +39,8 @@ python3 -c "import scanpy as sc; sc.tl.leiden(A, flavor='igraph')"
 
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m, cap $0.15. Both pipelines plus the comparison finish inside a few minutes, mostly image pull. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
+**Which box — [measured](../../measurements/seurat-real/README.md)** on the full 10x `pbmc_10k_v3` (11,043 cells after QC), with `FindAllMarkers`: Graviton4 `m8g.xlarge` 5023 s / **$0.25**, x86 `m8i.xlarge` 4231 s / **$0.25** per result. QC through clustering is under a minute on either chip. **`FindAllMarkers` is 98.5–98.8% of the run** because this env lacks `presto`, so Seurat uses its single-threaded R Wilcoxon test. Install presto before you pick a bigger box. Library sizes and normalisation identities match exactly across chips. The seeded partitions are deterministic on each chip but differ between them (Seurat ARI 0.97 across chips), and Scanpy's louvain differs between two runs on the same box (ARI 0.84).
+
 <details>
 <summary>As shipped: the cross-tool agreement, an unseeded louvain, what had to be matched, and four failures</summary>
 
