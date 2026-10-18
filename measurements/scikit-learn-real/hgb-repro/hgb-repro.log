@@ -1,0 +1,44 @@
+sklearn 1.9.1 numpy 2.5.4
+rows 20000 features 10 class counts [7274, 9767, 1220, 100, 331, 623, 685]
+
+== sklearn HistGradientBoostingClassifier, defaults except max_iter=200, early_stopping=False ==
+defaults (l2=0, 31 leaves, lr 0.1) (3.6s) 1:0.9809 25:0.4847 50:0.4380 75:0.7908 100:1.0845 150:1.2941 200:1.9335 | min 0.4180@55, final/min 4.63, iters-with-rise 87, max|leaf| 2.15e+04
+again, fresh fit (determinism) (3.5s) 1:0.9809 25:0.4847 50:0.4380 75:0.7908 100:1.0845 150:1.2941 200:1.9335 | min 0.4180@55, final/min 4.63, iters-with-rise 87, max|leaf| 2.15e+04
+
+== one change at a time ==
+l2_regularization=0.01 (3.2s)      1:0.9799 25:0.4456 50:0.3545 75:0.3026 100:0.2598 150:0.2001 200:0.1598 | min 0.1598@200, final/min 1.00, iters-with-rise 0, max|leaf| 43.8
+l2_regularization=0.1 (3.1s)       1:0.9824 25:0.4455 50:0.3581 75:0.3033 100:0.2614 150:0.2031 200:0.1615 | min 0.1615@200, final/min 1.00, iters-with-rise 0, max|leaf| 12.3
+l2_regularization=1 (3.2s)         1:1.0052 25:0.4633 50:0.3741 75:0.3164 100:0.2781 150:0.2188 200:0.1802 | min 0.1802@200, final/min 1.00, iters-with-rise 0, max|leaf| 3.71
+max_leaf_nodes=15 (2.4s)           1:1.0094 25:0.5864 50:0.5102 75:0.6654 100:0.9201 150:0.8543 200:0.7938 | min 0.5102@50, final/min 1.56, iters-with-rise 67, max|leaf| 3.66e+04
+max_leaf_nodes=7 (1.8s)            1:1.0408 25:0.6673 50:0.6083 75:0.5875 100:0.5842 150:0.5572 200:0.5168 | min 0.5136@199, final/min 1.01, iters-with-rise 41, max|leaf| 1.01e+04
+max_leaf_nodes=255 (8.7s)          1:0.9220 25:0.2786 50:0.3767 75:2.0944 100:4.4360 150:17.1733 200:17.1733 | min 0.1919@30, final/min 89.48, iters-with-rise 75, max|leaf| 1.86e+05
+min_samples_leaf=100 (3.3s)        1:1.0096 25:0.6473 50:0.5566 75:0.4607 100:0.4540 150:0.3656 200:0.9625 | min 0.3361@159, final/min 2.86, iters-with-rise 65, max|leaf| 2.13e+04
+learning_rate=0.05 (3.1s)          1:1.0748 25:0.5553 50:0.4461 75:0.3929 100:0.3570 150:0.3038 200:0.2607 | min 0.2607@200, final/min 1.00, iters-with-rise 0, max|leaf| 8.1
+learning_rate=0.2 (3.1s)           1:0.8891 25:0.5063 50:1.3214 75:2.9907 100:3.5375 150:7.1946 200:13.5799 | min 0.4404@26, final/min 30.84, iters-with-rise 100, max|leaf| 2.4e+05
+min_hessian_to_split=0.002 (patched) (3.3s) 1:0.9809 25:0.4885 50:0.4535 75:0.4645 100:0.6063 150:0.5430 200:0.4433 | min 0.4042@66, final/min 1.10, iters-with-rise 65, max|leaf| 2.98e+03
+min_hessian_to_split=0.01 (patched) (3.1s) 1:0.9809 25:0.4549 50:0.3611 75:0.3035 100:0.2612 150:0.2009 200:0.1594 | min 0.1594@200, final/min 1.00, iters-with-rise 0, max|leaf| 79.8
+min_hessian_to_split=0.1 (patched) (3.1s) 1:0.9816 25:0.4435 50:0.3539 75:0.2997 100:0.2587 150:0.1997 200:0.1600 | min 0.1600@200, final/min 1.00, iters-with-rise 0, max|leaf| 16.2
+min_hessian_to_split=1 (patched) (3.0s) 1:0.9859 25:0.4509 50:0.3571 75:0.2984 100:0.2573 150:0.1969 200:0.1604 | min 0.1604@200, final/min 1.00, iters-with-rise 0, max|leaf| 5.08
+baseline raw score 0, not log-prior (3.0s) 1:1.5893 25:0.4732 50:0.3598 75:0.3032 100:0.2604 150:0.1996 200:0.1574 | min 0.1574@200, final/min 1.00, iters-with-rise 0, max|leaf| 1.52
+
+== what a user on all-default settings sees (early_stopping='auto' is on above 10,000 rows) ==
+HistGradientBoostingClassifier(random_state=0): stopped at n_iter_=11; train loss there 0.6395; max|leaf| 1.9e+03
+
+== same rows, sklearn's own get_equivalent_estimator ==
+lightgbm 4.7.0 {'learning_rate': 0.11666666666666668, 'num_leaves': 31, 'min_sum_hessian_in_leaf': 0.002, 'reg_lambda': 0.0, 'min_data_in_leaf': 20}
+lightgbm equivalent                1:0.9818 25:0.4409 50:0.3516 75:0.3007 100:0.2590 150:0.2009 200:0.1607 | min 0.1607@200, final/min 1.00, iters-with-rise 0
+lightgbm equivalent, {'min_sum_hessian_in_leaf': 1e-06} 1:0.9818 25:0.4409 50:0.3516 75:0.3007 100:0.2592 150:0.2016 200:0.1605 | min 0.1605@200, final/min 1.00, iters-with-rise 0
+lightgbm equivalent, {'boost_from_average': False} 1:1.5887 25:0.4751 50:0.3639 75:0.3056 100:0.2622 150:0.1998 200:0.1603 | min 0.1603@200, final/min 1.00, iters-with-rise 0
+xgboost equivalent, lr x1          1:1.0660 25:0.5382 50:0.4290 75:0.3780 100:0.3440 150:0.2929 200:0.2539 | min 0.2539@200, final/min 1.00, iters-with-rise 0
+xgboost equivalent, lr x2          1:0.9679 25:0.4141 50:0.3334 75:0.2859 100:0.2483 150:0.1913 200:0.1531 | min 0.1531@200, final/min 1.00, iters-with-rise 0
+xgboost 3.4.2 (multi:softprob uses hessian 2p(1-p), so lr x2 is the sklearn-equivalent step)
+
+== forensics on the default fit: the first iteration whose training loss rises ==
+iteration 20: train loss 0.5294 -> 0.5357
+largest leaf of that iteration: tree for class 4, value -191.3, count 34 (rows matched 34)
+  rows of that class in the leaf 21; sum g 2.001, sum h 0.001046, -lr*G/H -191.3; min h 0, max h 0.00103, median p_class 1
+  those rows' summed loss 4217 -> 4751; whole-set summed loss change 125.2
+
+== the original observation, measurements/scikit-learn-real/real.py's diagnostic, all 581,012 rows ==
+full data, 255 leaves, 100 it (29s) 20:0.2768 40:0.1998 60:0.2758 80:0.3580 100:0.8166 | min 0.1844@47, final/min 4.43, iters-with-rise 34, max|leaf| 5.73e+04
+HGB REPRO OK

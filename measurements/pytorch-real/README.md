@@ -52,6 +52,28 @@ in 10 s).
   | **backward-weights** | **`gemm:ref` 8.65 ms** | `jit:avx512_core` 0.59 ms |
 
   One pass of three runs about 15× slower on aarch64, and that pass alone accounts for the training gap.
+- **The cause is in oneDNN, not in conda-forge's build.** PyTorch's own `torch-2.14.1+cpu` aarch64
+  wheel bundles the same oneDNN v3.12.0, built with the Arm Compute Library (its forward pass runs
+  `indirect_gemm:acl`). Its backward-weights pass is still `gemm:ref`, at 8.84 ms against
+  conda-forge's 8.67 ms. oneDNN's f32 backward-weights list has aarch64 JIT kernels for SVE-512 and
+  SVE-256 only, on `main` as well as v3.12, and no ACL entry. Graviton4's 128-bit SVE therefore falls
+  through to im2col plus oneDNN's portable `ref_gemm`. This is open upstream as
+  [uxlfoundation/oneDNN#2165](https://github.com/uxlfoundation/oneDNN/issues/2165) (Oct 2024).
+  `torch.backends.mkldnn.flags(enabled=False)` routes the pass to PyTorch's im2col + OpenBLAS, which
+  is 5.8 ms. That is faster than `gemm:ref` but still 10× x86, and it makes forward and backward-data
+  slower. The probes are `02-onednn-bwdw.task.json` and `03-onednn-bwdw-time.task.json`; stage them with
+  `onednn-bwdw/stage.sh`. Their logs are in `results/onednn-bwdw/`.
+  **Graviton3 (`c7g`, 256-bit SVE) settles it.** The same two builds pick `jit:sve_256` for
+  backward-weights there and run it in **0.85 ms**, 10× faster than Graviton4 on this pass. The
+  regression is set by vector length, not by any build flag.
+
+  | backward-weights, 16→16 3×3, batch 128 | Graviton4 `c8g` (SVE-128) | Graviton3 `c7g` (SVE-256) |
+  |---|---|---|
+  | conda-forge `libtorch 2.14.1` | `gemm:ref` 8.67 ms | `jit:sve_256` 0.85 ms |
+  | PyTorch `2.14.1+cpu` wheel (ACL) | `gemm:ref` 8.84 ms | `jit:sve_256` 0.85 ms |
+
+  These are medians of five executions, from `ONEDNN_VERBOSE`. At 64→64 channels the gap is
+  26.6 ms against 13.6 ms.
 - **Threads.** At 8 → 16 threads Graviton4 goes 544 → 1,007 samples/s (1.85×), and x86 goes
   2,162 → 2,192, which is flat: 16 vCPU on `c8i` is 8 cores with SMT, and on `c8g` it is 16 cores.
   An 8-thread x86 job would cost the same on a box half the size.

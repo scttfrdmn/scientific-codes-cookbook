@@ -1,0 +1,303 @@
+CPU(s):                                  16
+Model name:                              Neoverse-V2
+Flags:                                   fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asimddp sha512 sve asimdfhm dit uscat ilrcpc flagm sb paca pacg dcpodp sve2 sveaes svepmull svebitperm svesha3 flagm2 frint svei8mm svebf16 i8mm bf16 dg
+sve sve2 sveaes svebf16 svebitperm svei8mm svepmull svesha3 
+== conda-forge build (image) ==
+BUILD conda-forge torch 2.14.1 file /opt/conda/lib/python3.14/site-packages/torch/__init__.py
+CFG - Intel(R) MKL-DNN v3.12.0 (Git Hash N/A)
+CFG - CPU capability usage: SVE128
+CFG - Build settings: BLAS_INFO=open, BUILD_TYPE=Release, COMMIT_SHA=Unknown, CUDA_FLAGS= -DLIBCUDACXX_ENABLE_SIMPLIFIED_COMPLEX_OPERATIONS -Xfatbin -compress-all  
+CFG has USE_MKLDNN_ACL: False
+CFG has USE_ACL: False
+CFG has ACL: False
+mkldnn available True
+ITER C=16 it=0
+onednn_verbose,v1,info,oneDNN v3.12.0 (commit N/A)
+onednn_verbose,v1,info,cpu,runtime:OpenMP,nthr:16
+onednn_verbose,v1,info,cpu,isa:AArch64 SVE (128 bits)
+onednn_verbose,v1,info,gpu,runtime:none
+onednn_verbose,v1,info,graph,backend,0:dnnl_backend
+onednn_verbose,v1,primitive,info,template:operation,engine,primitive,implementation,prop_kind,memory_descriptors,attributes,auxiliary,problem_desc,exec_time
+onednn_verbose,v1,graph,info,template:operation,engine,partition_id,partition_kind,op_names,data_formats,logical_tensors,fpmath_mode,implementation,backend,exec_time
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.680908
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.0090332
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.822998
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0231934
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.078125
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00512695
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.636963
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0209961
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.76392
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.0078125
+ITER C=16 it=1
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0800781
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.00415039
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.664062
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.019043
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0720215
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00415039
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.666016
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0158691
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.76196
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00512695
+ITER C=16 it=2
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0930176
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.00415039
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.651855
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0219727
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0720215
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00292969
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.661865
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0161133
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.63403
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00488281
+ITER C=16 it=3
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0778809
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.662109
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0178223
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0720215
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.665771
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0148926
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.60815
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00512695
+ITER C=16 it=4
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.078125
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.666016
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0180664
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.072998
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00317383
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.673096
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0200195
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.67114
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00610352
+ITER C=16 it=5
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.078125
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,16x16x3x3,0.00292969
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.650146
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0219727
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0720215
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00415039
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.660156
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0161133
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.67188
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00585938
+ITER C=64 it=0
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.64209
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0310059
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.6389
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.372803
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.448975
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.046875
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.636
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.194824
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.6392
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0310059
+ITER C=64 it=1
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.543945
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0119629
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.5361
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.229004
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.461914
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0090332
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.698
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.187988
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.6609
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0090332
+ITER C=64 it=2
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.461914
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0090332
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.4839
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.368896
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.416992
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.00878906
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.634
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.177002
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.584
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0341797
+ITER C=64 it=3
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.47998
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0100098
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.5022
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.206055
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.468018
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0300293
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.824
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.187012
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.582
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0358887
+ITER C=64 it=4
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.483887
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0200195
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.4851
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.397949
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.438965
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0229492
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.8101
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.187012
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.5461
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0341797
+ITER C=64 it=5
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.471924
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb16a::f0,attr-scratchpad:user,,64x64x3x3,0.0170898
+onednn_verbose,v1,primitive,exec,cpu,convolution,brgconv:sve_128,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb16a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.52
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.239014
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.438965
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.00878906
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.626
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.187988
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,26.5879
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0341797
+PROBE OK conda-forge
+== official PyTorch wheel ==
+ls: cannot access '/tmp/ptw/torch.libs': No such file or directory
+BUILD official-wheel torch 2.14.1+cpu file /tmp/ptw/torch/__init__.py
+CFG - Intel(R) MKL-DNN v3.12.0 (Git Hash 80afa71049cd69a3df32adcccb623b12cd7baa22)
+CFG - CPU capability usage: SVE128
+CFG - Build settings: BLAS_INFO=open, BUILD_TYPE=Release, COMMIT_SHA=5c4886908584029761b579af026dcfb627c84070, CUDA_FLAGS= -DLIBCUDACXX_ENABLE_SIMPLIFIED_COMPLEX_OP
+CFG has USE_MKLDNN_ACL: False
+CFG has USE_ACL: False
+CFG has ACL: False
+mkldnn available True
+ITER C=16 it=0
+onednn_verbose,v1,info,oneDNN v3.12.0 (commit 80afa71049cd69a3df32adcccb623b12cd7baa22)
+onednn_verbose,v1,info,cpu,runtime:OpenMP,nthr:16
+onednn_verbose,v1,info,cpu,isa:AArch64 SVE (128 bits)
+onednn_verbose,v1,info,gpu,runtime:none
+onednn_verbose,v1,info,graph,backend,0:dnnl_backend
+onednn_verbose,v1,primitive,info,template:operation,engine,primitive,implementation,prop_kind,memory_descriptors,attributes,auxiliary,problem_desc,exec_time
+onednn_verbose,v1,graph,info,template:operation,engine,partition_id,partition_kind,op_names,data_formats,logical_tensors,fpmath_mode,implementation,backend,exec_time
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.806152
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.0349121
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,1.0481
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0549316
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.112061
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.0300293
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.698975
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0187988
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.90698
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.0439453
+ITER C=16 it=1
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.10791
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.00292969
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.846191
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0209961
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0739746
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.670898
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0180664
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.88892
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00488281
+ITER C=16 it=2
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.116943
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.828857
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0239258
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0749512
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.654053
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0209961
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.84692
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00512695
+ITER C=16 it=3
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.119141
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.839111
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0310059
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0749512
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00390625
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.655762
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0209961
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.84302
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00610352
+ITER C=16 it=4
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.115967
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.00317383
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.825928
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0180664
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0739746
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00292969
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.669189
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0170898
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.83618
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00610352
+ITER C=16 it=5
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.118164
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,16x16x3x3,0.00415039
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.823975
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.019043
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0759277
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,16x16x3x3,0.00292969
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.670898
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x16x32x32,0.0168457
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,8.82104
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00512695
+ITER C=64 it=0
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.62207
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.0549316
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.26
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.375977
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.460938
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0439453
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.6169
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.195068
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,28.8591
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0449219
+ITER C=64 it=1
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.525879
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.00683594
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.062
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.259033
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.511963
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0859375
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.6218
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.234131
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,29.2109
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0249023
+ITER C=64 it=2
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.497803
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.00805664
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.0471
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.241943
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.450195
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0839844
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.592
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.171875
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,28.926
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.026123
+ITER C=64 it=3
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.486084
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.00683594
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.177
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.220947
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.429199
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.072998
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.5471
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.216064
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,28.866
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0839844
+ITER C=64 it=4
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.489014
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.00805664
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.29
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.241211
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.444092
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0739746
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.572
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.186035
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,28.729
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0241699
+ITER C=64 it=5
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.510986
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Acdb4a::f0,attr-scratchpad:user,,64x64x3x3,0.00683594
+onednn_verbose,v1,primitive,exec,cpu,convolution,indirect_gemm:acl,forward_training,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Acdb4a::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,11.0989
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.232178
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.431885
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:Bcda16b::f0,attr-scratchpad:user,,64x64x3x3,0.0749512
+onednn_verbose,v1,primitive,exec,cpu,convolution,brg_conv_bwd:sve_128+brgconv:sve_128,backward_data,src:f32:a:blocked:acdb::f0 wei:f32:a:blocked:Bcda16b::f0 bia:undef::undef::: dst:f32:a:blocked:acdb::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,10.5979
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:acdb::f0 dst:f32::blocked:acdb::f0,attr-scratchpad:user,,128x64x32x32,0.216064
+onednn_verbose,v1,primitive,exec,cpu,convolution,gemm:ref,backward_weights,src:f32:a:blocked:abcd::f0 wei:f32:a:blocked:abcd::f0 bia:undef::undef::: dst:f32:a:blocked:abcd::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic64oc64_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,28.8801
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,64x64x3x3,0.0419922
+PROBE OK official-wheel

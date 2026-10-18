@@ -1,0 +1,14 @@
+/opt/conda/lib/python3.14/site-packages/torch/backends/mkldnn/__init__.py:96: UserWarning: TF32 acceleration on top of oneDNN is available for Intel GPUs. The current Torch version does not have Intel GPU Support. (Triggered internally at /home/conda/feedstock_root/build_artifacts/libtorch_1791585353283/work/aten/src/ATen/Context.cpp:265.)
+  torch._C._set_onednn_allow_tf32(_allow_tf32)
+TIME conda-forge C=16 mkldnn=True fwd 0.936 ms  bwd_data 1.013 ms  bwd_weights 8.663 ms  |dW-dW_onednn|max 0.00e+00
+TIME conda-forge C=16 mkldnn=False fwd 13.212 ms  bwd_data 15.070 ms  bwd_weights 5.807 ms  |dW-dW_onednn|max 2.41e-03
+TIME conda-forge C=64 mkldnn=True fwd 11.967 ms  bwd_data 12.345 ms  bwd_weights 26.589 ms  |dW-dW_onednn|max 0.00e+00
+TIME conda-forge C=64 mkldnn=False fwd 15.815 ms  bwd_data 60.469 ms  bwd_weights 23.258 ms  |dW-dW_onednn|max 2.56e-03
+TIME OK conda-forge
+/tmp/ptw/torch/backends/mkldnn/__init__.py:96: UserWarning: TF32 acceleration on top of oneDNN is available for Intel GPUs. The current Torch version does not have Intel GPU Support. (Triggered internally at /__w/pytorch/pytorch/aten/src/ATen/Context.cpp:265.)
+  torch._C._set_onednn_allow_tf32(_allow_tf32)
+TIME official-wheel C=16 mkldnn=True fwd 1.093 ms  bwd_data 1.011 ms  bwd_weights 9.084 ms  |dW-dW_onednn|max 0.00e+00
+TIME official-wheel C=16 mkldnn=False fwd 3.761 ms  bwd_data 20.383 ms  bwd_weights 6.032 ms  |dW-dW_onednn|max 2.41e-03
+TIME official-wheel C=64 mkldnn=True fwd 12.633 ms  bwd_data 12.349 ms  bwd_weights 29.272 ms  |dW-dW_onednn|max 0.00e+00
+TIME official-wheel C=64 mkldnn=False fwd 10.444 ms  bwd_data 74.052 ms  bwd_weights 23.352 ms  |dW-dW_onednn|max 2.56e-03
+TIME OK official-wheel

@@ -87,11 +87,34 @@ coefficients ill-conditioned), and exact equality everywhere else.
 
 The diagnostic fits the same HGB with sklearn's default `l2_regularization=0` for 100 iterations.
 Its **training** log-loss falls to 0.200 by iteration 40, then rises — 0.276, 0.358, **0.817** at 100
-— while the largest leaf value reaches **5.7e4**. That is
-unregularised Newton boosting: a near-pure leaf's step `−G/H` divides by a tiny hessian. It is
+— while the largest leaf value reaches **5.7e4**. It is
 not a chip effect — the trace, the leaf maximum and the accuracy (0.910088) are identical on both.
-So **set `l2_regularization`** for multiclass boosting with large trees; test accuracy alone at a
+So **set `l2_regularization`** for multiclass boosting; test accuracy alone at a
 fixed `max_iter` would read it as overfitting.
+
+**It needs neither large trees nor much data, and "unregularised Newton" does not explain it on
+its own.** [`hgb-repro/`](hgb-repro/) is a minimal reproduction on Graviton4: 20,000 rows, the 10
+numeric features, and every hyperparameter at sklearn's default except `max_iter=200, early_stopping=False`.
+Training log-loss bottoms at 0.418 (iteration 55) and ends at 1.934, with leaves reaching 2.2e4.
+It also re-runs the full-data diagnostic above to the digit (0.1998 / 0.8166 / 5.73e4).
+
+- **Fixes:** `l2_regularization` ≥ 0.01, `min_hessian_to_split` ≥ 0.01 (patched, since it is not
+  an estimator parameter), `learning_rate=0.05`, starting from raw score 0 instead of the log class
+  priors, or **`min_samples_leaf=1`**.
+- **Not fixes:** 7–255 leaves, `min_samples_leaf` 5 or 100, `min_hessian_to_split=0.002`.
+- **LightGBM and XGBoost do not diverge on the same rows**, using sklearn's own
+  `get_equivalent_estimator` mapping (l2 = 0). Both decrease monotonically to 0.16 and 0.15.
+- **The discriminator is `min_samples_leaf`.** At 1, sklearn and LightGBM agree (0.155 vs 0.152 at
+  200). At 5 and 20, sklearn diverges and LightGBM does not. LightGBM applies `min_data_in_leaf`
+  to bin counts *estimated from hessians* (`feature_histogram.hpp`, `cnt_factor = num_data / sum_hessian`),
+  while sklearn uses true counts. The diverging leaves are ~20–40 rows whose summed hessian sits
+  just above the 1e-3 floor (the first rise: 34 rows, G = 2.0, H = 1.05e-3, step −191).
+- With the default `early_stopping='auto'` the fit stops at `n_iter_=11` (train loss 0.64), and
+  max |leaf| has already reached 1.9e3.
+
+No scikit-learn issue or doc note covers this. The nearest is
+[#17763](https://github.com/scikit-learn/scikit-learn/issues/17763) (2020), about learning rates
+above 0.1, which was closed because LightGBM degraded there too.
 
 ## Pins
 

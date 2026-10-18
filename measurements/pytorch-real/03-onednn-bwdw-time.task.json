@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-pytorch-real-onednn-bwdw-time",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\necho 'c6728c98c2f51f3cad47f6e19fdb9a0a63a4b5ebc8afd3f2ab4eefa72d753995  run2.sh' | sha256sum -c || { echo 'FAIL: run2.sh does not match its pin'; exit 1; }\nbash run2.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/onednn-bwdw/torch-2.14.1+cpu-cp314-cp314-manylinux_2_28_aarch64.whl",
+      "destination": "/tmp/torch-2.14.1+cpu-cp314-cp314-manylinux_2_28_aarch64.whl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/onednn-bwdw/convtime.py",
+      "destination": "/tmp/convtime.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/onednn-bwdw/run2.sh",
+      "destination": "/tmp/run2.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pytorch-real/onednn-bwdw/pins2.sha256",
+      "destination": "/tmp/pins2.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/time.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/onednn-bwdw/time.log"
+    },
+    {
+      "source": "/tmp/verbose.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/onednn-bwdw/verbose.log"
+    },
+    {
+      "source": "/tmp/pip.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pytorch-real/onednn-bwdw/pip-time.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.30
+  }
+}
