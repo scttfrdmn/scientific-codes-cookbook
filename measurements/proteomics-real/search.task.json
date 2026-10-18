@@ -1,0 +1,70 @@
+{
+ "task_id": "cookbook-proteomics-real-search-r1",
+ "container": "quay.io/aarchbio/openms@sha256:8e9f3d4b0a80c509dc94229a2f02bfd45b6f4375eb6ec7d9e2032e08f4c0e725",
+ "resources": {
+  "cpu": 8,
+  "memory_gib": 16,
+  "architecture": "arm64",
+  "families": [
+   "c8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/target.fasta",
+   "destination": "/tmp/target.fasta"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/search.sh",
+   "destination": "/tmp/search.sh"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/pins.sha256",
+   "destination": "/tmp/pins.sha256"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/runs.txt",
+   "destination": "/tmp/runs.txt"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/GFP_C001_1.mzML",
+   "destination": "/tmp/GFP_C001_1.mzML"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/GFP_C001_2.mzML",
+   "destination": "/tmp/GFP_C001_2.mzML"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/GFP_C001_3.mzML",
+   "destination": "/tmp/GFP_C001_3.mzML"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/MCL1_c007_1.mzML",
+   "destination": "/tmp/MCL1_c007_1.mzML"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/MCL1_c007_2.mzML",
+   "destination": "/tmp/MCL1_c007_2.mzML"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/MCL1_c007_3.mzML",
+   "destination": "/tmp/MCL1_c007_3.mzML"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics-real/r1/search/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "60m",
+  "on_complete": "terminate",
+  "cost_limit": 0.4
+ },
+ "command": [
+  "bash",
+  "-c",
+  "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out\necho \"== staged bytes must match their pins ==\"\n# Only the pinned files this task staged are checked (BusyBox sha256sum in the x86 image has no\n# --ignore-missing), and every input the run list needs must be among them, or the filter passed\n# vacuously.\nwhile read -r h f; do test -e \"$f\" && printf '%s  %s\\n' \"$h\" \"$f\"; done < pins.sha256 > pins.staged\nsha256sum -c pins.staged || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nfor f in target.fasta search.sh $(for r in $(cat runs.txt); do printf '%s.mzML ' \"$r\"; done); do grep -q \"  $f\\$\" pins.staged || { echo \"FAIL: $f was not verified\"; exit 1; }; done\necho \"pinned_files_verified\t$(wc -l < pins.staged | tr -d ' ')\"\ngrep -m1 -iE 'model name|CPU part' /proc/cpuinfo | sed 's/^/cpu\\t/'; nproc | sed 's/^/nproc\\t/'\nexport THREADS=8\nT0=$(date +%s)\nbash search.sh > search-run.log 2>&1\nRC=$?\necho \"search.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncp search-run.log out/\ngrep -v '^  ' search-run.log\ntest \"$RC\" = 0 || { echo \"FAIL: the search task failed\"; exit 1; }\ngrep -q 'SEARCH OK' out/score.tsv || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+ ]
+}

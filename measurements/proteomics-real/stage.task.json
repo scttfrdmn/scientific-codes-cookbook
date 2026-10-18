@@ -1,0 +1,38 @@
+{
+ "task_id": "cookbook-proteomics-real-stage-r4",
+ "container": "quay.io/aarchsci/geo-ml@sha256:83ca6331cd84cbae0f60987e9536704ce201904bdfe98d3398aff57e8061aae9",
+ "resources": {
+  "cpu": 8,
+  "memory_gib": 32,
+  "architecture": "arm64",
+  "families": [
+   "m8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/stage.py",
+   "destination": "/tmp/stage.py"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/stage.sha256",
+   "destination": "/tmp/stage.sha256"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "3h",
+  "on_complete": "terminate",
+  "cost_limit": 0.5
+ },
+ "command": [
+  "bash",
+  "-c",
+  "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out\nsha256sum -c stage.sha256 || { echo \"FAIL: stage.py does not match its pin\"; exit 1; }\npython3 -u stage.py > out/stage.log 2>&1\nRC=$?\ncat out/stage.log\ntest \"$RC\" = 0 || { echo \"FAIL: staging failed\"; exit 1; }\ngrep -q 'STAGE OK' out/stage.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+ ]
+}

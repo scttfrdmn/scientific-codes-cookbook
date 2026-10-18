@@ -1,0 +1,50 @@
+{
+ "task_id": "cookbook-proteomics-real-rescore-r1",
+ "container": "quay.io/aarchbio/percolator@sha256:4cc39404eeba4f8093fdd380c1bd4f615d0e97c5e0efe4fe0e44bac63fbd6df6",
+ "resources": {
+  "cpu": 2,
+  "memory_gib": 4,
+  "architecture": "arm64",
+  "families": [
+   "c8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/rescore.sh",
+   "destination": "/tmp/rescore.sh"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/pins.sha256",
+   "destination": "/tmp/pins.sha256"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/runs.txt",
+   "destination": "/tmp/runs.txt"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/ref/",
+   "destination": "/tmp/ref/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/runs/proteomics-real/r1/search/",
+   "destination": "/tmp/pin/"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/proteomics-real/r1/rescore/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "45m",
+  "on_complete": "terminate",
+  "cost_limit": 0.1
+ },
+ "command": [
+  "bash",
+  "-c",
+  "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out\necho \"== staged bytes must match their pins ==\"\n# Only the pinned files this task staged are checked (BusyBox sha256sum in the x86 image has no\n# --ignore-missing), and every input the run list needs must be among them, or the filter passed\n# vacuously.\nwhile read -r h f; do test -e \"$f\" && printf '%s  %s\\n' \"$h\" \"$f\"; done < pins.sha256 > pins.staged\nsha256sum -c pins.staged || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nfor f in rescore.sh $(for r in $(cat runs.txt); do printf 'ref/ref_%s.tsv ' \"$r\"; done); do grep -q \"  $f\\$\" pins.staged || { echo \"FAIL: $f was not verified\"; exit 1; }; done\necho \"pinned_files_verified\t$(wc -l < pins.staged | tr -d ' ')\"\ngrep -m1 -iE 'model name|CPU part' /proc/cpuinfo | sed 's/^/cpu\\t/'; nproc | sed 's/^/nproc\\t/'\nT0=$(date +%s)\nbash rescore.sh > rescore-run.log 2>&1\nRC=$?\necho \"rescore.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncp rescore-run.log out/\ngrep -v '^  ' rescore-run.log\ntest \"$RC\" = 0 || { echo \"FAIL: the rescoring task failed\"; exit 1; }\ngrep -q 'RESCORE OK' out/score-percolator.tsv || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+ ]
+}

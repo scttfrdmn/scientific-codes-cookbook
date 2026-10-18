@@ -42,13 +42,13 @@ percolator -U -S 1 -m target_psms.tab -M decoy_psms.tab percolatorTab
 | `-protein false` | add protein inference | `-protein` defaults to **true** and the tool then refuses, correctly — protein-level FDR needs an inference step. Every check here is PSM-level. |
 | `SimpleSearchEngine` | `CometAdapter`, `MSGFPlusAdapter` | the adapters ship in this image; **the Comet and MSGF+ binaries do not.** One tool per image, so a wrapper has nothing to wrap. |
 | `-S 1` (percolator seed) | any fixed value | **keep it fixed.** The SVM trains on randomised cross-validation splits: seed 7 changed the q-value of *all* 9,852 target PSMs. |
-| `percolatorTab` | your own PIN | percolator gets its own fixture because `PercolatorAdapter` cannot bridge two images — see below. |
+| `percolatorTab` | a PIN from your own search | `PercolatorAdapter` cannot *run* percolator across two images (below), but pointed at `-percolator_executable /bin/true` it writes `-out_pin` first and then exits 1 — [measured](../../measurements/proteomics-real/README.md) on 538,544 PSMs; run percolator on it as a second task. |
 
 **Leave the fixtures.** The point of both is that someone else already published the answer: OpenMS commits the expected output for its own search, and ships an OMSSA identification of this exact mzML. **Scale it** by swapping your own mzML and database; every check here is size-independent.
 
-## Shape, size, cost
+## Shape, size, cost — which box, [measured at scale](../../measurements/proteomics-real/README.md)
 
-Two tasks on `m8g.large` (2 vCPU / 8 GiB), TTL 45m as a **backstop** with `cost_limit` $0.15 and $0.12 as the real guard. The search is **4 s** and three percolator trainings **2 s**; the recorded 93 s and 62 s windows are boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+The fixtures run as two tasks on `m8g.large` (TTL 45m a **backstop**, `cost_limit` $0.15 / $0.12 the guard): 4 s of search and 2 s of percolator inside 93 s and 62 s windows of boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). **On a real experiment** — all six HeLa runs of PXD083239, 582,823 spectra, the submitters' own FASTA and settings — **Graviton4 costs $0.062 billed (`c8g.2xlarge` search + `c8g.large` rescore) and x86 $0.074 (`c8i`): take Graviton4, 15% cheaper,** though x86 searches 1.12× faster (338 vs 378 s). Both accept the same 147,880 PSMs at 1% FDR and name the submitters' own peptide on 99.35% of the spectra both accept. Size the search box by its tmpfs (4.9 GiB of staged mzML), not its 2.4 GiB RSS.
 
 <details>
 <summary>As shipped: a committed output reproduced to the last bits, q-values recomputed from scratch, and why this is two fixtures rather than one pipeline</summary>
