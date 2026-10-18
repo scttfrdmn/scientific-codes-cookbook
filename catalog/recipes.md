@@ -159,7 +159,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
 | [modflow](../recipes/modflow/README.md) | Solves 1-D confined groundwater flow on Graviton4 and checks the heads against the analytical solution, the through-flow against Darcy's law, and the discretisation against its theoretical order. For anyone running groundwater models on ARM. | geoscience | stage | 2026-10-17 | 2026-10-09 | 2026-10-17 | — |
-| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-17 | 2026-10-09 | 2026-10-17 | — |
+| [obspy](../recipes/obspy/README.md) | Reproduces the Java TauP reference travel times for 66 arrivals on Graviton4, then checks waveform I/O and filtering with exact identities. For anyone doing seismology on ARM. | geoscience | stage | 2026-10-18 | 2026-10-09 | 2026-10-17 | — |
 
 ## geospatial
 
