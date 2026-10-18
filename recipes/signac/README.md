@@ -25,6 +25,15 @@ obj  <- CreateSeuratObject(CreateChromatinAssay(fm, fragments = frag, annotation
 obj  <- TSSEnrichment(NucleosomeSignal(obj)); obj <- RunSVD(FindTopFeatures(RunTFIDF(obj), min.cutoff = "q0"))
 ```
 
+## Which box — [measured](../../measurements/signac-real/README.md) (a whole 10x run: 257.6M fragments, 10,246 cells)
+| chip | instance | tool wall | peak RSS | $/hr | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.xlarge` | 1652 s | 16.7 GiB | 0.2356 | **0.121** |
+| Intel | `r8i.xlarge` | 1842 s | 17.9 GiB | 0.2778 | 0.157 |
+| AMD | `r8a.xlarge` | **1456 s** | 17.8 GiB | 0.3195 | 0.142 |
+
+**Size by memory, not cores.** `FeatureMatrix` and `GeneActivity` are serial tabix scans and take about 60% of the run, so 4 vCPU is plenty, but 10k cells peak at 17–18 GiB. That rules out a 16 GiB `m8`. Graviton4 is cheapest per result and AMD fastest. Every count, and the QC table, is byte-identical on all three chips and equal to an independent recount.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |

@@ -1,0 +1,34 @@
+Core: Cooperlake
+version	Signac  1.17.1  SeuratObject  5.4.0  Rsamtools  2.26.0  RSpectra  0.16.2  Matrix  1.7.5  R  4.5.3
+arch	x86_64
+blas	/usr/local/lib/libopenblasp-r0.3.32.so
+dataset	10246  cells (Cell Ranger is__cell_barcode)
+
+time	CountFragments  104.7  s
+count_fragments	barcodes  549529  records  257638540  reads  506314049  nfr  129802675  mono  96814634  di  30399897  len147or294_in_neither_bin  621334  barcodes_differing  0
+time	CreateFragmentObject  10.4  s
+time	FeatureMatrix  533.5  s
+feature_matrix	peaks  165434  rows_returned  165434  cells  10246  nnz  115788819  total  160246308  checksum  198418904  recount_checksum  198418904  peaks_differing  0
+time	ChromatinAssay+FRiP  74.5  s
+
+time	NucleosomeSignal  17  s
+frip	median  0.686902  range  0.0725783,0.818672
+nucleosome_signal	median  0.66082  nonfinite  0  first_n_records  51230000
+time	TSSEnrichment  309.6  s
+tss_enrichment	median  5.5377  range  1.01693,12.4823  cells_below_2  43  tss_positions  19947
+Warning message:
+In SingleFeatureMatrix(fragment = fragments[[x]], features = features,  :
+  13 features are on seqnames not present in the fragment file. These will be removed.
+time	GeneActivity  600.4  s
+gene_activity	windows  19628  rows  19615  nnz  87596808  total  206660378  checksum  710930125  recount_checksum  710930125  genes_differing  0
+tfidf	nonzeros  115788819  max_abs_diff  8.88e-16
+time	RunTFIDF  68.5  s
+time	RunSVD  68.4  s
+time	SVD checks  55.4  s
+lsi	features  165434  components  50
+lsi	singular_values  6116.999434,3098.630112,1318.192094,1251.65759,868.4285578,767.579025,699.7928045,664.0055969,573.5668713,536.7204599,498.0254645,445.6559821,443.247497,390.5323261,379.1011873,373.7181632,373.0003727,372.1585728,371.6710641,371.1191103,370.0284296,369.0913101,367.7226698,366.5413149,365.7923413,365.3161764,363.5391713,362.7608864,361.26838,360.9015584,360.1381096,357.8644969,357.6887662,357.1276193,356.2237748,355.4578514,354.5154899,353.100521,352.5506856,351.530847,350.0948544,349.3754223,348.0413582,347.4961747,346.4483334,345.7204212,345.2166842,343.5294162,341.5514172,340.8516996
+lsi	residual_Av  2.49e-10  residual_Atu  5.45e-17  orth_u  1.53e-14  orth_v  7.55e-15  d_k  340.8517  deflated_top_estimate  339.85784  cor_LSI1_depth  0.9282
+md5	count_fragments  20bf2bcd95d253d73553f1daf5a9b551  feature_matrix  55d84d2a423d21265cf5a67d47bf5300  gene_activity  0f3915d1cb5bdf792dc78de379e57c02  qc  1d99212ad4dd52fd1e42d74a8e624370  singular_values  9b6237029e98ba0fc064798c8bab9880
+peak_rss	VmHWM:	18748384 kB
+time	signac_total  1842.3  s
+SIGNAC OK

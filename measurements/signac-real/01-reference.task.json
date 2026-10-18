@@ -1,0 +1,82 @@
+{
+  "task_id": "cookbook-signac-real-reference",
+  "container": "quay.io/aarchbio/r-signac@sha256:80fffb0fa5c788d0cae11b64b273b7eb335c12a03d291838ec0921220907d283",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e (spawn#707); the body is staged, not inlined\n# (EC2 user data is capped at 16 KiB, spawn#1063).\ncd /tmp\nprintf '06a104a7d81d8bf5aa2d53ce830ca06cd9395862a62f3ceb5ed164fbe7ef92e9  reference.sh\\n3f49f5a7687db4cc0240db8e9c7e5ca4b9e475c8104203e5de225f58cc8d2440  bins.awk\\n49c4e0aa28a9ca3a83cd4ac4ab523cda058e235bd02fd9532b2840433ea8ea77  overlap.awk\\n10dd78f743f3df54b2f23fd5971fb40c710d6bbe24bf5e3205d3378239f694eb  windows.awk\\n4d492941a253554c595985cec01e24ceb52c15c3f9c0055e40903158f96fdbd1  gtf.awk\\n2c5e4bef7d0955777b75fceff62d1517451326f8f8259e7fc04ccb8e8fdc7944  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash /tmp/reference.sh > reference.log 2>&1; RC=$?\ncat reference.log\ntest \"$RC\" = 0 && grep -q '^REFERENCE OK' reference.log || { echo \"FAIL: reference.sh exited $RC\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/reference.sh",
+      "destination": "/tmp/reference.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/bins.awk",
+      "destination": "/tmp/bins.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/overlap.awk",
+      "destination": "/tmp/overlap.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/windows.awk",
+      "destination": "/tmp/windows.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/gtf.awk",
+      "destination": "/tmp/gtf.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/fragments.tsv.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/fragments.tsv.gz"
+    },
+    {
+      "source": "/tmp/fragments.tsv.gz.tbi",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/fragments.tsv.gz.tbi"
+    },
+    {
+      "source": "/tmp/peaks.bed",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/peaks.bed"
+    },
+    {
+      "source": "/tmp/singlecell.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/singlecell.csv"
+    },
+    {
+      "source": "/tmp/ref/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/ref/"
+    },
+    {
+      "source": "/tmp/reference.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac-real/reference/reference.log"
+    },
+    {
+      "source": "/tmp/data.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac-real/reference/data.sha256"
+    },
+    {
+      "source": "/tmp/ref.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/signac-real/reference/ref.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

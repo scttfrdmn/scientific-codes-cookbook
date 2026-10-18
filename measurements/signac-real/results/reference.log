@@ -1,0 +1,37 @@
+arch aarch64   awk: /usr/bin/awk /usr/bin/mawk
+fetch_s 65
+-rw-r--r--. 1 1000 1000 2641500673 Oct 18 05:09 fragments.tsv.gz
+-rw-r--r--. 1 1000 1000    1152837 Oct 18 05:09 fragments.tsv.gz.tbi
+-rw-r--r--. 1 1000 1000   46712404 Oct 18 05:10 genes.gtf.gz
+-rw-r--r--. 1 1000 1000    3954436 Oct 18 05:09 peaks.bed
+-rw-r--r--. 1 1000 1000   32821340 Oct 18 05:09 singlecell.csv
+GTF matches Ensembl release-98 CHECKSUMS (47563 45618)
+0813248a84f875de50735866461cde046dde1cd994d520a03bfefd414f19c32f  fragments.tsv.gz
+0062587c718db8596887ba8aaba056561daf62345fd15aef182a7d67e036b07e  fragments.tsv.gz.tbi
+073998cda2b1f3a514822f8f5721a0417c75a7e7380efab3b700e7733a71007d  singlecell.csv
+5267f3afe6426e9f010957d46a50ebb97ab629167e2d1d76576afbf7b2be9f93  peaks.bed
+7966e412a6c5864f232ebcb40d67f9ab873064af090dac28a8cab013aaea18b7  genes.gtf.gz
+cells 10246   NucleosomeSignal reads the first 51230000 records
+annotation 1318529 exon rows; 19628 gene windows; 165434 peaks
+bins	records 257638540  barcodes 549529  max_length 5036  first_N 51230000
+rc 0 0
+overlap	peaks: nnz 115788819 sum 160246308   windows: nnz 87596808 sum 206660378
+rc 0 0
+recount_s 1402
+1	115788819	160246308	289885906	198418904
+2	87596808	206660378	911160564	710930125
+cellranger	barcodes 573155: records == passed_filters 572516, peak fragments == peak_region_fragments 573155
+cellranger	cells 10246: records == passed_filters 9670, peak fragments == peak_region_fragments 10246
+a2f114226e4c2b1de3f2da942bbb82bf189ae7d35fe6dbc28de7811efd8ae883  barcodes.tsv
+d4fd832aafc71a364d1cb7e89f8449ce0a245a349407782e335cf2ba8687a525  cells.txt
+f64365ca0b2a1eb1558df2b8040eaaeed38a1d8e1886c1e95365449aa349b050  cols_1.tsv
+eed6781bb63ac147b46975f811b0ef4e53751e9709df7435989d785a9c5b9aa8  cols_2.tsv
+d44b854c44b995a74e1a0682717103066b6b8d93885cf9d7ef5a33ccdd39e717  data.sha256
+216e21dfea6318d019a02e3fb76a15c1d51a537bf114fa9ff287dd96785b345f  genes.tsv
+a992da8ce52316977846da51eb000e5a92651635f6665c01423b265dc1b649ca  nfirst.tsv
+512a86c30f77ecaa162e64a25f52d4a9e88bcf56d9c8aee3315e5611d1dae389  peakfrag.tsv
+80b40c6984ff6a904608bf1385e32edc5b59146b10c01d763f5554ab4b5c9f8e  rows_1.tsv
+45da14adcb8215d614b9c541241f4d0013ac545ea22a95b60adcb14486f06101  rows_2.tsv
+c96f4635247f428e03d6afb9f95c8b622adb90fccee29b7717e92f17e17cd8cf  stats.tsv
+3796b6fd8a8d48c263dff051258112f77d8c7c8b17da86cf76484d7293c2ecc4  windows.bed
+REFERENCE OK
