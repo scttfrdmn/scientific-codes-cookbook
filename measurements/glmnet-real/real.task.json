@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-glmnet-real-pancan",
+  "container": "quay.io/aarchsci/r@sha256:f224ffc9bff58dd405c5bc9a201e41137cea3c5670ac5302768191128c6ced38",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh /tmp/pancan 20531 11069\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pancan/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv",
+      "destination": "/tmp/pancan/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pancan/merged_sample_quality_annotations.tsv",
+      "destination": "/tmp/pancan/merged_sample_quality_annotations.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/real.R",
+      "destination": "/tmp/real.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/glmnet-real/pancan/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

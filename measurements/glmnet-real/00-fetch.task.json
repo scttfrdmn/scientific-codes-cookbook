@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-glmnet-real-fetch",
+  "container": "quay.io/aarchsci/r@sha256:f224ffc9bff58dd405c5bc9a201e41137cea3c5670ac5302768191128c6ced38",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\n# The TCGA PanCanAtlas (Hoadley et al. 2018) RNA-seq matrix and its sample annotations, fetched on AWS\n# from the GDC by file UUID and checked against the md5 in each file's GDC record before they are kept.\nfetch() {\n  if command -v curl >/dev/null; then curl -fsSL --retry 3 -o \"$2\" \"https://api.gdc.cancer.gov/data/$1\"\n  else Rscript -e \"options(timeout=3600); download.file(\\\"https://api.gdc.cancer.gov/data/$1\\\", \\\"$2\\\", mode=\\\"wb\\\", quiet=TRUE)\"; fi || { echo \"FAIL: fetch $2\"; exit 1; }\n  got=$(md5sum \"$2\" | cut -d' ' -f1)\n  [ \"$got\" = \"$3\" ] || { echo \"FAIL: $2 md5 $got, GDC record says $3\"; exit 1; }\n  echo \"$2 md5 $got == GDC\"\n}\nfetch 3586c0da-64d0-4b74-a449-5ff4d9136611 EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv 02e72c33071307ff6570621480d3c90b\nfetch 1a7d7be8-675d-4e60-a105-19d4121bdebf merged_sample_quality_annotations.tsv 05ddd2270fb1fb24fbdc2fe9bf7384e5\nsha256sum EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv merged_sample_quality_annotations.tsv | tee data.sha256\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pancan/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

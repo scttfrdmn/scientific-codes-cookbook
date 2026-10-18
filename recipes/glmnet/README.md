@@ -18,17 +18,26 @@ Fits glmnet's gaussian and binomial elastic-net paths on Graviton4 and checks ev
 make stage RECIPE=glmnet     # once: the checks only — the design and responses are synthesised
 spawn task run --spec "$(make -s spec RECIPE=glmnet)" --wait
 make ls RECIPE=glmnet
-
 fit <- glmnet(X, y, alpha = 1, control = list(thresh = 1e-14))     # the whole lasso path
 cv  <- cv.glmnet(X, y, foldid = foldid, relax = TRUE)              # fixed folds -> reproducible
 coef(cv, s = "lambda.1se", gamma = "gamma.1se")                    # exactly the planted support
 ```
 
+## Which box — [measured](../../measurements/glmnet-real/README.md) on the whole TCGA pan-cancer matrix, n = 10,885, p = 16,335
+
+| chip | `xlarge` | wall | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `r8g` | 1,538 s | 0.113 |
+| Xeon 6975P-C | `r8i` | 2,059 s | 0.166 |
+| **EPYC 9R45** | `r8a` | **954 s** | **0.094** |
+
+**Take AMD:** 1.6× Graviton4's speed and 17% cheaper. Coordinate descent is single-threaded, so size the box by memory (9.1 GiB peak). KKT holds at all 100 λ at p > n, and every chip selects the same genes.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `control = list(thresh = ...)` | `thresh = ...` | **glmnet 5.0 deprecates the `thresh=` argument.** The default `1e-7` leaves KKT residuals of **1.3e-4** (in units of sd(y)), about 3,000× the residual at `1e-14`, because the residual scales as √thresh. Tighten it before you compare against anything else. |
+| `control = list(thresh = ...)` | `thresh = ...` | **glmnet 5.0 deprecates the `thresh=` argument.** The default `1e-7` leaves KKT residuals of **1.3e-4** (in units of sd(y)), about 3,000× the residual at `1e-14`, because the residual scales as √thresh. Tighten it before you compare against anything else. At `1e-20` also pass `maxit = 1e6`: on the [pan-cancer fit](../../measurements/glmnet-real/README.md) the default `1e5` ran out at λ 82 of 100, and glmnet only warned and returned the shorter path. |
 | `lambda` on raw `y` | — | **glmnet's λ is in y units.** On an unscaled response the ridge it solves is `(XᵀX/n + (λ/sd_y)I)b = Xᵀy/n`. Reading it as `+ λI` puts you **0.16** off. Standardise y first, or divide. |
 | `relax = TRUE`, `lambda.1se` | plain lasso | plain lasso at `lambda.1se` kept **2 extra neighbours** (x04, x19) here, and got the support exactly in only 13 of 40 seeds of this design. The relaxed fit got it in 40 of 40. Shrinkage bias is the reason, not a bug. |
 | `foldid = foldid` | `nfolds = 10` | random folds make `lambda.1se`, and so the selected model, change from run to run. Fix the folds and two runs give identical CV curves. |
@@ -160,8 +169,7 @@ These are untouched:
 - other families: `poisson`, `cox`, `multinomial`, `mgaussian`
 - sparse `Matrix` input
 - `penalty.factor`, box constraints (`lower.limits`/`upper.limits`) and offsets
-- `p > n`, where the `lm()`/`glm()` legs no longer exist but KKT still holds
 - glmnet's own test suite
-- any performance claim: this is one box at one small size
+- the fixture at `p > n`, which [glmnet-real](../../measurements/glmnet-real/README.md) covers at scale
 
 </details>

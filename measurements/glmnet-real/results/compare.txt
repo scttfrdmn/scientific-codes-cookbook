@@ -1,0 +1,61 @@
+== Graviton4 vs x86_64
+score.tsv: 38 observables identical
+  differs  A_lambda_max                         glmnet 0.10341220238080659 closed form 0.10341220238080684 rel 2.416e-15
+                                                glmnet 0.10341220238080659 closed form 0.10341220238080676 rel 1.610e-15
+  differs  A_kkt_max_violation                  1.526e-11 (inactive 7.096e-16) bound 2.310e-06
+                                                1.526e-11 (inactive 6.031e-16) bound 2.310e-06
+  differs  A_intercept_score                    max |mean(y - p)| 1.095e-16
+                                                max |mean(y - p)| 1.089e-16
+  differs  B_lambda_max                         glmnet 2.751889354006317 closed form 2.7518893540063143 rel 9.683e-16
+                                                glmnet 2.751889354006317 closed form 2.7518893540063161 rel 3.228e-16
+  differs  B_lambda_max_alpha_0.5               rel 8.069e-16
+                                                rel 1.614e-16
+  differs  B_ridge_vs_dual_closed_form          3.395e-14 over 5 lambdas, kappa 216.9, bound 4.817e-11
+                                                3.397e-14 over 5 lambdas, kappa 216.9, bound 4.817e-11
+A path: 100 vs 100 lambdas, lambda max rel diff 1.406e-16, df differs at 0, dev_ratio max diff 8.882e-16
+A coefficients: 5802 nonzeros vs 5802; support differs in 0 entries over 0 lambdas; 82 of 5802 shared coefficients bit-identical; max |diff| 8.743e-15, max rel 1.630e-10
+A cv curve: 100 vs 100 lambdas, cvm max rel diff 0.000e+00
+B path: 100 vs 100 lambdas, lambda max rel diff 0.000e+00, df differs at 0, dev_ratio max diff 2.609e-14
+B coefficients: 8848 nonzeros vs 8848; support differs in 0 entries over 0 lambdas; 30 of 8848 shared coefficients bit-identical; max |diff| 6.313e-13, max rel 1.507e-09
+B cv curve: 100 vs 100 lambdas, cvm max rel diff 2.066e-15
+== Graviton4 vs amd
+score.tsv: 38 observables identical
+  differs  A_lambda_max                         glmnet 0.10341220238080659 closed form 0.10341220238080684 rel 2.416e-15
+                                                glmnet 0.10341220238080659 closed form 0.10341220238080676 rel 1.610e-15
+  differs  A_kkt_max_violation                  1.526e-11 (inactive 7.096e-16) bound 2.310e-06
+                                                1.526e-11 (inactive 6.031e-16) bound 2.310e-06
+  differs  A_intercept_score                    max |mean(y - p)| 1.095e-16
+                                                max |mean(y - p)| 1.089e-16
+  differs  B_lambda_max                         glmnet 2.751889354006317 closed form 2.7518893540063143 rel 9.683e-16
+                                                glmnet 2.751889354006317 closed form 2.7518893540063161 rel 3.228e-16
+  differs  B_lambda_max_alpha_0.5               rel 8.069e-16
+                                                rel 1.614e-16
+  differs  B_ridge_vs_dual_closed_form          3.395e-14 over 5 lambdas, kappa 216.9, bound 4.817e-11
+                                                3.397e-14 over 5 lambdas, kappa 216.9, bound 4.817e-11
+A path: 100 vs 100 lambdas, lambda max rel diff 1.406e-16, df differs at 0, dev_ratio max diff 8.882e-16
+A coefficients: 5802 nonzeros vs 5802; support differs in 0 entries over 0 lambdas; 82 of 5802 shared coefficients bit-identical; max |diff| 8.743e-15, max rel 1.630e-10
+A cv curve: 100 vs 100 lambdas, cvm max rel diff 0.000e+00
+B path: 100 vs 100 lambdas, lambda max rel diff 0.000e+00, df differs at 0, dev_ratio max diff 2.609e-14
+B coefficients: 8848 nonzeros vs 8848; support differs in 0 entries over 0 lambdas; 30 of 8848 shared coefficients bit-identical; max |diff| 6.313e-13, max rel 1.507e-09
+B cv curve: 100 vs 100 lambdas, cvm max rel diff 2.066e-15
+== Intel vs AMD (the same x86 env twin)
+score.tsv: 44 observables identical
+A path: 100 vs 100 lambdas, lambda max rel diff 0.000e+00, df differs at 0, dev_ratio max diff 0.000e+00
+A coefficients: 5802 nonzeros vs 5802; support differs in 0 entries over 0 lambdas; 5802 of 5802 shared coefficients bit-identical; max |diff| 0.000e+00, max rel 0.000e+00
+A cv curve: 100 vs 100 lambdas, cvm max rel diff 0.000e+00
+B path: 100 vs 100 lambdas, lambda max rel diff 0.000e+00, df differs at 0, dev_ratio max diff 0.000e+00
+B coefficients: 8848 nonzeros vs 8848; support differs in 0 entries over 0 lambdas; 8848 of 8848 shared coefficients bit-identical; max |diff| 0.000e+00, max rel 0.000e+00
+B cv curve: 100 vs 100 lambdas, cvm max rel diff 0.000e+00
+== sha256 of the outputs
+ab2e6bd816ab2fdc2e17ea7ea6b23e98c54300858f958cad119d0fc46bc60e12  amd/A-path.tsv
+0e85728f16efb472171d28ac484cbc8f15eeea2d6cd7254c306ea65f09f91588  arm64/A-path.tsv
+ab2e6bd816ab2fdc2e17ea7ea6b23e98c54300858f958cad119d0fc46bc60e12  x86_64/A-path.tsv
+4b30b451cc922c5e78a9c3d97f5a9f944dc48b26ee9008bf0507a542d37132b1  amd/B-path.tsv
+70259b64a9ff8d70c64b93cdf07176efe59d58ca657d65979585ef6af4431b91  arm64/B-path.tsv
+4b30b451cc922c5e78a9c3d97f5a9f944dc48b26ee9008bf0507a542d37132b1  x86_64/B-path.tsv
+8e16d4be4d625b626f803143bb263277a3ac451a6236486270526fe6eee33827  amd/A-cv.tsv
+5422063d643456300830442668fbfe86bff375b57dc20c97ab18204202e7d0bb  arm64/A-cv.tsv
+8e16d4be4d625b626f803143bb263277a3ac451a6236486270526fe6eee33827  x86_64/A-cv.tsv
+c832dd433e99d076f904d3f99893cdfbafc67deab70ea360cfbd6de75d40072d  amd/B-cv.tsv
+251037347a8b4f8149f25e84582c0f0fe64a3ea45e275eee32670991e1157446  arm64/B-cv.tsv
+c832dd433e99d076f904d3f99893cdfbafc67deab70ea360cfbd6de75d40072d  x86_64/B-cv.tsv
