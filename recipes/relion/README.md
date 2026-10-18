@@ -12,7 +12,7 @@ last_verified: 2026-10-13
 
 `relion_postprocess` turns two unfiltered half-maps and a solvent mask from a real RELION 5 refinement into a sharpened map plus a resolution estimate — and reproduces, value for value, the output the depositors themselves got.
 
-> **What this covers.** `relion_postprocess`: masked gold-standard FSC, phase randomization, Rosenthal–Henderson weighting, automatic B-factor sharpening. It does **not** run 3D refinement or classification — that is where cryo-EM's compute cost lives, it's GPU-bound, and it's Round Two on x86. So this is one step of a pipeline, not the pipeline — but it answers "does RELION run correctly on Graviton4" unusually strongly (below).
+> **What this covers.** `relion_postprocess`: masked gold-standard FSC, phase randomization, Rosenthal–Henderson weighting, automatic B-factor sharpening. The recipe itself does not refine; a complete CPU 3D auto-refinement is [measured](../../measurements/relion-real/README.md) below — but refinement and classification are where cryo-EM's compute goes, and GPU is their normal platform (Round Two).
 
 ## Run it
 
@@ -36,6 +36,15 @@ One task — post-processing is a single invocation, and the two half-maps *are*
 | the `half1` filename | your half1 (don't rename half2) | RELION derives the half2 name by substituting `half1`→`half2`, so the pair must keep those tokens. |
 
 Deterministic (FFTs, a shell-wise correlation, a straight-line fit — no sampling, no thread flag) — **nothing is determinism scaffolding**. **Leave the fixture:** it's a real 440³ reconstruction reproducing a published result exactly; there is no smaller or larger input that makes the check more legible. Leave-it.
+
+## Which box — [measured](../../measurements/relion-real/README.md) (a whole `Refine3D`: 4,452 β-gal particles, box 256, D2, 9 ranks × 8 threads)
+
+| chip | instance | refine wall | $/hr | **billed $/refinement** |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.16xlarge` | **444 s** | 2.5523 | **0.390** |
+| Intel | `c8i.16xlarge` | 648 s | 2.9987 | 0.611 |
+
+**On CPU, take Graviton4: 1.46× faster, 36% cheaper billed**, and both reach the depositors' own 3.153 Å. Leave `--cpu` off: the x86 build's vectorised kernels were *slower* (751 s), and the arm64 build has none. It is a path: with a fixed `--random_seed`, x86 at 9 × 8 and Graviton4 at 3 ranks × 1 thread reproduce byte for byte (and match each other), but Graviton4 at 9 ranks did not — check two runs' `run_data.star` before relying on reproducibility.
 
 ## Shape, size, cost
 

@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-relion-real-refine3d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho \"== the staged scripts must match their pins ==\"\nprintf 'a0bdab5fb2adc0500858f39fc20f98b4372c6fa72cb79376bec17e3660559baf  run.sh\\nc03ad339ec6ea6b6b0be9840f44d639fd720f522c6452532e8b1344a71217631  check.py\\n14888e6794b7710d8ded0cc930d0e6e8ec7f330c896ed1c201919ce70e5e5769  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash /tmp/run.sh 9 8\n"
+  ],
+  "container": "quay.io/aarchbio/relion@sha256:74aef38176ce4b9929f1312bb977c54c06994329e63c94fc3accce44ea844119",
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/Tutorial5.0/",
+      "destination": "/tmp/Tutorial5.0/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/check.py",
+      "destination": "/tmp/check.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/check.txt"
+    },
+    {
+      "source": "/tmp/relion-real-out.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/relion-real-out.tar"
+    },
+    {
+      "source": "/tmp/samples.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/samples.tsv"
+    },
+    {
+      "source": "/tmp/xfsc.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/xfsc.txt"
+    },
+    {
+      "source": "/tmp/run_half1_class001_unfil.mrc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/run_half1_class001_unfil.mrc"
+    },
+    {
+      "source": "/tmp/run_half2_class001_unfil.mrc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/run_half2_class001_unfil.mrc"
+    },
+    {
+      "source": "/tmp/run_class001.mrc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/relion-real/r1/run_class001.mrc"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 4.0
+  }
+}

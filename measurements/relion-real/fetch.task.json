@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-relion-real-fetch",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho \"== the staged script and pins must match their pins ==\"\nprintf 'f6ba761c22b8235f440f67a0dcff1a1670a6d64db92edb4efc8e67a27d793f83  fetch.sh\\n14888e6794b7710d8ded0cc930d0e6e8ec7f330c896ed1c201919ce70e5e5769  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash /tmp/fetch.sh\n"
+  ],
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/fetch.sh",
+      "destination": "/tmp/fetch.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/stage/Tutorial5.0/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/relion-real/Tutorial5.0/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}
