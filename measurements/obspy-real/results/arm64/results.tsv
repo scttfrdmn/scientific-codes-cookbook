@@ -1,0 +1,31 @@
+channels processed == files staged	ok	720 of 720
+ids unique	ok	720
+decoded samples == record-header nsamp, every file	ok	6159279810 == 6159279810 (19007870 records)
+STEIM2 round trip bit-identical, every trace	ok	720 of 720 files (33774 traces)
+endtime - starttime == (npts-1)/rate, every trace (<= 1 ns)	ok	0.000e+00 s
+split into 3 + merge bit-identical, every channel	ok	720 of 720
+exactly one channel epoch covers the day, every channel	ok	720 of 720
+stage 1: evalresp == numpy poles/zeros (rel < 1e-10), every channel	ok	max 1.746e-15 over 720
+stage 1: naive A0*G (gain frequency ignored), channels off by > 1e-10	reported	336 of 720, worst 4.635e-02
+product of stage gains / reported sensitivity (metadata)	reported	min 0.998857 max 1.046348
+PPSD histogram total == n_psd * n_period_bins, every channel	ok	33825 PSDs
+PPSD: at least one hour-long PSD, every channel	ok	min 45 max 47
+PSD values inside Peterson NLNM..NHNM (median over channels)	reported	0.790
+velocity traces have energy (identities are not vacuous)	ok	240 Z channels, min 8.032e-08
+remove_response superposition (rel < 1e-10), every Z channel	ok	max 3.423e-13
+Parseval on the velocity trace (rel < 1e-12), every Z channel	ok	max 7.941e-16
+peak ground velocity, HHZ	reported	CI.WBM..HHZ 0.0359 m/s
+velocity samples processed	reported	2027559296
+gaps (sum over channels)	reported	33054
+mainshock hypocentre (SCSN)	reported	35.7695 -117.5993 8.00 km, 95 P/S picks
+epicentral distance: SCSN vs obspy WGS84 geodesic, max |diff|	reported	0.709 km
+TauP iasp91 P residual pick - model (median, MAD, n)	reported	-0.525 s, 0.253 s, 79
+TauP iasp91 S residual pick - model (median, MAD, n)	reported	+0.980 s, 0.681 s, 16
+TauP ak135 P residual pick - model (median, MAD, n)	reported	-0.525 s, 0.253 s, 79
+TauP ak135 S residual pick - model (median, MAD, n)	reported	+1.285 s, 0.611 s, 16
+worker seconds by stage	reported	decode=38 header=19 parseval=52 ppsd=1151 remove_response=2003 response_eval=1 roundtrip=100 split_merge=5 stationxml=68 superposition=3909
+pool wall	reported	485.9 s
+taup wall	reported	1.6 s
+peak worker RSS	reported	1.88 GiB
+peak system memory used (incl. tmpfs)	reported	33.96 GiB
+real.py wall	reported	487.6 s

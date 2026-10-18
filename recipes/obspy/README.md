@@ -26,6 +26,16 @@ model = TauPyModel(model="iasp91")                   # matches: taup_time -h 10 
 model.get_travel_times(source_depth_in_km=10.0, distance_in_degree=35.0, phase_list=["ttall"])
 ```
 
+## Which box — [measured](../../measurements/obspy-real/README.md) on a network-day: 720 CI broadband channels, 2019-07-06 (Ridgecrest Mw 7.1)
+
+| chip | `4xlarge`, 16 workers | real.py wall | **billed $/result** |
+|---|---|---|---|
+| **Graviton4** | `m8g` | 488 s | **0.129** |
+| Xeon 6975P-C | `m8i` | 712 s | 0.194 |
+| EPYC 9R45 | `m8a` | 416 s | 0.141 |
+
+**Take Graviton4:** AMD is 1.17× faster but 9% dearer per result. Decode, PPSD and full-day deconvolution of 6.2 billion samples run with every identity exact on all three chips. Size by RAM (`m8g`), because the 11 GB of input sits in tmpfs. The fixture itself is one `m8g.large` task (TTL 30m as a **backstop**, `cost_limit` $0.10 as the guard). Its recorded **63 s** is boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -38,10 +48,6 @@ model.get_travel_times(source_depth_in_km=10.0, distance_in_degree=35.0, phase_l
 | obspy 1.5.1 | a newer obspy | **the task asserts the version.** The staged reference came from obspy's own tree at 1.5.1; from another tag it would describe a different implementation. |
 
 **Leave the fixture.** 3,000 samples and a 35° source–receiver pair are small on purpose: the point is that someone else published the answer, which no larger dataset here would give you. **Scale it** by pointing `read()` at your own data — every identity below is size-independent.
-
-## Shape, size, cost
-
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.10 as the real guard. Two TauP model loads and a few filter passes over 3,000 samples are seconds; the recorded **63 s** is boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: 66 arrivals against an independent Java implementation, five bit-exact round-trips, and three identities that need no reference at all</summary>
@@ -168,10 +174,11 @@ bucket regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 
 ### Not covered
 
-Instrument-response removal and simulation (the bundled inventory carries a real 5-pole/2-zero
-response and `evalresp`, so deconvolution against an independently computed transfer function is
-the obvious next check), FDSN web services and any network fetch, event and station metadata
-beyond reading it, PPSD and spectrogram products, beamforming and array analysis, cross-correlation
+In this fixture: instrument-response removal and PPSD (the
+[real workload](../../measurements/obspy-real/README.md) checks both on a network-day: evalresp's
+stage 1 against numpy, deconvolution superposition and Parseval, PPSD histogram totals). Not anywhere:
+response simulation, FDSN web services and any network fetch, event and station metadata
+beyond reading it, spectrogram products, beamforming and array analysis, cross-correlation
 and template matching, magnitude and moment-tensor work, ray *paths* and pierce points — this
 recipe asserts travel times only — and the deeper TauP references in the same directory
 (`java_tauptime_testoutput`, the ak135 phase tables), which would widen the comparison

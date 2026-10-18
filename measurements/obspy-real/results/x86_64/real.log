@@ -1,0 +1,45 @@
+obspy 1.5.1 numpy 2.5.3 scipy 1.18.1 python 3.14.8
+files 720, stations 239, workers 16
+  20/239 stations, 96 s
+  40/239 stations, 145 s
+  60/239 stations, 195 s
+  80/239 stations, 243 s
+  100/239 stations, 321 s
+  120/239 stations, 374 s
+  140/239 stations, 426 s
+  160/239 stations, 498 s
+  180/239 stations, 556 s
+  200/239 stations, 608 s
+  220/239 stations, 661 s
+ok   channels processed == files staged                         720 of 720
+ok   ids unique                                                 720
+ok   decoded samples == record-header nsamp, every file         6159279810 == 6159279810 (19007870 records)
+ok   STEIM2 round trip bit-identical, every trace               720 of 720 files (33774 traces)
+ok   endtime - starttime == (npts-1)/rate, every trace (<= 1 ns) 0.000e+00 s
+ok   split into 3 + merge bit-identical, every channel          720 of 720
+ok   exactly one channel epoch covers the day, every channel    720 of 720
+ok   stage 1: evalresp == numpy poles/zeros (rel < 1e-10), every channel max 1.282e-15 over 720
+     stage 1: naive A0*G (gain frequency ignored), channels off by > 1e-10 336 of 720, worst 4.635e-02
+     product of stage gains / reported sensitivity (metadata)   min 0.998857 max 1.046348
+ok   PPSD histogram total == n_psd * n_period_bins, every channel 33825 PSDs
+ok   PPSD: at least one hour-long PSD, every channel            min 45 max 47
+     PSD values inside Peterson NLNM..NHNM (median over channels) 0.790
+ok   velocity traces have energy (identities are not vacuous)   240 Z channels, min 8.032e-08
+ok   remove_response superposition (rel < 1e-10), every Z channel max 3.424e-13
+ok   Parseval on the velocity trace (rel < 1e-12), every Z channel max 8.293e-16
+     peak ground velocity, HHZ                                  CI.WBM..HHZ 0.0359 m/s
+     velocity samples processed                                 2027559296
+     gaps (sum over channels)                                   33054
+     mainshock hypocentre (SCSN)                                35.7695 -117.5993 8.00 km, 95 P/S picks
+     epicentral distance: SCSN vs obspy WGS84 geodesic, max |diff| 0.709 km
+     TauP iasp91 P residual pick - model (median, MAD, n)       -0.525 s, 0.253 s, 79
+     TauP iasp91 S residual pick - model (median, MAD, n)       +0.980 s, 0.681 s, 16
+     TauP ak135 P residual pick - model (median, MAD, n)        -0.525 s, 0.253 s, 79
+     TauP ak135 S residual pick - model (median, MAD, n)        +1.285 s, 0.611 s, 16
+     worker seconds by stage                                    decode=63 header=23 parseval=93 ppsd=1844 remove_response=2914 response_eval=1 roundtrip=166 split_merge=14 stationxml=102 superposition=5686
+     pool wall                                                  710.1 s
+     taup wall                                                  1.6 s
+     peak worker RSS                                            1.89 GiB
+     peak system memory used (incl. tmpfs)                      33.98 GiB
+     real.py wall                                               711.7 s
+OBSPY REAL OK

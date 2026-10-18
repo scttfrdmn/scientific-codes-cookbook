@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-obspy-real",
+  "container": "quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport TMPDIR=/tmp HOME=/tmp MPLBACKEND=Agg\nexport OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OBSPY_THREADS=16 OBSPY_DIR=/tmp/day187\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nT0=$(date +%s)\nsha256sum -c pins.sha256 > pins.check 2>&1 || { grep -v ': OK$' pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nNOK=$(grep -c ': OK$' pins.check)\necho \"pinned_files_verified $NOK in $(( $(date +%s) - T0 ))s\"\ntest \"$NOK\" -eq 962 || { echo \"FAIL: verified $NOK pinned files, expected 962\"; exit 1; }\nV=$(python3 -c \"import obspy; print(obspy.__version__)\" 2>&1)\necho \"obspy_running $V\"\ntest \"$V\" = \"1.5.1\" || { echo \"FAIL: obspy $V, expected 1.5.1\"; exit 1; }\n{ lscpu | grep -iE 'model name|^cpu\\(s\\)|thread\\(s\\) per core|numa node\\(s\\)'; python3 -u corename.py; uname -m | awk '{print \"arch\\t\"$1}'; df -h /tmp; } > cpu.txt 2>&1\ncat cpu.txt\nT0=$(date +%s)\npython3 -u real.py > real.log 2>&1\nRC=$?\necho \"real.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncat real.log\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'OBSPY REAL OK' real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy-real/day187/",
+      "destination": "/tmp/day187/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy-real/corename.py",
+      "destination": "/tmp/corename.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/obspy-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/results.tsv"
+    },
+    {
+      "source": "/tmp/channels.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/channels.tsv"
+    },
+    {
+      "source": "/tmp/taup_picks.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/taup_picks.tsv"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/cpu.txt"
+    },
+    {
+      "source": "/tmp/pins.check",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/obspy-real/r1/pins.check"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
