@@ -55,7 +55,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [spades](../recipes/spades/README.md) | Assemble short reads into contigs with no reference — the standard bacterial/small-genome assembler. | aarchbio | stage: bcftools | 2026-10-12 | 2026-09-10 | 2026-10-13 | — |
 | [star](../recipes/star/README.md) | Builds the full GRCh38 + Ensembl 116 splice-aware index and aligns a complete 15.8M-read run on Graviton. For anyone doing spliced alignment, and deciding what to pay for. | aarchbio | stage: kallisto, salmon, star | 2026-10-12 | 2026-10-01 | 2026-10-13 | — |
 | [viennarna](../recipes/viennarna/README.md) | Folds 50 RNAs on Graviton4 and compares the complete output to ViennaRNA's committed reference files, across four dangling-end treatments, `--noLP`, and two temperatures. For anyone doing RNA structure prediction on ARM. | aarchbio | stage | 2026-10-12 | 2026-10-08 | 2026-10-13 | — |
-| [wgcna](../recipes/wgcna/README.md) | Builds WGCNA's adjacency, TOM, modules and eigengenes on Graviton4 and x86, from a matrix with planted modules. For anyone finding gene modules in bulk expression data with R. | aarchbio | stage | 2026-10-16 | 2026-10-16 | 2026-10-16 | — |
+| [wgcna](../recipes/wgcna/README.md) | Builds WGCNA's adjacency, TOM, modules and eigengenes on Graviton4 and x86, from a matrix with planted modules. For anyone finding gene modules in bulk expression data with R. | aarchbio | stage | 2026-10-18 | 2026-10-16 | 2026-10-16 | — |
 
 ## astro
 
