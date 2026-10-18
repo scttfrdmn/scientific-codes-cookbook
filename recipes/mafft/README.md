@@ -28,20 +28,27 @@ mafft --auto --thread 8 gpcr906.fa > aln.fa
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `7tm_1`'s 906 human members | any family in `hits.tbl.gz` | change one `awk` pattern; the family is whatever hmmsearch found, not a hand-curated set. |
-| `--auto` | `--localpair --maxiterate 1000` | `--auto` picked FFT-NS-2 here; L-INS-i is far better and far slower at this size. |
+| `--auto` | `--localpair --maxiterate 1000` | `--auto` picked FFT-NS-2 here. L-INS-i scores better against Pfam and is far slower — add `--threadit 0` if you need it reproducible ([measured](../../measurements/mafft-real/README.md)). |
 | `--thread 8` | fewer | 3 s either way at this size. Keep it *pinned* — see below. |
 
-**Leave the family** — 906 sequences of ~344 aa is a real alignment and it runs in 3 s, so the whole
-recipe is boot. **Scale it** by picking a bigger family or dropping `--auto` for an iterative mode;
-both cost real time where this does not.
+**Leave the family** — 906 sequences of ~344 aa is a real alignment, and 3 s of it leaves the recipe all
+boot. **Scale it** with a bigger family or an iterative mode, as the measurement below does.
 
 ## Shape, size, cost
 
-`c8g.2xlarge`: **3 s of mafft inside a ~2 min billed window, ~$0.01.**
+`c8g.2xlarge`: **3 s of mafft inside a ~2 min billed window, ~$0.01.** Which box at real scale,
+[measured](../../measurements/mafft-real/README.md) (L-INS-i, 919 Pfam sequences, 8 threads):
 
-**No generation table.** Three seconds of work cannot distinguish four chips — a ladder here would
-measure boot, the same reason [mash](../mash/README.md) has none. If you need mafft to take real
-time, the lever is `--localpair`, not a newer core.
+| chip | instance | `--threadit 0` | threaded refinement | billed $/result |
+|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 484 s | **131 s** | 0.047 / **0.016** |
+| Xeon 6975P-C | `c8i.2xlarge` | 468 s | 209 s | 0.054 / 0.027 |
+| EPYC 9R45 | `c8a.2xlarge` | **374 s** | 114 s | 0.049 / 0.018 |
+
+**`--threadit 0` is the reproducible choice:** the same alignment byte for byte on all three chips,
+but its refinement runs on one core. Threaded refinement is 3.7× faster on Graviton4 and as close to
+Pfam's alignment, but each run returns a different one. Pin `--threadit 0` when the alignment must
+repeat; otherwise take Graviton4 with threaded refinement.
 
 <details>
 <summary>As shipped: a conservation identity, a reproducibility result muscle does not share, pins</summary>

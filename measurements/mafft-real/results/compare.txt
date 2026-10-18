@@ -1,0 +1,22 @@
+== sha256 (first 16) per alignment, per chip
+label          arm64              x86_64             amd
+linsi          a34c93ca15854761   a34c93ca15854761   a34c93ca15854761
+linsi-rep      a34c93ca15854761   a34c93ca15854761   a34c93ca15854761
+linsi-mt       eaa5c8c2154f5a35   4efe98147678a194   6cd4935a22dbe835
+linsi-mt-rep   b9714ebf748c94a0   36fbccab09abfc4c   3fb2c926764e0a75
+auto           db0911ee5c7a5247   db0911ee5c7a5247   db0911ee5c7a5247
+== linsi-mt: x86_64 scored against Graviton4's linsi-mt (SP/TC of one alignment against the other)
+sp 0.998301
+tc 0.602968
+== linsi-mt: amd scored against Graviton4's linsi-mt (SP/TC of one alignment against the other)
+sp 0.998176
+tc 0.669759
+== linsi-mt on arm64: second run scored against the first
+sp 0.998471
+tc 0.643785
+== linsi-mt on x86_64: second run scored against the first
+sp 0.998235
+tc 0.580357
+== linsi-mt on amd: second run scored against the first
+sp 0.998113
+tc 0.643510
