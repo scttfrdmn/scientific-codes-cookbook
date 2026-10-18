@@ -11,8 +11,6 @@ last_verified_x86_64: 2026-10-17
 
 `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared.
 
-> **What this covers.** One conservative regrid on global periodic grids, one real-netCDF reader path, one MetPy calc — proof the climate stack (xarray / netCDF4 / xESMF / esmpy / MetPy) is correct on Graviton4. Not a benchmark; no large dataset, GRIB decode, or full reanalysis.
-
 ## Run it
 
 ```bash
@@ -28,8 +26,6 @@ regridder = xe.Regridder(src, dst, "conservative", periodic=True)   # periodic: 
 out = regridder(src["lat"] * 0 + 1.0)    # a constant 1.0 field must come back 1.0 everywhere
 ```
 
-One task: the regrid, an `xarray.open_dataset` on a pinned NCEP file, and a MetPy wind-speed calc, in one `python3` invocation. Only the netCDF is staged.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -38,13 +34,20 @@ One task: the regrid, an `xarray.open_dataset` on a pinned NCEP file, and a MetP
 | the pinned NCEP `air_temperature.nc` | your own netCDF | opened with the `netcdf4` engine to exercise the *reader* on a real file (the env's own D3 only round-trips a self-made one). |
 | `"conservative"` | `"bilinear"`, `"nearest_s2d"`, … | scaffolding that **must match your science** — only conservative preserves the area-weighted integral, and the conservation check is specific to it. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the conservation law is exact at any grid size and the real netCDF exercises the reader; a bigger dataset is a longer run, not a more legible one. Leave-it.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the conservation law is exact at any grid size and the real netCDF exercises the reader; a bigger dataset is a longer run, not a more legible one — the year of hourly ERA5 [measured below](../../measurements/climate-real/README.md) is that run, with its own identities. Leave-it.
 
 ## Shape, size, cost
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from the first real run (10m → 5m, $0.03 → $0.02). Measured phase split: stage-in of the 7 MB netCDF **1 s**, Docker install **46 s**, image pull **75 s**, reader + regrid + calc **5 s**. Provisioning is 96% of the 127 s window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
-**Sizing:** no family question for this fixture; a real reanalysis is I/O-bound (large netCDF/GRIB at scale), not compute — size on [data movement](../../patterns/data-movement.md).
+## Which box — [measured](../../measurements/climate-real/README.md) (all 8,760 hours of 2023 ERA5 2 m temperature, 0.25°, 8 threads)
+
+| chip | instance | era5.py wall | peak RSS | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | 884 s | 30.9 GiB | **0.1398** |
+| x86 | `r8i.2xlarge` | 1001 s | 32.7 GiB | 0.1743 |
+
+**Graviton4: 1.13× faster, 20% cheaper billed**, and every non-timing output byte-identical across chips; the 2023 global mean (14.9829 °C), July (16.953 °C) and the 6 July daily record (17.0797 °C) each land within 0.003 °C of Copernicus's published values. **Memory picks the family:** staging is tmpfs (½ RAM), so the year's 13.35 GB needs `r8g` before any compute ([data movement](../../patterns/data-movement.md)).
 
 <details>
 <summary>As shipped: three kinds of check, pins, smoke check, run + verify</summary>

@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-climate-real",
+  "container": "quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nexport OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 ERA5_THREADS=8 ERA5_DIR=/tmp/era5\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nT0=$(date +%s)\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"sha256 of 13.35 GB in $(( $(date +%s) - T0 ))s\"\nlscpu | grep -iE 'model name|^cpu\\(s\\)|numa node\\(s\\)' > cpu.txt; cat cpu.txt\ndf -h /tmp | tee -a cpu.txt\nT0=$(date +%s)\npython3 -u era5.py > era5.log 2>&1\nRC=$?\necho \"era5.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncat era5.log\ndf -h /tmp\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'ERA5 REAL OK' era5.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/climate-real/era5-2023/",
+      "destination": "/tmp/era5/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/climate-real/era5.py",
+      "destination": "/tmp/era5.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/climate-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/era5.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate-real/r1/era5.log"
+    },
+    {
+      "source": "/tmp/era5-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate-real/r1/era5-results.tsv"
+    },
+    {
+      "source": "/tmp/annual_mean_2023.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate-real/r1/annual_mean_2023.npy"
+    },
+    {
+      "source": "/tmp/global_hourly_2023.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate-real/r1/global_hourly_2023.npy"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/climate-real/r1/cpu.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
