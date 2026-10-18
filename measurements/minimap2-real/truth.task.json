@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-minimap2real-truth",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho '== staged bytes must match their pins =='\ngrep -E 'no_alt_analysis_set.fa|truth' pins.sha256 > pins.sel\nsha256sum -c pins.sel || { echo 'FAIL: a staged input does not match its pin'; exit 1; }\nREF=GRCh38_no_alt_analysis_set.fa\nbcftools view -R truth.chr20.bed -v snps -i 'GT=\"alt\"' -Ou truth.chr20.vcf.gz \\\n  | bcftools norm -f $REF -m -any -Oz -o t.snv.vcf.gz || { echo 'FAIL: truth norm'; exit 1; }\nbcftools index -f t.snv.vcf.gz\nbcftools view -H t.snv.vcf.gz | awk '{print $1\"\\t\"$2}' > pos.tsv\nNTRUTH=$(wc -l < pos.tsv)\n# Genotype ONLY at the truth sites: recall of known variants is a check on placement, not a\n# calling benchmark -- looking only where the answer is cannot measure precision.\nT0=$(date +%s)\nbcftools mpileup -f $REF -T pos.tsv -q 20 -Ou hifi.sorted.bam 2> mp.log \\\n  | bcftools call -m -Oz -o q.vcf.gz || { tail mp.log; echo 'FAIL: mpileup/call'; exit 1; }\nT1=$(date +%s)\nbcftools index -f q.vcf.gz\nbcftools view -v snps -i 'GT=\"alt\"' -Ou q.vcf.gz | bcftools norm -f $REF -m -any -Oz -o q.snv.vcf.gz\nbcftools index -f q.snv.vcf.gz\nrm -rf is; bcftools isec -p is q.snv.vcf.gz t.snv.vcf.gz || { echo 'FAIL: isec'; exit 1; }\nTP=$(grep -vc '^#' is/0002.vcf); FN=$(grep -vc '^#' is/0001.vcf)\nREC=$(awk -v tp=\"$TP\" -v fn=\"$FN\" 'BEGIN{printf \"%.5f\", tp/(tp+fn)}')\n{\n  echo \"mpileup_wall_s      $(( T1 - T0 ))\"\n  echo \"truth_snv_sites     $NTRUTH\"\n  echo \"recovered (TP)      $TP\"\n  echo \"missed (FN)         $FN\"\n  echo \"truth_snv_recall    $REC  want >=0.95\"\n} > truth-support.txt\ncat truth-support.txt\nawk -v v=\"$REC\" 'BEGIN{exit !(v>=0.95)}' || { echo 'FAIL: recall'; exit 1; }\necho 'TRUTH SUPPORT CHECK PASSED'\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz.tbi",
+      "destination": "/tmp/truth.chr20.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/hifi.sorted.bam",
+      "destination": "/tmp/hifi.sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/hifi.sorted.bam.bai",
+      "destination": "/tmp/hifi.sorted.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/truth-support.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/truth-support.txt"
+    },
+    {
+      "source": "/tmp/mp.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/mpileup.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

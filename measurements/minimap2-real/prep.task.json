@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-minimap2real-prep",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho '4e6f52cc5ec41c950015b509c462a59b956018661d188d1ffda7b819137b176b  prep.sh' | sha256sum -c || { echo 'FAIL: prep.sh does not match its pin'; exit 1; }\nbash prep.sh > prep.log 2>&1\nRC=$?\ncat prep.log\ntest \"$RC\" = 0 || { echo 'FAIL: prep failed'; exit 1; }\ngrep -q 'PREP OK' prep.log || { echo 'FAIL: no completion sentinel'; exit 1; }\nsha256sum truth.chr20.vcf.gz truth.chr20.bed >> prep-pins.sha256\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/hifi.chr20.fq.gz",
+      "destination": "/tmp/hifi.chr20.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.vcf.gz",
+      "destination": "/tmp/truth.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/truth.chr20.bed",
+      "destination": "/tmp/truth.chr20.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/GRCh38_no_alt_analysis_set.fa",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "/tmp/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "/tmp/pbmm2.chr20.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/pbmm2.chr20.tsv"
+    },
+    {
+      "source": "/tmp/prep-pins.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep-pins.sha256"
+    },
+    {
+      "source": "/tmp/prep.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

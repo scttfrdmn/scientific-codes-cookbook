@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-minimap2real-sort",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nT0=$(date +%s)\nsamtools sort -@ 8 -m 1G -T /tmp/st -o hifi.sorted.bam aln.sam 2> sort.log || { cat sort.log; echo 'FAIL: sort'; exit 1; }\nT1=$(date +%s)\nsamtools index -@ 8 hifi.sorted.bam || { echo 'FAIL: index'; exit 1; }\nMAGIC=$(od -An -tx1 -N4 hifi.sorted.bam | tr -d ' \\n')\nQC=0; samtools quickcheck -v hifi.sorted.bam && QC=1\nNSAM=$(grep -vc '^@' aln.sam)\nNBAM=$(samtools view -c -@ 8 hifi.sorted.bam)\nsamtools coverage -r chr20 hifi.sorted.bam > cov.txt\nDEPTH=$(awk 'NR==2{print $7}' cov.txt); COVPCT=$(awk 'NR==2{print $6}' cov.txt)\n{\n  echo \"sort_wall_s     $(( T1 - T0 ))\"\n  echo \"bam_magic       $MAGIC  want 1f8b0804\"\n  echo \"quickcheck      $QC  want 1\"\n  echo \"sam_records     $NSAM\"\n  echo \"bam_records     $NBAM  want == sam_records\"\n  echo \"chr20_depth     $DEPTH  want >=25\"\n  echo \"chr20_covered   $COVPCT  want >=98\"\n  echo \"bam_bytes       $(stat -c%s hifi.sorted.bam)\"\n} > sort-check.txt\ncat sort-check.txt cov.txt\ntest \"$MAGIC\" = 1f8b0804 && test \"$QC\" = 1 && test \"$NSAM\" = \"$NBAM\" || { echo 'FAIL: sort check'; exit 1; }\nawk -v d=\"$DEPTH\" -v c=\"$COVPCT\" 'BEGIN{exit !(d>=25 && c>=98)}' || { echo 'FAIL: chr20 depth/coverage'; exit 1; }\necho 'SORT CHECK PASSED'\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/chr20.sam",
+      "destination": "/tmp/aln.sam"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/hifi.sorted.bam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/hifi.sorted.bam"
+    },
+    {
+      "source": "/tmp/hifi.sorted.bam.bai",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/hifi.sorted.bam.bai"
+    },
+    {
+      "source": "/tmp/sort-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/sort-check.txt"
+    },
+    {
+      "source": "/tmp/sort.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/genome/sort.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

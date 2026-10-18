@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-minimap2real-align",
+  "container": "quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho '== staged bytes must match their pins =='\ngrep -E 'align.sh|no_alt_analysis_set.fa$|pbmm2|hifi' pins.sha256 > pins.sel\nsha256sum -c pins.sel || { echo 'FAIL: a staged input does not match its pin'; exit 1; }\nT0=$(date +%s)\nbash align.sh > run.log 2>&1\nRC=$?\necho \"align.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncat run.log\ntest \"$RC\" = 0 || { echo 'FAIL: the workload failed'; exit 1; }\ngrep -q 'MINIMAP2 REAL OK' run.log || { echo 'FAIL: no completion sentinel'; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/hifi.chr20.fq.gz",
+      "destination": "/tmp/hifi.chr20.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/pbmm2.chr20.tsv",
+      "destination": "/tmp/pbmm2.chr20.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/align.sh",
+      "destination": "/tmp/align.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/aln.sam",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/aln.sam"
+    },
+    {
+      "source": "/tmp/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/results.tsv"
+    },
+    {
+      "source": "/tmp/run.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/run.log"
+    },
+    {
+      "source": "/tmp/minimap2.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/minimap2.log"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/cpu.txt"
+    },
+    {
+      "source": "/tmp/samp.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/samp.tsv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}

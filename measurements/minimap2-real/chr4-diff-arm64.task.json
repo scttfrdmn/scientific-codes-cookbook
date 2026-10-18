@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-minimap2real-chr4diff",
+  "container": "quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho '2a57b2effa8e4655f71cbbab843dfad12f878824aad857ce9c4e4f0097e5ad78  chr4-diff.sh' | sha256sum -c || { echo 'FAIL: chr4-diff.sh does not match its pin'; exit 1; }\ngrep -E 'wg/chr4.fq.gz' wg-pins.sha256 > p.sel; sha256sum -c p.sel ||{ echo 'FAIL: chr4.fq.gz pin'; exit 1; }\nbash chr4-diff.sh > diag.log 2>&1\nRC=$?\ncat diag.log\ntest \"$RC\" = 0 && grep -q 'DIAG OK' diag.log || { echo 'FAIL: diag'; exit 1; }\ntouch diff.txt\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/wg/chr4.fq.gz",
+      "destination": "/tmp/wg/chr4.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/wg-pins.sha256",
+      "destination": "/tmp/wg-pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/chr4-diff.sh",
+      "destination": "/tmp/chr4-diff.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/chr4.nosq.sam.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/chr4.arm64.nosq.sam.gz"
+    },
+    {
+      "source": "/tmp/diag.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/minimap2-real/chr4diff/diag.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

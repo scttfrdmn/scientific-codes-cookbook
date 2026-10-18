@@ -18,8 +18,6 @@ last_verified: 2026-10-13
 
 Aligns 2.16 Gbp of NA12878 HiFi reads to chr20 on Graviton in 4½ minutes, then verifies the placement recovers 99.96% of GIAB's known SNVs. For anyone aligning long reads.
 
-> **Long reads are cheap to align.** 2.16 Gbp at 7.8 Mbp/s for $0.064 — the whole four-task path, prep to truth check, costs **$0.10**.
-
 ## Run it
 
 ```bash
@@ -32,14 +30,17 @@ minimap2 -ax map-hifi -t 16 --MD chr20.fa hifi.chr20.fq.gz > aln.sam
 
 ## What it costs
 
-| step | tool | wall | box | $ |
-|---|---|---|---|---|
-| prep — chr20 reads out of the GIAB BAM | samtools | 209 s | `m8g.2xlarge` | 0.0208 |
-| **align 2.16 Gbp** | **minimap2** | **276 s** | `c8g.4xlarge` | **0.0640** |
-| sort + index | samtools | 20 s | `m8g.2xlarge` | 0.0090 |
-| truth-support check | bcftools | 17 s | `m8g.2xlarge` | 0.0074 |
+The chr20 path is prep 209 s on `m8g.2xlarge` ($0.021), **align 276 s on `c8g.4xlarge` ($0.064, 7.8 Mbp/s on 16 Graviton4 cores)**, then sort 20 s and truth check 17 s ($0.016): **$0.10** for the four tasks. The short-read recipe spends [$0.15 on 4.83 Gbp](../bwa-samtools/README.md). Per base the two are within 2×, so alignment is not the expensive part of a long-read pipeline.
 
-**7.8 Mbp/s on 16 Graviton4 cores.** For scale, the short-read recipe spends [$0.15 on 4.83 Gbp](../bwa-samtools/README.md) — per base the two are within 2×, so alignment is not the expensive part of a long-read pipeline.
+## Which box — [measured](../../measurements/minimap2-real/README.md) (the whole 30× genome, 90.5 Gbp vs all of GRCh38, 32 threads)
+
+| chip | instance | align wall | $/hr | **compute $/result** | billed $/result |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.8xlarge` | 2,618 s | 1.8851 | 1.388 | **2.095** |
+| Xeon 6975P-C | `r8i.8xlarge` | 2,880 s | 2.2227 | 1.802 | 3.119 |
+| **EPYC 9R45** | `r8a.8xlarge` | **1,774 s** | 2.5562 | **1.280** | 2.532 |
+
+**For the alignment itself, take AMD:** it is 1.48× faster than Graviton4 and 8% cheaper per genome. The whole-genome rate is 35 Mbp/s on Graviton4 and varies 3× between chromosomes, so the chr20 timing above does not scale linearly. Choose `r8` for its RAM. minimap2 itself needs 26 GB, but staging the 75 GiB of reads needs 95 GiB of tmpfs. Every identity held on all three chips, and recall stayed at 0.99960. All alignments match apart from 9 of 11.1M records, which differ by one MAPQ or DP-score unit in the chr4 centromere.
 
 ## Make it yours
 
@@ -47,7 +48,7 @@ minimap2 -ax map-hifi -t 16 --MD chr20.fa hifi.chr20.fq.gz > aln.sam
 |---|---|---|
 | PacBio HiFi, `-ax map-hifi` | ONT: `-ax map-ont`; older CLR: `-ax map-pb` | the preset is the whole configuration — mismatching it to the chemistry is the most common long-read error, and it degrades quietly. |
 | chr20 at 33× | your reads + reference | minimap2 indexes on the fly; no separate index step and no index to stage. |
-| `-t 16` | your core count | minimap2 threads well; the data path, not the chip, is usually the limit. |
+| `-t 16` | your core count | minimap2 threads well: at 32 threads on the whole genome it kept 67–74% of them busy. The chip moved the wall 1.6× (above). |
 
 **Leave the workload** — a real HiFi library at production depth with a published truth set to check placement against. **Scale it** to a whole genome by swapping the reference; there is no index build to budget for, unlike [bwa-mem2](../bwa-mem2/README.md).
 

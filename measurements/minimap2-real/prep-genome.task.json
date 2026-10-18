@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-minimap2real-prepgenome",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho 'ff807f3ecc446d61346a2b0dd629c6eb6673c316b718d3d45238e015fcdc8f97  prep-genome.sh' | sha256sum -c || { echo 'FAIL: prep-genome.sh does not match its pin'; exit 1; }\necho '5874ca5098bb98b88d3c9e62ea0b728681ee0d4446ca43977dea3b2a178c2913  prep-chunk.sh' | sha256sum -c || { echo 'FAIL: prep-chunk.sh does not match its pin'; exit 1; }\nbash prep-genome.sh > prep-genome.log 2>&1\nRC=$?\ncat prep-genome.log\ntest \"$RC\" = 0 || { echo 'FAIL: prep failed'; exit 1; }\ngrep -q 'PREP GENOME OK' prep-genome.log || { echo 'FAIL: no completion sentinel'; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/pbmm2.chr20.tsv",
+      "destination": "/tmp/pbmm2.chr20.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2/hifi.chr20.fq.gz",
+      "destination": "/tmp/hifi.chr20.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep-genome.sh",
+      "destination": "/tmp/prep-genome.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep-chunk.sh",
+      "destination": "/tmp/prep-chunk.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/wg/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/wg/"
+    },
+    {
+      "source": "/tmp/wg-pins.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/wg-pins.sha256"
+    },
+    {
+      "source": "/tmp/prep-genome.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep-genome.log"
+    },
+    {
+      "source": "/tmp/chunks.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/prep-chunks.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}
