@@ -1,0 +1,91 @@
+version	scanpy 1.12.4
+version	anndata 0.13.4
+version	numpy 2.5.4
+version	scipy 1.18.1
+version	scikit-learn 1.9.1
+version	leidenalg 0.12.0
+version	igraph 1.0.0
+version	umap-learn 0.5.12
+version	pynndescent 0.6.0
+version	numba 0.68.0
+blas	openblas 0.3.34 neoversev2 threads=8
+blas	openmp None None threads=8
+load_s	8.2
+raw	161764 cells x 20525 genes, 353548607 non-zero
+/opt/conda/lib/python3.14/functools.py:982: UserWarning: zero-centering a sparse array/matrix densifies it.
+  return dispatch(args[0].__class__)(*args, **kw)
+warmup_s	16.4
+/opt/conda/lib/python3.14/functools.py:982: UserWarning: zero-centering a sparse array/matrix densifies it.
+  return dispatch(args[0].__class__)(*args, **kw)
+/opt/conda/lib/python3.14/site-packages/legacy_api_wrap/__init__.py:88: FutureWarning: The function louvain is deprecated and will be removed in the future. Use :func:`scanpy.tl.leiden` instead.
+  return fn(*args_all, **kw)
+rung	cells=20220	after_qc=20220	leiden_clusters=23	louvain_clusters=19	peak_rss_gib=5.84	qc=0.94	normalize=0.03	log1p=0.17	hvg=0.47	scale=0.09	pca=1.6	neighbors=16.93	leiden=0.49	louvain=1.19	umap=10.32	rank_genes_groups=10.67	total=42.91
+/opt/conda/lib/python3.14/functools.py:982: UserWarning: zero-centering a sparse array/matrix densifies it.
+  return dispatch(args[0].__class__)(*args, **kw)
+/opt/conda/lib/python3.14/site-packages/legacy_api_wrap/__init__.py:88: FutureWarning: The function louvain is deprecated and will be removed in the future. Use :func:`scanpy.tl.leiden` instead.
+  return fn(*args_all, **kw)
+rung	cells=40441	after_qc=40441	leiden_clusters=24	louvain_clusters=21	peak_rss_gib=9.44	qc=1.84	normalize=0.06	log1p=0.33	hvg=0.9	scale=0.18	pca=2.79	neighbors=1.28	leiden=1.08	louvain=2.28	umap=21.23	rank_genes_groups=17.29	total=49.26
+/opt/conda/lib/python3.14/functools.py:982: UserWarning: zero-centering a sparse array/matrix densifies it.
+  return dispatch(args[0].__class__)(*args, **kw)
+/opt/conda/lib/python3.14/site-packages/legacy_api_wrap/__init__.py:88: FutureWarning: The function louvain is deprecated and will be removed in the future. Use :func:`scanpy.tl.leiden` instead.
+  return fn(*args_all, **kw)
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:609: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:612: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:622: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:633: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:607: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "names"] = self.var_names[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:609: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:612: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:622: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:633: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+rung	cells=80882	after_qc=80882	leiden_clusters=27	louvain_clusters=25	peak_rss_gib=15.16	qc=4.19	normalize=0.22	log1p=0.75	hvg=1.96	scale=0.35	pca=4.97	neighbors=1.64	leiden=2.49	louvain=5.59	umap=43.89	rank_genes_groups=47.01	total=113.06
+after_qc	161764 cells x 20525 genes
+libsize	total 1293147637 counts over 161764 cells
+libsize_vs_published_nCount_RNA	3512 of 161764 cells equal, max published-ours 231
+norm_rowsum	max |sum-1e4|/1e4 = 8.152e-08 over 161764 cells
+norm_pattern	identical
+norm_recover	max rel error recovering raw counts = 1.162e-07 over 353548607 values
+log1p_rowsum	max |sum(expm1)-1e4|/1e4 = 3.009e-07
+/opt/conda/lib/python3.14/functools.py:982: UserWarning: zero-centering a sparse array/matrix densifies it.
+  return dispatch(args[0].__class__)(*args, **kw)
+/opt/conda/lib/python3.14/site-packages/legacy_api_wrap/__init__.py:88: FutureWarning: The function louvain is deprecated and will be removed in the future. Use :func:`scanpy.tl.leiden` instead.
+  return fn(*args_all, **kw)
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:609: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:612: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:622: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:633: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:607: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "names"] = self.var_names[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:609: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "scores"] = scores[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:612: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals"] = pvals[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:622: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "pvals_adj"] = pvals_adj[global_indices]
+/opt/conda/lib/python3.14/site-packages/scanpy/tools/_rank_genes_groups.py:633: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  self.stats[group_name, "logfoldchanges"] = np.log2(
+rung	cells=161764	after_qc=161764	leiden_clusters=27	louvain_clusters=27	peak_rss_gib=24.59	qc=7.16	normalize=0.23	log1p=1.34	hvg=3.55	scale=0.71	pca=9.99	neighbors=2.68	leiden=5.79	louvain=13.68	umap=89.88	rank_genes_groups=140.41	total=275.41
+marker	CD3D  peaks in cluster 16  (2.172 vs next 2.001); cluster is 70.6% CD8 T
+marker	LYZ   peaks in cluster 0   (5.151 vs next 5.062); cluster is 98.9% Mono
+marker	MS4A1 peaks in cluster 18  (2.510 vs next 2.434); cluster is 100.0% B
+marker	NKG7  peaks in cluster 13  (4.092 vs next 4.016); cluster is 99.7% NK
+markers_distinct	yes (16,0,18,13)
+lineage_purity_l1	0.9465
+ari_leiden_vs_celltype_l1	0.3958
+ari_leiden_vs_celltype_l2	0.5222
+ari_leiden_vs_louvain	0.8107
+peak_rss_gib	24.59
+PIPELINE OK

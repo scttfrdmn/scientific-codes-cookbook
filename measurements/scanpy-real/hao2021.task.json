@@ -1,0 +1,35 @@
+{
+  "task_id": "cookbook-scanpy-real-hao2021",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl NUMBA_CACHE_DIR=/tmp/numba\ncd /tmp\n: > pipeline-r1.log; : > pipeline-r2.log; : > compare.log; : > steps.csv\necho \"== the staged dataset and scripts must match their pins ==\"\nprintf 'c55594bd58d86624f9d55626f841cb97aabf401e2ffed918933df214c693aa29  ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad\\n722c62270388f6783e0ac3affdf5da38d71ba3ddcb4d3323cf63fe0fad75e17c  pipeline.py\\n1c1ea5b926541500bba9a2aa7ddc9d65a1cb7dfc41343fbba060be55c28ebfc2  compare.py\\n41c3904629b6cd74db955713c0cac4c3196ee803c6fe805917cf7344c347c5f7  run.sh\\n' > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\n. ./run.sh\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy-real/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad", "destination": "/tmp/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy-real/pipeline.py", "destination": "/tmp/pipeline.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy-real/compare.py", "destination": "/tmp/compare.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/scanpy-real/run.sh", "destination": "/tmp/run.sh"}
+  ],
+  "outputs": [
+    {"source": "/tmp/pipeline-r1.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy-real/r1/pipeline-r1.log"},
+    {"source": "/tmp/pipeline-r2.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy-real/r1/pipeline-r2.log"},
+    {"source": "/tmp/compare.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy-real/r1/compare.log"},
+    {"source": "/tmp/steps.csv", "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy-real/r1/steps.csv"},
+    {"source": "/tmp/r1/", "destination": "s3://${COOKBOOK_BUCKET}/runs/scanpy-real/r1/result/"}
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}
