@@ -1,0 +1,102 @@
+{
+  "task_id": "cookbook-bcftools-real",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH THREADS=4\ncd /tmp\necho '== staged bytes must match their pins =='\nsha256sum -c pins.sha256 || { echo 'FAIL: a staged input does not match its pin'; exit 1; }\nlscpu > cpu.txt 2>/dev/null || cat /proc/cpuinfo > cpu.txt\nT0=$(date +%s)\nbash run.sh > run.log 2>&1\nRC=$?\necho \"run.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncat run.log\ntest \"$RC\" = 0 || { echo 'FAIL: the workload failed'; exit 1; }\ngrep -q 'BCFTOOLS REAL OK' run.log || { echo 'FAIL: no completion sentinel'; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bcftools-real/hs37d5.chr20-22.fa",
+      "destination": "/tmp/hs37d5.chr20-22.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bcftools-real/integrated_call_samples_v3.20130502.ALL.panel",
+      "destination": "/tmp/integrated_call_samples_v3.20130502.ALL.panel"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bcftools-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bcftools-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/run.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/run.log"
+    },
+    {
+      "source": "/tmp/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/results.tsv"
+    },
+    {
+      "source": "/tmp/checks.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/checks.tsv"
+    },
+    {
+      "source": "/tmp/timings.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/timings.tsv"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/cpu.txt"
+    },
+    {
+      "source": "/tmp/stats.norm.chr20.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/stats.norm.chr20.txt"
+    },
+    {
+      "source": "/tmp/stats.norm.chr21.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/stats.norm.chr21.txt"
+    },
+    {
+      "source": "/tmp/stats.norm.chr22.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/stats.norm.chr22.txt"
+    },
+    {
+      "source": "/tmp/all.norm.vcf.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/all.norm.vcf.gz"
+    },
+    {
+      "source": "/tmp/all.norm.vcf.gz.csi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/all.norm.vcf.gz.csi"
+    },
+    {
+      "source": "/tmp/all.common.vcf.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/all.common.vcf.gz"
+    },
+    {
+      "source": "/tmp/all.common.vcf.gz.csi",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bcftools-real/r1/all.common.vcf.gz.csi"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "120m",
+    "on_complete": "terminate",
+    "cost_limit": 0.60
+  }
+}

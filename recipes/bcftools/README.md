@@ -48,6 +48,7 @@ bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
 ## Shape, size, cost
 
 One task on `c8g.xlarge`: **228 s of calling inside a 285 s billed window** — 80% compute, **$0.0126**. Cheap enough that the data path, not the chip, is what you would optimise next.
+**Processing a cohort VCF, [measured](../../measurements/bcftools-real/README.md):** 1000 Genomes chr20–22, all 2,504 samples, through `norm -m -any -f`, `+fill-tags`, `stats`, `view -i`, `annotate -a`, `concat` and `merge` — **3,750 s, $0.3444 on `c8g.2xlarge`** against 3,553 s, $0.3796 on `c8i.2xlarge`, with identical outputs. Peak RSS is 16–18 MiB, so size the box by `/tmp` staging, not RAM.
 
 <details>
 <summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>

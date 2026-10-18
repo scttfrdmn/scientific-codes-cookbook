@@ -1,0 +1,308 @@
+== versions ==
+bcftools 1.24
+Using htslib 1.24
+x86_64
+arch = x86_64
+bcftools_version = bcftools 1.24
+htslib_version = Using htslib 1.24
+threads = 4
+================ chr20 ================
+TIME census_in_chr20 62s
+chr20_records_in = 1812841
+chr20_alt_alleles_in = 1822268
+chr20_multiallelic_in = 8972
+chr20_sum_AC_in = 317433531
+CHECK [ok] chr20 every input record has AN=5008 (2504 diploid samples): 0 vs 0
+TIME stats_in_chr20 9s
+CHECK [ok] chr20 stats records == text census (input): 1812841 vs 1812841
+CHECK [ok] chr20 stats multiallelic sites == text census (input): 8972 vs 8972
+TIME norm_chr20 102s
+Warning: the tag INFO/SVLEN must be defined as Number=A in order for the field to be split
+         (the command `bcftools reheader` can be used to fix the header)
+Lines   total/split/joined/realigned/mismatch_removed/dup_removed/skipped:	1812841/8972/0/2403/0/0/0
+CHECK [ok] chr20 bcftools norm exit: 0 vs 0
+chr20_norm_lines_total_split_joined_realigned_removed_skipped = 1812841/8972/0/2403/0/0/0
+CHECK [ok] chr20 norm read every input record: 1812841 vs 1812841
+CHECK [ok] chr20 norm split exactly the multiallelic records: 8972 vs 8972
+CHECK [ok] chr20 norm removed (REF mismatch, duplicate) and skipped nothing: 0/0/0 vs 0/0/0
+chr20_norm_realigned = 2403
+TIME census_norm_chr20 62s
+chr20_records_norm = 1822268
+chr20_norm_snp_mnp_indel_other = 1751797/0/69134/1337
+CHECK [ok] chr20 records out == ALT alleles in (one record per allele): 1822268 vs 1822268
+CHECK [ok] chr20 every output record is biallelic: 1822268/0 vs 1822268/0
+CHECK [ok] chr20 sum of AC conserved through the split: 317433531 vs 317433531
+CHECK [ok] chr20 AN still 5008 on every split record: 0 vs 0
+CHECK [ok] chr20 index count == records: 1822268 vs 1822268
+TIME filltags_chr20 379s
+CHECK [ok] chr20 fill-tags | query exit: 0 0 vs 0 0
+CHECK [ok] chr20 recomputed rows / published rows == records: 1822268/1822268 vs 1822268/1822268
+chr20_superpop_AF_max_abs_diff = 5e-05
+CHECK [ok] chr20 AC recomputed from GT == published AC, every split record: 0 vs 0
+CHECK [ok] chr20 AN recomputed from GT == published AN, every split record: 0 vs 0
+CHECK [ok] chr20 every super-population AF is a number on both sides: 0 vs 0
+CHECK [ok] chr20 super-population AF == published to its 4-decimal print precision (<=5e-5): yes vs yes
+TIME stats_norm_chr20 10s
+CHECK [ok] chr20 stats records == census: 1822268 vs 1822268
+CHECK [ok] chr20 stats SNPs == census: 1751797 vs 1751797
+CHECK [ok] chr20 stats MNPs == census: 0 vs 0
+chr20_stats_indels_others = 69112/1359
+CHECK [ok] chr20 stats indels+others == census indels+others: 70471 vs 70471
+chr20_other_nonsymbolic = 22
+CHECK [ok] chr20 the indel/other boundary is exactly the non-symbolic 'other' records: 22 vs 22
+20	922920	A	TT
+20	2369274	C	AA
+20	6486972	G	AAAA
+20	8208842	ATAATA	T
+20	9032558	T	AA
+CHECK [ok] chr20 stats multiallelic sites after split: 0 vs 0
+TIME filter_chr20 60s
+chr20_common_snps = 271047
+CHECK [ok] chr20 filter count == independent count of SNP && AF>=0.01: 271047 vs 271047
+TIME annotate_chr20 247s
+chr20_records_with_id = 1822268
+CHECK [ok] chr20 (control) the strip removed every ID, and the original had them: 0/some vs 0/some
+CHECK [ok] chr20 (control) the strip removed the AF header lines: 0 vs 0
+CHECK [ok] chr20 annotate strip+restore from sites file is lossless: d34861115602ae904844cbff6484e9fa vs d34861115602ae904844cbff6484e9fa
+================ chr21 ================
+TIME census_in_chr21 38s
+chr21_records_in = 1105538
+chr21_alt_alleles_in = 1112228
+chr21_multiallelic_in = 6374
+chr21_sum_AC_in = 231209651
+CHECK [ok] chr21 every input record has AN=5008 (2504 diploid samples): 0 vs 0
+TIME stats_in_chr21 5s
+CHECK [ok] chr21 stats records == text census (input): 1105538 vs 1105538
+CHECK [ok] chr21 stats multiallelic sites == text census (input): 6374 vs 6374
+TIME norm_chr21 63s
+Warning: the tag INFO/SVLEN must be defined as Number=A in order for the field to be split
+         (the command `bcftools reheader` can be used to fix the header)
+Lines   total/split/joined/realigned/mismatch_removed/dup_removed/skipped:	1105538/6374/0/1659/0/0/0
+CHECK [ok] chr21 bcftools norm exit: 0 vs 0
+chr21_norm_lines_total_split_joined_realigned_removed_skipped = 1105538/6374/0/1659/0/0/0
+CHECK [ok] chr21 norm read every input record: 1105538 vs 1105538
+CHECK [ok] chr21 norm split exactly the multiallelic records: 6374 vs 6374
+CHECK [ok] chr21 norm removed (REF mismatch, duplicate) and skipped nothing: 0/0/0 vs 0/0/0
+chr21_norm_realigned = 1659
+TIME census_norm_chr21 38s
+chr21_records_norm = 1112228
+chr21_norm_snp_mnp_indel_other = 1063228/0/48213/787
+CHECK [ok] chr21 records out == ALT alleles in (one record per allele): 1112228 vs 1112228
+CHECK [ok] chr21 every output record is biallelic: 1112228/0 vs 1112228/0
+CHECK [ok] chr21 sum of AC conserved through the split: 231209651 vs 231209651
+CHECK [ok] chr21 AN still 5008 on every split record: 0 vs 0
+CHECK [ok] chr21 index count == records: 1112228 vs 1112228
+TIME filltags_chr21 231s
+CHECK [ok] chr21 fill-tags | query exit: 0 0 vs 0 0
+CHECK [ok] chr21 recomputed rows / published rows == records: 1112228/1112228 vs 1112228/1112228
+chr21_superpop_AF_max_abs_diff = 5e-05
+CHECK [ok] chr21 AC recomputed from GT == published AC, every split record: 0 vs 0
+CHECK [ok] chr21 AN recomputed from GT == published AN, every split record: 0 vs 0
+CHECK [ok] chr21 every super-population AF is a number on both sides: 0 vs 0
+CHECK [ok] chr21 super-population AF == published to its 4-decimal print precision (<=5e-5): yes vs yes
+TIME stats_norm_chr21 6s
+CHECK [ok] chr21 stats records == census: 1112228 vs 1112228
+CHECK [ok] chr21 stats SNPs == census: 1063228 vs 1063228
+CHECK [ok] chr21 stats MNPs == census: 0 vs 0
+chr21_stats_indels_others = 48194/806
+CHECK [ok] chr21 stats indels+others == census indels+others: 49000 vs 49000
+chr21_other_nonsymbolic = 19
+CHECK [ok] chr21 the indel/other boundary is exactly the non-symbolic 'other' records: 19 vs 19
+21	17047184	T	AAA
+21	17562906	A	GT
+21	21061537	T	GTG
+21	22089290	GC	A
+21	23128006	TTG	A
+CHECK [ok] chr21 stats multiallelic sites after split: 0 vs 0
+TIME filter_chr21 37s
+chr21_common_snps = 174989
+CHECK [ok] chr21 filter count == independent count of SNP && AF>=0.01: 174989 vs 174989
+TIME annotate_chr21 152s
+chr21_records_with_id = 1112228
+CHECK [ok] chr21 (control) the strip removed every ID, and the original had them: 0/some vs 0/some
+CHECK [ok] chr21 (control) the strip removed the AF header lines: 0 vs 0
+CHECK [ok] chr21 annotate strip+restore from sites file is lossless: 11feecdb1f7c7eed100b4628610a494c vs 11feecdb1f7c7eed100b4628610a494c
+================ chr22 ================
+TIME census_in_chr22 37s
+chr22_records_in = 1103547
+chr22_alt_alleles_in = 1110240
+chr22_multiallelic_in = 6348
+chr22_sum_AC_in = 204816071
+CHECK [ok] chr22 every input record has AN=5008 (2504 diploid samples): 0 vs 0
+TIME stats_in_chr22 6s
+CHECK [ok] chr22 stats records == text census (input): 1103547 vs 1103547
+CHECK [ok] chr22 stats multiallelic sites == text census (input): 6348 vs 6348
+TIME norm_chr22 63s
+Warning: the tag INFO/SVLEN must be defined as Number=A in order for the field to be split
+         (the command `bcftools reheader` can be used to fix the header)
+Lines   total/split/joined/realigned/mismatch_removed/dup_removed/skipped:	1103547/6348/0/1520/0/0/0
+CHECK [ok] chr22 bcftools norm exit: 0 vs 0
+chr22_norm_lines_total_split_joined_realigned_removed_skipped = 1103547/6348/0/1520/0/0/0
+CHECK [ok] chr22 norm read every input record: 1103547 vs 1103547
+CHECK [ok] chr22 norm split exactly the multiallelic records: 6348 vs 6348
+CHECK [ok] chr22 norm removed (REF mismatch, duplicate) and skipped nothing: 0/0/0 vs 0/0/0
+chr22_norm_realigned = 1520
+TIME census_norm_chr22 38s
+chr22_records_norm = 1110240
+chr22_norm_snp_mnp_indel_other = 1064502/0/44866/872
+CHECK [ok] chr22 records out == ALT alleles in (one record per allele): 1110240 vs 1110240
+CHECK [ok] chr22 every output record is biallelic: 1110240/0 vs 1110240/0
+CHECK [ok] chr22 sum of AC conserved through the split: 204816071 vs 204816071
+CHECK [ok] chr22 AN still 5008 on every split record: 0 vs 0
+CHECK [ok] chr22 index count == records: 1110240 vs 1110240
+TIME filltags_chr22 231s
+CHECK [ok] chr22 fill-tags | query exit: 0 0 vs 0 0
+CHECK [ok] chr22 recomputed rows / published rows == records: 1110240/1110240 vs 1110240/1110240
+chr22_superpop_AF_max_abs_diff = 5e-05
+CHECK [ok] chr22 AC recomputed from GT == published AC, every split record: 0 vs 0
+CHECK [ok] chr22 AN recomputed from GT == published AN, every split record: 0 vs 0
+CHECK [ok] chr22 every super-population AF is a number on both sides: 0 vs 0
+CHECK [ok] chr22 super-population AF == published to its 4-decimal print precision (<=5e-5): yes vs yes
+TIME stats_norm_chr22 7s
+CHECK [ok] chr22 stats records == census: 1110240 vs 1110240
+CHECK [ok] chr22 stats SNPs == census: 1064502 vs 1064502
+CHECK [ok] chr22 stats MNPs == census: 0 vs 0
+chr22_stats_indels_others = 44845/893
+CHECK [ok] chr22 stats indels+others == census indels+others: 45738 vs 45738
+chr22_other_nonsymbolic = 21
+CHECK [ok] chr22 the indel/other boundary is exactly the non-symbolic 'other' records: 21 vs 21
+22	18012276	C	AG
+22	18211021	T	AC
+22	19953176	CAAAACAACAA	T
+22	23821964	G	TT
+22	27124840	C	TTTATTTAT
+CHECK [ok] chr22 stats multiallelic sites after split: 0 vs 0
+TIME filter_chr22 38s
+chr22_common_snps = 174442
+CHECK [ok] chr22 filter count == independent count of SNP && AF>=0.01: 174442 vs 174442
+TIME annotate_chr22 150s
+chr22_records_with_id = 1110240
+CHECK [ok] chr22 (control) the strip removed every ID, and the original had them: 0/some vs 0/some
+CHECK [ok] chr22 (control) the strip removed the AF header lines: 0 vs 0
+CHECK [ok] chr22 annotate strip+restore from sites file is lossless: 84a6d5cee39de96610242d4c9f9f9a7c vs 84a6d5cee39de96610242d4c9f9f9a7c
+================ concat ================
+Checking the headers and starting positions of 3 files
+Concatenating norm.chr20.vcf.gz	100.014741 seconds
+Concatenating norm.chr21.vcf.gz	62.249761 seconds
+Concatenating norm.chr22.vcf.gz	61.148038 seconds
+TIME concat 224s
+CHECK [ok] concat exit: 0 vs 0
+all_records = 4044736
+CHECK [ok] concat records == sum of per-chromosome records: 4044736 vs 4044736
+CHECK [ok] chr20 concat -> region split round trip is byte-identical (records incl. all genotypes): eea6f74550b42d739224b63ca354aa98 vs eea6f74550b42d739224b63ca354aa98
+CHECK [ok] chr21 concat -> region split round trip is byte-identical (records incl. all genotypes): a5451897d3a9bc9687d593fc95195017 vs a5451897d3a9bc9687d593fc95195017
+CHECK [ok] chr22 concat -> region split round trip is byte-identical (records incl. all genotypes): 30f2bffe113aa09a3333e864f3ada30a vs 30f2bffe113aa09a3333e864f3ada30a
+TIME concat_roundtrip 581s
+Checking the headers and starting positions of 3 files
+Concatenating common.chr20.vcf.gz	56.996890 seconds
+Concatenating common.chr21.vcf.gz	37.629232 seconds
+Concatenating common.chr22.vcf.gz	36.438848 seconds
+all_common_snps = 620478
+================ merge (chr22) ================
+samples = 2504
+CHECK [ok] sample count: 2504 vs 2504
+TIME sample_split_chr22 102s
+TIME merge_chr22 94s
+CHECK [ok] merge exit: 0 vs 0
+TIME merge_check_chr22 237s
+CHECK [ok] merged samples == original order: a37908a93be7692c40321c961855ec9f vs a37908a93be7692c40321c961855ec9f
+CHECK [ok] merge records == original records: 1110240 vs 1110240
+CHECK [ok] sample split + merge reproduces every genotype of every record: 80d45bc82241754233deb5d96ed543ae vs 80d45bc82241754233deb5d96ed543ae
+peak_rss_kib = 18696
+checks_failed = 0
+== checks ==
+chr20 every input record has AN=5008 (2504 diploid samples)	0	0	ok
+chr20 stats records == text census (input)	1812841	1812841	ok
+chr20 stats multiallelic sites == text census (input)	8972	8972	ok
+chr20 bcftools norm exit	0	0	ok
+chr20 norm read every input record	1812841	1812841	ok
+chr20 norm split exactly the multiallelic records	8972	8972	ok
+chr20 norm removed (REF mismatch, duplicate) and skipped nothing	0/0/0	0/0/0	ok
+chr20 records out == ALT alleles in (one record per allele)	1822268	1822268	ok
+chr20 every output record is biallelic	1822268/0	1822268/0	ok
+chr20 sum of AC conserved through the split	317433531	317433531	ok
+chr20 AN still 5008 on every split record	0	0	ok
+chr20 index count == records	1822268	1822268	ok
+chr20 fill-tags | query exit	0 0	0 0	ok
+chr20 recomputed rows / published rows == records	1822268/1822268	1822268/1822268	ok
+chr20 AC recomputed from GT == published AC, every split record	0	0	ok
+chr20 AN recomputed from GT == published AN, every split record	0	0	ok
+chr20 every super-population AF is a number on both sides	0	0	ok
+chr20 super-population AF == published to its 4-decimal print precision (<=5e-5)	yes	yes	ok
+chr20 stats records == census	1822268	1822268	ok
+chr20 stats SNPs == census	1751797	1751797	ok
+chr20 stats MNPs == census	0	0	ok
+chr20 stats indels+others == census indels+others	70471	70471	ok
+chr20 the indel/other boundary is exactly the non-symbolic 'other' records	22	22	ok
+chr20 stats multiallelic sites after split	0	0	ok
+chr20 filter count == independent count of SNP && AF>=0.01	271047	271047	ok
+chr20 (control) the strip removed every ID, and the original had them	0/some	0/some	ok
+chr20 (control) the strip removed the AF header lines	0	0	ok
+chr20 annotate strip+restore from sites file is lossless	d34861115602ae904844cbff6484e9fa	d34861115602ae904844cbff6484e9fa	ok
+chr21 every input record has AN=5008 (2504 diploid samples)	0	0	ok
+chr21 stats records == text census (input)	1105538	1105538	ok
+chr21 stats multiallelic sites == text census (input)	6374	6374	ok
+chr21 bcftools norm exit	0	0	ok
+chr21 norm read every input record	1105538	1105538	ok
+chr21 norm split exactly the multiallelic records	6374	6374	ok
+chr21 norm removed (REF mismatch, duplicate) and skipped nothing	0/0/0	0/0/0	ok
+chr21 records out == ALT alleles in (one record per allele)	1112228	1112228	ok
+chr21 every output record is biallelic	1112228/0	1112228/0	ok
+chr21 sum of AC conserved through the split	231209651	231209651	ok
+chr21 AN still 5008 on every split record	0	0	ok
+chr21 index count == records	1112228	1112228	ok
+chr21 fill-tags | query exit	0 0	0 0	ok
+chr21 recomputed rows / published rows == records	1112228/1112228	1112228/1112228	ok
+chr21 AC recomputed from GT == published AC, every split record	0	0	ok
+chr21 AN recomputed from GT == published AN, every split record	0	0	ok
+chr21 every super-population AF is a number on both sides	0	0	ok
+chr21 super-population AF == published to its 4-decimal print precision (<=5e-5)	yes	yes	ok
+chr21 stats records == census	1112228	1112228	ok
+chr21 stats SNPs == census	1063228	1063228	ok
+chr21 stats MNPs == census	0	0	ok
+chr21 stats indels+others == census indels+others	49000	49000	ok
+chr21 the indel/other boundary is exactly the non-symbolic 'other' records	19	19	ok
+chr21 stats multiallelic sites after split	0	0	ok
+chr21 filter count == independent count of SNP && AF>=0.01	174989	174989	ok
+chr21 (control) the strip removed every ID, and the original had them	0/some	0/some	ok
+chr21 (control) the strip removed the AF header lines	0	0	ok
+chr21 annotate strip+restore from sites file is lossless	11feecdb1f7c7eed100b4628610a494c	11feecdb1f7c7eed100b4628610a494c	ok
+chr22 every input record has AN=5008 (2504 diploid samples)	0	0	ok
+chr22 stats records == text census (input)	1103547	1103547	ok
+chr22 stats multiallelic sites == text census (input)	6348	6348	ok
+chr22 bcftools norm exit	0	0	ok
+chr22 norm read every input record	1103547	1103547	ok
+chr22 norm split exactly the multiallelic records	6348	6348	ok
+chr22 norm removed (REF mismatch, duplicate) and skipped nothing	0/0/0	0/0/0	ok
+chr22 records out == ALT alleles in (one record per allele)	1110240	1110240	ok
+chr22 every output record is biallelic	1110240/0	1110240/0	ok
+chr22 sum of AC conserved through the split	204816071	204816071	ok
+chr22 AN still 5008 on every split record	0	0	ok
+chr22 index count == records	1110240	1110240	ok
+chr22 fill-tags | query exit	0 0	0 0	ok
+chr22 recomputed rows / published rows == records	1110240/1110240	1110240/1110240	ok
+chr22 AC recomputed from GT == published AC, every split record	0	0	ok
+chr22 AN recomputed from GT == published AN, every split record	0	0	ok
+chr22 every super-population AF is a number on both sides	0	0	ok
+chr22 super-population AF == published to its 4-decimal print precision (<=5e-5)	yes	yes	ok
+chr22 stats records == census	1110240	1110240	ok
+chr22 stats SNPs == census	1064502	1064502	ok
+chr22 stats MNPs == census	0	0	ok
+chr22 stats indels+others == census indels+others	45738	45738	ok
+chr22 the indel/other boundary is exactly the non-symbolic 'other' records	21	21	ok
+chr22 stats multiallelic sites after split	0	0	ok
+chr22 filter count == independent count of SNP && AF>=0.01	174442	174442	ok
+chr22 (control) the strip removed every ID, and the original had them	0/some	0/some	ok
+chr22 (control) the strip removed the AF header lines	0	0	ok
+chr22 annotate strip+restore from sites file is lossless	84a6d5cee39de96610242d4c9f9f9a7c	84a6d5cee39de96610242d4c9f9f9a7c	ok
+concat exit	0	0	ok
+concat records == sum of per-chromosome records	4044736	4044736	ok
+chr20 concat -> region split round trip is byte-identical (records incl. all genotypes)	eea6f74550b42d739224b63ca354aa98	eea6f74550b42d739224b63ca354aa98	ok
+chr21 concat -> region split round trip is byte-identical (records incl. all genotypes)	a5451897d3a9bc9687d593fc95195017	a5451897d3a9bc9687d593fc95195017	ok
+chr22 concat -> region split round trip is byte-identical (records incl. all genotypes)	30f2bffe113aa09a3333e864f3ada30a	30f2bffe113aa09a3333e864f3ada30a	ok
+sample count	2504	2504	ok
+merge exit	0	0	ok
+merged samples == original order	a37908a93be7692c40321c961855ec9f	a37908a93be7692c40321c961855ec9f	ok
+merge records == original records	1110240	1110240	ok
+sample split + merge reproduces every genotype of every record	80d45bc82241754233deb5d96ed543ae	80d45bc82241754233deb5d96ed543ae	ok
+BCFTOOLS REAL OK
