@@ -1,0 +1,43 @@
+== Graviton4 vs x86_64
+score.tsv: 28 of 31 observables identical
+  differs  cor_vs_blas_closed_form            max|diff| over all 15045 x 15045 1.443e-15 (assert <= 1e-12) ok
+                                              max|diff| over all 15045 x 15045 2.665e-15 (assert <= 1e-12) ok
+  differs  adjacency_signed                   max|A - ((1+cor)/2)^12| over all, cor through BLAS 1.066e-14 (assert <= 1e-12) ok
+                                              max|A - ((1+cor)/2)^12| over all, cor through BLAS 1.599e-14 (assert <= 1e-12) ok
+  differs  cor_vs_stats_cor_200_rows          max|diff| over 200 x 15045 5.551e-16 (assert <= 1e-12) ok
+                                              max|diff| over 200 x 15045 8.882e-16 (assert <= 1e-12) ok
+modules.tsv module        0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv blocked_5000  0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv control       0 of 15045 genes assigned differently; ARI nan
+kWithin: 7421 of 15045 bit-identical; max rel diff 2.990e-15
+eigengenes: 26 MEs x 1083 samples; max|diff| 1.665e-15
+== Graviton4 vs amd
+score.tsv: 28 of 31 observables identical
+  differs  cor_vs_blas_closed_form            max|diff| over all 15045 x 15045 1.443e-15 (assert <= 1e-12) ok
+                                              max|diff| over all 15045 x 15045 2.665e-15 (assert <= 1e-12) ok
+  differs  adjacency_signed                   max|A - ((1+cor)/2)^12| over all, cor through BLAS 1.066e-14 (assert <= 1e-12) ok
+                                              max|A - ((1+cor)/2)^12| over all, cor through BLAS 1.599e-14 (assert <= 1e-12) ok
+  differs  cor_vs_stats_cor_200_rows          max|diff| over 200 x 15045 5.551e-16 (assert <= 1e-12) ok
+                                              max|diff| over 200 x 15045 8.882e-16 (assert <= 1e-12) ok
+modules.tsv module        0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv blocked_5000  0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv control       0 of 15045 genes assigned differently; ARI nan
+kWithin: 7421 of 15045 bit-identical; max rel diff 2.990e-15
+eigengenes: 26 MEs x 1083 samples; max|diff| 1.665e-15
+== Intel vs AMD (the same x86 image)
+score.tsv: 31 of 31 observables identical
+modules.tsv module        0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv blocked_5000  0 of 15045 genes assigned differently; ARI 1.000000
+modules.tsv control       0 of 15045 genes assigned differently; ARI nan
+kWithin: 15045 of 15045 bit-identical; max rel diff 0.000e+00
+eigengenes: 26 MEs x 1083 samples; max|diff| 0.000e+00
+== sha256 of the outputs
+1a8be1e6f864a7097058225a31c1f18c3daa30d6c0f45286bfd003ff86bb71c4  amd/modules.tsv
+cd89a80ec81678c3fe8e9fd3c75e33a7f0082fff469e94839e1bef10b294ccf3  arm64/modules.tsv
+1a8be1e6f864a7097058225a31c1f18c3daa30d6c0f45286bfd003ff86bb71c4  x86_64/modules.tsv
+ea7029533bf9df1dd3eecff722860ad5c7856785691fea67b76808064cd5675a  amd/eigengenes.tsv
+30f1f327bfc031c962e83474d9459d1c3bfe7cc59a082bc48d53427eaf406a22  arm64/eigengenes.tsv
+ea7029533bf9df1dd3eecff722860ad5c7856785691fea67b76808064cd5675a  x86_64/eigengenes.tsv
+bab61302a5274ca494a7dec207194ef6a31d738821ed436fe249c43d389a2bfb  amd/sft.tsv
+e559f383be4b8f495faf788fd2351986186966500e57c6029bec11b8d64bb9b9  arm64/sft.tsv
+bab61302a5274ca494a7dec207194ef6a31d738821ed436fe249c43d389a2bfb  x86_64/sft.tsv

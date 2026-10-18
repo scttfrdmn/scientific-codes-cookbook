@@ -19,12 +19,20 @@ make stage RECIPE=wgcna            # once: the planted-module matrix, sha256-pin
 spawn task run --spec "$(make -s spec RECIPE=wgcna)" --wait
 make ls RECIPE=wgcna
 
-Rscript -e 'library(WGCNA); enableWGCNAThreads(2)
-  sft <- pickSoftThreshold(X, powerVector = 1:12)
+Rscript -e 'library(WGCNA); enableWGCNAThreads(2); sft <- pickSoftThreshold(X, powerVector = 1:12)
   net <- blockwiseModules(X, power = 6, networkType = "unsigned", TOMType = "unsigned",
-                          minModuleSize = 30, deepSplit = 2, mergeCutHeight = 0.25,
-                          numericLabels = TRUE, maxBlockSize = 5000)'
+    minModuleSize = 30, deepSplit = 2, mergeCutHeight = 0.25, numericLabels = TRUE, maxBlockSize = 5000)'
 ```
+
+## Which box — [measured](../../measurements/wgcna-real/README.md) on every TCGA BRCA tumour, 15,045 genes × 1,083 samples, one block
+
+| chip | `xlarge` | wall | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `r8g` | 791 s | 0.058 |
+| Xeon 6975P-C | `r8i` | 461 s | 0.042 |
+| **EPYC 9R45** | `r8a` | **238 s** | **0.030** |
+
+**Take AMD:** 3.3× Graviton4's speed and half the cost; size by memory (14.3 GiB peak at 15k genes). All three chips put every gene in the same module, and the proliferation, luminal and T-cell markers land 10 of 10 in three modules. On arm64 never run `stats::cor` on a whole matrix: it accumulates in software `long double` (6,579 s vs 4 s for `WGCNA::cor`).
 
 ## Make it yours
 
@@ -33,10 +41,10 @@ Rscript -e 'library(WGCNA); enableWGCNAThreads(2)
 | `expr.csv`, 60 samples × 600 genes | your samples × genes matrix | rows are **samples**, columns genes. Filter low-count and low-variance genes first. |
 | `power = 6` | `sft$powerEstimate` on your data | the estimate (11) is only the first power past R² 0.85, on a curve that never plateaus here (planted modules are not scale-free). Read the curve, not the number. |
 | `networkType = "unsigned"` | `"signed"` | **this changes the answer**: unsigned joins anticorrelated genes into one module, signed splits them. The recipe runs both and the planted truth tells them apart. |
-| `maxBlockSize = 5000` | ≥ your gene count if RAM allows | one block means one TOM; above it, genes are pre-clustered into blocks and modules are approximate across block edges. A TOM is n² doubles. |
+| `maxBlockSize = 5000` | ≥ your gene count if RAM allows | one block means one TOM; above it, genes are pre-clustered into blocks and modules are approximate across block edges — on 15k real genes, 4 blocks gave 39 modules against one block's 25, ARI 0.50. A TOM is n² doubles. |
 | `enableWGCNAThreads(2)` | your core count | the TOM is bit-identical at 1 and 2 threads here, and two whole runs agree exactly. |
 
-**Leave the fixture.** A planted matrix is the only input where "did it find the modules" has an answer; a real dataset tests the same code with no truth to check. **Scale it** to your matrix once the parameters are chosen — the TOM grows as n², so a 20,000-gene matrix holds 3.2 GB per TOM, several times that at peak — size an `r8g` from a measured run.
+**Leave the fixture.** A planted matrix is where "did it find the modules" has an exact answer; the real cohort above checks the same code against published marker clusters instead. **Scale it** to your matrix once the parameters are chosen — the TOM grows as n², so a 20,000-gene matrix holds 3.2 GB per TOM, several times that at peak — size an `r8g` from a measured run.
 
 ## Shape, size, cost
 
@@ -115,8 +123,8 @@ structure. Check the bucket regardless ([exit 0 isn't proof](../../practices/con
 
 ### Not covered
 
-Multi-block networks (`maxBlockSize` below the gene count, where pre-clustering makes modules
-approximate), consensus networks across datasets, module–trait correlation, hub genes and
-`intramodularConnectivity`, and real expression data.
+Consensus networks across datasets and module–trait correlation. Multi-block networks are reported
+there, not asserted: real expression data at one block (15k genes, `kWithin` included) and the
+default 4-block split are in [`wgcna-real`](../../measurements/wgcna-real/README.md).
 
 </details>

@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-wgcna-real-brca",
+  "container": "quay.io/aarchbio/r-wgcna@sha256:8f54c6548dd6938819c9ce47ffc1092561195c1f90b3d0a75b02bbbe40d83546",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh /tmp/pancan 4 20531 11069\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pancan/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv",
+      "destination": "/tmp/pancan/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/glmnet-real/pancan/merged_sample_quality_annotations.tsv",
+      "destination": "/tmp/pancan/merged_sample_quality_annotations.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna-real/real.R",
+      "destination": "/tmp/real.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/wgcna-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/wgcna-real/brca/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}
