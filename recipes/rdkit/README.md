@@ -37,8 +37,17 @@ check possible. **Scale it** by compound count; it is linear and cheap.
 ## Shape, size, cost
 
 `c8g.xlarge` (4 vCPU): **35 s, ~$0.01.** Single-threaded Python over 100k molecules, ~6 MB in.
-No generation table: at 35 s a four-chip ladder would measure boot, not RDKit
-([the same call as mash](../mash/README.md)).
+
+## Which box — [measured](../../measurements/rdkit-real/README.md) (all 2,897,819 ChEMBL 37 compounds, 8 workers)
+
+| chip | instance | tool wall | billed $/result |
+|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 483 s | 0.0506 |
+| Xeon | `c8i.2xlarge` | 678 s | 0.0781 |
+| **EPYC** | `c8a.2xlarge` | **367 s** | **0.0507** |
+
+AMD is fastest, Graviton4 the same per result, Intel's 8 vCPU only 4 cores. Output is byte-identical
+across chips; every element-count miss is a ChEMBL record whose SMILES and InChI disagree.
 
 <details>
 <summary>As shipped: three graded checks against one published reference, and why one needed restricting</summary>
