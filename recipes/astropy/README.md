@@ -12,8 +12,6 @@ last_verified: 2026-09-13
 
 Astropy runs the core transforms every astronomy pipeline leans on — physical units, WCS sky projections, coordinate-frame conversions, time scales, and FITS I/O — on Graviton4. The first recipe in the `astro` env, for anyone doing astronomy who knows the library.
 
-> **What this covers.** One offline astropy task exercising five core operations, each checked by an *exact* identity rather than a tolerance — the strongest verification the catalog has, in a domain that had none. Not a benchmark, and no live archive queries (astroquery needs network; out of scope).
-
 ## Run it
 
 ```bash
@@ -23,19 +21,16 @@ spawn task run --spec "$(make -s spec RECIPE=astropy)" --wait
 ```python
 from astropy.wcs import WCS
 w = WCS(naxis=2)
-w.wcs.ctype = ["RA---TAN", "DEC--TAN"]; w.wcs.crval = [150.0, 2.0]
-w.wcs.crpix = [256.5, 256.5]; w.wcs.cdelt = [-0.000277778, 0.000277778]
+w.wcs.ctype = ["RA---TAN", "DEC--TAN"]; w.wcs.crval = [150.0, 2.0]; w.wcs.crpix = [256.5, 256.5]; w.wcs.cdelt = [-0.000277778, 0.000277778]
 world = w.wcs_pix2world(pixels, 0)   # pixel → sky
 back  = w.wcs_world2pix(world, 0)    # sky → pixel — returns the input, exactly
 ```
-
-That WCS round-trip is the headline; the recipe adds a coordinate transform, a time-scale offset, a units check, and a FITS round-trip — five identities in one task, nothing staged.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| the synthetic checks (constructed WCS, in-code arrays) | your FITS images / source catalogs | synthetic *because* these identities are exact by construction; a real image is a longer run, not a more legible check. |
+| the synthetic checks (constructed WCS, in-code arrays) | your FITS images / source catalogs | synthetic *because* these identities are exact by construction; the [real field](../../measurements/astropy-real/README.md) is the at-scale version. |
 | astropy core | photutils, sunpy, healpy, reproject, specutils | all in the `astro` env; this recipe proves the core those build on. |
 | offline | astroquery for live archive/catalog queries | needs network — deliberately out of this zero-network recipe. |
 
@@ -43,9 +38,16 @@ That WCS round-trip is the headline; the recipe adds a coordinate transform, a t
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The compute is **~1 s**; recorded command window **93 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The compute is **~1 s**; recorded command window **93 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.** A real workload sizes by data volume and shifts to RAM — below.
 
-**Sizing:** no family question — the checks are CPU-light and definitional. A real workload (large FITS mosaics, healpix maps, catalog cross-matches) sizes by data volume and shifts to RAM; size it on the dataset, not this.
+## Which box — [measured](../../measurements/astropy-real/README.md) (Gaia DR3 × PS1 over 13.4 deg², 100 PS1 skycell WCS)
+
+| chip | instance | cross-match / WCS / total | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `r8g.xlarge` | 65 / 767 / 866 s | **0.0706** |
+| x86 | `r8i.xlarge` | 52 / 728 / 811 s | 0.0734 |
+
+**r8g: memory, not cores, sizes it** (7.4 GiB staged in tmpfs + 8.5 GiB peak RSS). The 3.74 M-row merged catalogue is identical across chips. Gaia pm is per TCB year and ERFA propagates in TDB, so `apply_space_motion` falls short by L_B = 1.55e-8. astropy 8.0.1's parquet reader raises `KeyError('_healpix_29')` on Gaia's HATS files, so read them with pyarrow.
 
 <details>
 <summary>As shipped: the five identities, pins, smoke check, run + verify</summary>

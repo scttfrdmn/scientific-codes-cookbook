@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-astropy-real",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp/in\necho \"== staged bytes must match their pins ==\"\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins ok: $(wc -l < pins.sha256) files\"\nlscpu | grep -iE 'model name|^cpu\\(s\\)|numa node\\(s\\)' > /tmp/cpu.txt; cat /tmp/cpu.txt\ndf -h /tmp | tail -1\nT0=$(date +%s)\npython3 -u real.py /tmp/in > /tmp/real.log 2>&1\nRC=$?\necho \"real.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncat /tmp/real.log\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'ASTROPY REAL OK' /tmp/real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/astropy-real/",
+      "destination": "/tmp/in/"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/real-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy-real/r1/real-results.tsv"
+    },
+    {
+      "source": "/tmp/matches.fits",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy-real/r1/matches.fits"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/astropy-real/r1/cpu.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
