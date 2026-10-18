@@ -1,0 +1,47 @@
+{
+  "task_id": "cookbook-metaphlan-real-prep",
+  "container": "quay.io/aarchbio/sra-tools@sha256:7145cf2f6f2e9265b7ace204d86b6ed1cbbd0b8b3ef31cbadf32bfa271229afd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (prep\\.sh|ERR2984773\\.sra|ERR2935805\\.sra)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 1 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash prep.sh ERR2984773 8785731 2653290762 8 || exit 1\nbash prep.sh ERR2935805 47832553 9662175706 8 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 80
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/ERR2984773.sra",
+      "destination": "/tmp/ERR2984773.sra"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/ERR2935805.sra",
+      "destination": "/tmp/ERR2935805.sra"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

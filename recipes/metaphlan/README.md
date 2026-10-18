@@ -25,8 +25,6 @@ metaphlan reads_1.fastq.gz,reads_2.fastq.gz --input_type fastq \
   --nproc 16 --mapout mapout.bz2 -o profile.txt
 ```
 
-Staging runs on a box, not your laptop — see below.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -36,11 +34,19 @@ Staging runs on a box, not your laptop — see below.
 | `--offline` | **keep it** | a recipe here may not fetch at run time, and it turns a wrong `--db_dir` into a loud failure instead of a silent 23 GB download. |
 | the 8-species truth table | your own expected list | **this is the part worth copying** — a defined mixture has a *closed* species list, which is what makes presence assertable without a tolerance. |
 
-**Leave the fixture.** 794,279 read pairs over ~40 Mb of combined genomes is ~6× — thin by WGS standards but ample for marker-based profiling, and it keeps a 23 GB-index run to minutes. **Scale it** with `--subsampling_paired N --subsampling_seed S` on a deeper run; `ERR12710526` is the same community at 39.3M reads.
+**Leave the fixture.** 794,279 read pairs over ~40 Mb of combined genomes is ~6× — thin by WGS standards but ample for marker-based profiling, and it keeps a 23 GB-index run to minutes. **Scale it** with `--subsampling_paired N --subsampling_seed S` on a deeper run. For a whole run, the [measurement](../../measurements/metaphlan-real/README.md) profiles Nicholls et al.'s D6300 (17.6M reads) and D6310 log-ladder (95.7M) runs. Don't use `ERR12710526`: it is titled "zymo mock community" but profiles as a gut-like sample.
 
 ## Shape, size, cost
 
-One profile task on `r8g.4xlarge` (16 vCPU, **124 GiB**), TTL 50m, cap $0.90. The RAM is for **tmpfs, not compute**: `/tmp` is a tmpfs at half the instance RAM and must hold the 23 GB index tar — a staged input, so it can never be `rm`-ed — plus its 23 GB expansion. Measured **108 s** of MetaPhlAn on 16 threads inside a ~6.5 min window, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). Staging is three one-off tasks: markers (3 min), index (26 min), reads (2 min).
+One profile task on `r8g.4xlarge` (16 vCPU, **124 GiB**), TTL 50m, cap $0.90. The RAM is for **tmpfs, not compute**: `/tmp` is a tmpfs at half the instance RAM and must hold the 23 GB index tar — a staged input, so it can never be `rm`-ed — plus its 23 GB expansion. Measured **108 s** of MetaPhlAn on 16 threads inside a ~6.5 min window, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). Staging is three one-off tasks on a box, not your laptop: markers (3 min), index (26 min), reads (2 min).
+
+**Which box — [measured](../../measurements/metaphlan-real/README.md)** on two whole Zymo runs (12.3 Gbp) in one 16-vCPU task. **AMD is 1.4× faster and 5% cheaper; Intel matches Graviton4's speed at 20% more.** The profiles agree value for value on all three chips, and 8/8 bacteria with 0 false positives above 1% hold at 17.6M reads. Profile a cohort in one task: about a fifth of each bill is staging the 35 GB every sample shares.
+
+| chip | instance | tool wall | billed | $/hr | **billed $ (both samples)** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | 1,313 s | 1,658 s | 0.9426 | 0.4341 |
+| Xeon 6975P-C | `r8i.4xlarge` | 1,352 s | 1,687 s | 1.1114 | 0.5208 |
+| **EPYC 9R45** | `r8a.4xlarge` | **934 s** | **1,163 s** | 1.2781 | **0.4129** |
 
 <details>
 <summary>As shipped: 8/8 present and nothing else, why the abundances are not asserted, pins</summary>

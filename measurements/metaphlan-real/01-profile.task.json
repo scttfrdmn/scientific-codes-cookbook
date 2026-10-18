@@ -1,0 +1,82 @@
+{
+  "task_id": "cookbook-metaphlan-real-profile",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (mpa_vJun23_CHOCOPhlAnSGB_202403\\.tar|mpa_vJun23_CHOCOPhlAnSGB_202403_bt2\\.tar|zymo_d6300\\.tsv|zymo_d6310\\.tsv|profile\\.sh|score\\.py|ERR2984773_1\\.fastq\\.gz|ERR2984773_2\\.fastq\\.gz|ERR2984773\\.reads_ge70|ERR2935805_1\\.fastq\\.gz|ERR2935805_2\\.fastq\\.gz|ERR2935805\\.reads_ge70)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 12 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash profile.sh 16 ERR2984773:zymo_d6300.tsv ERR2935805:zymo_d6310.tsv\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403.tar",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar",
+      "destination": "/tmp/mpa_vJun23_CHOCOPhlAnSGB_202403_bt2.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/zymo_d6300.tsv",
+      "destination": "/tmp/zymo_d6300.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/zymo_d6310.tsv",
+      "destination": "/tmp/zymo_d6310.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz",
+      "destination": "/tmp/ERR2984773_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz",
+      "destination": "/tmp/ERR2984773_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/reads_ge70.txt",
+      "destination": "/tmp/ERR2984773.reads_ge70"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_1.fastq.gz",
+      "destination": "/tmp/ERR2935805_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz",
+      "destination": "/tmp/ERR2935805_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/reads_ge70.txt",
+      "destination": "/tmp/ERR2935805.reads_ge70"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/profile.sh",
+      "destination": "/tmp/profile.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/metaphlan-real/zymo/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
