@@ -1,0 +1,93 @@
+== 1. upstream's reference: the 32,000-atom system, step 0, automatic PPPM ==
+ok   PPPM grid == upstream's                      25 32 32
+ok   PPPM g_ewald == upstream's                   0.24883488
+ref_step0_KinEng                   21444.8312841475
+ok   step-0 KinEng == upstream reference          21444.831284 vs 21444.8313 (diff -1.59e-05)
+ref_step0_PotEng                   -46801.0370262904
+ok   step-0 PotEng == upstream reference          -46801.037026 vs -46801.0370 (diff -2.63e-05)
+ref_step0_E_bond                   2537.9940105865
+ok   step-0 E_bond == upstream reference          2537.994011 vs 2537.9940 (diff 1.06e-05)
+ref_step0_E_angle                  10921.3742085767
+ok   step-0 E_angle == upstream reference         10921.374209 vs 10921.3742 (diff 8.58e-06)
+ref_step0_E_dihed                  5211.7864995514
+ok   step-0 E_dihed == upstream reference         5211.786500 vs 5211.7865 (diff -4.49e-07)
+ref_step0_E_impro                  213.5115854455
+ok   step-0 E_impro == upstream reference         213.511585 vs 213.5116 (diff -1.46e-05)
+ref_step0_E_vdwl                   -2307.8634154552
+ok   step-0 E_vdwl == upstream reference          -2307.863415 vs -2307.8634 (diff -1.55e-05)
+ref_step0_E_coul                   207025.8933711299
+ok   step-0 E_coul == upstream reference          207025.893371 vs 207025.8934 (diff -2.89e-05)
+ref_step0_E_long                   -270403.7332861252
+ok   step-0 E_long == upstream reference          -270403.733286 vs -270403.7333 (diff 1.39e-05)
+ref_step0_Press                    -149.3299953678
+ok   step-0 Press == upstream reference           -149.329995 vs -149.3300 (diff 4.63e-06)
+ref_step0_Volume                   307995.0335000000
+ok   step-0 Volume == upstream reference          307995.033500 vs 307995.0335 (diff 0.00e+00)
+== 2. extensivity: replicated 4x4x4 at the same g_ewald and a mesh scaled with it ==
+rep_fixed_grid                     100 128 128
+ext_rel_KinEng                     6.786e-15   (21444.831284147684 per cell vs 21444.831284147538)
+ext_rel_PotEng                     4.484e-13   (-46801.037026997277 per cell vs -46801.037027018261)
+ext_rel_E_bond                     3.942e-15   (2537.994010586533 per cell vs 2537.994010586523)
+ext_rel_E_angle                    6.662e-15   (10921.374208576628 per cell vs 10921.374208576701)
+ext_rel_E_dihed                    5.759e-15   (5211.786499551447 per cell vs 5211.786499551417)
+ext_rel_E_impro                    1.131e-14   (213.511585445481 per cell vs 213.511585445479)
+ext_rel_E_vdwl                     6.069e-14   (-2307.863415455337 per cell vs -2307.863415455197)
+ext_rel_E_coul                     8.575e-15   (207025.897046460625 per cell vs 207025.897046462400)
+ext_rel_E_long                     8.481e-14   (-270403.736962162657 per cell vs -270403.736962185591)
+ext_rel_Volume                     0.000e+00   (307995.033500000020 per cell vs 307995.033500000020)
+ext_rel_worst                      4.484e-13
+ok   every term, replicated == 64 x base          worst relative 4.484e-13 (bound 1e-10)
+press_base_vs_rep                  -149.329996 vs -149.329996   (intensive; reported)
+== 3. the production run: 2048000 atoms, 5000 steps, 64 ranks ==
+lammps_version                     LAMMPS (22 Jul 2025 - Update 6)
+ok   LAMMPS is the pinned 22 Jul 2025 release     LAMMPS (22 Jul 2025 - Update 6)
+ok   MPI ranks used == launched                   64 want 64
+ok   atoms == 32,000 x 64                         2048000
+ok   steps == 5000                                5000
+ok   bonds == 64 x 27723                          1774272
+ok   angles == 64 x 40467                         2589888
+ok   dihedrals == 64 x 56829                      3637056
+ok   impropers == 64 x 1034                       66176
+ok   completed (Total wall time printed)          
+ok   step-0 KinEng / 64 == upstream reference     21444.831284 vs 21444.8313
+ok   step-0 E_bond / 64 == upstream reference     2537.994011 vs 2537.9940
+ok   step-0 E_angle / 64 == upstream reference    10921.374208 vs 10921.3742
+ok   step-0 E_dihed / 64 == upstream reference    5211.786500 vs 5211.7865
+ok   step-0 E_impro / 64 == upstream reference    213.511586 vs 213.5116
+ok   step-0 E_vdwl / 64 == upstream reference     -2307.863416 vs -2307.8634
+ok   step-0 Volume / 64 == upstream reference     307995.033500 vs 307995.0335
+prod_step0_E_coul_per_cell_minus_ref -3918.0924   (Ewald split differs with the grid; reported)
+prod_step0_E_long_per_cell_minus_ref 3918.6978   (Ewald split differs with the grid; reported)
+prod_step0_PotEng_per_cell_minus_ref 0.6054   (Ewald split differs with the grid; reported)
+prod_step0_TotEng_per_cell_minus_ref 0.6053   (Ewald split differs with the grid; reported)
+prod_step0_TotEng                  -1622758.4228
+prod_step0_PotEng                  -2995227.6250
+prod_step0_E_coul                  12998899.2647
+prod_step0_E_long                  -17055042.2745
+prod_step0_KinEng                  1372469.2022
+prod_step0_Temp                    299.0274
+prod_step0_Press                   -148.6867
+prod_step0_Volume                  19711682.1440
+prod_final_TotEng                  -1614292.2885   (path; reported)
+prod_final_PotEng                  -2992104.4930   (path; reported)
+prod_final_Temp                    300.1915   (path; reported)
+prod_final_Press                   -54.3959   (path; reported)
+prod_final_Volume                  19771218.5967   (path; reported)
+ok   final temperature 280..330 K (NPT at 300 K)  300.1915
+steps_per_s_first_half             4.9380
+steps_per_s_second_half            4.8401   (ratio 0.980; homogeneity of the step cost, reported)
+ns_per_day                         0.845
+timesteps_per_s                    4.889
+atom_step_rate                     10.012 Matom-step/s
+ok   ns/day > 0                                   0.845
+loop_time_s                        1022.8
+neighbor_builds                    662
+dangerous_builds                   0
+mem_per_rank_mbytes                142.1 | 142.2 | 142.2 Mbytes
+lmp_total_wall                     0:17:03
+cpu_use_pct                        100.0
+production_wall_s                  1026
+peak_mem_gib                       8.19
+avg_cores                          63.68
+cgroup_peak_gib                    8.19
+CHECKS: 0 failed

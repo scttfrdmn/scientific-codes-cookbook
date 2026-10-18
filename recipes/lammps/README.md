@@ -33,16 +33,16 @@ mpiexec -n 16 lmp_mpi -in in.rhodo -log lmp.log     # replicate 2 2 1 → 128k a
 | Graviton4 | `c8g.4xlarge` | 3.635 | 47.54 s | 2.692 M | 4.213 |
 | **Graviton5** | `c9g.4xlarge` | **4.425** | **39.05 s** | **3.278 M** | **3.772** |
 
-**Take the newest generation** — faster and cheaper per nanosecond at every step. Unlike GROMACS,
-the ladder here is fairly even (49%, 24%, 22%), so there is no single generation that suddenly pays
-for itself. The ladder predates the repin (`md@1ee941664add…`); the new digest re-ran Graviton4 only, at 3.656 ns/day.
+**Take the newest generation** — faster and cheaper per nanosecond at every step; unlike GROMACS the ladder is fairly even (49%, 24%, 22%). The ladder predates the repin (`md@1ee941664add…`); the new digest re-ran Graviton4 only, at 3.656 ns/day.
+
+**Across chips** ([measured](../../measurements/lammps-real/README.md): 2,048,000 atoms, 64 ranks, 10 ps): Graviton4 `c8g.16xlarge` **0.845 ns/day, $72.7/ns**; Intel `c8i` 0.615, $117.3; AMD `c8a` 0.869, $95.5. Graviton4 is 38% cheaper per ns than Intel; AMD is 3% faster and 31% dearer. All three reproduce upstream's reference energies.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | rhodopsin, `replicate 2 2 1` | your own data file, or a larger replicate | the deck is LAMMPS' `bench/in.rhodo` with two changes (below); replication is how the benchmark set is meant to be scaled. |
-| `-n 16` pure MPI | fewer ranks, or add OpenMP | LAMMPS' default build here is MPI-only; [assert the rank count](../../practices/mpi-rank-count.md) whatever you choose. |
+| `-n 16` pure MPI | fewer ranks, or add OpenMP | LAMMPS' default build here is MPI-only; [assert the rank count](../../practices/mpi-rank-count.md) whatever you choose. At 64 ranks Docker's 64 MB `/dev/shm` kills Open MPI with SIGBUS: set `OMPI_MCA_btl_sm_backing_directory=/tmp`. |
 | `pppm 1e-4` | your accuracy target | PPPM is the long-range solver and usually the first thing to limit scaling on a small system. |
 
 **Leave the workload** — a real biomolecular system with long-range electrostatics at production
