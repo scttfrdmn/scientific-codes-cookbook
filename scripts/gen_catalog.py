@@ -169,9 +169,10 @@ def main():
         # x86_64: the verifying run's date, or "gap" when the recipe records that no x86
         # build exists -- so this column IS the list of missing x86 builds, generated.
         x86 = fm.get("last_verified_x86_64") or ("gap" if fm.get("gap_x86_64") else "—")
+        amd = fm.get("last_verified_amd") or ("gap" if fm.get("gap_x86_64") else "—")
         rows.append((domain, name, retarget_links(lede(text), d), env, inputs,
                      git_updated(os.path.relpath(d, ROOT)),
-                     fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "—"), x86))
+                     fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "—"), x86, amd))
 
     # group by domain, alphabetical within
     domains = sorted({r[0] for r in rows})
@@ -192,15 +193,16 @@ def main():
            "no arm64 build exists, so the recipe is x86-only. **x86_64** is "
            "the same for a same-generation Intel box (`c8i`/`m8i`/`r8i`, `make run ... ARCH=x86_64`): "
            "a date, `—` (not yet run), or **gap** (no x86 build of the pinned version exists; the "
-           "page says why).", ""]
+           "page says why). **AMD** is the same pins on same-generation AMD EPYC "
+           "(`c8a`/`m8a`/`r8a`, `make run ... ARCH=amd`).", ""]
     for dom in domains:
         drows = [r for r in rows if r[0] == dom]
         out.append(f"## {dom}")
         out.append("")
-        out.append("| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 |")
-        out.append("|---|---|---|---|---|---|---|")
-        for _, name, desc, env, inputs, updated, verified, x86 in drows:
-            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} | {updated} | {verified} | {x86} |")
+        out.append("| Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |")
+        out.append("|---|---|---|---|---|---|---|---|")
+        for _, name, desc, env, inputs, updated, verified, x86, amd in drows:
+            out.append(f"| [{name}](../recipes/{name}/README.md) | {desc} | {env} | {inputs} | {updated} | {verified} | {x86} | {amd} |")
         out.append("")
     content = "\n".join(out).rstrip() + "\n"
 

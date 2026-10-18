@@ -56,7 +56,7 @@ def _outside_details_lines(text):
     in_x86 = False
     for i, line in enumerate(text.split("\n")):
         if i < fm_lines:
-            if re.match(r"^(images_x86_64:|env_x86_64:|last_verified_x86_64:|gap_x86_64:|gap_arm64:)", line):
+            if re.match(r"^(images_x86_64:|env_x86_64:|last_verified_x86_64:|last_verified_amd:|gap_x86_64:|gap_arm64:)", line):
                 in_x86 = line.startswith("images_x86_64:")
                 continue
             if in_x86 and re.match(r"^\s+- ", line):
@@ -197,8 +197,9 @@ def check_x86_frontmatter(text, keys, rel):
         errors.append(f"{rel}: gap_arm64 and an arm64 image: -- one or the other")
     if has_imgs and has_gap:
         errors.append(f"{rel}: frontmatter has both images_x86_64 and gap_x86_64 -- one or the other")
-    if "last_verified_x86_64" in keys and not (has_imgs or has_env):
-        errors.append(f"{rel}: last_verified_x86_64 without images_x86_64 or env_x86_64 -- nothing to have run")
+    for k in ("last_verified_x86_64", "last_verified_amd"):     # amd runs the same x86 pins on c8a/m8a/r8a
+        if k in keys and not (has_imgs or has_env):
+            errors.append(f"{rel}: {k} without images_x86_64 or env_x86_64 -- nothing to have run")
     if has_imgs:
         block = text[4:text.find("\n---\n", 4)]
         m = re.search(r"^images_x86_64:\s*\n((?:\s+-\s+.*\n?)+)", block, re.M)

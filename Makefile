@@ -34,9 +34,9 @@ stage: ## build a recipe's inputs into your bucket from public sources: make sta
 	  bash recipes/$(RECIPE)/stage-inputs.sh $(COOKBOOK_BUCKET); \
 	else echo "recipe '$(RECIPE)' builds its input in the task — no staging needed"; fi
 	@env=$$(sed -n '2,/^---$$/s/^env_x86_64:[[:space:]]*//p' recipes/$(RECIPE)/README.md 2>/dev/null); \
-	if [ -n "$$env" ] && [ "$(ARCH)" = "x86_64" ]; then bash scripts/stage_env_x86.sh "$$env" $(COOKBOOK_BUCKET); fi
+	if [ -n "$$env" ] && { [ "$(ARCH)" = "x86_64" ] || [ "$(ARCH)" = "amd" ]; }; then bash scripts/stage_env_x86.sh "$$env" $(COOKBOOK_BUCKET); fi
 
-spec: ## resolve a recipe's spec(s) for spawn and print the path(s); ARCH=x86_64 for the x86 run: spawn task run --spec "$(make -s spec RECIPE=bwa-samtools)"
+spec: ## resolve a recipe's spec(s) for spawn and print the path(s); ARCH=x86_64 (Intel) or ARCH=amd for an x86 run: spawn task run --spec "$(make -s spec RECIPE=bwa-samtools)"
 	@test -n "$(RECIPE)" || { echo "usage: make spec RECIPE=<name>" >&2; exit 1; }
 	@test -n "$(AWS_ACCOUNT)" || { echo "AWS not configured — run 'make bootstrap' first" >&2; exit 1; }
 	@ls recipes/$(RECIPE)/*.task.json >/dev/null 2>&1 || { echo "recipe '$(RECIPE)' has no TaskSpec — see its page for how it runs" >&2; exit 1; }

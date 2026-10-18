@@ -3,6 +3,9 @@
 
     python3 scripts/spec_arch.py <recipe> <arch> <bucket> <nonce> [spec.task.json ...]
 
+<arch> is arm64, x86_64 (same-generation Intel) or amd (same-generation AMD EPYC: c8a/m8a/r8a,
+the same x86 pins, outputs under /runs-amd/, verified as last_verified_amd).
+
 Prints the resolved spec paths. With trailing spec paths, those specs are rewritten instead of the
 recipe's own (a measurement's specs, say) -- the x86 pins still come from the recipe's frontmatter.
 
@@ -40,11 +43,18 @@ import sys
 import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FAMILY = {"x86_64": {"c8g": "c8i", "m8g": "m8i", "r8g": "r8i"}}
+# A TARGET is an architecture plus a vendor: `x86_64` is same-generation Intel, `amd` the same
+# generation on AMD EPYC (c8a/m8a/r8a). Both run the same linux/amd64 pins (images_x86_64 or
+# env_x86_64) -- only the family, the price and the output prefix differ.
+ARCH = {"x86_64": "x86_64", "amd": "x86_64"}
+FAMILY = {"x86_64": {"c8g": "c8i", "m8g": "m8i", "r8g": "r8i"},
+          "amd": {"c8g": "c8a", "m8g": "m8a", "r8g": "r8a",
+                  "c8i": "c8a", "m8i": "m8a", "r8i": "r8a"}}   # the 8i keys: an x86-only recipe (ants) is written for Intel
 # Each spec's cost_limit was sized at Graviton prices; same-generation Intel is ~17% dearer per
 # hour (c8i vs c8g). A working x86 run must not die on an ARM-priced cap, so the cap is scaled
 # with margin. It stays a cap -- cost_limit is the spend guard, the TTL only a hang backstop.
-COST_FACTOR = {"x86_64": 1.3}
+# AMD 8a lists ~35% above Graviton4 per hour in us-west-2 (c8a.2xlarge $0.4311 vs c8g $0.3190).
+COST_FACTOR = {"x86_64": 1.3, "amd": 1.6}
 # The env route's base image: mambaorg/micromamba 2.9.0-debian13, the amd64 entry of the manifest
 # list recipes/fsl already pins (not cosign-signed, so the digest is the pin).
 MICROMAMBA_X86 = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
@@ -142,7 +152,7 @@ def resolve(recipe, arch, bucket, nonce, *paths):
         for o in json.load(open(f, encoding="utf-8")).get("outputs", []):
             d = o.get("destination", "")
             m = re.match(r"s3://[^/]+/([^/]+)/", d)
-            if m and m.group(1) != "runs":
+            if m and m.group(1) not in ("runs", "runs-x86_64"):   # runs-x86_64: an x86-only recipe's runs
                 written.add(d)
     for f in specs:
         text = open(f, encoding="utf-8").read()
@@ -173,7 +183,7 @@ def resolve(recipe, arch, bucket, nonce, *paths):
                 sys.exit("%s/%s: container %s has no x86_64 pin (images_x86_64 has: %s%s)"
                          % (recipe, os.path.basename(f), spec["container"], ", ".join(sorted(mapping)) or "nothing",
                             "; env_x86_64 covers aarch.science images only" if env else ""))
-            res["architecture"] = arch
+            res["architecture"] = ARCH[arch]
             res["families"] = [FAMILY[arch].get(x, x) for x in res.get("families", [])]
             life = spec.get("lifecycle", {})
             if "cost_limit" in life:
@@ -186,6 +196,8 @@ def resolve(recipe, arch, bucket, nonce, *paths):
                             if io[k] in written_here:
                                 io[k] = re.sub(r"^(s3://[^/]+/)([^/]+)/", r"\g<1>\g<2>-%s/" % arch, io[k])
                             io[k] = io[k].replace("/runs/", "/runs-%s/" % arch)
+                            if arch != "x86_64":   # an x86-only recipe's specs already say runs-x86_64
+                                io[k] = io[k].replace("/runs-x86_64/", "/runs-%s/" % arch)
         base = os.path.basename(f)
         out = os.path.join(outdir, "%s.%s%s.json" % (base[:-len(".task.json")] if base.endswith(".task.json") else base, nonce,
                                                       "" if arch == "arm64" else "." + arch))
@@ -197,4 +209,6 @@ def resolve(recipe, arch, bucket, nonce, *paths):
 if __name__ == "__main__":
     if len(sys.argv) < 5:
         sys.exit(__doc__)
+    if sys.argv[2] != "arm64" and sys.argv[2] not in ARCH:
+        sys.exit("unknown target %r -- arm64, %s" % (sys.argv[2], ", ".join(sorted(ARCH))))
     resolve(*sys.argv[1:])

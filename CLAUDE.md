@@ -11,8 +11,9 @@ later phase and is out of scope now.
 the subject and the whole point: `truffle` sizes the box, `spawn` runs the pinned
 container on it under a TTL and a cost cap, `lagotto` handles capacity, and the
 instance self-terminates. **This is an AWS cookbook, not an ARM one:** Graviton4
-(`c8g`/`m8g`/`r8g`) and same-generation x86 (`c8i`/`m8i`/`r8i`, via `ARCH=x86_64`) are
-both targets, from one recipe — the x86 pins live in the frontmatter beside the arm64 ones
+(`c8g`/`m8g`/`r8g`) and same-generation x86 — Intel (`c8i`/`m8i`/`r8i`, `ARCH=x86_64`) and AMD
+(`c8a`/`m8a`/`r8a`, `ARCH=amd`: the same x86 pins, outputs under `runs-amd/`, `last_verified_amd`) — are
+all targets, from one recipe — the x86 pins live in the frontmatter beside the arm64 ones
 (`images_x86_64` or, for aarch.science envs, `env_x86_64`; `last_verified_x86_64`; or `gap_x86_64` with the reason), and
 `scripts/spec_arch.py` rewrites the same specs rather than keeping a second copy. The mirror
 case — a code with **no arm64 build anywhere** — is an x86-only recipe: `gap_arm64: <reason>` plus
