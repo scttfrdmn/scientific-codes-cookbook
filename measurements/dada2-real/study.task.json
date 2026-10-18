@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-dada2-real",
+  "container": "quay.io/aarchbio/bioconductor-dada2@sha256:1dbe837ab143941ae1864da332632f2fca92b1c191a1c8f8644c6a2267148478",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\necho \"f757f9baa71f6461eb1b5b07592f37580333f4f5fc665e215566b3da6405ac2a  pins.sha256\" | sha256sum -c || { echo \"FAIL: pins.sha256 does not match its pin\"; exit 1; }\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/dada2-real/StabilityNoMetaG.tar",
+      "destination": "/tmp/StabilityNoMetaG.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/dada2-real/miseqsopdata.zip",
+      "destination": "/tmp/miseqsopdata.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/dada2-real/dada2-real.R",
+      "destination": "/tmp/dada2-real.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/dada2-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/dada2-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/dada2-real/study/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

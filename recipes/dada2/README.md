@@ -19,7 +19,6 @@ DADA2 infers amplicon sequence variants from noisy reads on Graviton4, checked a
 ```bash
 spawn task run --spec "$(make -s spec RECIPE=dada2)" --wait
 ```
-
 ```r
 filterAndTrim("reads.fastq", "filt.fastq", truncQ=2, maxN=0, maxEE=2)
 err <- learnErrors("filt.fastq")               # fit the error model from the data
@@ -27,17 +26,25 @@ d   <- dada("filt.fastq", err=err)             # denoise to exact sequence varia
 asv <- getSequences(makeSequenceTable(d))
 ```
 
-One task: generate reads from known templates, denoise, then require the templates back.
+## Which box — [measured](../../measurements/dada2-real/README.md) (whole Kozich 2013 study, 362 samples, 16 threads)
+
+| chip | instance | tool wall | peak RSS | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 354 s | 18.1 GiB | 0.6381 | 0.0628 | **0.0932** |
+| Intel | `c8i.4xlarge` | 443 s | 11.3 GiB | 0.7497 | 0.0922 | 0.1220 |
+| AMD | `c8a.4xlarge` | 311 s | 11.9 GiB | 0.8622 | 0.0746 | 0.1104 |
+
+**Graviton4 is cheapest per study and AMD is fastest.** All three give a byte-identical 362 × 420 ASV table and reproduce the DADA2 tutorial's printed numbers exactly. Only ~5.5 of 16 cores are busy, because `mergePairs` is single-threaded. The memory peak is `filterAndTrim`'s one fork per thread, so `multithread=` decides the box.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| synthetic reads from 3 templates, seed 42 | your demultiplexed FASTQs | the planted templates are the whole point — with real reads you have no truth, only DADA2's internal consistency. |
+| synthetic reads from 3 templates, seed 42 | your demultiplexed FASTQs | real reads carry no truth unless the run has a mock community: sequence one, as the [measured study](../../measurements/dada2-real/README.md) did (20 of 20 strains exact). |
 | single-end | paired-end (`filterAndTrim(fwd, filt, rev, filtRev)` + `mergePairs`) | 16S V4 is usually paired; merging adds a step but does not change the shape of the check. |
 | no chimera removal, no taxonomy | `removeBimeraDenovo`, `assignTaxonomy` + a reference | taxonomy needs a staged reference database (SILVA/GTDB) — a data-tier decision this recipe deliberately avoids. |
 
-**Leave the fixture:** planted templates let the recipe assert *exact* recovery, which no real dataset can support. **Scale it** to your run — and note the fixture's one non-obvious requirement, below, because it will bite you if you ever synthesise reads yourself.
+**Leave the fixture:** planted templates let a 2-minute run assert *exact* recovery of every read; the real-study run asserts the same of a mock, at study scale. **Scale it** to your run — and note the fixture's one non-obvious requirement, below, because it will bite you if you ever synthesise reads yourself.
 
 ## Shape, size, cost
 
