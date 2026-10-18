@@ -1,0 +1,21 @@
+versions                           GDAL 3.12.4 / rasterio 1.5.0 / pyproj 3.7.2 on PROJ 9.8.1 / numpy 2.5.2   [observation]
+cpu                                AMD EPYC 9R45, 16 vCPU, 1 thread(s)/core, 30.7 GiB, OpenBLAS Cooperlake   [observation]
+gie_reference_vectors              6191 total / 6191 ok / 0 skipped / 0 failed  want 6191 / 0 / 0
+mosaic_shape                       28 tiles -> (14400, 25200) px, every tile on a whole-pixel offset: True  want 28 -> (14400, 25200)
+mosaic                             EPSG:4326, float32 / None, nodata None; 0 invalid px of 362880000; elevation 999.56 .. 4395.69 m   [observation]
+workload                           UTM 13N 30 m: 20766 x 15054 px; warp 3.1s, slope 8.4s, hillshade 10.5s   [observation]
+gdal_sum_eq_blocksum               max|gdalwarp -r sum - numpy| / block |sum| = 1.629e-02 over 3,628,800 cells (abs 4.338e+03 on values to 434326)  want < 1e-9
+sum_conserves_total                sum(out)/sum(in) = 0.997324444741  want 1 to 1e-9 (total 7.569849e+11 m)
+near_coverage                      299129688 px valid exactly where the inverse lands inside the mosaic, 0 disagree (1 on the edge, excluded)  want 0
+near_is_source_pixel               299129688 of 299129688 px equal the source pixel pyproj predicts; 0 equal none of its 3x3  want 0
+near_exact_fraction                1.000000000 of valid px equal the floor() pixel exactly; the rest are ties   [observation]
+reproject_roundtrip                32613 -> 4326 -> 32613 over every 8th 256-row chunk: 3.73e-09 m  want < 1e-6
+slope_eq_horn                      max|gdaldem slope - Horn (numpy, float64)| = 9.701e-04 deg over 299058669 interior px  want < 5e-3
+slope_nodata_pattern               0 interior px where gdaldem's nodata disagrees with 'all 9 neighbours valid'  want 0
+slope_control_has_teeth            Zevenbergen-Thorne instead of Horn misses by 10.26 deg  want > 5e-2 (10x the bound)
+sha256_mosaic                      b7e2d5ee9c2aa434aa45b51d7056e0913df0004155160bb0d256b99d9a01e6fe   [observation]
+sha256_sum10                       5307653ab7ca0f0b284cd5376b8803886b092dfe36eafddd14b3b9d779d66921   [observation]
+sha256_dem_utm                     5c3ab93f179b65b868d657996f368b19660bfb634303150b894cc3a21367eca7   [observation]
+sha256_near_utm                    2f38a523075598e2cfb2a44cd40f6bc3b9df14ba59cc15909d534884a3e9efde   [observation]
+sha256_slope                       68858fbe0438db61841cf0a73c662aa69716b0fb8f25ccff6e4e3503658160a5   [observation]
+sha256_hillshade                   80553e7391bd7c7ba1a74722333f3397a99e124cf69806eb2ebc44a2dee0cb27   [observation]

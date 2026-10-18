@@ -1,0 +1,155 @@
+{
+  "task_id": "cookbook-geospatial-real-sumdiag",
+  "container": "quay.io/aarchsci/geospatial@sha256:1827aeb547547b3e7ced8ede5cde82563635a765c2d5455221347ee2c10a74fb",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\nmkdir -p /tmp/out /var/tmp/work\necho \"== staged bytes must match their pins ==\"\nsha256sum -c tiles.sha256 > /tmp/out/pins.check 2>&1 || { cat /tmp/out/pins.check; echo \"FAIL: a staged tile does not match its pin\"; exit 1; }\necho \"7c64eda36f4ef63c7453981aaa38614e11740b2f7be75d8f618796a5d41e51c4  sumdiag.py\" | sha256sum -c - || { echo \"FAIL: sumdiag.py does not match its pin\"; exit 1; }\necho \"$(wc -l < tiles.sha256) tiles match their pins\"\n# footprint, every 2 s: container anonymous memory and cumulative CPU (cgroup v2)\n( while : ; do echo \"$(date +%s) $(awk '/^anon /{print $2; exit}' /sys/fs/cgroup/memory.stat 2>/dev/null) $(awk '/^usage_usec/{print $2}' /sys/fs/cgroup/cpu.stat 2>/dev/null)\" >> /tmp/out/samples.txt; sleep 2; done ) &\nSPID=$!\nT0=$(date +%s)\nSUMDIAG_SET=1 python3 -u sumdiag.py > /tmp/out/real.log 2>&1\nRC=$?\necho \"real.py exit $RC in $(( $(date +%s) - T0 ))s\"\nkill $SPID\nawk 'NR==1{t0=$1; u0=$3} $2>m{m=$2} {t=$1; u=$3} END{printf \"peak_anon_gib %.2f\\navg_busy_cores %.2f\\n\", m/1073741824, (t>t0)?(u-u0)/1e6/(t-t0):0}' /tmp/out/samples.txt | tee /tmp/out/footprint.txt\necho \"memory.peak_gib $(awk '{printf \"%.2f\", $1/1073741824}' /sys/fs/cgroup/memory.peak 2>/dev/null)\" | tee -a /tmp/out/footprint.txt\ncat /tmp/out/real.log\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'SUMDIAG DONE' /tmp/out/real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W103_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W103_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W104_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W104_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W105_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W105_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W106_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W106_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W107_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W107_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W108_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W108_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N37_00_W109_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N37_00_W109_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W103_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W103_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W104_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W104_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W105_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W105_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W106_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W106_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W107_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W107_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W108_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W108_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N38_00_W109_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N38_00_W109_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W103_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W103_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W104_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W104_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W105_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W105_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W106_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W106_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W107_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W107_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W108_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W108_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N39_00_W109_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N39_00_W109_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W103_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W103_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W104_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W104_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W105_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W105_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W106_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W106_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W107_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W107_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W108_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W108_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/Copernicus_DSM_COG_10_N40_00_W109_00_DEM.tif",
+      "destination": "/tmp/Copernicus_DSM_COG_10_N40_00_W109_00_DEM.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/tiles.sha256",
+      "destination": "/tmp/tiles.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/sumdiag.py",
+      "destination": "/tmp/sumdiag.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial/gie.tar",
+      "destination": "/tmp/gie.tar"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/geospatial-real/sumdiag/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

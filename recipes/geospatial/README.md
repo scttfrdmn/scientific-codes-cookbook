@@ -31,21 +31,23 @@ gdalwarp -r sum -ovr NONE -tr 60 60 B04.tif out.tif   # -ovr NONE is load-bearin
 | PROJ 9.8.1's `test/gie` | the tag matching **your** image's PROJ | expected values from another release are a different reference — `pyproj.proj_version_str` tells you which. |
 | 6× downsample on the band's own bounds | any integer factor, aligned | a non-integer factor makes partial pixel overlaps, and then GDAL's answer and the obvious answer are not the same question. |
 | `-r sum` / `-r average` | `bilinear`, `cubic`, … | those interpolate, so no reduction reproduces them; the conservation check only works for the aggregating kernels. |
+| a UTM band | lat/lon (EPSG:4326) tiles | add `-to INSERT_CENTER_LONG=FALSE` to `-r sum`, or it loses 0.27% of the total on x86 ([measured](../../measurements/geospatial-real/README.md)). |
 
-**Leave the fixture.** Both halves are already exact at this size — more pixels buys a longer run,
+**Leave the fixture.** Both halves are exact at this size, and more UTM pixels buys a longer run,
 not a stronger claim. The raster is [earth-observation](../earth-observation/README.md)'s staged
 band on purpose: a second copy of the same bytes is a second thing to keep true.
 
-## Which box
+## Which box — [measured](../../measurements/geospatial-real/README.md) (all of Colorado, 30 m, 16 threads)
 
-`c8g.xlarge` (4 vCPU / 8 GiB). Measured: 6,191 reference vectors in under a second, the numpy
-reduction over 120,560,400 pixels in **0.6 s**, and `gdalwarp -r sum -ovr NONE` in **29 s** — which
-is the whole job. Docker install and the image pull are ~70 s of the 111 s window, so **these
-timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | warp / slope / hillshade | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 3.9 / 11.7 / 13.9 s | **0.051** |
+| Xeon 6975P-C | `c8i.4xlarge` | 5.4 / 9.9 / 12.2 s | 0.060 |
+| EPYC 9R45 | `c8a.4xlarge` | 3.1 / 8.4 / 10.5 s | 0.053 |
 
-The warp is single-threaded in this form and bound by reading every pixel; the 225 MB band stages
-into `/tmp` = [tmpfs at half the instance's RAM](../../patterns/data-movement.md), which with the
-Float64 output is what sets 8 GiB.
+A 363 M px state DEM takes under 30 s on any chip; **Graviton4 is cheapest per result**. Boot, pull
+and checks are most of the bill, so **these timings are not compute cost**
+([layout](../../patterns/layout-and-effective-cost.md)). This fixture runs on a `c8g.xlarge`.
 
 <details>
 <summary>As shipped: upstream's own vectors, a cross-code warp identity, two traps that pass quietly</summary>
