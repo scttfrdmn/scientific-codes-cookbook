@@ -1,0 +1,74 @@
+{
+  "task_id": "antsreal-cohort",
+  "container": "docker.io/antsx/ants@sha256:59c45f54a1f1dc69134f63bec91a726e41c71c64a16cc21cda0b54526910a3c3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf 'b2cf7baf898c13a639af8082b13ae2da6f7d6aeb0588bff90dc96680f2049fff  run.sh\\n5a8291fb633efb25d4230a93d61c955be9019137e16a4e7a15d8f3f9a8141fa6  subject.sh\\n' | sha256sum -c --quiet || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nbash /tmp/run.sh 16 0\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "x86_64",
+    "families": [
+      "c8i"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/NFBS_Dataset.tar.gz",
+      "destination": "/tmp/NFBS_Dataset.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl-real/nfbs.sha256",
+      "destination": "/tmp/nfbs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/MNI152_T1_2mm_brain.nii.gz",
+      "destination": "/tmp/MNI152_T1_2mm_brain.nii.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/MNI152_T1_2mm_brain_mask.nii.gz",
+      "destination": "/tmp/MNI152_T1_2mm_brain_mask.nii.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/mni.sha256",
+      "destination": "/tmp/mni.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/subject.sh",
+      "destination": "/tmp/subject.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants-real/cohort/summary.txt"
+    },
+    {
+      "source": "/tmp/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants-real/cohort/results.tsv"
+    },
+    {
+      "source": "/tmp/samples.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants-real/cohort/samples.tsv"
+    },
+    {
+      "source": "/tmp/subjects.err",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants-real/cohort/subjects.err"
+    },
+    {
+      "source": "/tmp/logs.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/ants-real/cohort/logs.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.75
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "task_id": "antsreal-template",
+  "container": "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '1016d4b401587ca99b22408df3503fe844c4cccc5831aac2bde011312562b2b3  template.sh\\n' | sha256sum -c --quiet || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nbash /tmp/template.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c8i"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fsl/pkgs/linux-64/fsl-data_standard-2208.0-0.tar.bz2",
+      "destination": "/tmp/fsl-data_standard-2208.0-0.tar.bz2"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/template.sh",
+      "destination": "/tmp/template.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/mni/MNI152_T1_2mm_brain.nii.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/MNI152_T1_2mm_brain.nii.gz"
+    },
+    {
+      "source": "/tmp/mni/MNI152_T1_2mm_brain_mask.nii.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/MNI152_T1_2mm_brain_mask.nii.gz"
+    },
+    {
+      "source": "/tmp/mni.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/template-out.sha256"
+    },
+    {
+      "source": "/tmp/template.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/ants-real/template.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

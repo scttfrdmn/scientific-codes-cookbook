@@ -35,6 +35,16 @@ ConvertTransformFile 3 rr_0GenericAffine.mat rr.txt     # matrix + offset as tex
 
 **Leave the fixture.** A planted motion is what turns "registration converged" into "registration found the answer": the transform is known before ANTs runs. **Scale it** to real brains; the identities hold, and recovered-vs-planted is how to test any pipeline change.
 
+## Which box — [measured](../../measurements/ants-real/README.md) (125 real T1s, `antsRegistrationSyNQuick.sh` to MNI152)
+
+| chip | instance | cohort wall | $/hr | **billed $/subject** |
+|---|---|---|---|---|
+| Graviton4 | — | gap: no arm64 build | | |
+| Intel | `c8i.4xlarge` | 35 min | 0.7497 | 0.0036 |
+| **AMD** | `c8a.4xlarge` | **22 min** | 0.8622 | **0.0026** |
+
+**Take AMD: 1.58× faster, 26% cheaper per subject.** Both chips give byte-identical warps for all 125 subjects, and every identity above holds on the real scans.
+
 ## Shape, size, cost
 
 One task on `c8i.large` (2 vCPU / 4 GiB, x86_64), TTL 40m as a **backstop** with `cost_limit` $0.12 as the real guard. Three registrations on a 64³ volume take seconds of a ~1-minute window ([layout](../../patterns/layout-and-effective-cost.md)).
@@ -116,9 +126,10 @@ does not raise similarity. Check the bucket regardless
 
 ### Not covered
 
-**Deformable registration** (SyN, `antsRegistrationSyNQuick.sh`), which is most of what ANTs is
-used for and where a planted *warp* — not a rigid motion — would be the check. **Real brains and
-templates**: no MNI/OASIS template ships in the image. **N4 bias correction**, **atlas-based
+A planted *warp*, as opposed to a rigid motion, as the check on deformable registration. SyN on real
+brains is in the [measurement](../../measurements/ants-real/README.md) (Jacobian > 0, inverse
+consistency, Dice gain over affine), but no MNI/OASIS template ships in the image, so the recipe
+itself stays synthetic. **N4 bias correction**, **atlas-based
 segmentation** (`antsAtroposN4.sh`) and **cortical thickness**. **Multi-modal metrics** (Mattes MI)
 and **`CC`**. **Graviton**, until an aarch64 build exists — and with it the cross-architecture
 identity every bioconda recipe now carries.

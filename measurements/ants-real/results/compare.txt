@@ -1,0 +1,22 @@
+subjects on both chips: 125 (Intel 125, AMD 125)
+
+Intel vs AMD, per subject                identical   largest |difference|
+  rigid_sha16                           125 / 125
+  aff_sha16                             125 / 125
+  warp_sha16                            125 / 125
+  id_rel                                125 / 125   0
+  resid_mm                              125 / 125   0
+  self_dev                              125 / 125   0
+  dice_aff                              125 / 125   0
+  dice_syn                              125 / 125   0
+  r_aff                                 125 / 125   0
+  r_syn                                 125 / 125   0
+  jac_min_brain                         125 / 125   0
+  ic_mean                               125 / 125   0
+  ic_max                                125 / 125   0
+  warp_mean                             125 / 125   0
+
+ANTs SyN (antsRegistrationSyNQuick.sh) vs FSL FNIRT, same scans, same MNI152 2 mm bytes,
+curated mask carried to MNI space, Dice against MNI152's brain mask:
+  FSL x86_64  n=125  ANTs affine median 0.9528  FLIRT median 0.9029  |  SyN median 0.9643  FNIRT median 0.9553  SyN higher on 120 / 125
+  FSL arm64   n=125  ANTs affine median 0.9528  FLIRT median 0.9030  |  SyN median 0.9643  FNIRT median 0.9555  SyN higher on 120 / 125
