@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-root-real-dimuon",
+  "container": "quay.io/aarchsci/hep@sha256:45441294ef5ef11379cf577ae746ecd91cb0e20e303cf3e557abeb15b84d201d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=$PATH:/opt/conda/bin\ncd /tmp\ngrep -E ' (Run2012BC_DoubleMuParked_Muons\\.root|real\\.sh|analysis\\.py|check\\.py)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 4 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/data/Run2012BC_DoubleMuParked_Muons.root",
+      "destination": "/tmp/Run2012BC_DoubleMuParked_Muons.root"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/analysis.py",
+      "destination": "/tmp/analysis.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/root-real/dimuon/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

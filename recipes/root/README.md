@@ -17,7 +17,6 @@ Writes a TTree with ROOT and reads it with uproot, which shares no code with ROO
 ```bash
 make stage RECIPE=root     # once: the checks only — the sample is seeded, the references are identities
 spawn task run --spec "$(make -s spec RECIPE=root)" --wait
-make ls RECIPE=root
 
 ROOT.RDF.FromNumpy({"x": x, "i": i, "w": w}).Snapshot("t", "out.root", ["x","i","w"])
 uproot.open("out.root")["t"].arrays(library="np")   # bit-identical, float64 and int64
@@ -33,13 +32,22 @@ h.Fit("gaus", "QSN")                                # params within ROOT's own r
 | `GetMean`/`GetStdDev` | estimating from bins | **`TH1` keeps raw moments as you `Fill`**, so these are the *unbinned* statistics, and `GetStdDev` is the population form (`ddof=0`). Estimating from bin centres is a different quantity — 1.2e-03 off here. |
 | `TMath::BesselI0` | `scipy.special.i0` | **~2.3e-08 against SciPy** — a polynomial approximation, about single precision. `Erf` and `LnGamma` are bit-identical; `BesselI0` is not. |
 | the seeded sample | your own data | the fit is bounded by ROOT's *own* reported errors, so it transfers — but keep a fixed seed or the claim goes flaky. |
-| `TTree` | `RNTuple` | both writer and reader are present in 6.40 and unexercised here. |
 
 **Leave the fixture.** Nothing is fetched: the sample is a seeded RNG draw, and every reference is an exact identity, an independent implementation already in the image, or an uncertainty the tool reports about itself. **Scale it** to your own trees — the format round-trip and the boost invariance hold at any size.
 
 ## Shape, size, cost
 
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 45m as a **backstop** with `cost_limit` $0.20 as the real guard. The analysis is **23 s** of a 2m31s window, and **83 s of that is pulling the image** — `hep` is **2.86 GB compressed**, the largest in this catalog, so the pull dominates and TTLs here must allow for it ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/root-real/README.md) (whole CMS Open Data record 12341, 61.5 M events, df102 dimuon analysis, `EnableImplicitMT(8)`)
+
+| chip | instance | event loop | task window | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 22.3 s | 187 s | 0.3190 | 0.0020 | **0.0166** |
+| Xeon 6975P-C | `c8i.2xlarge` | 27.2 s | 173 s | 0.3748 | 0.0028 | 0.0180 |
+| EPYC 9R45 | `c8a.2xlarge` | **14.3 s** | 142 s | 0.4311 | **0.0017** | 0.0170 |
+
+**AMD has the fastest loop; Graviton4 is cheapest billed, by 3–9%**, because on one 2.2 GB file the event loop is 10–16% of the window and the rest is boot and the image. Put many files in one task and the loop decides it. Every count, bit fingerprint, histogram bin and fit is identical on all three chips, and uproot decodes the same file to the same bits as ROOT.
 
 <details>
 <summary>As shipped: a bit-identical format round-trip through an unrelated reader, two bit-identical special functions, and a corrected causal claim</summary>
@@ -181,11 +189,12 @@ string comes from linking `libboost_python314.so`, not from a module
 
 **`RNTuple`**, ROOT's new columnar format — writer and reader are both present in 6.40 and would
 give a second format round-trip. **`RDataFrame` as a subject** — used here only to write a tree,
-not for lazy multi-threaded analysis, which is what it is for. **The rest of the env**: pythia8,
+not for lazy multi-threaded analysis, which is what it is for (the measurement runs that). **The rest of the env**: pythia8,
 fastjet, lhapdf, yoda, `pyHepMC3`, awkward are installed and unexercised; a generator-to-jets
 chain would exercise them together. **TTree with non-trivial branch types** — `std::vector`
 branches, jagged arrays and custom classes are where format compatibility actually gets hard, and
-this writes three flat columns. No performance claim: 20,000 entries says nothing about ROOT's I/O
-at analysis scale.
+this writes three flat columns; the [real-data measurement](../../measurements/root-real/README.md)
+round-trips jagged NanoAOD muon branches at 24 M events. Performance at analysis scale is there
+too, not here.
 
 </details>

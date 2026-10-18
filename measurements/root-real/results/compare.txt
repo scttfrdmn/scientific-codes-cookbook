@@ -1,0 +1,31 @@
+arm64   loop  22.34 s  cores 7.11  analysis 26.5 s  check 15.4 s  window  187 s  $/hr 0.3190  compute $ 0.00198  billed $ 0.01657  rss 2.735/3.032 GiB  completed
+x86_64  loop  27.17 s  cores 7.24  analysis 30.9 s  check 22.9 s  window  173 s  $/hr 0.3748  compute $ 0.00283  billed $ 0.01801  rss 2.706/3.016 GiB  completed
+amd     loop  14.34 s  cores 7.05  analysis 17.4 s  check 13.4 s  window  142 s  $/hr 0.4311  compute $ 0.00172  billed $ 0.01700  rss 2.461/2.923 GiB  completed
+== x86_64 vs arm64
+  root.tsv: 24 values identical; differ: none
+  check.tsv: 25 values identical; differ: ['mass_worst_dm2_over_eps_E2', 'mass_worst_relative_diff', 'identity_mass_two_formulas']
+    mass_worst_dm2_over_eps_E2
+      arm64 6.756
+      x86_64 7.401
+    mass_worst_relative_diff
+      arm64 1.611e-08
+      x86_64 7.630e-09
+    identity_mass_two_formulas
+      arm64 per event, numpy's E^2-|p|^2 agrees with ROOT's PtEtaPhiMVector mass to 6.76 eps (E1+E2)^2 (bound 64); worst relative mass difference 1.6e-08
+      x86_64 per event, numpy's E^2-|p|^2 agrees with ROOT's PtEtaPhiMVector mass to 7.40 eps (E1+E2)^2 (bound 64); worst relative mass difference 7.6e-09
+  hist-mass.txt: 0 of 30002 bins differ
+  hist-nmuon.txt: 0 of 66 bins differ
+== amd vs arm64
+  root.tsv: 24 values identical; differ: none
+  check.tsv: 25 values identical; differ: ['mass_worst_dm2_over_eps_E2', 'mass_worst_relative_diff', 'identity_mass_two_formulas']
+    mass_worst_dm2_over_eps_E2
+      arm64 6.756
+      amd   7.401
+    mass_worst_relative_diff
+      arm64 1.611e-08
+      amd   7.630e-09
+    identity_mass_two_formulas
+      arm64 per event, numpy's E^2-|p|^2 agrees with ROOT's PtEtaPhiMVector mass to 6.76 eps (E1+E2)^2 (bound 64); worst relative mass difference 1.6e-08
+      amd   per event, numpy's E^2-|p|^2 agrees with ROOT's PtEtaPhiMVector mass to 7.40 eps (E1+E2)^2 (bound 64); worst relative mass difference 7.6e-09
+  hist-mass.txt: 0 of 30002 bins differ
+  hist-nmuon.txt: 0 of 66 bins differ

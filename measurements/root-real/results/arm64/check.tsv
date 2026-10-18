@@ -1,0 +1,32 @@
+uproot_version	5.7.7
+awkward_version	2.14.0
+numpy_version	2.5.3
+uproot_types	nMuon:uint32_t;Muon_pt:float[];Muon_eta:float[];Muon_phi:float[];Muon_mass:float[];Muon_charge:int32_t[]
+uproot_source_read_s	9.2
+n_events	61540413
+sum_nMuon	149322456
+nmuon_hist	0,1550682,6718485,31104343,13823608,5193919,1882447,712735,291275,129914,61748,31103,16577,9071,5196,3142,1893,1186,714,550,387,278,213,155,129,86,93,85,69,51,36,36,39,27,32,19,15,22,14,6,8,7,3,2,3,3,4,2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+bits_Muon_pt	327098456196685592
+bits_Muon_eta	631216928471464473
+bits_Muon_phi	631780045244789795
+bits_Muon_mass	310433352966714236
+bits_Muon_charge	641074485118246306
+n_os	24067843
+identity_two_readers	ROOT and uproot decode all 61540413 events to the same bits: count, sum(nMuon)=149322456, the nMuon distribution and the fingerprint of all five muon branches
+snapshot_types	nMuon:uint32_t;Muon_pt:float[];Muon_eta:float[];Muon_phi:float[];Muon_mass:float[];Muon_charge:int32_t[];Dimuon_mass:double
+uproot_snapshot_read_s	6.2
+snapshot_entries	24067843
+snapshot_bits_Muon_pt	79358924171707028
+snapshot_bits_Muon_eta	152926475230110702
+snapshot_bits_Muon_phi	152774833134072165
+snapshot_bits_Muon_mass	74917765243602908
+snapshot_bits_Muon_charge	159477324018914681
+identity_snapshot_roundtrip	ROOT's multi-threaded Snapshot of 24067843 events (jagged muon branches) reads back in uproot bit-identical to the same selection made by uproot on the source
+mass_worst_dm2_over_eps_E2	6.756
+mass_worst_relative_diff	1.611e-08
+identity_mass_two_formulas	per event, numpy's E^2-|p|^2 agrees with ROOT's PtEtaPhiMVector mass to 6.76 eps (E1+E2)^2 (bound 64); worst relative mass difference 1.6e-08
+bins_differ_numpy_binning_of_root_masses	0
+bins_differ_numpy_masses	0
+events_moved_numpy_masses	0
+wall_s_check	15.4
+peak_rss_gib	3.032

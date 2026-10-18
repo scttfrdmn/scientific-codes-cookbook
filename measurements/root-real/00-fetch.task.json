@@ -1,0 +1,39 @@
+{
+  "task_id": "cookbook-root-real-fetch",
+  "container": "quay.io/aarchsci/hep@sha256:45441294ef5ef11379cf577ae746ecd91cb0e20e303cf3e557abeb15b84d201d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p /tmp/out\ngrep ' fetch\\.py$' pins.sha256 | sha256sum -c || { echo \"FAIL: fetch.py does not match its pin\"; exit 1; }\npython3 -u fetch.py 2>&1 | tee /tmp/out/fetch.log\ntest \"${PIPESTATUS[0]}\" = 0 || { echo \"FAIL: fetch\"; exit 1; }\ngrep -q 'FETCH OK' /tmp/out/fetch.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g",
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/root-real/data/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}
