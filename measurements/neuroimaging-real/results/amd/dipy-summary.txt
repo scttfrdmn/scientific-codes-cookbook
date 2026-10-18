@@ -1,0 +1,60 @@
+cohort_wall_s	171
+peak_rss_mib	23628
+tmpfs_peak_mib	12217
+avg_cores	15.34
+arch	x86_64
+Model name	AMD EPYC 9R45
+Thread(s) per core	1
+Core(s) per socket	16
+Socket(s)	1
+afni	Precompiled binary linux_universal: Sep  7 2025 (Version AFNI_25.0.00 'Severus Alexander')
+dipy	1.12.1
+nibabel	5.4.2
+numpy	2.5.3
+scipy	1.18.1
+openblas_corename	Cooperlake
+subjects  123 listed, 123 OK
+all subjects complete                                      PASS  123 / 123
+137 volumes per scan                                       PASS  137
+fslmaths positive mask == numpy's, every subject           PASS  123 / 123
+AFNI 3dTstat mean vs numpy, max relative < 1e-6            PASS  6.695e-08
+DIPY OLS vs dtifit FA (modes matched), max |diff| < 1e-6   PASS  8.508e-08
+DIPY OLS vs dtifit MD, max relative < 1e-6                 PASS  5.959e-08
+DIPY OLS vs dtifit eigenvalues, max |diff| / MD < 1e-6     PASS  1.501e-07
+planted tensor FA recovered (OLS), max error < 1e-10       PASS  1.148e-11
+planted tensor FA recovered (WLS), max error < 1e-10       PASS  3.272e-11
+planted tensor MD recovered, max relative < 1e-10          PASS  9.599e-14
+rotated gradient table: FA unchanged, max |diff| < 1e-10   PASS  1.608e-11
+rotated gradient table: MD unchanged, max relative < 1e-10 PASS  2.051e-13
+  n_brain          min 1.228e+05  median 1.612e+05  max 2.267e+05
+  n_pd             min 1.228e+05  median 1.61e+05  max 2.262e+05
+  n_cmp            min 1.228e+05  median 1.61e+05  max 2.262e+05
+  n_floor          min 0  median 104  max 956
+  fsl_fa_gt1       min 1  median 123  max 345
+  fsl_dfa_naive    min 1.15e-06  median 0.008899  max 0.02831
+  fsl_dfa_floor_only min 1.15e-06  median 2.506e-06  max 6.639e-06
+  fsl_dfa_norm_only min 6.195e-08  median 0.008899  max 0.02831
+  rot_dfa_clipped  min 2.256e-08  median 1.159e-06  max 0.0009683
+  fa_med_ols       min 0.1436  median 0.1775  max 0.2047
+  fa_med_wls       min 0.1446  median 0.1789  max 0.2066
+  md_med           min 0.0006894  median 0.0007198  max 0.00079
+  wls_ols_dfa_med  min 0.002408  median 0.003303  max 0.004059
+  fsl_dfa_p99      min 2.617e-08  median 3.481e-08  max 3.75e-08
+  t_load           min 0.4139  median 0.4806  max 0.5723
+  t_afni           min 0.7947  median 0.8963  max 1.095
+  t_mask           min 10.2  median 10.79  max 11.77
+  t_ols            min 0.1668  median 0.2295  max 0.3625
+  t_wls            min 2.233  median 3.042  max 4.553
+  t_checks         min 3.753  median 4.799  max 6.5
+  t_total          min 18.09  median 20.65  max 24.18
+  positive definite and unclipped 0.998364 of brain voxels; compared with dtifit 0.998364
+  dtifit's 1%-of-S0 floor binds in 20060 voxels (1.01e-03 of brain); dtifit FA > 1 in 15907
+  DIPY vs dtifit FA max |diff|: neither mode matched 2.831e-02, floor only 6.639e-06, bvec norm only 2.831e-02, both 8.508e-08
+  slope/inter      1/0
+  sum_t_load       59.9
+  sum_t_afni       112.1
+  sum_t_mask       1331.9
+  sum_t_ols        28.7
+  sum_t_wls        378.8
+  sum_t_checks     598.9
+  sum_t_total      2541.8

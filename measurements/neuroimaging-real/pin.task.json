@@ -1,0 +1,38 @@
+{
+  "task_id": "neuroreal-pin",
+  "container": "docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358557db8a0d9a7d11a07d1d224f1b2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp/dwi && sha256sum * > /tmp/dwi.sha256; echo \"files\t$(wc -l < /tmp/dwi.sha256)\"; du -sb /tmp/dwi\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/dwi/",
+      "destination": "/tmp/dwi/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/subjects.txt",
+      "destination": "/tmp/subjects.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/dwi.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/pin/dwi.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "task_id": "neuroreal-compare",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:cb8a08c524d7aff435432265a8c9ffce81429b0dc8c4685653b8557691529277",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '8163a285b55930741c17b238b8058a77dfa4974f89abce6d5f4e22af1686fd65  /tmp/compare.py\\n' | sha256sum -c --quiet || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nexport OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\npython3 -u /tmp/compare.py > /tmp/compare.txt 2>&1\nRC=$?\ncat /tmp/compare.txt\nexit $RC\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/compare.py",
+      "destination": "/tmp/compare.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/cohort/dipy/dipy-maps.tar",
+      "destination": "/tmp/arm64/dipy-dipy-maps.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/cohort/dipy/results.tsv",
+      "destination": "/tmp/arm64/dipy-results.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/cohort/fsl/dtifit.tar",
+      "destination": "/tmp/arm64/fsl-dtifit.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/neuroimaging-real/cohort/dipy/dipy-maps.tar",
+      "destination": "/tmp/x86_64/dipy-dipy-maps.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/neuroimaging-real/cohort/dipy/results.tsv",
+      "destination": "/tmp/x86_64/dipy-results.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/neuroimaging-real/cohort/fsl/dtifit.tar",
+      "destination": "/tmp/x86_64/fsl-dtifit.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/neuroimaging-real/cohort/dipy/dipy-maps.tar",
+      "destination": "/tmp/amd/dipy-dipy-maps.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/neuroimaging-real/cohort/dipy/results.tsv",
+      "destination": "/tmp/amd/dipy-results.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/neuroimaging-real/cohort/fsl/dtifit.tar",
+      "destination": "/tmp/amd/fsl-dtifit.tar"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/compare.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/compare/compare.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

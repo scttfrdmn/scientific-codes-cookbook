@@ -18,11 +18,20 @@ Fits DIPY's DTI model to a signal synthesised from a known tensor and checks it 
 make stage RECIPE=neuroimaging    # once: the checks only — there is no data to stage
 spawn task run --spec "$(make -s spec RECIPE=neuroimaging)" --wait
 make ls RECIPE=neuroimaging
-
 sig = single_tensor(gtab, S0=100., evals=[1.5e-3, 0.4e-3, 0.4e-3], evecs=np.eye(3), snr=None)
 TensorModel(gtab).fit(vol).fa          # must equal 0.686161147707, which is arithmetic
 3dTstat -mean -prefix m.nii.gz dwi.nii.gz    # must equal numpy's mean over the same file
 ```
+
+## Which box — [measured](../../measurements/neuroimaging-real/README.md) (123 real DWI scans, 16 vCPU, same bytes)
+
+| chip | instance | cohort wall | $/hr | compute $/subject | **billed $/subject** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 220 s | 0.7181 | **0.000357** | 0.000551 |
+| Intel | `m8i.4xlarge` | 278 s | 0.8467 | 0.000532 | 0.000679 |
+| AMD | `m8a.4xlarge` | **171 s** | 0.9738 | 0.000376 | **0.000530** |
+
+**Graviton4 or AMD, within 5% of each other per subject:** AMD is 1.29× faster at a 35% higher hourly price; Intel is last, with 8 cores behind its 16 vCPU. On real scans DIPY reproduces FSL's `dtifit` to float32 rounding (FA 8.5e-8) — once `dtifit`'s undocumented 1%-of-S0 signal floor and bvec renormalisation are matched; unmatched, the two differ by 0.028.
 
 ## Make it yours
 
@@ -161,7 +170,9 @@ that fails to discriminate against the ignore-the-slope reading. But check the b
 `3dDTtoDWI`, `1dDW_Grad_o_Mat++`, `3dAutomask` and `nifti_tool`. The conda AFNI package ships a
 subset of AFNI's programs, so the DTI cross-validation between AFNI and DIPY that this recipe was
 first designed around is **not reachable here**; it would need an image carrying the full AFNI
-distribution. That is the honest reason the cross-check is about NIfTI interpretation instead.
+distribution. That is the honest reason the cross-check is about NIfTI interpretation instead. The tensor
+cross-validation does run, against FSL's `dtifit` on 123 real scans, in
+[the measurement](../../measurements/neuroimaging-real/README.md).
 
 Beyond that: real diffusion data (everything here is synthetic, so nothing speaks to motion,
 eddy-current or susceptibility correction), tractography and connectomes, DIPY's other
