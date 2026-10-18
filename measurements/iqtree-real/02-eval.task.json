@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-iqtree-real-pf01255-eval",
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (pf01255\\.25_seed\\.fa|eval\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 2 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash eval.sh pf01255.25_seed.fa 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree-real/pf01255.25_seed.fa",
+      "destination": "/tmp/pf01255.25_seed.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree-real/eval.sh",
+      "destination": "/tmp/eval.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/iqtree-real/pf01255/iqtree/real.treefile",
+      "destination": "/tmp/real.treefile"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/iqtree-real/pf01255/eval/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

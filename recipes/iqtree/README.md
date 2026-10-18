@@ -24,11 +24,15 @@ make ls    RECIPE=iqtree   # iqout.treefile + smoke-check.txt
 iqtree3 -s pfam38.2_seed_alignment.fa -m LG+G4 -T 4 --seed 12345 --prefix iqout
 ```
 
-## Shape, size, cost
+## Which box — [measured](../../measurements/iqtree-real/README.md) on 919 taxa, ModelFinder + 1,000 UFBoot, `-T 8`
 
-One task on `c8g.xlarge`, 4 threads: **447 s billed**, about $0.02. The companion
-[RAxML-NG](../raxml-ng/README.md) run carries the generation table for this pair — 2.04× from
-Graviton2 to Graviton5, with Graviton4 oddly dearer per search than Graviton3.
+| chip | `2xlarge` | ModelFinder | s / search iteration | **$ per ModelFinder + 1,000 iterations** |
+|---|---|---|---|---|
+| Graviton4 | `c8g` | 4,305 s | 30.4 | 3.08 |
+| Xeon 6975P-C | `c8i` | 3,067 s | 24.4 | 2.86 |
+| **EPYC 9R45** | `c8a` | **1,514 s** | **10.7** | **1.47** |
+
+**Take AMD:** 2.8× Graviton4's speed for half the cost per unit of work. Graviton4 runs this arm64 build's 128-bit SSE2 kernel; x86 runs AVX+FMA. The fixture itself is one `c8g.xlarge` task, 447 s billed, ~$0.02.
 
 ## Make it yours
 
@@ -38,8 +42,8 @@ Graviton2 to Graviton5, with Graviton4 oddly dearer per search than Graviton3.
 | `-T 4` | your core count | **not** `AUTO`: thread count changes the order of likelihood updates and therefore which optimum the search lands on. Pin it, with `--seed`. |
 | `-m LG+G4` | your model, or `-m MFP` to select one | changes the likelihood, so the RAxML-NG agreement only holds at matched models. |
 
-**Leave the workload** — a curated 114-taxon alignment, so the timing and the agreement transfer.
-**Scale it** by taxa, and re-pin threads and seed before quoting any exact number.
+**Leave the workload** — a curated 114-taxon alignment, small enough that the agreement is exact and cheap to re-check.
+**Scale it** by taxa: at 919, `-T 8 --seed` no longer reproduces a run, because FreeRate (`+R`) fits vary run to run, so the tree and the run length do too ([measured](../../measurements/iqtree-real/README.md)).
 
 <details>
 <summary>As shipped: why the likelihood is a band, what is asserted instead, pins</summary>

@@ -1,0 +1,16 @@
+== checks ==
+both iqtree3 runs exit 0           want 0 0               ok   (0 0)
+real.log completion footer         want 1                 ok   (footer)
+taxa: alignment / IQ-TREE          want 919               ok   (919 / 919)
+sites read by IQ-TREE              want 533               ok   (533)
+tips: ML / consensus / evaluated   want 919 each          ok   (919 / 919 / 919)
+ML tree branches (unrooted binary) want 2n-3 = 1835       ok   (1835)
+UFBoot supports, one per split     want n-3 = 916, 0..100 ok   (916, 2..100)
+AIC == -2L + 2k                    4 dp                   ok   (L -254959.4753, k 1854, AIC 513626.9507)
+BIC == -2L + k ln(sites)           4 dp                   ok   (BIC 521559.3294)
+BEST SCORE FOUND == report logL    3 vs 4 dp              ok   (-254959.475 vs -254959.4753)
+chosen model is the BIC minimum    over 29 fitted models  ok   (Q.PFAM+I+R10 (523776.326) vs chosen Q.PFAM+I+R10)
+every row: AIC, BIC closed-form    3 dp, row 1 = chosen   ok   (29 rows, 0 off, row 1 Q.PFAM+I+R10)
+search >= ModelFinder start, same model final >= start         ok   (-254959.4753 >= -256067.9736)
+fixed-topology LG+G4 evaluated     model LG+G4            ok   (logL -257203.5203)
+IQTREE REAL OK

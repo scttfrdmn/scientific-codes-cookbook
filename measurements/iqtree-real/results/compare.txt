@@ -1,0 +1,28 @@
+== Graviton4 vs x86_64 (task 1)
+treefile_byte_identical False
+ml_tree_RF 606 of max 1832 (normalised 0.3308)
+ufboot_support_shared_splits 613 max_abs_diff 82 mean_abs_diff 4.96
+final_logL -254905.0241 -254978.2288 diff 73.2047
+modelfinder_models 29 29 common 29 df_mismatch 0
+  gamma/invariant/none     4 models  identical   4  max_abs_dlnL 0.000000
+  FreeRate +R             25 models  identical   3  max_abs_dlnL 2.119600
+chosen Q.PFAM+I+R10 Q.PFAM+I+R10
+search_iterations 1001 1001
+== Graviton4 vs amd (task 1)
+treefile_byte_identical False
+ml_tree_RF 658 of max 1832 (normalised 0.3592)
+ufboot_support_shared_splits 587 max_abs_diff 73 mean_abs_diff 4.08
+final_logL -254905.0241 -254959.4753 diff 54.4512
+modelfinder_models 29 29 common 29 df_mismatch 0
+  gamma/invariant/none     4 models  identical   4  max_abs_dlnL 0.000000
+  FreeRate +R             25 models  identical   3  max_abs_dlnL 2.210100
+chosen Q.PFAM+I+R10 Q.PFAM+I+R10
+search_iterations 1001 400
+== AMD vs AMD again: ModelFinder alone, same image, seed and threads (05-mf-repeat)
+modelfinder_models 29 29 common 29 df_mismatch 0
+  gamma/invariant/none     4 models  identical   4  max_abs_dlnL 0.000000
+  FreeRate +R             25 models  identical   3  max_abs_dlnL 2.132700
+== Graviton4's tree, LG+G4 fixed point, every chip (02-eval on arm64, 04-eval-g4tree on x86)
+arm64 -256990.2156  cf5558eaf9a5067d
+x86_64 -256990.2156  bafa53dcd81471b3
+amd -256990.2156  cf5558eaf9a5067d
