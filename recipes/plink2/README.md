@@ -21,13 +21,10 @@ Runs PLINK 2 and PLINK 1.9 over the identical binary fileset on Graviton4 and ch
 make stage RECIPE=plink2        # PLINK 1.9 generates the fileset and its own summaries
 spawn task run --spec "$(make -s spec RECIPE=plink2 | grep crosscheck)" --wait
 make ls RECIPE=plink2
-
 plink  --dummy 300 1000 0.02 0 acgt --seed 42 --make-bed --out data
 plink  --bfile data --freq counts --out p19     # 1.9: C1/C2, A1 = MINOR allele
 plink2 --bfile data --freq counts --out p2      # 2.0: ALT_CTS/OBS_CT, ALT = ALT allele
 ```
-
-Two tasks: PLINK 1.9 generates and stages the fileset, then PLINK 2 reads **those bytes** and compares.
 
 ## Make it yours
 
@@ -39,11 +36,20 @@ Two tasks: PLINK 1.9 generates and stages the fileset, then PLINK 2 reads **thos
 | `--assoc` | `--glm` | PLINK 2 **removed** `--assoc`. `--glm` is a regression, not an allelic chi-square — a different test, so old and new association output are not comparable. |
 | `--hardy` | — | 1.9 emits `ALL`/`AFF`/`UNAFF` rows per variant when a phenotype exists; 2.0 emits one. Filter to `ALL` or you are comparing different samples. |
 
-**Leave the fixture.** 300 samples × 1000 variants solves in seconds and is large enough that an off-by-one in either tool shows up somewhere. The point is the *agreement*, not the data. **Scale it** to a real cohort once you trust the pair — the comparison logic is size-independent.
+**Leave the fixture.** 300 samples × 1000 variants solves in seconds and is large enough that an off-by-one in either tool shows up somewhere. The point is the *agreement*, not the data. **Scale it** to a real cohort once you trust the pair — the comparison logic is size-independent, and the measurement below did exactly that.
+
+## Which box — [measured](../../measurements/plink2-real/README.md) (1000 Genomes Phase 3: 77.8 M SNPs × 2,504 samples, VCF → PCA → `--glm`)
+
+| chip | instance | PLINK 2 wall | compute $/result | billed $/result |
+|---|---|---|---|---|
+| **Graviton4** | `r8g.4xlarge` | **681 s** | **0.178** | 0.318 |
+| x86 | `r8i.4xlarge` | 804 s | 0.248 | 0.739 |
+
+**Graviton4 is 1.18× faster and 28% cheaper per result**; VCF import is most of it. Size by the 41 GiB of `/tmp` (staged VCFs plus the merged `.pgen`), not by PLINK. At this scale every allele count still equals PLINK 1.9's and the VCF's own `AC`/`AN`, exactly, and the two PLINKs' exact-PCA eigenvalues are identical. `--glm`'s A1 is the *minor* allele, not ALT — check it before reading a sign — and seed `--pca approx`.
 
 ## Shape, size, cost
 
-Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 20m each, caps $0.05 each. Both tools finish in under a second; the recorded windows are almost entirely boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+Two tasks — PLINK 1.9 generates and stages the fileset, then PLINK 2 reads **those bytes** and compares — on `c8g.large` (2 vCPU / 4 GiB), TTL 20m each, caps $0.05 each. Both tools finish in under a second; the recorded windows are almost entirely boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: exact integer equality, the two conventions that would have faked a disagreement, and four failed attempts</summary>
@@ -164,8 +170,8 @@ not match, or HWE p-values beyond printed precision — but check the bucket reg
 
 ### Not covered
 
-Association testing (above), PLINK 2's native `.pgen` format and its compression advantages, sample
-QC beyond missingness, relatedness (`--king-cutoff`), PCA, and real cohort scale. `--glm` on a
-phenotype with covariates is the obvious next recipe and is a different claim.
+Here: association testing (above), sample QC beyond missingness, relatedness (`--king-cutoff`).
+PCA, `--glm` with PC covariates and a real cohort are in the
+[measurement](../../measurements/plink2-real/README.md).
 
 </details>
