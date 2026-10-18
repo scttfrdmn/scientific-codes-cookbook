@@ -37,9 +37,8 @@ cutadapt -q 15,20 -o out.fq in.fq          # 5' cutoff 15, 3' cutoff 20
 | `-m 10 --max-n 0` | your filters | filtering is per pair: one mate with an `N` drops both. |
 | `-j 4` | your core count | output was byte-identical to `-j 1`, so the core count does not change the result. |
 
-**Leave the fixture as it is.** It is small because every read carries a known answer, and a real
-run would test nothing more about how trimming behaves. **Scale it** by pointing the same command
-at your own data. This recipe has not been timed at real scale, so size that box with a run of your own.
+**Leave the fixture as it is:** every read carries a known answer, and a real run tests nothing more
+about trimming. **Scale it** by pointing the same command at your data, as the measurement below does.
 
 ## Shape, size, cost
 
@@ -47,6 +46,10 @@ Two tasks with S3 between them, because one image holds one tool: fastp trims th
 bytes, then cutadapt trims them and checks both. `c8g.large` + `c8g.xlarge`: **106 s + 113 s billed,
 $0.0074 for both tasks**. All four cutadapt runs take about a second together. Boot, Docker and the
 image pull make up nearly all of that time, so **these timings are not compute cost**.
+
+**Which box — [measured](../../measurements/cutadapt-real/README.md)** on 8.8M MiSeq and 47.8M HiSeq
+TruSeq pairs at `-j 16`: **47.8M pairs in 45 s on AMD, 74 s Graviton4, 77 s Intel** (AMD 18–23% cheaper on compute),
+identical output on all three, every conservation check exact. Only ~5 cores stay busy; RSS < 0.4 GiB.
 
 <details>
 <summary>As shipped: planted truth for every read, the books balanced, BWA quality trimming reimplemented, fastp on the same bytes, pins, x86</summary>

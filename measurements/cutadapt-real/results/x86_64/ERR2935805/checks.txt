@@ -1,0 +1,17 @@
+== ERR2935805: 47832553 pairs ==
+ok   1. input == ENA read_count, base_count                         47832553 pairs / 9662175706 bases (ENA 47832553 / 9662175706)
+ok   2. every trimmed read is a prefix of its input (seq + qual)    not a prefix R1 0 R2 0, raw pairs left over 0
+ok   3. raw report, R1: trimmed_lengths == files, with_adapter      1801335 reads, 24626748 bp removed; 99 lengths, 0 differ
+ok   3. raw report, R2: trimmed_lengths == files, with_adapter      1771027 reads, 24353937 bp removed; 99 lengths, 0 differ
+ok   3. raw report: pairs and bases in == files                     47832553 / 9662175706
+ok   3. main report, R1: trimmed_lengths == files, with_adapter     1801335 reads, 24626748 bp removed; 99 lengths, 0 differ
+ok   3. main report, R2: trimmed_lengths == files, with_adapter     1771027 reads, 24353937 bp removed; 99 lengths, 0 differ
+ok   3. main report: pairs and bases in == files                    47832553 / 9662175706
+ok   4. no untouched read holds an exact adapter or 3' adapter prefix >= 3 violations R1 0 R2 0 
+ok   5. main output == raw pairs passing -m 10 --max-n 0, in order  kept 47734403 (report 47734403), too_short 2378 (2378), too_many_n 95772 (95772), mismatched 0, extra 0
+ok   5. main report: bases out == file                              9593898054 / 9593898054
+     bases: in 9662175706 = out 9593898054 + adapter-trimmed 48980685 + left in filtered pairs 19296967
+obs  trimmed reads whose removed suffix is an exact adapter prefix: R1 1760801/1801335  R2 1699974/1771027
+obs  pairs trimmed on both mates 870472: same length 864020, R1 == revcomp(R2) 797317; one mate only 1831418
+{"acc": "ERR2935805", "adapter_bases": 48980685, "hist_sha256": ["c1c590312aa5d8e3895f7b57a94d6559b80c8ee6adbb293c260d949b1b30c7ef", "b9e39522fa524688903b6fffedca96585049998cae3fdd1e5342060a1f8b5b4e"], "kept": 47734403, "main_records_sha256": "abee52f48e76679442ab4e773bd1d56d2d740527db3cb15e8e0cd0de28d6069c", "pairs": 47832553, "too_many_n": 95772, "too_short": 2378, "with_adapter": [1801335, 1771027]}
+CHECK OK ERR2935805

@@ -1,0 +1,21 @@
+== ERR2984773: 8785731 pairs ==
+ok   1. input == ENA read_count, base_count                         8785731 pairs / 2653290762 bases (ENA 8785731 / 2653290762)
+ok   2. every trimmed read is a prefix of its input (seq + qual)    not a prefix R1 0 R2 0, raw pairs left over 0
+ok   3. raw report, R1: trimmed_lengths == files, with_adapter      1407649 reads, 39816596 bp removed; 149 lengths, 0 differ
+ok   3. raw report, R2: trimmed_lengths == files, with_adapter      1378137 reads, 39038404 bp removed; 149 lengths, 0 differ
+ok   3. raw report: pairs and bases in == files                     8785731 / 2653290762
+ok   3. main report, R1: trimmed_lengths == files, with_adapter     1407649 reads, 39816596 bp removed; 149 lengths, 0 differ
+ok   3. main report, R2: trimmed_lengths == files, with_adapter     1378137 reads, 39038404 bp removed; 149 lengths, 0 differ
+ok   3. main report: pairs and bases in == files                    8785731 / 2653290762
+ok   4. no untouched read holds an exact adapter or 3' adapter prefix >= 3 violations R1 0 R2 0 
+ok   5. main output == raw pairs passing -m 10 --max-n 0, in order  kept 8778584 (report 8778584), too_short 1110 (1110), too_many_n 6037 (6037), mismatched 0, extra 0
+ok   5. main report: bases out == file                              2572518444 / 2572518444
+     bases: in 2653290762 = out 2572518444 + adapter-trimmed 78855000 + left in filtered pairs 1917318
+obs  trimmed reads whose removed suffix is an exact adapter prefix: R1 1359741/1407649  R2 1280326/1378137
+obs  pairs trimmed on both mates 1242808: same length 1240700, R1 == revcomp(R2) 1136596; one mate only 300170
+ok   6. -j 1 == -j 16: records and report counts                    8778584 pairs, sha256 d8a482b743c41986
+ok   6. -q 15,20 R1 == the BWA rule, read for read                  8785731 reads, 925532 trimmed (0 to empty), 4115711 bp; 0 differ
+ok   6. -q 15,20 R2 == the BWA rule, read for read                  8785731 reads, 2136206 trimmed (3639 to empty), 12887396 bp; 0 differ
+obs  wrong kit (Nextera adapter): with adapter R1 188329 R2 157763, of which removed >= 10 bp: 241 / 235; TruSeq removed >= 10 bp: 1004362 / 985901
+{"acc": "ERR2984773", "adapter_bases": 78855000, "hist_sha256": ["8cfb1dd07b48aa0488ea41107a49ba68fa212ba1e3d4782a0b9e33aaa9a718e3", "fd5a0fd94ed7abf3beaf61b3bc60abb28101472595d173bb105158046c9554ac"], "kept": 8778584, "main_records_sha256": "d8a482b743c41986ae51dc120df63fa946c65a7be6a6b8c9beb9f9f1a5d357ec", "nextera_with_adapter": [188329, 157763], "pairs": 8785731, "qual_records_sha256": ["0236afb2edfa751857ee6fdced05dac3683dd76fa2ba3e8faccc6f14f12c415b", "23c5de2e82506bad5ff8669e1a40c55d0c11bcab7aee4c5491527fd252b5362f"], "too_many_n": 6037, "too_short": 1110, "with_adapter": [1407649, 1378137]}
+CHECK OK ERR2984773

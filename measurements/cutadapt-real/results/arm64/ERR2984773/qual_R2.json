@@ -1,0 +1,56 @@
+{
+  "tag": "Cutadapt report",
+  "schema_version": [0, 3],
+  "cutadapt_version": "5.2",
+  "python_version": "3.13.14",
+  "command_line_arguments": [
+    "-q",
+    "15,20",
+    "-j",
+    "16",
+    "--json=/tmp/out/ERR2984773/qual_R2.json",
+    "-o",
+    "/var/tmp/cutadapt-real/ERR2984773/qual_R2.fq",
+    "ERR2984773_2.fastq.gz"
+  ],
+  "cores": 16,
+  "input": {
+    "path1": "ERR2984773_2.fastq.gz",
+    "path2": null,
+    "paired": false
+  },
+  "read_counts": {
+    "input": 8785731,
+    "filtered": {
+      "too_short": null,
+      "too_long": null,
+      "too_many_n": null,
+      "too_many_expected_errors": null,
+      "casava_filtered": null,
+      "discard_trimmed": null,
+      "discard_untrimmed": null
+    },
+    "output": 8785731,
+    "reverse_complemented": null,
+    "read1_with_adapter": null,
+    "read2_with_adapter": null
+  },
+  "basepair_counts": {
+    "input": 1326645381,
+    "input_read1": 1326645381,
+    "input_read2": null,
+    "quality_trimmed": 12887396,
+    "quality_trimmed_read1": 12887396,
+    "quality_trimmed_read2": null,
+    "poly_a_trimmed": null,
+    "poly_a_trimmed_read1": null,
+    "poly_a_trimmed_read2": null,
+    "output": 1313757985,
+    "output_read1": 1313757985,
+    "output_read2": null
+  },
+  "adapters_read1": [],
+  "adapters_read2": null,
+  "poly_a_trimmed_read1": null,
+  "poly_a_trimmed_read2": null
+}
