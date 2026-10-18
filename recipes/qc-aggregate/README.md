@@ -25,7 +25,7 @@ fastqc -t 2 --extract -o . sampleA.fastq sampleB.fastq sampleC.fastq sampleD.fas
 multiqc -f -o mqc zips/          # reads the *_fastqc.zip files directly
 ```
 
-Two tasks: FastQC builds the fixture and measures it, MultiQC aggregates the four reports and the table is checked against FastQC's own numbers.
+Two tasks: FastQC builds the fixture and measures it; MultiQC aggregates the four reports, checked against FastQC's own numbers.
 
 ## Make it yours
 
@@ -36,11 +36,19 @@ Two tasks: FastQC builds the fixture and measures it, MultiQC aggregates the fou
 | `multiqc zips/` | `multiqc .` over a whole analysis dir | MultiQC scans for *any* tool's output it recognises — bwa, samtools, salmon, picard — so pointing it at a project root is the usual real use. |
 | implicit sample count | an explicit expected N | **assert the row count yourself.** MultiQC cannot know a sample is missing; see below. |
 
-**Leave the fixture:** metrics fixed by construction make every FastQC number exactly assertable rather than merely plausible. **Scale it** to real reads whenever — the aggregation checks are what carry over.
+**Leave the fixture:** metrics fixed by construction make every FastQC number exactly assertable rather than merely plausible. **Scale it** to real reads whenever — the checks carry over, as the real cohort below shows.
 
 ## Shape, size, cost
 
-Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m and 12m, caps $0.05 each. FastQC is a JVM tool and MultiQC a Python one; both finish in seconds here and the windows are almost entirely image pull. **These timings are not compute cost.**
+Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m and 12m, caps $0.05 each. FastQC is a JVM tool and MultiQC a Python one; both finish in seconds here and the windows are almost entirely image pull. **These timings are not compute cost.** Which box on a real cohort — [measured](../../measurements/qc-aggregate-real/README.md), 11 whole FASTQs, 446M reads, 4 assays:
+
+| chip | instance | FastQC wall | $/hr | compute $ | **billed $/result** | overhead |
+|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 231 s | 0.7181 | 0.0461 | **0.0695** | 109 s |
+| Xeon 6975P-C | `m8i.4xlarge` | 220 s | 0.8467 | 0.0518 | 0.0843 | 128 s |
+| EPYC 9R45 | `m8a.4xlarge` | **165 s** | 0.9738 | **0.0447** | 0.0724 | 96 s |
+
+**AMD is fastest, Graviton4 cheapest billed:** staging 22.9 GB is a third of every bill. FastQC runs one thread per file, so the wall is the largest file and 16 vCPU averaged 6.3 busy; the box is sized by [tmpfs](../../practices/container-path.md) (21 GiB staged), not cores. Every count was exact against a recount and the published counts, and every output byte-identical on all three chips.
 
 <details>
 <summary>As shipped: exact metrics by construction, the silently-short cohort report, the 1000-vs-1000.0 trap, pins</summary>

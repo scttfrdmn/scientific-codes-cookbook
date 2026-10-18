@@ -1,0 +1,98 @@
+{
+  "task_id": "cookbook-qc-aggregate-real-fastqc",
+  "container": "quay.io/aarchbio/fastqc@sha256:a4a8edb4754d731a0fd513cb4594a14766d662d5156c4e93299bdd57ef4b2fc3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '699dcf9a17b5adf54bc6c213ca1efb2b2ef12f944509a6ae31b72290e5424d8b  fastqc.sh\\nc2b50626833abf3bdbed3b25f1f0396fdaedab97713b3288b39107a712c69307  recount.pl\\n8f4851cc04c211a6eb347e4446ffdb77f2b58dcb763a1ab3bad6c463eb38cd03  check_fastqc.pl\\n5c5905a553e49592ca50ec921c444580361a37a792c9a895a105248b098935e7  cohort.tsv\\n8d5efb3d9148444bbcff81bf29367bc554a464ea1345605c0ac0e2fb6f69bfa9  ena.md5\\naefd6f9c06547f3af37b5b5785b7eeb51e1197e9852e25c350f36709aaae8336  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash /tmp/fastqc.sh 11\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/fq/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/fq/SRR062634_2.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/fq/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/fq/ERR188026_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz",
+      "destination": "/tmp/fq/ERR2984773_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz",
+      "destination": "/tmp/fq/ERR2984773_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_1.fastq.gz",
+      "destination": "/tmp/fq/ERR2935805_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz",
+      "destination": "/tmp/fq/ERR2935805_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/plasmid.fastq.gz",
+      "destination": "/tmp/fq/SRR8297998.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/repA.fastq.gz",
+      "destination": "/tmp/fq/SRR8279891.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/repB.fastq.gz",
+      "destination": "/tmp/fq/SRR8281054.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/fastqc.sh",
+      "destination": "/tmp/fastqc.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/recount.pl",
+      "destination": "/tmp/recount.pl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/check_fastqc.pl",
+      "destination": "/tmp/check_fastqc.pl"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/cohort.tsv",
+      "destination": "/tmp/cohort.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/ena.md5",
+      "destination": "/tmp/ena.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qc-aggregate-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qc-aggregate-real/r2/fastqc/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
