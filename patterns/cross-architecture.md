@@ -54,3 +54,13 @@ The same run carries its own control: `bwa-mem2 index` is nearly arch-neutral (1
 ## The build-confound, carried forward
 
 The dramatic cross-arch number is the one to distrust — [SPAdes looked 2.5× faster on x86 and it was the *build*](cost-per-result.md) (arm64 ~3 cores vs x86 ~6), not the silicon. So this set was chosen for clean attribution and instrumented to prove it: **OpenFOAM shares one upstream image** (no channel to confound); **bwa and gatk4 are version-matched** across aarch.bio/biocontainers, with actual cores confirmed by `cpu.stat`, not assumed from the `-t` flag. **GROMACS and SPAdes were excluded** — GROMACS has no version-matched x86 build (2026.3 vs biocontainers' 2022), and SPAdes' confound is already on record — because a comparison you can't cleanly attribute measures the build channel, not the chip.
+
+The real-workload batches found three more builds where the arm64 deficit comes from the toolchain, not the core. Each is measured, and each is fixable without new silicon:
+
+| code | what arm64 ships | measured | |
+|---|---|---|---|
+| any pure-Python tool ([mageck](../measurements/mageck-real/README.md)) | conda-forge CPython cross-compiled from x86, so built **without PGO** | gzip line reading 2.56 M/s on Graviton4 vs 3.85 Intel, 5.02 AMD | [python-feedstock#955](https://github.com/conda-forge/python-feedstock/issues/955) |
+| [IQ-TREE](../measurements/iqtree-real/README.md) | the 128-bit `SSE2` likelihood kernel (x86 gets `AVX+FMA`) | AMD 2.8× Graviton4 per iteration | |
+| R's `stats::cor`/`cov` ([wgcna](../measurements/wgcna-real/README.md)) | `cov.c` accumulates in `LDOUBLE`, which is software 128-bit on aarch64 Linux (80-bit x87 hardware on x86) | 19–40× slower; `WGCNA::cor` (BLAS) does the same 15k² in 4 s | |
+
+So when an arm64 number is far off, check how the arm64 build was made before you blame the chip.
