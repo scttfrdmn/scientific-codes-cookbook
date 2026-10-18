@@ -1,0 +1,45 @@
+claim	value	bound	status
+version nilearn	0.14.1		report
+version nibabel	5.4.2		report
+version numpy	2.5.4		report
+version scipy	1.18.1		report
+version sklearn	1.9.1		report
+version joblib	1.6.0		report
+cohort: quality-checked subjects	871	== 871 (fetch_abide_pcp)	ok
+cohort: FILE_IDs unique	True		ok
+cohort: SUB_IDs unique	True		ok
+cohort: autism / control	403 / 468		ok
+cohort: sites	20	== 20	ok
+cohort: subjects with all three files staged	871	every one	ok
+CC200 centres of mass vs the published table: via atlas header, max mm	0.08		report
+CC200 centres of mass vs the published table: via image header (index-aligned), max mm	4.31		report
+volumes per subject (min / median / max)	78 / 176 / 316		report
+total volumes	168434		report
+image dtypes	['float64']		report
+CC200 regions extracted, every subject	[200]	== labels in the atlas	ok
+atlas-to-image voxel map is an integer shift, every subject	['1,1,0']		ok
+CC200 regions with no voxel in the image, max	0		report
+NiftiLabelsMasker vs hand mean, max abs	0.000e+00		report
+NiftiLabelsMasker vs hand mean, worst (|diff| - n eps mean|x|)	0.000e+00	<= 0 (float64 summation bound, every element)	ok
+NiftiMasker round trip in-mask, max abs	0.0	== 0	ok
+NiftiMasker round trip out-of-mask, max abs	0.0	== 0	ok
+signal.clean(detrend) . [1,t], max rel	2.785e-17	< 1e-10	ok
+correlation(EmpiricalCovariance) vs np.corrcoef, max abs	3.220e-15	< 1e-12	ok
+C-PAC rois_cc200 same shape, every subject	871	871	ok
+C-PAC vs mean over the index-aligned atlas, max abs	6.579e-06		report
+C-PAC vs mean over the index-aligned atlas, worst (|diff| - (n eps32 mean|x| + ulp32 + 5e-7))	-8.360e-09	<= 0 (a float32 mean, 6 printed decimals)	ok
+control: C-PAC vs nilearn (header-aligned), max abs	4.028e+02	> 1 (the placements differ)	ok
+C-PAC vs nilearn per-region r: median of medians / min	0.9602 / -0.2276		report
+zero-variance regions (region:subjects)	12:1;27:2;30:1;32:4;36:3;42:3;43:9;52:5;53:1;78:1;80:1;86:1;109:1;113:2;124:2;130:1;139:1;176:2;181:1;198:4		report
+sha256 over all region-signal arrays	c0d4d9b92979b6c6ae04eb2a9d6ee1feaade54777926c47823821bbb6a1e3d26		report
+regions kept for the group (nonzero variance in every subject)	180		report
+tangent: geometric mean converged (no max_iter warning)	True		ok
+tangent: |mean of tangent vectors|_F / n^2 at the returned mean	4.507e-08	< 1e-7 (nilearn's own tol)	ok
+control: the same gradient at the arithmetic mean	5.759e-04	> 100x the converged one	ok
+tangent: whitening . mean . whitening == I, max abs	4.474e-14	< 1e3 kappa eps = 1.6e-11 (kappa 72.2)	ok
+tangent: inverse_transform recovers every covariance, max rel	9.080e-14	< 1e3 kappa_max eps = 1.5e-09 (kappa_max 6681.0)	ok
+sha256 tangent mean	c62c67832e05eda2fcdfaaa9762bef09571c29171863a17b70e138b1081e4d13		report
+10-fold CV accuracy, mean (folds stratified by site x diagnosis)	0.7049		report
+10-fold CV accuracy, per fold	0.750,0.736,0.713,0.667,0.667,0.759,0.678,0.632,0.770,0.678		report
+leave-one-site-out accuracy, pooled	0.6774		report
+control: permuted diagnosis, 10-fold accuracy	0.5085		report

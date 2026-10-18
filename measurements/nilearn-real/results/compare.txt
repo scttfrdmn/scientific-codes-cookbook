@@ -1,0 +1,33 @@
+== Graviton4 vs x86_64
+region signals bit-identical: 871 of 871 subjects
+tangent mean: max |diff| 1.313e-11, rel 4.547e-14, bit-identical entries 31 of 32400
+pred_10fold: identical for 871 of 871 subjects
+pred_loso: identical for 871 of 871 subjects
+
+scored values that differ:
+  signal.clean(detrend) . [1,t], max rel: 3.509e-17  |  2.785e-17
+  correlation(EmpiricalCovariance) vs np.corrcoef, max abs: 1.998e-15  |  3.220e-15
+  tangent: whitening . mean . whitening == I, max abs: 2.444e-14  |  4.474e-14
+  tangent: inverse_transform recovers every covariance, max rel: 4.904e-14  |  9.080e-14
+  sha256 tangent mean: d1a84d3d653e36bf37f5c5c050aac047dfa9677d79a9786e646e82ce9a641ba7  |  c62c67832e05eda2fcdfaaa9762bef09571c29171863a17b70e138b1081e4d13
+
+== Graviton4 vs amd
+region signals bit-identical: 871 of 871 subjects
+tangent mean: max |diff| 1.313e-11, rel 4.547e-14, bit-identical entries 31 of 32400
+pred_10fold: identical for 871 of 871 subjects
+pred_loso: identical for 871 of 871 subjects
+
+scored values that differ:
+  signal.clean(detrend) . [1,t], max rel: 3.509e-17  |  2.785e-17
+  correlation(EmpiricalCovariance) vs np.corrcoef, max abs: 1.998e-15  |  3.220e-15
+  tangent: whitening . mean . whitening == I, max abs: 2.444e-14  |  4.474e-14
+  tangent: inverse_transform recovers every covariance, max rel: 4.904e-14  |  9.080e-14
+  sha256 tangent mean: d1a84d3d653e36bf37f5c5c050aac047dfa9677d79a9786e646e82ce9a641ba7  |  c62c67832e05eda2fcdfaaa9762bef09571c29171863a17b70e138b1081e4d13
+
+== Intel vs AMD (the same x86 env twin)
+region signals bit-identical: 871 of 871 subjects
+tangent mean: max |diff| 0.000e+00, rel 0.000e+00, bit-identical entries 32400 of 32400
+pred_10fold: identical for 871 of 871 subjects
+pred_loso: identical for 871 of 871 subjects
+
+scored values that differ:

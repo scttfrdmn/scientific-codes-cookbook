@@ -23,6 +23,16 @@ FirstLevelModel(noise_model="ols", signal_scaling=False).fit(img, design_matrice
 ConnectivityMeasure(kind="correlation", cov_estimator=EmpiricalCovariance())             # == np.corrcoef
 ```
 
+## Which box — [measured](../../measurements/nilearn-real/README.md) on all 871 quality-checked ABIDE I subjects (99 GB)
+
+| chip | `8xlarge` | wall | **billed $/result** |
+|---|---|---|---|
+| **Graviton4** | `r8g` | 459 s | **0.499** |
+| Xeon 6975P-C | `r8i` | 527 s | 0.709 |
+| EPYC 9R45 | `r8a` | **300 s** | 0.576 |
+
+**Take Graviton4 for a one-off pass, AMD if the data stays on the box:** AMD runs CC200 extraction, the tangent embedding and three CVs 1.5× faster, but staging the cohort is half the bill. Every identity holds at scale and all three chips give identical region signals and predictions (10-fold accuracy 0.705). The release's own `rois_cc200` series put the atlas 3 mm off its header, so extract from `func_preproc` yourself.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -153,10 +163,10 @@ trend — or a NaN anywhere a bound is applied. Check the bucket regardless
 
 ### Not covered
 
-**Plotly and kaleido backends**, which the env does not carry (the matplotlib plotting tests do run). **Real scans**: nothing here reads a
-BIDS dataset, so fetchers, confound loading (`load_confounds`) and resampling between real spaces
-are untouched. **Second-level models, decoding and searchlight**, which are where most fMRI
-analyses end up. **Surface data** (`SurfaceImage`, fsaverage): the bundled `fsaverage5` ships in
+**Plotly and kaleido backends**, which the env does not carry (the matplotlib plotting tests do run). **Real scans** are in
+[nilearn-real](../../measurements/nilearn-real/README.md) (ABIDE I, region signals, tangent space, a
+classifier), but nothing reads a BIDS dataset, so fetchers and confound loading (`load_confounds`) are
+untouched. **Second-level models and searchlight**, which are where many fMRI analyses end up. **Surface data** (`SurfaceImage`, fsaverage): the bundled `fsaverage5` ships in
 the package and the suite's surface tests use it, but the identities do not.
 
 </details>

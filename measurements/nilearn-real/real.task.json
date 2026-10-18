@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-nilearn-real-abide",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash real.sh /tmp/abide 32\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn-real/abide/",
+      "destination": "/tmp/abide/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nilearn-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nilearn-real/abide/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
