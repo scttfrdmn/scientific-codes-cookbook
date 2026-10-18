@@ -23,6 +23,16 @@ ncwa -y max -v topo topo.nc max.nc    # NCO's independent max of the same field 
 
 CDO produces the field and its statistics; NCO reads the same file and recomputes them. Two independent implementations agreeing on identical bytes is the check — the [openbabel/pdbfixer](../openbabel-pdbfixer/README.md) shape, one domain over.
 
+## Which box — [measured](../../measurements/cdo-nco-real/README.md) on a year of hourly ERA5 (13.35 GB), 8 vCPU
+
+| chip | `r8.2xlarge` | nine full-year jobs | compute $/result | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `r8g` | 286 s | **0.038** | 0.108 |
+| Xeon 6975P-C | `r8i` | 347 s | 0.054 | 0.128 |
+| **EPYC 9R45** | `r8a` | **228 s** | 0.041 | **0.103** |
+
+**Any of the three works. Size by RAM, not cores**: the year stages into tmpfs (½ RAM), so 64 GiB. At that scale, CDO and NCO agree on all 392 million daily, monthly and annual mean values, and CDO's annual field is bit-identical to xarray's. On ERA5's chunked files, pass `fldmean` its areas (`-setgridarea`, 10× faster) and give `ncra` a chunk cache (`--cnk_csh=1000000000`, 22× faster).
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |

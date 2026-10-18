@@ -1,0 +1,82 @@
+{
+  "task_id": "cookbook-cdo-nco-real",
+  "container": "quay.io/aarchsci/climate@sha256:ce6735b6dffe825fd23810bce4935b8eff6f6fbf7963c1418b87a7f30767b5fe",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nT0=$(date +%s)\nsha256sum -c pins.sha256 > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"sha256 of 13.35 GB in $(( $(date +%s) - T0 ))s\"\nT0=$(date +%s)\nbash real.sh > real.log 2>&1\nRC=$?\necho \"real.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncat real.log\ntar czf logs.tgz logs times.tsv host.txt\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\nT0=$(date +%s)\npython3 -u check.py > check.log 2>&1\nRC=$?\ncat check.log\necho \"check.py exit $RC in $(( $(date +%s) - T0 ))s\"\ntest \"$RC\" = 0 || { echo \"FAIL: a check failed\"; exit 1; }\ngrep -q 'CDO NCO REAL OK' check.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ndf -h /tmp | tail -1\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/climate-real/era5-2023/",
+      "destination": "/tmp/era5/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/xr_global_hourly_2023.npy",
+      "destination": "/tmp/xr_global_hourly_2023.npy"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/xr_annual_mean_2023.npy",
+      "destination": "/tmp/xr_annual_mean_2023.npy"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/rt.py",
+      "destination": "/tmp/rt.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cdo-nco-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/check.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/check.log"
+    },
+    {
+      "source": "/tmp/logs.tgz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/logs.tgz"
+    },
+    {
+      "source": "/tmp/cdo-nco-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/cdo-nco-results.tsv"
+    },
+    {
+      "source": "/tmp/g.nc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/g.nc"
+    },
+    {
+      "source": "/tmp/gr.nc",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/gr.nc"
+    },
+    {
+      "source": "/tmp/ann_cdo.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cdo-nco-real/r1/ann_cdo.npy"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
