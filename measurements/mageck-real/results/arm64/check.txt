@@ -1,0 +1,36 @@
+library_duplicated_sequences           0   (MAGeCK keeps the first)
+stagger_vs_recount_plasmid             77441 sgRNAs, 0 differ   (offsets 22,23,24,25,26,27,28,29,30; reads 60120685, counted 34048514 = 56.63%)
+stagger_uncounted_guides_plasmid       242322 reads (0.403% of reads) hold a guide at another offset   (observation; offset:reads 0:1 1:1 3:12 4:7 5:8 6:11 7:9 8:6 9:19 10:14 11:43 12:60 13:118 14:189 15:307 16:418 17:809 18:2266 19:6097 20:28437 21:203490)
+stagger_summary_plasmid                reads 60120685 mapped 34048514 zero 74 gini 0.05514   (|gini - recompute| 1.2e-14)
+stagger_vs_recount_repA                77441 sgRNAs, 0 differ   (offsets 22,23,24,25,26,27,28,29,30; reads 99121522, counted 79588036 = 80.29%)
+stagger_uncounted_guides_repA          612786 reads (0.618% of reads) hold a guide at another offset   (observation; offset:reads 1:1 3:2 4:1 5:1 6:1 7:2 8:14 9:21 10:47 11:121 12:236 13:424 14:637 15:946 16:1616 17:2859 18:6496 19:16743 20:75143 21:507475)
+stagger_summary_repA                   reads 99121522 mapped 79588036 zero 410 gini 0.07731   (|gini - recompute| 8.3e-16)
+stagger_vs_recount_repB                77441 sgRNAs, 0 differ   (offsets 22,23,24,25,26,27,28,29,30; reads 93622486, counted 75481180 = 80.62%)
+stagger_uncounted_guides_repB          579348 reads (0.619% of reads) hold a guide at another offset   (observation; offset:reads 4:1 5:4 6:2 7:4 8:12 9:30 10:54 11:96 12:181 13:357 14:558 15:806 16:1410 17:2661 18:6165 19:15736 20:71461 21:479810)
+stagger_summary_repB                   reads 93622486 mapped 75481180 zero 405 gini 0.07743   (|gini - recompute| 3.8e-15)
+auto_vs_recount_plasmid                77441 sgRNAs, 0 differ   (offsets 24,25,23,29,28,26; reads 60120685, counted 26839950 = 44.64%)
+auto_uncounted_guides_plasmid          7450886 reads (12.393% of reads) hold a guide at another offset   (observation; offset:reads 0:1 1:1 3:17 4:8 5:8 6:11 7:9 8:6 9:19 10:14 11:45 12:60 13:118 14:189 15:307 16:420 17:809 18:2266 19:6101 20:28606 21:204991 22:3889535 27:231228 30:3086117)
+auto_summary_plasmid                   reads 60120685 mapped 26839950 zero 91 gini 0.0573   (|gini - recompute| 2.6e-14)
+auto_vs_recount_repA                   77441 sgRNAs, 0 differ   (offsets 23,25,28,26,24,29; reads 99121522, counted 61769341 = 62.32%)
+auto_uncounted_guides_repA             18431481 reads (18.595% of reads) hold a guide at another offset   (observation; offset:reads 1:1 3:4 4:1 5:1 6:1 7:2 8:14 9:21 10:47 11:124 12:236 13:424 14:637 15:946 16:1616 17:2859 18:6496 19:16746 20:75625 21:510624 22:9356785 27:545317 30:7912954)
+auto_summary_repA                      reads 99121522 mapped 61769341 zero 422 gini 0.08008   (|gini - recompute| 1.7e-14)
+auto_vs_recount_repB                   77441 sgRNAs, 0 differ   (offsets 23,25,28,24,29,26; reads 93622486, counted 58578520 = 62.57%)
+auto_uncounted_guides_repB             17482008 reads (18.673% of reads) hold a guide at another offset   (observation; offset:reads 4:1 5:4 6:2 7:4 8:12 9:30 10:54 11:98 12:181 13:358 14:558 15:806 16:1410 17:2662 18:6165 19:15737 20:71896 21:482557 22:8870300 27:515759 30:7513414)
+auto_summary_repB                      reads 93622486 mapped 58578520 zero 411 gini 0.08019   (|gini - recompute| 1.4e-14)
+size_factors_rra                       1.718160 0.746543 0.786995   (max rel diff vs recompute 0.0e+00)
+size_factors_null                      0.976281 1.027273   (max rel diff vs recompute 0.0e+00)
+normalized_eq_raw_x_factor             0.0e+00   (max rel diff, 77441 rows)
+rra_rerun_byte_identical               True
+reference_sets_in_library              CEGv2 661 of 684, NEGv1 897 of 926
+rra_depleted_fdr_lt_0.05               1484 of 20111 genes: 513 CEG (recall 0.776), 6 NEG
+rra_ctrl_depleted_fdr_lt_0.05          16265 of 19112 genes: 660 CEG, 683 NEG   (observation: non-targeting guides as the null)
+rra_auto_depleted_fdr_lt_0.05          1477 of 20110 genes: 511 CEG, 5 NEG   (observation: AUTO offsets)
+rra_auc_ceg_vs_neg                     0.9932   (observation; by neg|rank)
+mle_genes                              20112, 0 non-finite beta
+genes_scored                           RRA 20111 (genes with a read: 20111), MLE 20112 (genes in the table: 20112)
+mle_beta_of_a_gene_with_no_reads       controlguide371 -0.78849   (observation)
+mle_median_beta                        CEG -1.6034, NEG 0.1071
+mle_auc_ceg_vs_neg                     0.9944   (observation; by beta)
+mle_fixed_columns                      dropout|beta,dropout|z,dropout|wald-p-value,dropout|wald-fdr   (written to mle.fixed.tsv for the cross-chip compare)
+null_repB_vs_repA_fdr_lt_0.05          neg 0, pos 2   (observation)
+MAGECK REAL OK

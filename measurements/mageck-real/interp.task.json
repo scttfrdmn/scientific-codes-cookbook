@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-mageck-real-interp",
+  "container": "quay.io/aarchbio/mageck@sha256:92a0f37e3ebe2deb7186eaaed15cb9803caf4fa1a8302d6b6c70d71d913edcba",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf 'd2486ce56820f8d1992f894ed305cc572610ec9253a9520cce8902453c99944f  interp.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH HOME=/tmp\nmkdir -p /tmp/out\npython3 -u /tmp/interp.py /tmp/data/plasmid.fastq.gz > /tmp/out/interp.txt 2>&1\ncat /tmp/out/interp.txt\ngrep -q 'INTERP OK' /tmp/out/interp.txt || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/plasmid.fastq.gz",
+      "destination": "/tmp/data/plasmid.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/brunello.tsv",
+      "destination": "/tmp/data/brunello.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/interp.py",
+      "destination": "/tmp/interp.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck-real/interp/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

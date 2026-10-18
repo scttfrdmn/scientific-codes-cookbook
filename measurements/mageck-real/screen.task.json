@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-mageck-real",
+  "container": "quay.io/aarchbio/mageck@sha256:92a0f37e3ebe2deb7186eaaed15cb9803caf4fa1a8302d6b6c70d71d913edcba",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '54fde2eaddeb46f92e1dd967162ac9df71c6e1c532c379bf9d65e46cc555b959  run.sh\\nbb4e82ac04e32c30ff1ad2edebd29e2a03653769753c337135e0e974286a04b5  recount.py\\n265812a179e500982481735f3d0a1e63fe3a8f4ebab85a074b58427ddf942962  check.py\\n62ce68332f91c9dee96fd0242f284aca8d0921d24b0d72f86daddc5130dbede0  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash /tmp/run.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/brunello.tsv",
+      "destination": "/tmp/data/brunello.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/CEGv2.txt",
+      "destination": "/tmp/data/CEGv2.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/NEGv1.txt",
+      "destination": "/tmp/data/NEGv1.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/plasmid.fastq.gz",
+      "destination": "/tmp/data/plasmid.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/repA.fastq.gz",
+      "destination": "/tmp/data/repA.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/data/repB.fastq.gz",
+      "destination": "/tmp/data/repB.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/recount.py",
+      "destination": "/tmp/recount.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mageck-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mageck-real/r3/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

@@ -17,7 +17,6 @@ Runs `mageck count`, `mageck test` (RRA) and `mageck mle` on a pooled knockout s
 ```bash
 make stage RECIPE=mageck          # once: library, six FASTQs, truth tables (sha256-pinned)
 spawn task run --spec "$(make -s spec RECIPE=mageck)" --wait
-make ls RECIPE=mageck
 
 mageck count -l library.txt -n screen --sample-label ctrl1,ctrl2,treat1,treat2,null1,null2 \
   --fastq ctrl1.fastq.gz ctrl2.fastq.gz treat1.fastq.gz treat2.fastq.gz null1.fastq.gz null2.fastq.gz
@@ -30,12 +29,22 @@ mageck mle  -k screen.count.txt -d design.txt --control-sgrna controls.txt --thr
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `library.txt` (id, 20-mer, gene) | your library (Brunello, GeCKO, …) | same three columns. Matching is **exact**: a read one mismatch off a guide is not counted. |
-| `--trim-5` left at `AUTO` | `--trim-5 23` or `23,24,25` | AUTO keeps only the dominant offset(s) from the first 100k reads. A staggered library at a minor offset is silently not counted. Check `Auto determination of trim5` in the log. |
-| `controls.txt`, 200 non-targeting sgRNAs | your library's non-targeting list | RRA draws its null from these. Without them it uses every sgRNA. |
+| `--trim-5` left at `AUTO` | every stagger offset, e.g. `22,23,24,25,26,27,28,29,30` | AUTO stops at 75% of the first 100k reads. On a real Broad screen it dropped 3 of 9 offsets, **18.6% of reads**. Check `Auto determination of trim5` in the log. |
+| `controls.txt`, 200 non-targeting sgRNAs | your library's non-targeting list | RRA draws its null from these. In a **knockout** screen don't: cutting toxicity made 85% of real genes "depleted". Leave the flag off. |
 | `ctrl1,ctrl2` vs `treat1,treat2` | your day-0 / plasmid vs end point | median normalisation uses only the samples in the comparison. |
 | `design.txt` (baseline + treatment) | more columns for more conditions | `mle` reports one beta per column. Read `beta` and `wald-fdr`, which are deterministic. Permutation `p-value`/`fdr` are not. |
 
 **Leave the fixture.** A planted screen is the only kind where the count table and the hit list have a known answer. 840 genes × 4 sgRNAs keeps the whole run under a minute. **Scale it** to a genome-wide library: the claims hold, and only `count` time grows (linear in reads).
+
+## Which box — [measured](../../measurements/mageck-real/README.md) (Brunello A375: 253M reads × 77,441 guides, 8 vCPU)
+
+| chip | instance | count / RRA / MLE | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 1224 / 11 / 86 s | 0.3590 | 0.142 |
+| Xeon 6975P-C | `m8i.2xlarge` | 738 / 8 / 91 s | 0.4234 | 0.111 |
+| **EPYC 9R45** | `m8a.2xlarge` | **530** / 7 / 55 s | 0.4869 | **0.097** |
+
+**Take AMD: 2.2× faster, 32% cheaper, byte-identical output.** `count` is single-threaded Python and 93% of the run. The arm64 image's Python has no PGO/LTO, so part of the gap is the build.
 
 ## Shape, size, cost
 
@@ -125,8 +134,8 @@ MAGeCK's own `*.log` files are staged out beside the results. Check the bucket r
 ### Not covered
 
 **Paired-end counting, BAM input and `--count-n`.** **`mageck pathway`, `--cnv-norm` and the PDF
-reports**, which need R and LaTeX. **MAGeCK-VISPR / FluteMLE.** **A real screen.** No
-public screen has a known answer, so this one is planted. The obvious next step is a public
-Brunello screen run against a known core-essential list as a regime check.
+reports**, which need R and LaTeX. **MAGeCK-VISPR / FluteMLE.** **A real screen** is
+[mageck-real](../../measurements/mageck-real/README.md): the Brunello A375 dropout,
+recounted exactly, with Hart's essential and non-essential genes as the regime check.
 
 </details>
