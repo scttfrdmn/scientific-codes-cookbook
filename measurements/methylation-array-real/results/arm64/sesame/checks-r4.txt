@@ -1,0 +1,20 @@
+sesame_version                     1.28.1
+sesameData_version                 1.28.0
+preprocessCore_version             1.72.0
+workers                            16
+samples                            ok   689 rows, 689 unique GSM
+sesame_betas                       ok   486427 x 689, 282,910,849 non-NA  want 486427 x 689 (HM450 address order)
+sesame_beta_in_range               ok   [0.002802, 0.996404]
+sesame_nonNA_per_sample            min 326418  median 414993  max 420642   [observation]
+sex_sesame_equals_minfi            ok   689/689 samples: both codes call the same sex
+sesame_sex_vs_annotation           689/689 agree   [observation]
+annotation_mismatches_confirmed    ok   0 samples whose annotation minfi contradicts; SeSAMe agrees with minfi on 0 of them
+minfi_betas_read                   ok   485512 x 689, columns in pheno order: TRUE
+probes_both_retain_all_689         301762 of 485512 shared   [observation]
+  match_top50000                   689/689  min diag 0.97087  per-sample margin min 0.01922 median 0.03986   [observation]
+  match_top20000                   689/689  min diag 0.95196  per-sample margin min 0.03187 median 0.06667   [observation]
+  match_top5000                    689/689  min diag 0.87835  per-sample margin min 0.01234 median 0.13113   [observation]
+  match_top1000                    688/689  min diag 0.71223  per-sample margin min -0.00100 median 0.19210   [observation]
+pipelines_agree_on_identity        ok   689/689 samples' best rank-match is the same sample (top 5000 probes; 689 of 474721 ordered pairs)
+identity_margin_min                0.01234 (the fixture's 6-sample margin was 0.11575)   [observation]
+ALL CHECKS PASSED

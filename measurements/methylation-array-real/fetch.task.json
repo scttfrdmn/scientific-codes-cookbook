@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-methylation-array-real-fetch",
+  "container": "quay.io/aarchbio/metaphlan@sha256:7149c1bb1e23d01d273d56cc86502e36a2b976c598175327f6a32c42abfbbe48",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '%s  fetch.sh\\n' 5623564b19a120c86ee0ece09180ccad95399f56055b6c22edbef915739f623a > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: fetch.sh does not match its pin\"; exit 1; }\nbash /tmp/fetch.sh 2>&1 | tee /tmp/fetch.log\nexit ${PIPESTATUS[0]}\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/fetch.sh",
+      "destination": "/tmp/fetch.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/stage/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

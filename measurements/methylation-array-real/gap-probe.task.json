@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-methylation-array-real-gap-probe",
+  "container": "quay.io/biocontainers/bioconductor-sesame@sha256:6cd24f0a92d832a84db1b9b8cb797246466d9b9e9b0de7c7801fffa6adf2856a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out\n{ uname -m; grep -m1 'model name' /proc/cpuinfo; grep -o -m1 -w avx512f /proc/cpuinfo || echo 'no avx512f'\n  Rscript -e 'cat(\"preprocessCore\", as.character(packageVersion(\"preprocessCore\")), \"\\n\"); x <- matrix(runif(4e5), ncol = 4); y <- preprocessCore::normalize.quantiles(x); cat(\"normalize.quantiles ok\", dim(y), \"\\n\")' 2>&1\n  echo \"Rscript exit $?\"; } > /tmp/out/probe.txt 2>&1\ncat /tmp/out/probe.txt\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c8i"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/methylation-array-real/gap-probe/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

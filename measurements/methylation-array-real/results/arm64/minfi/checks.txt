@@ -1,0 +1,34 @@
+minfi_version                      1.56.0
+IlluminaHumanMethylation450kmanifest_version 0.4.0
+IlluminaHumanMethylation450kanno.ilmn12.hg19_version 0.6.1
+limma_version                      3.66.0
+blas                               /opt/conda/lib/libopenblasp-r0.3.34.so
+samples                            ok   689 rows, 689 unique GSM, 689 unique basenames  want 689 each
+design                             Normal=335  rheumatoid arthritis=354
+arrays_read                        ok   689  want 689
+array_type                         ok   IlluminaHumanMethylation450k / ilmn12.hg19
+probes                             ok   485512  want exactly 485512 (450k array)
+beta_in_range                      ok   [0.000000, 1.000000] over 334,517,768 values  want within [0,1]
+raw_beta_NA                        5603 (M+U == 0: 5603)   [observation]
+annotated_sex_values               ok   F=492 M=197
+minfi_sex_vs_annotation            689/689 agree; 0 disagree   [observation]
+snp_probes                         ok   65  want exactly 65
+snp_nn_distance                    min 2.0452  median 2.4852  max 2.8817  (fixture: within-donor median 0.5951, between 3.2501)   [observation]
+  snp_closest_pair                 GSM1052031 GSM1052198 2.0452   [observation]
+  snp_closest_pair                 GSM1052049 GSM1052198 2.0703   [observation]
+  snp_closest_pair                 GSM1051926 GSM1052037 2.1313   [observation]
+  snp_closest_pair                 GSM1052032 GSM1052052 2.1343   [observation]
+  snp_closest_pair                 GSM1052043 GSM1052072 2.1573   [observation]
+snp_pairs_below_1.0                0   [observation]
+funnorm_dims                       ok   485512 x 689  want 485512 x 689
+funnorm_beta_in_range              ok   [0.000000, 0.997510], 0 NA
+funnorm_sex_vs_raw_getSex          689/689 identical   [observation]
+probes_dropped_nonfinite_M         855 probes (1321 values of M infinite)   [observation]
+dmp_rows                           ok   484657  want one per finite probe (484657)
+dmp_F_equals_pooled_t_squared      ok   max diff 3.02e-12 over 484657 probes (relative, absolute below F=1)  want < 1e-8
+dmp_p_from_F                       ok   p == pf(F, 1, 687, upper): max rel 0.00e+00  want < 1e-10
+dmp_q_lt_0.05                      303507   [observation]
+dmp_bonferroni_0.05                76431   [observation]
+dmp_top                            cg26244575 F=361.612 p=4.234e-65   [observation]
+r_max_vcells_gib                   41.79
+ALL CHECKS PASSED

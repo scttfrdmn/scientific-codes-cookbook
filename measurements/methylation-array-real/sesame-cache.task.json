@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-methylation-array-real-sesame-cache",
+  "container": "quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nmkdir -p /tmp/stage\nprintf '%s  sesame-cache.sh\\n' 1380c3ed0279476b6ebd0e6aadbd7daaaed73251615c3e29b7edab9c7e166174 > scripts.sha256\nsha256sum -c scripts.sha256 || { echo \"FAIL: sesame-cache.sh does not match its pin\"; exit 1; }\nbash /tmp/sesame-cache.sh 2>&1 | tee /tmp/stage/sesame-cache.log\nexit ${PIPESTATUS[0]}\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array/sesame-cache.tar",
+      "destination": "/tmp/sesame-cache.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/sesame-cache.sh",
+      "destination": "/tmp/sesame-cache.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/stage/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/sesame-cache/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

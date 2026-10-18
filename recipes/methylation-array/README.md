@@ -38,15 +38,14 @@ getSnpBeta(RGsetEx)                                      # 65 probes → which d
 
 **Leave the fixture.** Six samples is small, but it is *three donors with two samples each* — and that pairing is what turns the identity check into a combinatorial claim rather than a clustering opinion. A bigger cohort adds rows, not truth.
 
-## Which box
+## Which box — [measured](../../measurements/methylation-array-real/README.md) on all 689 arrays of GSE42861
 
-Two tasks, one image each ([one tool per image](../../practices/container-path.md)): minfi on
-`c8g.large` (verified under a **2 GiB** cgroup limit), then SeSAMe on `m8g.large` for the 124 MB
-it stages in. Measured: minfi **20 s** of analysis in a 140 s window, SeSAMe **53 s** in 203 s —
-provisioning is 74–86% of both, so **these timings are not compute cost**
-([layout](../../patterns/layout-and-effective-cost.md)). Only SeSAMe's 19 MB cache is staged —
-`minfiData` carries the IDATs, manifest and annotation in its image, and task 1 re-exports them
-because SeSAMe's image has no minfiData, which is also what made the failed first attempt cheap.
+| task | 6-array fixture | 689-array cohort | peak RSS | billed $/cohort |
+|---|---|---|---|---|
+| minfi | `c8g.large`, 20 s | `r8g.4xlarge`, 1,216 s on 1 core | 51.9 GiB | 0.374 |
+| SeSAMe | `m8g.large`, 53 s | `m8g.4xlarge`, 773 s | 30.9 GiB | 0.189 |
+
+**Size minfi by RAM, about 77 MB per array at the funnorm peak.** It is serial, and a 64 GiB box was OOM-killed. At 689 arrays, sex agrees 689/689 across minfi, SeSAMe and GEO. The identity matching holds 689/689, but its narrowest margin falls from 0.116 to 0.012, so use 20,000 probes on a real cohort. Intel and AMD are still a gap (re-probed 2026-10-18). Two tasks, [one tool per image](../../practices/container-path.md). The fixture's timings are 74–86% provisioning, so **they are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). Only SeSAMe's 19 MB cache is staged: `minfiData` carries the IDATs, manifest and annotation in its image, and task 1 re-exports them for SeSAMe.
 
 <details>
 <summary>As shipped: two truths the array carries, and why SeSAMe isn't here yet</summary>
@@ -128,8 +127,9 @@ need. Same sourcing move as SIESTA's stripped pseudopotentials
 prefix and the sqlite files carry timestamps, so neither the names nor the tar's sha256 are
 reproducible — but the downloaded resources are immutable. Staging hashes every non-sqlite
 blob and requires the *set* to match four pinned sha256s; the task re-checks the same set
-after untarring, before SeSAMe runs. The box has no network path to ExperimentHub, so
-`sesame_ran_offline` returning 486,427 betas is itself the proof the cache was complete.
+after untarring, before SeSAMe runs, and `sesame_ran_offline` returns 486,427 betas from it. Task
+containers do have outbound network (measured: a task fetched from NCBI), so that check shows the
+cache was used, not that the network was unreachable.
 
 ### A tar that extracts fine and still fails the task
 

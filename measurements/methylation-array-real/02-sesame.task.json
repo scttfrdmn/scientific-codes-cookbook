@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-methylation-array-real-sesame",
+  "container": "quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '%s  %s\\n' f5be190849cd5f78765db79ba8aaa9f90519847a7cf1594b4be057a8085c8843 run.sh a286a829b876eb37fea9fc665ed5242a62eeb955b59feac398689df18e5b92f2 sesame-real.R 3a4aa6e3b46b676be96eeb320031daab4c12559ec3bdf4f037e6b329613c0d2a pheno.tsv 67af70d7178a5b8a3ac196cd1dc76ee2b5656bc1c2c36b0d9678eefb1a0ccb12 idat.sha256 > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\n# the recipe's pinned ExperimentHub cache plus probeIDSignature for inferSex (sesame-cache.sh), checked by content\nmkdir -p /tmp/sesamehome\ntar -xmf /tmp/sesame-cache.tar -C /tmp/sesamehome --no-same-owner --no-same-permissions\nC=/tmp/sesamehome/.cache/R/ExperimentHub\nprintf '%s\\n' 59fb9bcbd5a430fe4cbfe39333c2d716e71480dc03077533299aee764a32fbe3 73578ce17c439acc8e1443f9a6c55c3f02fdcc18cdff287b7b93f74cb86c835e 99300ba1d45aec5d5fdcdb12b61923f7313b1600c4ec9c8b9ca573d09bfc1655 a216599b21bf2aae080922a3ced2b7817e8bdf183255b7c119852266dddf305f b4eb0da4ef492655c2fe18b45fa65e969967c9f4a0c2149a5fae9241b510c7b2 > /tmp/want.txt\n( cd \"$C\" && for x in $(ls | grep -vE 'sqlite|LOCK'); do sha256sum \"$x\" | cut -d' ' -f1; done ) | sort > /tmp/got.txt\ndiff /tmp/want.txt /tmp/got.txt || { echo 'FAIL: sesameData cache contents do not match the pins'; exit 1; }\nexport HOME=/tmp/sesamehome WORKERS=16 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1\nbash run.sh sesame-real.R\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/idat/",
+      "destination": "/tmp/idat/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/idat.sha256",
+      "destination": "/tmp/idat.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/pheno.tsv",
+      "destination": "/tmp/pheno.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/sesame-cache/sesame-cache-real.tar",
+      "destination": "/tmp/sesame-cache.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/methylation-array-real/minfi/minfi-raw-betas.rds",
+      "destination": "/tmp/minfi-raw-betas.rds"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/methylation-array-real/minfi/sex-minfi.tsv",
+      "destination": "/tmp/sex-minfi.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/sesame-real.R",
+      "destination": "/tmp/sesame-real.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/methylation-array-real/sesame/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

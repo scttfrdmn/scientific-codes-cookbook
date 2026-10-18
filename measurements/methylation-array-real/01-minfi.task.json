@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-methylation-array-real-minfi",
+  "container": "quay.io/aarchbio/bioconductor-minfidata@sha256:afec63a77f9e2662e44104f1d5f17aded9ad6aa9e6ff0f07b494d9e972bb300b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '%s  %s\\n' f5be190849cd5f78765db79ba8aaa9f90519847a7cf1594b4be057a8085c8843 run.sh 72ea9261ade8c22e9818e5c6bad3bcbc0d19353e1f48b455e33ec53bb122e498 minfi-real.R 3a4aa6e3b46b676be96eeb320031daab4c12559ec3bdf4f037e6b329613c0d2a pheno.tsv 67af70d7178a5b8a3ac196cd1dc76ee2b5656bc1c2c36b0d9678eefb1a0ccb12 idat.sha256 > pins.sha256\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh minfi-real.R\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/idat/",
+      "destination": "/tmp/idat/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/idat.sha256",
+      "destination": "/tmp/idat.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/GSE42861/pheno.tsv",
+      "destination": "/tmp/pheno.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/minfi-real.R",
+      "destination": "/tmp/minfi-real.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/methylation-array-real/minfi/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
