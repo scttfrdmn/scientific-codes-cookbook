@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-mne-real-ds000117",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 > /tmp/pins.check 2>&1 || { cat /tmp/pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(grep -c ': OK$' /tmp/pins.check) files OK\"\nbash real.sh /tmp/meg 01 02 03 04 05 06\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/meg/",
+      "destination": "/tmp/meg/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mne-real/ds000117-sub01/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

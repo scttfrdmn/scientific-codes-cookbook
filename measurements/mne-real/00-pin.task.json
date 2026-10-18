@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-mne-real-pin",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp/meg\nbad=0\nwhile IFS=$'\\t' read -r f vid md5 bytes; do\n  [ \"$f\" = file ] && continue\n  got=$(md5sum \"$f\" | cut -d' ' -f1)\n  if [ \"$got\" = \"$md5\" ]; then echo \"$f md5 == OpenNeuro ETag (version $vid)\"; else echo \"FAIL: $f md5 $got, OpenNeuro ETag $md5\"; bad=1; fi\ndone < /tmp/sources.tsv\n[ \"$bad\" = 0 ] || exit 1\ncd /tmp && sha256sum meg/* > /tmp/data.sha256\nwc -l < /tmp/data.sha256\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/meg/",
+      "destination": "/tmp/meg/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mne-real/sources.tsv",
+      "destination": "/tmp/sources.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/data.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mne-real/pin/data.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

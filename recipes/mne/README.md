@@ -18,11 +18,20 @@ Plants a known answer in each step of an EEG/MEG pipeline and has MNE recover it
 make stage RECIPE=mne     # once: the checks only — every signal is synthesised
 spawn task run --spec "$(make -s spec RECIPE=mne)" --wait
 make ls RECIPE=mne
-
 raw.filter(1.0, 40.0, method="fir", phase="zero", fir_window="hamming", fir_design="firwin")
 ica = mne.preprocessing.ICA(n_components=3, method="fastica", random_state=0).fit(raw)
 dip, _ = mne.fit_dipole(evoked, mne.make_ad_hoc_cov(info), sphere)
 ```
+
+## Which box — [measured](../../measurements/mne-real/README.md) on a whole six-run MEG session (ds000117 sub-01, 5.2 GB)
+
+| chip | `2xlarge` | wall | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `r8g` | 658 s | 0.097 |
+| Xeon 6975P-C | `r8i` | 663 s | 0.112 |
+| **EPYC 9R45** | `r8a` | **362 s** | **0.073** |
+
+**Take AMD:** 1.8× Graviton4's speed and 24% cheaper. Size by memory: the session peaks at 32.5 GiB. Every assertion holds, and every decision (triggers, epochs kept, ICA picks, decoding peak) is identical on all three.
 
 ## Make it yours
 
@@ -128,8 +137,9 @@ regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 ### Not covered
 
 **MNE's own test suite**: `mne-base` ships no test files, and its tests need the `mne-testing-data`
-download. **Real recordings and file readers** (FIF, EDF, BrainVision): every signal here is built
-in memory. **Source imaging with a BEM** (`make_bem_model`, minimum-norm inverse): those need a
+download. **Real recordings**: every signal here is built in memory; FIF, Maxwell filtering and
+decoding on a real session are in [mne-real](../../measurements/mne-real/README.md), EDF and
+BrainVision readers in neither. **Source imaging with a BEM** (`make_bem_model`, minimum-norm inverse): those need a
 FreeSurfer subject.
 **Time-frequency** (Morlet, multitaper), **statistics** (cluster permutation) and **decoding**.
 Plotting and the interactive browser, which `mne-base` omits. [nilearn](../nilearn/README.md) is the

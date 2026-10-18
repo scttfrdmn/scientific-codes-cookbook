@@ -1,0 +1,106 @@
+== Graviton4 vs x86_64
+score rows identical: 38 of 49
+  differs  psd_parseval               A: max |sum(psd) df / mean(x^2) - 1| = 5.55e-16, 4 channels x 540100 samples
+                                     B: max |sum(psd) df / mean(x^2) - 1| = 8.88e-16, 4 channels x 540100 samples
+  differs  sss_linearity              A: maxwell_filter(2.5a - 0.7b) vs 2.5 f(a) - 0.7 f(b), two real 20 s segments: rel 3.60e-15
+                                     B: maxwell_filter(2.5a - 0.7b) vs 2.5 f(a) - 0.7 f(b), two real 20 s segments: rel 3.78e-15
+  differs  sss_rank run-01            A: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 1.96e-15, gap 6.91e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 7.28e-16, gap 2.57e-12
+  differs  sss_rank run-02            A: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 1.67e-15, gap 5.53e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 5.20e-16, gap 1.72e-12
+  differs  sss_rank run-03            A: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 1.09e-15, gap 4.42e-12
+                                     B: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 8.95e-16, gap 3.64e-12
+  differs  sss_rank run-04            A: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 1.44e-15, gap 5.66e-12
+                                     B: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 7.08e-16, gap 2.78e-12
+  differs  sss_rank run-05            A: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 1.49e-15, gap 5.67e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 7.73e-16, gap 2.94e-12
+  differs  sss_rank run-06            A: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 1.78e-15, gap 5.70e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 4.83e-16, gap 1.54e-12
+  differs  epoch_average              A: average vs numpy mean 0.00e+00; baseline-period mean 1.08e-16 (rel), 857 epochs x 306 ch x 1101 times
+                                     B: average vs numpy mean 0.00e+00; baseline-period mean 1.28e-16 (rel), 857 epochs x 306 ch x 1101 times
+  differs  ica_roundtrip              A: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 3.75e-15; default apply (43 dims) discards 2.94e-15 of the norm (reported)
+                                     B: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 3.03e-15; default apply (43 dims) discards 3.30e-15 of the norm (reported)
+  differs  dipole_m170                A: best of 12 fits at 200 ms: GOF 17.4%, 24.4 nAm, head-frame position (mm) [14.1, 31.4, -65.7] (reported)
+                                     B: best of 12 fits at 200 ms: GOF 17.4%, 24.4 nAm, head-frame position (mm) [14.1, 31.6, -65.9] (reported)
+evoked Famous     max|diff|/max 7.97e-11  bit-identical False
+evoked Unfamiliar max|diff|/max 7.83e-11  bit-identical False
+evoked Scrambled  max|diff|/max 5.75e-11  bit-identical False
+epoch selection identical: True (857 kept)
+ica mixing (43, 43): max|diff|/max 3.08e-09
+SSS run-01 singular values, first 44: max rel diff 1.16e-13
+decoding AUC curve: max|diff| 9.21e-05; nulls max|diff| 9.23e-05
+real dipole fits (12 times): max position diff 2.63e-01 mm, max GOF diff 8.24e-03 %
+planted-dipole fit: position diff 1.01e-10 mm
+== Graviton4 vs amd
+score rows identical: 38 of 49
+  differs  psd_parseval               A: max |sum(psd) df / mean(x^2) - 1| = 5.55e-16, 4 channels x 540100 samples
+                                     B: max |sum(psd) df / mean(x^2) - 1| = 8.88e-16, 4 channels x 540100 samples
+  differs  sss_linearity              A: maxwell_filter(2.5a - 0.7b) vs 2.5 f(a) - 0.7 f(b), two real 20 s segments: rel 3.60e-15
+                                     B: maxwell_filter(2.5a - 0.7b) vs 2.5 f(a) - 0.7 f(b), two real 20 s segments: rel 3.78e-15
+  differs  sss_rank run-01            A: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 1.96e-15, gap 6.91e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 7.23e-16, gap 2.55e-12
+  differs  sss_rank run-02            A: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 1.67e-15, gap 5.53e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 5.13e-16, gap 1.70e-12
+  differs  sss_rank run-03            A: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 1.09e-15, gap 4.42e-12
+                                     B: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 8.75e-16, gap 3.56e-12
+  differs  sss_rank run-04            A: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 1.44e-15, gap 5.66e-12
+                                     B: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 7.10e-16, gap 2.79e-12
+  differs  sss_rank run-05            A: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 1.49e-15, gap 5.67e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 7.70e-16, gap 2.93e-12
+  differs  sss_rank run-06            A: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 1.78e-15, gap 5.70e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 4.77e-16, gap 1.52e-12
+  differs  epoch_average              A: average vs numpy mean 0.00e+00; baseline-period mean 1.08e-16 (rel), 857 epochs x 306 ch x 1101 times
+                                     B: average vs numpy mean 0.00e+00; baseline-period mean 1.28e-16 (rel), 857 epochs x 306 ch x 1101 times
+  differs  ica_roundtrip              A: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 3.75e-15; default apply (43 dims) discards 2.94e-15 of the norm (reported)
+                                     B: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 2.68e-15; default apply (43 dims) discards 3.18e-15 of the norm (reported)
+  differs  dipole_m170                A: best of 12 fits at 200 ms: GOF 17.4%, 24.4 nAm, head-frame position (mm) [14.1, 31.4, -65.7] (reported)
+                                     B: best of 12 fits at 200 ms: GOF 17.4%, 24.5 nAm, head-frame position (mm) [14.2, 31.2, -65.5] (reported)
+evoked Famous     max|diff|/max 7.97e-11  bit-identical False
+evoked Unfamiliar max|diff|/max 7.84e-11  bit-identical False
+evoked Scrambled  max|diff|/max 5.74e-11  bit-identical False
+epoch selection identical: True (857 kept)
+ica mixing (43, 43): max|diff|/max 3.08e-09
+SSS run-01 singular values, first 44: max rel diff 1.04e-13
+decoding AUC curve: max|diff| 9.18e-05; nulls max|diff| 9.23e-05
+real dipole fits (12 times): max position diff 1.59e+00 mm, max GOF diff 3.87e-02 %
+planted-dipole fit: position diff 4.62e-11 mm
+== Intel vs AMD (the same x86 env twin)
+score rows identical: 41 of 49
+  differs  sss_rank run-01            A: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 7.28e-16, gap 2.57e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.84e-04, s[nfree]/s0 7.23e-16, gap 2.55e-12
+  differs  sss_rank run-02            A: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 5.20e-16, gap 1.72e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.02e-04, s[nfree]/s0 5.13e-16, gap 1.70e-12
+  differs  sss_rank run-03            A: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 8.95e-16, gap 3.64e-12
+                                     B: nfree 45; singular values s[nfree-1]/s0 2.46e-04, s[nfree]/s0 8.75e-16, gap 3.56e-12
+  differs  sss_rank run-04            A: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 7.08e-16, gap 2.78e-12
+                                     B: nfree 43; singular values s[nfree-1]/s0 2.55e-04, s[nfree]/s0 7.10e-16, gap 2.79e-12
+  differs  sss_rank run-05            A: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 7.73e-16, gap 2.94e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 2.63e-04, s[nfree]/s0 7.70e-16, gap 2.93e-12
+  differs  sss_rank run-06            A: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 4.83e-16, gap 1.54e-12
+                                     B: nfree 44; singular values s[nfree-1]/s0 3.13e-04, s[nfree]/s0 4.77e-16, gap 1.52e-12
+  differs  ica_roundtrip              A: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 3.03e-15; default apply (43 dims) discards 3.30e-15 of the norm (reported)
+                                     B: apply(exclude=[], all 306 PCA components) vs input, 60 s x 306 MEG channels: rel 2.68e-15; default apply (43 dims) discards 3.18e-15 of the norm (reported)
+  differs  dipole_m170                A: best of 12 fits at 200 ms: GOF 17.4%, 24.4 nAm, head-frame position (mm) [14.1, 31.6, -65.9] (reported)
+                                     B: best of 12 fits at 200 ms: GOF 17.4%, 24.5 nAm, head-frame position (mm) [14.2, 31.2, -65.5] (reported)
+evoked Famous     max|diff|/max 2.53e-13  bit-identical False
+evoked Unfamiliar max|diff|/max 2.53e-13  bit-identical False
+evoked Scrambled  max|diff|/max 2.23e-13  bit-identical False
+epoch selection identical: True (857 kept)
+ica mixing (43, 43): max|diff|/max 4.59e-12
+SSS run-01 singular values, first 44: max rel diff 1.20e-14
+decoding AUC curve: max|diff| 9.18e-05; nulls max|diff| 9.23e-05
+real dipole fits (12 times): max position diff 1.39e+00 mm, max GOF diff 3.66e-02 %
+planted-dipole fit: position diff 1.05e-10 mm
+== sha256 of the outputs
+a553fe3b1b895ab1c6f0abd577530d74e54e122b2e7d1cf247f063d210ca1212  amd/evoked.npz
+b7ab4311e83d8c3ea0d78a99bc2f8984481952642ebb9cef694d0f626e18d38f  arm64/evoked.npz
+1effd9b482543929226336c9ac72eef25f0a6c39463e30aa08a4dea2e78b197d  x86_64/evoked.npz
+09717d86ca96566d676ffab2d0ee469a624215a99299e3639865cc509d43fdc8  amd/ica-mixing.npy
+26d18773e2472d6cab9ae1cca4eb7d16821a07489e43562a2e09b5a7533f33cd  arm64/ica-mixing.npy
+cc6b89cf7f45c70f241f9e4b28aec86024818296fde6fda6777c6677e9008ab7  x86_64/ica-mixing.npy
+0b2ad6891282c5c2f5c9637ec1c9f57d1a9fab5a79bc38a68f0301a1a164fc3d  amd/decoding.npz
+7c45a333a3d45f14addde072eca153378d7103415fce8c9e594cf5ce400850e7  arm64/decoding.npz
+59ee38696573efa741830496c4e936e91c7b3706bec752bd60b54700cb51ba4d  x86_64/decoding.npz
+8590aff6df8a48519a31e483733da53cb9dcd18c8276cea00504068553be768e  amd/dipole.npz
+a6c4c84afad22469feb2914116399c01314c5c0fb2e460d6150aa78b87ebbf5f  arm64/dipole.npz
+4d54ad8417add0abc82c2138a910707afe1b1c8cb7b92c3cc9521605fe9d12a3  x86_64/dipole.npz
