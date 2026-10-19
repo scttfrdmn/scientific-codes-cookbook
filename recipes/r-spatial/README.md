@@ -19,12 +19,20 @@ Runs R's spatial stack on Graviton4 against two references published inside the 
 make stage RECIPE=r-spatial     # once: the checks only — both datasets are already staged
 spawn task run --spec "$(make -s spec RECIPE=r-spatial)" --wait
 make ls RECIPE=r-spatial
-
 v <- sf::st_read("/vsizip//tmp/tiger.zip")          # 3235 counties, EPSG:4269
 terra::expanse(terra::vect(v), unit = "m", transform = TRUE)   # ellipsoidal; matches ALAND+AWATER
 r <- terra::rast("/tmp/SCL.tif")                    # 5490² @ 20 m, EPSG:32611
 terra::freq(r)                                      # class counts -> ESA's published percentages
 ```
+
+## Which box — [measured](../../measurements/r-spatial-real/README.md) (all 85,529 US tracts + Colorado's 363 M-px DEM by tract)
+| chip | instance | wall | $/hr | compute $ | **billed $/result** | peak |
+|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | 485 s | 0.4713 | 0.0635 | 0.0847 | 24.3 GiB |
+| Intel | `r8i.2xlarge` | 498 s | 0.5557 | 0.0769 | 0.0909 | 27.1 GiB |
+| **AMD** | `r8a.2xlarge` | **358 s** | 0.6390 | 0.0635 | **0.0820** | 27.2 GiB |
+
+AMD's speed exactly cancels its price on compute, so any of the three is within 11%. Size by memory, not cores. **At scale, `terra::rasterize()` silently skips reprojection** (`extract()` does it): NAD83 tracts on a WGS84 DEM put 913 of 1,447 tracts off by up to 61 cells, so `project()` first.
 
 ## Make it yours
 

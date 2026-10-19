@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-r-spatial-real",
+  "container": "quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd5869502007cf6c5a56c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\nmkdir -p /tmp/out /var/tmp/work\necho \"== staged bytes must match their pins ==\"\n( cd /tmp/tract && sha256sum -c /tmp/tracts.sha256 ) > /tmp/out/pins.check 2>&1 || { cat /tmp/out/pins.check; echo \"FAIL: a tract zip does not match its pin\"; exit 1; }\n( cd /tmp/dem && sha256sum -c tiles.sha256 ) >> /tmp/out/pins.check 2>&1 || { cat /tmp/out/pins.check; echo \"FAIL: a DEM tile does not match its pin\"; exit 1; }\necho \"04e668d3502757c837c13444730547cd967f28a2c49aeffb873d1792ab2cb97b  /tmp/tiger.zip\" | sha256sum -c - || { echo \"FAIL: counties do not match geo-ml's pin\"; exit 1; }\necho \"90e1f6a9504ac0e19cbd931978298b2ed0fe4ee64ed77617670d9b8f5eaea7ff  /tmp/real.R\" | sha256sum -c - || { echo \"FAIL: real.R does not match its pin\"; exit 1; }\necho \"$(wc -l < /tmp/tracts.sha256) tract zips + $(wc -l < /tmp/dem/tiles.sha256) DEM tiles + counties match their pins\"\nuname -m | tee /tmp/out/arch.txt\nlscpu | grep -E '^(Model name|Thread\\(s\\) per core|Core\\(s\\) per socket|Socket\\(s\\)|CPU\\(s\\)):' | tee /tmp/out/lscpu.txt\nT0=$(date +%s)\nRscript real.R > /tmp/out/real.log 2>&1\nRC=$?\necho \"real.R exit $RC in $(( $(date +%s) - T0 ))s\" | tee /tmp/out/wall.txt\necho \"memory.peak_gib $(awk '{printf \"%.2f\", $1/1073741824}' /sys/fs/cgroup/memory.peak 2>/dev/null)\" | tee /tmp/out/footprint.txt\ncat /tmp/out/real.log\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'R-SPATIAL REAL OK' /tmp/out/real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ntest -s /tmp/out/score.tsv || { echo \"FAIL: no score.tsv\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-spatial-real/tract/",
+      "destination": "/tmp/tract/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-spatial-real/tracts.sha256",
+      "destination": "/tmp/tracts.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-spatial-real/real.R",
+      "destination": "/tmp/real.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geo-ml/tiger.zip",
+      "destination": "/tmp/tiger.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/geospatial-real/",
+      "destination": "/tmp/dem/"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-spatial-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
