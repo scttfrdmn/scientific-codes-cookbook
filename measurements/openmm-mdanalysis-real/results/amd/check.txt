@@ -1,0 +1,64 @@
+openmm_version                     obs   8.6.1.dev-b399af4
+platforms_loaded                   obs   Reference,CPU
+== JAC ==
+JAC platform_cpu                   ok    CPU  want CPU (loaded: Reference,CPU)
+JAC cpu_threads                    ok    32  want 32 (the CPU platform's own Threads property)
+JAC atoms                          ok    23558  want 23558 (suite README)
+JAC constraints                    obs   22290; H mass 3.024-3.024 Da
+JAC pme_matches_sander             ok    alpha 0.30767639/A (sander prints 0.30768), order 5, grid [64, 64, 64]
+JAC sander_bond                    ok    OpenMM 458.7319  sander 458.7319  |d| 0.0000 kcal/mol (1.5e-08 rel)  want <= 1e-6 rel
+JAC sander_angle                   ok    OpenMM 1240.8415  sander 1240.8415  |d| 0.0000 kcal/mol (4.1e-09 rel)  want <= 1e-6 rel
+JAC sander_dihedral                ok    OpenMM 1009.5202  sander 1009.5200  |d| 0.0002 kcal/mol (1.9e-07 rel)  want <= 1e-6 rel
+JAC sander_lj                      ok    OpenMM 9624.3861  sander 9624.3862 (VDWAALS + 1-4 VDW, vdwmeth=0)  6.5e-09 rel  want <= 1e-7
+JAC sander_elec                    ok    OpenMM -84907.1204  sander -84904.2828 (EEL + 1-4 EEL)  raw ratio-1 3.342e-05, Coulomb-constant ratio-1 3.461e-05, residual -1.2e-06  want <= 1e-5
+JAC openmm_dispersion_correction   ok    -530.4497 kcal/mol  closed form (OpenMM's) -530.4497  (2.0e-10 rel)  want <= 1e-7; textbook N^2 form -530.4107 (7.4e-05)
+JAC sander_dispersion_correction   obs   -530.7462 kcal/mol (vdwmeth=1 - vdwmeth=0); closed form (attractive, sander's form) -530.7461; with n_i*n_j wrapped to int32 -530.7461; largest type count 14046
+JAC cpu_eq_reference HarmonicB     ok    CPU 458.731907  Reference 458.731907  (0.0e+00 rel)  want <= 1e-06
+JAC cpu_eq_reference HarmonicA     ok    CPU 1240.841495  Reference 1240.841495  (3.7e-16 rel)  want <= 1e-06
+JAC cpu_eq_reference PeriodicT     ok    CPU 1009.520192  Reference 1009.520192  (5.6e-16 rel)  want <= 1e-06
+JAC cpu_eq_reference Nonbonded     ok    CPU -75813.183837  Reference -75813.183983  (1.9e-09 rel)  want <= 1e-06
+JAC cpu_eq_reference potential     ok    CPU -73104.090244  Reference -73104.090389  (2.0e-09 rel)  want <= 1e-06
+JAC openmm_default_pme             obs   alpha 0.29203/A grid [55, 55, 55]: nonbonded -0.6795 kcal/mol vs sander's PME parameters
+JAC energies_finite                ok    101 samples, all finite
+JAC nve_length                     obs   250000 steps x 4 fs = 1.000 ns; 55.34 ns/day on 32 threads
+JAC nve_etot                       obs   -58546.4050 -> -58470.4423 kcal/mol, slope +10.5513 kcal/mol/ns; std(Etot)/std(KE) 0.1069
+JAC constraint_projection          obs   step 0 before/after applyConstraints: Etot +0.0025 kcal/mol, KE -0.0000
+JAC nve_conserved                  ok    2.18e-04 kcal/mol per DoF per ns = 0.037% of kT(300K)  want < 5% (ndof 48381)
+JAC temperature                    ok    mean 295.94 K (291.59-302.83)  want 290-310 (restart equilibrated at 300 K; NVE)
+JAC shake_end                      ok    max |d-d0|/d0 = 2.35e-07 at the last step  want < 1e-05 (tolerance 1e-6)
+/var/tmp/env/lib/python3.13/site-packages/MDAnalysis/topology/TOPParser.py:332: UserWarning: ATOMIC_NUMBER record not found, elements attribute will not be populated. If needed these can be guessed using universe.guess_TopologyAttrs(to_guess=['elements']).
+  warnings.warn(msg)
+/var/tmp/env/lib/python3.13/site-packages/MDAnalysis/coordinates/DCD.py:171: DeprecationWarning: DCDReader currently makes independent timesteps by copying self.ts while other readers update self.ts inplace. This behavior will be changed in 3.0 to be the same as other readers. Read more at https://github.com/MDAnalysis/mdanalysis/issues/3889 to learn if this change in behavior might affect you.
+  warnings.warn("DCDReader currently makes independent timesteps"
+mdanalysis_version                 obs   2.10.0
+JAC mda_atoms                      ok    23558  == OpenMM 23558
+JAC mda_frames                     ok    100  want 100 (every 2500 steps)
+JAC mda_box                        ok    61.6447 61.6447 61.6447 A  == OpenMM's box (|d| 1.2e-06)
+JAC mda_constraints_decode         ok    max |d-d0|/d0 = 1.78e-05 over 2,229,000 constrained distances (22290 x 100 frames), read by MDAnalysis  want < 1e-04
+== STMV ==
+STMV platform_cpu                  ok    CPU  want CPU (loaded: Reference,CPU)
+STMV cpu_threads                   ok    32  want 32 (the CPU platform's own Threads property)
+STMV atoms                         ok    1067095  want 1067095 (suite README)
+STMV constraints                   obs   978008; H mass 1.008-3.024 Da
+STMV pme_matches_sander            ok    alpha 0.30767639/A (sander prints 0.30768), order 5, grid [240, 225, 225]
+STMV sander_bond                   ok    OpenMM 39438.8847  sander 39438.8847  |d| 0.0000 kcal/mol (5.9e-10 rel)  want <= 1e-6 rel
+STMV sander_angle                  ok    OpenMM 93835.2298  sander 93835.2298  |d| 0.0000 kcal/mol (4.8e-10 rel)  want <= 1e-6 rel
+STMV sander_dihedral               ok    OpenMM 120384.2474  sander 120384.2433  |d| 0.0041 kcal/mol (3.4e-08 rel)  want <= 1e-6 rel
+STMV sander_lj                     ok    OpenMM 385874.8518  sander 385874.8517 (VDWAALS + 1-4 VDW, vdwmeth=0)  1.4e-10 rel  want <= 1e-7
+STMV sander_elec                   ok    OpenMM -3969823.9933  sander -3969691.8738 (EEL + 1-4 EEL)  raw ratio-1 3.328e-05, Coulomb-constant ratio-1 3.461e-05, residual -1.3e-06  want <= 1e-5
+STMV openmm_dispersion_correction  ok    -25184.1357 kcal/mol  closed form (OpenMM's) -25184.1357  (2.5e-10 rel)  want <= 1e-7; textbook N^2 form -25184.0976 (1.5e-06)
+STMV sander_dispersion_correction  obs   -3595.1791 kcal/mol (vdwmeth=1 - vdwmeth=0); closed form (attractive, sander's form) -25200.2942; with n_i*n_j wrapped to int32 -3595.1791; largest type count 600106
+STMV cpu_eq_reference HarmonicB    ok    CPU 39438.884677  Reference 39438.884677  (0.0e+00 rel)  want <= 1e-06
+STMV cpu_eq_reference HarmonicA    ok    CPU 93835.229845  Reference 93835.229845  (2.0e-14 rel)  want <= 1e-06
+STMV cpu_eq_reference PeriodicT    ok    CPU 120384.247373  Reference 120384.247373  (1.9e-14 rel)  want <= 1e-06
+STMV cpu_eq_reference Nonbonded    ok    CPU -3609133.487749  Reference -3609133.277202  (5.8e-08 rel)  want <= 1e-06
+STMV cpu_eq_reference potential    ok    CPU -3355475.125855  Reference -3355474.915308  (6.3e-08 rel)  want <= 1e-06
+STMV openmm_default_pme            obs   alpha 0.29203/A grid [197, 199, 200]: nonbonded -10.1708 kcal/mol vs sander's PME parameters
+STMV energies_finite               ok    11 samples, all finite
+STMV nve_length                    obs   1000 steps x 4 fs = 0.004 ns; 1.39 ns/day on 32 threads
+STMV nve_etot                      obs   -2623785.8737 -> -2618653.9922 kcal/mol, slope +715469.1209 kcal/mol/ns; std(Etot)/std(KE) 0.1212
+STMV constraint_projection         obs   step 0 before/after applyConstraints: Etot +0.1006 kcal/mol, KE -0.0002
+STMV nve_slope (4 ps)              obs   3.22e-01 kcal/mol per DoF per ns = 53.980% of kT(300K)
+STMV temperature (4 ps)            obs   mean 315.01 K (312.43-331.22)
+STMV shake_end                     ok    max |d-d0|/d0 = 5.85e-07 at the last step  want < 1e-05 (tolerance 1e-6)
+ALL CHECKS PASSED

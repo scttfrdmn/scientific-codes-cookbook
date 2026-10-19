@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-openmm-mdanalysis-real-sander",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707); the scripts set their own options.\nset -uo pipefail\ncd /tmp\nprintf '2283ab6fef1c1d849b592dde1a295bd31ccfc78d8adee7574898e4543d2af6cf  sander.sh\\nb9aa3153a90a0bfbeb0191656fb4e38253cd3fc40964decfbe9b4fc26e128d41  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/sander.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/amber20/Amber20_Benchmark_Suite.tar.gz",
+      "destination": "/tmp/Amber20_Benchmark_Suite.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/sander.sh",
+      "destination": "/tmp/sander.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/sander/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

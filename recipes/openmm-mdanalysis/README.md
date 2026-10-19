@@ -21,8 +21,7 @@ make ls RECIPE=openmm-mdanalysis   # top.pdb + traj.dcd + omm.json + smoke-check
 ```
 
 ```python
-sim = app.Simulation(top, system, mm.VerletIntegrator(1*unit.femtosecond),
-                     mm.Platform.getPlatformByName("CPU"))
+sim = app.Simulation(top, system, mm.VerletIntegrator(1*unit.femtosecond), mm.Platform.getPlatformByName("CPU"))
 sim.context.setPositions(unit.Quantity(pos, unit.nanometer))   # units are load-bearing
 sim.step(20000)                                                # no thermostat: NVE
 u = mda.Universe("top.pdb", "traj.dcd")                        # the other layer reads it back
@@ -37,14 +36,19 @@ u = mda.Universe("top.pdb", "traj.dcd")                        # the other layer
 | 100 K | your temperature | LJ argon melts near 84 K, so 100 K is a fluid; below that you are simulating a solid. |
 | `CPU` platform | `CUDA` / `OpenCL` | `OPENMM_CPU_THREADS` controls the CPU platform; drift is thread-order dependent (below). |
 
-**Leave the size.** 7 s of compute already makes drift accumulate over 20,000 steps, which is what
-the identity tests; a bigger box would cost more without sharpening it. **Scale it** if you need
-throughput numbers rather than a correctness check.
+**Leave the size** for the check (20,000 steps already accumulate drift); the measured runs below carry it to production scale.
 
 ## Shape, size, cost
 
-`c8g.2xlarge` (8 threads): **20 ps in 7 s**, well under a cent. No generation table — at 7 s a
-four-chip ladder would measure boot ([same call as mash](../mash/README.md)).
+`c8g.2xlarge`: **20 ps in 7 s**. **Which box — [measured](../../measurements/openmm-mdanalysis-real/README.md)** (Amber20 suite: DHFR 23,558 atoms × 1 ns NVE, STMV 1,067,095 atoms; 32 threads, `8xlarge`):
+
+| chip | DHFR ns/day | STMV ns/day | **$/ns DHFR** |
+|---|---|---|---|
+| **Graviton4** `c8g` | **66.5** | **1.70** | **0.46** |
+| Intel `c8i` | 51.3 | 0.97 | 0.70 |
+| AMD `c8a` | 55.3 | 1.39 | 0.75 |
+
+Graviton4 is 34–38% cheaper per ns; OpenMM matches `sander` term by term on all three, and caught a `sander` overflow bug.
 
 <details>
 <summary>As shipped: an energy identity, a cross-layer decode, and the units bug the decode caught</summary>

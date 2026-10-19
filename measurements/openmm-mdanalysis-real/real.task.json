@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-openmm-mdanalysis-real-r1",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707); the scripts set their own options.\nset -uo pipefail\ncd /tmp\nprintf '88c36fe559d2b2e35616b4582c4b104484819df8e9674c30afd8d9c3a1ea0895  run.sh\\n6aba13ce40fa9d7007eb07f87c5f38ebca28fa64a9d9c495a5fd32be8e844cf0  real.py\\nb9aa3153a90a0bfbeb0191656fb4e38253cd3fc40964decfbe9b4fc26e128d41  inputs.sha256\\na05035ad90b5c82186f4092cfccda0ed23d0077b00da0699987741229a755eff  check.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 32 250000 1000 \n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/amber20/Amber20_Benchmark_Suite.tar.gz",
+      "destination": "/tmp/Amber20_Benchmark_Suite.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/sander/sander-JAC.mdout",
+      "destination": "/tmp/sander/sander-JAC.mdout"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/sander/sander-JAC-novdwcorr.mdout",
+      "destination": "/tmp/sander/sander-JAC-novdwcorr.mdout"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/sander/sander-STMV.mdout",
+      "destination": "/tmp/sander/sander-STMV.mdout"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/sander/sander-STMV-novdwcorr.mdout",
+      "destination": "/tmp/sander/sander-STMV-novdwcorr.mdout"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openmm-mdanalysis-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

@@ -1,0 +1,144 @@
+{
+ "threads": 32,
+ "dt_fs": 4.0,
+ "stride": 2500,
+ "systems": {
+  "JAC": {
+   "pme_alpha_per_A": 0.30767638558266697,
+   "pme_grid": [
+    64,
+    64,
+    64
+   ],
+   "build_s": 0.3843754220000051,
+   "n_atoms": 23558,
+   "n_constraints": 22290,
+   "h_mass_min": 3.024,
+   "h_mass_max": 3.024,
+   "box_nm": [
+    6.164472315757705,
+    6.164472315757705,
+    6.164472315757705
+   ],
+   "e0_cpu": {
+    "HarmonicBondForce": 458.7319067155528,
+    "HarmonicAngleForce": 1240.8414949362393,
+    "PeriodicTorsionForce": 1009.5201920571872,
+    "NonbondedForce": -75813.18181305831,
+    "potential": -73104.08816099833
+   },
+   "e0_cpu_s": 0.1096970779999964,
+   "cpu_threads_property": "32",
+   "platform": "CPU",
+   "e0_ref": {
+    "HarmonicBondForce": 458.7319067155528,
+    "HarmonicAngleForce": 1240.8414949362393,
+    "PeriodicTorsionForce": 1009.5201920571877,
+    "NonbondedForce": -75813.18398274801,
+    "potential": -73104.09038903903
+   },
+   "e0_ref_s": 2.1966112409999994,
+   "e0_nb_split": {
+    "lj": 9093.936440870848,
+    "lj_nodisp": 9624.386137444153,
+    "elec": -84907.12042361897
+   },
+   "default_pme": {
+    "alpha_per_A": 0.29202898720871845,
+    "grid_formula_min": [
+     55,
+     55,
+     55
+    ]
+   },
+   "e0_cpu_defaultpme": {
+    "HarmonicBondForce": 458.7319067155528,
+    "HarmonicAngleForce": 1240.8414949362393,
+    "PeriodicTorsionForce": 1009.5201920571872,
+    "NonbondedForce": -75813.86125064219,
+    "potential": -73104.76768610872
+   },
+   "projection": {
+    "d_etot": 0.0023653515381738544,
+    "d_ke": 6.010508514009416e-06
+   },
+   "md_s": 1300.074335542,
+   "md_steps": 250000,
+   "ns_per_day": 66.4577383292317,
+   "constraint_max_rel_dev_end": 2.037002373608031e-07
+  },
+  "STMV": {
+   "pme_alpha_per_A": 0.30767638558266697,
+   "pme_grid": [
+    240,
+    225,
+    225
+   ],
+   "build_s": 17.270303587999933,
+   "n_atoms": 1067095,
+   "n_constraints": 978008,
+   "h_mass_min": 1.008,
+   "h_mass_max": 3.024,
+   "box_nm": [
+    22.11723142,
+    22.319888090000003,
+    22.44925841
+   ],
+   "e0_cpu": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503751,
+    "PeriodicTorsionForce": 120384.24737260756,
+    "NonbondedForce": -3609133.417263976,
+    "potential": -3355475.051635247
+   },
+   "e0_cpu_s": 6.074303911000015,
+   "cpu_threads_property": "32",
+   "platform": "CPU",
+   "e0_ref": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503934,
+    "PeriodicTorsionForce": 120384.24737260985,
+    "NonbondedForce": -3609133.2772025024,
+    "potential": -3355474.9153082306
+   },
+   "e0_ref_s": 177.727189254,
+   "e0_nb_split": {
+    "lj": 360690.7160526583,
+    "lj_nodisp": 385874.8517535538,
+    "elec": -3969823.9932551766
+   },
+   "default_pme": {
+    "alpha_per_A": 0.29202898720871845,
+    "grid_formula_min": [
+     197,
+     199,
+     200
+    ]
+   },
+   "e0_cpu_defaultpme": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503751,
+    "PeriodicTorsionForce": 120384.24737260756,
+    "NonbondedForce": -3609143.5932380557,
+    "potential": -3355485.2313437914
+   },
+   "projection": {
+    "d_etot": 0.10462593426927924,
+    "d_ke": -0.00017133017536252737
+   },
+   "md_s": 203.62607065400016,
+   "md_steps": 1000,
+   "ns_per_day": 1.6972286450846505,
+   "constraint_max_rel_dev_end": 4.1156149334606746e-07
+  }
+ },
+ "openmm_version": "8.6.1.dev-b399af4",
+ "platforms_loaded": [
+  "Reference",
+  "CPU"
+ ],
+ "plugin_load_failures": [],
+ "maxrss_gib_after_JAC": 0.3347015380859375,
+ "maxrss_gib_after_STMV": 11.41562271118164,
+ "maxrss_gib": 11.41562271118164
+}

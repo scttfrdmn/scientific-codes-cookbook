@@ -1,0 +1,153 @@
+{
+ "threads": 32,
+ "dt_fs": 4.0,
+ "stride": 2500,
+ "systems": {
+  "JAC": {
+   "pme_alpha_per_A": 0.30767638558266697,
+   "pme_grid": [
+    64,
+    64,
+    64
+   ],
+   "build_s": 0.33402699700000227,
+   "n_atoms": 23558,
+   "n_constraints": 22290,
+   "h_mass_min": 3.024,
+   "h_mass_max": 3.024,
+   "box_nm": [
+    6.164472315757705,
+    6.164472315757705,
+    6.164472315757705
+   ],
+   "e0_cpu": {
+    "HarmonicBondForce": 458.7319067155529,
+    "HarmonicAngleForce": 1240.8414949362393,
+    "PeriodicTorsionForce": 1009.5201920571872,
+    "NonbondedForce": -75813.18669934281,
+    "potential": -73104.09310563389
+   },
+   "e0_cpu_s": 0.12204651700000113,
+   "cpu_threads_property": "32",
+   "platform": "CPU",
+   "e0_ref": {
+    "HarmonicBondForce": 458.7319067155529,
+    "HarmonicAngleForce": 1240.8414949362389,
+    "PeriodicTorsionForce": 1009.5201920571877,
+    "NonbondedForce": -75813.18398274813,
+    "potential": -73104.09038903915
+   },
+   "e0_ref_s": 3.15716856600001,
+   "e0_nb_split": {
+    "lj": 9093.936440870848,
+    "lj_nodisp": 9624.386137444153,
+    "elec": -84907.12042361897
+   },
+   "default_pme": {
+    "alpha_per_A": 0.29202898720871845,
+    "grid_formula_min": [
+     55,
+     55,
+     55
+    ]
+   },
+   "e0_cpu_defaultpme": {
+    "HarmonicBondForce": 458.7319067155529,
+    "HarmonicAngleForce": 1240.8414949362393,
+    "PeriodicTorsionForce": 1009.5201920571872,
+    "NonbondedForce": -75813.8668766568,
+    "potential": -73104.77331212333
+   },
+   "projection": {
+    "d_etot": 0.0025048737079487182,
+    "d_ke": 2.1422823920147493e-05
+   },
+   "md_s": 1682.9234949030001,
+   "md_steps": 250000,
+   "ns_per_day": 51.339232152665325,
+   "constraint_max_rel_dev_end": 3.589699670287119e-07
+  },
+  "STMV": {
+   "pme_alpha_per_A": 0.30767638558266697,
+   "pme_grid": [
+    240,
+    225,
+    225
+   ],
+   "build_s": 16.786315949000027,
+   "n_atoms": 1067095,
+   "n_constraints": 978008,
+   "h_mass_min": 1.008,
+   "h_mass_max": 3.024,
+   "box_nm": [
+    22.11723142,
+    22.319888090000003,
+    22.44925841
+   ],
+   "e0_cpu": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503754,
+    "PeriodicTorsionForce": 120384.24737260754,
+    "NonbondedForce": -3609133.6174011035,
+    "potential": -3355475.2555068354
+   },
+   "e0_cpu_s": 7.7720511830000305,
+   "cpu_threads_property": "32",
+   "platform": "CPU",
+   "e0_ref": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503937,
+    "PeriodicTorsionForce": 120384.24737260985,
+    "NonbondedForce": -3609133.277202499,
+    "potential": -3355474.915308227
+   },
+   "e0_ref_s": 175.5728624039998,
+   "e0_nb_split": {
+    "lj": 360690.7160526585,
+    "lj_nodisp": 385874.851753554,
+    "elec": -3969823.9932551733
+   },
+   "default_pme": {
+    "alpha_per_A": 0.29202898720871845,
+    "grid_formula_min": [
+     197,
+     199,
+     200
+    ]
+   },
+   "e0_cpu_defaultpme": {
+    "HarmonicBondForce": 39438.88467662275,
+    "HarmonicAngleForce": 93835.22984503754,
+    "PeriodicTorsionForce": 120384.24737260754,
+    "NonbondedForce": -3609143.7860288145,
+    "potential": -3355485.424134547
+   },
+   "projection": {
+    "d_etot": 0.10330115677788854,
+    "d_ke": -0.00018167041707783937
+   },
+   "md_s": 355.15220862199976,
+   "md_steps": 1000,
+   "ns_per_day": 0.9731039019606196,
+   "constraint_max_rel_dev_end": 6.111797403546128e-07
+  }
+ },
+ "openmm_version": "8.6.1.dev-b399af4",
+ "platforms_loaded": [
+  "Reference",
+  "CPU"
+ ],
+ "plugin_load_failures": [
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMHIP.so: libhiprtc.so.6: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMCUDA.so: libcuda.so.1: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMRPMDHIP.so: libhiprtc.so.6: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMDrudeHIP.so: libhiprtc.so.6: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMRPMDCUDA.so: libcuda.so.1: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMAmoebaHIP.so: libhiprtc.so.6: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMDrudeCUDA.so: libcuda.so.1: cannot open shared object file: No such file or directory",
+  "Error loading library /var/tmp/env/lib/plugins/libOpenMMAmoebaCUDA.so: libcuda.so.1: cannot open shared object file: No such file or directory"
+ ],
+ "maxrss_gib_after_JAC": 0.3370399475097656,
+ "maxrss_gib_after_STMV": 11.398872375488281,
+ "maxrss_gib": 11.398872375488281
+}
