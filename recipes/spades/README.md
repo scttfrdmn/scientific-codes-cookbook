@@ -28,13 +28,23 @@ The recipe assembles a ~400 kb region and asserts the exact contig set; [QUAST](
 | the 30× region reads (51,933 pairs) | your own reads | `--isolate` is the mode for high-coverage isolate data; use `--meta`, `--rna`, etc. for other libraries. |
 | **`-t 4` (fixed)** | scale threads for speed — but then drop the exact assertion | **determinism scaffolding — the load-bearing knob.** SPAdes at a *fixed* thread count is deterministic (verified: 237 contigs / 428,168 bp on two runs); change the thread count and the exact numbers can shift, so assert a band or pin the count. Same discipline as [flye](../flye/README.md) and the tree-builders. |
 
-**Leave the fixture small:** a subsampled region assembles deterministically and lets the check assert exact integers; a whole-genome assembly is a different, slower recipe and wouldn't make the tool *more* legible. Leave-it.
+**Leave the fixture small:** a subsampled region assembles deterministically and lets the check assert exact integers in two minutes. The whole-genome run is [measured separately](../../measurements/spades-real/README.md), below. Leave-it.
 
 ## Shape, size, cost
 
 One task, ~74 s assembly. `c8g.xlarge`, ~$0.02, **~113s** wall — boot and image pull ([why](../../practices/what-this-does-not-cover.md)). First in a chain: run SPAdes + [MEGAHIT](../megahit/README.md) before [QUAST](../quast/README.md).
 
 **The scale-it, measured.** On a real bacterial genome (~100× *E. coli*, measured on `m8g.2xlarge` (8 vCPU / 32 GiB) — oversized so SPAdes wasn't the bottleneck, *not* the recommendation) SPAdes holds a **~4.4 GiB** working set and averages **3.4 of 8 cores**, peaking briefly at 8. So `c8g.xlarge` (4 vCPU / 8 GiB) fits — 8 GiB clears the floor, 4 cores match the average; the measurement box stranded ~28 GiB and ~5 cores, and the 8-core peak would tempt you to strand more. On the *same reads* **MEGAHIT assembles in ~0.4 GiB — ~11× leaner** ([why](../megahit/README.md)); the succinct de Bruijn graph is the memory win. **Neither needs a memory (`r`) box at this scale** — the choice is leaner-vs-heavier, not a family jump. (Both climb with genome size; this is bacterial-scale.) Measured across five families for $/result — and [why the cross-arch number is a trap](../../patterns/cost-per-result.md).
+
+## Which box — [measured](../../measurements/spades-real/README.md) (whole *E. coli* isolate, 97×, `-t 8`)
+
+| chip | instance | SPAdes wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.2xlarge` | 1,182 s | 0.3190 | 0.1047 | **0.1101** |
+| Xeon 6975P-C | `c8i.2xlarge` | 1,057 s | 0.3748 | 0.1101 | 0.1155 |
+| EPYC 9R45 | `c8a.2xlarge` | 1,023 s | 0.4311 | 0.1225 | 0.1276 |
+
+**Graviton4 is cheapest per assembly; AMD is 1.16× faster and 16% dearer.** All three give the same `contigs.fasta` byte for byte: 98.6% of the closed reference, 1.11 mismatches per 100 kbp. **Put `-o` on disk, not `/tmp`:** the work directory peaks at **18 GB** against 4.4 GiB of RAM and ran out of space at K77 on a 16 GiB box's tmpfs.
 
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>

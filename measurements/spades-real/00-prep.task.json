@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-spades-real-prep",
+  "container": "quay.io/aarchbio/sra-tools@sha256:7145cf2f6f2e9265b7ace204d86b6ed1cbbd0b8b3ef31cbadf32bfa271229afd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (prep\\.sh|DRR171213\\.sra)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 1 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash prep.sh DRR171213 760683 450083225 8 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 30
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spades-real/DRR171213.sra",
+      "destination": "/tmp/DRR171213.sra"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spades-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spades-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/spades-real/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

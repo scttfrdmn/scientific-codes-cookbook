@@ -1,0 +1,145 @@
+WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py arm64.contigs.fasta x86_64.contigs.fasta amd.contigs.fasta -r GCF_000005845.2.fna.gz -t 4 -o q --labels arm64,x86_64,amd
+
+Version: 5.3.0
+
+System information:
+  OS: Linux-6.18.54-121.166.amzn2023.aarch64-aarch64-with-glibc2.36 (linux_64)
+  Python version: 3.13.14
+  CPUs number: 4
+
+Started: 2026-10-19 05:01:00
+
+Logging to /tmp/q/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: default, threads: 4, min contig length: 500, min alignment length: 65, min alignment IDY: 95.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/GCF_000005845.2.fna.gz ==> GCF_000005845.2
+
+Contigs:
+  Pre-processing...
+  1  arm64.contigs.fasta ==> arm64
+  2  x86_64.contigs.fasta ==> x86_64
+  3  amd.contigs.fasta ==> amd
+
+2026-10-19 05:01:00
+Running Basic statistics processor...
+  Reference genome:
+    GCF_000005845.2.fna, length = 4641652, num fragments = 1, GC % = 50.79
+  Contig files: 
+    1  arm64
+    2  x86_64
+    3  amd
+  Calculating N50 and L50...
+    1  arm64, N50 = 178400, L50 = 9, auN = 198328.1, Total length = 4589418, GC % = 50.74, # N's per 100 kbp =  0.00
+    2  x86_64, N50 = 178400, L50 = 9, auN = 198328.1, Total length = 4589418, GC % = 50.74, # N's per 100 kbp =  0.00
+    3  amd, N50 = 178400, L50 = 9, auN = 198328.1, Total length = 4589418, GC % = 50.74, # N's per 100 kbp =  0.00
+  Drawing Nx plot...
+    saved to /tmp/q/basic_stats/Nx_plot.pdf
+  Drawing NGx plot...
+    saved to /tmp/q/basic_stats/NGx_plot.pdf
+  Drawing cumulative plot...
+    saved to /tmp/q/basic_stats/cumulative_plot.pdf
+  Drawing GC content plot...
+    saved to /tmp/q/basic_stats/GC_content_plot.pdf
+  Drawing arm64 GC content plot...
+    saved to /tmp/q/basic_stats/arm64_GC_content_plot.pdf
+  Drawing x86_64 GC content plot...
+    saved to /tmp/q/basic_stats/x86_64_GC_content_plot.pdf
+  Drawing amd GC content plot...
+    saved to /tmp/q/basic_stats/amd_GC_content_plot.pdf
+  Drawing Coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/coverage_histogram.pdf
+  Drawing arm64 coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/arm64_coverage_histogram.pdf
+  Drawing x86_64 coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/x86_64_coverage_histogram.pdf
+  Drawing amd coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/amd_coverage_histogram.pdf
+Done.
+
+2026-10-19 05:01:02
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  x86_64
+  1  Logging to files /tmp/q/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  3  amd
+  1  Aligning contigs to the reference
+  2  Logging to files /tmp/q/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  2  Aligning contigs to the reference
+  3  Logging to files /tmp/q/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  3  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  1  Analysis is finished.
+  Creating total report...
+    saved to /tmp/q/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/q/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/q/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+  Drawing misassemblies by types plot...
+    saved to /tmp/q/contigs_reports/misassemblies_plot.pdf
+  Drawing misassemblies FRCurve plot...
+    saved to /tmp/q/contigs_reports/misassemblies_frcurve_plot.pdf
+Done.
+
+2026-10-19 05:01:04
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 414105, NA50 = 176019, NGA50 = 176019, LA50 = 9, LGA50 = 9
+  2  x86_64, Largest alignment = 414105, NA50 = 176019, NGA50 = 176019, LA50 = 9, LGA50 = 9
+  3  amd, Largest alignment = 414105, NA50 = 176019, NGA50 = 176019, LA50 = 9, LGA50 = 9
+  Drawing cumulative plot...
+    saved to /tmp/q/aligned_stats/cumulative_plot.pdf
+  Drawing NAx plot...
+    saved to /tmp/q/aligned_stats/NAx_plot.pdf
+  Drawing NGAx plot...
+    saved to /tmp/q/aligned_stats/NGAx_plot.pdf
+Done.
+
+2026-10-19 05:01:04
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  x86_64
+  3  amd
+  2  Analysis is finished.
+  1  Analysis is finished.
+  3  Analysis is finished.
+  Drawing Genome fraction, % histogram...
+    saved to /tmp/q/genome_stats/genome_fraction_histogram.pdf
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-19 05:01:05
+Creating large visual summaries...
+This may take a while: press Ctrl-C to skip this step..
+  1 of 2: Creating PDF with all tables and plots...
+  2 of 2: Creating Icarus viewers...
+Done
+
+2026-10-19 05:01:05
+RESULTS:
+  Text versions of total report are saved to /tmp/q/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/q/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/q/report.html
+  PDF version (tables and plots) is saved to /tmp/q/report.pdf
+  Icarus (contig browser) is saved to /tmp/q/icarus.html
+  Log is saved to /tmp/q/quast.log
+
+Finished: 2026-10-19 05:01:05
+Elapsed time: 0:00:05.695029
+NOTICEs: 3; WARNINGs: 2; non-fatal ERRORs: 0
+
+Thank you for using QUAST!

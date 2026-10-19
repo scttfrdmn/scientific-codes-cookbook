@@ -1,0 +1,10 @@
+reference md5 == NCBI md5checksums       want c13d459b5caa702ff7e1f26fe44b8ad7 ok   (c13d459b5caa702ff7e1f26fe44b8ad7)
+reference is one 4,641,652 bp sequence   want 1 4641652               ok   (1 4641652)
+fasterq-dump exit                        want 0                       ok   (0)
+mates pair up                            R1 == R2                     ok   (760683 / 760683)
+pairs == ENA read_count (spots)          want 760683                  ok   (760683)
+bases == ENA base_count                  want 450083225               ok   (450083225)
+qualities are real, not SRA-lite         want >1 symbol               ok   (33 / 33)
+mate 1 gzip intact                       gzip -t                      ok   (1)
+mate 2 gzip intact                       gzip -t                      ok   (2)
+prep_failures 0
