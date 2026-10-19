@@ -28,8 +28,8 @@ humann --input demo.fastq --output out --threads 4 --bypass-prescreen \
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `demo.fastq` (21,000 reads) | your metagenome | the DEMO databases are a tiny subset; real work needs the full ChocoPhlAn + UniRef (~30 GB via `humann_databases`). |
-| `--bypass-prescreen` | **you have no choice yet** | HUMAnN cannot start otherwise — [biobakery/humann#80](https://github.com/biobakery/humann/issues/80). It also means `--taxonomic-profile` is **ignored**. See below; this is the recipe's real limitation. |
+| `demo.fastq` (21,000 reads) | your metagenome | the DEMO databases are a tiny subset; real work needs the full ChocoPhlAn + UniRef90 (49 GiB unpacked). Concatenating mates from `fasterq-dump`? Give them unique IDs first, or HUMAnN merges them ([measured](../../measurements/humann-real/README.md#caveats): 30% less RPK, no error). |
+| `--bypass-prescreen` | `--taxonomic-profile` + a `metaphlan` version shim | MetaPhlAn 4.2.5 breaks HUMAnN's version check ([biobakery/humann#80](https://github.com/biobakery/humann/issues/80)), and `--bypass-prescreen` **ignores the profile**. The [whole-sample run](../../measurements/humann-real/README.md#run-it) uses a shim to get the guided path (25 pangenomes, not all of ChocoPhlAn). |
 | the DEMO databases | `humann_databases --download ...` | a full-database run changes the answer substantially, not marginally. |
 | 4 threads | more | `--threads` is passed to bowtie2 and diamond, which is where the time goes. |
 
@@ -38,6 +38,14 @@ humann --input demo.fastq --output out --threads 4 --bypass-prescreen \
 ## Shape, size, cost
 
 One task on `c8g.large` (4 vCPU / 8 GiB), TTL 40m, cap $0.15. Measured: **186 unit tests in 30 s**, the demo in **46 s**, then a second identical demo run for the determinism check — all inside a ~4 min window that is mostly image pull. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
+**Which box — [measured](../../measurements/humann-real/README.md)** on a whole 17.6M-read Zymo sample against the full databases, profile-guided, 16 vCPU. **AMD is 1.45× faster and 3% cheaper. Intel matches Graviton4's speed at 19% more.** All 117,726 species-level gene-family values are identical on all three chips, and 8/8 Zymo bacteria recruit families.
+
+| chip | instance | tool wall | billed | $/hr | **billed $/sample** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | 3,785 s | 4,284 s | 0.9426 | 1.1217 |
+| Xeon 6975P-C | `r8i.4xlarge` | 3,758 s | 4,336 s | 1.1114 | 1.3386 |
+| **EPYC 9R45** | `r8a.4xlarge` | **2,602 s** | **3,071 s** | 1.2781 | **1.0903** |
 
 <details>
 <summary>As shipped: 186 author-written tests, and the one number this recipe refuses to assert</summary>
@@ -102,11 +110,13 @@ warning line is simply replaced by an "Installed databases:" line. Filed as
 [biobakery/humann#80](https://github.com/biobakery/humann/issues/80) with the suggested fix
 (match the version by pattern, or read the first line).
 
-So `--bypass-prescreen` is the only way in, and the cost is specific: **`--taxonomic-profile` is
+So without help `--bypass-prescreen` is the only way in, and the cost is specific: **`--taxonomic-profile` is
 ignored.** Running with and without the profile produced *identical* gene-family tables, so
 HUMAnN searches the whole nucleotide database rather than the pangenomes a profile would select.
-That is why this recipe profiles a demo rather than claiming a taxonomy-guided functional profile
-— the path that consumes a profile is gated behind the broken check.
+The demo here runs that way. The [whole-sample measurement](../../measurements/humann-real/README.md)
+takes the guided path: a `metaphlan` shim on `--metaphlan` answers `--version` with the version line
+last and refuses any other call, so the check passes, the profile selects 25 pangenomes, and
+MetaPhlAn provably never runs.
 
 ### Pins
 
@@ -166,7 +176,7 @@ The checks run inside the task and fail it on a failed unit test, a missing outp
 
 ### Not covered
 
-A full-database run (~30 GB of ChocoPhlAn + UniRef), taxonomy-guided profiling (blocked, above),
+A full-database, taxonomy-guided run is in [humann-real](../../measurements/humann-real/README.md), not here.
 `humann_barplot` and the regroup/rename table utilities beyond what the functional tests exercise,
 and MetaPhlAn profiling itself — that is [metaphlan](../metaphlan/README.md).
 

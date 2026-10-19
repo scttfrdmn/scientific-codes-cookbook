@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-humann-real-dbs",
+  "container": "quay.io/aarchbio/humann@sha256:c614308013fd2a7f7cef181d18ad0ce3c785b1b3243f62f0428fa313c1852ac6",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (fetch_dbs\\.py|hashtree\\.py)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 2 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nmkdir -p out/db\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_gib %.1f\\n\", $2/1048576}'\npython3 -u fetch_dbs.py chocophlan out/db > out/fetch-chocophlan.txt 2>&1 & P1=$!\npython3 -u fetch_dbs.py uniref out/db > out/fetch-uniref.txt 2>&1 & P2=$!\nwait $P1; R1=$?; wait $P2; R2=$?\ncat out/fetch-chocophlan.txt out/fetch-uniref.txt\n[ \"$R1\" = 0 ] && [ \"$R2\" = 0 ] || { echo \"FAIL: a download did not match its advertised length\"; exit 1; }\npython3 -u hashtree.py write out/db out/db.sha256 || exit 1\ndf -k /tmp | awk 'NR==2{printf \"tmpfs_used_gib %.1f\\n\", $3/1048576}'\necho \"DBS OK\"\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/fetch_dbs.py",
+      "destination": "/tmp/fetch_dbs.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/hashtree.py",
+      "destination": "/tmp/hashtree.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

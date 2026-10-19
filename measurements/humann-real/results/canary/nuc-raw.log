@@ -1,0 +1,258 @@
+10/19/2026 05:05:13 AM - humann.humann - INFO: Running humann v3.9
+10/19/2026 05:05:13 AM - humann.humann - INFO: Output files will be written to: /var/tmp/w/nuc-raw
+10/19/2026 05:05:13 AM - humann.humann - INFO: Writing temp files to directory: /var/tmp/w/nuc-raw/ERR2984773_humann_temp
+10/19/2026 05:05:13 AM - humann.utilities - INFO: File ( /var/tmp/w/raw.fastq ) is of format:  fastq
+10/19/2026 05:05:13 AM - humann.humann - INFO: Removing spaces from identifiers in input file
+10/19/2026 05:05:13 AM - humann.utilities - DEBUG: Check software, metaphlan, for required version, 3.0
+10/19/2026 05:05:14 AM - humann.utilities - INFO: Using metaphlan version 4.2
+10/19/2026 05:05:14 AM - humann.utilities - DEBUG: Check software, bowtie2, for required version, 2.2
+10/19/2026 05:05:14 AM - humann.utilities - INFO: Using bowtie2 version 2.5
+10/19/2026 05:05:14 AM - humann.config - INFO: 
+Run config settings: 
+
+DATABASE SETTINGS
+nucleotide database folder = /tmp/db/chocophlan
+protein database folder = /tmp/db/uniref
+pathways database file 1 = /opt/conda/lib/python3.12/site-packages/humann/data/pathways/metacyc_reactions_level4ec_only.uniref.bz2
+pathways database file 2 = /opt/conda/lib/python3.12/site-packages/humann/data/pathways/metacyc_pathways_structured_filtered_v24_subreactions
+utility mapping database folder = /opt/conda/lib/python3.12/site-packages/humann/data/misc
+
+RUN MODES
+resume = False
+verbose = False
+bypass prescreen = False
+bypass nucleotide index = False
+bypass nucleotide search = False
+bypass translated search = True
+translated search = diamond
+threads = 16
+
+SEARCH MODE
+search mode = uniref90
+nucleotide identity threshold = 0.0
+translated identity threshold = 80.0
+
+ALIGNMENT SETTINGS
+bowtie2 options = --very-sensitive
+diamond options = --top 1 --outfmt 6
+evalue threshold = 1.0
+prescreen threshold = 0.01
+translated subject coverage threshold = 50.0
+translated query coverage threshold = 90.0
+nucleotide subject coverage threshold = 50.0
+nucleotide query coverage threshold = 90.0
+
+PATHWAYS SETTINGS
+minpath = on
+xipe = off
+gap fill = on
+
+INPUT AND OUTPUT FORMATS
+input file format = fastq
+output file format = tsv
+output max decimals = 10
+remove stratified output = False
+remove column description output = False
+log level = DEBUG
+
+10/19/2026 05:05:14 AM - humann.store - DEBUG: Initialize Alignments class instance to minimize memory use
+10/19/2026 05:05:14 AM - humann.store - DEBUG: Initialize Reads class instance to minimize memory use
+10/19/2026 05:05:26 AM - humann.humann - INFO: Load pathways database part 1: /opt/conda/lib/python3.12/site-packages/humann/data/pathways/metacyc_reactions_level4ec_only.uniref.bz2
+10/19/2026 05:05:26 AM - humann.humann - INFO: Load pathways database part 2: /opt/conda/lib/python3.12/site-packages/humann/data/pathways/metacyc_pathways_structured_filtered_v24_subreactions
+10/19/2026 05:05:26 AM - humann.search.prescreen - DEBUG: Taxon not in mapping file: k__Eukaryota|p__Ascomycota|c__Saccharomycetes|o__Saccharomycetales|f__Saccharomycetaceae|g__Saccharomyces|s__Saccharomyces_cerevisiae|t__EUK4932	2759|4890|4891|4892|4893|4930|4932|	0.321097	k__Eukaryota|p__Ascomycota|c__Saccharomycetes|o__Saccharomycetales|f__Saccharomycetaceae|g__Saccharomyces|s__Saccharomyces_uvarum,k__Eukaryota|p__Ascomycota|c__Saccharomycetes|o__Saccharomycetales|f__Saccharomycetaceae|g__Saccharomyces|s__Saccharomyces_boulardii_nom_inval
+
+10/19/2026 05:05:26 AM - humann.search.prescreen - DEBUG: Taxon not in mapping file: k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales|f__Bacillaceae|g__Bacillus|s__Bacillus_vallismortis|t__SGB7792	2|1239|91061|1385|186817|1386|72361|	0.016811	k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales|f__Bacillaceae|g__Bacillus|s__Bacillus_sp_MSP13
+
+10/19/2026 05:05:26 AM - humann.search.prescreen - DEBUG: Taxon not in mapping file: k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales|f__Bacillaceae|g__Bacillus|s__Bacillus_sp_FSQ1|t__SGB66481	2|1239|91061|1385|186817|1386|2834415|	0.012604	k__Bacteria|p__Firmicutes|c__Bacilli|o__Bacillales|f__Bacillaceae|g__Bacillus|s__Bacillus_sp_SKDU12
+
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB7106 : 16.25% of mapped reads ( s__Lactobacillus_fermentum )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB7962 : 13.81% of mapped reads ( s__Enterococcus_faecalis,g__Enterococcus.s__Enterococcus_sp_HMSC073E09,g__Enterococcus.s__Enterococcus_sp_255_ESPC,g__Enterococcus.s__Enterococcus_sp_1140_ESPC,g__Enterococcus.s__Enterococcus_sp_HMSC078F03,g__Enterococcaceae_unclassified.s__Enterococcaceae_bacterium,g__Enterococcus.s__Enterococcus_sp_LX10,g__Enterococcus.s__Enterococcus_sp_PLM3,g__Enterococcus.s__Enterococcus_sp_S183_ASV_20,g__Enterococcus.s__Enterococcus_sp_S159_ASV_20 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB7852 : 9.55% of mapped reads ( s__Staphylococcus_aureus,g__Staphylococcus.s__Staphylococcus_sp_HMSC062H10,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_19,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_23,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_29,g__Staphylococcus.s__Staphylococcus_sp_HMSC058E01,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_1,g__Staphylococcus.s__Staphylococcus_sp_GDY8P51A,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_32,g__Staphylococcus.s__Staphylococcus_sp_HMSC58E11,g__Staphylococcus.s__Staphylococcus_sp_HMSC74G01,g__Staphylococcus.s__Staphylococcus_sp_EG_SA_17,g__Staphylococcus.s__Staphylococcus_sp_MZ7,g__Staphylococcus.s__Staphylococcus_sp_HMSC74F04,g__Staphylococcus.s__Staphylococcus_sp_GDB20D11A )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB7535 : 7.45% of mapped reads ( s__Listeria_monocytogenes )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB10073 : 7.34% of mapped reads ( s__Salmonella_enterica,g__Salmonella.s__Salmonella_bongori,g__Salmonella.s__Salmonella_sp_SG126,g__Salmonella.s__Salmonella_sp_SG135,g__Salmonella.s__Salmonella_sp_SJTUF14152,g__Salmonella.s__Salmonella_sp_S126_66713,g__Salmonella.s__Salmonella_sp_32031103_2018_00083_FB_01_SM_01,g__Salmonella.s__Salmonella_sp_SG203,g__Salmonella.s__Salmonella_sp_S091_02751,g__Salmonella.s__Salmonella_sp_zj_f50,g__Salmonella.s__Salmonella_sp_XN2,g__Salmonella.s__Salmonella_sp_S129_41069,g__Salmonella.s__Salmonella_sp_S113_49063,g__Salmonella.s__Salmonella_sp_SCFS4,g__Salmonella.s__Salmonella_sp_gx_f7,g__Salmonella.s__Salmonella_sp_32130201_2017_00038SM,g__Salmonella.s__Salmonella_sp_S134_54621,g__Salmonella.s__Salmonella_sp_32031101201600128SM,g__Salmonella.s__Salmonella_sp_gx_h1,g__Salmonella.s__Salmonella_sp_gx_f8,g__Salmonella.s__Salmonella_sp_SG143,g__Salmonella.s__Salmonella_sp_SSDFZ54,g__Salmonella.s__Salmonella_sp_SG193,g__Salmonella.s__Salmonella_sp_hn_f5,g__Salmonella.s__Salmonella_sp_S050_01140,g__Salmonella.s__Salmonella_sp_32020501_2019_00050,g__Salmonella.s__Salmonella_sp_S061_01369,g__Salmonella.s__Salmonella_sp_3203110320160044,g__Salmonella.s__Salmonella_sp_S133_54550,g__Salmonella.s__Salmonella_sp_32070601201500089SM,g__Salmonella.s__Salmonella_sp_gx_f9,g__Salmonella.s__Salmonella_sp_SJTUF14146,g__Salmonella.s__Salmonella_sp_32010601201600067SM,g__Salmonella.s__Salmonella_sp_SSDFZ69,g__Salmonella.s__Salmonella_sp_32040203_2019_00032,g__Salmonella.s__Salmonella_sp_32040203_2019_00004,g__Salmonella.s__Salmonella_sp_S110_31002,g__Salmonella.s__Salmonella_sp_YP131_1,g__Salmonella.s__Salmonella_sp_15E557,g__Salmonella.s__Salmonella_sp_YP95_1,g__Salmonella.s__Salmonella_sp_YP437_1,g__Salmonella.s__Salmonella_sp_YP101_1,g__Salmonella.s__Salmonella_sp_YC4_4,g__Salmonella.s__Salmonella_sp_14ESS1484,g__Salmonella.s__Salmonella_sp_17E74,g__Salmonella.s__Salmonella_sp_YP54_1,g__Salmonella.s__Salmonella_sp_L_S2353,g__Salmonella.s__Salmonella_sp_L_S1477,g__Salmonella.s__Salmonella_sp_YT2_4_4,g__Salmonella.s__Salmonella_sp_S87,g__Salmonella.s__Salmonella_sp_A29_2,g__Salmonella.s__Salmonella_sp_17E594,g__Salmonella.s__Salmonella_sp_JXY0409_18,g__Salmonella.s__Salmonella_sp_17E530,g__Salmonella.s__Salmonella_sp_S_L_S1349,g__Salmonella.s__Salmonella_sp_15E418 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB12320 : 6.73% of mapped reads ( s__Pseudomonas_aeruginosa,g__Pseudomonas.s__Pseudomonas_sp_HMSC072F09,g__Pseudomonas.s__Pseudomonas_sp_P179,g__Pseudomonas.s__Pseudomonas_sp_HMSC063H08,g__Pseudomonas.s__Pseudomonas_sp_HMSC067G02,g__Pseudomonas.s__Pseudomonas_sp_BIS,g__Pseudomonas.s__Pseudomonas_sp_S33,g__Pseudomonas.s__Pseudomonas_sp_HMSC066A08,g__Pseudomonas.s__Pseudomonas_sp_2VD,g__Pseudomonas.s__Pseudomonas_sp_BDPW,g__Pseudomonas.s__Pseudomonas_sp_P20,g__Pseudomonas.s__Pseudomonas_fluorescens,g__Pseudomonas.s__Pseudomonas_sp_HMSC058C05,g__Pseudomonas.s__Pseudomonas_sp_HMSC065H02,g__Pseudomonas.s__Pseudomonas_sp_HMSC057H01,g__Pseudomonas.s__Pseudomonas_sp_17053418,g__Pseudomonas.s__Pseudomonas_sp_17072548,g__Pseudomonas.s__Pseudomonas_sp_18092229,g__Pseudomonas.s__Pseudomonas_sp_18083194,g__Pseudomonas.s__Pseudomonas_sp_18113298,g__Pseudomonas.s__Pseudomonas_sp_19064969,g__Pseudomonas.s__Pseudomonas_sp_17033095,g__Pseudomonas.s__Pseudomonas_sp_18082574,g__Pseudomonas.s__Pseudomonas_sp_19062259,g__Pseudomonas.s__Pseudomonas_sp_18103014,g__Pseudomonas.s__Pseudomonas_sp_18083259,g__Pseudomonas.s__Pseudomonas_sp_17073326,g__Pseudomonas.s__Pseudomonas_sp_19072337_2,g__Pseudomonas.s__Pseudomonas_sp_18093371,g__Pseudomonas.s__Pseudomonas_sp_17053703,g__Pseudomonas.s__Pseudomonas_sp_17063399,g__Pseudomonas.s__Pseudomonas_sp_18082551,g__Pseudomonas.s__Pseudomonas_sp_203_8,g__Pseudomonas.s__Pseudomonas_sp_17103552,g__Pseudomonas.s__Pseudomonas_sp_18083202,g__Pseudomonas.s__Pseudomonas_sp_18082547,g__Pseudomonas.s__Pseudomonas_sp_17104299,g__Pseudomonas.s__Pseudomonas_sp_PS1_2021,g__Pseudomonas.s__Pseudomonas_sp_CP_1 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB10068 : 6.45% of mapped reads ( s__Escherichia_coli,g__Shigella.s__Shigella_sonnei,g__Shigella.s__Shigella_flexneri,g__Shigella.s__Shigella_boydii,g__Shigella.s__Shigella_dysenteriae,g__Escherichia.s__Escherichia_sp_HH26CH,g__Escherichia.s__Escherichia_sp_R15,g__Escherichia.s__Escherichia_sp_HH41S,g__Escherichia.s__Escherichia_sp_KCJ4928,g__Escherichia.s__Escherichia_sp_MOD1_EC5287,g__Escherichia.s__Escherichia_sp_R16,g__Escherichia.s__Escherichia_sp_MOD1_EC5189,g__Escherichia.s__Escherichia_sp_94_0001,g__Escherichia.s__Escherichia_sp_R11,g__Shigella.s__Shigella_sp_FC1567,g__Shigella.s__Shigella_sp_FC1661,g__Escherichia.s__Escherichia_sp_1_1_43,g__Escherichia.s__Escherichia_sp_R14,g__Escherichia.s__Escherichia_sp_SCLE84,g__Escherichia.s__Escherichia_sp_MOD1_EC1915,g__Escherichia.s__Escherichia_sp_DSM_109009,g__Escherichia.s__Escherichia_sp_MOD1_EC6021,g__Escherichia.s__Escherichia_sp_79_0191,g__Escherichia.s__Escherichia_sp_MOD1_EC5990,g__Escherichia.s__Escherichia_sp_KCJ4943,g__Escherichia.s__Escherichia_sp_MOD1_EC6300,g__Shigella.s__Shigella_sp_SHS_8,g__Escherichia.s__Escherichia_sp_R3,g__Escherichia.s__Escherichia_sp_MOD1_EC4550,g__Escherichia.s__Escherichia_sp_7785,g__Escherichia.s__Escherichia_sp_JL983,g__Escherichia.s__Escherichia_sp_R12,g__Shigella.s__Shigella_sp_FC2383,g__Escherichia.s__Escherichia_sp_R7,g__Escherichia.s__Escherichia_sp_MOD1_EC2449,g__Shigella.s__Shigella_sp_FC1544,g__Escherichia.s__Escherichia_sp_MOD1_EC4516,g__Shigella.s__Shigella_sp_FC2175,g__Escherichia.s__Escherichia_sp_R8,g__Escherichia.s__Escherichia_sp_TW15838,g__Escherichia.s__Escherichia_sp_0_2392,g__Escherichia.s__Escherichia_sp_R18,g__Escherichia.s__Escherichia_sp_4_1_40B,g__Enterobacteriaceae_unclassified.s__Enterobacteriaceae_bacterium,g__Escherichia.s__Escherichia_fergusonii,g__Shigella.s__Shigella_sp_SHS_2,g__Escherichia.s__Escherichia_sp_R6,g__Shigella.s__Shigella_sp_FC1056,g__Escherichia.s__Escherichia_sp_MOD1_EC4560,g__Shigella.s__Shigella_sp_FC2541,g__Escherichia.s__Escherichia_sp_XD100,g__Escherichia.s__Escherichia_sp_S2_ASV_4,g__Escherichia.s__Escherichia_sp_TM_G17TGC,g__Enterobacteriaceae_unclassified.s__Enterobacteriaceae_bacterium_MCC505,g__Escherichia.s__Escherichia_sp_XD33,g__Escherichia.s__Escherichia_sp_S85_ASV_4,g__Escherichia.s__Escherichia_sp_XD11,g__Escherichia.s__Escherichia_sp_M623,g__Shigella.s__Shigella_sp_FC6543,g__Shigella.s__Shigella_sp_PIB,g__Escherichia.s__Escherichia_sp_NT45,g__Escherichia.s__Escherichia_sp_M612,g__Escherichia.s__Escherichia_sp_XD115,g__Escherichia.s__Escherichia_sp_M609,g__Escherichia.s__Escherichia_sp_M626,g__Escherichia.s__Escherichia_sp_M593,g__Escherichia.s__Escherichia_sp_M608,g__Escherichia.s__Escherichia_sp_NIC18_1,g__Escherichia.s__Escherichia_sp_TF21_Red,g__Enterobacteriaceae_unclassified.s__Enterobacteriaceae_bacterium_CLA_AA_H239,g__Shigella.s__Shigella_sp_FC6485,g__Escherichia.s__Escherichia_sp_NIC33,g__Escherichia.s__Escherichia_sp_XD12 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found g__Saccharomyces.s__Saccharomyces_cerevisiae : 0.32% of mapped reads ( g__Saccharomyces.s__Saccharomyces_uvarum,g__Saccharomyces.s__Saccharomyces_boulardii_nom_inval )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found t__SGB7788 : 0.06% of mapped reads ( s__Bacillus_subtilis_group,g__Bacillus.s__Bacillus_stercoris,g__Bacillus.s__Bacillus_sp_LM_4_2,g__Bacillus.s__Bacillus_sp_X2_2017,g__Bacillus.s__Bacillus_sp_Ru63,g__Bacillus.s__Bacillus_sp_JS,g__Bacillus.s__Bacillus_sp_FW1,g__Bacillus.s__Bacillus_sp_CMAA_1185,g__Bacillus.s__Bacillus_sp_F56,g__Bacillus.s__Bacillus_sp_Rc4,g__Bacillus.s__Bacillus_sp_SJZ110,g__Bacillus.s__Bacillus_sp_J5TS4,g__Bacillus.s__Bacillus_sp_seq1,g__Bacillus.s__Bacillus_sp_A053,g__Bacillus.s__Bacillus_sp_FMQ74,g__Bacillus.s__Bacillus_sp_TYF_B5_5,g__Bacillus.s__Bacillus_sp_DM2,g__Bacillus.s__Bacillus_sp_WR11,g__Bacillus.s__Bacillus_sp_MT,g__Bacillus.s__Bacillus_sp_SN32,g__Bacillus.s__Bacillus_sp_LJBS06,g__Bacillus.s__Bacillus_sp_LJBS17,g__Bacillus.s__Bacillus_sp_BC1_43,g__Bacillus.s__Bacillus_sp_C21,g__Bacillus.s__Bacillus_sp_1006_3 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found g__Bacillus.s__Bacillus_vallismortis : 0.02% of mapped reads ( g__Bacillus.s__Bacillus_sp_MSP13 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Found g__Bacillus.s__Bacillus_sp_FSQ1 : 0.01% of mapped reads ( g__Bacillus.s__Bacillus_sp_SKDU12 )
+10/19/2026 05:05:26 AM - humann.search.prescreen - INFO: Total species selected from prescreen: 235
+10/19/2026 05:05:27 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Staphylococcus.s__Staphylococcus_aureus.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Salmonella.s__Salmonella_enterica.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Salmonella.s__Salmonella_bongori.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Saccharomyces.s__Saccharomyces_cerevisiae.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Pseudomonas.s__Pseudomonas_fluorescens_group.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Pseudomonas.s__Pseudomonas_aeruginosa.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:28 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Pseudomonas.s__Pseudomonas_aeruginosa_group.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:30 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Listeria.s__Listeria_monocytogenes.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:30 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Lactobacillus.s__Lactobacillus_fermentum.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:31 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Escherichia.s__Escherichia_coli.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:31 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Escherichia.s__Escherichia_fergusonii.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:31 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Enterococcus.s__Enterococcus_faecalis.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:33 AM - humann.search.prescreen - DEBUG: Adding file to database: g__Bacillus.s__Bacillus_subtilis_group.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:34 AM - humann.search.prescreen - INFO: Creating custom ChocoPhlAn database ........
+10/19/2026 05:05:34 AM - humann.utilities - DEBUG: Using software: /usr/bin/gunzip
+10/19/2026 05:05:34 AM - humann.utilities - INFO: Execute command: /usr/bin/gunzip -c /tmp/db/chocophlan/g__Staphylococcus.s__Staphylococcus_aureus.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Salmonella.s__Salmonella_enterica.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Salmonella.s__Salmonella_bongori.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Saccharomyces.s__Saccharomyces_cerevisiae.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Pseudomonas.s__Pseudomonas_fluorescens_group.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Pseudomonas.s__Pseudomonas_aeruginosa.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Pseudomonas.s__Pseudomonas_aeruginosa_group.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Listeria.s__Listeria_monocytogenes.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Lactobacillus.s__Lactobacillus_fermentum.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Escherichia.s__Escherichia_coli.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Escherichia.s__Escherichia_fergusonii.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Enterococcus.s__Enterococcus_faecalis.centroids.v201901_v31.ffn.gz /tmp/db/chocophlan/g__Bacillus.s__Bacillus_subtilis_group.centroids.v201901_v31.ffn.gz
+10/19/2026 05:05:38 AM - humann.humann - INFO: TIMESTAMP: Completed 	custom database creation 	:	 12	 seconds
+10/19/2026 05:05:38 AM - humann.search.nucleotide - INFO: Running bowtie2-build ........
+10/19/2026 05:05:38 AM - humann.utilities - DEBUG: Using software: /opt/conda/bin/bowtie2-build
+10/19/2026 05:05:38 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/bowtie2-build -f /var/tmp/w/nuc-raw/ERR2984773_humann_temp/ERR2984773_custom_chocophlan_database.ffn /var/tmp/w/nuc-raw/ERR2984773_humann_temp/ERR2984773_bowtie2_index
+10/19/2026 05:24:55 AM - humann.humann - INFO: TIMESTAMP: Completed 	database index 	:	 1157	 seconds
+10/19/2026 05:24:55 AM - humann.search.nucleotide - DEBUG: Nucleotide input file is of type: fastq
+10/19/2026 05:24:55 AM - humann.utilities - DEBUG: Using software: /opt/conda/bin/bowtie2
+10/19/2026 05:24:55 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/bowtie2 -q -x /var/tmp/w/nuc-raw/ERR2984773_humann_temp/ERR2984773_bowtie2_index -U /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpi3ulepo0 -S /var/tmp/w/nuc-raw/ERR2984773_humann_temp/ERR2984773_bowtie2_aligned.sam -p 16 --very-sensitive
+10/19/2026 05:25:13 AM - humann.utilities - DEBUG: b'400000 reads; of these:\n  400000 (100.00%) were unpaired; of these:\n    135133 (33.78%) aligned 0 times\n    74284 (18.57%) aligned exactly 1 time\n    190583 (47.65%) aligned >1 times\n66.22% overall alignment rate\n'
+10/19/2026 05:25:13 AM - humann.humann - INFO: TIMESTAMP: Completed 	nucleotide alignment 	:	 18	 seconds
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments where percent identity is not a number: 0
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments where alignment length is not a number: 0
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments where E-value is not a number: 0
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments not included based on large e-value: 0
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments not included based on small percent identity: 0
+10/19/2026 05:25:17 AM - humann.utilities - DEBUG: Total alignments not included based on small query coverage: 0
+10/19/2026 05:25:18 AM - humann.search.blastx_coverage - INFO: Total alignments without coverage information: 0
+10/19/2026 05:25:18 AM - humann.search.blastx_coverage - INFO: Total proteins in blastx output: 58196
+10/19/2026 05:25:18 AM - humann.search.blastx_coverage - INFO: Total proteins without lengths: 0
+10/19/2026 05:25:18 AM - humann.search.blastx_coverage - INFO: Proteins with coverage greater than threshold (50.0): 23575
+10/19/2026 05:25:22 AM - humann.search.nucleotide - DEBUG: Total nucleotide alignments not included based on filtered genes: 94062
+10/19/2026 05:25:22 AM - humann.search.nucleotide - DEBUG: Total nucleotide alignments not included based on small percent identities: 0
+10/19/2026 05:25:22 AM - humann.search.nucleotide - DEBUG: Total nucleotide alignments not included based on query coverage threshold: 0
+10/19/2026 05:25:22 AM - humann.search.nucleotide - DEBUG: Keeping sam file
+10/19/2026 05:25:22 AM - humann.humann - INFO: TIMESTAMP: Completed 	nucleotide alignment post-processing 	:	 9	 seconds
+10/19/2026 05:25:22 AM - humann.humann - INFO: Total bugs from nucleotide alignment: 17
+10/19/2026 05:25:22 AM - humann.humann - INFO: 
+g__Listeria.s__Listeria_monocytogenes: 39205 hits
+g__Salmonella.s__Salmonella_enterica: 17633 hits
+g__Staphylococcus.s__Staphylococcus_aureus: 14041 hits
+g__Lactobacillus.s__Lactobacillus_fermentum: 26424 hits
+g__Pseudomonas.s__Pseudomonas_aeruginosa_group: 12593 hits
+g__Pseudomonas.s__Pseudomonas_aeruginosa: 12408 hits
+g__Escherichia.s__Escherichia_coli: 14473 hits
+g__Enterococcus.s__Enterococcus_faecalis: 17764 hits
+g__Bacillus.s__Bacillus_subtilis_group: 15606 hits
+g__Pseudomonas.s__Pseudomonas_fluorescens_group: 98 hits
+g__Salmonella.s__Salmonella_bongori: 140 hits
+g__Escherichia.s__Escherichia_fergusonii: 259 hits
+g__Saccharomyces.s__Saccharomyces_cerevisiae: 132 hits
+g__Pseudomonas.s__Pseudomonas_alcaligenes: 17 hits
+g__Pseudomonas.s__Pseudomonas_mendocina: 3 hits
+g__Pseudomonas.s__Pseudomonas_citronellolis: 8 hits
+g__Pseudomonas.s__Pseudomonas_resinovorans: 1 hits
+10/19/2026 05:25:22 AM - humann.humann - INFO: Total gene families from nucleotide alignment: 23575
+10/19/2026 05:25:22 AM - humann.humann - INFO: Unaligned reads after nucleotide alignment: 65.2370000000 %
+10/19/2026 05:25:22 AM - humann.humann - INFO: Bypass translated search
+10/19/2026 05:25:22 AM - humann.humann - INFO: Computing gene families ...
+10/19/2026 05:25:22 AM - humann.quantify.families - DEBUG: Compute gene families
+10/19/2026 05:25:22 AM - humann.store - INFO: 
+Total gene families  : 23575
+g__Listeria.s__Listeria_monocytogenes : 4113 gene families
+g__Salmonella.s__Salmonella_enterica : 3996 gene families
+g__Staphylococcus.s__Staphylococcus_aureus : 2647 gene families
+g__Lactobacillus.s__Lactobacillus_fermentum : 1836 gene families
+g__Pseudomonas.s__Pseudomonas_aeruginosa_group : 3269 gene families
+g__Pseudomonas.s__Pseudomonas_aeruginosa : 3289 gene families
+g__Escherichia.s__Escherichia_coli : 5120 gene families
+g__Enterococcus.s__Enterococcus_faecalis : 2406 gene families
+g__Bacillus.s__Bacillus_subtilis_group : 2091 gene families
+g__Pseudomonas.s__Pseudomonas_fluorescens_group : 24 gene families
+g__Salmonella.s__Salmonella_bongori : 72 gene families
+g__Escherichia.s__Escherichia_fergusonii : 137 gene families
+g__Saccharomyces.s__Saccharomyces_cerevisiae : 38 gene families
+g__Pseudomonas.s__Pseudomonas_alcaligenes : 5 gene families
+g__Pseudomonas.s__Pseudomonas_mendocina : 1 gene families
+g__Pseudomonas.s__Pseudomonas_citronellolis : 3 gene families
+g__Pseudomonas.s__Pseudomonas_resinovorans : 1 gene families
+10/19/2026 05:25:31 AM - humann.humann - INFO: TIMESTAMP: Completed 	computing gene families 	:	 9	 seconds
+10/19/2026 05:25:31 AM - humann.humann - INFO: Computing pathways abundance and coverage ...
+10/19/2026 05:25:31 AM - humann.quantify.modules - DEBUG: Write flat reactions to pathways file for Minpath
+10/19/2026 05:25:31 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Listeria.s__Listeria_monocytogenes
+10/19/2026 05:25:32 AM - humann.quantify.modules - INFO: Run MinPath on g__Listeria.s__Listeria_monocytogenes
+10/19/2026 05:25:32 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Salmonella.s__Salmonella_enterica
+10/19/2026 05:25:33 AM - humann.quantify.modules - INFO: Run MinPath on g__Salmonella.s__Salmonella_enterica
+10/19/2026 05:25:33 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Staphylococcus.s__Staphylococcus_aureus
+10/19/2026 05:25:33 AM - humann.quantify.modules - INFO: Run MinPath on g__Staphylococcus.s__Staphylococcus_aureus
+10/19/2026 05:25:33 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Lactobacillus.s__Lactobacillus_fermentum
+10/19/2026 05:25:34 AM - humann.quantify.modules - INFO: Run MinPath on g__Lactobacillus.s__Lactobacillus_fermentum
+10/19/2026 05:25:34 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa_group
+10/19/2026 05:25:34 AM - humann.quantify.modules - INFO: Run MinPath on g__Pseudomonas.s__Pseudomonas_aeruginosa_group
+10/19/2026 05:25:34 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa
+10/19/2026 05:25:35 AM - humann.quantify.modules - INFO: Run MinPath on g__Pseudomonas.s__Pseudomonas_aeruginosa
+10/19/2026 05:25:35 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Escherichia.s__Escherichia_coli
+10/19/2026 05:25:36 AM - humann.quantify.modules - INFO: Run MinPath on g__Escherichia.s__Escherichia_coli
+10/19/2026 05:25:36 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Enterococcus.s__Enterococcus_faecalis
+10/19/2026 05:25:36 AM - humann.quantify.modules - INFO: Run MinPath on g__Enterococcus.s__Enterococcus_faecalis
+10/19/2026 05:25:36 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Bacillus.s__Bacillus_subtilis_group
+10/19/2026 05:25:37 AM - humann.quantify.modules - INFO: Run MinPath on g__Bacillus.s__Bacillus_subtilis_group
+10/19/2026 05:25:37 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_fluorescens_group
+10/19/2026 05:25:38 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Salmonella.s__Salmonella_bongori
+10/19/2026 05:25:38 AM - humann.quantify.modules - INFO: Run MinPath on g__Salmonella.s__Salmonella_bongori
+10/19/2026 05:25:38 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Escherichia.s__Escherichia_fergusonii
+10/19/2026 05:25:39 AM - humann.quantify.modules - INFO: Run MinPath on g__Escherichia.s__Escherichia_fergusonii
+10/19/2026 05:25:39 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Saccharomyces.s__Saccharomyces_cerevisiae
+10/19/2026 05:25:39 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_alcaligenes
+10/19/2026 05:25:40 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_mendocina
+10/19/2026 05:25:40 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_citronellolis
+10/19/2026 05:25:41 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: g__Pseudomonas.s__Pseudomonas_resinovorans
+10/19/2026 05:25:41 AM - humann.quantify.modules - INFO: Compute reaction scores for bug: all
+10/19/2026 05:25:43 AM - humann.quantify.modules - INFO: Run MinPath on all
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - DEBUG: Using python module : /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp8fm0i4n5 -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpt5zjkr3r -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpkh2bqqqr -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp8sqaq3x2
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpa41rbdd6 -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpcxn33m5o -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3bh_4hzb -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpoxn_sftb
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpfke6hkxb -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpe43wc2jq -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp77at0m_c -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmprbfxulwj
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpgjhrkqtz -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp7mcecv7r -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3hkmdm9c -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpm99wydtz
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpvtflalli -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpsb05t32i -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmppdzas_4m -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmprckzrbqh
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp4_dbaq3d -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpgt9kbif4 -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpdygaygei -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpp6ntofud
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp4rhiogo8 -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpas19g_fl -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpxx11kbx1 -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpj6t6bv2c
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpriq5ns7f -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpoz4wm5er -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmppcegm9y5 -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpc2d1wia2
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpn4tjj0ua -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpj43fko7h -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpure51u9a -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpubwhk0pb
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp4e1cjntb -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpcvbyy12f -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp39arsc2n -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpoa3ugqkl
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp6ym3d5vt -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp8msuta1t -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpypfrjrz2 -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpkxlvth0e
+10/19/2026 05:25:43 AM - humann.utilities - INFO: Execute command: /opt/conda/bin/python /opt/conda/lib/python3.12/site-packages/humann/quantify/MinPath12hmp.py -any /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpqq72173v -map /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp3sm9jctf -report /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmpqldtoxdt -details /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmp5jst67kj -mps /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh/tmprr5z6i9l
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Listeria.s__Listeria_monocytogenes
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Salmonella.s__Salmonella_enterica
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Staphylococcus.s__Staphylococcus_aureus
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Lactobacillus.s__Lactobacillus_fermentum
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa_group
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Escherichia.s__Escherichia_coli
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Enterococcus.s__Enterococcus_faecalis
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Bacillus.s__Bacillus_subtilis_group
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Salmonella.s__Salmonella_bongori
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Escherichia.s__Escherichia_fergusonii
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Pseudomonas.s__Pseudomonas_mendocina
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: g__Pseudomonas.s__Pseudomonas_citronellolis
+10/19/2026 05:25:43 AM - humann.quantify.modules - DEBUG: Compute pathway abundance for bug: all
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Listeria.s__Listeria_monocytogenes
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Salmonella.s__Salmonella_enterica
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Staphylococcus.s__Staphylococcus_aureus
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Lactobacillus.s__Lactobacillus_fermentum
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa_group
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Pseudomonas.s__Pseudomonas_aeruginosa
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Escherichia.s__Escherichia_coli
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Enterococcus.s__Enterococcus_faecalis
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Bacillus.s__Bacillus_subtilis_group
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Salmonella.s__Salmonella_bongori
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Escherichia.s__Escherichia_fergusonii
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Pseudomonas.s__Pseudomonas_mendocina
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: g__Pseudomonas.s__Pseudomonas_citronellolis
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Compute pathway coverage for bug: all
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Print pathways _Abundance
+10/19/2026 05:25:48 AM - humann.quantify.modules - DEBUG: Print pathways _Coverage
+10/19/2026 05:25:48 AM - humann.humann - INFO: TIMESTAMP: Completed 	computing pathways 	:	 17	 seconds
+10/19/2026 05:25:48 AM - humann.humann - INFO: 
+Output files created: 
+/var/tmp/w/nuc-raw/ERR2984773_genefamilies.tsv
+/var/tmp/w/nuc-raw/ERR2984773_pathabundance.tsv
+/var/tmp/w/nuc-raw/ERR2984773_pathcoverage.tsv
+
+10/19/2026 05:25:48 AM - humann.utilities - DEBUG: Remove directory: /var/tmp/w/nuc-raw/ERR2984773_humann_temp/tmp5rpta1lh

@@ -1,0 +1,17 @@
+gene-family rows unique                              want 92338                         ok   (92338)
+both unaligned fractions printed                     nucleotide, translated             ok   (['nucleotide', 'translated'])
+UNMAPPED == reads x final unaligned %                tol 2.0e-07 (print precision)      ok   (182227.0000000000 vs 182227.0000)
+unaligned: translated <= nucleotide <= 100%          monotone                           ok   (45.5567500000 <= 57.2327500000)
+UNMAPPED is a whole read count                       integer                            ok   (182227.0000000000)
+every stratified family has a community row          0 orphans                          ok   (0)
+every community row has strata                       0 without                          ok   (0)
+family == sum of its strata (all families)           within print precision             ok   (42880 families, worst 2.0e-10)
+custom database is the profile's species, not all of ChocoPhlAn few pangenomes                     ok   (25 species)
+every stratum is a species in the custom database    subset                             ok   (17 of 17)
+every Zymo bacterium in the database recruits families want 8/8                           ok   (8/8)
+pathway coverage in [0, 1]                           all rows                           ok   (1025 rows)
+pathabundance has UNMAPPED, UNINTEGRATED             present                            ok   (1025 rows)
+observed: community pathways                         -                                  363
+observed: community gene families                    -                                  42880
+observed: unaligned after nucleotide / translated    -                                  57.2327500000 / 45.5567500000 %
+failures 0

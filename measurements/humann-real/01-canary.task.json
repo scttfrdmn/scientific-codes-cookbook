@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-humann-real-canary",
+  "container": "quay.io/aarchbio/humann@sha256:c614308013fd2a7f7cef181d18ad0ce3c785b1b3243f62f0428fa313c1852ac6",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (run\\.sh|check\\.py|hashtree\\.py|ERR2984773\\.profile\\.txt|zymo_d6300\\.tsv|ERR2984773_1\\.fastq\\.gz|ERR2984773_2\\.fastq\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 7 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh 16 ERR2984773 200000 zymo_d6300.tsv rawids\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 120
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/db/",
+      "destination": "/tmp/db/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/hashtree.py",
+      "destination": "/tmp/hashtree.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/ERR2984773.profile.txt",
+      "destination": "/tmp/ERR2984773.profile.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/humann-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan/zymo_d6300.tsv",
+      "destination": "/tmp/zymo_d6300.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz",
+      "destination": "/tmp/ERR2984773_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz",
+      "destination": "/tmp/ERR2984773_2.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/humann-real/canary/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}
