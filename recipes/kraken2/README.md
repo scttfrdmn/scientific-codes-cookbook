@@ -70,11 +70,9 @@ the same file. kraken2's own books then balance: classified plus unclassified is
 processed.
 
 **The truth here is the sample's provenance, not a claim about its contents.** These are 1000 Genomes
-reads from HG00096, so "the dominant species is *Homo sapiens*" is a fact about the input. That
-mattered for the design: the tempting alternative was a ZymoBIOMICS mock community, where the
-manufacturer's known mixture would be a GIAB-style constructed truth — but establishing *which*
-public run is genuinely shotgun-of-a-known-mix means asserting a sample's composition from inference,
-and this batch already lost two genomes to exactly that kind of guess.
+reads from HG00096, so "the dominant species is *Homo sapiens*" is a fact about the input. The
+known-mixture check this fixture lacks is in the [measurement](../../measurements/kraken2-real/README.md):
+two ZymoBIOMICS runs whose composition Nicholls et al. 2019 publish, recovered at genus rank.
 
 **Epstein-Barr virus is expected biology, and that is the nicest check on the page.** 1000 Genomes
 samples are EBV-transformed lymphoblastoid cell lines, so the virus used to immortalise the line is
