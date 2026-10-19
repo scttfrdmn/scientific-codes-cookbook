@@ -36,7 +36,9 @@ One seeded 1,083 × 15,045 matrix on 8-vCPU `c8g`/`c8i`/`c8a.2xlarge`, using the
 | control: a BLAS `double` dot product, ×10 | **7.9 s** | 12.3 s | 6.6 s |
 
 - **`stats::cor` is 29× slower than Intel and 46× slower than AMD.** `sum`, `mean` and `colSums` are 9–14×
-  slower, even though they are memory-bound passes.
+  slower on these `rnorm` values, even though they are memory-bound passes. The cost depends on the
+  data: summing whole-number values ran at x86 speed, and non-integers 2–4× slower, over a real DEM
+  ([r-spatial-real](../measurements/r-spatial-real/README.md)). Why is not established.
 - **The control rules out a slow box.** On the same Graviton4 instance, a reduction that accumulates in
   `double` is faster than Intel's. The gap follows the accumulator type, which fits software quad-precision
   arithmetic. That reading is inferred, not profiled: the images carry no profiler.
