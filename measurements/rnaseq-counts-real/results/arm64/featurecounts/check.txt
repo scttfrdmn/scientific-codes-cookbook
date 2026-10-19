@@ -1,0 +1,12 @@
+star_input_pairs        15800127
+star_unique / multi / too_many  14610289 / 898248 / 4092
+fc_genes                78941
+fc_assigned             12637595
+fc_gene_sum             12637595   want == fc_assigned (EXACT)
+fc_unique_classes       14610289   want == star_unique (EXACT: assigned + no_features + ambiguity is every uniquely mapped pair)
+fc_unmapped             291590   want == star unmapped + too_many 291590 (EXACT)
+fc_multimapping         2555038   want in [2, 10] x star_multi 898248 (one record per alignment pair; NH is 2..10 under STAR's default outFilterMultimapNmax 10)
+fc_secondary_records    0
+fc_T8_vs_T1_counts     73c46d8b356440a54cc06b959430e4e620ce4b40e2e6a074705a6b3f88c6406f 73c46d8b356440a54cc06b959430e4e620ce4b40e2e6a074705a6b3f88c6406f   want identical (EXACT: thread count must not change a count)
+fc_T8_vs_T1_summary    41ae8499013a84f0eb79fbe4cc501c5a88542a8aa064c09b45f16553ddb94b33 41ae8499013a84f0eb79fbe4cc501c5a88542a8aa064c09b45f16553ddb94b33   want identical
+fc_counts_sha256        73c46d8b356440a54cc06b959430e4e620ce4b40e2e6a074705a6b3f88c6406f

@@ -1,0 +1,36 @@
+star_input_pairs               15800127   
+star_unique/multi/too_many     14610289/898248/4092   
+htseq_accounting_sum           15800127   want == star_input_pairs (EXACT: every pair once)
+htseq__alignment_not_unique    898248   
+htseq__ambiguous               2202143   
+htseq__no_feature              448202   
+htseq__not_aligned             291590   
+htseq__too_low_aQual           0   
+star_col2_sum_unstranded       15800127   want == star_input_pairs (EXACT)
+star_col3_sum_stranded_fwd     15800127   want == star_input_pairs (EXACT)
+star_col4_sum_stranded_rev     15800127   want == star_input_pairs (EXACT)
+star_N_ambiguous               2202143   (column 2)
+star_N_multimapping            898248   (column 2)
+star_N_noFeature               448202   (column 2)
+star_N_unmapped                291590   (column 2)
+htseq_not_aligned_vs_star      291590   want == star unmapped + too-many-loci 291590 (EXACT)
+htseq_not_unique_vs_star       898248   want == star multi-loci 898248 (EXACT)
+htseq_unique_classes           14610289   genes+no_feature+ambiguous+too_low_aQual, want == star unique 14610289 (EXACT)
+gene_sets_equal                78941/78941/78941   htseq/featureCounts/STAR, want identical sets
+htseq_vs_star_genes_differing  0   want 0 (EXACT)
+htseq_vs_star_sum_abs_diff     0   of 11959944 counted by the first
+htseq__no_feature_vs_star_N_noFeature 448202 448202   want equal (EXACT)
+htseq__ambiguous_vs_star_N_ambiguous 2202143 2202143   want equal (EXACT)
+htseq__alignment_not_unique_vs_star_N_multimapping 898248 898248   want equal (EXACT)
+htseq__not_aligned_vs_star_N_unmapped 291590 291590   want equal (EXACT)
+featurecounts_vs_htseq_genes_differing 9436   OBSERVATION
+featurecounts_vs_htseq_sum_abs_diff 677651   of 12637595 counted by the first
+featurecounts_vs_htseq_worst_gene ENSG00000205542 107415 vs 74102   
+featurecounts_above_htseq      9436   of 9436 differing genes, want all (EXACT: featureCounts never counts fewer)
+no_feature_fc_vs_htseq         448202 448202   want equal (EXACT)
+fc_extra_vs_ambiguity          677651 677651   sum(fc - htseq) == htseq __ambiguous - fc Unassigned_Ambiguity (EXACT)
+spearman_htseq_featurecounts   0.990109   over 25675 genes counted by either; OBSERVATION
+spearman_htseq_star            1.000000   over 25119 genes counted by either; OBSERVATION
+star_stranded_fwd_rev          7393223 7387405 ratio 1.0008   ~1 => unstranded library, so -s no / -s 0 is right
+htseq_counts_sha256            c2db026cca463b3a9cd6eec25d7a4057ac071e731ac67b3b47588d914c1178e1   
+COMPARE PASSED

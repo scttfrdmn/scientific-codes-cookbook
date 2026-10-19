@@ -42,6 +42,16 @@ Two tasks: featureCounts builds the fixture and counts it, then HTSeq counts the
 
 Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. Recorded windows well under a minute of counting each; **1m10s** for the HTSeq + comparison task. **These timings are not compute cost.**
 
+## Which box — [measured](../../measurements/rnaseq-counts-real/README.md) (a whole 15.8M-pair run, all 78,941 Ensembl 116 genes)
+
+| chip | featureCounts `-T 8`, `2xlarge` | billed $/sample | HTSeq, `large` | billed $/sample |
+|---|---|---|---|---|
+| Graviton4 | 26 s | 0.0149 | 898 s | 0.0323 |
+| Xeon 6975P-C | 26 s | 0.0160 | 902 s | 0.0383 |
+| **EPYC 9R45** | **17 s** | **0.0148** | **525 s** | **0.0257** |
+
+At this scale HTSeq matches STAR's `--quantMode GeneCounts` on every gene. featureCounts assigns 677,651 more pairs, all of them pairs HTSeq calls ambiguous. Every count table is byte-identical across chips. featureCounts is 14× faster on one thread, and boot is most of its bill. HTSeq is a single process, so the chip matters: AMD is 1.7× faster and the cheapest.
+
 <details>
 <summary>As shipped: five exact checks, a conservation identity, the stranding question settled by measurement, pins</summary>
 

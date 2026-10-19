@@ -1,0 +1,20 @@
+arm64   featurecounts  fc_T8     Graviton4 cpu_part 0xd4f     tpc 1  wall    26 s  window   168 s  $/hr 0.3191  compute $ 0.0023  billed $ 0.0149  vmhwm 0.78 GiB    completed
+arm64   featurecounts  fc_T1     Graviton4 cpu_part 0xd4f     tpc 1  wall    63 s  window   168 s  $/hr 0.3191  compute $ 0.0056  billed $ 0.0149  vmhwm 0.51 GiB    completed
+arm64   htseq          htseq     Graviton4 cpu_part 0xd4f     tpc 1  wall   898 s  window   988 s  $/hr 0.1178  compute $ 0.0294  billed $ 0.0323  vmhwm 0.23 GiB  neoversev2  completed
+x86_64  featurecounts  fc_T8     Intel(R) Xeon(R) 6975P-C     tpc 2  wall    26 s  window   154 s  $/hr 0.3748  compute $ 0.0027  billed $ 0.0160  vmhwm 0.78 GiB    completed
+x86_64  featurecounts  fc_T1     Intel(R) Xeon(R) 6975P-C     tpc 2  wall    60 s  window   154 s  $/hr 0.3748  compute $ 0.0062  billed $ 0.0160  vmhwm 0.51 GiB    completed
+x86_64  htseq          htseq     Intel(R) Xeon(R) 6975P-C     tpc 2  wall   902 s  window   993 s  $/hr 0.1389  compute $ 0.0348  billed $ 0.0383  vmhwm 0.24 GiB  Cooperlake  completed
+amd     featurecounts  fc_T8     AMD EPYC 9R45                tpc 1  wall    17 s  window   124 s  $/hr 0.4311  compute $ 0.0020  billed $ 0.0148  vmhwm 0.78 GiB    completed
+amd     featurecounts  fc_T1     AMD EPYC 9R45                tpc 1  wall    44 s  window   124 s  $/hr 0.4311  compute $ 0.0053  billed $ 0.0148  vmhwm 0.51 GiB    completed
+amd     htseq          htseq     AMD EPYC 9R45                tpc 1  wall   525 s  window   580 s  $/hr 0.1598  compute $ 0.0233  billed $ 0.0257  vmhwm 0.24 GiB  Cooperlake  completed
+x86_64  featurecounts/fc_counts.tsv  73c46d8b3564 vs Graviton4 73c46d8b3564  [ok]
+x86_64  featurecounts/fc.summary     4a14d939b259 vs Graviton4 4a14d939b259  [ok]
+x86_64  featurecounts/check.txt      f05daee3b884 vs Graviton4 f05daee3b884  [ok]
+x86_64  htseq/htseq_counts.tsv       c2db026cca46 vs Graviton4 c2db026cca46  [ok]
+x86_64  htseq/check.txt              46a80c0b9e72 vs Graviton4 46a80c0b9e72  [ok]
+amd     featurecounts/fc_counts.tsv  73c46d8b3564 vs Graviton4 73c46d8b3564  [ok]
+amd     featurecounts/fc.summary     4a14d939b259 vs Graviton4 4a14d939b259  [ok]
+amd     featurecounts/check.txt      f05daee3b884 vs Graviton4 f05daee3b884  [ok]
+amd     htseq/htseq_counts.tsv       c2db026cca46 vs Graviton4 c2db026cca46  [ok]
+amd     htseq/check.txt              46a80c0b9e72 vs Graviton4 46a80c0b9e72  [ok]
+CROSS-CHIP PASSED

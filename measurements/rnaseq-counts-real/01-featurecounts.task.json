@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-rnaseq-counts-real-featurecounts-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'e431c44e978244a4cab8fe01d2beeb4bcf1f663fea3aedc5219621ad0daf3077  featurecounts.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/featurecounts.sh 8\n"
+  ],
+  "container": "quay.io/aarchbio/subread@sha256:0c2f26ea5f115a11e0178d6f9680001015bddd1fd1339e8f706e68bcd8fe306a",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/featurecounts.sh",
+      "destination": "/tmp/featurecounts.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/star/Aligned.out.bam",
+      "destination": "/tmp/reads.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.116.gtf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/star/Log.final.out",
+      "destination": "/tmp/star.Log.final.out"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/star/ReadsPerGene.out.tab",
+      "destination": "/tmp/ReadsPerGene.out.tab"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rnaseq-counts-real/r2/featurecounts/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

@@ -1,0 +1,51 @@
+
+        ==========     _____ _    _ ____  _____  ______          _____  
+        =====         / ____| |  | |  _ \|  __ \|  ____|   /\   |  __ \ 
+          =====      | (___ | |  | | |_) | |__) | |__     /  \  | |  | |
+            ====      \___ \| |  | |  _ <|  _  /|  __|   / /\ \ | |  | |
+              ====    ____) | |__| | |_) | | \ \| |____ / ____ \| |__| |
+        ==========   |_____/ \____/|____/|_|  \_\______/_/    \_\_____/
+	  v2.1.1
+
+//========================== featureCounts setting ===========================\\
+||                                                                            ||
+||             Input files : 1 BAM file                                       ||
+||                                                                            ||
+||                           reads.bam                                        ||
+||                                                                            ||
+||             Output file : fc_T8.txt                                        ||
+||                 Summary : fc_T8.txt.summary                                ||
+||              Paired-end : yes                                              ||
+||        Count read pairs : yes                                              ||
+||              Annotation : genes.gtf (GTF)                                  ||
+||      Dir for temp files : /var/tmp/fc                                      ||
+||                                                                            ||
+||                 Threads : 8                                                ||
+||                   Level : meta-feature level                               ||
+||      Multimapping reads : not counted                                      ||
+|| Multi-overlapping reads : not counted                                      ||
+||   Min overlapping bases : 1                                                ||
+||                                                                            ||
+\\============================================================================//
+
+//================================= Running ==================================\\
+||                                                                            ||
+|| Load annotation file genes.gtf ...                                         ||
+||    Features : 5087789                                                      ||
+||    Meta-features : 78941                                                   ||
+||    Chromosomes/contigs : 70                                                ||
+||                                                                            ||
+|| Process BAM file reads.bam...                                              ||
+||    Paired-end reads are included.                                          ||
+||    Total alignments : 17456917                                             ||
+||    Successfully assigned alignments : 12637595 (72.4%)                     ||
+||    Running time : 0.09 minutes                                             ||
+||                                                                            ||
+|| Write the final count table.                                               ||
+|| Write the read assignment summary.                                         ||
+||                                                                            ||
+|| Summary of counting results can be found in file "/var/tmp/fc/fc_T8.txt.s  ||
+|| ummary"                                                                    ||
+||                                                                            ||
+\\============================================================================//
+

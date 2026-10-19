@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-rnaseq-counts-real-align-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'eee43038b83e3b8e1c5c562b7cfb87e3aba94ec2f96df1b3f7fac39dbe321e85  align.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/align.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/align.sh",
+      "destination": "/tmp/align.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-index-GRCh38-116/",
+      "destination": "/tmp/idx/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.116.gtf.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/rnaseq-counts-real/star/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
