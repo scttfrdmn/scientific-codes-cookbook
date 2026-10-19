@@ -1,0 +1,39 @@
+openblas_corename Cooperlake (libopenblas.so)
+jobset full cpus 16 jobs 10
+== ref-w64PBE-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i w64PBE.inp -o out.txt
+  kind=ref  input=w64PBE  ranks=16  threads=1  exit=0  wall_s=160.3  cp2k_total_s=158.103  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1102.7676350096708  e_final=-1102.7551404111025  md_pot_final=-0.110275514041E+04  md_pot_avg=-0.110271804018E+04  md_cons_final=-0.110249596807E+04  ener_rows=11  cons_maxdev=1.168e-03  scf_not_converged=0  cp2k_peak_proc_mib=476  maxrss_gib=0.46  ended=True
+== ref-w64SCAN-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i w64SCAN.inp -o out.txt
+  kind=ref  input=w64SCAN  ranks=16  threads=1  exit=0  wall_s=393.4  cp2k_total_s=391.137  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.282771109054  e_final=-1101.2821779457345  md_pot_final=-0.110128217795E+04  md_pot_avg=-0.110126151501E+04  md_cons_final=-0.110101136939E+04  ener_rows=11  cons_maxdev=7.861e-04  scf_not_converged=0  cp2k_peak_proc_mib=664  maxrss_gib=0.65  ended=True
+== ref-w64PBE0-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i w64PBE0.inp -o out.txt
+  kind=ref  input=w64PBE0  ranks=16  threads=1  exit=0  wall_s=1184.9  cp2k_total_s=1182.609  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.5099816804718  e_final=-1101.5104428715927  md_pot_final=-0.110151044287E+04  md_pot_avg=-0.110148923648E+04  md_cons_final=-0.110123863502E+04  ener_rows=11  cons_maxdev=8.708e-04  scf_not_converged=0  cp2k_peak_proc_mib=778  maxrss_gib=0.76  ended=True
+== ref-w64GAPW-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i w64GAPW.inp -o out.txt
+  kind=ref  input=w64GAPW  ranks=16  threads=1  exit=0  wall_s=1068.6  cp2k_total_s=1066.302  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-4888.234764844161  e_final=-4888.228349480502  md_pot_final=-0.488822834948E+04  md_pot_avg=-0.488819537025E+04  md_cons_final=-0.488796321361E+04  ener_rows=11  cons_maxdev=8.512e-04  scf_not_converged=0  cp2k_peak_proc_mib=1068  maxrss_gib=1.04  ended=True
+== ref-w64ccGRB-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i w64ccGRB.inp -o out.txt
+  kind=ref  input=w64ccGRB  ranks=16  threads=1  exit=0  wall_s=919.8  cp2k_total_s=917.525  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.5834059093377  e_final=-1101.5813577732904  md_pot_final=-0.110158135777E+04  md_pot_avg=-0.110156769201E+04  md_cons_final=-0.110131201702E+04  ener_rows=11  cons_maxdev=8.257e-04  scf_not_converged=0  cp2k_peak_proc_mib=1053  maxrss_gib=1.15  ended=True
+== release-H2O-64-16x1: mpiexec --oversubscribe --bind-to none -n 16 cp2k.psmp -i H2O-64.inp -o out.txt
+  kind=release  input=H2O-64  ranks=16  threads=1  exit=0  wall_s=56.7  cp2k_total_s=54.479  ranks_reported=16  threads_reported=1  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.0310058890245  e_final=-1101.0233749857662  md_pot_final=-0.110102337499E+04  md_pot_avg=-0.110106681602E+04  md_cons_final=-0.110076505584E+04  ener_rows=11  cons_maxdev=8.337e-03  scf_not_converged=1  cp2k_peak_proc_mib=445  maxrss_gib=0.44  ended=True
+== release-H2O-64-8x2: mpiexec --oversubscribe --bind-to none -n 8 cp2k.psmp -i H2O-64.inp -o out.txt
+  kind=release  input=H2O-64  ranks=8  threads=2  exit=0  wall_s=61.3  cp2k_total_s=59.288  ranks_reported=8  threads_reported=2  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.031005889155  e_final=-1101.0233749857684  md_pot_final=-0.110102337499E+04  md_pot_avg=-0.110106681602E+04  md_cons_final=-0.110076505584E+04  ener_rows=11  cons_maxdev=8.337e-03  scf_not_converged=1  cp2k_peak_proc_mib=552  maxrss_gib=0.56  ended=True
+== release-H2O-64-4x4: mpiexec --oversubscribe --bind-to none -n 4 cp2k.psmp -i H2O-64.inp -o out.txt
+  kind=release  input=H2O-64  ranks=4  threads=4  exit=0  wall_s=65.6  cp2k_total_s=63.628  ranks_reported=4  threads_reported=4  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.0310058888774  e_final=-1101.023374985766  md_pot_final=-0.110102337499E+04  md_pot_avg=-0.110106681602E+04  md_cons_final=-0.110076505584E+04  ener_rows=11  cons_maxdev=8.337e-03  scf_not_converged=1  cp2k_peak_proc_mib=803  maxrss_gib=0.82  ended=True
+== release-H2O-64-2x8: mpiexec --oversubscribe --bind-to none -n 2 cp2k.psmp -i H2O-64.inp -o out.txt
+  kind=release  input=H2O-64  ranks=2  threads=8  exit=0  wall_s=71.9  cp2k_total_s=69.873  ranks_reported=2  threads_reported=8  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.0310058894356  e_final=-1101.0233749857716  md_pot_final=-0.110102337499E+04  md_pot_avg=-0.110106681602E+04  md_cons_final=-0.110076505584E+04  ener_rows=11  cons_maxdev=8.337e-03  scf_not_converged=1  cp2k_peak_proc_mib=1326  maxrss_gib=1.32  ended=True
+== release-H2O-64-1x16: mpiexec --oversubscribe --bind-to none -n 1 cp2k.psmp -i H2O-64.inp -o out.txt
+  kind=release  input=H2O-64  ranks=1  threads=16  exit=0  wall_s=89.8  cp2k_total_s=87.803  ranks_reported=1  threads_reported=16  version=2026.2  cpu_model=Intel(R) Xeon(R) 6975P-C  n_energies=11  e_step0=-1101.0310058911891  e_final=-1101.0233749857716  md_pot_final=-0.110102337499E+04  md_pot_avg=-0.110106681602E+04  md_cons_final=-0.110076505584E+04  ener_rows=11  cons_maxdev=8.337e-03  scf_not_converged=1  cp2k_peak_proc_mib=1874  maxrss_gib=2.09  ended=True
+vs-ref w64PBE    pot_final  ours -0.110275514041E+04 ref -0.110275514041E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64PBE    pot_avg    ours -0.110271804018E+04 ref -0.110271804018E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64PBE    cons_final ours -0.110249596807E+04 ref -0.110249596807E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64SCAN   pot_final  ours -0.110128217795E+04 ref -0.110128217795E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64SCAN   pot_avg    ours -0.110126151501E+04 ref -0.110126151501E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64SCAN   cons_final ours -0.110101136939E+04 ref -0.110101136939E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64PBE0   pot_final  ours -0.110151044287E+04 ref -0.110151044271E+04 diff -1.600e-07 (ref: 2023.2 48x1)
+vs-ref w64PBE0   pot_avg    ours -0.110148923648E+04 ref -0.110148923645E+04 diff -3.000e-08 (ref: 2023.2 48x1)
+vs-ref w64PBE0   cons_final ours -0.110123863502E+04 ref -0.110123863493E+04 diff -9.000e-08 (ref: 2023.2 48x1)
+vs-ref w64GAPW   pot_final  ours -0.488822834948E+04 ref -0.488822834948E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64GAPW   pot_avg    ours -0.488819537025E+04 ref -0.488819537025E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64GAPW   cons_final ours -0.488796321361E+04 ref -0.488796321361E+04 diff 0.000e+00 (ref: 2023.2 48x1)
+vs-ref w64ccGRB  pot_final  ours -0.110158135777E+04 ref -0.110158135777E+04 diff 0.000e+00 (ref: 2026.1 48x2)
+vs-ref w64ccGRB  pot_avg    ours -0.110156769201E+04 ref -0.110156769201E+04 diff 0.000e+00 (ref: 2026.1 48x2)
+vs-ref w64ccGRB  cons_final ours -0.110131201702E+04 ref -0.110131201702E+04 diff 0.000e+00 (ref: 2026.1 48x2)
+release: 5 decompositions, final spread 5.684e-12 Ha, max |final-mean| 2.956e-12, step-0 spread 2.312e-09 Ha
+CP2K REAL OK

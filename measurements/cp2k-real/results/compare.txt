@@ -1,0 +1,42 @@
+== Graviton4 vs x86_64
+job                            step0 diff     final diff     cons_final wall b/a
+ref-w64PBE-16x1                 2.274e-13      2.274e-13      0.000e+00     0.82
+ref-w64SCAN-16x1                0.000e+00     -4.547e-13      0.000e+00     1.10
+ref-w64PBE0-16x1               -7.599e-10     -1.630e-07     -1.300e-07     1.20
+ref-w64GAPW-16x1               -2.374e-10      2.819e-10      0.000e+00     0.92
+ref-w64ccGRB-16x1              -6.821e-13      2.501e-12      0.000e+00     0.94
+release-H2O-64-16x1            -8.640e-11      1.819e-12      0.000e+00     0.95
+release-H2O-64-8x2              8.845e-11      2.501e-12      0.000e+00     0.97
+release-H2O-64-4x4              4.657e-10      5.684e-12      0.000e+00     0.97
+release-H2O-64-2x8             -1.278e-09      1.364e-12      0.000e+00     0.98
+release-H2O-64-1x16            -2.691e-09     -3.638e-12      0.000e+00     0.95
+worst step-0 |diff| 7.599e-10 Ha over the 5 reference-set runs (asserted <= 1e-9)
+fixed point agrees
+== Graviton4 vs amd
+job                            step0 diff     final diff     cons_final wall b/a
+ref-w64PBE-16x1                 2.274e-13      0.000e+00      0.000e+00     0.43
+ref-w64SCAN-16x1               -4.547e-13     -6.821e-13      0.000e+00     0.62
+ref-w64PBE0-16x1               -7.556e-10     -1.634e-07     -1.300e-07     0.64
+ref-w64GAPW-16x1                1.037e-10      1.755e-10      0.000e+00     0.52
+ref-w64ccGRB-16x1              -6.821e-13      3.411e-12      0.000e+00     0.50
+release-H2O-64-16x1            -9.049e-11      9.095e-13      0.000e+00     0.52
+release-H2O-64-8x2              1.721e-10      2.274e-13      0.000e+00     0.63
+release-H2O-64-4x4              5.309e-10      1.364e-12      0.000e+00     0.57
+release-H2O-64-2x8              2.133e-10      4.547e-13      0.000e+00     0.50
+release-H2O-64-1x16            -2.083e-09      0.000e+00      0.000e+00     0.58
+worst step-0 |diff| 7.556e-10 Ha over the 5 reference-set runs (asserted <= 1e-9)
+fixed point agrees
+== Intel vs AMD (the same x86 env twin)
+job                            step0 diff     final diff     cons_final wall b/a
+ref-w64PBE-16x1                 0.000e+00     -2.274e-13      0.000e+00     0.52
+ref-w64SCAN-16x1               -4.547e-13     -2.274e-13      0.000e+00     0.57
+ref-w64PBE0-16x1                4.320e-12     -4.000e-10      0.000e+00     0.53
+ref-w64GAPW-16x1                3.411e-10     -1.064e-10      0.000e+00     0.56
+ref-w64ccGRB-16x1               0.000e+00      9.095e-13      0.000e+00     0.53
+release-H2O-64-16x1            -4.093e-12     -9.095e-13      0.000e+00     0.54
+release-H2O-64-8x2              8.367e-11     -2.274e-12      0.000e+00     0.66
+release-H2O-64-4x4              6.526e-11     -4.320e-12      0.000e+00     0.59
+release-H2O-64-2x8              1.491e-09     -9.095e-13      0.000e+00     0.51
+release-H2O-64-1x16             6.085e-10      3.638e-12      0.000e+00     0.61
+worst step-0 |diff| 3.411e-10 Ha over the 5 reference-set runs (asserted <= 1e-9)
+fixed point agrees

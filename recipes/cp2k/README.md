@@ -39,7 +39,13 @@ done
 
 ## Shape, size, cost
 
-One task on `c8g.2xlarge` (the spec asks 4 vCPU / 16 GiB; 16 GiB picks the 2xlarge), TTL 120m as a **backstop** with `cost_limit` $0.50 as the real guard. 25 directories run twice (serial and 2-rank) in **7m51s** of the 9m04s billed, so boot and image pull are the smaller half here for once — but **these timings are still not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `c8g.2xlarge` (the spec asks 4 vCPU / 16 GiB; 16 GiB picks the 2xlarge), TTL 120m as a **backstop** with `cost_limit` $0.50 as the real guard. 25 directories run twice (serial and 2-rank) in **7m51s** of the 9m04s billed, so boot and image pull are the smaller half here for once — but **these timings are still not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). **Which box — [measured](../../measurements/cp2k-real/README.md)** on CP2K's own 64-water AIMD benchmarks (five functionals, plus H2O-64 under five MPI×OpenMP layouts, 16 vCPU): all three chips reproduce the developers' committed output and pass CP2K's release check at 3e-12 Ha. Take AMD — 1.8× faster and cheapest per result despite the dearer hour; pure MPI beats every OpenMP split.
+
+| chip | instance | tool wall | billed $/result |
+|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 4,032 s | 0.835 |
+| Xeon 6975P-C | `m8i.4xlarge` | 4,072 s | 0.984 |
+| **EPYC 9R45** | `m8a.4xlarge` | **2,218 s** | **0.628** |
 
 <details>
 <summary>As shipped: 52 references at upstream's own tolerances, why the bound needs two clauses, and the restart ordering that cost six runs</summary>
