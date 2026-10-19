@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-pathology-real-camelyon16",
+  "container": "quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867fe936f9a5b962455e6f5a8e80",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh 32 100\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology-real/slides.tsv",
+      "destination": "/tmp/slides.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pathology-real/camelyon16/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

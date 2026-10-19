@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-pathology-real-probe",
+  "container": "quay.io/aarchsci/pathology@sha256:b3fb3cdd2561a29e23867dfae1d10ecccbf5867fe936f9a5b962455e6f5a8e80",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707)\ncd /tmp\necho '2dfdf26130378affcff53d6e7f1addb1b3b78b33f3823f1045b33c5707f9e421  probe.py' | sha256sum -c || exit 1\nlscpu > probe.log 2>&1\npython3 -u probe.py tumor_091 tumor_075 test_001 tumor_001 tumor_102 >> probe.log 2>&1\necho \"rc $?\" >> probe.log\ncat probe.log\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pathology-real/probe.py",
+      "destination": "/tmp/probe.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/probe.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pathology-real/probe/probe.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

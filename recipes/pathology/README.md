@@ -19,7 +19,6 @@ Reads a 61440 × 53760 whole-slide image on Graviton4 and reproduces the tumour 
 make stage RECIPE=pathology    # once: the checks and the publisher's two manifests
 spawn task run --spec "$(make -s spec RECIPE=pathology)" --wait
 make ls RECIPE=pathology
-
 slide = openslide.OpenSlide("tumor_091.tif")
 slide.level_dimensions                                 # 8 levels, 61440x53760 down to 480x420
 tile = slide.read_region((4096, 4096), 2, (512, 512))  # RGBA, from the level-2 pyramid
@@ -36,11 +35,20 @@ mask = openslide.OpenSlide("tumor_091_mask.tif")       # same dimensions; labels
 | the polygon comparison | your own masks | **the part worth copying.** It reproduces a derived artifact from its own source, and the `Exclusion` group is a free negative control. |
 | the slide class | — | **do not assert it.** Measured across nine slides: it is clinical metadata the mask does not determine. See below. |
 
-**Leave the fixture.** `tumor_091` is the smallest tumour slide (546 MB of 399) and carries the geometry that makes the negative control work — an `Exclusion` polygon sitting *inside* a `Tumor` polygon. **Scale it** by looping the same checks over more slides; the analysis is 8 s, so the slide download dominates.
+**Leave the fixture.** `tumor_091` is the smallest tumour slide (546 MB of 399) and carries the geometry that makes the negative control work — an `Exclusion` polygon sitting *inside* a `Tumor` polygon. **Scale it** the way [the measurement](../../measurements/pathology-real/README.md) does: one process per slide over the whole cohort.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 40m as a **backstop** with `cost_limit` $0.15 as the real guard. The **analysis is 8 s**; the 67 s wrapper window is 36 s installing Docker, 17 s pulling the image and 6 s staging 546 MB. Peak RSS 628 MiB, tmpfs high-water 530 MiB of 3882 — so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/pathology-real/README.md) (all 160 annotated slides at level 0, 32 workers)
+**Take Graviton4.** The cohort is 321 GB: every 1024² tissue block is read through openslide and tifffile, byte-identical, and the masks match the polygons beyond 4 px of an outline, with identical results on all three chips. The box is `r8g` because the slides in flight need half the RAM as tmpfs.
+
+| chip | instance | tool wall | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `r8g.8xlarge` | 1,473 s | 1.8851 | **0.809** |
+| Xeon 6975P-C | `r8i.8xlarge` | 2,211 s | 2.2227 | 1.397 |
+| EPYC 9R45 | `r8a.8xlarge` | 1,339 s | 2.5562 | 0.979 |
 
 <details>
 <summary>As shipped: 176,339 interior pixels exact, a bit-identical read overlap, a 962-pixel negative control — and one check deleted because nine slides proved it invalid</summary>
@@ -194,10 +202,11 @@ non-exhaustively annotated slides**, where a mask-vs-annotation check measures t
 
 All four of `tifffile`, `imagecodecs`, `zarr` and `dask` are in this env and now exercised —
 by [imagecodecs](../imagecodecs/README.md) and [zarr-dask](../zarr-dask/README.md), though
-on synthetic arrays rather than on these slides. Still untried here: tiled
-out-of-core access over a WSI, a real workload this recipe does not attempt; stain
-normalisation; tissue/background segmentation (the bucket ships a `background_tissue/` directory
-this recipe ignores); patch extraction pipelines, which are what most pathology users actually
-run; and multi-slide throughput, since this is one slide on one box.
+on synthetic arrays rather than on these slides. Tiled level-0 access through tifffile/zarr,
+the publisher's `background_tissue/` masks, a patch grid and multi-slide throughput are covered by
+[pathology-real](../../measurements/pathology-real/README.md), over all 160 annotated slides. Two
+findings there refine the polygon check above. The mask fills by nonzero winding, and the innermost
+polygon decides a pixel, so tumour islands inside an Exclusion are kept. Neither changes
+`tumor_091`. Still untried: stain normalisation, and training or scoring a model.
 
 </details>
