@@ -120,7 +120,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-17 | 2026-10-03 | 2026-10-17 | — |
+| [ase-phonopy](../recipes/ase-phonopy/README.md) | Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal. | dft | build-in-task | 2026-10-18 | 2026-10-03 | 2026-10-17 | — |
 | [gpaw](../recipes/gpaw/README.md) | Runs a 36-atom Pt(111) surface SCF (PW 400 eV, 4×4×1 k-points, PBE) and prices it across four Graviton generations and three core counts. For anyone running plane-wave DFT on ARM. | dft | build-in-task | 2026-10-17 | 2026-09-30 | 2026-10-17 | — |
 | [nwchem](../recipes/nwchem/README.md) | Runs a 217-basis-function DFT energy twice, serial and parallel, and asserts NWChem's own rank count. For anyone doing quantum chemistry with MPI on ARM. | dft | build-in-task | 2026-10-17 | 2026-10-03 | 2026-10-17 | — |
 | [psi4](../recipes/psi4/README.md) | `psi4` computes the RHF/STO-3G energy of a hydrogen molecule — a Gaussian-basis quantum-chemistry SCF. | dft | build-in-task | 2026-10-17 | 2026-10-17 | — | — |
