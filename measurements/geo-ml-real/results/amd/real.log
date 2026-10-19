@@ -1,0 +1,67 @@
+versions                             geopandas 1.1.4 shapely 2.1.2 geos 3.14.1 pyproj 3.7.2 proj 9.8.1 pyogrio 0.12.1 gdal 3.12.4 libpysal 4.15.0 esda 2.10.0 spreg 1.9.1 sklearn 1.9.0 statsmodels 0.15.0 rasterio 1.5.0 numpy 2.5.2   [observation]
+cpu                                  AMD EPYC 9R45, 4 vCPU, 1 thread(s)/core, OpenBLAS Cooperlake   [observation]
+tract_files                          56 zips  want 56 (50 states, DC, PR, 4 island areas)
+[read_tracts] 3.2s
+tracts_read                          85529 tracts, 85529 unique 11-digit GEOIDs, CRS [4269]  want 85529, all unique, EPSG:4269
+tract_vertices                       42,420,293   [observation]
+[geodesic_tracts] 22.4s
+geodesic_vs_census_every_tract       0 of 85529 tracts outside 1 m^2 + perimeter x 0.0557 m; worst at 0.2173 of the bound
+geodesic_vs_census_rel               median 2.906e-07  max 5.263e-05; 433 tracts over the fixture's flat 1e-5   [observation]
+total_area_conserved                 sum rel err 6.372e-08  want < 1e-6
+pyproj_vs_terra_every_tract          max |pyproj - terra| 3.052e-05 m^2 (2.239e-11 rel), median 2.477e-07 m^2, 85392 identical in the printed 1e-6 m^2  want < 0.01 m^2 on all 85529
+[area_albers_5070] 3.3s
+  via albers_5070                    median rel err 3.319e-07  max 1.116e-04   [observation]
+[area_web_mercator_3857] 13.1s
+  via web_mercator_3857              median rel err 6.256e-01  max 8.659e+00   [observation]
+counties_read                        3235 counties  want 3235
+tract_keys_are_counties              3235 county keys in tracts vs 3235 counties
+[geodesic_counties] 4.2s
+tracts_sum_to_county_area            max rel |sum(tract) - county| 3.762e-16 over 3235 counties  want < 1e-12 (interior edges cancel)
+[dissolve_counties] 39.2s
+dissolve_rebuilds_counties           3235 dissolved, max rel area err vs county file 1.962e-16  want 3235, < 1e-9
+[sjoin_point_in_county] 0.5s
+sjoin_recovers_geoid                 85529 tracts in exactly one county, 85529 of them the county their GEOID names  want 85529
+[queen_libpysal] 56.2s
+[rook_libpysal] 55.8s
+contiguity                           queen 269767 pairs (7 islands), rook 237369 pairs (7 islands), over 85529 tracts   [observation]
+queen_symmetric                      every link reciprocated, s0 = 539534 = 2 x 269767
+rook_subset_of_queen                 237369 rook pairs, 0 not queen pairs  want 0
+[queen_geos_sjoin] 6.3s
+[rook_geos_relate] 17.6s
+no_overlapping_tracts                0 intersecting pairs whose interiors meet  want 0
+queen_libpysal_eq_geos               libpysal 269767, GEOS 269767, only-libpysal 0, only-GEOS 0
+rook_libpysal_eq_geos                libpysal 237369, GEOS 237369, only-libpysal 0, only-GEOS 0
+[county_contiguity] 20.2s
+tract_queen_collapses_to_county      9480 county pairs from tracts, 9480 from the county file, 0 differ  want 0
+tract_rook_collapses_to_county       9128 county pairs from tracts, 9128 from the county file, 0 differ  want 0
+[moran_subset] 0.2s
+moran_weights_row_standardised       n = 85141 tracts with land and a neighbour, s0 = 85141.000000000, 0 islands  want s0 = n, 0
+[moran] 0.8s
+morans_I                             0.850996647863  log10(ALAND) over 85141 tracts, z_norm 425.525   [observation]
+moran_sign_invariant                 |I(y) - I(-y)| = 0.00e+00  want 0 exactly
+moran_affine_invariant               |I(y) - I(3.7y + 112.5)| = 5.55e-16  want < 1e-10 (n x eps rounding)
+moran_expectation                    EI = -1.174536058257e-05  want -1/(n-1)
+moran_direct_sparse                  esda 0.850996647862764 vs n/S0 z'Wz/z'z 0.850996647862764, |diff| 3.33e-16  want < 1e-10
+[moran_999_permutations] 1.6s
+moran_permutations                   999 seeded: p_sim 0.0010, z_sim 414.732, max permuted I 0.0059   [observation]
+[ols_four_routes] 0.2s
+ols_fit                              log10(ALAND) ~ log10(perimeter) + |lat|: -0.867893661 1.855810035 0.001411211  R2 0.974900024   [observation]
+four_ols_routes_agree                max |diff| across statsmodels / sklearn / lstsq / spreg = 6.79e-12  want < 1e-10 (conditioning)
+residual_moran_esda_eq_spreg         esda 0.336057317893 vs spreg 0.336057317893 on the OLS residuals, |diff| 1.42e-14  want < 1e-10
+dem_tiles                            28 tiles  want 28
+[read_dem] 0.7s
+dem_mosaic                           14400 x 25200  want 14400 x 25200
+colorado_units                       1447 tracts, 64 counties  want 1447, 64
+nad83_to_wgs84_max_shift_deg         8.003e-06  (terra/PROJ 9.9 in r-spatial-real: 8.003e-06)   [observation]
+[zonal_tracts] 5.5s
+[zonal_counties] 3.7s
+tract_zones_nest_in_county_zones     0 of 64 counties differ in cells, 0 in decimetre sums  want 0, 0
+zonal_cells_rasterio_eq_terra        0 of 1447 tracts differ in cell count; total 360398892  want 0, 360398892
+zonal_dm_rasterio_eq_terra_f32       0 of 1447 tracts differ via round(float32(v x 10)); total 7541399513167 dm  want 0, 7541399513167
+zonal_dm_exact_product               round(v x 10) in double: 1289 of 1447 tracts differ from terra, total 7541399199577 dm (-313590); 314868 of 362880000 cells round differently   [observation]
+[zonal_tracts_unprojected] 4.1s
+control_nad83_rasterized_raw         913 of 1447 tracts move, by up to 61 cells  (terra in r-spatial-real: 913, 61)   [observation]
+sha256 tract-areas.csv               c9f81cbe43e731607d0eb7c4bbd03f236e815726e6bd59a5e9462b1256328af0   [observation]
+sha256 co-tract-zonal.csv            6ab28ab4921189055e1129c08709e27bae9caeafca571e2de9ac36e378f6d270   [observation]
+peak_rss                             22.98 GiB (ru_maxrss), 274 s total   [observation]
+GEO-ML REAL OK

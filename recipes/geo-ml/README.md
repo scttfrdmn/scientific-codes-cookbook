@@ -35,20 +35,20 @@ abs(geod.geometry_area_perimeter(g.geometry[0])[0])   # matches that county's AL
 | `log10(ALAND)` for Moran's I | your own variable | the invariance assertion holds for any variable; the *value* 0.605 does not. |
 | rook contiguity | `Queen`, KNN, distance bands | rook is the one with an exact shared-edge count to check against. |
 
-**Leave the fixture.** 3,235 polygons is already a real workload — 8,235,114 vertices and 14.7 s of
-contiguity building — and it is the largest unit at which Census publishes an area for every
-feature, which is what makes the check possible. Tracts would be more rows, not a stronger claim.
+**Leave the fixture.** 3,235 polygons (8.2M vertices) is a real workload, small enough to read every
+check. The tract run below carries every identity to 85,529 polygons, as evidence for scaling.
 
-## Which box
+## Which box — [measured](../../measurements/geo-ml-real/README.md) (all 85,529 US tracts + Colorado's DEM by tract)
 
-`m8g.large` (2 vCPU / 8 GiB). Measured: read 0.8 s, geodesic area over 8.2M vertices **6.9 s**,
-rook contiguity **14.7 s** — 22 s of compute, all single-threaded, so RAM picks the box and not
-cores. Docker install and the image pull dominate the window; **these timings are not compute
-cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | wall | $/hr | compute $ | **billed $/result** | peak memory |
+|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.xlarge` | 382 s | 0.2356 | 0.0250 | 0.0324 | 22.9 GiB |
+| Xeon 6975P-C | `r8i.xlarge` | 373 s | 0.2778 | 0.0288 | 0.0331 | 25.7 GiB |
+| **EPYC 9R45** | `r8a.xlarge` | **275 s** | 0.3195 | **0.0244** | **0.0288** | 25.7 GiB |
 
-`m8g` over `c8g` because the geometry and the weights matrix are the constraint: 84 MB of staged
-zip expands to 8.2M coordinate pairs plus a 17,762-link adjacency, and nothing here scales with
-vCPU count.
+Every identity holds on all three; libpysal's queen and rook graphs equal GEOS's pair for pair. **AMD is
+1.39× faster, 11% cheaper billed.** All single-threaded, so memory picks the box: the fixture fits
+`m8g.large`, the tracts plus a state DEM need 32 GiB. **Not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: a reference that ships inside the data, three exact invariances, one trap</summary>
