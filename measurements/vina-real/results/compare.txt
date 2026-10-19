@@ -1,0 +1,33 @@
+complexes per chip: {'arm64': 513, 'x86_64': 513, 'amd': 513}
+
+== Graviton4 vs Intel
+e_xtal           identical 513/513  max|diff| 0  want <= 1e-06  ok
+e_xtal_opt       identical 512/513  max|diff| 0.008
+rmsd_xtal_opt    identical 466/513  max|diff| 0.00636
+e_top            identical 4/513 (path, reported)
+rmsd_top         identical 0/513 (path, reported)
+pose_sha         identical 0/513 (path, reported)
+e_top Intel minus Graviton4: mean +0.0098  min -1.618  max +2.194
+top-1 <= 2 A verdict differs on 24 complexes
+
+== Graviton4 vs AMD
+e_xtal           identical 513/513  max|diff| 0  want <= 1e-06  ok
+e_xtal_opt       identical 512/513  max|diff| 0.008
+rmsd_xtal_opt    identical 466/513  max|diff| 0.00636
+e_top            identical 4/513 (path, reported)
+rmsd_top         identical 0/513 (path, reported)
+pose_sha         identical 0/513 (path, reported)
+e_top AMD minus Graviton4: mean +0.0098  min -1.618  max +2.194
+top-1 <= 2 A verdict differs on 24 complexes
+
+== Intel vs AMD
+e_xtal           identical 513/513  max|diff| 0  want <= 1e-06  ok
+e_xtal_opt       identical 513/513  max|diff| 0
+rmsd_xtal_opt    identical 513/513  max|diff| 0
+e_top            identical 513/513 (path, reported)
+rmsd_top         identical 513/513 (path, reported)
+pose_sha         identical 513/513 (path, reported)
+e_top AMD minus Intel: mean +0.0000  min +0.000  max +0.000
+top-1 <= 2 A verdict differs on 0 complexes
+
+CROSS-CHIP FIXED POINTS OK

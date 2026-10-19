@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-vina-real-posebusters",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (data/prep.tar|dock\\.py|real\\.sh|posebusters_308_ids\\.txt)$' pins.sha256 | sed 's| data/prep.tar$| prep.tar|' | sha256sum -c || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 32 \n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 20
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/prep/prep.tar",
+      "destination": "/tmp/prep.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/dock.py",
+      "destination": "/tmp/dock.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/posebusters_308_ids.txt",
+      "destination": "/tmp/posebusters_308_ids.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/vina-real/posebusters/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 3.5
+  }
+}

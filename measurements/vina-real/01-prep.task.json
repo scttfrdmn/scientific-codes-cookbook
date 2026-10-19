@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-vina-real-prep",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\ncd /tmp\ngrep -E ' (data/posebusters_paper_data\\.zip|prep\\.py)$' pins.sha256 | sha256sum -c || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nmkdir -p /tmp/out\nobabel -V | tee /tmp/out/versions.txt\npython3 -c \"import rdkit; print('rdkit', rdkit.__version__)\" | tee -a /tmp/out/versions.txt\npython3 -u prep.py data/posebusters_paper_data.zip /var/tmp/prep 8 > /tmp/out/prep.log 2>&1\nRC=$?\ntail -n 30 /tmp/out/prep.log\ncp /var/tmp/prep/manifest.tsv /var/tmp/prep/prep_failed.tsv /var/tmp/prep/prep_notes.tsv /tmp/out/\n[ \"$RC\" = 0 ] && grep -q '^VINA PREP OK$' /tmp/out/prep.log || { echo \"FAIL: prep exited $RC\"; exit 1; }\ntar -C /var/tmp -cf /tmp/out/prep.tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner prep\n( cd /tmp/out && sha256sum prep.tar | tee prep.sha256 )\nls -l /tmp/out\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 20
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/posebusters/posebusters_paper_data.zip",
+      "destination": "/tmp/data/posebusters_paper_data.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/prep.py",
+      "destination": "/tmp/prep.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/vina-real/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

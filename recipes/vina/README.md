@@ -44,6 +44,8 @@ runtime. A screen needs a drug-likeness filter and its own sizing pass.
 
 `c8g.large` (2 vCPU): **5 min 52 s command window, ~$0.01** for two 32-exhaustiveness docks.
 
+**Which box, [measured](../../measurements/vina-real/README.md) on all 513 PoseBusters redocks** (32 × `cpu=1`): AMD `c8a.8xlarge` 46 min, **$1.34**. Graviton4 `c8g.8xlarge` 61 min, **$1.31**. Intel `c8i.8xlarge` 82 min, $2.05. The top pose is within 2 Å on 49–50 of 85 Astex complexes, and PoseBusters' own Vina run got 49. Crystal-pose scores are identical on all three chips. The docked poses differ on Graviton4 only, because the search path depends on the build.
+
 <details>
 <summary>As shipped: a published number, and why the seed alone was not enough</summary>
 
