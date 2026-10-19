@@ -1,0 +1,42 @@
+{
+ "task_id": "cookbook-r-longdouble-probe",
+ "container": "quay.io/aarchbio/r-wgcna@sha256:8f54c6548dd6938819c9ce47ffc1092561195c1f90b3d0a75b02bbbe40d83546",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\n# spawn runs task commands under bash -e (spawn#707)\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash run.sh 8\n"
+ ],
+ "resources": {
+  "cpu": 8,
+  "memory_gib": 16,
+  "architecture": "arm64",
+  "families": [
+   "c8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/r-longdouble/probe.R",
+   "destination": "/tmp/probe.R"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/r-longdouble/run.sh",
+   "destination": "/tmp/run.sh"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/r-longdouble/pins.sha256",
+   "destination": "/tmp/pins.sha256"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/r-longdouble/probe/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "4h",
+  "on_complete": "terminate",
+  "cost_limit": 1.5
+ }
+}
