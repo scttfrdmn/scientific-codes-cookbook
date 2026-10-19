@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/openms@sha256:8e9f3d4b0a80c509dc94229a2f02bfd45b6f4375eb6ec7d9e2032e08f4c0e725
   - quay.io/aarchbio/percolator@sha256:4cc39404eeba4f8093fdd380c1bd4f615d0e97c5e0efe4fe0e44bac63fbd6df6
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/openms@sha256:665df95060bdb8144ac45b83ea5da6d7c43d30fd169069078daa2d51f4e4f0c2
   - quay.io/biocontainers/percolator@sha256:efb3c71cdf6b37686815a5746cadbb946ef3852dc889e0a28cbb1012e391ca94

@@ -3,6 +3,7 @@ tool: gatk4
 tool_version: 4.6.2.0
 image: quay.io/aarchbio/gatk4@sha256:92065598dde922a2223eb57863606c4bf8558b11af938ada9637efb9d0d8d0fc
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
   - quay.io/biocontainers/gatk4@sha256:7311332e4d565d2356bbc0540cf582b505d1969a5f088a2c065302b13b10f5ee

@@ -5,6 +5,7 @@ env: geoscience
 image: quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70
 env_x86_64: geoscience-0ac81cc7b2f4
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.126.1
 last_verified: 2026-10-09
 ---

@@ -3,6 +3,7 @@ tool: viennarna
 tool_version: "2.7.2"
 image: quay.io/aarchbio/viennarna@sha256:df02a2dc5052d8afdba41acbf18b69df253a2ca7d93b070df247bd4cdd47c51e
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/viennarna@sha256:b60deaa93a17b6b7d6a37aa2993078dc39137cae26315edad5f8c3d87d22edf0
 spawn_version: 0.123.0

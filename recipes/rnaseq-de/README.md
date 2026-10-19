@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/bioconductor-deseq2@sha256:6d87efaf6ff4691c2adfd1416c2a40444709d870408ca0ef9cced378cff042a3
   - quay.io/aarchbio/bioconductor-edger@sha256:09169b359eedcda2bd9f83366d993c2024dc40ac15441cdf68cf34f32befdd02
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/bioconductor-deseq2@sha256:de4543b77eba3d5b4b774a50bf2539b9adb0ba7451c9d909bf8def4a1b1dd56d
   - quay.io/biocontainers/bioconductor-edger@sha256:6b2154b169512344d163ea5c9d5d5293fb4cbb67ea22ffa0e3d4aa8a8c0dde84

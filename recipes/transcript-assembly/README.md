@@ -7,6 +7,7 @@ images:
   - quay.io/aarchbio/stringtie@sha256:e0eb6ef15f2c8d329c3b24381b7614b80e97f056dece5fbd2f4ec2f6121b6964
   - quay.io/aarchbio/gffcompare@sha256:9674f300816f52f289453f514c14ebcc8dd6ab1361b2f29ac1c1b283e66e3547
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/gffcompare@sha256:2a8868cca6c21b413a83a5f16299ec0e3bcd86dcc31a218d7da921640f5f2175
   - quay.io/biocontainers/hisat2@sha256:dd9d15d12d46a3c49e7aa1cbf12cf49b2f80b54483fea1756b3fda4dde67e385

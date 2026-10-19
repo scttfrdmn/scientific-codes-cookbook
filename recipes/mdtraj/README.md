@@ -7,6 +7,7 @@ env_x86_64: md-f7ed8789d24e
 spawn_version: 0.131.0
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # MDTraj — read a real 100 ps trajectory, checked against MDAnalysis byte for byte
 

@@ -7,6 +7,7 @@ env_x86_64: dft-c103c83e2eb2
 spawn_version: 0.111.4
 last_verified: 2026-09-30
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # SIESTA — bulk Si equilibrium lattice constant, cross-validated against GPAW
 

@@ -3,6 +3,7 @@ tool: humann
 tool_version: "3.9"
 image: quay.io/aarchbio/humann@sha256:c614308013fd2a7f7cef181d18ad0ce3c785b1b3243f62f0428fa313c1852ac6
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/humann@sha256:5d4ad5983b133477b1738c0cc3505f60245836c3790db39361fa7a2c0fa84abf
 spawn_version: 0.123.0

@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/mrbayes@sha256:a320f21c5742641ec3db1bd6b443df81bb513589acfe1f8974640fcd1c6556ab
   - quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/mrbayes@sha256:9f19aafb555767e28c53df9692d63e126cb27e8273f4b13b0f217fad852ebd1c
   - quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d

@@ -3,6 +3,7 @@ tool: relion
 tool_version: 5.1.0
 image: quay.io/aarchbio/relion@sha256:74aef38176ce4b9929f1312bb977c54c06994329e63c94fc3accce44ea844119
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/relion@sha256:1a60aa8fc33c91ae51027ee9956c1dbde80deca53d011975afe35baa06f793bc
 spawn_version: 0.115.0

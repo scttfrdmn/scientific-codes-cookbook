@@ -3,6 +3,7 @@ tool: picard
 tool_version: 3.5.0
 image: quay.io/aarchbio/picard@sha256:c6a742e8277b9010df9aa3b9a6bb40651792ff319627cc1c2bf8a70ac633e6bd
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/picard@sha256:84923e37c5a43b0984fdb152a89f8ac952878fafc3e6076c534e5e5c82e278be
 spawn_version: 0.111.4

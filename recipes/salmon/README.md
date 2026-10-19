@@ -3,6 +3,7 @@ tool: salmon
 tool_version: "2.7.0"
 image: quay.io/aarchbio/salmon@sha256:7134f5116644d29ab5b8fbc1c1199214842d7391094438ba6166e5631ecb7a5e
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/salmon@sha256:85b0addd8a145f0ffda525daa86004e77ee5efe5fae323b7a1167429ecfced46
 spawn_version: 0.111.1

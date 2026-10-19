@@ -5,6 +5,7 @@ image: quay.io/aarchbio/homer@sha256:b70d88a0e541fef5a5aa5312da987abccc439f3d1f0
 images_x86_64:
   - quay.io/biocontainers/homer@sha256:d99bf68f31a7d14cdcd4b3016a5741d775b1e779d70d9e36c8e008300bce30a5
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-13
 ---

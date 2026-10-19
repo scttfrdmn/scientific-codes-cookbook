@@ -7,6 +7,7 @@ env_x86_64: quantum-0134d92cdcd5
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Qiskit — exact amplitudes, the DFT matrix, and a bit-identical cross-check against qutip
 

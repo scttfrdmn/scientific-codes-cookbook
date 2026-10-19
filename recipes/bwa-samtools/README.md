@@ -3,6 +3,7 @@ tool: bwa
 tool_version: "0.7.19-r1273"
 image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
   - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561

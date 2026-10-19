@@ -7,6 +7,7 @@ env_x86_64: climate-8c7f1e0cc15d
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # cftime — CF calendar arithmetic against published constants
 

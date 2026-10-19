@@ -3,6 +3,7 @@ tool: spades
 tool_version: 4.3.0
 image: quay.io/aarchbio/spades@sha256:f8b7ad9acda742d695be9176c1fec0e9a33579a6a19294d3d2a3516ade3de81c
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/spades@sha256:90a6d8d2fef8eb932e2e2712ed2ef797cce7117f7dd0403cc6e62c349408ba9a
 spawn_version: 0.104.0

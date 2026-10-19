@@ -7,6 +7,7 @@ env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # NWChem — caffeine at B3LYP/6-31G*, serial and on 4 MPI ranks
 

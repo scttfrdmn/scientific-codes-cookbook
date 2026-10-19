@@ -3,6 +3,7 @@ tool: bowtie2
 tool_version: 2.5.5
 image: quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/bowtie2@sha256:d568130f2f569f7ea2e2453e5f22e82d960d644b9a533b74f8ac737da6faf556
 spawn_version: 0.111.4

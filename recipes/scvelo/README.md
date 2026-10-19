@@ -7,6 +7,7 @@ env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # scVelo — RNA velocity on counts with known kinetics, steady-state and dynamical
 

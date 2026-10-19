@@ -7,6 +7,7 @@ images:
   - quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586
   - quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/bismark@sha256:86d39c42efab92a444949bc3a738e609b4787c1aad4285cfbceb2b54ed431e1b
   - quay.io/biocontainers/bwameth@sha256:dc7921711d58d014d17619e01ca68773d6f6b226dadcf4e5fa9ba2d72d323301

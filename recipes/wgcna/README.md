@@ -7,6 +7,7 @@ images_x86_64:
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-16
+last_verified_amd: 2026-10-18
 ---
 # WGCNA — co-expression modules, recovered from a matrix whose modules we planted
 

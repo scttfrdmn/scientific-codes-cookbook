@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7
   - quay.io/aarchbio/deeptools@sha256:91c028a26e85579dde0eadb0efd06c662bcdcb52956e48c941cdeea6c3016ca8
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/deeptools@sha256:59b35677305fca387aabecfa3f2fb9c79dab82c94dbe30d2e8ead3db99781a6d
   - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561

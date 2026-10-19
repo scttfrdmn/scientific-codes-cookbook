@@ -6,6 +6,7 @@ images:
   racon: quay.io/aarchbio/racon@sha256:75020311bdb6a635ee67718984db28029e95ee2272e32de9d0def8a9826ed4ee
   medaka: quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/minimap2@sha256:f7e4a9a17912eea542500988ee96013e37a887b3746673636f2773cc81052590
   - quay.io/biocontainers/racon@sha256:8348069307a3e1bf370fa42f70fc256383215f20d08aade7baae009e13052130

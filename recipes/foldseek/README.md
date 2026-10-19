@@ -3,6 +3,7 @@ tool: foldseek
 tool_version: "8.ef4e960"
 image: quay.io/aarchbio/foldseek@sha256:871c61cc7c37557742972ef4f57fecf47a9eb3494f95f5fb28b9edc132b3644b
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/foldseek@sha256:f194c34439f5110fa12d5fffdd8947a8d7c6f1a0b4761bb67ecd87e13656dcaa
 spawn_version: 0.123.0

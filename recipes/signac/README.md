@@ -5,6 +5,7 @@ image: quay.io/aarchbio/r-signac@sha256:80fffb0fa5c788d0cae11b64b273b7eb335c12a0
 images_x86_64:
   - quay.io/biocontainers/r-signac@sha256:1455a0dd29e8b8b16f2c005aa50a3ee8899606a068f594d59e273ef7c7ec695d
 last_verified_x86_64: 2026-10-16
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 ---

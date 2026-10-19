@@ -7,6 +7,7 @@ env_x86_64: fem-cfd-1950e1068faa
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # SLEPc — eigenvalues against a closed form, on 1 rank and on 2
 

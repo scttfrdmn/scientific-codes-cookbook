@@ -7,6 +7,7 @@ env_x86_64: geo-ml-ffc4dc5282aa
 spawn_version: 0.127.0
 last_verified: 2026-10-13
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # scikit-learn — its own 47,445 tests, then closed forms you can lift
 

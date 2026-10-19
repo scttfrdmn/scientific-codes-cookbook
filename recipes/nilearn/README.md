@@ -5,6 +5,7 @@ env: neuroimaging
 image: quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c
 env_x86_64: neuroimaging-d0a05a385703
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-17
 ---

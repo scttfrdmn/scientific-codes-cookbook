@@ -3,6 +3,7 @@ tool: sourmash
 tool_version: 4.9.4
 image: quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/sourmash@sha256:cf32bc7e7039340772184a79333a88d7988a2213a1209716b6e11977fa0d6719
 spawn_version: 0.111.4

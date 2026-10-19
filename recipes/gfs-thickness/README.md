@@ -7,6 +7,7 @@ env_x86_64: climate-b7b5178faf93
 spawn_version: 0.123.0
 last_verified: 2026-10-08
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # MetPy + eccodes — GFS in GRIB2, checked against its own geopotential
 

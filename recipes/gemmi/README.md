@@ -5,6 +5,7 @@ env: md
 image: quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f
 env_x86_64: md-f7ed8789d24e
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 ---

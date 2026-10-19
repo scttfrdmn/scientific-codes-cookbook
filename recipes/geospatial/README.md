@@ -7,6 +7,7 @@ env_x86_64: geospatial-07484bd0bf42
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # GDAL + PROJ — 6,191 upstream reference coordinates, and a warp checked against arithmetic
 

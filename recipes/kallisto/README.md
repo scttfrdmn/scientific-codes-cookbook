@@ -3,6 +3,7 @@ tool: kallisto
 tool_version: 0.52.0
 image: quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/kallisto@sha256:6efe95704074d76fec299e4848185ccb1dc2b6805f48695b73717743dc22ca81
 spawn_version: 0.111.4

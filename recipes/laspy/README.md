@@ -5,6 +5,7 @@ env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:7817e0291f05f6bc209aa5999363503897647daf4eb9d6df153b1965629d6ffc
 env_x86_64: pointcloud-93bbd77d2902
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---

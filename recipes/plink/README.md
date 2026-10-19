@@ -3,6 +3,7 @@ tool: plink
 tool_version: "1.9.0-b.8"
 image: quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a
 spawn_version: 0.111.1

@@ -7,6 +7,7 @@ env_x86_64: nlp-60b4d70cf1b7
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # spaCy — its own 4,855 tests, then exact claims on tokenization, hashing, serialization and matching
 

@@ -7,6 +7,7 @@ env_x86_64: pic-bf42d7d6c3f2
 spawn_version: 0.130.1
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # WarpX — a Langmuir wave against its own closed form, and what 16 threads actually buy
 

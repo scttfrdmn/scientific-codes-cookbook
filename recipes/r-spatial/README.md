@@ -7,6 +7,7 @@ env_x86_64: r-d98eb9641259
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # sf + terra — Census's areas and ESA's class percentages, recovered in R on Graviton
 

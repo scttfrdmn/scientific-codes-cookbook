@@ -3,6 +3,7 @@ tool: freebayes
 tool_version: "1.3.10"
 image: quay.io/aarchbio/freebayes@sha256:033f0f12b3a31db97ebceee72604c904d1436f877e288ff247f22a9eedfacdf9
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/freebayes@sha256:212b2e7182fec427e0d6956ac8e9636e87de9a19c92cb7a20326a9ce8f99a9c6
   - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0

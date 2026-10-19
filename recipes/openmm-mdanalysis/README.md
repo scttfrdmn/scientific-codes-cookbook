@@ -7,6 +7,7 @@ env_x86_64: comp-chem-1243f25ebfec
 spawn_version: 0.130.1
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # OpenMM — 20 ps of NVE on 1,728 atoms, read back by MDAnalysis
 

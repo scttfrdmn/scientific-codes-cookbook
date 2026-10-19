@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847
   - quay.io/aarchbio/bowtie2@sha256:a6807f0611a1c276235f47d175471ebbaec863aa751a0c3771c324be57d8fc59
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/bowtie2@sha256:d568130f2f569f7ea2e2453e5f22e82d960d644b9a533b74f8ac737da6faf556
   - quay.io/biocontainers/rsem@sha256:05b9a0be934d1ac7fe894d965fbe45deff8d4fb1bbbfddb31b339541116b7420

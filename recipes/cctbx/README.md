@@ -7,6 +7,7 @@ env_x86_64: structbio-e0104a505be2
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # cctbx — all 230 space groups, cross-checked against a second implementation
 

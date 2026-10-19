@@ -6,6 +6,7 @@ images_x86_64:
   - quay.io/biocontainers/fastp@sha256:cbbe2402b6b6704df470d7d77dcb498eefd5bcd01f4c38be0ec69899e79ac134
   - quay.io/biocontainers/cutadapt@sha256:dc10b125b5099682ebd0c17d8ffee70c4bf82ad599fea4a1071b2f46e4d572f3
 last_verified_x86_64: 2026-10-16
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 ---

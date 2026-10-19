@@ -3,6 +3,7 @@ tool: star
 tool_version: "2.7.11b"
 image: quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/star@sha256:c43295cdbc28a7be7d88296775a29cc65b30296c996d8242ef90c031c8b9739b
 spawn_version: 0.111.4

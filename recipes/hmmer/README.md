@@ -3,6 +3,7 @@ tool: hmmer
 tool_version: "3.4"
 image: quay.io/aarchbio/hmmer@sha256:ecae1325123858761f0d744aacae948a89368440fd6d91f69c178402294fc792
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/hmmer@sha256:8ca0dc3bd55a8db881dff34511f5f4ba92eda00aa4c757b01083c002cc5d68d1
 spawn_version: 0.111.4

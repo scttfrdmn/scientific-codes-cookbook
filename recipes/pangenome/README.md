@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/vg@sha256:0c9767627faac4a98586fe99ffebb4e701903deb8cd5983ff12746344e8b0ccf
   - quay.io/aarchbio/odgi@sha256:51b2b70d3162e83453f95626932cfee54f10f5c63f679d41f6572371d1a1755d
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/vg@sha256:562f804563f42458c5457b6ebca31ad39a0ba79810d4d30814b6cf6e1bda6cdd
   - quay.io/biocontainers/odgi@sha256:20f70608a427b99bc3dde21d96f6fa4b02ef2d0b5b7fa66c3bdf820fb9f27ea6

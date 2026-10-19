@@ -3,6 +3,7 @@ tool: iqtree
 tool_version: 3.1.3
 image: quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d
 spawn_version: 0.111.4

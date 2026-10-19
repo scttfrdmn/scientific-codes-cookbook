@@ -7,6 +7,7 @@ env_x86_64: fem-cfd-9ae4b72449df
 spawn_version: 0.131.0
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # PETSc — reproducing its own committed KSP output, serial and on 2 ranks
 

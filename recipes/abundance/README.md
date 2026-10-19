@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455
   - quay.io/aarchbio/bracken@sha256:f2cf8671bef1b9892efeadfa4ee0a9c9b7c961704e0b2991ea1fb2258c838abd
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/kraken2@sha256:c5eb4764f23e9db975cbc3e545d330e1fe468307f5e59a99c0ce8f4c1f6f09e2
   - quay.io/biocontainers/bracken@sha256:b86467a34e157dfa086a40e8e7ca7d6f4af1c559030024efbab76381e448d097

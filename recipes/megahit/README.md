@@ -3,6 +3,7 @@ tool: megahit
 tool_version: 1.2.9
 image: quay.io/aarchbio/megahit@sha256:d82953bf0096098b0b892edf7180f99b599e8ad17be14c47b1e8c2e1b6a8bdfd
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/megahit@sha256:a1e51b68962e54eb5b0576db7dc366d05f81ee1aa5d56a983133a8675e905c75
 spawn_version: 0.104.0

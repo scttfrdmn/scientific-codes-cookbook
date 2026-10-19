@@ -7,6 +7,7 @@ env_x86_64: earth-observation-51a38824432a
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Sentinel-2 L2A — recompute ESA's scene classification, and NDVI over the whole tile
 

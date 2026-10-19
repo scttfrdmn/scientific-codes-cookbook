@@ -3,6 +3,7 @@ tool: raxml-ng
 tool_version: 2.0.2
 image: quay.io/aarchbio/raxml-ng@sha256:3a6bbc162ff43249ada42bd92828ac0024855c33b614c0cdbaaa1e3e3eed89e5
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/raxml-ng@sha256:e27292d42400cb03d3f8e070836e7048a5f9bf3ff68bd979c19e883b426f2bb0
 spawn_version: 0.111.4

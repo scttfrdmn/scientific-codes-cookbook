@@ -5,6 +5,7 @@ env: bayes
 image: quay.io/aarchsci/bayes@sha256:583447048ee2ed011ec822aa15a68c5248842c5b22959bdf98da5d3e9302b46d
 env_x86_64: bayes-f84fca06ee06
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---

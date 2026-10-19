@@ -7,6 +7,7 @@ env_x86_64: r-813f6d1c2008
 spawn_version: 0.130.1
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # R (r env) — ordinary least squares on `cars`, two independent ways
 

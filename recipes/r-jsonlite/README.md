@@ -7,6 +7,7 @@ env_x86_64: r-d98eb9641259
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # jsonlite — a lossless JSON round-trip needs `digits = I(17)`
 

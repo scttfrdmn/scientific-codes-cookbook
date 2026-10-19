@@ -7,6 +7,7 @@ env_x86_64: neuroimaging-d0a05a385703
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # MNE-Python — spectra, filters, referencing, events, ICA and a dipole fit, each against a planted answer
 

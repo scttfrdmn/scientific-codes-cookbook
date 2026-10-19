@@ -7,6 +7,7 @@ images_x86_64:
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-16
+last_verified_amd: 2026-10-18
 ---
 # ArchR — scATAC fragments to Arrow files, tiles, clusters and marker tiles, on a planted genome
 

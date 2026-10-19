@@ -7,6 +7,7 @@ env_x86_64: pathology-c817c8dd8540
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # imagecodecs — "lossless" checked as byte identity, 25 round-trips
 

@@ -5,6 +5,7 @@ image: docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358
 images_x86_64:
   - docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72
 last_verified_x86_64: 2026-10-16
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 ---

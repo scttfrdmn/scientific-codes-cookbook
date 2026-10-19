@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/pairtools@sha256:2b4ce4761b3e6acf9739ebbd598fbe5b4a9a42ab58fa35b23ae28733efaf913e
   - quay.io/aarchbio/cooler@sha256:5f665b9b2c94e5ca6812216309cb2e8d462d7d4498d4b25206ac0515e89a7dd0
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/cooler@sha256:95ef864cd6fc3a4bf8487d300de8d80f4abcd90e4d545823d8194d60547c2cf7
   - quay.io/biocontainers/pairtools@sha256:29e06e1791a809300c29abd8dea482eca573f2b9d0f8b8e2dddc0c749f561ba4

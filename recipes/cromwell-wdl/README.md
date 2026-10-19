@@ -3,6 +3,7 @@ tool: cromwell
 tool_version: "0.40"
 image: quay.io/aarchbio/cromwell@sha256:0d86efb43d8df392362fb54c0ef1ea2a6449b776cabe5089dd1b5a0cafce230e
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/cromwell@sha256:71738c6e849f45197f746e5aeb9a80d607498ae48d87ebb923ab61faf8f5199b
 spawn_version: 0.111.1

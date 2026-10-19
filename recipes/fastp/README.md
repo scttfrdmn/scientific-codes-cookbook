@@ -3,6 +3,7 @@ tool: fastp
 tool_version: 1.3.6
 image: quay.io/aarchbio/fastp@sha256:061ee7c6b8e5af265dfed6f25c51e482e3bb403c51f167561405010e5c5f632a
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/fastp@sha256:cbbe2402b6b6704df470d7d77dcb498eefd5bcd01f4c38be0ec69899e79ac134
 spawn_version: 0.111.4

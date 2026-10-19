@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7
   - quay.io/aarchbio/plink2@sha256:8a025c5284f1fce7c14e50309e596d10860431abde8d23b94cd6ec5e061f511d
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a
   - quay.io/biocontainers/plink2@sha256:af4fb40af571289713f6d400296fc885ce9829b1cb94572eac21810f1de31040

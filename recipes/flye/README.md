@@ -3,6 +3,7 @@ tool: flye
 tool_version: 2.9.6
 image: quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/flye@sha256:2a75bea2cb11b7b05fbaefe0cbeb5227fa6e8606a86bd07c9e313c187411e5ad
 spawn_version: 0.111.4

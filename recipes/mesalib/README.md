@@ -7,6 +7,7 @@ env_x86_64: viz-0fe5dabecafa
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Mesa llvmpipe — headless GL, checked to the pixel
 

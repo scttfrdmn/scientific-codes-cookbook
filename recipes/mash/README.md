@@ -3,6 +3,7 @@ tool: mash
 tool_version: "2.3"
 image: quay.io/aarchbio/mash@sha256:abad0c5f4d3365661ffc5533bc6eb5f1bd07d773ea61b1abd1bfc00c1df813fe
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/mash@sha256:5ec679a567729361c247addb9725a7b2de4aa3697d2c7220a58b01921fe5e953
 spawn_version: 0.111.4

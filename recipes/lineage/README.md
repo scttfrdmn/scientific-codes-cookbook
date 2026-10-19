@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/nextclade@sha256:7cbf30abb4fa7fbc9b9a2c608b9ed361d8527514af139fb6c1883dce16e16f62
   - quay.io/aarchbio/pangolin@sha256:32551903d08cbe39fc70fcf924326fec08c100b8416346acd0302bb0e7f2a03a
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/nextclade@sha256:801a4c7b176d3c9c2359ad0a2c03e52cd113d8d5cbf006ff611e310ef4d74571
   - quay.io/biocontainers/pangolin@sha256:409ee2c0f9c5d38fc407435a1a7ce487187deca17bf3fba91e1f9ea1f0810df7

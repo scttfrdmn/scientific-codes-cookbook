@@ -3,6 +3,7 @@ tool: dada2
 tool_version: "1.38.0"
 image: quay.io/aarchbio/bioconductor-dada2@sha256:1dbe837ab143941ae1864da332632f2fca92b1c191a1c8f8644c6a2267148478
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/bioconductor-dada2@sha256:a51eeb35b252786cabe0653c3ef88ff6075fa7115f5442a7153c039e79d54d32
 spawn_version: 0.111.1

@@ -7,6 +7,7 @@ env_x86_64: geo-ml-5ca5b99c000d
 spawn_version: 0.115.0
 last_verified: 2026-10-03
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # geopandas + libpysal — recover Census's published county areas, then do spatial statistics
 

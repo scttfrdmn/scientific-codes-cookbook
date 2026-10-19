@@ -7,6 +7,7 @@ env_x86_64: hep-327e2aedf1d0
 spawn_version: 0.127.0
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # YODA — histogram accounting, cross-checked against numpy
 

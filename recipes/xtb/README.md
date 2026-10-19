@@ -6,6 +6,7 @@ image: quay.io/aarchsci/comp-chem@sha256:f22ef7a3b0d6e506782596e297472fb35533850
 env_x86_64: comp-chem-823f1ef5e11e
 spawn_version: 0.131.0
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # xtb — GFN2 on water, against xtb's own committed test values
 

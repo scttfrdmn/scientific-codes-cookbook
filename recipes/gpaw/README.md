@@ -7,6 +7,7 @@ env_x86_64: dft-5cb0d94e928d
 spawn_version: 0.111.4
 last_verified: 2026-09-30
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # GPAW — a Pt(111) slab in plane-wave DFT, and the same energy from every box
 

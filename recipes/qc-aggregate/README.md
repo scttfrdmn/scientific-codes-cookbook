@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/fastqc@sha256:a4a8edb4754d731a0fd513cb4594a14766d662d5156c4e93299bdd57ef4b2fc3
   - quay.io/aarchbio/multiqc@sha256:69df62f478fd50e624ab0c9af81fc23f36afd8c049fd7b3221f8d444cb0c9ffc
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/fastqc@sha256:e194048df39c3145d9b4e0a14f4da20b59d59250465b6f2a9cb698445fd45900
   - quay.io/biocontainers/multiqc@sha256:ceace1ca5329886d92600c225d34a523020c163b1599403e44c8d895d2dfb2a2

@@ -7,6 +7,7 @@ env_x86_64: fem-cfd-1d4e4b5ee82a
 spawn_version: 0.126.1
 last_verified: 2026-10-10
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # CalculiX — 225 static FE cases against their committed references, exactly
 

@@ -3,6 +3,7 @@ tool: quast
 tool_version: 5.3.0
 image: quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/quast@sha256:a8d5771c90e4fb6daf32885c56ccece7523344c4e7cd02aa1601a75dff885c22
 spawn_version: 0.104.0

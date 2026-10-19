@@ -7,6 +7,7 @@ env_x86_64: neuroimaging-add4ba1f213a
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Nipype — a workflow engine held to order, data flow and cardinality
 

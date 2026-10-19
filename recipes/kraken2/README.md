@@ -3,6 +3,7 @@ tool: kraken2
 tool_version: 2.17.1
 image: quay.io/aarchbio/kraken2@sha256:fc6dd9becb7fec054ee01575d85e12c7fc509e53001c0ade5ed2e095c3cbe455
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/kraken2@sha256:c5eb4764f23e9db975cbc3e545d330e1fe468307f5e59a99c0ce8f4c1f6f09e2
 spawn_version: 0.111.4

@@ -7,6 +7,7 @@ env_x86_64: optimization-f8c54d155671
 spawn_version: 0.127.0
 last_verified: 2026-10-16
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Z3 — SAT, SMT, bit-vectors and Optimize, every verdict checked outside the solver
 

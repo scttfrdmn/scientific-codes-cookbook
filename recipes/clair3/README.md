@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/clair3@sha256:b464803435a71829228bedd4641d994018106952d746517188761d7dbd7bd289
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/clair3@sha256:60fef37a5798efacd68118545becd6085694f9b12c022aa15b0ba96dd952a31b
   - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0

@@ -3,6 +3,7 @@ tool: bedtools
 tool_version: 2.31.1
 image: quay.io/aarchbio/bedtools@sha256:cd1e72a29500369c5576c10e98b2c1723a09a73bde9fb50d80bf4022096b449b
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-19
 images_x86_64:
   - quay.io/biocontainers/bedtools@sha256:ffcd7aa5cd028e8156b8412cc4c88e4f7c4bfa44c4da24ac2737f82116940559
 spawn_version: 0.111.4

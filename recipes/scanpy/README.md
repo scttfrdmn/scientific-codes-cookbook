@@ -7,6 +7,7 @@ env_x86_64: single-cell-957f8c9c38e0
 spawn_version: 0.130.1
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Scanpy — clustering 2,700 PBMCs, checked three ways that aren't the clustering
 

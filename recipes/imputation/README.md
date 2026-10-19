@@ -5,6 +5,7 @@ images:
   - quay.io/aarchbio/minimac4@sha256:cea08321a8ab3632633b2ba0f2b68c98d7e6fcfb1c9c624f9b790a61a0e4b3c2
   - quay.io/aarchbio/beagle@sha256:7a22203b34a80d9b832ea84c3c46d9fdf83f4f679b6e53fcf1baebeeba06ce63
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/minimac4@sha256:cdf67fb7fe83cc2aeeb4dac927777e68d6edc4d95bff79a969326d4b49b80f08
   - quay.io/biocontainers/beagle@sha256:503733eb23bdb0509e75298cf6524ac65437830bcceb7f7acef22e7ee6ea581d

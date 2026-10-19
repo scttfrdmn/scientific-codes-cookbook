@@ -3,6 +3,7 @@ tool: macs2
 tool_version: 2.2.9.1
 image: quay.io/aarchbio/macs2@sha256:ca577fd2e65087538f4d51c3abf263453c9ec1485621d0e12f3a7822c5ab7a92
 last_verified_x86_64: 2026-10-13
+last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/macs2@sha256:e8275df9bac43b07adca4fee041ad8e51f5cb92c8bed14875f5afc6fd8ab7e98
 spawn_version: 0.104.0

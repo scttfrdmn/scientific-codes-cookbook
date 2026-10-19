@@ -5,6 +5,7 @@ env: astro
 image: quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c
 env_x86_64: astro-e2ee19affec3
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 spawn_version: 0.127.0
 last_verified: 2026-10-12
 ---

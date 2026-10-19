@@ -7,6 +7,7 @@ env_x86_64: single-cell-ff275bd07c2f
 spawn_version: 0.131.0
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
+last_verified_amd: 2026-10-18
 ---
 # Seurat vs Scanpy — the same 2,700 cells, clustered twice, compared by ARI
 
