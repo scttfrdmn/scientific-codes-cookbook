@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-blast-real-blast-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'de7de88bc72d5fa1d08f3b7db747d6648e5334f33eb30b8087b062edfb768737  run.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/blast@sha256:377bfb5dc686ed9df1ce95f31835225c573bb6b75c17b0da80dfeb0c3b747b0c",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast-real/swissprot-2026-10-10-01-05-01/",
+      "destination": "/tmp/db/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/blast/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

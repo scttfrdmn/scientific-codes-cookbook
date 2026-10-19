@@ -27,30 +27,36 @@ blastp -query queries1000.fa -db pepdb -max_target_seqs 500 -num_threads 16 \
   -outfmt '6 qseqid sseqid pident length qlen evalue bitscore' -out hits.tsv
 ```
 
-## What it costs
+## Which box — [measured](../../measurements/blast-real/README.md) on all 20,525 reviewed human proteins vs all of SwissProt (16 threads)
 
-| | search | $/search | hit rows |
-|---|---|---|---|
-| **BLAST+**, 16 threads | **156 s** | **0.0277** | 320,305 |
-| [DIAMOND](../diamond/README.md) `--very-sensitive` | 19 s | 0.0034 | — |
+| chip | instance | `blastp` | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | **3,783 s** | 0.6381 | **0.688** |
+| Xeon 6975P-C | `c8i.4xlarge` | 5,385 s | 0.7497 | 1.145 |
+| EPYC 9R45 | `c8a.4xlarge` | 3,861 s | 0.8622 | 0.947 |
 
-**`-max_target_seqs 500`, not 20** — and that is not a performance choice. At 20 the report is
-truncated before a query's own self-hit for 25 of 931 queries, which silently breaks the check
-below. Raising it to 500 costs **2 seconds** (154 → 156) and restores the identity.
+**Take Graviton4.** AMD is no faster and its hour is 35% dearer. The 8.0M-row hit table is byte-identical on all three chips, and every query that hits anything finds itself full length at 100% identity. DIAMOND does the same search in 32–73 s.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the first 1000 proteome records | your own query FASTA | the queries being records *of the database* is what makes the self-hit identity available; your own queries lose that check. |
-| `-max_target_seqs 500` | higher for deep families | too low silently drops self-hits, as above — it is a correctness knob here, not just a speed one. |
-| 1000 queries | more | cost is near-linear in queries; 1000 is annotation scale and runs in under 3 minutes. |
+| `-max_target_seqs 500` | higher for deep families | a correctness knob, not a speed one: at 20, 25 of 931 queries lost their own self-hit. 500 costs 2 s (154 → 156). |
+| 1000 queries | a whole proteome | cost is near-linear in queries; the measured whole-proteome run above is 63 minutes. |
 
 **Leave the workload** — a real query set against a real proteome, so the timing and the
 DIAMOND comparison both transfer. **Scale it** by query count, which is the axis that costs money.
 
 <details>
 <summary>As shipped: the identity scale broke, what replaced it, pins</summary>
+
+### The fixture's cost
+
+| | search | $/search | hit rows |
+|---|---|---|---|
+| **BLAST+**, 16 threads | **156 s** | **0.0277** | 320,305 |
+| [DIAMOND](../diamond/README.md) `--very-sensitive` | 19 s | 0.0034 | — |
 
 ### The checks
 
@@ -76,6 +82,8 @@ So the claim had to be split, because two different things were bundled in it:
 - **Data-dependent:** whether the local alignment extends to the final residue. 102 of 931 do not.
   Terminal proline is enriched 3.6× among them (50 of 102, against 137 of 1000 overall) — a clear
   signal, but the mechanism is not established here, so it is reported rather than explained.
+  On SwissProt, none of 20,522 whole-proteome self-alignments stop short
+  ([measured](../../measurements/blast-real/README.md)), so the truncation belongs to this input.
 
 A fixture of 20 well-behaved proteins made a false claim look exact for months. That is the
 [assert-the-claim-you-mean](../../practices/cross-checks.md) rule failing in the direction that is

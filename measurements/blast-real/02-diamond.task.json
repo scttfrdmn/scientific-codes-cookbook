@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-blast-real-diamond-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'ea281e17c0c46fbfd0284325367d191a2f39f843583fb3455338c5656024fa09  diamond.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/diamond.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/blast-real/diamond.sh",
+      "destination": "/tmp/diamond.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/blast/queries.fa",
+      "destination": "/tmp/queries.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/blast/swissprot.fa.gz",
+      "destination": "/tmp/swissprot.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/blast/blast_self.tsv",
+      "destination": "/tmp/blast_self.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/blast/check.txt",
+      "destination": "/tmp/blast-check.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/blast-real/r3/diamond/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
