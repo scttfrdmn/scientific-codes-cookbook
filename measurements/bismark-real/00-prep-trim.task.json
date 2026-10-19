@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-bismark-real-prep-trim",
+  "container": "quay.io/aarchbio/cutadapt@sha256:434a8a2384580ec718463bac3723a5c407b083855af7bab5f802f9100033781d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (prep-trim\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 1 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash prep-trim.sh 6 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/ENCFF000LYO.fastq.gz",
+      "destination": "/tmp/ENCFF000LYO.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-trim.sh",
+      "destination": "/tmp/prep-trim.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-trim/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

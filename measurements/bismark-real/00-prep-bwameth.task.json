@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-bismark-real-prep-bwameth",
+  "container": "quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (prep-bwameth\\.sh|GRCh38_no_alt_analysis_set\\.fa)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 2 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash prep-bwameth.sh || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 60
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth.sh",
+      "destination": "/tmp/prep-bwameth.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

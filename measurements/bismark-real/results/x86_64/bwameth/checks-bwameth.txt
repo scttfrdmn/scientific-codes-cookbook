@@ -1,0 +1,7 @@
+head runs: bwa-meth | samtools exit                  0/0 both (a crash is not a zero)   ok   (0/0, 0/0)
+bwa-meth default -T 40 on 36 bp reads                maps 0 (max score 36)              ok   (0 of 100000)
+bwa-meth -T 20 on 36 bp reads                        maps some                          ok   (99138 of 100000)
+bwa-meth + sort + index                              exit 0                             ok   (0/0)
+primary records == reads in                          every read reported once           ok   (31569432 / 31569432)
+XM-tagged reads                                      0 -- Bismark's extractor cannot read this BAM ok   (0)
+failures 0

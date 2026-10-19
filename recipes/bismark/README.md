@@ -28,14 +28,11 @@ for s in $(make -s spec RECIPE=bismark); do spawn task run --spec "$s" --wait; d
 bismark prepare genome --bowtie2                              # CT + GA converted indices
 bismark align --genome genome --single_end reads.fq            # directional bisulfite alignment
 bismark extract -s --bedGraph --comprehensive reads_bismark_bt2.bam
-
 samtools sort -o sorted.bam reads_bismark_bt2.bam && samtools index sorted.bam
 MethylDackel extract --mergeContext chrS.fa sorted.bam -o md   # the second, independent caller
 bwameth.py index bwm.fa && bwameth.py --reference bwm.fa reads.fq > bwm.sam   # the second aligner
 MethylDackel extract --mergeContext chrS.fa bwm.bam -o bwm     # same caller, other alignments
 ```
-
-Five tasks: Bismark builds the fixture and calls, samtools sorts, MethylDackel re-calls the same alignments, then bwa-meth re-aligns the same reads and MethylDackel calls those too.
 
 ## Make it yours
 
@@ -45,16 +42,28 @@ Five tasks: Bismark builds the fixture and calls, samtools sorts, MethylDackel r
 | reads converted in-code | your WGBS FASTQs (after `trim_galore`) | real libraries need adapter/quality trimming first, and RRBS needs `--rrbs`; neither changes the shape below. |
 | directional (default) | `--non_directional` | get this wrong and reads align poorly for reasons that look like bad data. |
 | both callers | either one alone | they agree here, so pick on ergonomics — but see the coordinate note before you diff their outputs. |
-| both aligners | either one alone | they also agree here. bwa-meth is a thin wrapper over bwa on a C→T converted reference, so it is faster to run and easier to slot into an existing bwa pipeline. |
+| both aligners | either one alone | they also agree here. bwa-meth is a thin wrapper over bwa on a C→T converted reference, so it slots into an existing bwa pipeline. **Reads under 40 bp:** it calls `bwa mem -T 40` and maps none of them, silently; pass `-T20` as one token. |
 
-**Leave the fixture:** 30 reads over three sites make every methylation count hand-checkable, which is what turns this into an exact assertion. **Scale it** to a real genome — `prepare` on a mammalian reference is hours and tens of gigabytes, not seconds.
+**Leave the fixture:** 30 reads over three sites make every methylation count hand-checkable, which is what turns this into an exact assertion. **Scale it** to a real genome — `bismark prepare` on GRCh38 is 21 minutes and 7.8 GB on `m8g.4xlarge`, `bwameth.py index` 1h49m (single-threaded `bwa index`); build once and share.
 
 ## Shape, size, cost
 
-Five tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12–15m each, caps $0.05 each. Bismark's prepare → align → extract chain runs in about a minute at this size; the rest are seconds of work inside an image pull. **These timings are not compute cost.**
+Five tasks: Bismark builds the fixture and calls, samtools sorts, MethylDackel re-calls the same alignments, then bwa-meth re-aligns the same reads and MethylDackel calls those too. Each on `c8g.large` (2 vCPU / 4 GiB), TTL 12–15m, cap $0.05. Bismark's prepare → align → extract chain runs in about a minute at this size; the rest are seconds of work inside an image pull. **These timings are not compute cost.**
+
+**Which box — [measured](../../measurements/bismark-real/README.md)** on a whole ENCODE GM12878 RRBS run (31.6M trimmed reads, GRCh38): **Graviton4 is cheapest, $0.42 billed per sample; AMD is fastest** (1.2×) at 11–14% more; Intel is slowest and 35–46% dearer. Every alignment and all 2,349,220 cytosine calls are byte-identical across the three chips, and Bismark's extractor and MethylDackel agree on every one. Use `-p`, not `--multicore` (31–38% slower, 3× the memory). bwa-meth is ~3/4 of the compute. `MethylDackel perRead` does not run on ARM (a `char` getopt bug).
 
 <details>
 <summary>As shipped: exact per-site counts, the 2×2 that cannot be completed, the coordinate trap, why the 0% site matters, pins</summary>
+
+### Which box: the measured table
+
+| chip | instance | Bismark | bwa-meth | billed | $/hr | compute $ | **billed $/sample** |
+|---|---|---|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | 316 s | 832 s | 2,169 s | 0.7181 | **0.2318** | **0.4186** |
+| Xeon 6975P-C | `m8i.4xlarge` | 355 s | 1,062 s | 2,481 s | 0.8467 | 0.3374 | 0.5655 |
+| EPYC 9R45 | `m8a.4xlarge` | **244 s** | **725 s** | **1,784 s** | 0.9738 | 0.2647 | 0.4655 |
+
+Tool walls are the main path; billed is four tasks, including a `--multicore` rerun that checks the parallel mode. Details, the identities at scale and the cross-chip comparison are in the [write-up](../../measurements/bismark-real/README.md).
 
 ### The checks
 

@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-bismark-real-call",
+  "container": "quay.io/aarchbio/methyldackel@sha256:c75367a11f9943fe378fcf266859810617e3569f70acd8a55fcb2597a9996586",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (call\\.sh|genome/GRCh38_no_alt_analysis_set\\.fa)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 2 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash call.sh 16 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/genome/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "/tmp/genome/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/sort/p/bismark.sorted.bam",
+      "destination": "/tmp/bismark.sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/sort/p/bismark.sorted.bam.bai",
+      "destination": "/tmp/bismark.sorted.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/p/CpG.cov.gz",
+      "destination": "/tmp/bismark.CpG.cov.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bwameth/bwameth.sorted.bam",
+      "destination": "/tmp/bwameth.sorted.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bwameth/bwameth.sorted.bam.bai",
+      "destination": "/tmp/bwameth.sorted.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/call.sh",
+      "destination": "/tmp/call.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/call/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

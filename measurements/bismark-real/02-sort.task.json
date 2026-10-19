@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-bismark-real-sort",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (sort\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 1 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash sort.sh 8 p mc || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/p/bismark.bam",
+      "destination": "/tmp/p/bismark.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/p/SE_report.txt",
+      "destination": "/tmp/p/SE_report.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/mc/bismark.bam",
+      "destination": "/tmp/mc/bismark.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/mc/SE_report.txt",
+      "destination": "/tmp/mc/SE_report.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/sort.sh",
+      "destination": "/tmp/sort.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/sort/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

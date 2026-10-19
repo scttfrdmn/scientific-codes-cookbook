@@ -1,0 +1,59 @@
+{
+  "task_id": "cookbook-bismark-real-bismark",
+  "container": "quay.io/aarchbio/bismark@sha256:1bdd5895c5b9b458f8f4c1a19fd1b177f3ffab951262c37c543f2ce767150302",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (align-bismark\\.sh|genome/GRCh38_no_alt_analysis_set\\.fa|ENCFF000LYO\\.trimmed\\.fastq\\.gz|index\\.sha256)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 4 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash align-bismark.sh 16 0 31569432 p mc || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 80
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/genome/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "/tmp/genome/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-trim/ENCFF000LYO.trimmed.fastq.gz",
+      "destination": "/tmp/ENCFF000LYO.trimmed.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/Bisulfite_Genome/",
+      "destination": "/tmp/genome/Bisulfite_Genome/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep/index.sha256",
+      "destination": "/tmp/index.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/align-bismark.sh",
+      "destination": "/tmp/align-bismark.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bismark/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

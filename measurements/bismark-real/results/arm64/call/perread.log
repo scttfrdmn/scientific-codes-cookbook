@@ -1,0 +1,47 @@
+Invalid option 'ÿ'
+
+Usage: MethylDackel perRead [OPTIONS] <ref.fa> <input>
+
+This program will compute the average CpG methylation level of a given read.
+The output is a tab-separated file with the following columns:
+ - read name
+ - chromosome
+ - position
+ - CpG methylation (%)
+ - number of informative bases
+
+Arguments:
+  ref.fa    Reference genome in fasta format. This must be indexed with
+            samtools faidx
+  input     An input BAM or CRAM file. This MUST be sorted and should be indexed.
+
+Options:
+ -q INT     Minimum MAPQ threshold to include an alignment (default 10)
+ -p INT     Minimum Phred threshold to include a base (default 5). This must             be >0.
+ -r STR     Region string in which to extract methylation
+ -l FILE    A BED file listing regions for inclusion.
+ --keepStrand  If a BED file is specified, then this option will cause the
+            strand column (column 6) to be utilized, if present. Thus, if
+            a region has a '+' in this column, then only metrics from the
+            top strand will be output. Note that the -r option can be used
+            to limit the regions of -l.
+ -o STR     Output file name [stdout]
+ -F, --ignoreFlags    By default, all reads are output. If you would like to
+            ignore certain classes of reads then simply give a value for their
+            flags here. Note that an alignment will be logically anded with this
+            flag, so a single bit overlap will lead to exclusion. The default
+            for this is 0.
+ -R, --requireFlags   Require each alignment to have all bits in this value
+            present, or else the alignment is ignored. This is equivalent to the
+            -f option in samtools. The default is 0, which includes all
+            alignments.
+ --ignoreNH Ignore NH auxiliary tags. By default, if an NH tag is present
+            and its value is >1 then an entry is ignored as a
+            multimapper.
+ -@ INT     The number of threads to use, the default 1
+ --chunkSize INT  The size of the genome processed by a single thread at a time.
+            The default is 1000000 bases. This value MUST be at least 1.
+ --version  Print version and quit
+
+Note that this program will produce incorrect values for alignments spanning
+more than 10kb.

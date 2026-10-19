@@ -1,0 +1,69 @@
+
+*** Bismark methylation extractor (Rust port) version 3.1.0 ***
+
+Treating file(s) as single-end data (specified via -s/-p)
+
+Summarising Bismark methylation extractor parameters:
+=======================================================
+Bismark single-end format specified
+Number of parallel workers: 1
+Output will be written to: /var/tmp/aln-mc/ext
+Output files will be GZIP compressed (.gz)
+
+Alignment provenance (from BAM/SAM header):
+@HD	VN:1.0	SO:unsorted
+@PG	ID:Bismark	VN:v0.25.1	CL:"bismark --genome /tmp/genome --single_end /tmp/ENCFF000LYO.trimmed.fastq.gz --multicore 4 -p 2 -o /var/tmp/aln-mc --temp_dir /var/tmp/aln-mc"
+
+Processed lines: 500000
+Processed lines: 1000000
+Processed lines: 1500000
+Processed lines: 2000000
+Processed lines: 2500000
+Processed lines: 3000000
+Processed lines: 3500000
+Processed lines: 4000000
+Processed lines: 4500000
+Processed lines: 5000000
+Processed lines: 5500000
+Processed lines: 6000000
+Processed lines: 6500000
+Processed lines: 7000000
+Processed lines: 7500000
+Processed lines: 8000000
+Processed lines: 8500000
+Processed lines: 9000000
+Processed lines: 9500000
+Processed lines: 10000000
+Processed lines: 10500000
+Processed lines: 11000000
+Processed lines: 11500000
+Processed lines: 12000000
+Processed lines: 12500000
+Processed lines: 13000000
+Processed lines: 13500000
+Processed lines: 14000000
+/var/tmp/aln-mc/ext/CHH_context_ENCFF000LYO.trimmed_bismark_bt2.txt.gz contains data ->	kept
+/var/tmp/aln-mc/ext/CpG_context_ENCFF000LYO.trimmed_bismark_bt2.txt.gz contains data ->	kept
+/var/tmp/aln-mc/ext/CHG_context_ENCFF000LYO.trimmed_bismark_bt2.txt.gz contains data ->	kept
+
+
+
+Processed 14419557 lines in total
+Total number of methylation call strings processed: 14419557
+
+Final Cytosine Methylation Report
+=================================
+Total number of C's analysed:	158923602
+
+Total methylated C's in CpG context:	10069752
+Total methylated C's in CHG context:	237729
+Total methylated C's in CHH context:	474802
+
+Total C to T conversions in CpG context:	36647830
+Total C to T conversions in CHG context:	38609899
+Total C to T conversions in CHH context:	72883590
+
+C methylated in CpG context:	21.6%
+C methylated in CHG context:	0.6%
+C methylated in CHH context:	0.6%
+

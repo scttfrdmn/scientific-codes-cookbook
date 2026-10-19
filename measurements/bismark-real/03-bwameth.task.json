@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-bismark-real-bwameth",
+  "container": "quay.io/aarchbio/bwameth@sha256:00689db68658a8e10393d0dd810a1a6bc63e0660e9a84961814f74356017cbfa",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (align-bwameth\\.sh|ENCFF000LYO\\.trimmed\\.fastq\\.gz|ref\\.fa\\.bwameth\\.c2t\\.amb|ref\\.fa\\.bwameth\\.c2t\\.ann|ref\\.fa\\.bwameth\\.c2t\\.bwt|ref\\.fa\\.bwameth\\.c2t\\.pac|ref\\.fa\\.bwameth\\.c2t\\.sa)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 7 ] && sha256sum -c pins.sel > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sel) staged inputs match\"\nbash align-bwameth.sh 16 0 31569432 20 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 60
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-trim/ENCFF000LYO.trimmed.fastq.gz",
+      "destination": "/tmp/ENCFF000LYO.trimmed.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/bwameth/ref.fa.bwameth.c2t.amb",
+      "destination": "/tmp/ref.fa.bwameth.c2t.amb"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/bwameth/ref.fa.bwameth.c2t.ann",
+      "destination": "/tmp/ref.fa.bwameth.c2t.ann"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/bwameth/ref.fa.bwameth.c2t.bwt",
+      "destination": "/tmp/ref.fa.bwameth.c2t.bwt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/bwameth/ref.fa.bwameth.c2t.pac",
+      "destination": "/tmp/ref.fa.bwameth.c2t.pac"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/prep-bwameth/bwameth/ref.fa.bwameth.c2t.sa",
+      "destination": "/tmp/ref.fa.bwameth.c2t.sa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/align-bwameth.sh",
+      "destination": "/tmp/align-bwameth.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bismark-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bismark-real/whole/bwameth/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}
