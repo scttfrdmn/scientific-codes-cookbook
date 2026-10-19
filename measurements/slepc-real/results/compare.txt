@@ -1,0 +1,36 @@
+== Graviton4 vs x86_64
+eigenvalues            102 each; max |dtheta| 9.021e-17; worst ratio to residual bound 0.000
+bit-identical values   6 of 102
+inertia_cut            identical
+inertia_mid            identical
+ks_iterations          4 | 4   (path, reported)
+ks_worst_residual      1.554e-10 | 1.075e-10   (path, reported)
+alt_iterations         390 | 391   (path, reported)
+alt_vs_ks_worst_abs    2.341e-15 | 1.388e-15   (path, reported)
+orthonormality_max_abs 2.243e-14 | 1.354e-14   (path, reported)
+openblas_corename      neoversev2 | Cooperlake   (path, reported)
+fixed point agrees
+== Graviton4 vs amd
+eigenvalues            102 each; max |dtheta| 7.286e-17; worst ratio to residual bound 0.000
+bit-identical values   3 of 102
+inertia_cut            identical
+inertia_mid            identical
+ks_iterations          4 | 5   (path, reported)
+ks_worst_residual      1.554e-10 | 1.538e-10   (path, reported)
+alt_iterations         390 | 387   (path, reported)
+alt_vs_ks_worst_abs    2.341e-15 | 6.980e-16   (path, reported)
+orthonormality_max_abs 2.243e-14 | 1.288e-14   (path, reported)
+openblas_corename      neoversev2 | Cooperlake   (path, reported)
+fixed point agrees
+== Intel vs AMD (the same x86 env twin)
+eigenvalues            102 each; max |dtheta| 7.980e-17; worst ratio to residual bound 0.000
+bit-identical values   16 of 102
+inertia_cut            identical
+inertia_mid            identical
+ks_iterations          4 | 5   (path, reported)
+ks_worst_residual      1.075e-10 | 1.538e-10   (path, reported)
+alt_iterations         391 | 387   (path, reported)
+alt_vs_ks_worst_abs    1.388e-15 | 6.980e-16   (path, reported)
+orthonormality_max_abs 1.354e-14 | 1.288e-14   (path, reported)
+openblas_corename      Cooperlake | Cooperlake   (path, reported)
+fixed point agrees

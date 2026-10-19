@@ -17,9 +17,6 @@ Solves for the smallest eigenvalues of a 1-D Laplacian on Graviton4 and checks t
 ```bash
 make stage RECIPE=slepc      # once: the checks only — the reference is a closed form
 spawn task run --spec "$(make -s spec RECIPE=slepc)" --wait
-make ls RECIPE=slepc
-
-eps = SLEPc.EPS().create(comm=PETSc.COMM_WORLD)
 eps.setProblemType(SLEPc.EPS.ProblemType.HEP)          # symmetric
 eps.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
 eps.solve()                   # lambda_k == 4 sin^2(k pi / 2(n+1)), exactly
@@ -34,13 +31,23 @@ A.getOwnershipRange()         # rows 0..100 of 200 — proves it is actually dis
 | the `[-1,2,-1]` stencil | your operator | its eigenvalues are `4sin²(kπ/2(n+1))` **exactly**, so there is a reference for all 200 of them and nothing to stage. |
 | scipy `eigh_tridiagonal` as referee | SLEPc alone | dense LAPACK versus Krylov-Schur — genuinely different code. Note scipy is itself **1.2e-12** from exact, so the two agree to within their own accuracies, not to an arbitrary bound. |
 | n = 200, 6 eigenpairs | larger | 44 iterations and 9 s of compute. The smallest relative gap is 0.36, which staging checks — nearly degenerate eigenvalues would make "the k-th smallest" ambiguous. |
-| `SMALLEST_REAL` | `LARGEST_*`, shift-invert | this env also carries PETSc's preconditioners and MUMPS-class direct solvers for spectral transformations, all unexercised here. |
+| `SMALLEST_REAL` | `LARGEST_*`, shift-invert | shift-and-invert on MUMPS, with an inertia count, is [measured at 2.1M unknowns](../../measurements/slepc-real/README.md). |
 
 **Leave the fixture.** Nothing is fetched: the operator is a stencil and the reference is mathematics. **Scale it** by raising `n` — the closed form holds at any size, and staging re-verifies it against a dense diagonalisation whenever you change it.
 
 ## Shape, size, cost
 
 One task on `c8g.large` (4 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. Both passes — serial then 2-rank — are **9 s** of a 1m12s window; 24 s is pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/slepc-real/README.md) (128³ Laplacian, 2.1M unknowns, lowest 102 modes, 16 ranks)
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** | peak memory |
+|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | 656 s | 0.9426 | 0.1718 | 0.1990 | 60.7 GiB |
+| Xeon 6975P-C | `r8i.4xlarge` | 687 s | 1.1114 | 0.2121 | 0.2275 | 63.2 GiB |
+| **EPYC 9R45** | `r8a.4xlarge` | **469 s** | 1.2781 | **0.1665** | **0.1807** | 63.6 GiB |
+
+**AMD is cheapest per result (9% under Graviton4), but the phase mix decides it.** One MUMPS factorisation takes 167 s on Graviton4 against 45 s on AMD, while Graviton4 runs the solves after it fastest (inferred by subtraction). So if you factorise once for many modes, Graviton4 closes the gap; for spectrum slicing (many shifts), take AMD. Shift-and-invert, exact multiplicities and an independent inertia count all hold at this scale on every chip. The eigenvalues agree across chips to 9e-17.
 
 <details>
 <summary>As shipped: a closed form verified independently of the solver, a dense-vs-Krylov cross-check, and the distribution asserted rather than assumed</summary>
@@ -162,9 +169,9 @@ in either pass is diagnosable without a rerun.
 
 ### Not covered
 
-**Spectral transformations.** No shift-invert, no `ST` configuration, no targeting an interior
-eigenvalue — which is what SLEPc is usually reached for on real problems, and where the
-preconditioners in this env would matter.
+**Spectral transformations** in this recipe's fixture. Shift-and-invert with MUMPS, inertia counts
+and a preconditioned Davidson solver are exercised at scale in
+[slepc-real](../../measurements/slepc-real/README.md); interior targets are not.
 
 **Generalised and non-symmetric problems** (`GHEP`, `GNHEP`, quadratic eigenproblems), so nothing
 here exercises complex spectra or the balancing that needs. **Larger rank counts** — 2 ranks

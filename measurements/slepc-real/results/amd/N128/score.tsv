@@ -1,0 +1,47 @@
+petsc	3.25.6
+slepc	3.25.2
+numpy	2.5.4
+openblas_corename	Cooperlake
+operator	7-point Dirichlet Laplacian, 128^3 grid, 2097152 unknowns
+nev	102 eigenvalues in 27 clusters (first cluster boundary >= 100)
+mpi_ranks	16
+CHECK mpi_ranks	PASS 16 ranks reported, 16 launched
+time_assemble_s	0.07
+ownership_rank0	rows 0..131072 of 2097152
+CHECK distributed	PASS rank 0 owns 131072 of 2097152 rows across 16 ranks
+CHECK symmetric	PASS A == A^T exactly
+time_krylovschur_sinvert_s	312.13
+ks_ncv	204
+ks_converged	128
+ks_iterations	5
+CHECK ks_converged	PASS 128 of 102 requested
+ks_worst_abs_err	4.892e-16
+ks_worst_rel_err	2.284e-13
+ks_worst_residual	1.538e-10
+ks_worst_slepc_relerr	1.235e-08
+CHECK ks_within_residual_bound	PASS every |theta_i - lambda_i| <= ||r_i|| + 1.7e-13 (worst ratio err/(r+slack) 0.003)
+ks_min_gap_delta	4.217e-06
+CHECK ks_within_quadratic_bound	PASS every |theta_i - lambda_i| <= ||r_i||^2/delta_i + 1.7e-13 (worst ratio 0.0029)
+CHECK multiplicities	PASS 27 clusters (1x3x3x3x1x6x3x3x3x6x3x3x6x3x1x6x6x3x3x3x6x3x3x6x6x3x6), each with its exact multiplicity
+orthonormality_max_abs	1.288e-14
+CHECK orthonormal	PASS max |X^T X - I| = 1.288e-14
+time_ks_checks_s	1.52
+time_inertia_cut_s	45.21
+inertia_cut	shift 0.0251818579505: 102 negative, 0 zero, 2097050 positive
+CHECK inertia_cut	PASS 102 eigenvalues below 0.0251819, closed form says 102
+time_inertia_mid_s	45.10
+inertia_mid	shift 0.0157027374158: 44 negative, 0 zero, 2097108 positive
+CHECK inertia_mid	PASS 44 eigenvalues below 0.0157027, closed form says 44
+alt_solver	gd-hypre
+time_alt_solve_s	60.54
+alt_converged	20
+alt_iterations	387
+CHECK alt_converged	PASS 20 of 20 requested
+alt_worst_abs_err	4.723e-16
+alt_vs_ks_worst_abs	6.980e-16
+CHECK alt_within_residual_bound	PASS every second-solver |theta - lambda| <= its own ||r|| (worst ratio 0.000)
+CHECK alt_agrees_with_ks	PASS 20 values; the two algorithms agree within the sum of their residuals (worst 6.980e-16)
+rank_maxrss_max_mib	4762
+rank_maxrss_sum_gib	61.66
+time_total_s	467.14
+checks_failed	0
