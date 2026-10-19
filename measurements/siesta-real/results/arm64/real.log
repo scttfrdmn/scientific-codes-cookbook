@@ -1,0 +1,199 @@
+siesta /opt/conda/bin/siesta tbtrans /opt/conda/bin/tbtrans mpiexec /opt/conda/bin/mpiexec
+== siesta build header ==
+  Executable      : /opt/conda/bin/siesta
+  Version         : 5.4.2
+  Architecture    : aarch64
+  Compiler version: GNU-14.3.0
+  Compiler flags  : -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O3 -pipe -fno-merge-constants -isystem <prefix>/include -I<prefix>/_build_env/include -fdebug-prefix-map=<prefix>/work=/usr/local/src/conda/siesta-5.4.2 -fdebug-prefix-map=<prefix>=/usr/local/src/conda-prefix -I<prefix>/lib -fallow-argument-mismatch -O3
+  Parallelisations: MPI
+  NetCDF support
+  NetCDF-4 support
+  NetCDF-4 MPI-IO support
+  Lua support
+  ELSI support. Solvers:
+     ELPA (internal) 
+     NTPoly
+     OMM
+  
+siesta_version 5.4.2
+feature ELSI_ELPA_HAS_GPU_SUPPORT False
+feature ELSI_HAS_PEXSI False
+feature SIESTA_ELPA_HAS_GPU_SUPPORT False
+feature SIESTA_WITH_DFTD3 False
+feature SIESTA_WITH_ELPA False
+feature SIESTA_WITH_ELSI True
+feature SIESTA_WITH_FLOOK True
+feature SIESTA_WITH_NCDF True
+feature SIESTA_WITH_PEXSI False
+feature SIESTA_WITH_WANNIER90 False
+openblas_corename neoversev2
+openblas_config OpenBLAS 0.3.34 DYNAMIC_ARCH NO_AFFINITY neoversev2 MAX_THREADS=128
+ldd_blas liblapack.so.3 libscalapack.so libxc.so.15 libxcf03.so.15
+tests selected 133 skipped 12
+  skipped: 12.Solvers/si-qdot-elsi-elpa-gpu (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elsi-elpa-1stage-gpu (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elsi-pexsi (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-pexsi-native (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elpa-native (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elpa-native-1stage (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elpa-native-gpu (build lacks the guard)
+  skipped: 12.Solvers/si-qdot-elpa-native-1stage-gpu (build lacks the guard)
+  skipped: 17.Wannier90/w90-on-the-fly (build lacks the guard)
+  skipped: 17.Wannier90/graphene_w90 (build lacks the guard)
+  skipped: 17.Wannier90/w90-chem-h2 (build lacks the guard)
+  skipped: Dependency_Tests/dftd3 (build lacks the guard)
+ran default_basis_mpi4                         00.BasisSets               n=4 rc=0 1.9s
+ran fireballs_mpi4                             00.BasisSets               n=4 rc=0 1.9s
+ran nodes_mpi4                                 00.BasisSets               n=4 rc=0 1.9s
+ran bessel_mpi4                                00.BasisSets               n=4 rc=0 1.9s
+ran custom_softbasis_mpi4                      00.BasisSets               n=4 rc=0 2.0s
+ran ghost_atom_mpi4                            00.BasisSets               n=4 rc=0 1.9s
+ran bessel_rich_mpi4                           00.BasisSets               n=4 rc=0 2.2s
+ran charge_confinement_mpi4                    00.BasisSets               n=4 rc=0 2.0s
+ran psf_mpi4                                   01.PseudoPotentials        n=4 rc=0 2.1s
+ran full.psml_mpi4                             01.PseudoPotentials        n=4 rc=0 2.1s
+ran sl.psml_mpi4                               01.PseudoPotentials        n=4 rc=0 2.1s
+ran soft.psml_mpi4                             01.PseudoPotentials        n=4 rc=0 2.2s
+ran soft-full.psml_mpi4                        01.PseudoPotentials        n=4 rc=0 2.1s
+ran reparam_mpi4                               01.PseudoPotentials        n=4 rc=0 2.1s
+ran reparam-rgoff_mpi4                         01.PseudoPotentials        n=4 rc=0 2.1s
+ran fe_spin_mpi4                               02.SpinPolarization        n=4 rc=0 2.0s
+ran fe_noncol_mpi4                             02.SpinPolarization        n=4 rc=0 2.2s
+ran fe_noncol_kp_mpi4                          02.SpinPolarization        n=4 rc=0 2.2s
+ran fe_spin_directphi_mpi4                     02.SpinPolarization        n=4 rc=0 2.8s
+ran fe_noncol_gga_mpi4                         02.SpinPolarization        n=4 rc=0 2.7s
+ran fe_noncol_sp_mpi4                          02.SpinPolarization        n=4 rc=0 2.5s
+ran FePt-X-X_mpi4                              03.SpinOrbit               n=4 rc=0 2.5s
+ran FePt-onsite_mpi4                           03.SpinOrbit               n=4 rc=0 2.4s
+ran FePt-offsite_mpi4                          03.SpinOrbit               n=4 rc=0 2.9s
+ran pulay_mpi4                                 04.SCFMixing               n=4 rc=0 2.8s
+ran linear_mpi4                                04.SCFMixing               n=4 rc=0 2.4s
+ran broyden_mpi4                               04.SCFMixing               n=4 rc=0 3.1s
+ran ge_bands_mpi4                              05.Bands                   n=4 rc=0 2.2s
+ran chargemix_mpi4                             04.SCFMixing               n=4 rc=0 2.5s
+ran ge_bands_so_mpi4                           05.Bands                   n=4 rc=0 3.5s
+ran fullmix_mpi4                               04.SCFMixing               n=4 rc=0 6.4s
+ran ge_bands_so_bpoints_mpi4                   05.Bands                   n=4 rc=0 3.5s
+ran ge_bands_so_fatbands_mpi4                  05.Bands                   n=4 rc=0 3.6s
+ran ldos_mpi4                                  06.DensityOfStates         n=4 rc=0 3.7s
+ran pdos_g_mpi4                                06.DensityOfStates         n=4 rc=0 3.7s
+ran pdos_kp_mpi4                               06.DensityOfStates         n=4 rc=0 2.7s
+ran pdos_k_mpi4                                06.DensityOfStates         n=4 rc=0 3.9s
+ran pdos_kp_pol_mpi4                           06.DensityOfStates         n=4 rc=0 4.6s
+ran fc_mpi4                                    07.ForceConstants          n=4 rc=0 2.5s
+ran pdos_kp_nc_mpi4                            06.DensityOfStates         n=4 rc=0 7.4s
+ran born_mpi4                                  07.ForceConstants          n=4 rc=0 3.1s
+ran born_sp_mpi4                               07.ForceConstants          n=4 rc=0 3.4s
+ran pdos_kp_soc_mpi4                           06.DensityOfStates         n=4 rc=0 7.6s
+ran born_nc_mpi4                               07.ForceConstants          n=4 rc=0 3.3s
+ran cg_mpi4                                    08.GeometryOptimization    n=4 rc=0 3.7s
+ran cg_vc_mpi4                                 08.GeometryOptimization    n=4 rc=0 3.4s
+ran cg_vc_constantvol_mpi4                     08.GeometryOptimization    n=4 rc=0 3.5s
+ran broyden_mpi4                               08.GeometryOptimization    n=4 rc=0 2.9s
+ran fire_mpi4                                  08.GeometryOptimization    n=4 rc=0 3.2s
+ran broyden_vc_mpi4                            08.GeometryOptimization    n=4 rc=0 4.1s
+ran fire_vc_mpi4                               08.GeometryOptimization    n=4 rc=0 3.5s
+ran zm_cg_mpi4                                 08.GeometryOptimization    n=4 rc=0 2.2s
+ran zm_broyden_mpi4                            08.GeometryOptimization    n=4 rc=0 2.3s
+ran zm_fire_mpi4                               08.GeometryOptimization    n=4 rc=0 2.2s
+ran anneal_mpi4                                09.MolecularDynamics       n=4 rc=0 2.6s
+ran verlet_mpi4                                09.MolecularDynamics       n=4 rc=0 3.2s
+ran anneal_pt_mpi4                             09.MolecularDynamics       n=4 rc=0 2.5s
+ran nose_mpi4                                  09.MolecularDynamics       n=4 rc=0 2.6s
+ran pr_mpi4                                    09.MolecularDynamics       n=4 rc=0 2.6s
+ran npr_mpi4                                   09.MolecularDynamics       n=4 rc=0 2.5s
+ran npr_rip_mpi4                               09.MolecularDynamics       n=4 rc=0 2.5s
+ran verlet_rst_mpi4                            09.MolecularDynamics       n=4 rc=0 2.6s
+ran anneal_rst_mpi4                            09.MolecularDynamics       n=4 rc=0 2.6s
+ran anneal_pt_rst_mpi4                         09.MolecularDynamics       n=4 rc=0 2.5s
+ran nose_rst_mpi4                              09.MolecularDynamics       n=4 rc=0 2.6s
+ran pr_rst_mpi4                                09.MolecularDynamics       n=4 rc=0 2.4s
+ran npr_rst_mpi4                               09.MolecularDynamics       n=4 rc=0 2.4s
+ran npr_rip_rst_mpi4                           09.MolecularDynamics       n=4 rc=0 2.4s
+ran verlet_rstxv_mpi4                          09.MolecularDynamics       n=4 rc=0 2.6s
+ran anneal_rstxv_mpi4                          09.MolecularDynamics       n=4 rc=0 2.6s
+ran anneal_pt_rstxv_mpi4                       09.MolecularDynamics       n=4 rc=0 2.5s
+ran nose_rstxv_mpi4                            09.MolecularDynamics       n=4 rc=0 2.6s
+ran pr_rstxv_mpi4                              09.MolecularDynamics       n=4 rc=0 2.5s
+ran npr_rstxv_mpi4                             09.MolecularDynamics       n=4 rc=0 2.4s
+ran npr_rip_rstxv_mpi4                         09.MolecularDynamics       n=4 rc=0 2.4s
+ran lyp_mpi4                                   10.Functionals             n=4 rc=0 2.5s
+ran pbe_mpi4                                   10.Functionals             n=4 rc=0 2.8s
+ran pbesol_mpi4                                10.Functionals             n=4 rc=0 2.8s
+ran am05_mpi4                                  10.Functionals             n=4 rc=0 2.8s
+ran vdw_vv_mpi4                                10.Functionals             n=4 rc=0 3.1s
+ran c6_mpi4                                    10.Functionals             n=4 rc=0 2.8s
+ran ldau_mpi4                                  10.Functionals             n=4 rc=0 3.3s
+ran vdw_drsll_mpi4                             10.Functionals             n=4 rc=0 6.1s
+ran h2o_qmmm_mpi4                              10.Functionals             n=4 rc=0 3.3s
+ran charge_mpi4                                11.ElectronicProperties    n=4 rc=0 2.4s
+ran coop_mpi4                                  11.ElectronicProperties    n=4 rc=0 2.3s
+ran charge_sp_mpi4                             11.ElectronicProperties    n=4 rc=0 4.5s
+ran optical_mpi4                               11.ElectronicProperties    n=4 rc=0 5.5s
+ran coop_sp_mpi4                               11.ElectronicProperties    n=4 rc=0 4.6s
+ran dftu_soc_mpi4                              10.Functionals             n=4 rc=0 12.3s
+ran charge_partial-mulliken_mpi4               11.ElectronicProperties    n=4 rc=0 2.3s
+ran charge_partial-voronoi_mpi4                11.ElectronicProperties    n=4 rc=0 2.3s
+ran charge_partial-hirshfeld_mpi4              11.ElectronicProperties    n=4 rc=0 2.4s
+ran optical_sp_mpi4                            11.ElectronicProperties    n=4 rc=0 7.5s
+ran si_default_mpi4                            12.Solvers                 n=4 rc=0 5.0s
+ran si_procy_mpi4                              12.Solvers                 n=4 rc=0 5.0s
+ran si_mrrr_mpi4                               12.Solvers                 n=4 rc=0 5.0s
+ran si_omm1_mpi4                               12.Solvers                 n=4 rc=0 5.0s
+ran si_omm2_mpi4                               12.Solvers                 n=4 rc=0 5.0s
+ran si_on_mpi4                                 12.Solvers                 n=4 rc=0 5.5s
+ran dip_corr_mpi4                              13.MiscOptions             n=4 rc=0 2.5s
+ran dip_corr_vac_mpi4                          13.MiscOptions             n=4 rc=0 2.5s
+ran gate_charge_mpi4                           13.MiscOptions             n=4 rc=0 2.5s
+ran sih-elsi_mpi4                              12.Solvers                 n=4 rc=0 10.2s
+ran gate_hartree_mpi4                          13.MiscOptions             n=4 rc=0 2.5s
+ran net_charge_mpi4                            13.MiscOptions             n=4 rc=0 2.8s
+ran net_charge_dope_mpi4                       13.MiscOptions             n=4 rc=0 3.2s
+ran gcs_mpi4                                   13.MiscOptions             n=4 rc=0 3.9s
+ran filter_cutoff_mpi4                         13.MiscOptions             n=4 rc=0 2.2s
+ran highmesh_mpi4                              13.MiscOptions             n=4 rc=0 4.6s
+ran si-qdot-elsi-elpa-1stage_mpi4              12.Solvers                 n=4 rc=0 22.6s
+ran si-qdot-elsi-elpa_mpi4                     12.Solvers                 n=4 rc=0 25.5s
+ran filter_tol_mpi4                            13.MiscOptions             n=4 rc=0 2.2s
+ran shift_cop_mpi4                             13.MiscOptions             n=4 rc=0 2.6s
+ran bulk_bias_mpi4                             13.MiscOptions             n=4 rc=0 2.2s
+ran save_outs_mpi4                             14.FileIO                  n=4 rc=0 1.9s
+ran synth_atom_mpi4                            13.MiscOptions             n=4 rc=0 2.5s
+ran save_init_rho_mpi4                         14.FileIO                  n=4 rc=0 1.8s
+ran s_only_mpi4                                14.FileIO                  n=4 rc=0 1.8s
+ran write_ncdf_mpi4                            14.FileIO                  n=4 rc=0 1.9s
+ran denchar_mpi4                               14.FileIO                  n=4 rc=0 1.8s
+ran kp_file_mpi4                               14.FileIO                  n=4 rc=0 1.9s
+ran save_dm_mpi4                               14.FileIO                  n=4 rc=0 1.8s
+ran TDDFT_h2o1_mpi4                            15.TDDFT                   n=4 rc=0 2.0s
+ran TDDFT_h2o2_mpi4                            15.TDDFT                   n=4 rc=0 2.5s
+ran ts_n_terminal_elec_x_mpi4                  16.TranSiesta              n=4 rc=0 1.8s
+ran ts_n_terminal_elec_z_mpi4                  16.TranSiesta              n=4 rc=0 1.7s
+ran ts_chain_mpi4                              16.TranSiesta              n=4 rc=0 2.2s
+ran lua_h2o_mpi4                               Dependency_Tests           n=4 rc=0 2.1s
+ran wannier_mpi4                               17.Wannier90               n=4 rc=0 2.9s
+ran ts_chain_tbt_mpi4                          16.TranSiesta              n=4 rc=0 2.2s
+ran ts_n_terminal_3_mpi4                       16.TranSiesta              n=4 rc=0 4.5s
+ran ts_n_terminal_3_tbt_mpi4                   16.TranSiesta              n=4 rc=0 3.3s
+suite_run_wall_s 128
+suite: 133 selected, 133 ran to '>> End of run', 0 did not
+verify: 133 with a committed reference: 127 pass, 6 etol, 0 other
+  etol 02.SpinPolarization/fe_spin_mpi4 worst Eharris at 6.00 x tol
+  etol 02.SpinPolarization/fe_spin_directphi_mpi4 worst Eharris at 15.19 x tol
+  etol 02.SpinPolarization/fe_noncol_gga_mpi4 worst Ebs at 29.32 x tol
+  etol 02.SpinPolarization/fe_noncol_sp_mpi4 worst Ebs at 1176.73 x tol
+  etol 03.SpinOrbit/FePt-X-X_mpi4 worst Ekin at 14.46 x tol
+  etol 04.SCFMixing/chargemix_mpi4 worst Ebs at 102.13 x tol
+verify: 3614 reference values compared, 2168 of them non-zero in the reference
+verify, SCF converged: 112 tests, 112 pass
+verify, stopped before convergence (SCF_NOT_CONV): 21 tests, 15 pass, 6 etol (reported)
+rank count asserted in 133 MPI tests
+qdot reference (committed, one SCF step, ELPA-2): -110997.549364
+qdot-quick-default (build default eigensolver): rc=0 wall=10s ranks=16 Etot=-110997.549364 scf_steps=1 converged=False Qtot=None
+qdot-quick-mrrr (MRRR): rc=0 wall=11s ranks=16 Etot=-110997.549364 scf_steps=1 converged=False Qtot=None
+qdot-full (full: converged SCF + forces): rc=0 wall=71s ranks=16 Etot=-111092.73479 scf_steps=13 converged=True Qtot=4320.000
+qdot-dzp (full at DZP, build default eigensolver): rc=0 wall=1600s ranks=16 Etot=-112015.936544 scf_steps=14 converged=True Qtot=4320.000
+qdot-dzp-elsi-elpa (full at DZP, ELSI-ELPA): rc=0 wall=2677s ranks=16 Etot=-112015.936544 scf_steps=14 converged=True Qtot=4320.000
+qdot DZP: default eigensolver minus ELSI-ELPA = 0.000000 eV
+ru_maxrss_children_gib 1.84
+SIESTA REAL OK

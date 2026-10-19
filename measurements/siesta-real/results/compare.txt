@@ -1,0 +1,53 @@
+== Graviton4 vs x86_64
+tests on both: 133 (only on A: 0, only on B: 1)
+converged    79 tests, 1254 non-zero values, 1159 identical to the printed digit, 35 tests differ anywhere
+            largest energy |diff| 0.007786 eV  (04.SCFMixing/pulay_mpi4 Ekin)
+            largest Etot   |diff| 0.000028 eV  (16.TranSiesta/ts_chain_mpi4)
+trajectory   33 tests,  561 non-zero values,  499 identical to the printed digit, 9 tests differ anywhere
+            largest energy |diff| 0.001620 eV  (08.GeometryOptimization/broyden_mpi4 Ekin)
+            largest Etot   |diff| 0.000015 eV  (08.GeometryOptimization/zm_broyden_mpi4)
+unconverged  21 tests,  353 non-zero values,  259 identical to the printed digit, 12 tests differ anywhere
+            largest energy |diff| 0.817635 eV  (03.SpinOrbit/FePt-X-X_mpi4 Ekin)
+            largest Etot   |diff| 0.015962 eV  (02.SpinPolarization/fe_spin_directphi_mpi4)
+verify verdict differs in 1 tests
+  02.SpinPolarization/fe_noncol_kp_mpi4 (unconverged): pass vs etol
+qdot qdot-dzp             Etot -112015.936544 vs -112015.936557  diff +0.000013 eV  scf steps 14 vs 14
+qdot qdot-dzp-elsi-elpa   Etot -112015.936544 vs -112015.936557  diff +0.000013 eV  scf steps 14 vs 14
+qdot qdot-full            Etot -111092.734790 vs -111092.734842  diff +0.000052 eV  scf steps 13 vs 13
+qdot qdot-quick-default   Etot -110997.549364 vs -110997.549416  diff +0.000052 eV  scf steps 1 vs 1
+qdot qdot-quick-mrrr      Etot -110997.549364 vs -110997.549416  diff +0.000052 eV  scf steps 1 vs 1
+== Graviton4 vs amd
+tests on both: 133 (only on A: 0, only on B: 1)
+converged    79 tests, 1254 non-zero values, 1157 identical to the printed digit, 38 tests differ anywhere
+            largest energy |diff| 0.007786 eV  (04.SCFMixing/pulay_mpi4 Ekin)
+            largest Etot   |diff| 0.000028 eV  (16.TranSiesta/ts_chain_mpi4)
+trajectory   33 tests,  561 non-zero values,  499 identical to the printed digit, 9 tests differ anywhere
+            largest energy |diff| 0.001620 eV  (08.GeometryOptimization/broyden_mpi4 Ekin)
+            largest Etot   |diff| 0.000015 eV  (08.GeometryOptimization/zm_broyden_mpi4)
+unconverged  21 tests,  353 non-zero values,  259 identical to the printed digit, 12 tests differ anywhere
+            largest energy |diff| 0.817635 eV  (03.SpinOrbit/FePt-X-X_mpi4 Ekin)
+            largest Etot   |diff| 0.015962 eV  (02.SpinPolarization/fe_spin_directphi_mpi4)
+verify verdict differs in 1 tests
+  02.SpinPolarization/fe_noncol_kp_mpi4 (unconverged): pass vs etol
+qdot qdot-dzp             Etot -112015.936544 vs -112015.936557  diff +0.000013 eV  scf steps 14 vs 14
+qdot qdot-dzp-elsi-elpa   Etot -112015.936544 vs -112015.936557  diff +0.000013 eV  scf steps 14 vs 14
+qdot qdot-full            Etot -111092.734790 vs -111092.734842  diff +0.000052 eV  scf steps 13 vs 13
+qdot qdot-quick-default   Etot -110997.549364 vs -110997.549416  diff +0.000052 eV  scf steps 1 vs 1
+qdot qdot-quick-mrrr      Etot -110997.549364 vs -110997.549416  diff +0.000052 eV  scf steps 1 vs 1
+== Intel vs AMD (the same x86 env twin)
+tests on both: 134 (only on A: 0, only on B: 0)
+converged    79 tests, 1254 non-zero values, 1246 identical to the printed digit, 5 tests differ anywhere
+            largest energy |diff| 0.000001 eV  (10.Functionals/c6_mpi4 Ekin)
+            largest Etot   |diff| 0.000001 eV  (10.Functionals/pbesol_mpi4)
+trajectory   33 tests,  561 non-zero values,  561 identical to the printed digit, 0 tests differ anywhere
+            largest energy |diff| 0.000000 eV  (08.GeometryOptimization/broyden_mpi4 Ebs)
+            largest Etot   |diff| 0.000000 eV  (08.GeometryOptimization/broyden_mpi4)
+unconverged  22 tests,  371 non-zero values,  371 identical to the printed digit, 0 tests differ anywhere
+            largest energy |diff| 0.000000 eV  (00.BasisSets/bessel_mpi4 Ebs)
+            largest Etot   |diff| 0.000000 eV  (00.BasisSets/bessel_mpi4)
+verify verdict differs in 0 tests
+qdot qdot-dzp             Etot -112015.936557 vs -112015.936557  diff +0.000000 eV  scf steps 14 vs 14
+qdot qdot-dzp-elsi-elpa   Etot -112015.936557 vs -112015.936557  diff +0.000000 eV  scf steps 14 vs 14
+qdot qdot-full            Etot -111092.734842 vs -111092.734842  diff +0.000000 eV  scf steps 13 vs 13
+qdot qdot-quick-default   Etot -110997.549416 vs -110997.549416  diff +0.000000 eV  scf steps 1 vs 1
+qdot qdot-quick-mrrr      Etot -110997.549416 vs -110997.549416  diff +0.000000 eV  scf steps 1 vs 1

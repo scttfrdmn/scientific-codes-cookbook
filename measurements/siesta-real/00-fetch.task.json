@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-siesta-real-fetch",
+  "container": "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncommand -v python3 >/dev/null || export PATH=/opt/conda/bin:$PATH\ncd /tmp\nmkdir -p /tmp/out\npython3 -u fetch.py manifest.tsv /tmp/out || { echo \"FAIL: fetch\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/siesta-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/siesta-real/manifest.tsv",
+      "destination": "/tmp/manifest.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/siesta-real/suite/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
