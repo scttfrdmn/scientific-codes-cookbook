@@ -18,7 +18,6 @@ Checks both boosters against guarantees they document rather than against each o
 make stage RECIPE=gradient-boosting   # once: the checks only — every fixture is seeded
 spawn task run --spec "$(make -s spec RECIPE=gradient-boosting)" --wait
 make ls RECIPE=gradient-boosting
-
 XGBRegressor(n_jobs=1, tree_method="exact", random_state=20261011,
              monotone_constraints=(1, 0)).fit(X, y)     # no negative step along x0, ever
 LGBMRegressor(n_jobs=1, verbose=-1, random_state=20261011,
@@ -36,6 +35,15 @@ LGBMRegressor(n_jobs=1, verbose=-1, random_state=20261011,
 | the seeded fixtures | your data | you lose the known answer. The point of these five is that the right result is derivable, not measured. |
 
 **Leave the fixtures.** Nothing is fetched and nothing is a band: a constant target *is* predicted exactly, separable data *is* fit with zero errors, a constrained model *cannot* step downward. **Scale it** to real data for performance work — these checks travel, the exactness doesn't.
+
+## Which box — [measured](../../measurements/gradient-boosting-real/README.md) (all 11M rows of HIGGS, 500 rounds, 8 threads)
+| chip | instance | fit: xgboost / LightGBM | **compute $/fit** | billed $/result | peak RSS |
+|---|---|---|---|---|---|
+| **Graviton4** | `m8g.2xlarge` | 92.6 / 160.0 s | **0.0092 / 0.0160** | **0.0705** | 17.4 GiB |
+| Xeon 6975P-C | `m8i.2xlarge` | 149.7 / 205.9 s | 0.0176 / 0.0242 | 0.1044 | 17.4 GiB |
+| EPYC 9R45 | `m8a.2xlarge` | 88.0 / 170.0 s | 0.0119 / 0.0230 | 0.0948 | 17.4 GiB |
+
+**Take Graviton4:** cheapest per fit for both libraries, 23–48% below the x86 chips. Size by RAM, not cores: the peak is the CSV load, so 32 GiB, not a 16 GiB `c8g`. At 8 pinned threads, both libraries' test predictions came out byte-identical on all three chips.
 
 ## Shape, size, cost
 
@@ -174,11 +182,9 @@ features wrongly — but check the bucket regardless
 
 ### Not covered
 
-**Any performance or accuracy claim.** These fixtures are built so the right answer is derivable;
-they say nothing about how either library does on real data, and nothing about speed — 7 s on
-seeded toys is not a benchmark. **Multi-threaded determinism**: `n_jobs=1` throughout, so the
-recipe does not establish what either library does when threads race, which is the actual
-reproducibility question for a practitioner. **GPU training**, the main reason people reach for
+**Performance, accuracy, and multi-threaded determinism are in
+[gradient-boosting-real](../../measurements/gradient-boosting-real/README.md)** (all of HIGGS,
+8 threads), not here: 7 s on seeded toys is not a benchmark, and this recipe pins `n_jobs=1`. **GPU training**, the main reason people reach for
 these two, and Round Two here regardless. **Categorical features**, LightGBM's native handling and
 xgboost's `enable_categorical`, both untouched. **Early stopping, cross-validation and
 hyperparameter search** — the workflow most users actually run. **`datashader`, `statsmodels` and

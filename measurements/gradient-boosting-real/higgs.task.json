@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-gradient-boosting-real",
+  "container": "quay.io/aarchsci/geo-ml@sha256:14aeb6be84be41b991aab8bd262197044b7c351b067ef9199ae22c4fc6ccde20",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\n# Eight threads, pinned: both libraries are bit-reproducible only at a fixed thread count.\nexport OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 GB_THREADS=8\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\n{ uname -m; lscpu | grep -iE 'model name|^cpu\\(s\\)|thread\\(s\\) per core|core\\(s\\) per socket|numa node\\(s\\)'; } > cpu.txt; cat cpu.txt\nT0=$(date +%s)\npython3 -u real.py > real.log 2>&1\nRC=$?\necho \"real.py exit $RC in $(( $(date +%s) - T0 ))s\" | tee -a real.log\ngrep -v '^\\[LightGBM\\] \\[Warning\\] No further splits' real.log\ntest \"$RC\" = 0 || { echo \"FAIL: an assertion failed or the workload died\"; exit 1; }\ngrep -q 'GB REAL OK' real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/HIGGS.csv.gz",
+      "destination": "/tmp/HIGGS.csv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gradient-boosting-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/real-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gradient-boosting-real/r1/real-results.tsv"
+    },
+    {
+      "source": "/tmp/xgb_margin.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gradient-boosting-real/r1/xgb_margin.npy"
+    },
+    {
+      "source": "/tmp/lgb_margin.npy",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gradient-boosting-real/r1/lgb_margin.npy"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gradient-boosting-real/r1/cpu.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}

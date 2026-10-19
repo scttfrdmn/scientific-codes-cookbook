@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-gradient-boosting-real-fetch",
+  "container": "quay.io/aarchsci/geo-ml@sha256:14aeb6be84be41b991aab8bd262197044b7c351b067ef9199ae22c4fc6ccde20",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\npython3 -u fetch.py 2>&1 | tee fetch.log\ntest \"${PIPESTATUS[0]}\" = 0 || { echo \"FAIL: fetch\"; exit 1; }\ngrep -q 'FETCH OK' fetch.log || { echo \"FAIL: no sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/HIGGS.csv.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/HIGGS.csv.gz"
+    },
+    {
+      "source": "/tmp/fetch.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/fetch.tsv"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gradient-boosting-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}
