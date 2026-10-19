@@ -1,0 +1,30 @@
+{
+ "smp_backend_default": "Sequential",
+ "openblas_corename": "Cooperlake",
+ "numpy": "2.5.2",
+ "paraview": "paraview version 6.1.1",
+ "smp_comparison": {
+  "Sequential": {
+   "backend": "Sequential",
+   "threads": "1",
+   "contour_clip_integrate_s": 17.296,
+   "V": 1087794,
+   "F": 2158854,
+   "area": "645223.2018994958",
+   "vol_lo": "-51248981.04289708"
+  },
+  "TBB": {
+   "backend": "TBB",
+   "threads": "8",
+   "contour_clip_integrate_s": 4.153,
+   "V": 1087794,
+   "F": 2158854,
+   "area": "645223.201899499",
+   "vol_lo": "-51248981.083090715"
+  }
+ },
+ "smp_backend": [
+  "TBB",
+  "8"
+ ]
+}

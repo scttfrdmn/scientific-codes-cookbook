@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-paraview-real-week",
+  "container": "quay.io/aarchsci/viz@sha256:2539c1e42d24695785a2510e4fd041e547078209513b0aa201b9362b00b438f6",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\n: > pins.sel\nfor f in era5/*.nc real.sh week.py; do\n  awk -v f=\"$f\" '$2==f' pins.sha256 | grep . >> pins.sel || { echo \"FAIL: $f has no pin\"; exit 1; }\ndone\nsha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 8 /tmp/era5/*.nc\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/paraview-real/era5-t/",
+      "destination": "/tmp/era5/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/paraview-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/paraview-real/week.py",
+      "destination": "/tmp/week.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/paraview-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/paraview-real/week/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

@@ -1,0 +1,29 @@
+hours                              168  want 168 (24 per daily file)
+smp_backend                        TBB with 8 threads  want TBB (Sequential would be one core)
+grid                               1440 x 721 x 37 every hour
+finite                             every value of T finite, every hour
+physical_range                     T in [182.45, 317.93] K  want inside (150, 350)
+ties                               0 grid values exactly equal 273.15   [observation]
+vertices_eq_crossing_edges         168/168 hours: contour points == grid edges whose ends straddle 273.15 K (numpy)
+boundary_edges_eq_boundary_crossings 168/168 hours: boundary edges == crossings on the domain faces (numpy)
+manifold                           168/168 hours with 0 non-manifold edges
+volume_eq_box                      worst 0.00e+00 relative  want <= N eps = 8.28e-09
+clip_halves_one_sign               sign(below), sign(above) of the T clip = [(-1.0, -1.0)] every hour
+plane_clip_partitions_volume       z = 512.3 hPa cut, |below + above| = whole, worst 3.56e-11 over 7 hours  want <= 8.28e-09
+scalar_clip_partition_gap          T = 273.15 K cut, |below + above| vs whole, worst 4.04e-07 relative (non-planar cut faces, triangulated independently on each side)   [observation]
+integral_T_eq_numpy_trapezoid      worst 1.30e-13 relative  want <= 8.28e-09
+clip_integral_T_partition          below + above vs whole, worst 4.29e-07 relative (cut cells and uncut hexes are integrated on tetrahedra, not trilinearly)   [observation]
+euler_characteristic               V - E + F in [-55, 178] across hours   [observation]
+contour_size                       V 1066900..1112628, F 2117452..2207992   [observation]
+below_freezing_fraction            0.7914..0.7938 of the (lon, lat, p) volume   [observation]
+frames                             168/168 frames 800x450, > 50 colours, < 98% one colour
+t_read                             72.3 s total, 0.43 s/hour   [observation]
+t_contour                          48.4 s total, 0.29 s/hour   [observation]
+t_edges                            55.2 s total, 0.33 s/hour   [observation]
+t_clip                             265.4 s total, 1.58 s/hour   [observation]
+t_integrate                        349.0 s total, 2.08 s/hour   [observation]
+t_render                           51.4 s total, 0.31 s/hour   [observation]
+t_numpy                            35.6 s total, 0.21 s/hour   [observation]
+t_hour                             877.4 s total, 5.22 s/hour   [observation]
+wall                               886.1 s for 168 hours   [observation]
+peak_rss                           7.92 GiB (ru_maxrss)   [observation]

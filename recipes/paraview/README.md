@@ -37,13 +37,15 @@ IntegrateVariables(Input=c)                              # Area -> 4πR² to 1.3
 assertion, and it cannot be formed from one run. 513³ is also where this stops being a toy:
 135,005,697 points, 21 s, 4.1 GiB peak.
 
-## Which box
+## Which box — [measured](../../measurements/paraview-real/README.md) (a week of hourly ERA5 3D temperature)
 
-`c8g.xlarge` (4 vCPU / 8 GiB), sized from the measured **4,185 MiB peak RSS** at the top rung — RAM
-picks the box. The whole ladder is 24.2 s: 0.1 s, 0.4 s, 2.7 s, **21.0 s**, which is the ~8×
-per-rung growth you expect from 8× the cells. No GPU, no display: Xvfb plus llvmpipe software GL
-([what this does not cover](../../practices/what-this-does-not-cover.md)). **These timings are not
-compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | pvbatch, 168 hours | per data-hour | billed $/result |
+|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 1,581 s | 9.4 s | 0.174 |
+| Xeon 6975P-C | `m8i.2xlarge` | 2,136 s | 12.7 s | 0.265 |
+| **EPYC 9R45** | `m8a.2xlarge` | **886 s** | **5.3 s** | **0.131** |
+
+**Call `vtkSMPTools.SetBackend("TBB")` first:** conda-forge's ParaView defaults to one-core `Sequential` (4.0× slower on Graviton4). Staging picks the box: 8.86 GB of netCDF fills 54% of `m8g`'s half-RAM tmpfs; the fixture fits `c8g.xlarge`. No GPU, Xvfb + llvmpipe ([not covered](../../practices/what-this-does-not-cover.md)); **timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: an integer topological identity, a convergence rate, and why one resolution isn't enough</summary>
