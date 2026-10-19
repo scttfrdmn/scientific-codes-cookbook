@@ -1,0 +1,76 @@
+qe64_spacegroup	Fd-3m (227)	ok  want Fd-3m (227)
+qe64_supercell_atoms	64	ok  want 64
+qe64_displacements_committed	1	ok  want 1
+qe64_displacements_regenerated	1	ok  want 1 (phonopy 4.4.0 + spglib re-derive the same symmetry cut)
+vasp16_spacegroup	Fd-3m (227)	ok  want Fd-3m (227)
+vasp16_supercell_atoms	16	ok  want 16
+vasp16_displacements_committed	1	ok  want 1
+vasp16_displacements_regenerated	1	ok  want 1 (phonopy 4.4.0 + spglib re-derive the same symmetry cut)
+qe64_QE_forces_parsed	(64, 3)	ok  phonopy's own parser
+qe64_QE_drift_over_fmax	7.86e-18	
+qe64_gpaw_energy_eV	-345.57468611	
+qe64_gpaw_wall_s	768.9	
+qe64_gpaw_scf_iterations	42	
+qe64_gpaw_peak_rss_gib_sum_ranks	12.05	
+qe64_gpaw_mpi_ranks	16	ok  want 16 launched
+qe64_gpaw_drift_over_fmax	1.08e-09	ok  want < 1e-2 (|mean F| vs max |F|)
+vasp16_VASP_forces_parsed	(16, 3)	ok  phonopy's own parser
+vasp16_VASP_drift_over_fmax	6.64e-09	
+vasp16_gpaw_energy_eV	-86.36233331	
+vasp16_gpaw_wall_s	30.8	
+vasp16_gpaw_scf_iterations	30	
+vasp16_gpaw_peak_rss_gib_sum_ranks	4.15	
+vasp16_gpaw_mpi_ranks	16	ok  want 16 launched
+vasp16_gpaw_drift_over_fmax	1.27e-06	ok  want < 1e-2 (|mean F| vs max |F|)
+qe64_QE_gamma_acoustic_raw_THz	3.931e-07	ok  want < 1e-2 THz (acoustic sum rule, unsymmetrised force constants)
+qe64_QE_xstar_spread_THz	1.6e-14	ok  want < 1e-8 (6 symmetry-equivalent X points, identical spectra)
+qe64_QE_dos_integral	6.00106	ok  want 6 +- 1e-2 (3N modes per primitive cell, tetrahedron DOS)
+qe64_QE_F0_eq_ZPE	11.7095371130 vs 11.7095371130	ok  want F(T=0) == 1/2 sum h nu (kJ/mol)
+qe64_QE_dSdT_order	3.998	ok  want 4 (S = -dF/dT, central difference O(h^2); errors 1.76e-02, 4.41e-03 J/K/mol)
+qe64_QE_no_imaginary_on_band	-0.0000	ok  want > -0.05 THz
+qe64_QE_gamma_optical_THz	15.09510	
+qe64_QE_S300_JKmol	38.84390	
+qe64_QE_Cv300_JKmol	40.01212	
+qe64_QE_ZPE_kJmol	11.709537	
+qe64_QE_phonopy_s	8.33	
+qe64_GPAW_gamma_acoustic_raw_THz	3.611e-07	ok  want < 1e-2 THz (acoustic sum rule, unsymmetrised force constants)
+qe64_GPAW_xstar_spread_THz	1.1e-14	ok  want < 1e-8 (6 symmetry-equivalent X points, identical spectra)
+qe64_GPAW_dos_integral	6.00138	ok  want 6 +- 1e-2 (3N modes per primitive cell, tetrahedron DOS)
+qe64_GPAW_F0_eq_ZPE	11.6781154087 vs 11.6781154087	ok  want F(T=0) == 1/2 sum h nu (kJ/mol)
+qe64_GPAW_dSdT_order	3.998	ok  want 4 (S = -dF/dT, central difference O(h^2); errors 1.77e-02, 4.42e-03 J/K/mol)
+qe64_GPAW_no_imaginary_on_band	0.0000	ok  want > -0.05 THz
+qe64_GPAW_gamma_optical_THz	15.16251	
+qe64_GPAW_S300_JKmol	39.35024	
+qe64_GPAW_Cv300_JKmol	40.01281	
+qe64_GPAW_ZPE_kJmol	11.678115	
+qe64_GPAW_phonopy_s	8.40	
+vasp16_VASP_gamma_acoustic_raw_THz	2.054e-07	ok  want < 1e-2 THz (acoustic sum rule, unsymmetrised force constants)
+vasp16_VASP_xstar_spread_THz	6.2e-15	ok  want < 1e-8 (6 symmetry-equivalent X points, identical spectra)
+vasp16_VASP_dos_integral	5.99895	ok  want 6 +- 1e-2 (3N modes per primitive cell, tetrahedron DOS)
+vasp16_VASP_F0_eq_ZPE	11.7110492470 vs 11.7110492470	ok  want F(T=0) == 1/2 sum h nu (kJ/mol)
+vasp16_VASP_dSdT_order	3.998	ok  want 4 (S = -dF/dT, central difference O(h^2); errors 1.74e-02, 4.36e-03 J/K/mol)
+vasp16_VASP_no_imaginary_on_band	-0.0000	ok  want > -0.05 THz
+vasp16_VASP_gamma_optical_THz	15.11120	
+vasp16_VASP_S300_JKmol	40.67874	
+vasp16_VASP_Cv300_JKmol	39.83458	
+vasp16_VASP_ZPE_kJmol	11.711049	
+vasp16_VASP_phonopy_s	8.32	
+vasp16_GPAW_gamma_acoustic_raw_THz	2.887e-07	ok  want < 1e-2 THz (acoustic sum rule, unsymmetrised force constants)
+vasp16_GPAW_xstar_spread_THz	7.1e-15	ok  want < 1e-8 (6 symmetry-equivalent X points, identical spectra)
+vasp16_GPAW_dos_integral	5.99878	ok  want 6 +- 1e-2 (3N modes per primitive cell, tetrahedron DOS)
+vasp16_GPAW_F0_eq_ZPE	11.7312365750 vs 11.7312365750	ok  want F(T=0) == 1/2 sum h nu (kJ/mol)
+vasp16_GPAW_dSdT_order	3.998	ok  want 4 (S = -dF/dT, central difference O(h^2); errors 1.74e-02, 4.34e-03 J/K/mol)
+vasp16_GPAW_no_imaginary_on_band	-0.0000	ok  want > -0.05 THz
+vasp16_GPAW_gamma_optical_THz	15.17428	
+vasp16_GPAW_S300_JKmol	40.76636	
+vasp16_GPAW_Cv300_JKmol	39.79087	
+vasp16_GPAW_ZPE_kJmol	11.731237	
+vasp16_GPAW_phonopy_s	8.35	
+QE_vs_VASP_worst_rel	0.0510	the two published references, every mode above 1 THz at Gamma/X/L (reported)
+qe64_GPAW_vs_QE_worst_rel	0.0554	identical displaced supercell and k-mesh (reported)
+qe64_GPAW_vs_QE_gamma_optical_rel	0.00447	
+vasp16_GPAW_vs_VASP_worst_rel	0.0135	identical displaced supercell and k-mesh (reported)
+vasp16_GPAW_vs_VASP_gamma_optical_rel	0.00417	
+qe64_GPAW_vs_VASP_worst_rel	0.0096	different supercell, displacement and k-mesh (reported)
+GPAW64_vs_GPAW16_worst_rel	0.0045	same code, two supercells and displacements (reported)
+experiment_gamma_optical_THz	15.61	Raman 520.7 cm-1, room temperature (reported; PBE runs ~3% soft)

@@ -1,0 +1,98 @@
+{
+  "task_id": "cookbook-ase-phonopy-real-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf 'd17dd240a7a6a91a592d96b02c9800ab9caf5e4a1a2d995fa5e77f456c9df463  run.sh\\n820830da6c1350fa766b8954084e971cccc133bfc1fb2a3ac4a5e8d3e6a19fed  forces.py\\n3a9f5a48012fa5c720332aa1604071c2fdc174af5a583ab6df1e454966e51327  analyse.py\\ne55f8c71b35ad6c0d8b0508bd227f5c093d89b2f3e0c30e4bff813d182c5bc51  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/Si-QE_phonopy_disp.yaml",
+      "destination": "/tmp/Si-QE_phonopy_disp.yaml"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/Si-QE_supercell-001.out",
+      "destination": "/tmp/Si-QE_supercell-001.out"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/Si_phonopy_disp.yaml",
+      "destination": "/tmp/Si_phonopy_disp.yaml"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/Si_vasprun.xml",
+      "destination": "/tmp/Si_vasprun.xml"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/forces.py",
+      "destination": "/tmp/forces.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/analyse.py",
+      "destination": "/tmp/analyse.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/ase-phonopy-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/check.txt"
+    },
+    {
+      "source": "/tmp/out/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/results.tsv"
+    },
+    {
+      "source": "/tmp/out/freqs.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/freqs.tsv"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/forces-vasp16.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/forces-vasp16.out"
+    },
+    {
+      "source": "/tmp/out/forces-qe64.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/forces-qe64.out"
+    },
+    {
+      "source": "/tmp/out/gpaw-vasp16.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/gpaw-vasp16.txt"
+    },
+    {
+      "source": "/tmp/out/gpaw-qe64.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/gpaw-qe64.txt"
+    },
+    {
+      "source": "/tmp/ase-phonopy-real-out.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/ase-phonopy-real/r2/ase-phonopy-real-out.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

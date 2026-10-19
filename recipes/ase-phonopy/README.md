@@ -11,8 +11,7 @@ last_verified_x86_64: 2026-10-17
 # ASE → spglib → phonopy — phonons of bulk silicon
 
 Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmetry, phonopy computes Γ-point phonons — the phonon-calculation pipeline for any crystal.
-
-> **What this covers.** Forces come from a generic Lennard-Jones field, so the phonon *frequencies* are not silicon's real spectrum. No DFT forces, dispersion, or thermodynamics.
+> **What this covers.** Forces come from a generic Lennard-Jones field, so the phonon *frequencies* are not silicon's real spectrum; real DFT forces, dispersion and thermodynamics are in the [measurement](../../measurements/ase-phonopy-real/README.md).
 
 ## Run it
 
@@ -20,18 +19,13 @@ Three tools in a chain — ASE builds a silicon crystal, spglib finds its symmet
 spawn task run --spec "$(make -s spec RECIPE=ase-phonopy)" --wait
 ```
 ```python
-import numpy as np
-from ase.build import bulk
-from phonopy import Phonopy
-from phonopy.structure.atoms import PhonopyAtoms
+import numpy as np; from ase.build import bulk
+from phonopy import Phonopy; from phonopy.structure.atoms import PhonopyAtoms
 si = bulk("Si", "diamond", a=5.43)                         # ASE builds bulk Si (Fd-3m)
-unit = PhonopyAtoms(symbols=si.get_chemical_symbols(), cell=si.cell[:],
-                    scaled_positions=si.get_scaled_positions())
+unit = PhonopyAtoms(symbols=si.get_chemical_symbols(), cell=si.cell[:], scaled_positions=si.get_scaled_positions())
 ph = Phonopy(unit, supercell_matrix=np.eye(3) * 2)         # 2×2×2 supercell; spglib finds the symmetry
-ph.generate_displacements(distance=0.03)                   # → ONE displacement: the chain link made visible
-# fill ph.forces from a LennardJones calculator on ph.supercells_with_displacements (DFT for real work)
-ph.produce_force_constants()
-freqs = ph.get_frequencies([0, 0, 0])                      # 3 acoustic → 0, 3 optical degenerate
+ph.generate_displacements(distance=0.03)                   # → ONE displacement; fill ph.forces on ph.supercells_with_displacements (LJ here, DFT for real work)
+ph.produce_force_constants(); freqs = ph.get_frequencies([0, 0, 0])   # 3 acoustic → 0, 3 optical degenerate
 ```
 
 ## Make it yours
@@ -39,7 +33,7 @@ freqs = ph.get_frequencies([0, 0, 0])                      # 3 acoustic → 0, 3
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | bulk Si diamond cell (built in code) | your own crystal (ASE `Atoms` or a CIF) | the space-group and sum-rule identities hold for any crystal; Si is the hand-checkable case. |
-| Lennard-Jones forces | a real calculator (DFT via [gpaw](../gpaw/README.md)) | **load-bearing to state:** LJ forces make the *frequencies* wrong for Si, but the acoustic sum rule holds for **any** translationally-invariant potential, so it still validates the chain. Swap in real forces for real phonons. |
+| Lennard-Jones forces | a real calculator (DFT via [gpaw](../gpaw/README.md)) | **load-bearing to state:** LJ forces make the *frequencies* wrong for Si, but the acoustic sum rule holds for **any** translationally-invariant potential, so it still validates the chain. Real PBE forces on phonopy's own 64-atom supercell are [measured](../../measurements/ase-phonopy-real/README.md) — match the reference's k-mesh before comparing codes. |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the sum rule is a construction where physics forces an exact answer regardless of cell size, so a bigger supercell is a longer run, not a more legible one. Leave-it.
 
@@ -47,7 +41,13 @@ Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:**
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split for the verifying run: Docker install **40 s**, `dft` image pull **78 s**, the whole ASE → spglib → phonopy chain **5 s**. Provisioning is 96% of the 123 s wrapper window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
-**Sizing:** phonopy's own work (displacements, force constants) is light on any box; the cost of real phonons is the DFT force evaluation per displacement — size that on the DFT code ([gpaw](../gpaw/README.md)), not phonopy.
+**Real forces — [measured](../../measurements/ase-phonopy-real/README.md); take AMD.** GPAW PBE forces on phonopy's own 64- and 16-atom Si supercells, then the full phonopy analysis, 16 ranks: 97% of the wall is the DFT SCF, where GPAW's dense linear algebra runs 3.4x faster on EPYC, and phonopy's whole analysis is 18–34 s on any box. Every identity and every converged number agrees across the three chips.
+
+| chip | instance | tool wall | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 1,078 s | 0.6381 | 0.208 |
+| Intel | `c8i.4xlarge` | 840 s | 0.7497 | 0.186 |
+| **AMD** | `c8a.4xlarge` | **439 s** | 0.8622 | **0.116** |
 
 <details>
 <summary>As shipped: the physical identities, pins, smoke-check table, run + verify</summary>
