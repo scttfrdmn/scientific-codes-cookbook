@@ -114,7 +114,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-17 | 2026-10-17 | — | — |
+| [cp2k](../recipes/cp2k/README.md) | Runs 25 Quickstep regtest directories on Graviton4 and compares every energy with the reference CP2K ships beside it, at the tolerance CP2K ships with it. For anyone doing DFT or ab-initio MD on ARM. | cp2k | stage | 2026-10-19 | 2026-10-17 | — | — |
 
 ## dft
 
