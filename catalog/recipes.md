@@ -86,7 +86,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-17 | 2026-10-17 | 2026-10-17 | — |
+| [su2](../recipes/su2/README.md) | SU2 solves a finite-volume Euler flow on Graviton4 and proves the scheme right where it's hardest to fake — **free-stream preservation**: uniform flow held to machine zero on a deliberately skewed mesh. The catalog's second CFD recipe (finite-volume compressible, distinct from [OpenFOAM](../recipes/openfoam/README.md)'s incompressible), for anyone doing CFD. | cfd-fv | build-in-task | 2026-10-19 | 2026-10-17 | 2026-10-17 | — |
 
 ## climate
 
