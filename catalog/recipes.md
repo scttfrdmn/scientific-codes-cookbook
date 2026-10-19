@@ -212,7 +212,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
 | [optimization](../recipes/optimization/README.md) | Solves a classic Netlib LP on Graviton4 with three unrelated solvers, checks each one's primal–dual certificate, and compares all three to the optimum netlib published in 1985. For anyone doing optimization or OR on ARM. | optimization | stage | 2026-10-18 | 2026-10-08 | 2026-10-17 | — |
-| [z3](../recipes/z3/README.md) | Runs Z3's Python API on Graviton4 across Boolean, integer, bit-vector and optimization problems, and checks each answer independently of Z3. For anyone doing verification, constraint solving or program analysis on ARM. | optimization | stage | 2026-10-17 | 2026-10-16 | 2026-10-17 | — |
+| [z3](../recipes/z3/README.md) | Runs Z3's Python API on Graviton4 across Boolean, integer, bit-vector and optimization problems, and checks each answer independently of Z3. For anyone doing verification, constraint solving or program analysis on ARM. | optimization | stage | 2026-10-18 | 2026-10-16 | 2026-10-17 | — |
 
 ## pathology
 
