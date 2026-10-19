@@ -24,6 +24,16 @@ python3 -c "import highspy; h=highspy.Highs(); h.readModel('afiro.mps'); h.run()
 python3 -c "from pyscipopt import Model; m=Model(); m.readProblem('afiro.mps'); m.optimize()"
 ```
 
+## Which box — [measured](../../measurements/optimization-real/README.md) on all of Netlib LP and the MIPLIB 2017 benchmark, 240 MIPs at 300 s each
+
+| chip | `16xlarge`, 64 solves at a time | MIPs finished, HiGHS + SCIP | **billed $ / finished** |
+|---|---|---|---|
+| **Graviton4** | `r8g` | 79 + 70 | **0.0137** |
+| Xeon 6975P-C | `r8i` | 73 + 67 | 0.0177 |
+| EPYC 9R45 | `r8a` | **85 + 71** | 0.0173 |
+
+**Take Graviton4 for solves per dollar, AMD for solves per hour.** A time-limited MIP batch bills about the same wall clock on every chip, so a chip's speed shows up as instances finished. Every finished optimum matches MIPLIB's on all three chips. HiGHS's search path differs between arm64 and x86. SCIP's does not.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -33,7 +43,7 @@ python3 -c "from pyscipopt import Model; m=Model(); m.readProblem('afiro.mps'); 
 | LP | MIP (`integer` sections) | **strong duality does not hold for MIP** — there is a duality *gap*, so the central check here stops applying. Use the solver's reported bound gap instead. |
 | the duality assertion | your own | **this is the part worth copying** — every LP solver reports a primal–dual certificate, so you can assert optimality from mathematics rather than trusting a status string. |
 
-**Leave the fixture.** afiro is 28 rows × 32 columns and solves in 5 simplex iterations — the point is that its optimum has been *published* since 1985, which no larger instance here would give you. **Scale it** with `25fv47.mps` or any of the 82 MPS files in HiGHS's `check/instances/`; the duality check is size-independent, though only some have published reference values.
+**Leave the fixture.** afiro is 28 rows × 32 columns and solves in 5 simplex iterations — the point is that its optimum has been *published* since 1985. **Scale it** to all of Netlib, where 90 LPs have exact optima, or to MIPLIB 2017, as [measured](../../measurements/optimization-real/README.md). The duality check is size-independent. For MIP, the published optimum must sit inside each solver's bound bracket.
 
 ## Shape, size, cost
 

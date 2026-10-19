@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-optimization-real-fetch",
+  "container": "quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c284a34d4bb864d4f18820bd8837d4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\npython3 -u -I /tmp/fetch.py || { echo \"FAIL: fetch\"; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/data/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

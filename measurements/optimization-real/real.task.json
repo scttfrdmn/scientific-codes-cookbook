@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-optimization-real",
+  "container": "quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c284a34d4bb864d4f18820bd8837d4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\n# 64 single-threaded solves at a time, 8 GiB each (MIPLIB test engine default); LP limit 600 s;\n# MIP limit 300 s; every benchmark instance\nbash real.sh /tmp/data 64 600 300 0\n"
+  ],
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 512,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/data/",
+      "destination": "/tmp/data/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/driver.py",
+      "destination": "/tmp/driver.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/solve.py",
+      "destination": "/tmp/solve.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/summarize.py",
+      "destination": "/tmp/summarize.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/optimization-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/optimization-real/miplib-netlib/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

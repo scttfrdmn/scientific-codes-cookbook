@@ -1,0 +1,79 @@
+== Graviton4 (A) vs x86_64 (B)
+lp highs finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 43 / 91; worst rel diff 9.44e-12 (pilot: -557.489729279667 vs -557.489729274403)
+    summed wall on both-finished: A 24 s, B 38 s, B/A 1.538
+lp scip  finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 91 / 91; worst rel diff 0.00e+00 (25fv47: 5501.84588828673 vs 5501.84588828673)
+    node count identical 91 / 91
+    summed wall on both-finished: A 45 s, B 65 s, B/A 1.458
+lp cbc   finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 90 / 91; worst rel diff 5.87e-08 (pilot87: 301.710365 vs 301.7103473)
+    summed wall on both-finished: A 17 s, B 24 s, B/A 1.423
+mip highs finished 79 / 240 (A) and 73 / 240 (B); both 73
+    same status on both-finished 73 / 73
+    objective bit-identical 26 / 72; worst rel diff 2.90e-10 (neos5: 14.9999999956296 vs 14.999999999983)
+    node count identical 25 / 73
+    summed wall on both-finished: A 3897 s, B 5561 s, B/A 1.427
+    finished on A only: 30n20b8 neos-3216931-puriri neos-933966 ns1830653 tbfp-network tr12-30
+mip scip  finished 70 / 240 (A) and 66 / 240 (B); both 66
+    same status on both-finished 66 / 66
+    objective bit-identical 64 / 64; worst rel diff 0.00e+00 (air05: 26374 vs 26374)
+    node count identical 66 / 66
+    summed wall on both-finished: A 3856 s, B 5235 s, B/A 1.358
+    finished on A only: 30n20b8 ex10 mcsched unitcal_7
+== Graviton4 (A) vs amd (B)
+lp highs finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 43 / 91; worst rel diff 9.44e-12 (pilot: -557.489729279667 vs -557.489729274403)
+    summed wall on both-finished: A 24 s, B 26 s, B/A 1.059
+lp scip  finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 91 / 91; worst rel diff 0.00e+00 (25fv47: 5501.84588828673 vs 5501.84588828673)
+    node count identical 91 / 91
+    summed wall on both-finished: A 45 s, B 46 s, B/A 1.029
+lp cbc   finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 90 / 91; worst rel diff 5.87e-08 (pilot87: 301.710365 vs 301.7103473)
+    summed wall on both-finished: A 17 s, B 17 s, B/A 0.964
+mip highs finished 79 / 240 (A) and 85 / 240 (B); both 77
+    same status on both-finished 77 / 77
+    objective bit-identical 26 / 76; worst rel diff 2.90e-10 (neos5: 14.9999999956296 vs 14.999999999983)
+    node count identical 25 / 77
+    summed wall on both-finished: A 4614 s, B 4296 s, B/A 0.931
+    finished on A only: 30n20b8 neos-3216931-puriri
+    finished on B only: mushroom-best neos-3004026-krka neos-3402294-bobin neos-873061 net12 pg5_34 satellites2-60-fs sct2
+mip scip  finished 70 / 240 (A) and 71 / 240 (B); both 70
+    same status on both-finished 70 / 70
+    objective bit-identical 68 / 68; worst rel diff 0.00e+00 (30n20b8: 302 vs 302)
+    node count identical 70 / 70
+    summed wall on both-finished: A 4897 s, B 4131 s, B/A 0.844
+    finished on B only: supportcase7
+== Intel (A) vs AMD (B), the same x86 env twin
+lp highs finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 91 / 91; worst rel diff 0.00e+00 (25fv47: 5501.84588828676 vs 5501.84588828676)
+    summed wall on both-finished: A 38 s, B 26 s, B/A 0.689
+lp scip  finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 91 / 91; worst rel diff 0.00e+00 (25fv47: 5501.84588828673 vs 5501.84588828673)
+    node count identical 91 / 91
+    summed wall on both-finished: A 65 s, B 46 s, B/A 0.706
+lp cbc   finished 91 / 91 (A) and 91 / 91 (B); both 91
+    same status on both-finished 91 / 91
+    objective bit-identical 91 / 91; worst rel diff 0.00e+00 (25fv47: 5501.845888 vs 5501.845888)
+    summed wall on both-finished: A 24 s, B 17 s, B/A 0.678
+mip highs finished 73 / 240 (A) and 85 / 240 (B); both 73
+    same status on both-finished 73 / 73
+    objective bit-identical 72 / 72; worst rel diff 0.00e+00 (air05: 26374 vs 26374)
+    node count identical 73 / 73
+    summed wall on both-finished: A 5561 s, B 3397 s, B/A 0.611
+    finished on B only: mushroom-best neos-3004026-krka neos-3402294-bobin neos-873061 neos-933966 net12 ns1830653 pg5_34 satellites2-60-fs sct2 tbfp-network tr12-30
+mip scip  finished 66 / 240 (A) and 71 / 240 (B); both 66
+    same status on both-finished 66 / 66
+    objective bit-identical 64 / 64; worst rel diff 0.00e+00 (air05: 26374 vs 26374)
+    node count identical 66 / 66
+    summed wall on both-finished: A 5235 s, B 3220 s, B/A 0.615
+    finished on B only: 30n20b8 ex10 mcsched supportcase7 unitcal_7
