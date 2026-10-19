@@ -18,9 +18,7 @@ Solves PETSc's `ex2` Poisson problem on Graviton4 and reproduces the iteration c
 make stage RECIPE=petsc                                       # the two scripts
 spawn task run --spec "$(make -s spec RECIPE=petsc)" --wait
 make ls RECIPE=petsc
-
-# the committed reference, src/ksp/ksp/tutorials/output/ex2_1.out:
-#   Norm of error 0.000392701 iterations 4
+# committed in src/ksp/ksp/tutorials/output/ex2_1.out: "Norm of error 0.000392701 iterations 4"
 mpiexec -n 1 python3 ex2.py ex2     # 4 iterations, 0.000392700601
 mpiexec -n 2 python3 ex2.py ex2     # 7 iterations, 0.000292348878
 ```
@@ -42,6 +40,14 @@ mpiexec -n 2 python3 ex2.py ex2     # 7 iterations, 0.000292348878
 ## Shape, size, cost
 
 One task on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 30m, cap $0.10. Two `ex2` solves plus a four-rung refinement ladder finish in seconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `r8g.4xlarge` | 585 s | 0.9426 | **0.153** | **0.201** |
+| Xeon 6975P-C | `r8i.4xlarge` | 797 s | 1.1114 | 0.246 | 0.293 |
+| EPYC 9R45 | `r8a.4xlarge` | **490 s** | 1.2781 | 0.174 | 0.207 |
+
+**Which box, [measured](../../measurements/petsc-real/README.md) on six SuiteSparse SPD matrices (0.5–1.6 M rows, up to 78 M nonzeros), each solved four ways on 16 ranks: it depends on the solver.** AMD factors the largest matrix 2.5× faster with MUMPS or SuperLU_DIST. Graviton4 runs AMG-preconditioned CG cheapest. On the whole set Graviton4 is cheapest billed, 3% under AMD. On every chip the inertia is (0, 0, n), both factorizations are backward stable, CG's true residual meets its rtol, and every iteration count is identical. **PETSc's BoomerAMG defaults give CG an indefinite preconditioner on 3-D elasticity**; the fix is on the measurement page.
 
 <details>
 <summary>As shipped: two committed references, a rank-count guard, the solver's own verdict, and a measured order</summary>

@@ -1,0 +1,16 @@
+/tmp/convert.py:21: DeprecationWarning: The default value for `spmatrix` is changing to `False` in v1.20.
+             That means the default return type will be a sparse array.
+             Unless you use * instead of @, ** for matrix power, or you depend
+             on 2D shapes from e.g. `A.sum(axis=0)` it may not matter to you.
+             See the spmatrix to sparray migration guide for details.
+             https://docs.scipy.org/doc/scipy/reference/sparse.migration_to_sparray.html
+             
+  A = scipy.io.mmread(tf.extractfile("%s/%s.mtx" % (name, name)))
+convert_read_s	0.2
+rows	715176
+cols	715176
+nonzeros	4817870
+explicit_zeros	0
+diag_min	810.05630630633425
+structurally_symmetric_and_equal	1
+convert_write_s	0.1

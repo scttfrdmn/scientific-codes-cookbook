@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-petsc-real",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:6cadf382f817fb3967b0bda58c561114dce1ae3176fd7bbf25c5e70d56392e79",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf '4fdb7e5e7bfc5cc4878e91e00baa14bec42adea6fb839d2206af7b29cc33119d  run.sh\\n2eacfcf4d265d854b24ff38ad31977fa88a4e689c0b7104efc8976baa3f40983  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16 1e-8\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/mm/",
+      "destination": "/tmp/mm/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/convert.py",
+      "destination": "/tmp/convert.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/solve.py",
+      "destination": "/tmp/solve.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/petsc-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

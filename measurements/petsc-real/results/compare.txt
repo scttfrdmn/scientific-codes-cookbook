@@ -1,0 +1,81 @@
+== Graviton4 vs x86_64
+matrix         solver          its A     its B  fwd err A  fwd err B   max|dw|/bound  x.w identical
+parabolic_fem  mumps_ldlt          1         1  4.907e-14  3.702e-14  5.651e-04     0/2
+parabolic_fem  superlu_lu          1         1  4.180e-14  3.009e-14  1.263e-04     0/2
+parabolic_fem  cg_gamg            14        14  3.461e-07  3.461e-07  1.080e-10     0/2
+parabolic_fem  cg_hypre            7         7  8.967e-07  8.967e-07  2.242e-11     0/2
+apache2        mumps_ldlt          1         1  2.219e-13  1.780e-13  1.610e-04     0/2
+apache2        superlu_lu          1         1  1.449e-13  1.192e-13  1.968e-04     0/2
+apache2        cg_gamg            32        32  3.182e-07  3.182e-07  4.467e-10     0/2
+apache2        cg_hypre            6         6  2.843e-06  2.843e-06  4.467e-11     0/2
+audikw_1       mumps_ldlt          1         1  3.960e-12  2.027e-12  9.010e-04     0/2
+audikw_1       superlu_lu          1         1  4.830e-12  8.297e-12  1.485e-04     0/2
+audikw_1       cg_gamg           830       830  2.264e-03  2.264e-03  4.905e-12     0/2
+audikw_1       cg_hypre         1401      1401  3.986e-05  3.986e-05  1.067e-10     0/2
+ecology2       mumps_ldlt          1         1  7.841e-12  4.889e-12  2.893e-04     0/2
+ecology2       superlu_lu          1         1  8.512e-12  7.709e-12  6.552e-05     0/2
+ecology2       cg_gamg            12        12  6.193e-06  6.193e-06  4.288e-10     0/2
+ecology2       cg_hypre            6         6  1.952e-06  1.952e-06  2.377e-07     0/2
+thermal2       mumps_ldlt          1         1  3.152e-13  4.313e-13  1.260e-03     0/2
+thermal2       superlu_lu          1         1  5.657e-13  8.142e-13  2.030e-04     0/2
+thermal2       cg_gamg            13        13  1.570e-06  1.570e-06  3.378e-11     0/2
+thermal2       cg_hypre            9         9  1.655e-06  1.655e-06  3.665e-11     0/2
+G3_circuit     mumps_ldlt          1         1  9.745e-14  1.150e-13  5.999e-04     0/2
+G3_circuit     superlu_lu          1         1  1.092e-13  8.276e-14  5.801e-04     0/2
+G3_circuit     cg_gamg            23        23  1.802e-05  1.802e-05  2.028e-12     0/2
+G3_circuit     cg_hypre            6         6  1.079e-05  1.079e-05  2.029e-12     0/2
+cross-chip: integers identical; every solve the same fixed point within its measured forward errors
+== Graviton4 vs amd
+matrix         solver          its A     its B  fwd err A  fwd err B   max|dw|/bound  x.w identical
+parabolic_fem  mumps_ldlt          1         1  4.907e-14  4.493e-14  3.377e-04     0/2
+parabolic_fem  superlu_lu          1         1  4.180e-14  3.015e-14  3.606e-05     0/2
+parabolic_fem  cg_gamg            14        14  3.461e-07  3.461e-07  1.482e-10     0/2
+parabolic_fem  cg_hypre            7         7  8.967e-07  8.967e-07  2.242e-11     0/2
+apache2        mumps_ldlt          1         1  2.219e-13  1.912e-13  1.039e-04     0/2
+apache2        superlu_lu          1         1  1.449e-13  1.127e-13  2.490e-04     0/2
+apache2        cg_gamg            32        32  3.182e-07  3.182e-07  4.549e-10     0/2
+apache2        cg_hypre            6         6  2.843e-06  2.843e-06  4.467e-11     0/2
+audikw_1       mumps_ldlt          1         1  3.960e-12  8.981e-12  3.853e-04     0/2
+audikw_1       superlu_lu          1         1  4.830e-12  8.248e-12  1.551e-04     0/2
+audikw_1       cg_gamg           830       830  2.264e-03  2.264e-03  1.523e-12     0/2
+audikw_1       cg_hypre         1401      1401  3.986e-05  3.986e-05  1.067e-10     0/2
+ecology2       mumps_ldlt          1         1  7.841e-12  4.725e-12  3.087e-04     0/2
+ecology2       superlu_lu          1         1  8.512e-12  7.596e-12  7.557e-05     0/2
+ecology2       cg_gamg            12        12  6.193e-06  6.193e-06  3.047e-10     0/2
+ecology2       cg_hypre            6         6  1.952e-06  1.952e-06  2.377e-07     0/2
+thermal2       mumps_ldlt          1         1  3.152e-13  2.673e-13  9.280e-04     0/2
+thermal2       superlu_lu          1         1  5.657e-13  8.619e-13  2.377e-04     0/2
+thermal2       cg_gamg            13        13  1.570e-06  1.570e-06  1.428e-10     0/2
+thermal2       cg_hypre            9         9  1.655e-06  1.655e-06  3.665e-11     0/2
+G3_circuit     mumps_ldlt          1         1  9.745e-14  1.400e-13  5.498e-04     0/2
+G3_circuit     superlu_lu          1         1  1.092e-13  8.431e-14  5.838e-04     0/2
+G3_circuit     cg_gamg            23        23  1.802e-05  1.802e-05  9.348e-13     0/2
+G3_circuit     cg_hypre            6         6  1.079e-05  1.079e-05  2.029e-12     0/2
+cross-chip: integers identical; every solve the same fixed point within its measured forward errors
+== Intel vs AMD (the same x86 env twin)
+matrix         solver          its A     its B  fwd err A  fwd err B   max|dw|/bound  x.w identical
+parabolic_fem  mumps_ldlt          1         1  3.702e-14  4.493e-14  7.796e-04     0/2
+parabolic_fem  superlu_lu          1         1  3.009e-14  3.015e-14  1.077e-04     0/2
+parabolic_fem  cg_gamg            14        14  3.461e-07  3.461e-07  7.120e-11     0/2
+parabolic_fem  cg_hypre            7         7  8.967e-07  8.967e-07  0.000e+00     2/2
+apache2        mumps_ldlt          1         1  1.780e-13  1.912e-13  5.814e-05     0/2
+apache2        superlu_lu          1         1  1.192e-13  1.127e-13  5.244e-05     0/2
+apache2        cg_gamg            32        32  3.182e-07  3.182e-07  8.052e-11     0/2
+apache2        cg_hypre            6         6  2.843e-06  2.843e-06  0.000e+00     2/2
+audikw_1       mumps_ldlt          1         1  2.027e-12  8.981e-12  6.820e-05     0/2
+audikw_1       superlu_lu          1         1  8.297e-12  8.248e-12  1.083e-05     0/2
+audikw_1       cg_gamg           830       830  2.264e-03  2.264e-03  3.382e-12     0/2
+audikw_1       cg_hypre         1401      1401  3.986e-05  3.986e-05  0.000e+00     2/2
+ecology2       mumps_ldlt          1         1  4.889e-12  4.725e-12  2.046e-05     0/2
+ecology2       superlu_lu          1         1  7.709e-12  7.596e-12  1.010e-05     0/2
+ecology2       cg_gamg            12        12  6.193e-06  6.193e-06  1.240e-10     0/2
+ecology2       cg_hypre            6         6  1.952e-06  1.952e-06  0.000e+00     2/2
+thermal2       mumps_ldlt          1         1  4.313e-13  2.673e-13  5.726e-04     0/2
+thermal2       superlu_lu          1         1  8.142e-13  8.619e-13  3.537e-05     0/2
+thermal2       cg_gamg            13        13  1.570e-06  1.570e-06  1.090e-10     0/2
+thermal2       cg_hypre            9         9  1.655e-06  1.655e-06  0.000e+00     2/2
+G3_circuit     mumps_ldlt          1         1  1.150e-13  1.400e-13  1.537e-04     0/2
+G3_circuit     superlu_lu          1         1  8.276e-14  8.431e-14  1.431e-04     0/2
+G3_circuit     cg_gamg            23        23  1.802e-05  1.802e-05  1.677e-12     0/2
+G3_circuit     cg_hypre            6         6  1.079e-05  1.079e-05  0.000e+00     2/2
+cross-chip: integers identical; every solve the same fixed point within its measured forward errors

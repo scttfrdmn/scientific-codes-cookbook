@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-petsc-real-fetch",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:6cadf382f817fb3967b0bda58c561114dce1ae3176fd7bbf25c5e70d56392e79",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p /tmp/out\npython3 -u fetch.py /tmp/out > /tmp/out/fetch.log 2>&1\nRC=$?\ncat /tmp/out/fetch.log\n[ \"$RC\" = 0 ] || { echo \"FAIL: fetch\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/petsc-real/mm/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
