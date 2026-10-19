@@ -1,0 +1,26 @@
+== Graviton4 vs x86_64
+log density + gradient at 1100 reference draws (40 errored on either chip)
+  bit-identical (lp__ and every gradient component): 751 of 1100
+  max relative |lp__ difference|:   6.102e-15  (sblrc-blr draw 0)
+  max gradient difference / max|gradient|: 1.878e-13  (sblrc-blr draw 4)
+  FIXED POINT: lp__ <= 1e-12 and gradient <= 1e-10 relative: holds
+posteriors whose 4000 draws are byte-identical across the two chips: 24 of 57
+  identical: Rate_1_data-Rate_1_model Rate_2_data-Rate_2_model Rate_3_data-Rate_3_model Rate_5_data-Rate_5_model arK-arK arma-arma11 dogs-dogs dogs-dogs_hierarchical earnings-earn_height earnings-log10earn_height kidiq-kidscore_interaction kidiq-kidscore_momhs kidiq-kidscore_momhsiq kidiq-kidscore_momiq kidiq_with_mom_work-kidscore_interaction_c kidiq_with_mom_work-kidscore_interaction_c2 kidiq_with_mom_work-kidscore_interaction_z kidiq_with_mom_work-kidscore_mom_work kilpisjarvi_mod-kilpisjarvi low_dim_gauss_mix-low_dim_gauss_mix mesquite-mesquite one_comp_mm_elim_abs-one_comp_mm_elim_abs radon_all-radon_pooled radon_mn-radon_pooled
+posterior means: identical in 88 of 390 parameters; max |difference| 0.353 reference sd (bball_drive_event_0-hmm_drive_0 lambda[2])
+== Graviton4 vs amd
+log density + gradient at 1100 reference draws (40 errored on either chip)
+  bit-identical (lp__ and every gradient component): 751 of 1100
+  max relative |lp__ difference|:   6.102e-15  (sblrc-blr draw 0)
+  max gradient difference / max|gradient|: 1.878e-13  (sblrc-blr draw 4)
+  FIXED POINT: lp__ <= 1e-12 and gradient <= 1e-10 relative: holds
+posteriors whose 4000 draws are byte-identical across the two chips: 24 of 57
+  identical: Rate_1_data-Rate_1_model Rate_2_data-Rate_2_model Rate_3_data-Rate_3_model Rate_5_data-Rate_5_model arK-arK arma-arma11 dogs-dogs dogs-dogs_hierarchical earnings-earn_height earnings-log10earn_height kidiq-kidscore_interaction kidiq-kidscore_momhs kidiq-kidscore_momhsiq kidiq-kidscore_momiq kidiq_with_mom_work-kidscore_interaction_c kidiq_with_mom_work-kidscore_interaction_c2 kidiq_with_mom_work-kidscore_interaction_z kidiq_with_mom_work-kidscore_mom_work kilpisjarvi_mod-kilpisjarvi low_dim_gauss_mix-low_dim_gauss_mix mesquite-mesquite one_comp_mm_elim_abs-one_comp_mm_elim_abs radon_all-radon_pooled radon_mn-radon_pooled
+posterior means: identical in 88 of 390 parameters; max |difference| 0.353 reference sd (bball_drive_event_0-hmm_drive_0 lambda[2])
+== Intel vs AMD (the same x86 env twin)
+log density + gradient at 1100 reference draws (40 errored on either chip)
+  bit-identical (lp__ and every gradient component): 1100 of 1100
+  max relative |lp__ difference|:   0.000e+00  ()
+  max gradient difference / max|gradient|: 0.000e+00  ()
+  FIXED POINT: lp__ <= 1e-12 and gradient <= 1e-10 relative: holds
+posteriors whose 4000 draws are byte-identical across the two chips: 57 of 57
+posterior means: identical in 390 of 390 parameters; max |difference| 0.000 reference sd (wells_data-wells_dist100_model beta[1])

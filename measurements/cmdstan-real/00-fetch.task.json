@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-cmdstan-real-fetch",
+  "container": "quay.io/aarchsci/bayes@sha256:cfa7cc144c6118155b4c3da60a5623a9eaa71db80c22fdbf67f811949c92a2fb",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p /tmp/out\npython3 -u fetch.py manifest.tsv /tmp/out || { echo \"FAIL: fetch\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan-real/manifest.tsv",
+      "destination": "/tmp/manifest.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan-real/pdb/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

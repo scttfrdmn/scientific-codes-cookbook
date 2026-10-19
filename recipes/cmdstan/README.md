@@ -33,14 +33,21 @@ model.sample(data="data.json", chains=4, iter_warmup=1000, iter_sampling=4000, s
 | `jacobian=True/False` | — | **check both.** `True` adds the logit transform's `log θ + log(1−θ)`, which turns the constrained kernel into the posterior Beta kernel itself. It is the flag that decides whether the sampler targets the right distribution. |
 | `seed=20260101` | any fixed value | **keep it fixed.** HMC is stochastic; a seeded run is bit-reproducible and an unseeded one makes every exact claim below flaky ([same rule the assemblers earned](../../practices/cross-checks.md)). |
 | `model.log_prob(...)` | — | **the part worth copying.** It evaluates the density with no sampling at all, so you can check a model against hand arithmetic before spending a single MCMC draw. |
-| `chains=4, iter_sampling=4000` | your own | sampling is effectively instant here; the 10 s **compile** dominates. Budget for compilation, not iterations. |
-| `stan_variable("theta")` | — | wrap in `np.atleast_1d`: cmdstanpy warns this will always return an array in a future release. |
+| `chains=4, iter_sampling=4000` | your own | here the 10 s **compile** dominates; on real models sampling does (posteriordb's `diamonds`: 1,253 s of sampling, 14 s of compile). |
 
 **Leave the fixture.** Four integers (`N=50, y=17`, prior `Beta(2,3)`) are the whole dataset, and that is the point — the posterior is `Beta(19,36)` on paper, so every check is a comparison against arithmetic. **Scale it** to your own model once it passes; `log_prob` and the seed discipline transfer unchanged.
 
 ## Shape, size, cost
 
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost_limit` $0.15 as the real guard. **Compiling the model takes 10.0 s and dominates**; three full 4-chain fits are seconds. The recorded **85 s** is mostly boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.xlarge` | 1,494 s | 0.1795 | 0.0745 | 0.0801 |
+| Xeon 6975P-C | `m8i.xlarge` | 1,900 s | 0.2117 | 0.1117 | 0.1194 |
+| **EPYC 9R45** | `m8a.xlarge` | **780 s** | 0.2434 | **0.0527** | **0.0596** |
+
+**Which box, [measured](../../measurements/cmdstan-real/README.md) on all 57 posteriordb reference posteriors: take AMD.** It is 1.9× faster than Graviton4 and 26% cheaper billed. Every converged posterior matches its published reference draws on all three chips. The log density agrees across chips to 6e-15, but the NUTS draws are a path, and only 24 of 57 posteriors are byte-identical between ARM and x86.
 
 <details>
 <summary>As shipped: a gradient exact to 1.35e-15, two MAPs with different known answers, and a sampler checked against its own stated error</summary>
