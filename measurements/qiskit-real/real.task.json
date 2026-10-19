@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-qiskit-real-r4",
+  "container": "quay.io/aarchsci/quantum@sha256:4f22a72396c229660587b4be43bf7f832046dcf9006b3aad8f81cbfd82c6207b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '20317cad9ca99b0f773c8ecc6594ec632cb7ae9e6e472ef2945c60feb0fb3ca7  run.sh\\ndef6e48a06d0e574a2955892684919754e7d081047f3fddfd705d59020b35dda  real.py\\n9ea3f8f23a7397c4d5bf76506b58a7b45ff2ea92d3e2ac0b70de8d4f8cdb8bca  qasmbench.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 60
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/qasmbench/",
+      "destination": "/tmp/qasmbench/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/qasmbench.sha256",
+      "destination": "/tmp/qasmbench.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/circuits.jsonl",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/circuits.jsonl"
+    },
+    {
+      "source": "/tmp/out/phases.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/qiskit-real/r4/phases.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 1.6
+  }
+}

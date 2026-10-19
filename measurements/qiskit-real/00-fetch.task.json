@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-qiskit-real-fetch",
+  "container": "quay.io/aarchsci/quantum@sha256:4f22a72396c229660587b4be43bf7f832046dcf9006b3aad8f81cbfd82c6207b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf 'e134dfb113e9fa3848e9d7b4052133dd508fe30b9cb06b9db94ac57f88d38a0a  fetch.py\\nd1e4bf8915ce3551c0114bae44f59c67ae66cfdcee702b767fb65f5c5e268192  qasmbench-357b942.gitblobs\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp\nmkdir -p /tmp/out\npython3 -u fetch.py qasmbench-357b942.gitblobs /tmp/out || { echo 'FAIL: fetch'; exit 1; }\nfind /tmp/out -type f | wc -l\ndu -sh /tmp/out\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/qasmbench-357b942.gitblobs",
+      "destination": "/tmp/qasmbench-357b942.gitblobs"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/qiskit-real/qasmbench/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

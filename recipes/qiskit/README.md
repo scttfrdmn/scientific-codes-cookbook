@@ -39,6 +39,10 @@ AerSimulator(method="stabilizer", seed_simulator=20261011).run(qc, shots=8192)
 
 **Leave the fixture.** There isn't one — nothing is fetched, because a Bell amplitude *is* `1/√2` and the QFT *is* the DFT matrix. **Scale it** to your own circuits; the identities (unitarity, norm, tableau-vs-dense) hold at any size and cost nothing.
 
+## Which box — [measured](../../measurements/qiskit-real/README.md) on the whole QASMBench suite
+
+**Billed $/suite: Graviton4 `r8g.2xlarge` $0.640 (4,783 s), Intel `r8i.2xlarge` $0.735 (4,696 s), AMD `r8a.2xlarge` $0.723 (3,998 s).** That is 123 circuits (2–433 qubits) compiled at `optimization_level=2` to heavy-hex, and every one a simulator can hold (93, up to 458 active qubits) checked equal to its source. The QFT family is the exception: level-2 resynthesis approximates it by design (1 − F up to 4.6e-7), and level 1 compiles it exactly. **Graviton4 is cheapest; AMD is fastest but its hour costs 36% more.** Memory picks the `r` family: one 2.3M-gate compile peaks at 26 GiB. Compile with final measurements removed if you compare states, because the transpiler may drop diagonal gates before a measurement.
+
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. The analysis is **7 s** of a 1m04s window — 39 s installing Docker, 16 s pulling the 0.42 GB image ([layout](../../patterns/layout-and-effective-cost.md)). BLAS threads are pinned to 1 so the seeded sampling stays reproducible.
@@ -173,12 +177,10 @@ warning is the evidence the migration path is being exercised, not noise to supp
 ### Not covered
 
 **Noise, error mitigation and real backends** — everything here is an ideal simulator, so nothing
-speaks to `NoiseModel`, readout correction, or transpilation to a coupling map. **The rest of the
-env**: `qiskit-algorithms` (VQE, QAOA), `qiskit-optimization`, `qiskit-machine-learning` and
-`openfermion` are all installed and unexercised; a VQE ground-state energy against an exact
-diagonalisation would be the natural next identity. **`extended_stabilizer` and
-`matrix_product_state`**, two Aer methods that would extend the cross-method comparison. **Circuit
-depth and qubit counts that matter** — 2–4 qubits exercises the algebra, not the simulator's
-scaling, and no performance claim is made.
+speaks to `NoiseModel` or readout correction. (Transpilation to a coupling map, `matrix_product_state`
+and circuits at real width are covered by [the QASMBench measurement](../../measurements/qiskit-real/README.md).)
+**The rest of the env**: `qiskit-algorithms` (VQE, QAOA), `qiskit-optimization`,
+`qiskit-machine-learning` and `openfermion` are all installed and unexercised; a VQE ground-state
+energy against an exact diagonalisation would be the natural next identity.
 
 </details>
