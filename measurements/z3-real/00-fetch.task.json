@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-z3-real-fetch",
+  "container": "quay.io/aarchsci/optimization@sha256:29abbb67fb16c16292ec38ccbc65c099e722935fae02cb7fccc77c14febb7f86",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\npython3 -u -I /tmp/fetch.py 2>&1 | tee /tmp/fetch.log\ntest \"${PIPESTATUS[0]}\" = 0 || { echo \"FAIL: fetch\"; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/data/"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

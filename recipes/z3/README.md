@@ -39,6 +39,16 @@ s.assert_and_track(c, z3.Bool("c1")); s.unsat_core()       # which assertions ma
 
 One task on `c8g.large` (2 vCPU / 4 GiB), TTL 30m as a **backstop** with `cost_limit` $0.05 as the real guard. The checks take **3.0 s** of a ~77 s window that is mostly boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
+## Which box — [measured](../../measurements/z3-real/README.md) (SMT-LIB 2025 QF_IDL + QF_RDL + QF_LRA, 4,536 benchmarks, 60 s each)
+
+| chip | instance | wall | decided | billed $ | **$ / decided** |
+|---|---|---|---|---|---|
+| **Graviton4** | `m8g.16xlarge` | 2,373 s | 3,475 | 1.94 | **0.000557** |
+| Xeon 6975P-C | `m8i.16xlarge` | 2,388 s | 3,419 | 2.29 | 0.000671 |
+| EPYC 9R45 | `m8a.16xlarge` | 1,963 s | **3,560** | 2.17 | 0.000610 |
+
+0 verdicts against the published `:status` and every sat model checked outside Z3, on all three. AMD decides the most benchmarks and Graviton4 is the cheapest per decided benchmark. The time limit, not the chip, sets the wall clock.
+
 <details>
 <summary>As shipped: pigeonhole cores of exactly n+1, 92 queens, a unique Sudoku, a 32-bit identity proven, and an integer optimum equal to brute force and HiGHS</summary>
 
@@ -117,8 +127,8 @@ differs from brute force or HiGHS. Check the bucket regardless
 ### Not covered
 
 **Z3's own regression suite** (`Z3Prover/z3test`) is not in the package and not staged.
-**Real arithmetic, strings, arrays, quantifiers and the SMT-LIB2 front end** (`z3 file.smt2`) are
-not exercised; nor are tactics, timeouts, or hard instances where solver heuristics and seeds
-start to matter.
+**Strings, arrays, quantifiers and tactics** are not exercised here. The SMT-LIB2 front end,
+linear real and difference arithmetic, timeouts and hard instances are, at scale, in
+[z3-real](../../measurements/z3-real/README.md).
 
 </details>

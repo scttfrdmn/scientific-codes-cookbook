@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-z3-real",
+  "container": "quay.io/aarchsci/optimization@sha256:29abbb67fb16c16292ec38ccbc65c099e722935fae02cb7fccc77c14febb7f86",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\n# 64 single-threaded Z3 processes at a time; 60 s per benchmark (and 60 s more for an unsat core);\n# Z3 memory limit 3500 MiB each; every benchmark of QF_IDL, QF_RDL and QF_LRA\nbash real.sh /tmp/data 64 60 3500 0\n"
+  ],
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 256,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/data/",
+      "destination": "/tmp/data/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/driver.py",
+      "destination": "/tmp/driver.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/solve.py",
+      "destination": "/tmp/solve.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/smtcheck.py",
+      "destination": "/tmp/smtcheck.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/summarize.py",
+      "destination": "/tmp/summarize.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/z3-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/z3-real/smtlib/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}
