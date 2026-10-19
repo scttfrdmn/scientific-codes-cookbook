@@ -1,0 +1,21 @@
+SU2 8.5.0 -- NACA 0012 SA, TMR 897x257 grid; 16 MPI ranks
+su2_native               SU2_CFD ELF e_machine 183 on aarch64  [ok]
+regression               exit 0, wall 1.8 s
+regression vs upstream aarch64 list: rms[Rho] -6.7e-05, rms[nu] -1.0e-06, CL +0.0e+00, CD +0.0e+00, LinSolIter +0.0e+00, LinSolRes +1.1e-04, LinSolIterTurb +0.0e+00, LinSolResTurb -2.1e-05, HeatFlux +0.0e+00
+regression vs upstream x86_64  list: rms[Rho] -3.8e-05, rms[nu] +1.0e-06, CL +0.0e+00, CD +0.0e+00, LinSolIter +0.0e+00, LinSolRes +7.2e-05, LinSolIterTurb +0.0e+00, LinSolResTurb -9.0e-06, HeatFlux +0.0e+00
+regression_fixed         iter 5 CL 1.080346 CD 0.018385, linear iters 20/20, heat flux 0 == upstream's, max |d| 0.0e+00  [ok]
+freestream               exit 0, wall 19.4 s
+freestream_897x257       Euler, uniform M 0.15 at 10 deg, all boundaries far-field: max log10(rms rho) over 200 iters -15.07 <= -12  [ok]
+rans_a+10                exit 0, wall 278.4 s
+rans_a+10                2393 iters, rms rho -12.000, CL 1.0966662140 CD 0.0125969500 CMz -0.0052665431; last-100-iter change CL 5.2e-06 CD 3.1e-07
+rans_a+10_converged      rms rho -12.000 <= -12 in 2393 iterations (cap 8000)  [ok]
+rans_a+10_mpi            SU2 reports Cores: 16, launched 16; ParMETIS partitioned=True  [ok]
+rans_a+15                exit 0, wall 236.0 s
+rans_a+15                2036 iters, rms rho -12.001, CL 1.5557882960 CD 0.0218698675 CMz -0.0144782885; last-100-iter change CL 1.5e-07 CD 3.3e-09
+rans_a+15_converged      rms rho -12.001 <= -12 in 2036 iterations (cap 8000)  [ok]
+rans_a+15_mpi            SU2 reports Cores: 16, launched 16; ParMETIS partitioned=True  [ok]
+tmr_CL10                 SU2 1.09667 vs TMR 7-code mean 1.09351 (range 1.08910-1.10000): +0.29%, bound +-1%  [ok]
+tmr_CL15                 SU2 1.55579 vs TMR 7-code mean 1.55176 (range 1.54460-1.56420): +0.26%, bound +-1%  [ok]
+tmr_CD10                 SU2 0.01260 vs TMR 7-code mean 0.01236 (range 0.01225-0.01245): +1.95%, bound +-4%  [ok]
+tmr_CD15                 SU2 0.02187 vs TMR 7-code mean 0.02127 (range 0.02073-0.02159): +2.81%, bound +-4%  [ok]
+SU2 REAL OK

@@ -36,9 +36,17 @@ The recipe writes the config and a distorted channel mesh, runs both legs, and c
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 4m, cap $0.05. Two Euler solves (250 iterations each, serial + 2-rank) on a ~288-cell mesh run in seconds; recorded command window **73 s** — boot and the 0.29 GB `cfd-fv` image pull are the rest. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 4m, cap $0.05. Two Euler solves (250 iterations each, serial + 2-rank) on a ~288-cell mesh run in seconds; recorded command window **73 s** — boot and the 0.29 GB `cfd-fv` image pull are the rest. **These timings are not compute cost.** A real case scales with cell count across MPI ranks (ParMETIS) — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying; size it on its mesh.
 
-**Sizing:** the channel mesh is tiny; a real case scales with cell count and moves to a Krylov solver across ranks (SU2 is MPI-parallel via ParMETIS) — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real model on its mesh.
+## Which box — [measured](../../measurements/su2-real/README.md) (NASA TMR NACA 0012, SA, 897×257 grid, α = 10° + 15°, 16 ranks)
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | **536 s** | 0.6381 | **0.095** | **0.115** |
+| Intel | `c8i.4xlarge` | 1,060 s | 0.7497 | 0.221 | 0.247 |
+| AMD | `c8a.4xlarge` | 810 s | 0.8622 | 0.194 | 0.211 |
+
+**Take Graviton4:** 1.98× faster than Intel and 1.51× faster than AMD for the same iteration count, at under half the cost per result. Lift and drag agree across all three chips to all 10 digits SU2 writes, within NASA TMR's seven-code band.
 
 <details>
 <summary>As shipped: why free-stream on a distorted mesh, the MPI check, native check, x86_64, pins, smoke check, run + verify</summary>

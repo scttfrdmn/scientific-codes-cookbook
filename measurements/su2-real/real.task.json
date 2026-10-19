@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-su2-real-r2",
+  "container": "quay.io/aarchsci/cfd-fv@sha256:830eaf94cc9a6b36d6307b08a702610f16ac9212235a984047fb8e329092ae46",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(grep -c . pins.sha256) files verified\"\nbash run.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/su2-real/data/",
+      "destination": "/tmp/data/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/su2-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/su2-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/su2-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/su2-real/r2/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
