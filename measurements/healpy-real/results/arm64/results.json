@@ -1,0 +1,365 @@
+{
+ "npix_12_nside2": {
+  "ok": true,
+  "detail": "every column of the map and both masks has 12*2048^2 = 50331648 pixels"
+ },
+ "ordering_nested": {
+  "ok": true,
+  "detail": "map and masks are NESTED, as Planck ships them"
+ },
+ "map_finite": {
+  "ok": true,
+  "detail": "I,Q,U all finite; UNSEEN pixels {'I_STOKES': 0, 'Q_STOKES': 0, 'U_STOKES': 0}"
+ },
+ "mask_fsky": {
+  "int": 0.7794126868247986,
+  "pol": 0.7814400792121887,
+  "int_binary": true,
+  "pol_binary": true
+ },
+ "inpaint": {
+  "I": {
+   "mask": "TMASKINP",
+   "mask_fsky": 0.984921932220459,
+   "differ": 50331640,
+   "differ_where_mask1": 49572736,
+   "differ_where_mask0": 758904,
+   "max_abs_diff_where_mask1_K": 0.008129649795591831,
+   "rms_K": 0.00010836522415047511,
+   "mask0": 758904
+  },
+  "Q": {
+   "mask": "PMASKINP",
+   "mask_fsky": 0.957911491394043,
+   "differ": 50331647,
+   "differ_where_mask1": 48213176,
+   "differ_where_mask0": 2118471,
+   "max_abs_diff_where_mask1_K": 0.0002871125179808587,
+   "rms_K": 2.8316369935055263e-05,
+   "mask0": 2118472
+  },
+  "U": {
+   "mask": "PMASKINP",
+   "mask_fsky": 0.957911491394043,
+   "differ": 50331648,
+   "differ_where_mask1": 48213176,
+   "differ_where_mask0": 2118472,
+   "max_abs_diff_where_mask1_K": 0.0002686715452000499,
+   "rms_K": 2.8408705475158058e-05,
+   "mask0": 2118472
+  }
+ },
+ "confidence_mask_fsky": {
+  "TMASK": 0.8424088954925537,
+  "PMASK": 0.9294669032096863
+ },
+ "nest2ring_is_permutation": {
+  "ok": true,
+  "detail": "nest2ring over all 50331648 pixels hits each ring index once"
+ },
+ "reorder_matches_index": {
+  "ok": true,
+  "detail": "reorder(n2r) == scatter by nest2ring, bit-exact"
+ },
+ "reorder_roundtrip": {
+  "ok": true,
+  "detail": "I,Q,U: nest -> ring -> nest bit-identical over all pixels"
+ },
+ "read_map_ring": {
+  "ok": true,
+  "detail": "hp.read_map(nest=False) == reorder of the raw NESTED columns, bit-exact"
+ },
+ "hash_ring_I": "7e5b8bad1a0f7839",
+ "area_sum_4pi": {
+  "ok": true,
+  "detail": "fsum of 50331648 pixel areas = 12.566370614359172, 4pi = 12.566370614359172"
+ },
+ "ring_nest_bijection": {
+  "ok": true,
+  "detail": "nest->ring->nest identity, all 50331648 pixels"
+ },
+ "pix_ang_pix_nest": {
+  "ok": true,
+  "detail": "pix2ang->ang2pix identity, all pixels (nest)"
+ },
+ "pix_vec_pix_nest": {
+  "ok": true,
+  "detail": "pix2vec->vec2pix identity, all pixels (nest)"
+ },
+ "astropy_healpix_centres_nest": {
+  "ok": true,
+  "detail": "astropy-healpix vs healpy pixel centres, max separation 1.52e-15 rad (bound 1e-12; pixel size 5.0e-04)"
+ },
+ "astropy_healpix_roundtrip_nest": {
+  "ok": true,
+  "detail": "astropy-healpix(healpy centres) and healpy(astropy-healpix centres) both return the pixel, all pixels (nest): 0 / 0 misses"
+ },
+ "pix_ang_pix_ring": {
+  "ok": true,
+  "detail": "pix2ang->ang2pix identity, all pixels (ring)"
+ },
+ "pix_vec_pix_ring": {
+  "ok": true,
+  "detail": "pix2vec->vec2pix identity, all pixels (ring)"
+ },
+ "astropy_healpix_centres_ring": {
+  "ok": true,
+  "detail": "astropy-healpix vs healpy pixel centres, max separation 1.78e-15 rad (bound 1e-12; pixel size 5.0e-04)"
+ },
+ "astropy_healpix_roundtrip_ring": {
+  "ok": true,
+  "detail": "astropy-healpix(healpy centres) and healpy(astropy-healpix centres) both return the pixel, all pixels (ring): 0 / 0 misses"
+ },
+ "centre_sep_max_rad": {
+  "nest": 1.5155051032962067e-15,
+  "ring": 1.7842128272115993e-15
+ },
+ "ang2pix_random_vs_astropy_healpix": {
+  "ok": true,
+  "detail": "20000000 random sky positions: 0 disagreements, all adjacent pixels: True"
+ },
+ "random_ang2pix_disagree": 0,
+ "query_disc_vs_bruteforce": {
+  "ok": true,
+  "detail": "24 discs 0.5-20 deg: 13939367 pixels inside, 0 disagreements (0 centres within 1e-13 of the edge excluded)"
+ },
+ "ud_grade_ring_equals_nest": {
+  "ok": true,
+  "detail": "ud_grade in RING == reorder(ud_grade in NESTED), bit-exact, 2048 -> 256"
+ },
+ "ud_vs_blockmean_256_maxrel": 0.0,
+ "ud_grade_conserves_sum": {
+  "ok": true,
+  "detail": "2048 -> 1024 ... 1: sum(out)*ratio == fsum(in), worst rel 7.31e-18 (bound 4*npix*eps*sum|m|)"
+ },
+ "ud_grade_up_down_exact": {
+  "ok": true,
+  "detail": "2048 -> 4096 (201,326,592 pixels) repeats each parent; -> 2048 returns the float32-valued map bit-exact"
+ },
+ "hash_ud_64": "e8063e3975de05f0",
+ "alm_size": 18877440,
+ "monopole_is_mean": {
+  "ok": true,
+  "detail": "map2alm(iter=0) a00 -1.018341e-12 == sqrt(4pi)*mean -1.018341e-12: |diff| 1.12e-21 (bound 64 eps sqrt(4pi) mean|m| = 4.34e-18)"
+ },
+ "int_beam": {
+  "vs_gauss": 0.0013333678630418344,
+  "vs_gauss_pixwin": 0.04451558329081595
+ },
+ "first_peak_vs_planck": {
+  "ok": true,
+  "detail": "first acoustic peak (quadratic vertex, l 170-270): SMICA masked pseudo-C_l 221.62, Planck PR3 published TT 221.39 (|diff| <= 5); best-fit theory 220.35, theory argmax 220"
+ },
+ "smica_over_published_tt": [
+  [
+   30,
+   1.0007812160267822
+  ],
+  [
+   80,
+   1.000322003163049
+  ],
+  [
+   130,
+   0.9964093326950266
+  ],
+  [
+   180,
+   0.989853167175556
+  ],
+  [
+   230,
+   0.9904335049295503
+  ],
+  [
+   280,
+   1.0024864314910047
+  ],
+  [
+   330,
+   1.0316671123216363
+  ],
+  [
+   380,
+   1.0528935362180056
+  ],
+  [
+   430,
+   1.0329643645771862
+  ],
+  [
+   480,
+   1.0218757292980838
+  ],
+  [
+   530,
+   1.0222806117658092
+  ],
+  [
+   580,
+   1.0333134750555442
+  ],
+  [
+   630,
+   1.0442641121751515
+  ],
+  [
+   680,
+   1.0450777075986208
+  ],
+  [
+   730,
+   1.0304733189223065
+  ],
+  [
+   780,
+   1.0279306632227156
+  ],
+  [
+   830,
+   1.0219386154475714
+  ],
+  [
+   880,
+   1.0443499603616802
+  ],
+  [
+   930,
+   1.0761816568701263
+  ],
+  [
+   980,
+   1.1045376769614232
+  ],
+  [
+   1030,
+   1.0959598549252756
+  ],
+  [
+   1080,
+   1.0886453644054417
+  ],
+  [
+   1130,
+   1.094168531134531
+  ],
+  [
+   1180,
+   1.1201907306169792
+  ],
+  [
+   1230,
+   1.157825878719633
+  ],
+  [
+   1280,
+   1.190198260227539
+  ],
+  [
+   1330,
+   1.1868633285424068
+  ],
+  [
+   1380,
+   1.1981591780959124
+  ],
+  [
+   1430,
+   1.2294061497151525
+  ],
+  [
+   1480,
+   1.2745482059441038
+  ]
+ ],
+ "first_peak": {
+  "smica": 221.61756919475573,
+  "published": 221.3905239522125,
+  "theory": 220.35498553550684
+ },
+ "alm2map_vs_scipy_Ylm": {
+  "ok": true,
+  "detail": "alm2map (l<=128, real SMICA a_lm) vs direct sum of scipy sph_harm_y at 4000 pixels: max |diff| 1.33e-17 = 3.9e-14 of max|map| (bound 1e-11)"
+ },
+ "synthesis_rel_err": 3.8785833790060905e-14,
+ "roundtrip_residual": {
+  "2048": [
+   2.6488705681920323e-05,
+   7.488203299468811e-07,
+   2.1171857527466054e-08,
+   5.986049722060524e-10
+  ],
+  "4096": [
+   4.526622485679686e-05,
+   5.4419183242674425e-06,
+   6.568564904729547e-07,
+   7.93004822780131e-08
+  ]
+ },
+ "roundtrip_rate": {
+  "2048": [
+   35.37391363800092,
+   35.36866469913863,
+   35.368662992291775
+  ],
+  "4096": [
+   8.318063991320619,
+   8.284790366232222,
+   8.28313361538124
+  ]
+ },
+ "roundtrip_geometric_rate": {
+  "ok": true,
+  "detail": "map2alm(alm2map(a)) residual shrinks by a constant factor per iteration: band limit 2048 x35.37/35.37/35.37, 4096 x8.32/8.28/8.28 (factor > 2, spread < 10%)"
+ },
+ "rotation_preserves_cl": {
+  "ok": true,
+  "detail": "Galactic -> equatorial rotate_alm (l<=2048): max_l |C_l'/C_l - 1| = 4.11e-13 (bound 1e-9)"
+ },
+ "rotation_roundtrip": {
+  "ok": true,
+  "detail": "G -> C -> G returns the a_lm: rel residual 6.84e-14 (bound 1e-9)"
+ },
+ "rotation": {
+  "cl_err": 4.11226608321158e-13,
+  "rt_err": 6.84187043512923e-14
+ },
+ "smoothing_is_beam_squared": {
+  "ok": true,
+  "detail": "smoothalm(10') C_l == C_l * exp(-l(l+1)sigma^2), independently computed: max rel 1.55e-14 over 6144 multipoles (bound 1e-12)"
+ },
+ "synalm_cosmic_variance": {
+  "ok": true,
+  "detail": "seeded synalm from Planck's best fit, l 2-2500: sum((2l+1)C^/C - (2l+1)) in sigma, TT 1.68 EE 0.15 (|z|<5)"
+ },
+ "synfast_map_recovers_cl": {
+  "ok": true,
+  "detail": "anafast(alm2map(a)) vs alm2cl(a), TT and EE, l 2-2500 at Nside 2048: max rel 4.70e-09 (bound 1e-4)"
+ },
+ "synfast": {
+  "z": {
+   "TT": 1.6791203414246938,
+   "EE": 0.15358985066987746
+  },
+  "map_rt": 4.6975250356240394e-09,
+  "hash_alm": "474900142abdc8a8"
+ },
+ "timings_s": {
+  "read": 2.25,
+  "reorder": 9.0,
+  "geometry": 45.66,
+  "ud_grade": 7.88,
+  "anafast_full": 115.53,
+  "monopole": 1.48,
+  "anafast_masked": 115.71,
+  "published_tt": 0.15,
+  "synthesis_vs_scipy": 65.11,
+  "roundtrip_convergence": 36.35,
+  "rotation": 5.58,
+  "smoothing": 0.2,
+  "synfast": 25.79
+ },
+ "wall_s": 432.4,
+ "ru_maxrss_gib": 8.686161041259766,
+ "failed": []
+}

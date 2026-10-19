@@ -1,0 +1,54 @@
+== x86_64 vs arm64
+  x86_64: failed checks none
+  hash_ring_I    identical
+  hash_ud_64     identical
+  synalm a_lm    identical
+  cl_full     max diff, l>=2: TT 1.0e-11 EE 1.9e-12 BB 2.4e-12 TE 5.6e-12 EB 1.2e-12 TB 6.1e-12
+  cl_mask     max diff, l>=2: TT 7.0e-15 EE 3.9e-14 BB 3.9e-14 TE 1.7e-14 EB 2.5e-14 TB 2.2e-14
+  synalm_cl   max diff, l>=2: TT 4.5e-16 EE 7.4e-16 BB 5.0e-16 TE 2.4e-16 EB 7.5e-17 TB 6.0e-17
+  synfast_cl  max diff, l>=2: TT 2.4e-15 EE 1.0e-15 BB 1.2e-14 TE 9.2e-16 EB 5.6e-15 TB 5.4e-15
+  first_peak               arm64 {'smica': 221.61756919475573, 'published': 221.3905239522125, 'theory': 220.35498553550684} | x86_64 {'smica': 221.6175691947558, 'published': 221.39052395221242, 'theory': 220.3549855355068}
+  random_ang2pix_disagree  arm64 0 | x86_64 0
+  centre_sep_max_rad       arm64 {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15} | x86_64 {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15}
+  rotation                 arm64 {'cl_err': 4.11226608321158e-13, 'rt_err': 6.84187043512923e-14} | x86_64 {'cl_err': 4.120037644383956e-13, 'rt_err': 8.011230594591868e-14}
+  roundtrip_rate           arm64 {'2048': [35.37391363800092, 35.36866469913863, 35.368662992291775], '4096': [8.318063991320619, 8.284790366232222, 8.28313361538124]} | x86_64 {'2048': [35.3739136398083, 35.36866469557387, 35.36866291269318], '4096': [8.318063991231591, 8.28479036615482, 8.283133615271996]}
+  synthesis_rel_err        arm64 3.8785833790060905e-14 | x86_64 3.8488548400765584e-14
+  synfast z                arm64 {'TT': 1.6791203414246938, 'EE': 0.15358985066987746} | x86_64 {'TT': 1.67912034142469, 'EE': 0.15358985066987502}
+  inpaint                  arm64 same | x86_64 
+  check details identical except: monopole_is_mean, alm2map_vs_scipy_Ylm, rotation_preserves_cl, rotation_roundtrip, smoothing_is_beam_squared
+== amd vs arm64
+  amd: failed checks none
+  hash_ring_I    identical
+  hash_ud_64     identical
+  synalm a_lm    identical
+  cl_full     max diff, l>=2: TT 1.0e-11 EE 1.9e-12 BB 2.4e-12 TE 5.6e-12 EB 1.2e-12 TB 6.1e-12
+  cl_mask     max diff, l>=2: TT 7.0e-15 EE 3.9e-14 BB 3.9e-14 TE 1.7e-14 EB 2.5e-14 TB 2.2e-14
+  synalm_cl   max diff, l>=2: TT 4.5e-16 EE 7.4e-16 BB 5.0e-16 TE 2.4e-16 EB 7.5e-17 TB 6.0e-17
+  synfast_cl  max diff, l>=2: TT 2.4e-15 EE 1.0e-15 BB 1.2e-14 TE 9.2e-16 EB 5.6e-15 TB 5.4e-15
+  first_peak               arm64 {'smica': 221.61756919475573, 'published': 221.3905239522125, 'theory': 220.35498553550684} | amd {'smica': 221.6175691947558, 'published': 221.39052395221242, 'theory': 220.3549855355068}
+  random_ang2pix_disagree  arm64 0 | amd 0
+  centre_sep_max_rad       arm64 {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15} | amd {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15}
+  rotation                 arm64 {'cl_err': 4.11226608321158e-13, 'rt_err': 6.84187043512923e-14} | amd {'cl_err': 4.120037644383956e-13, 'rt_err': 8.011230594591868e-14}
+  roundtrip_rate           arm64 {'2048': [35.37391363800092, 35.36866469913863, 35.368662992291775], '4096': [8.318063991320619, 8.284790366232222, 8.28313361538124]} | amd {'2048': [35.3739136398083, 35.36866469557387, 35.36866291269318], '4096': [8.318063991231591, 8.28479036615482, 8.283133615271996]}
+  synthesis_rel_err        arm64 3.8785833790060905e-14 | amd 3.8488548400765584e-14
+  synfast z                arm64 {'TT': 1.6791203414246938, 'EE': 0.15358985066987746} | amd {'TT': 1.67912034142469, 'EE': 0.15358985066987502}
+  inpaint                  arm64 same | amd 
+  check details identical except: monopole_is_mean, alm2map_vs_scipy_Ylm, rotation_preserves_cl, rotation_roundtrip, smoothing_is_beam_squared
+== amd vs x86_64
+  amd: failed checks none
+  hash_ring_I    identical
+  hash_ud_64     identical
+  synalm a_lm    identical
+  cl_full     bit-identical
+  cl_mask     bit-identical
+  synalm_cl   bit-identical
+  synfast_cl  bit-identical
+  first_peak               x86_64 {'smica': 221.6175691947558, 'published': 221.39052395221242, 'theory': 220.3549855355068} | amd {'smica': 221.6175691947558, 'published': 221.39052395221242, 'theory': 220.3549855355068}
+  random_ang2pix_disagree  x86_64 0 | amd 0
+  centre_sep_max_rad       x86_64 {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15} | amd {'nest': 1.5155051032962067e-15, 'ring': 1.7842128272115993e-15}
+  rotation                 x86_64 {'cl_err': 4.120037644383956e-13, 'rt_err': 8.011230594591868e-14} | amd {'cl_err': 4.120037644383956e-13, 'rt_err': 8.011230594591868e-14}
+  roundtrip_rate           x86_64 {'2048': [35.3739136398083, 35.36866469557387, 35.36866291269318], '4096': [8.318063991231591, 8.28479036615482, 8.283133615271996]} | amd {'2048': [35.3739136398083, 35.36866469557387, 35.36866291269318], '4096': [8.318063991231591, 8.28479036615482, 8.283133615271996]}
+  synthesis_rel_err        x86_64 3.8488548400765584e-14 | amd 3.8488548400765584e-14
+  synfast z                x86_64 {'TT': 1.67912034142469, 'EE': 0.15358985066987502} | amd {'TT': 1.67912034142469, 'EE': 0.15358985066987502}
+  inpaint                  x86_64 same | amd 
+  check details identical except: none

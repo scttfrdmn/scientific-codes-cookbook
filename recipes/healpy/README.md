@@ -13,8 +13,6 @@ last_verified: 2026-09-13
 
 healpy does HEALPix sky pixelization — the equal-area tessellation of the sphere that CMB and large-scale-structure analysis are built on — on Graviton4. The `astro` env's third recipe, on a different axis from [photutils](../photutils/README.md)' photometry. For anyone who works in HEALPix.
 
-> **What this covers.** healpy 1.20 checked by four **exact** HEALPix identities — combinatorial, equal-area, and two round-trips — each *zero-band* (exact-or-wrong), not a tolerance. Sky pixelization, a different sub-culture and a different check family from photutils' constructed-truth reproductions. No map data, no network.
-
 ## Run it
 
 ```bash
@@ -28,8 +26,6 @@ npix  = hp.nside2npix(nside)                 # 49152 = 12 * nside^2, exact
 theta, phi = hp.pix2ang(nside, range(npix))  # each pixel's centre on the sphere
 ```
 
-The recipe asserts four properties of this pixelization that hold exactly, by HEALPix's construction — no measured value, no band.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -40,11 +36,19 @@ The recipe asserts four properties of this pixelization that hold exactly, by HE
 
 **Leave the fixture:** the point is that HEALPix's exact properties hold on arm64, and exact identities show that better than any real map. **Scale it** to your maps and operations — the pixelization underneath is what these four checks pin down.
 
+## Which box — [measured](../../measurements/healpy-real/README.md) on Planck's full-resolution SMICA map
+
+| chip | instance | tool wall | compute $ | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 432 s | 0.0431 | 0.0584 |
+| Intel | `m8i.2xlarge` | 532 s | 0.0626 | 0.0766 |
+| **AMD** | `m8a.2xlarge` | **272 s** | **0.0368** | **0.0544** |
+
+The run is the Planck PR3 SMICA I, Q and U maps at Nside 2048: polarised `map2alm` to ℓmax 6143 on the full and masked sky, exhaustive pixel geometry against astropy-healpix, `ud_grade`, `rotate_alm` and a seeded synfast. All 31 identities hold on every chip, and SMICA's first acoustic peak lands at ℓ 221.6, against 221.4 in Planck's published spectrum. **AMD is cheapest, because it runs the harmonic transforms (about half the wall) 1.85× faster.** Graviton4 is 7% dearer, Intel 41%. The job peaks at 8.7 GiB of RAM, plus 2.4 GB of staged FITS in tmpfs.
+
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **74 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
-
-**Sizing:** no family question — pure combinatorics and coordinate math, CPU-light. A real workload (high-nside maps, spherical harmonic transforms) sizes by map size and shifts to RAM; size it on the data.
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **74 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.** **Sizing:** no family question — pure combinatorics and coordinate math, CPU-light. A real workload sizes by map size and RAM: see the measured table above.
 
 <details>
 <summary>As shipped: four exact identities (why zero-band, why exhaustive), pins, smoke check, run + verify</summary>

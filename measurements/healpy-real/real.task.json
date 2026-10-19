@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-healpy-real-r2",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf 'a661cc1b306b6ce4c1333cb65feb8f5c03725e76a787aaffa71a424823402b3a  run.sh\\n5949bb3361c4300c28e74cc26b5d5924ef0e7869515b203bfcea7e922145f201  real.py\\n2c09ee32c47ff772cca6cb46e4591a43c841925a4d7a3d8deedabc6367cd3da3  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/healpy-real/pr3/",
+      "destination": "/tmp/pr3/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/healpy-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/healpy-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/healpy-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/results.json"
+    },
+    {
+      "source": "/tmp/out/spectra.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/spectra.npz"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/healpy-real/r2/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

@@ -1,0 +1,74 @@
+healpy 1.20.0 numpy 2.5.3 scipy 1.18.1 astropy 8.0.1 astropy-healpix 2.0.1 OMP_NUM_THREADS 8
+openblas_corename Cooperlake
+== read
+smica columns ['I_STOKES', 'Q_STOKES', 'U_STOKES', 'TMASK', 'PMASK', 'I_STOKES_INP', 'Q_STOKES_INP', 'U_STOKES_INP', 'TMASKINP', 'PMASKINP'] ORDERING NESTED NSIDE 2048 TUNIT1 K_CMB
+mask columns ['TMASK'] NESTED ['PMASK'] NESTED
+npix_12_nside2                     every column of the map and both masks has 12*2048^2 = 50331648 pixels  [ok]
+ordering_nested                    map and masks are NESTED, as Planck ships them  [ok]
+map_finite                         I,Q,U all finite; UNSEEN pixels {'I_STOKES': 0, 'Q_STOKES': 0, 'U_STOKES': 0}  [ok]
+common masks fsky: Int 0.779413  Pol 0.781440  binary True True
+inpainting: {'I': {'mask': 'TMASKINP', 'mask_fsky': 0.984921932220459, 'differ': 50331640, 'differ_where_mask1': 49572736, 'differ_where_mask0': 758904, 'max_abs_diff_where_mask1_K': 0.008129649795591831, 'rms_K': 0.00010836522415047511, 'mask0': 758904}, 'Q': {'mask': 'PMASKINP', 'mask_fsky': 0.957911491394043, 'differ': 50331647, 'differ_where_mask1': 48213176, 'differ_where_mask0': 2118471, 'max_abs_diff_where_mask1_K': 0.0002871125179808587, 'rms_K': 2.8316369935055263e-05, 'mask0': 2118472}, 'U': {'mask': 'PMASKINP', 'mask_fsky': 0.957911491394043, 'differ': 50331648, 'differ_where_mask1': 48213176, 'differ_where_mask0': 2118472, 'max_abs_diff_where_mask1_K': 0.0002686715452000499, 'rms_K': 2.8408705475158058e-05, 'mask0': 2118472}}
+SMICA confidence masks fsky: {'TMASK': 0.8424088954925537, 'PMASK': 0.9294669032096863}
+   (read: 3.1 s)
+== reorder
+nest2ring_is_permutation           nest2ring over all 50331648 pixels hits each ring index once  [ok]
+reorder_matches_index              reorder(n2r) == scatter by nest2ring, bit-exact  [ok]
+reorder_roundtrip                  I,Q,U: nest -> ring -> nest bit-identical over all pixels  [ok]
+read_map_ring                      hp.read_map(nest=False) == reorder of the raw NESTED columns, bit-exact  [ok]
+   (reorder: 9.4 s)
+== geometry
+area_sum_4pi                       fsum of 50331648 pixel areas = 12.566370614359172, 4pi = 12.566370614359172  [ok]
+ring_nest_bijection                nest->ring->nest identity, all 50331648 pixels  [ok]
+pix_ang_pix_nest                   pix2ang->ang2pix identity, all pixels (nest)  [ok]
+pix_vec_pix_nest                   pix2vec->vec2pix identity, all pixels (nest)  [ok]
+astropy_healpix_centres_nest       astropy-healpix vs healpy pixel centres, max separation 1.52e-15 rad (bound 1e-12; pixel size 5.0e-04)  [ok]
+astropy_healpix_roundtrip_nest     astropy-healpix(healpy centres) and healpy(astropy-healpix centres) both return the pixel, all pixels (nest): 0 / 0 misses  [ok]
+pix_ang_pix_ring                   pix2ang->ang2pix identity, all pixels (ring)  [ok]
+pix_vec_pix_ring                   pix2vec->vec2pix identity, all pixels (ring)  [ok]
+astropy_healpix_centres_ring       astropy-healpix vs healpy pixel centres, max separation 1.78e-15 rad (bound 1e-12; pixel size 5.0e-04)  [ok]
+astropy_healpix_roundtrip_ring     astropy-healpix(healpy centres) and healpy(astropy-healpix centres) both return the pixel, all pixels (ring): 0 / 0 misses  [ok]
+ang2pix_random_vs_astropy_healpix  20000000 random sky positions: 0 disagreements, all adjacent pixels: True  [ok]
+query_disc_vs_bruteforce           24 discs 0.5-20 deg: 13939367 pixels inside, 0 disagreements (0 centres within 1e-13 of the edge excluded)  [ok]
+   (geometry: 52.0 s)
+== ud_grade
+I map: sum -1.4458712320129276e-05  sum|.| 4336.458012661264  mean -2.872688e-13 K
+ud_grade_ring_equals_nest          ud_grade in RING == reorder(ud_grade in NESTED), bit-exact, 2048 -> 256  [ok]
+ud_grade_conserves_sum             2048 -> 1024 ... 1: sum(out)*ratio == fsum(in), worst rel 7.31e-18 (bound 4*npix*eps*sum|m|)  [ok]
+ud_grade_up_down_exact             2048 -> 4096 (201,326,592 pixels) repeats each parent; -> 2048 returns the float32-valued map bit-exact  [ok]
+   (ud_grade: 13.4 s)
+== anafast_full
+full-sky IQU to lmax 6143, iter 3: 18877440 a_lm per field
+   (anafast_full: 148.8 s)
+== monopole
+monopole_is_mean                   map2alm(iter=0) a00 -1.018341e-12 == sqrt(4pi)*mean -1.018341e-12: |diff| 6.79e-22 (bound 64 eps sqrt(4pi) mean|m| = 4.34e-18)  [ok]
+   (monopole: 1.6 s)
+== anafast_masked
+   (anafast_masked: 149.1 s)
+== published_tt
+pixel window from healpy's own data file
+SMICA INT_BEAM, l 2-2000: max |B/gauss5' - 1| 1.33e-03, max |B/(gauss5' * pixwin) - 1| 4.45e-02; INT_BEAM[0:2] [0. 0.]
+first_peak_vs_planck               first acoustic peak (quadratic vertex, l 170-270): SMICA masked pseudo-C_l 221.62, Planck PR3 published TT 221.39 (|diff| <= 5); best-fit theory 220.35, theory argmax 220  [ok]
+SMICA masked pseudo-D_l / published TT, 50-l bins 30-1480: min 0.9899 max 1.2745 median 1.0443
+   (published_tt: 0.2 s)
+== synthesis_vs_scipy
+alm2map_vs_scipy_Ylm               alm2map (l<=128, real SMICA a_lm) vs direct sum of scipy sph_harm_y at 4000 pixels: max |diff| 1.32e-17 = 3.8e-14 of max|map| (bound 1e-11)  [ok]
+   (synthesis_vs_scipy: 55.3 s)
+== roundtrip_convergence
+map2alm round trip, band limit 2048: rel residual by iteration 2.649e-05 7.488e-07 2.117e-08 5.986e-10
+map2alm round trip, band limit 4096: rel residual by iteration 4.527e-05 5.442e-06 6.569e-07 7.930e-08
+roundtrip_geometric_rate           map2alm(alm2map(a)) residual shrinks by a constant factor per iteration: band limit 2048 x35.37/35.37/35.37, 4096 x8.32/8.28/8.28 (factor > 2, spread < 10%)  [ok]
+   (roundtrip_convergence: 49.2 s)
+== rotation
+rotation_preserves_cl              Galactic -> equatorial rotate_alm (l<=2048): max_l |C_l'/C_l - 1| = 4.12e-13 (bound 1e-9)  [ok]
+rotation_roundtrip                 G -> C -> G returns the a_lm: rel residual 8.01e-14 (bound 1e-9)  [ok]
+   (rotation: 11.9 s)
+== smoothing
+smoothing_is_beam_squared          smoothalm(10') C_l == C_l * exp(-l(l+1)sigma^2), independently computed: max rel 1.97e-14 over 6144 multipoles (bound 1e-12)  [ok]
+   (smoothing: 0.2 s)
+== synfast
+synalm_cosmic_variance             seeded synalm from Planck's best fit, l 2-2500: sum((2l+1)C^/C - (2l+1)) in sigma, TT 1.68 EE 0.15 (|z|<5)  [ok]
+synfast_map_recovers_cl            anafast(alm2map(a)) vs alm2cl(a), TT and EE, l 2-2500 at Nside 2048: max rel 4.70e-09 (bound 1e-4)  [ok]
+   (synfast: 34.7 s)
+timings {"read": 3.1, "reorder": 9.45, "geometry": 51.97, "ud_grade": 13.45, "anafast_full": 148.82, "monopole": 1.6, "anafast_masked": 149.14, "published_tt": 0.16, "synthesis_vs_scipy": 55.32, "roundtrip_convergence": 49.25, "rotation": 11.92, "smoothing": 0.2, "synfast": 34.7}
+wall 532.1 s  ru_maxrss 8.69 GiB
+HEALPY REAL OK

@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-healpy-real-fetch",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\n# Planck PR3 (2018) products from the Planck Legacy Archive's IRSA mirror, fetched on AWS.\n# The release tag (R3.00 / R3.01) is in every file name; the sha256 recorded here is the pin.\npython3 -u - <<'PYEOF' || { echo \"FAIL: fetch\"; exit 1; }\nimport hashlib, urllib.request\nB = \"https://irsa.ipac.caltech.edu/data/Planck/release_3/\"\nF = {\n \"COM_CMB_IQU-smica_2048_R3.00_full.fits\": (\"all-sky-maps/maps/component-maps/cmb/\", 2013312960),\n \"COM_Mask_CMB-common-Mask-Int_2048_R3.00.fits\": (\"ancillary-data/masks/\", 201335040),\n \"COM_Mask_CMB-common-Mask-Pol_2048_R3.00.fits\": (\"ancillary-data/masks/\", 201335040),\n \"COM_PowerSpect_CMB-TT-full_R3.01.txt\": (\"ancillary-data/cosmoparams/\", 170547),\n \"COM_PowerSpect_CMB-EE-full_R3.01.txt\": (\"ancillary-data/cosmoparams/\", 135731),\n \"COM_PowerSpect_CMB-base-plikHM-TTTEEE-lowl-lowE-lensing-minimum-theory_R3.01.txt\": (\"ancillary-data/cosmoparams/\", 205647),\n}\nout = open(\"data.sha256\", \"w\")\nfor name, (d, size) in F.items():\n    h = hashlib.sha256(); n = 0\n    with urllib.request.urlopen(B + d + name, timeout=900) as r, open(name, \"wb\") as fh:\n        while True:\n            b = r.read(1 << 22)\n            if not b:\n                break\n            h.update(b); fh.write(b); n += len(b)\n    print(name, n, h.hexdigest(), flush=True)\n    assert n == size, \"%s: %d bytes, expected %d\" % (name, n, size)\n    out.write(\"%s  %s\\n\" % (h.hexdigest(), name))\nout.close()\nfrom astropy.io import fits\nwith open(\"headers.txt\", \"w\") as fh:\n    for name in F:\n        if name.endswith(\".fits\"):\n            with fits.open(name, memmap=True) as hd:\n                for i, h in enumerate(hd):\n                    fh.write(\"== %s HDU %d\\n%s\\n\" % (name, i, h.header.tostring(sep=\"\\n\")))\n    for name in F:\n        if name.endswith(\".txt\"):\n            fh.write(\"== %s head\\n%s\\n\" % (name, \"\".join(open(name).readlines()[:5])))\nPYEOF\ncat data.sha256\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/healpy-real/pr3/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
