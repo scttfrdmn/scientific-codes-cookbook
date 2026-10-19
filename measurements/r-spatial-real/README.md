@@ -92,6 +92,8 @@ and 2 on Intel, whose 8 vCPU are 4 cores.
 | control: rasterize the NAD83 polygons onto the WGS84 grid unprojected | the route check has teeth | 913 tracts differ, by up to 61 cells | same | same |
 | base R `sum()` == `terra::global()` over all 362.88 M cells | exact integers | 7,569,849,656,536 | same | same |
 
+The decimetre values are terra's `dem * 10` layer, which terra stores as float32, not an exact `round(v × 10)` in double. Every route above reads that same layer, so the identities hold. Computed exactly in double, 1,289 of 1,447 tracts differ and the state total is 313,590 dm lower ([geo-ml-real](../geo-ml-real/README.md) measured this on all three chips).
+
 Bounds:
 - **Area, `1 m² + perimeter × 0.0557 m`.** ALAND and AWATER are integer m², so the pair is
   only good to 1 m². Census computed its areas in MAF/TIGER, from its own coordinates and with its
