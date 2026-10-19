@@ -1,0 +1,45 @@
+observable	value
+pass	par
+dolfinx	0.11.0
+basix	0.11.0
+ufl	2026.1.0
+petsc4py	3.25.6
+mpi_library	Open MPI v5.0.11
+machine	x86_64
+cpu	model name: AMD EPYC 9R45
+threads_per_core	1
+host_cpus	32
+openblas_corename	Cooperlake
+mpi_comm_world_size	32
+mpi_ranks_launched	32
+quadratic_P1_H1_error_q1_vs_q5	1.909407e-01 2.700309e-01
+quadratic_P1_L2_error	1.622126e-02
+quadratic_P2_H1_error_q2_vs_q7	2.120288e-13 1.642836e-13
+quadratic_P2_L2_error	1.549750e-14
+quadratic_P3_H1_error_q4_vs_q9	2.233120e-13 2.319204e-06
+quadratic_P3_L2_error	3.171175e-14
+identity_containment	P2 1.55e-14, P3 3.17e-14 exact; P1 control 1.622e-02 (1.0e+12x worse)
+sine_P1_N	16 32 64 128
+sine_P1_L2	6.337552e-03 1.597641e-03 4.002501e-04 1.001152e-04
+sine_P1_H1	2.427553e-01 1.217806e-01 6.094096e-02 3.047682e-02
+sine_P1_L2_orders	1.9880 1.9970 1.9992
+sine_P1_H1_orders	0.9952 0.9988 0.9997
+sine_P2_N	16 32 64 128
+sine_P2_L2	8.777626e-05 1.096729e-05 1.370897e-06 1.713648e-07
+sine_P2_H1	1.147461e-02 2.884992e-03 7.223292e-04 1.806516e-04
+sine_P2_L2_orders	3.0006 3.0000 3.0000
+sine_P2_H1_orders	1.9918 1.9978 1.9994
+identity_convergence_order	P1 L2 1.9992 H1 0.9997 (theory 2, 1); P2 L2 3.0000 H1 1.9994 (theory 3, 2), finest rungs
+finest_P2_dofs	16974593
+finest_P2_L2_boomeramg	1.713647905389e-07
+finest_P2_L2_gamg	1.713647904169e-07
+finest_P2_L2_relative_diff	7.120e-10
+finest_P2_algebraic_L2	9.044e-15
+finest_P2_algebraic_fraction	5.278e-08
+identity_two_preconditioners	BoomerAMG and GAMG reach one discrete solution: ||u_amg - u_gamg|| = 9.04e-15, 5.3e-08 of the discretisation error 1.714e-07
+serial_vs_parallel_rungs	6
+serial_vs_parallel_worst_relative	5.604e-10
+identity_serial_equals_parallel	6 rungs, worst 5.60e-10 relative (bound 1e-06)
+rss_sum_of_rank_peaks_gib	111.22
+rss_max_rank_peak_gib	3.70
+wall_s	92.1

@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-fenicsx-real-real",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:941bdafc519347a600fa4c2805971a3beec8cce561f52b9152b8676277978c68",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash real.sh 32 \"16 32 64\" \"16 32 64\" \"16 32 64 128\" \"16 32 64 128\"\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fenicsx-real/poisson3d.py",
+      "destination": "/tmp/poisson3d.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fenicsx-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fenicsx-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fenicsx-real/real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

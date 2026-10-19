@@ -1,0 +1,57 @@
+pass	par
+dolfinx	0.11.0
+basix	0.11.0
+ufl	2026.1.0
+petsc4py	3.25.6
+mpi_library	Open MPI v5.0.11
+machine	x86_64
+cpu	model name: Intel(R) Xeon(R) 6975P-C
+threads_per_core	2
+host_cpus	32
+openblas_corename	Cooperlake
+mpi_comm_world_size	32
+mpi_ranks_launched	32
+quadratic_P1_H1_error_q1_vs_q5	1.909407e-01 2.700309e-01
+rung	pass=par	case=quadratic	solver=lu	degree=1	n=8	dofs=729	cells=3072	its=1	reason=4	l2_error=1.622126198167e-02	h1_error=2.700308624337e-01	t_mesh=0.05	t_setup=0.02	t_solve=0.01	t_error=0.01
+quadratic_P1_L2_error	1.622126e-02
+quadratic_P2_H1_error_q2_vs_q7	2.143383e-13 1.675103e-13
+rung	pass=par	case=quadratic	solver=lu	degree=2	n=8	dofs=4913	cells=3072	its=1	reason=4	l2_error=1.623300742758e-14	h1_error=1.675102680861e-13	t_mesh=0.05	t_setup=0.03	t_solve=0.05	t_error=0.01
+quadratic_P2_L2_error	1.623301e-14
+quadratic_P3_H1_error_q4_vs_q9	2.304749e-13 2.319204e-06
+rung	pass=par	case=quadratic	solver=lu	degree=3	n=8	dofs=15625	cells=3072	its=1	reason=4	l2_error=3.385351370114e-14	h1_error=2.319204277618e-06	t_mesh=0.05	t_setup=0.01	t_solve=0.20	t_error=0.01
+quadratic_P3_L2_error	3.385351e-14
+identity_containment	P2 1.62e-14, P3 3.39e-14 exact; P1 control 1.622e-02 (1.0e+12x worse)
+rung	pass=par	case=sine	solver=boomeramg	degree=1	n=16	dofs=4913	cells=24576	its=7	reason=2	l2_error=6.337552439127e-03	h1_error=2.427553122818e-01	t_mesh=0.02	t_setup=0.02	t_solve=0.03	t_error=0.01
+rung	pass=par	case=sine	solver=boomeramg	degree=1	n=32	dofs=35937	cells=196608	its=8	reason=2	l2_error=1.597641078174e-03	h1_error=1.217805971241e-01	t_mesh=0.04	t_setup=0.06	t_solve=0.18	t_error=0.01
+rung	pass=par	case=sine	solver=boomeramg	degree=1	n=64	dofs=274625	cells=1572864	its=9	reason=2	l2_error=4.002500855237e-04	h1_error=6.094095744902e-02	t_mesh=0.22	t_setup=0.19	t_solve=1.29	t_error=0.07
+rung	pass=par	case=sine	solver=boomeramg	degree=1	n=128	dofs=2146689	cells=12582912	its=11	reason=2	l2_error=1.001152038703e-04	h1_error=3.047682036206e-02	t_mesh=2.25	t_setup=1.02	t_solve=10.06	t_error=0.58
+sine_P1_N	16 32 64 128
+sine_P1_L2	6.337552e-03 1.597641e-03 4.002501e-04 1.001152e-04
+sine_P1_H1	2.427553e-01 1.217806e-01 6.094096e-02 3.047682e-02
+sine_P1_L2_orders	1.9880 1.9970 1.9992
+sine_P1_H1_orders	0.9952 0.9988 0.9997
+rung	pass=par	case=sine	solver=boomeramg	degree=2	n=16	dofs=35937	cells=24576	its=11	reason=2	l2_error=8.777626043830e-05	h1_error=1.147461318208e-02	t_mesh=0.03	t_setup=0.04	t_solve=0.10	t_error=0.01
+rung	pass=par	case=sine	solver=boomeramg	degree=2	n=32	dofs=274625	cells=196608	its=11	reason=2	l2_error=1.096728840237e-05	h1_error=2.884992245314e-03	t_mesh=0.04	t_setup=0.16	t_solve=1.07	t_error=0.03
+rung	pass=par	case=sine	solver=boomeramg	degree=2	n=64	dofs=2146689	cells=1572864	its=11	reason=2	l2_error=1.370897393243e-06	h1_error=7.223291523907e-04	t_mesh=0.23	t_setup=0.61	t_solve=9.14	t_error=0.17
+rung	pass=par	case=sine	solver=boomeramg	degree=2	n=128	dofs=16974593	cells=12582912	its=12	reason=2	l2_error=1.713647905436e-07	h1_error=1.806515952964e-04	t_mesh=2.14	t_setup=3.66	t_solve=67.64	t_error=1.32
+sine_P2_N	16 32 64 128
+sine_P2_L2	8.777626e-05 1.096729e-05 1.370897e-06 1.713648e-07
+sine_P2_H1	1.147461e-02 2.884992e-03 7.223292e-04 1.806516e-04
+sine_P2_L2_orders	3.0006 3.0000 3.0000
+sine_P2_H1_orders	1.9918 1.9978 1.9994
+identity_convergence_order	P1 L2 1.9992 H1 0.9997 (theory 2, 1); P2 L2 3.0000 H1 1.9994 (theory 3, 2), finest rungs
+rung	pass=par	case=sine	solver=gamg	degree=2	n=128	dofs=16974593	cells=12582912	its=53	reason=2	l2_error=1.713647904201e-07	h1_error=1.806515952964e-04	t_mesh=2.14	t_setup=1.98	t_solve=35.42	t_error=1.33
+finest_P2_dofs	16974593
+finest_P2_L2_boomeramg	1.713647905436e-07
+finest_P2_L2_gamg	1.713647904201e-07
+finest_P2_L2_relative_diff	7.209e-10
+finest_P2_algebraic_L2	9.076e-15
+finest_P2_algebraic_fraction	5.296e-08
+identity_two_preconditioners	BoomerAMG and GAMG reach one discrete solution: ||u_amg - u_gamg|| = 9.08e-15, 5.3e-08 of the discretisation error 1.714e-07
+serial_vs_parallel_rungs	6
+serial_vs_parallel_worst_relative	5.571e-10
+identity_serial_equals_parallel	6 rungs, worst 5.57e-10 relative (bound 1e-06)
+rss_sum_of_rank_peaks_gib	110.90
+rss_max_rank_peak_gib	3.68
+wall_s	145.1
+FENICSX-REAL OK (pass=par comm_size=32)

@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-fenicsx-real-fpcontract",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:941bdafc519347a600fa4c2805971a3beec8cce561f52b9152b8676277978c68",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nexport TMPDIR=/tmp HOME=/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\nsha256sum -c fpcontract.sha256 || { echo \"FAIL: fpcontract.py does not match its pin\"; exit 1; }\nmkdir -p /tmp/out\npython3 -u fpcontract.py > /tmp/out/fpcontract.log 2>&1\ns=$?\ncat /tmp/out/fpcontract.log\ntest \"$s\" = 0 || { echo \"FAIL: probe exit $s\"; exit 1; }\ntest \"$(grep -c '^l2_P2_N64_' /tmp/out/fpcontract.log)\" = 2 || { echo \"FAIL: not both L2 values\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fenicsx-real/fpcontract.py",
+      "destination": "/tmp/fpcontract.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fenicsx-real/fpcontract.sha256",
+      "destination": "/tmp/fpcontract.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fenicsx-real/fpcontract/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

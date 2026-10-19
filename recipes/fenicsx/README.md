@@ -32,21 +32,21 @@ uh = LinearProblem(a, f*v*ufl.dx, bcs=[bc],
                    petsc_options={"ksp_type": "preonly", "pc_type": "lu"}).solve()
 ```
 
-The recipe wraps this in the method of manufactured solutions: pick an exact `u`, set `f = -Δu`, solve, and measure the L2 error — for a polynomial `u` (patch test) and a transcendental one (convergence).
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | the manufactured Poisson problem (unit square) | your PDE + geometry | dolfinx expresses the weak form in UFL; swap the forms and the mesh — the MMS *verifies* whatever you solve. |
 | P2 Lagrange elements | P1 / P3 / … | the convergence check asserts rate **p+1**, and the recipe now *demonstrates* it: P1 converges at **1.998**, P2 at **3.000**. P1 is also the patch test's control — it cannot represent a quadratic, so it fails that check by 6.8e11×. |
-| direct LU solve | GMRES + AMG for large problems | LU is exact and right for this size; real problems scale with a Krylov solver + preconditioner — the [scaling knee](../../patterns/sizing.md). |
+| direct LU solve | CG + AMG for large problems | LU is exact and right for this size; at 17 M unknowns PETSc's default GAMG solved **2× faster** than default BoomerAMG ([measured](../../measurements/fenicsx-real/README.md)). |
 
 **Leave the fixture:** the manufactured solution is the point — it gives an exact answer to check against, which a real problem can't. **Scale it** to your physics; the two checks (exact reproduction, correct order) travel to any PDE.
 
 ## Shape, size, cost
 
 One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 5m, cap $0.04. Measured on the box: **38 s** Docker install + **66 s** image pull (0.67 GB) dominate; the entire dolfinx exec — Python import, JIT form-compilation, and all five solves — was **6 s**. dolfinx JIT-compiles the variational forms at runtime (the env's gcc), which is the FEM timing wildcard in general, but for these simple Poisson forms it's cheap and lives inside that 6 s — the pull is the cost, as always. **These timings are not compute cost.** **Sizing:** the unit-square mesh is tiny; a real problem scales with degrees of freedom (mesh × element order) and moves to a Krylov solver across ranks, where the [scaling knee](../../patterns/sizing.md) lives. Size a real model on its DOF count.
+
+**Which box — [measured](../../measurements/fenicsx-real/README.md)** at production size: 3D P2 Poisson, 16,974,593 unknowns, CG + AMG over 32 ranks on an `8xlarge`. Orders 3.0000 / 1.9994 and every iteration count identical on all three chips; peak 108–111 GiB, about **6.7 KiB per P2 unknown**, so memory picks the box. **Graviton4** (`m8g.8xlarge`) 168 s, **$0.107** billed per result; AMD (`m8a`) 164 s, $0.113; Intel (`m8i`, 16 cores × 2 threads) 240 s, $0.133.
 
 <details>
 <summary>As shipped: the two checks, why the rate not the error, pins, smoke check, run + verify</summary>
