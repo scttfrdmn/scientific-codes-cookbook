@@ -40,11 +40,17 @@ Two tasks: pairtools produces the valid-pair count, then cooler must conserve it
 | `cooler coarsen` | `cooler zoomify` | zoomify builds a whole `.mcool` pyramid in one call; coarsen does one step, which is what makes the conservation check readable. |
 | the pairs fixture | aligned Hi-C reads | real pipelines start from FASTQ → `bwa mem` → `pairtools parse`. This recipe starts at `.pairs` to keep the identities the subject. |
 
-**Leave the fixture.** 9,998 contacts across **3,579 contigs** is small but adversarial in the way that matters here — a fragmented assembly means thousands of partial trailing bins, which is exactly where a coarsener loses counts. **Scale it** to a real library once it passes; the identities are size-independent.
+**Leave the fixture.** 9,998 contacts across **3,579 contigs** is small but adversarial in the way that matters here — a fragmented assembly means thousands of partial trailing bins, which is exactly where a coarsener loses counts. **Scale it** to a real library once it passes: the [measured run](../../measurements/hic-real/README.md) holds every identity on a whole 4DN experiment.
 
-## Shape, size, cost
+## Which box — [measured](../../measurements/hic-real/README.md) on a whole 4DN GM12878 experiment (151M contacts, 16 threads)
 
-Two tasks on `m8g.large`/`m8g.xlarge`, TTL 25m and 30m, caps $0.08 and $0.10. Both finish in seconds; the recorded windows are boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | pairtools + cooler | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | 1,065 + 523 s | 0.6381 | **0.397** |
+| Xeon 6975P-C | `c8i.4xlarge` | 1,071 + 502 s | 0.7497 | 0.461 |
+| EPYC 9R45 | `c8a.4xlarge` | 801 + 367 s | 0.8622 | 0.421 |
+
+**Take Graviton4; AMD if time matters more** (1.36× faster, 6% dearer). All three rebuild 4DN's published `.mcool` pixel for pixel at all 13 resolutions. Size by `/tmp` (half the RAM), not cores: task 1 stages 9 GB. The fixture tasks above run on `m8g.large`/`xlarge` in seconds, so their windows are boot, and **timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: three exact conservation identities, and what each one would catch</summary>
@@ -121,9 +127,11 @@ image, and the same tag for both files, so the pin is one self-consistent set ra
 sources to keep aligned. The read IDs still carry their SRA runs (`SRR5319284`, `SRR5319279`), so
 this is real sequencing rather than simulated contacts.
 
-**Why not 4DN or pairtools' own test data:** 4DN is not on the AWS Open Data Registry (probed:
-404), and pairtools' bundled test data is 1.9 KB of mock reads — the identities would hold and
-prove nothing at scale.
+**Why not 4DN or pairtools' own test data for the fixture:** 4DN is on RODA
+(`s3://4dn-open-data-public`) and the [real workload](../../measurements/hic-real/README.md) uses it,
+but its lists are gigabytes.
+pairtools' bundled test data is 1.9 KB of mock reads — the identities would hold and prove
+nothing at scale.
 
 Both images cosign-verified; signatures cover the **manifest-list** digest, so verify the tag and
 pin the arm64 digest.

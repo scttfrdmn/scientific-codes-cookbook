@@ -1,0 +1,59 @@
+{
+  "task_id": "cookbook-hic-real-pairs-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '8986fc45b4f2b05996773ad98e9610ca9491cfcc70eedfb460696bd7863c753b  /tmp/pairs.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/pairs.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/pairtools@sha256:2b4ce4761b3e6acf9739ebbd598fbe5b4a9a42ab58fa35b23ae28733efaf913e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 80,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/pairs.sh",
+      "destination": "/tmp/pairs.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFILGIU5G7.pairs.gz",
+      "destination": "/tmp/4DNFILGIU5G7.pairs.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFI4EZMKAO.pairs.gz",
+      "destination": "/tmp/4DNFI4EZMKAO.pairs.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFIHMMV629.pairs.gz",
+      "destination": "/tmp/4DNFIHMMV629.pairs.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFI823LSII.chrom.sizes",
+      "destination": "/tmp/4DNFI823LSII.chrom.sizes"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/inputs.md5",
+      "destination": "/tmp/inputs.md5"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic-real/r2/pairs/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.8
+  }
+}

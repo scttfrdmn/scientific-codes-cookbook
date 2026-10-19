@@ -2,8 +2,9 @@
 # Stage a real Hi-C pairs file and its chromsizes, both from cooler's own test data at the tag
 # matching the cooler in the image.
 #
-# WHY THIS SOURCE. 4DN is not on the AWS Open Data Registry (probed: 404), and pairtools' own
-# test data is 1.9 KB of mock reads -- the identities would hold but prove nothing at scale.
+# WHY THIS SOURCE. 4DN's lists (s3://4dn-open-data-public, RODA) are gigabytes -- measurements/hic-real
+# runs one -- and pairtools' own test data is 1.9 KB of mock reads: the identities would hold but
+# prove nothing at scale.
 # cooler ships REAL Hi-C at v0.10.4: aag2.sample1.pairs is 9,998 Aedes aegypti contacts whose
 # read IDs still carry their SRA runs (SRR5319284, SRR5319279). Pairs and chromsizes come from
 # the SAME tag, so the pin is one self-consistent set rather than two sources to keep aligned.

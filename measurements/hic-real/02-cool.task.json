@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-hic-real-cool-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'c79ddf37865d02ee73ac07c47088d354c63708e69786e19aff8f61cc2425a565  /tmp/cool.sh\\nae24b4275219792100625ca2944166245529b8175c2455f78e7c1c151c079f9f  /tmp/ident.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/cool.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/cooler@sha256:5f665b9b2c94e5ca6812216309cb2e8d462d7d4498d4b25206ac0515e89a7dd0",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 80,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/cool.sh",
+      "destination": "/tmp/cool.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/ident.py",
+      "destination": "/tmp/ident.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFIFBPTHCU.mcool",
+      "destination": "/tmp/4DNFIFBPTHCU.mcool"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/4DNFI823LSII.chrom.sizes",
+      "destination": "/tmp/4DNFI823LSII.chrom.sizes"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/hic-real/r2/pairs/combined.pairs.gz",
+      "destination": "/tmp/combined.pairs.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/hic-real/r2/pairs/check.txt",
+      "destination": "/tmp/pairs-check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hic-real/inputs.md5",
+      "destination": "/tmp/inputs.md5"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hic-real/r2/cool/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

@@ -1,0 +1,71 @@
+arm64  pairs Graviton4 cpu_part 0xd4f           tpc 1  tool   1065 s  window  1553 s  $/hr 0.6381  compute $ 0.1888  billed $ 0.2753  peak rss 8.00 GiB  cgroup 23.39 GiB  completed
+         digest_rep2                17.1 s  rss   0.01 GiB
+         digest_rep1                20.7 s  rss   0.01 GiB
+         digest_4dn_combined        35.6 s  rss   0.01 GiB
+         merge_select              368.9 s  rss   8.00 GiB
+         dedup_rep1_window         408.1 s  rss   1.01 GiB
+         dedup_rep2                507.6 s  rss   0.14 GiB
+         dedup_planted             895.5 s  rss   4.00 GiB
+         dedup_rep1               1064.9 s  rss   0.14 GiB
+         digest_ours                28.5 s  rss   0.01 GiB
+         keys_c4dn                  25.2 s  rss   0.01 GiB
+         keys_ours                  25.9 s  rss   0.01 GiB
+         sorted_c4dn               354.0 s  rss   5.00 GiB
+         sorted_ours               359.9 s  rss   5.00 GiB
+arm64  cool  Graviton4 cpu_part 0xd4f           tpc 1  tool    523 s  window   689 s  $/hr 0.6381  compute $ 0.0927  billed $ 0.1221  peak rss 3.70 GiB  cgroup 17.53 GiB  completed
+         cload                     285.9 s  rss   3.70 GiB
+         zoomify                   162.1 s  rss   3.16 GiB
+         balance_1000000            11.2 s  rss   0.59 GiB
+         balance_100000             31.3 s  rss   0.59 GiB
+         balance_10000              32.4 s  rss   0.59 GiB
+         openblas: neoversev2 (/opt/conda/lib/libopenblasp-r0.3.33.so)
+x86_64 pairs Intel(R) Xeon(R) 6975P-C           tpc 2  tool   1071 s  window  1558 s  $/hr 0.7497  compute $ 0.2230  billed $ 0.3244  peak rss 8.00 GiB  cgroup 23.47 GiB  completed
+         digest_rep1                14.3 s  rss   0.01 GiB
+         digest_rep2                15.3 s  rss   0.01 GiB
+         digest_4dn_combined        24.8 s  rss   0.01 GiB
+         merge_select              367.9 s  rss   8.00 GiB
+         dedup_rep2                558.7 s  rss   0.14 GiB
+         dedup_rep1_window         563.7 s  rss   1.49 GiB
+         dedup_planted             916.5 s  rss   4.00 GiB
+         dedup_rep1               1071.0 s  rss   0.14 GiB
+         digest_ours                19.6 s  rss   0.01 GiB
+         keys_c4dn                  24.7 s  rss   0.01 GiB
+         keys_ours                  25.3 s  rss   0.01 GiB
+         sorted_c4dn               353.0 s  rss   5.00 GiB
+         sorted_ours               361.3 s  rss   5.00 GiB
+x86_64 cool  Intel(R) Xeon(R) 6975P-C           tpc 2  tool    502 s  window   657 s  $/hr 0.7497  compute $ 0.1046  billed $ 0.1368  peak rss 3.26 GiB  cgroup 16.33 GiB  completed
+         cload                     268.4 s  rss   3.26 GiB
+         zoomify                   167.1 s  rss   3.14 GiB
+         balance_1000000            10.1 s  rss   0.58 GiB
+         balance_100000             25.9 s  rss   0.58 GiB
+         balance_10000              30.6 s  rss   0.58 GiB
+         openblas: Cooperlake (/usr/local/lib/libopenblasp-r0.3.30.so)
+amd    pairs AMD EPYC 9R45                      tpc 1  tool    801 s  window  1257 s  $/hr 0.8622  compute $ 0.1918  billed $ 0.3010  peak rss 8.00 GiB  cgroup 23.41 GiB  completed
+         digest_rep2                10.3 s  rss   0.01 GiB
+         digest_rep1                12.3 s  rss   0.01 GiB
+         digest_4dn_combined        18.9 s  rss   0.01 GiB
+         merge_select              264.8 s  rss   8.00 GiB
+         dedup_rep1_window         334.9 s  rss   1.50 GiB
+         dedup_rep2                369.5 s  rss   0.14 GiB
+         dedup_planted             669.6 s  rss   4.00 GiB
+         dedup_rep1                801.1 s  rss   0.14 GiB
+         digest_ours                18.1 s  rss   0.01 GiB
+         keys_c4dn                  17.7 s  rss   0.01 GiB
+         keys_ours                  20.7 s  rss   0.01 GiB
+         sorted_c4dn               350.8 s  rss   5.00 GiB
+         sorted_ours               360.3 s  rss   5.00 GiB
+amd    cool  AMD EPYC 9R45                      tpc 1  tool    367 s  window   502 s  $/hr 0.8622  compute $ 0.0879  billed $ 0.1202  peak rss 3.16 GiB  cgroup 17.76 GiB  completed
+         cload                     183.4 s  rss   3.16 GiB
+         zoomify                   121.1 s  rss   3.15 GiB
+         balance_1000000             9.1 s  rss   0.58 GiB
+         balance_100000             25.5 s  rss   0.58 GiB
+         balance_10000              27.9 s  rss   0.58 GiB
+         openblas: Cooperlake (/usr/local/lib/libopenblasp-r0.3.30.so)
+x86_64 vs arm64: pairs checks equal, pixel digests equal
+   x86_64 weight-10000.npy: masks equal, max rel diff 8.755e-16, byte-identical False
+   x86_64 weight-100000.npy: masks equal, max rel diff 6.768e-16, byte-identical False
+   x86_64 weight-1000000.npy: masks equal, max rel diff 0.000e+00, byte-identical True
+amd vs arm64: pairs checks equal, pixel digests equal
+   amd weight-10000.npy: masks equal, max rel diff 9.065e-16, byte-identical False
+   amd weight-100000.npy: masks equal, max rel diff 9.361e-16, byte-identical False
+   amd weight-1000000.npy: masks equal, max rel diff 0.000e+00, byte-identical True
