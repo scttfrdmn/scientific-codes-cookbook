@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-imputation-real-mm4",
+  "container": "quay.io/aarchbio/minimac4@sha256:cea08321a8ab3632633b2ba0f2b68c98d7e6fcfb1c9c624f9b790a61a0e4b3c2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (mm4\\.sh|score\\.py|lib\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 3 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash mm4.sh \n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/mm4.sh",
+      "destination": "/tmp/mm4.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/ref.msav",
+      "destination": "/tmp/ref.msav"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/truth.vcf.gz",
+      "destination": "/tmp/truth.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/ref.sites.tsv",
+      "destination": "/tmp/ref.sites.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/typed.pos",
+      "destination": "/tmp/typed.pos"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/beagle/beagle.vcf.gz",
+      "destination": "/tmp/beagle.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/mm4/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

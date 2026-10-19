@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-imputation-real-diff",
+  "container": "quay.io/aarchbio/minimac4@sha256:cea08321a8ab3632633b2ba0f2b68c98d7e6fcfb1c9c624f9b790a61a0e4b3c2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (vcfdiff\\.py)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 1 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nset -e\nexport PATH=/opt/conda/bin:$PATH\nmkdir -p /tmp/out\npython3 -u -I vcfdiff.py arm64.vcf.gz x86_64.vcf.gz arm64-vs-intel > /tmp/out/intel.tsv &\npython3 -u -I vcfdiff.py arm64.vcf.gz amd.vcf.gz arm64-vs-amd > /tmp/out/amd.tsv &\nwait\ncat /tmp/out/intel.tsv /tmp/out/amd.tsv\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/vcfdiff.py",
+      "destination": "/tmp/vcfdiff.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/mm4/mm4.vcf.gz",
+      "destination": "/tmp/arm64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/imputation-real/mm4/mm4.vcf.gz",
+      "destination": "/tmp/x86_64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/imputation-real/mm4/mm4.vcf.gz",
+      "destination": "/tmp/amd.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/diff/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

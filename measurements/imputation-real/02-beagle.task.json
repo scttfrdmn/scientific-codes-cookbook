@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-imputation-real-beagle",
+  "container": "quay.io/aarchbio/beagle@sha256:7a22203b34a80d9b832ea84c3c46d9fdf83f4f679b6e53fcf1baebeeba06ce63",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (beagle\\.sh|lib\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 2 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash beagle.sh 24g\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/beagle.sh",
+      "destination": "/tmp/beagle.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/ref.vcf.gz",
+      "destination": "/tmp/ref.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/prep/target.vcf.gz",
+      "destination": "/tmp/target.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imputation-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imputation-real/beagle/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

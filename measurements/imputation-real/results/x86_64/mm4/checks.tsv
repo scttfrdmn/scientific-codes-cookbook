@@ -1,0 +1,21 @@
+phased target sites == array sites	55178	55178	ok
+minimac4 exit status	0	0	ok
+minimac4 TYPED records == array sites	55178	55178	ok
+score.py exit status (it fails on any of its own checks)	0	0	ok
+three VCFs list the same samples, in order	250	250	ok
+records read == panel sites, every file in lockstep	1653582	1653582	ok
+record keys out of step with the panel	0	0	ok
+short records (fewer fields than samples)	0	0	ok
+truth genotypes not called-and-phased	0	0	ok
+beagle: holes (missing GT or DS) at any genotype	0	0	ok
+beagle: dosages outside [0,2]	0	0	ok
+beagle: masked genotypes scored == masked sites x samples	399601000	399601000	ok
+beagle: dosage r2 vs truth, panel MAF >= 5%, >= 0.90	0.982720	>=0.90	ok
+minimac4: holes (missing GT or DS) at any genotype	0	0	ok
+minimac4: dosages outside [0,2]	0	0	ok
+minimac4: masked genotypes scored == masked sites x samples	399601000	399601000	ok
+minimac4: dosage r2 vs truth, panel MAF >= 5%, >= 0.90	0.982650	>=0.90	ok
+beagle: max |INFO AF - mean(DS)/2| within print rounding	0.000320	<=0.00255	ok
+minimac4: max |INFO AF - mean(DS)/2| within print rounding	0.000002	<=0.0002505	ok
+beagle: typed genotypes changed	0	0	ok
+beagle vs minimac4 hard-call agreement, masked, >= 0.99	0.999250	>=0.99	ok

@@ -16,7 +16,7 @@ last_verified: 2026-09-20
 
 Beagle 5.5 and Minimac4 4.1.6 impute the same masked genotypes from the same reference panel on Graviton4, scored against the genotypes the fixture hid from them. For anyone imputing a cohort who wants to see what the two standard tools do and do not agree about.
 
-> **What this covers.** 400 SNPs, a 150-sample phased reference panel, 20 target samples, 1600 genotypes masked. Haplotypes are mosaics of 8 founders, so the panel carries real LD. Not a real reference panel, population structure, or a chromosome-scale run.
+> **What this covers.** 400 SNPs, a 150-sample phased reference panel, 20 target samples, 1600 genotypes masked. Haplotypes are mosaics of 8 founders, so the panel carries real LD. Not a real reference panel, population structure, or a chromosome-scale run; that run is [measured](../../measurements/imputation-real/README.md).
 
 ## Run it
 
@@ -26,7 +26,6 @@ for s in $(make -s spec RECIPE=imputation); do spawn task run --spec "$s" --wait
 minimac4 --compress-reference ref.vcf -o ref.msav
 bgzip -c target.vcf > target.vcf.gz && tabix -p vcf target.vcf.gz
 minimac4 ref.msav target.vcf.gz -o mm4.vcf.gz -f GT
-
 # Beagle takes plain VCFs
 beagle gt=target.vcf ref=ref.vcf out=imputed
 ```
@@ -45,7 +44,13 @@ Two tasks: Minimac4 builds the fixture and imputes, then Beagle imputes the same
 
 ## Shape, size, cost
 
-Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m each, caps $0.05 each. Recorded windows **~1m** (fixture + Minimac4) and **1m16s** (Beagle + scoring). **These timings are not compute cost.**
+Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m each, caps $0.05 each. Recorded windows **~1m** (fixture + Minimac4) and **1m16s** (Beagle + scoring). **These timings are not compute cost.** **Which box — [measured](../../measurements/imputation-real/README.md)** on 1000 Genomes chr20: 250 held-out people typed at the Omni2.5's 55,178 sites, imputed to 1.65M SNPs from the other 2,254, 16 threads on a `4xlarge`. **Take Graviton4 or AMD; they are within 4%.** Both tools reach dosage r² 0.983 on common variants and agree on 99.93% of calls, every output is byte-identical across chips, and most of the wall is the one-time panel build:
+
+| chip | Beagle / Minimac4 impute | chain tool wall | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | 64 / 54 s | 638 s | **0.1952** |
+| Xeon 6975P-C | 89 / 53 s | 629 s | 0.2409 |
+| EPYC 9R45 | 52 / 37 s | 442 s | 0.2024 |
 
 <details>
 <summary>As shipped: what is exact vs banded, the observed-genotype difference, the shared-error finding, pins</summary>
