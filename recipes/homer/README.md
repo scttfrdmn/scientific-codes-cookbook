@@ -39,6 +39,16 @@ findMotifs.pl targets.fa fasta out -fasta background.fa -len 10        # de novo
 
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 120m as a **backstop** with `cost_limit` $0.50 as the real guard. Two known-motif scans take **~8.5 min each** at `-p 4`, de novo seconds; ~19 min on Graviton4, ~27 on x86 ([layout](../../patterns/layout-and-effective-cost.md)).
 
+## Which box: [measured](../../measurements/homer-real/README.md) on all 44,217 ENCODE GM12878 CTCF peaks, genome-wide
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | 1,081 s | 0.7181 | **0.2156** | **0.2298** |
+| Xeon 6975P-C | `m8i.4xlarge` | 1,311 s | 0.8467 | 0.3083 | 0.3236 |
+| EPYC 9R45 | `m8a.4xlarge` | **984 s** | 0.9738 | 0.2662 | 0.2813 |
+
+**Take Graviton4.** AMD is 1.10× faster, but at 36% more per hour it is 22% dearer per result. Every fixed-input output is byte-identical across the three chips. HOMER keeps about 6 of 16 cores busy and peaks at 4.4 GiB.
+
 <details>
 <summary>As shipped: CTCF first of 1,049 known motifs and gone 100 kb away, a planted motif recovered exactly, identical across chips where the input is fixed</summary>
 

@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-homer-real-whole",
+  "container": "quay.io/aarchbio/homer@sha256:b70d88a0e541fef5a5aa5312da987abccc439f3d1f06c358da272913fa7346c2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 > pins.check 2>&1 || { cat pins.check; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(wc -l < pins.sha256) staged inputs match\"\nbash homer-real.sh 16  || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/minimap2-real/GRCh38_no_alt_analysis_set.fa.fai",
+      "destination": "/tmp/GRCh38_no_alt_analysis_set.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer-real/ENCFF796WRU.bed.gz",
+      "destination": "/tmp/ENCFF796WRU.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer-real/encode.md5",
+      "destination": "/tmp/encode.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer-real/homer-real.sh",
+      "destination": "/tmp/homer-real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/homer-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/homer-real/whole/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

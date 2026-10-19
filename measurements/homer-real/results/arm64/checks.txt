@@ -1,0 +1,16 @@
+ENCFF796WRU.bed.gz == ENCODE's published md5               md5sum -c                                ok   (ENCFF796WRU.bed.gz: OK )
+rows == unique + duplicate + edge; offset == unique        accounting                               ok   (44217 = 44217 + 0 + 0; offset 44217)
+homerTools extract returns every region                    peaks, offset                            ok   (44217 of 44217, 44217 of 44217)
+findMotifsGenome.pl genome                                 exit 0, knownResults written             ok   (rc 0)
+findMotifsGenome.pl offset                                 exit 0, knownResults written             ok   (rc 0)
+findMotifsGenome.pl vsoffset                               exit 0, knownResults written             ok   (rc 0)
+HOMER's targets == peaks - N-masked (genome bg)            every scannable peak scanned             ok   (44217 = 44217 - 0)
+HOMER's targets == offset - N-masked                       every scannable control scanned          ok   (44157 = 44217 - 60)
+top known motif, random genomic background                 a CTCF-family motif                      ok   (CTCF(Zf)/CD4+-CTCF-ChIP-Seq(Barski_et_al.)/Homer)
+top known motif, offset as background                      a CTCF-family motif                      ok   (CTCF(Zf)/CD4+-CTCF-ChIP-Seq(Barski_et_al.)/Homer)
+CTCF enrichment in peaks, genomic background               >= 10x                                   ok   (89.74x, rank 1)
+control: CTCF enrichment 100 kb away                       <= 3x                                    ok   (0.90x, rank 870)
+de novo motif 1's best match                               a CTCF-family motif                      ok   (GCCCCCTRGTGG -> CTCF/MA0139.2/Jaspar(0.944))
+per motif: 0 <= targets(genome) - targets(vsoffset) <= dropped subset monotonicity, all motifs          ok   (0 of 1049 violate; 0 dropped; 1049 unchanged)
+fails 0
+HOMER-REAL OK
