@@ -19,21 +19,29 @@ Runs a four-node DAG on Graviton4 and checks what a pipeline engine can actually
 make stage RECIPE=nipype     # once: the checks only — the reference is arithmetic
 spawn task run --spec "$(make -s spec RECIPE=nipype)" --wait
 make ls RECIPE=nipype
-
 wf = pe.Workflow(name="chain", base_dir="/tmp/wf")
 wf.connect([(src, d, [("x","x")]), (d, a, [("y","x")]),
             (a, s, [("y","x")]), (s, m, [("y","x")])])
 wf.run(plugin="Linear")      # double -> addone -> square -> minus3; ((2·5)+1)²−3 = 118
 ```
 
+## Which box — [measured](../../measurements/nipype-real/README.md) (a 616-node DTI workflow over 123 real scans, `MultiProc` at 16)
+
+| chip | instance | cohort wall | $/hr | **compute $/subject** |
+|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 214 s | 0.7181 | **0.000347** |
+| Intel | `m8i.4xlarge` | 258 s | 0.8467 | 0.000493 |
+| AMD | `m8a.4xlarge` | **188 s** | 0.9738 | 0.000413 |
+
+**Graviton4 is cheapest per subject.** AMD is 1.14× faster at a 36% higher hourly price. At scale, with real `afni.TStat` and `dipy.DTI` nodes, order, concurrency, `JoinNode` cardinality, `Linear` == `MultiProc` and caching all hold exactly, and the maps are bit-identical to a plain DIPY script. **Never pass a node the path of a file it writes**: nipype hashes the file, not the path, so that node re-runs every time.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| execution read from **side effects** | parsing nipype's console output | each node appends to a log file, so "what ran" is a fact rather than a log format that can change between releases. |
+| execution read from **side effects** | parsing nipype's console output | each node appends to a log file, so "what ran" is a fact rather than a log format that can change between releases. **Pass the log's directory, not the file**: here each node's input names the file it writes, so nothing is ever reused ([measured](../../measurements/nipype-real/README.md#why-a-function-node-re-runs-its-own-log-is-an-input)). |
 | `Function` nodes | AFNI/FSL/ANTs interfaces | **this env ships only a subset of AFNI** and no FSL/ANTs/SPM, so interface-based nodes would depend on which binaries exist ([what the neuroimaging recipe found](../neuroimaging/README.md)). Pure-Python nodes test the *engine*. |
 | four non-commuting ops | your own | staging checks that **0 of 23** wrong orderings give the right answer. Commuting ops would make "ran in order" unfalsifiable. |
-| expecting cached re-runs | — | **an identical re-run re-executed everything**, under `hash_method` `timestamp` *and* `content`. See below — this recipe does not claim caching. |
 | `plugin="Linear"` | `MultiProc` | linear is deterministic, which is what lets the order assertion be exact. |
 
 **Leave the fixture.** Nothing is fetched: the nodes do integer arithmetic so the answer is derivable, and the composition is chosen to be order-sensitive. **Scale it** by substituting real interfaces — the structural checks transfer unchanged.
@@ -98,11 +106,13 @@ An identical re-run of the same workflow in the same `base_dir` re-executed **ev
 both hashing modes. So "an unchanged node is cached" is not true for this configuration, and the
 recipe asserts nothing about it.
 
-**The mechanism is not established, and this page does not guess at one.** It could be specific to
-`Function` nodes, to each run happening in a fresh interpreter, or to something else entirely —
-`hash_method` was the obvious hypothesis and measuring it refuted it. Diagnosing nipype from one
-observation would be exactly the overreach this catalog has been bitten by; what is reported is
-what was measured, with the configuration stated so anyone can reproduce it.
+**The mechanism was measured later, in [nipype-real](../../measurements/nipype-real/README.md#why-a-function-node-re-runs-its-own-log-is-an-input).**
+nipype hashes a string input that names an existing file by that file's timestamp or content, not by
+the string. Every node here takes `logpath`, the file it appends to, so each run changes every node's
+hash, under both hashing modes. A one-node probe shows it: 2 executions in two identical runs when the
+input names the file, 1 when it names the directory. With the directory, a 616-node cohort re-run
+reuses every node. This fixture has not been re-run with that change, so it still asserts nothing about
+caching.
 
 A consequence worth noting: because nothing is cached, the "changed input re-runs all four nodes"
 check above is a **propagation** check rather than a cache-invalidation one. Had caching worked, the
@@ -148,6 +158,9 @@ regardless ([exit 0 isn't proof](../../practices/container-path.md)). Nipype's c
 reports are tarred to `nipype-diag.tar.gz` so a failure is diagnosable without a rerun.
 
 ### Not covered
+
+*By this fixture.* [nipype-real](../../measurements/nipype-real/README.md) covers `afni.TStat` and
+`dipy.DTI`, iterables, `JoinNode`, `MultiProc` and caching, on a real cohort.
 
 **Every real interface.** This exercises the engine with `Function` nodes only. The AFNI, FSL,
 ANTs, SPM and FreeSurfer wrappers that make nipype useful are untested — FSL/ANTs/SPM are absent

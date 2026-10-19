@@ -1,0 +1,83 @@
+{
+  "task_id": "nipypereal-cohort",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:6ede8870c83b095c25c9f08db34e56f66318e2cb6b668391d9d5642147856457",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '028941b7eb611b4bd858a8cf3020027722820df23f146ace1f97ac6072bbbe67  /tmp/run.sh\\n82d4de7ce67806e84506d4d0461e52bd99e92fbf5aa5e764e1f836a1aa9493ff  /tmp/pipeline.py\\ndaf7783c6bea5ec9e4a95256d72ecc15c4ca2f55e5f12b1cfaa5aaac4b71b288  /tmp/check.py\\nf18da2f6e505c24b6bc0c71133af8722852fd9dbc90b5af8c8791ef796a2dd27  /tmp/hashprobe.py\\n' | sha256sum -c --quiet || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nbash /tmp/run.sh 16 0\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "disk_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/dwi/",
+      "destination": "/tmp/dwi/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/dwi.sha256",
+      "destination": "/tmp/dwi.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/neuroimaging-real/subjects.txt",
+      "destination": "/tmp/subjects.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/neuroimaging-real/cohort/dipy/dipy-maps.tar",
+      "destination": "/tmp/ref-maps.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype-real/pipeline.py",
+      "destination": "/tmp/pipeline.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nipype-real/hashprobe.py",
+      "destination": "/tmp/hashprobe.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/summary.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/summary.txt"
+    },
+    {
+      "source": "/tmp/checks.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/checks.txt"
+    },
+    {
+      "source": "/tmp/phases.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/phases.txt"
+    },
+    {
+      "source": "/tmp/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/host.txt"
+    },
+    {
+      "source": "/tmp/cohort.jsonl",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/cohort.jsonl"
+    },
+    {
+      "source": "/tmp/nipype-logs.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nipype-real/cohort/nipype-logs.tar.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
