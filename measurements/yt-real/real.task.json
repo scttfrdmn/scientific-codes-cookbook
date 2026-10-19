@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-yt-real-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf '6ab5f228b153a27bfc1a493eaa87e0e6864fe20b417f28d6d1e89ab29559ccb5  run.sh\\n021c54bca8c25c04f3366b55b4b98811aef86bef3e2da9b1b563f2ffd72f2506  real.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 8 \n"
+  ],
+  "container": "quay.io/aarchsci/astro@sha256:eaa6cb334d95db68662c51646a139c0ff635e9ebf3cb603cf5856ad40c26d066",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/Enzo_64/",
+      "destination": "/tmp/data/Enzo_64/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/files.sha256",
+      "destination": "/tmp/files.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/real.py",
+      "destination": "/tmp/real.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/check.tsv"
+    },
+    {
+      "source": "/tmp/out/observations.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/observations.tsv"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/r1/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

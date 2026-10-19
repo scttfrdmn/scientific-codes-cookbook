@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-yt-real-diag",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\nexport HOME=/tmp TMPDIR=/tmp MPLCONFIGDIR=/tmp/mpl YT_CONFIG_DIR=/tmp/yt OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\nprintf '021c54bca8c25c04f3366b55b4b98811aef86bef3e2da9b1b563f2ffd72f2506  real.py\\n010c82215db7ac1f9d4727756c2284a4339676e2ec608c117e540891fd0292af  diag.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nmkdir -p /tmp/out\npython3 -u /tmp/diag.py /tmp/data/Enzo_64 /tmp/out DD0016 DD0034 DD0043 2>&1 | tee /tmp/out/diag.log\ntest \"${PIPESTATUS[0]}\" = 0 || { echo FAIL: diag; exit 1; }\n"
+  ],
+  "container": "quay.io/aarchsci/astro@sha256:eaa6cb334d95db68662c51646a139c0ff635e9ebf3cb603cf5856ad40c26d066",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/Enzo_64/",
+      "destination": "/tmp/data/Enzo_64/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/files.sha256",
+      "destination": "/tmp/files.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yt-real/diag.py",
+      "destination": "/tmp/diag.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/diag.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/diag/diag.log"
+    },
+    {
+      "source": "/tmp/out/DD0016-images.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/diag/DD0016-images.npz"
+    },
+    {
+      "source": "/tmp/out/DD0034-images.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/diag/DD0034-images.npz"
+    },
+    {
+      "source": "/tmp/out/DD0043-images.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yt-real/diag/DD0043-images.npz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

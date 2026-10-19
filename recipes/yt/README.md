@@ -39,6 +39,10 @@ ih, iv = ds.coordinates.x_axis[1], ds.coordinates.y_axis[1]   # 2, 0 — NOT 0, 
 
 **Leave the fixture.** Nothing is fetched and no simulation runs: the density is a polynomial sampled at cell centres, so every reference is a closed form or an independent numpy sum over the same doubles. **Scale it** by aiming the same checks at a real dataset — the conservation identities transfer unchanged, the closed forms don't.
 
+## Which box — [measured](../../measurements/yt-real/README.md) on all 51 outputs of the Enzo_64 cosmology run
+
+Eight workers on a `2xlarge`, one output each: **Graviton4 $0.0096 billed** (32 s), AMD $0.0104 (29 s), Intel $0.0126 (50 s). Leaf cells, covering grids and particles match an independent h5py reader exactly on every output and every chip. Every mass total closes to ≤ 2e-15, and the grid counts match Enzo's own log. The box is sized by the 4 GB staged in tmpfs, not by cores.
+
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. Every check together is **6 s** of a 1m15s window; 45 s is installing Docker and 23 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
@@ -177,8 +181,10 @@ display and image comparison, and this env is deliberately network- and display-
 
 **Real AMR.** `load_uniform_grid` is a single-level stream dataset. yt's reason to exist is
 adaptive refinement across many frontends — grid selection, ghost zones and level traversal are
-all untested here. [warpx](../warpx/README.md) reads a genuine AMReX plotfile, which is the
-nearest thing in this catalog, and even that is single-level.
+all untested here. [warpx](../warpx/README.md) reads a genuine AMReX plotfile, but it is
+single-level. Real AMR is covered by the [measurement](../../measurements/yt-real/README.md)
+instead: a five-level Enzo run read through yt's Enzo frontend and checked against an independent
+reader.
 
 **Particles**, and therefore every deposition and particle-filter path. **Derived fields** beyond
 the `("gas", "mass")` yt builds itself. **Units beyond cgs** — no unit-system conversion is
