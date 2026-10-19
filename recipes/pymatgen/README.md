@@ -11,9 +11,7 @@ last_verified_amd: 2026-10-18
 ---
 # pymatgen — bulk-silicon structure, symmetry, and a CIF round-trip
 
-pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling.
-
-> **What this covers.** Construct one crystal and check its exact properties and a format round-trip — proof pymatgen's core structure and symmetry machinery works on Graviton4. Not a benchmark; no materials-database query, phase diagram, or DFT.
+pymatgen builds silicon from its space group and round-trips it through CIF — materials-informatics structure handling, no DFT. Phase diagrams, symmetry and matching over a whole Materials Project release are the [measured run](../../measurements/pymatgen-real/README.md).
 
 ## Run it
 
@@ -28,8 +26,6 @@ s = Structure.from_spacegroup("Fd-3m", Lattice.cubic(5.43), ["Si"], [[0, 0, 0]])
 SpacegroupAnalyzer(s).get_space_group_symbol()    # Fd-3m
 ```
 
-One task, built in code — nothing is staged.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -39,11 +35,19 @@ One task, built in code — nothing is staged.
 
 Deterministic — **nothing is determinism scaffolding**. Note pymatgen's symmetry is **spglib-backed**, so its space group is a *reference* check against the known value, **not** an independent cross-engine check against [ase-phonopy](../ase-phonopy/README.md)'s spglib result (same engine). **Leave the fixture:** exact-by-construction identities don't get more legible with a bigger cell. Leave-it.
 
+## Which box — [measured](../../measurements/pymatgen-real/README.md) on the whole Materials Project 2025-09-25 release
+
+| chip | instance | tool wall | compute $ | **billed $/release** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 1,499 s | 0.266 | 0.296 |
+| Intel | `c8i.4xlarge` | 2,005 s | 0.418 | 0.447 |
+| **AMD** | `c8a.4xlarge` | **1,070 s** | **0.256** | **0.283** |
+
+The run covers all 58,315 phase diagrams, 210,579 space groups and the structure matching, with 16 workers. pymatgen reproduces MP's published e_above_hull, formation energy, stability and decomposition for every GGA and r2SCAN material to ~1e-12 eV/atom, and MP's space group for every structure. All three chips give identical answers. **AMD is fastest and 4% cheaper than Graviton4; Intel is slowest and ~50% dearer.** This is scalar Python, so per-core speed decides it, and the job needs only ~5.5 GiB.
+
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split for the verifying run: Docker install **40 s**, `dft` image pull **104 s**, the actual chemistry **4 s**. Provisioning is 97% of the 148 s wrapper window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** — and this is the shape where packing or an AMI would help, if there were enough work to pack ([layout](../../patterns/layout-and-effective-cost.md)).
-
-**Sizing:** no family question — structure/symmetry/CIF are sub-second in-memory operations; a bigger cell is a longer run, not a heavier box. Any 8g box fits.
+One task, built in code with nothing staged: `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split for the verifying run: Docker install **40 s**, `dft` image pull **104 s**, the actual chemistry **4 s**. Provisioning is 97% of the 148 s wrapper window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** — and this is the shape where packing or an AMI would help, if there were enough work to pack ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: the identities, pins, smoke-check table, run + verify</summary>

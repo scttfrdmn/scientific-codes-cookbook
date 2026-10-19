@@ -1,0 +1,71 @@
+pymatgen_version                                 info  2026.8.30
+spglib_version                                   info  2.7.0
+workers                                          info  16
+summary material_id unique                       ok    210579 ids, 210579 distinct
+summary materials                                info  210579 (10092 deprecated)
+MP symmetry settings                             info  [(0.1, 5.0, '2.5.0'), (0.1, 5.0, '2.6.0')]
+nsites decode                                    ok    210579 of 210579
+reduced formula decode (composition)             ok    210579 of 210579
+formula_pretty string != pymatgen reduced_formula info  2 [('mp-1019741', 'HeSiO2', 'SiO2He'), ('mp-1019742', 'HeSiO2', 'SiO2He')]
+volume vs published                              ok    max rel 2.06e-15
+density vs published (atomic-mass table is pymatgen-version dependent) info  max rel 1.40e-09
+space group == MP's (spglib 2.7.0 vs MP's)       ok    210579 of 210579
+space group invariant under rigid rotation       ok    210579 of 210579
+space group invariant under origin shift         info  210546 of 210579 (24 higher, 9 lower)
+space group invariant under site permutation     info  210085 of 210579 (371 higher, 123 lower)
+space group invariant under all three            info  210060 of 210579 (387 higher, 132 lower)
+StructureMatcher (primitive_cell=False) fits its own rotated copy ok    210579 of 210579
+StructureMatcher (MP settings) fits its own rotated copy info  210566 of 210579; failures (nsites, primitive, primitive of rotated): [('mp-687301', (12, 12, 12)), ('mp-694999', (36, 36, 36)), ('mp-722602', (36, 18, 18)), ('mp-1237669', (9, 3, 3)), ('mp-1273133', (40, 40, 40)), ('mp-1291152', (28, 14, 14)), ('mp-1297766', (32, 16, 16)), ('mp-1305634', (24, 12, 12)), ('mp-774032', (28, 14, 14)), ('mp-907483', (28, 14, 14)), ('mp-1178332', (56, 14, 14)), ('mp-2719870', (32, 16, 16)), ('mp-28688', (12, 12, 12))]
+StructureMatcher fits its rotated+shifted+permuted+1.1x-volume copy info  210501 of 210579
+structure errors                                 info  0 []
+time sym / match per structure (sum, cpu-s)      info  2169 / 4017
+formula+spacegroup groups with >1 material       info  10181 groups, 30561 materials, largest 333
+distinct MP materials that StructureMatcher merges info  270 groups covering 541 materials
+thermo files / docs                              info  2917 / 400163
+thermo_id unique                                 ok    400163 ids, 400163 distinct
+thermo docs per type                             info  {'GGA_GGA+U': 153167, 'GGA_GGA+U_R2SCAN': 164332, 'R2SCAN': 82664}
+docs whose energy_per_atom != own entry's energy info  1 of 400163 [(1.1198977272641741e-05, 'mp-15590_GGA_GGA+U')]
+GGA_GGA+U_R2SCAN (mixed) docs                    info  164332 -- not rebuilt (needs MP's mixing scheme on full entries)
+GGA_GGA+U non-deprecated                         info  153167 of 153167
+GGA_GGA+U chemical systems / maximal             info  48971 / 27032
+R2SCAN non-deprecated                            info  82664 of 82664
+R2SCAN chemical systems / maximal                info  48285 / 31283
+phase diagrams to build                          info  58315
+  largest                                        info  GGA_GGA+U Ba-Ca-F-Fe-K-Na-O-Si-Ti: 2542 entries
+  largest                                        info  GGA_GGA+U Ba-F-H-Mn-Na-O-Re-Si-Ti: 2075 entries
+  largest                                        info  GGA_GGA+U Fe-K-Li-Mn-Na-O-Si-Ti: 3209 entries
+  largest                                        info  GGA_GGA+U Al-B-H-Mg-Na-O-Si-V: 2910 entries
+  largest                                        info  GGA_GGA+U B-Cr-H-Mg-Na-O-Si-V: 2753 entries
+  largest                                        info  GGA_GGA+U Ca-F-Fe-Mn-Na-O-Si-Zr: 2675 entries
+  largest                                        info  GGA_GGA+U Al-B-F-Fe-H-Na-O-Si: 2216 entries
+  largest                                        info  GGA_GGA+U Ca-F-Mn-Na-O-Si-Ti-Zr: 2056 entries
+phase diagrams built                             info  58315 (0 failed)
+GGA_GGA+U every material evaluated               ok    153167 of 153167
+GGA_GGA+U e_above_hull vs MP                     ok    max |d| 1.36e-12 eV/atom, worst [(1.3635620410568094e-12, 'mp-26927'), (6.964775978168802e-13, 'mp-772429')]
+GGA_GGA+U formation energy vs MP                 ok    max |d| 3.12e-15 eV/atom
+GGA_GGA+U decomposition enthalpy vs MP, exact (no same-composition stable entry) ok    max |d| 6.96e-13 eV/atom
+GGA_GGA+U decomposition enthalpy vs MP, SLSQP (same-composition stable entry) ok    max |d| 3.45e-07 eV/atom, worst mp-27007
+GGA_GGA+U equilibrium reaction energy vs MP (stable) ok    max |d| 2.84e-13 eV/atom
+GGA_GGA+U inconsistent docs: difference == doc's own energy discrepancy ok    1 docs, unexplained 1.32e-16
+GGA_GGA+U is_stable vs MP                        ok    0 flips; 0 more where MP's flag contradicts its own e_above_hull=0 and dH<0
+GGA_GGA+U decomposition products vs MP           ok    0 mismatched sets
+GGA_GGA+U decomposition amounts vs MP            ok    max |d| 1.71e-13
+GGA_GGA+U chemical-potential shift leaves ehull, ef unchanged ok    max |d| 1.36e-12
+GGA_GGA+U same entry, every PD containing it: same ehull ok    max |d| 1.42e-12
+GGA_GGA+U decomposition mass balance, energy residual ok    1.71e-13 / 1.78e-15
+R2SCAN every material evaluated                  ok    82664 of 82664
+R2SCAN e_above_hull vs MP                        ok    max |d| 1.41e-12 eV/atom, worst [(1.4068468612293827e-12, 'mp-3266704'), (3.7043545314530135e-13, 'mp-1226494')]
+R2SCAN formation energy vs MP                    ok    max |d| 1.38e-14 eV/atom
+R2SCAN decomposition enthalpy vs MP, exact (no same-composition stable entry) ok    max |d| 1.41e-12 eV/atom
+R2SCAN decomposition enthalpy vs MP, SLSQP (same-composition stable entry) ok    max |d| 2.58e-11 eV/atom, worst mp-1195057
+R2SCAN equilibrium reaction energy vs MP (stable) ok    max |d| 4.00e-13 eV/atom
+R2SCAN inconsistent docs: difference == doc's own energy discrepancy ok    0 docs, unexplained 0.00e+00
+R2SCAN is_stable vs MP                           ok    0 flips; 126 more where MP's flag contradicts its own e_above_hull=0 and dH<0
+R2SCAN decomposition products vs MP              ok    0 mismatched sets
+R2SCAN decomposition amounts vs MP               ok    max |d| 4.24e-14
+R2SCAN chemical-potential shift leaves ehull, ef unchanged ok    max |d| 3.61e-13
+R2SCAN same entry, every PD containing it: same ehull ok    max |d| 1.41e-12
+R2SCAN decomposition mass balance, energy residual ok    2.84e-14 / 1.42e-14
+ru_maxrss self / largest child (GiB)             info  3.34 / 0.00
+phase timings (s)                                info  {'symmetry+selfmatch': 410.8, 'matching': 95.4, 'thermo_read': 3.0, 'hull': 554.8, 'total': 1067.1}
+ALL CHECKS PASSED

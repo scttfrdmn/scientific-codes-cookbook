@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-pymatgen-real-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf '3e51e7c4f545c15b96df519756b039c234f9d24c63fbd49adb45e48e7907828a  run.sh\\nccfaf3cb75c3ea4e0190ecee5fe3d47d08b6e7c88db9575678c873cdb96e4f6d  real.py\\n1d81222f2ed92ac82e108563a3ca81e9f8cf9e6d42014d636f367d2394176496  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:0740fab9721da533ce153cae3590b1c6822dd0decfa1838b0753e76ba4434a4e",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pymatgen-real/mp-2025-09-25/summary/",
+      "destination": "/tmp/mp/summary/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pymatgen-real/mp-2025-09-25/thermo/",
+      "destination": "/tmp/mp/thermo/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pymatgen-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pymatgen-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pymatgen-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/staged.sha256"
+    },
+    {
+      "source": "/tmp/pymatgen-real-out.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pymatgen-real/r3/pymatgen-real-out.tar.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
