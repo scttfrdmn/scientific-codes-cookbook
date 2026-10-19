@@ -17,11 +17,7 @@ Runs ArchR's core scATAC path (Arrow files, TileMatrix, iterative LSI, clusterin
 
 ```bash
 make stage RECIPE=archr        # once: a 20 Mb genome, 400 genes, 300 cells of fragments (bgzip + tabix)
-spawn task run --spec "$(make -s spec RECIPE=archr)" --wait
-make ls RECIPE=archr
-```
-
-```r
+spawn task run --spec "$(make -s spec RECIPE=archr)" --wait && make ls RECIPE=archr
 # excerpt of archr.R, the staged task script
 genomeAnnotation <- SimpleList(genome = "nullGenome", chromSizes = chromSizes, blacklist = blacklist)
 geneAnnotation <- SimpleList(genes = gGR, exons = gGR, TSS = tssGR)      # plain GRanges, no TxDb
@@ -35,21 +31,25 @@ proj <- addClusters(proj, reducedDims = "IterativeLSI", method = "Seurat", name 
   resolution = 0.8, seed = SEED, force = TRUE)
 ```
 
+## Which box — [measured](../../measurements/archr-real/README.md) (a whole 10x run: 245.9M fragments, 10,246 cells)
+| chip | instance | tool wall | peak RSS | $/hr | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | 1577 s | 7.5 GiB | 0.4713 | **0.226** |
+| Intel | `r8i.2xlarge` | 1990 s | 7.3 GiB | 0.5557 | 0.332 |
+| AMD | `r8a.2xlarge` | **1438 s** | 7.5 GiB | 0.6390 | 0.284 |
+
+Every count ArchR makes (QC, TileMatrix, PeakMatrix) equals an independent recount, and the counts and gene scores are byte-identical on all three chips. **Iterative LSI is not**: Intel and AMD share an OpenBLAS kernel and agree bit for bit, and Graviton4 lands on a different valid partition (ARI 0.87), so assert on counts, never on clusters. Graviton4 is cheapest per result and AMD fastest. Arrow creation is the largest step. The planted fixture itself takes 95 s on `m8g.large` (137 s on `m8i.large`, 1.4 GB peak) under a 60m TTL backstop and a $0.35 `cost_limit`; boot and the 1 GB image pull are most of its ~4.5 min ([these timings are not compute cost](../../patterns/layout-and-effective-cost.md)).
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `genome = "nullGenome"` + GRanges | `addArchRGenome("hg38")` | **this image ships no BSgenome, TxDb or OrgDb**, so `hg38` would download at run time. `nullGenome` is ArchR's own no-sequence path; it covers everything here, not peak calling, motifs or GC bias, which read sequence. |
 | planted `genes`/`exons`/`TSS` | your GTF as GRanges | needs a `symbol` column; **gene lengths must vary** — see below. |
-| two fragment files | your Cell Ranger `fragments.tsv.gz` | must be bgzip + tabix; ArchR reads it by tabix region. |
-| `addArchRThreads(1)`, `seed = 1` | more threads | one thread and a fixed seed make the LSI and clusters byte-identical run to run; more threads speed Arrow creation. |
-| `minTSS = 0`, `minFrags = 500` | the defaults (4, 1000) | lowered so the background-only control cells survive; real data wants the defaults. |
+| two fragment files, `minTSS = 0`, `minFrags = 500` | your Cell Ranger `fragments.tsv.gz`, the defaults (4, 1000) | must be bgzip + tabix; ArchR reads it by tabix region. The filters are lowered so the background-only control cells survive. |
+| `addArchRThreads(1)`, `seed = 1` | more threads | a fixed seed makes the LSI and clusters byte-identical run to run on one machine, at 1 or 8 threads; more threads speed Arrow creation. |
 
-**Leave the fixture.** Every number ArchR reports here has a planted or recountable answer, which a real dataset cannot give. **Scale it** for sizing only: the claims hold, and Arrow creation is what grows.
-
-## Shape, size, cost
-
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 60m as a **backstop**, `cost_limit` $0.35 as the guard. ArchR takes **95 s** on Graviton4 and **137 s** on `m8i.large`, at 1.4 GB peak RSS; the task is ~4.5 min end to end, and boot plus the 1 GB image pull are most of it ([these timings are not compute cost](../../patterns/layout-and-effective-cost.md)).
+**Leave the fixture.** Every number ArchR reports here has a planted or recountable answer, which a real dataset cannot give. **Scale it** for sizing only: the [whole-run measurement](../../measurements/archr-real/README.md) shows the count claims hold at 10,246 cells.
 
 <details>
 <summary>As shipped: every count recounts exactly, clusters recover the planted populations (ARI 1), planted tiles and genes top the marker test, identical across chips where it should be</summary>
@@ -138,7 +138,7 @@ as `archr-logs.tar.gz`. Check the bucket regardless ([exit 0 isn't proof](../../
 
 **Peak calling** (`addReproduciblePeakSet`): this image has no MACS2, and the `nullGenome` path has no
 sequence for ArchR's GC-matched backgrounds, so **motifs, chromVAR deviations and footprints** are out
-too. **UMAP, imputation (MAGIC), integration with scRNA, trajectories**. **Real data**: no 10x fragment
-file is staged, so there is no biological answer here, only planted ones.
+too. **UMAP, imputation (MAGIC), integration with scRNA, trajectories**. **Real data** is in [archr-real](../../measurements/archr-real/README.md), not here: the whole
+10x PBMC run, with every count recounted, but no planted answer for the clusters.
 
 </details>

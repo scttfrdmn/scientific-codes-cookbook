@@ -1,0 +1,424 @@
+Core: Cooperlake
+
+                                                   / |
+                                                 /    \
+            .                                  /      |.
+            \\\                              /        |.
+              \\\                          /           `|.
+                \\\                      /              |.
+                  \                    /                |\
+                  \\#####\           /                  ||
+                ==###########>      /                   ||
+                 \\##==......\    /                     ||
+            ______ =       =|__ /__                     ||      \\\
+        ,--' ,----`-,__ ___/'  --,-`-===================##========>
+       \               '        ##_______ _____ ,--,__,=##,__   ///
+        ,    __==    ___,-,__,--'#'  ==='      `-'    | ##,-/
+        -,____,---'       \\####\\________________,--\\_##,/
+           ___      .______        ______  __    __  .______      
+          /   \     |   _  \      /      ||  |  |  | |   _  \     
+         /  ^  \    |  |_)  |    |  ,----'|  |__|  | |  |_)  |    
+        /  /_\  \   |      /     |  |     |   __   | |      /     
+       /  _____  \  |  |\  \\___ |  `----.|  |  |  | |  |\  \\___.
+      /__/     \__\ | _| `._____| \______||__|  |__| | _| `._____|
+    
+version	ArchR  1.0.3  Seurat  5.3.0  Matrix  1.7.3  data.table  1.17.8  R  4.4.3
+arch	R built for  x86_64  host  x86_64
+  ok    R's binary architecture == the host's (not emulated)
+blas	/usr/local/lib/libopenblasp-r0.3.30.so
+Input threads is equal to or greater than ncores minus 1 (7)
+Setting cores to ncores minus 2. Set force = TRUE to set above this number!
+Setting default number of Parallel threads to 6.
+Setting ArchRLocking to FALSE.
+threads	8
+dataset	10246  cells  25  chroms  19947  genes  152913  transcripts  636  blacklist regions
+ArchR logging to : ArchRLogs/ArchR-createArrows-35892713c-Date-2026-10-19_Time-13-49-56.895378.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+Disabling H5 File Locking. If this is not desired check `addArchRLocking`.
+subThreading Enabled since ArchRLocking is FALSE see `addArchRLocking`
+2026-10-19 13:49:57.421774 : Batch Execution w/ safelapply!, 0 mins elapsed.
+2026-10-19 13:49:58.191367 : (pbmc10k : 1 of 1) Reading In Fragments from inputFiles (readMethod = tabix), 0.013 mins elapsed.
+2026-10-19 13:49:58.193602 : (pbmc10k : 1 of 1) Tabix Bed To Temporary File, 0.013 mins elapsed.
+2026-10-19 13:50:31.055523 : (pbmc10k : 1 of 1) Reading TabixFile 14 Percent, 0.561 mins elapsed.
+2026-10-19 13:50:59.085621 : (pbmc10k : 1 of 1) Reading TabixFile 27 Percent, 1.028 mins elapsed.
+2026-10-19 13:51:24.495623 : (pbmc10k : 1 of 1) Reading TabixFile 41 Percent, 1.451 mins elapsed.
+2026-10-19 13:51:51.985651 : (pbmc10k : 1 of 1) Reading TabixFile 54 Percent, 1.909 mins elapsed.
+2026-10-19 13:52:14.285627 : (pbmc10k : 1 of 1) Reading TabixFile 68 Percent, 2.281 mins elapsed.
+2026-10-19 13:52:36.105611 : (pbmc10k : 1 of 1) Reading TabixFile 82 Percent, 2.645 mins elapsed.
+2026-10-19 13:52:50.615709 : (pbmc10k : 1 of 1) Reading TabixFile 95 Percent, 2.887 mins elapsed.
+2026-10-19 13:52:54.699785 : (pbmc10k : 1 of 1) Successful creation of Temporary File, 2.955 mins elapsed.
+2026-10-19 13:52:54.701043 : (pbmc10k : 1 of 1) Creating ArrowFile From Temporary File, 2.955 mins elapsed.
+2026-10-19 13:53:26.088006 : (pbmc10k : 1 of 1) Successful creation of Arrow File, 3.478 mins elapsed.
+2026-10-19 13:54:10.862552 : (pbmc10k : 1 of 1) CellStats : Number of Cells Pass Filter = 10246 , 4.224 mins elapsed.
+2026-10-19 13:54:10.863284 : (pbmc10k : 1 of 1) CellStats : Median Frags = 22218 , 4.224 mins elapsed.
+2026-10-19 13:54:10.864547 : (pbmc10k : 1 of 1) CellStats : Median TSS Enrichment = 18.5035 , 4.224 mins elapsed.
+2026-10-19 13:54:12.18221 : (pbmc10k : 1 of 1) Adding Additional Feature Counts!, 4.246 mins elapsed.
+2026-10-19 13:54:27.867566 : (pbmc10k : 1 of 1) Removing Fragments from Filtered Cells, 4.507 mins elapsed.
+2026-10-19 13:54:27.86917 : (pbmc10k : 1 of 1) Creating Filtered Arrow File, 4.507 mins elapsed.
+2026-10-19 13:55:38.140914 : (pbmc10k : 1 of 1) Finished Constructing Filtered Arrow File!, 5.679 mins elapsed.
+2026-10-19 13:55:38.189884 : (pbmc10k : 1 of 1) Adding TileMatrix!, 5.679 mins elapsed.
+2026-10-19 13:59:15.487987 : (pbmc10k : 1 of 1) Adding GeneScoreMatrix!, 9.301 mins elapsed.
+2026-10-19 14:00:31.243502 : (pbmc10k : 1 of 1) Finished Creating Arrow File, 10.564 mins elapsed.
+ArchR logging successful to : ArchRLogs/ArchR-createArrows-35892713c-Date-2026-10-19_Time-13-49-56.895378.log
+time	createArrowFiles  634.9  s
+Validating Arrows...
+Getting SampleNames...
+1 
+Getting Cell Metadata...
+1 
+Merging Cell Metadata...
+Initializing ArchRProject...
+  ok    the project holds the 10,246 Cell Ranger cells, and nothing else
+  ok    recount records per cell == signac-real's recount (== Signac CountFragments), every cell
+  ok    nFrags == recount: fragments on the chroms, 10..2000 bp, every cell
+  ok    nMono/nDi/nMultiFrags == trunc(width/147)+1 classes, every cell
+  ok    ReadsInTSS == insertion x TSS-window overlaps (as (n/101)*101), every cell
+  ok    TSSEnrichment == 2(w/101)/max(f/100, 0.2) from the recount, exactly, every cell
+  ok    ReadsInPromoter == insertion x promoter overlaps, every cell
+  ok    ReadsInBlacklist == insertion x blacklist overlaps, every cell
+qc	records  246005688  off_chroms  82883  outside_10_2000  2334  nFrags  245920471  median_nFrags  22218  median_TSSEnrichment  18.5035  cells_TSS_below_4  68  ReadsInBlacklist  3121617
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-355d5e3113-Date-2026-10-19_Time-14-00-31.831738.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-354c93267-Date-2026-10-19_Time-14-00-57.429644.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3571fdbc53-Date-2026-10-19_Time-14-01-11.658345.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35787c791c-Date-2026-10-19_Time-14-01-24.785724.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3546f3b957-Date-2026-10-19_Time-14-01-33.593794.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353c3686ef-Date-2026-10-19_Time-14-01-45.555343.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353b83b1b6-Date-2026-10-19_Time-14-01-58.867908.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35733898d0-Date-2026-10-19_Time-14-02-09.486172.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353617a20a-Date-2026-10-19_Time-14-02-17.87456.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-355c9d1f9c-Date-2026-10-19_Time-14-02-28.52139.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-351cebcbde-Date-2026-10-19_Time-14-02-38.52438.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-354b75aca-Date-2026-10-19_Time-14-02-50.098673.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353462473a-Date-2026-10-19_Time-14-03-02.005086.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3537403e89-Date-2026-10-19_Time-14-03-07.503886.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35295aa8b8-Date-2026-10-19_Time-14-03-16.574905.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353975adde-Date-2026-10-19_Time-14-03-23.788314.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35c10ec42-Date-2026-10-19_Time-14-03-32.551822.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3558ecc4db-Date-2026-10-19_Time-14-03-45.053368.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-356f70304f-Date-2026-10-19_Time-14-03-50.309271.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-351b6a18b0-Date-2026-10-19_Time-14-04-02.915765.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3559cecc7f-Date-2026-10-19_Time-14-04-08.751323.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-352cd215ce-Date-2026-10-19_Time-14-04-12.526196.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-357fb02085-Date-2026-10-19_Time-14-04-18.512144.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+time	TileMatrix checks  234.8  s
+  ok    TileMatrix == recount per chrom (nnz, sum, sum of squares, checksum; blacklisted tiles zero), trunc(L/500)+1 tiles each
+  ok    TileMatrix column sums == recount tile insertions, every cell
+  ok    conservation: TileMatrix column sum + blacklisted-tile + chrM/chrY insertions == 2 x nFrags, every cell
+tile_matrix	chroms  23  tiles  6062095  nnz  270238837  insertions  488153039  blacklisted_tile_insertions  3150013  chrM_chrY_insertions  537890
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353c5f17a9-Date-2026-10-19_Time-14-04-26.069916.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+  ok    GeneScoreMatrix: one row per gene off chrM/chrY, every entry finite, every cell scored
+gene_scores	genes  19886  nnz  110720444  colsum_range  9999.9,10000.127  md5  3149de994c70dc03c5fb0031c7d4106a
+time	GeneScoreMatrix checks  37.5  s
+ArchR logging to : ArchRLogs/ArchR-addPeakMatrix-352390c492-Date-2026-10-19_Time-14-05-03.780813.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+2026-10-19 14:05:04.312361 : Batch Execution w/ safelapply!, 0 mins elapsed.
+2026-10-19 14:05:04.608173 : Adding pbmc10k to PeakMatrix for Chr (1 of 24)!, 0.005 mins elapsed.
+2026-10-19 14:05:16.394821 : Adding pbmc10k to PeakMatrix for Chr (2 of 24)!, 0.201 mins elapsed.
+2026-10-19 14:05:25.26247 : Adding pbmc10k to PeakMatrix for Chr (3 of 24)!, 0.349 mins elapsed.
+2026-10-19 14:05:32.629018 : Adding pbmc10k to PeakMatrix for Chr (4 of 24)!, 0.472 mins elapsed.
+2026-10-19 14:05:37.525591 : Adding pbmc10k to PeakMatrix for Chr (5 of 24)!, 0.553 mins elapsed.
+2026-10-19 14:05:44.639081 : Adding pbmc10k to PeakMatrix for Chr (6 of 24)!, 0.672 mins elapsed.
+2026-10-19 14:05:53.379039 : Adding pbmc10k to PeakMatrix for Chr (7 of 24)!, 0.817 mins elapsed.
+2026-10-19 14:06:00.190679 : Adding pbmc10k to PeakMatrix for Chr (8 of 24)!, 0.931 mins elapsed.
+2026-10-19 14:06:05.815898 : Adding pbmc10k to PeakMatrix for Chr (9 of 24)!, 1.025 mins elapsed.
+2026-10-19 14:06:11.090756 : Adding pbmc10k to PeakMatrix for Chr (10 of 24)!, 1.113 mins elapsed.
+2026-10-19 14:06:17.572982 : Adding pbmc10k to PeakMatrix for Chr (11 of 24)!, 1.221 mins elapsed.
+2026-10-19 14:06:25.558337 : Adding pbmc10k to PeakMatrix for Chr (12 of 24)!, 1.354 mins elapsed.
+2026-10-19 14:06:32.871188 : Adding pbmc10k to PeakMatrix for Chr (13 of 24)!, 1.476 mins elapsed.
+2026-10-19 14:06:36.143951 : Adding pbmc10k to PeakMatrix for Chr (14 of 24)!, 1.53 mins elapsed.
+2026-10-19 14:06:42.287489 : Adding pbmc10k to PeakMatrix for Chr (15 of 24)!, 1.633 mins elapsed.
+2026-10-19 14:06:47.37846 : Adding pbmc10k to PeakMatrix for Chr (16 of 24)!, 1.717 mins elapsed.
+2026-10-19 14:06:53.395236 : Adding pbmc10k to PeakMatrix for Chr (17 of 24)!, 1.818 mins elapsed.
+2026-10-19 14:07:02.583488 : Adding pbmc10k to PeakMatrix for Chr (18 of 24)!, 1.971 mins elapsed.
+2026-10-19 14:07:05.407091 : Adding pbmc10k to PeakMatrix for Chr (19 of 24)!, 2.018 mins elapsed.
+2026-10-19 14:07:16.429601 : Adding pbmc10k to PeakMatrix for Chr (20 of 24)!, 2.202 mins elapsed.
+2026-10-19 14:07:20.349486 : Adding pbmc10k to PeakMatrix for Chr (21 of 24)!, 2.267 mins elapsed.
+2026-10-19 14:07:22.65514 : Adding pbmc10k to PeakMatrix for Chr (22 of 24)!, 2.305 mins elapsed.
+2026-10-19 14:07:26.841131 : Adding pbmc10k to PeakMatrix for Chr (23 of 24)!, 2.375 mins elapsed.
+2026-10-19 14:07:30.288881 : Adding pbmc10k to PeakMatrix for Chr (24 of 24)!, 2.433 mins elapsed.
+ArchR logging successful to : ArchRLogs/ArchR-addPeakMatrix-352390c492-Date-2026-10-19_Time-14-05-03.780813.log
+time	addPeakMatrix  148.2  s
+  ok    ReadsInPeaks == recount insertions in peaks (uncapped), every cell
+  ok    FRIP == ReadsInPeaks / insertions on chroms with a peak, every cell
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3584291c1-Date-2026-10-19_Time-14-07-31.770235.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353c2f8ddb-Date-2026-10-19_Time-14-07-41.403142.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-351b015713-Date-2026-10-19_Time-14-07-45.197557.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-356985692f-Date-2026-10-19_Time-14-07-48.807652.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353f9f5a2c-Date-2026-10-19_Time-14-07-52.499346.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-359a22b0-Date-2026-10-19_Time-14-07-54.326464.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3546e39a42-Date-2026-10-19_Time-14-07-57.041172.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3544688c93-Date-2026-10-19_Time-14-08-00.146544.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-357297df03-Date-2026-10-19_Time-14-08-03.044109.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-353f60135f-Date-2026-10-19_Time-14-08-07.725072.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35b5c45eb-Date-2026-10-19_Time-14-08-09.283881.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-352ece65f2-Date-2026-10-19_Time-14-08-14.935455.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-357ae3c515-Date-2026-10-19_Time-14-08-20.272919.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-357e94debb-Date-2026-10-19_Time-14-08-22.538385.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3564e607fc-Date-2026-10-19_Time-14-08-23.854931.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-355780e4b2-Date-2026-10-19_Time-14-08-25.87987.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-351b80aa99-Date-2026-10-19_Time-14-08-30.507806.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35699d62c7-Date-2026-10-19_Time-14-08-33.829828.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-35be32bec-Date-2026-10-19_Time-14-08-38.367532.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3552c0e922-Date-2026-10-19_Time-14-08-43.711347.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-3512f80b7f-Date-2026-10-19_Time-14-08-48.328531.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-354558d9ca-Date-2026-10-19_Time-14-08-51.65786.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-355ed1d565-Date-2026-10-19_Time-14-08-54.593042.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-356be4d05a-Date-2026-10-19_Time-14-08-56.604001.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+  ok    PeakMatrix == recount per chrom with ceiling 4 (nnz, sum, sum of squares, checksum)
+peak_matrix	peaks  165376  nnz  115744013  sum_capped  278516752  sum_uncapped  302861260  median_FRIP  0.650229
+time	PeakMatrix checks  85.7  s
+Checking Inputs...
+ArchR logging to : ArchRLogs/ArchR-addIterativeLSI-3534c90a19-Date-2026-10-19_Time-14-08-57.408122.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+2026-10-19 14:08:57.965651 : Computing Total Across All Features, 0 mins elapsed.
+2026-10-19 14:08:58.950651 : Computing Top Features, 0.017 mins elapsed.
+###########
+2026-10-19 14:08:59.796547 : Running LSI (1 of 2) on Top Features, 0.031 mins elapsed.
+###########
+2026-10-19 14:08:59.82002 : Sampling Cells (N = 10000) for Estimated LSI, 0.031 mins elapsed.
+2026-10-19 14:08:59.820432 : Creating Sampled Partial Matrix, 0.031 mins elapsed.
+2026-10-19 14:09:43.174652 : Computing Estimated LSI (projectAll = FALSE), 0.754 mins elapsed.
+2026-10-19 14:10:25.217151 : Identifying Clusters, 1.455 mins elapsed.
+2026-10-19 14:10:31.695153 : Identified 12 Clusters, 1.562 mins elapsed.
+2026-10-19 14:10:31.702701 : Saving LSI Iteration, 1.563 mins elapsed.
+2026-10-19 14:10:40.722896 : Creating Cluster Matrix on the total Group Features, 1.713 mins elapsed.
+2026-10-19 14:10:54.770746 : Computing Variable Features, 1.947 mins elapsed.
+###########
+2026-10-19 14:10:54.918177 : Running LSI (2 of 2) on Variable Features, 1.95 mins elapsed.
+###########
+2026-10-19 14:10:54.9254 : Creating Partial Matrix, 1.95 mins elapsed.
+2026-10-19 14:11:38.461793 : Computing LSI, 2.675 mins elapsed.
+2026-10-19 14:11:56.776032 : Finished Running IterativeLSI, 2.98 mins elapsed.
+time	addIterativeLSI  179.4  s
+ArchR logging to : ArchRLogs/ArchR-addClusters-35212b483-Date-2026-10-19_Time-14-11-56.782095.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+2026-10-19 14:11:57.357969 : Running Seurats FindClusters (Stuart et al. Cell 2019), 0.001 mins elapsed.
+Computing nearest neighbor graph
+Computing SNN
+Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+
+Number of nodes: 10246
+Number of edges: 382479
+
+Running Louvain algorithm...
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Maximum modularity in 10 random starts: 0.8987
+Number of communities: 25
+Elapsed time: 0 seconds
+2026-10-19 14:12:02.595452 : Testing Biased Clusters, 0.088 mins elapsed.
+2026-10-19 14:12:02.646013 : Identified Biased Clusters (n = 3), set filterBias = TRUE to re-assign these cells: , 0.089 mins elapsed.
+Biased Clusters : Cluster24 Cluster3 Cluster7 
+2026-10-19 14:12:02.646697 : Testing Outlier Clusters, 0.089 mins elapsed.
+2026-10-19 14:12:02.647363 : Assigning Cluster Names to 25 Clusters, 0.089 mins elapsed.
+2026-10-19 14:12:02.682916 : Finished addClusters, 0.089 mins elapsed.
+time	addClusters  5.9  s
+clusters	n  25  sizes  C24:2130,C11:1341,C9:1012,C12:951,C6:670,C2:661,C8:552,C16:463,C5:430,C25:316,C21:313,C1:252,C18:173,C10:171,C4:163,C23:133,C20:116,C7:110,C17:62,C15:59,C22:53,C3:33,C13:29,C14:28,C19:25
+lsi	dims  30  cells  10246
+vs_signac	clusters_ARI  0.677634  signac_clusters  18  spearman_TSS  0.700448  spearman_FRiP  0.995176
+ArchR logging to : ArchRLogs/ArchR-getMarkerFeatures-3552be47a-Date-2026-10-19_Time-14-12-05.007209.log
+If there is an issue, please report to github with logFile!
+Warning: Your system is mis-configured: ‘/var/db/timezone/localtime’ is not a symlink
+Warning: ‘/var/db/timezone/localtime’ is not identical to any known timezone file
+2026-10-19 14:12:05.603393 : Matching Known Biases, 0.001 mins elapsed.
+2026-10-19 14:12:08.190436 : Computing Pairwise Tests (1 of 25), 0.044 mins elapsed.
+2026-10-19 14:12:08.208986 : Computing Pairwise Tests (2 of 25), 0.045 mins elapsed.
+2026-10-19 14:12:08.228571 : Computing Pairwise Tests (3 of 25), 0.045 mins elapsed.
+2026-10-19 14:12:08.248411 : Computing Pairwise Tests (4 of 25), 0.045 mins elapsed.
+2026-10-19 14:12:08.268409 : Computing Pairwise Tests (5 of 25), 0.046 mins elapsed.
+2026-10-19 14:12:08.289212 : Computing Pairwise Tests (6 of 25), 0.046 mins elapsed.
+2026-10-19 14:12:08.310668 : Computing Pairwise Tests (7 of 25), 0.046 mins elapsed.
+2026-10-19 14:12:08.332652 : Computing Pairwise Tests (8 of 25), 0.047 mins elapsed.
+2026-10-19 14:12:35.195657 : Computing Pairwise Tests (9 of 25), 0.494 mins elapsed.
+2026-10-19 14:12:35.495616 : Computing Pairwise Tests (10 of 25), 0.499 mins elapsed.
+2026-10-19 14:12:35.535767 : Computing Pairwise Tests (11 of 25), 0.5 mins elapsed.
+2026-10-19 14:12:35.581748 : Computing Pairwise Tests (12 of 25), 0.501 mins elapsed.
+2026-10-19 14:12:36.518867 : Computing Pairwise Tests (13 of 25), 0.516 mins elapsed.
+2026-10-19 14:12:36.585555 : Computing Pairwise Tests (14 of 25), 0.517 mins elapsed.
+2026-10-19 14:12:36.685609 : Computing Pairwise Tests (15 of 25), 0.519 mins elapsed.
+2026-10-19 14:12:36.925553 : Computing Pairwise Tests (16 of 25), 0.523 mins elapsed.
+2026-10-19 14:13:03.055723 : Computing Pairwise Tests (17 of 25), 0.959 mins elapsed.
+2026-10-19 14:13:03.395818 : Computing Pairwise Tests (18 of 25), 0.964 mins elapsed.
+2026-10-19 14:13:03.466403 : Computing Pairwise Tests (19 of 25), 0.965 mins elapsed.
+2026-10-19 14:13:03.615838 : Computing Pairwise Tests (20 of 25), 0.968 mins elapsed.
+2026-10-19 14:13:03.745771 : Computing Pairwise Tests (21 of 25), 0.97 mins elapsed.
+2026-10-19 14:13:04.06775 : Computing Pairwise Tests (22 of 25), 0.975 mins elapsed.
+2026-10-19 14:13:04.135762 : Computing Pairwise Tests (23 of 25), 0.977 mins elapsed.
+2026-10-19 14:13:05.005685 : Computing Pairwise Tests (24 of 25), 0.991 mins elapsed.
+2026-10-19 14:13:29.895556 : Computing Pairwise Tests (25 of 25), 1.406 mins elapsed.
+###########
+2026-10-19 14:13:53.857311 : Completed Pairwise Tests, 1.805 mins elapsed.
+###########
+ArchR logging successful to : ArchRLogs/ArchR-getMarkerFeatures-3552be47a-Date-2026-10-19_Time-14-12-05.007209.log
+time	getMarkerFeatures  111.2  s
+marker	MS4A1  C16  log2FC  4.13039  FDR  4.12125e-95
+marker	CD79A  C16  log2FC  1.12348  FDR  8.60912e-27
+marker	CD3E  C8  log2FC  0.781557  FDR  3.18548e-17
+marker	CD8A  C6  log2FC  1.91532  FDR  1.05413e-68
+marker	IL7R  C12  log2FC  1.10824  FDR  4.51973e-40
+marker	CD14  C24  log2FC  0.974957  FDR  3.39594e-46
+marker	LYZ  C24  log2FC  1.32728  FDR  1.1747e-48
+marker	FCGR3A  C6  log2FC  0.582964  FDR  1.65734e-18
+marker	NKG7  C2  log2FC  2.21582  FDR  4.86839e-60
+marker	GNLY  C2  log2FC  1.43468  FDR  3.46219e-44
+marker	CD1C  C24  log2FC  2.74518  FDR  1.71075e-69
+marker	PPBP  C25  log2FC  1.72591  FDR  0.059459
+markers	genes_FDR<=0.01_log2FC>=1_per_cluster  C1:379,C2:525,C3:0,C4:227,C5:22,C6:151,C7:5,C8:251,C9:269,C10:52,C11:160,C12:183,C13:9,C14:0,C15:83,C16:730,C17:10,C18:698,C19:0,C20:2258,C21:31,C22:0,C23:580,C24:1409,C25:791
+md5	cell_qc  48758c6a5e86b5deb8fda98122c1d4e8  clusters  207d47ddfc7d199e1928cee9e8f0fa0a  gene_scores  3149de994c70dc03c5fb0031c7d4106a
+peak_rss	VmHWM: 7886064 kB
+time	archr_total  1438.1  s
+checks: 16 run, all ok
+ARCHR OK

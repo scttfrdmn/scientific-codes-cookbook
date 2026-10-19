@@ -1,0 +1,336 @@
+Core: neoversev2
+
+                                                   / |
+                                                 /    \
+            .                                  /      |.
+            \\\                              /        |.
+              \\\                          /           `|.
+                \\\                      /              |.
+                  \                    /                |\
+                  \\#####\           /                  ||
+                ==###########>      /                   ||
+                 \\##==......\    /                     ||
+            ______ =       =|__ /__                     ||      \\\
+        ,--' ,----`-,__ ___/'  --,-`-===================##========>
+       \               '        ##_______ _____ ,--,__,=##,__   ///
+        ,    __==    ___,-,__,--'#'  ==='      `-'    | ##,-/
+        -,____,---'       \\####\\________________,--\\_##,/
+           ___      .______        ______  __    __  .______      
+          /   \     |   _  \      /      ||  |  |  | |   _  \     
+         /  ^  \    |  |_)  |    |  ,----'|  |__|  | |  |_)  |    
+        /  /_\  \   |      /     |  |     |   __   | |      /     
+       /  _____  \  |  |\  \\___ |  `----.|  |  |  | |  |\  \\___.
+      /__/     \__\ | _| `._____| \______||__|  |__| | _| `._____|
+    
+version	ArchR  1.0.3  Seurat  5.5.1  Matrix  1.7.6  data.table  1.18.6.1  R  4.4.3
+arch	R built for  aarch64  host  aarch64
+  ok    R's binary architecture == the host's (not emulated)
+blas	/opt/conda/lib/libopenblasp-r0.3.34.so
+Input threads is equal to or greater than ncores minus 1 (7)
+Setting cores to ncores minus 2. Set force = TRUE to set above this number!
+Setting default number of Parallel threads to 6.
+Setting ArchRLocking to FALSE.
+threads	8
+dataset	10246  cells  25  chroms  19947  genes  152913  transcripts  636  blacklist regions
+ArchR logging to : ArchRLogs/ArchR-createArrows-417378358d-Date-2026-10-19_Time-13-47-57.079514.log
+If there is an issue, please report to github with logFile!
+Disabling H5 File Locking. If this is not desired check `addArchRLocking`.
+subThreading Enabled since ArchRLocking is FALSE see `addArchRLocking`
+2026-10-19 13:47:57.10256 : Batch Execution w/ safelapply!, 0 mins elapsed.
+2026-10-19 13:47:57.7516 : (pbmc10k : 1 of 1) Reading In Fragments from inputFiles (readMethod = tabix), 0.011 mins elapsed.
+2026-10-19 13:47:57.754654 : (pbmc10k : 1 of 1) Tabix Bed To Temporary File, 0.011 mins elapsed.
+2026-10-19 13:48:25.718804 : (pbmc10k : 1 of 1) Reading TabixFile 14 Percent, 0.477 mins elapsed.
+2026-10-19 13:48:48.438924 : (pbmc10k : 1 of 1) Reading TabixFile 27 Percent, 0.856 mins elapsed.
+2026-10-19 13:49:11.209118 : (pbmc10k : 1 of 1) Reading TabixFile 41 Percent, 1.235 mins elapsed.
+2026-10-19 13:49:34.067455 : (pbmc10k : 1 of 1) Reading TabixFile 54 Percent, 1.616 mins elapsed.
+2026-10-19 13:49:51.869015 : (pbmc10k : 1 of 1) Reading TabixFile 68 Percent, 1.913 mins elapsed.
+2026-10-19 13:50:10.328941 : (pbmc10k : 1 of 1) Reading TabixFile 82 Percent, 2.22 mins elapsed.
+2026-10-19 13:50:22.419134 : (pbmc10k : 1 of 1) Reading TabixFile 95 Percent, 2.422 mins elapsed.
+2026-10-19 13:50:25.121972 : (pbmc10k : 1 of 1) Successful creation of Temporary File, 2.467 mins elapsed.
+2026-10-19 13:50:25.123674 : (pbmc10k : 1 of 1) Creating ArrowFile From Temporary File, 2.467 mins elapsed.
+2026-10-19 13:50:54.799164 : (pbmc10k : 1 of 1) Successful creation of Arrow File, 2.962 mins elapsed.
+2026-10-19 13:51:42.706526 : (pbmc10k : 1 of 1) CellStats : Number of Cells Pass Filter = 10246 , 3.76 mins elapsed.
+2026-10-19 13:51:42.707561 : (pbmc10k : 1 of 1) CellStats : Median Frags = 22218 , 3.76 mins elapsed.
+2026-10-19 13:51:42.709361 : (pbmc10k : 1 of 1) CellStats : Median TSS Enrichment = 18.5035 , 3.76 mins elapsed.
+2026-10-19 13:51:44.070575 : (pbmc10k : 1 of 1) Adding Additional Feature Counts!, 3.783 mins elapsed.
+2026-10-19 13:51:58.96139 : (pbmc10k : 1 of 1) Removing Fragments from Filtered Cells, 4.031 mins elapsed.
+2026-10-19 13:51:58.964307 : (pbmc10k : 1 of 1) Creating Filtered Arrow File, 4.031 mins elapsed.
+2026-10-19 13:53:08.68071 : (pbmc10k : 1 of 1) Finished Constructing Filtered Arrow File!, 5.193 mins elapsed.
+2026-10-19 13:53:08.74763 : (pbmc10k : 1 of 1) Adding TileMatrix!, 5.194 mins elapsed.
+2026-10-19 13:57:00.678801 : (pbmc10k : 1 of 1) Adding GeneScoreMatrix!, 9.06 mins elapsed.
+2026-10-19 13:58:16.720715 : (pbmc10k : 1 of 1) Finished Creating Arrow File, 10.327 mins elapsed.
+ArchR logging successful to : ArchRLogs/ArchR-createArrows-417378358d-Date-2026-10-19_Time-13-47-57.079514.log
+Warning messages:
+1: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the ArchR package.
+  Please report the issue to the authors. 
+2: The `size` argument of `element_rect()` is deprecated as of ggplot2 3.4.0.
+ℹ Please use the `linewidth` argument instead.
+ℹ The deprecated feature was likely used in the ArchR package.
+  Please report the issue to the authors. 
+3: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+ℹ The deprecated feature was likely used in the ArchR package.
+  Please report the issue to the authors. 
+time	createArrowFiles  619.9  s
+Validating Arrows...
+Getting SampleNames...
+1 
+Getting Cell Metadata...
+1 
+Merging Cell Metadata...
+Initializing ArchRProject...
+  ok    the project holds the 10,246 Cell Ranger cells, and nothing else
+  ok    recount records per cell == signac-real's recount (== Signac CountFragments), every cell
+  ok    nFrags == recount: fragments on the chroms, 10..2000 bp, every cell
+  ok    nMono/nDi/nMultiFrags == trunc(width/147)+1 classes, every cell
+  ok    ReadsInTSS == insertion x TSS-window overlaps (as (n/101)*101), every cell
+  ok    TSSEnrichment == 2(w/101)/max(f/100, 0.2) from the recount, exactly, every cell
+  ok    ReadsInPromoter == insertion x promoter overlaps, every cell
+  ok    ReadsInBlacklist == insertion x blacklist overlaps, every cell
+qc	records  246005688  off_chroms  82883  outside_10_2000  2334  nFrags  245920471  median_nFrags  22218  median_TSSEnrichment  18.5035  cells_TSS_below_4  68  ReadsInBlacklist  3121617
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4113a5b2e5-Date-2026-10-19_Time-13-58-17.589582.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415d1a55e0-Date-2026-10-19_Time-13-58-51.206172.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41119066d9-Date-2026-10-19_Time-13-59-13.120454.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-412babc2f1-Date-2026-10-19_Time-13-59-31.240603.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-413f2afdc7-Date-2026-10-19_Time-13-59-44.662328.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4142a15c0c-Date-2026-10-19_Time-14-00-01.026579.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4110a2c55-Date-2026-10-19_Time-14-00-20.288187.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-414b9db3e-Date-2026-10-19_Time-14-00-35.92551.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4148df33b3-Date-2026-10-19_Time-14-00-48.609905.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4141302299-Date-2026-10-19_Time-14-01-03.095882.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415ebc92d6-Date-2026-10-19_Time-14-01-18.476976.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4151760b0-Date-2026-10-19_Time-14-01-35.43487.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4115751c7-Date-2026-10-19_Time-14-01-52.100115.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4164d12a4a-Date-2026-10-19_Time-14-02-00.066967.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41227edc5d-Date-2026-10-19_Time-14-02-11.431832.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41298b8e01-Date-2026-10-19_Time-14-02-21.902103.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4116d5f6f6-Date-2026-10-19_Time-14-02-34.493149.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41468ecbcb-Date-2026-10-19_Time-14-02-51.252297.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-414c4dc776-Date-2026-10-19_Time-14-02-57.681667.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415e3a42c2-Date-2026-10-19_Time-14-03-15.131183.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-411d868f4a-Date-2026-10-19_Time-14-03-23.531229.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4144c0947e-Date-2026-10-19_Time-14-03-28.324753.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-416b8d22a8-Date-2026-10-19_Time-14-03-36.353371.log
+If there is an issue, please report to github with logFile!
+time	TileMatrix checks  328.6  s
+  ok    TileMatrix == recount per chrom (nnz, sum, sum of squares, checksum; blacklisted tiles zero), trunc(L/500)+1 tiles each
+  ok    TileMatrix column sums == recount tile insertions, every cell
+  ok    conservation: TileMatrix column sum + blacklisted-tile + chrM/chrY insertions == 2 x nFrags, every cell
+tile_matrix	chroms  23  tiles  6062095  nnz  270238837  insertions  488153039  blacklisted_tile_insertions  3150013  chrM_chrY_insertions  537890
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415e24befc-Date-2026-10-19_Time-14-03-45.367539.log
+If there is an issue, please report to github with logFile!
+  ok    GeneScoreMatrix: one row per gene off chrM/chrY, every entry finite, every cell scored
+gene_scores	genes  19886  nnz  110720444  colsum_range  9999.9,10000.127  md5  3149de994c70dc03c5fb0031c7d4106a
+time	GeneScoreMatrix checks  45.3  s
+ArchR logging to : ArchRLogs/ArchR-addPeakMatrix-413cdfc282-Date-2026-10-19_Time-14-04-31.041877.log
+If there is an issue, please report to github with logFile!
+2026-10-19 14:04:31.070209 : Batch Execution w/ safelapply!, 0 mins elapsed.
+2026-10-19 14:04:31.485349 : Adding pbmc10k to PeakMatrix for Chr (1 of 24)!, 0.006 mins elapsed.
+2026-10-19 14:04:46.673266 : Adding pbmc10k to PeakMatrix for Chr (2 of 24)!, 0.26 mins elapsed.
+2026-10-19 14:04:57.933808 : Adding pbmc10k to PeakMatrix for Chr (3 of 24)!, 0.447 mins elapsed.
+2026-10-19 14:05:07.233742 : Adding pbmc10k to PeakMatrix for Chr (4 of 24)!, 0.602 mins elapsed.
+2026-10-19 14:05:13.091413 : Adding pbmc10k to PeakMatrix for Chr (5 of 24)!, 0.7 mins elapsed.
+2026-10-19 14:05:21.300384 : Adding pbmc10k to PeakMatrix for Chr (6 of 24)!, 0.837 mins elapsed.
+2026-10-19 14:05:31.784569 : Adding pbmc10k to PeakMatrix for Chr (7 of 24)!, 1.011 mins elapsed.
+2026-10-19 14:05:39.305705 : Adding pbmc10k to PeakMatrix for Chr (8 of 24)!, 1.137 mins elapsed.
+2026-10-19 14:05:45.518079 : Adding pbmc10k to PeakMatrix for Chr (9 of 24)!, 1.24 mins elapsed.
+2026-10-19 14:05:52.712161 : Adding pbmc10k to PeakMatrix for Chr (10 of 24)!, 1.36 mins elapsed.
+2026-10-19 14:06:00.420755 : Adding pbmc10k to PeakMatrix for Chr (11 of 24)!, 1.489 mins elapsed.
+2026-10-19 14:06:09.167155 : Adding pbmc10k to PeakMatrix for Chr (12 of 24)!, 1.634 mins elapsed.
+2026-10-19 14:06:17.926188 : Adding pbmc10k to PeakMatrix for Chr (13 of 24)!, 1.78 mins elapsed.
+2026-10-19 14:06:21.508378 : Adding pbmc10k to PeakMatrix for Chr (14 of 24)!, 1.84 mins elapsed.
+2026-10-19 14:06:27.926972 : Adding pbmc10k to PeakMatrix for Chr (15 of 24)!, 1.947 mins elapsed.
+2026-10-19 14:06:33.110069 : Adding pbmc10k to PeakMatrix for Chr (16 of 24)!, 2.034 mins elapsed.
+2026-10-19 14:06:40.32671 : Adding pbmc10k to PeakMatrix for Chr (17 of 24)!, 2.154 mins elapsed.
+2026-10-19 14:06:51.057815 : Adding pbmc10k to PeakMatrix for Chr (18 of 24)!, 2.333 mins elapsed.
+2026-10-19 14:06:54.052484 : Adding pbmc10k to PeakMatrix for Chr (19 of 24)!, 2.383 mins elapsed.
+2026-10-19 14:07:06.191742 : Adding pbmc10k to PeakMatrix for Chr (20 of 24)!, 2.585 mins elapsed.
+2026-10-19 14:07:10.610471 : Adding pbmc10k to PeakMatrix for Chr (21 of 24)!, 2.659 mins elapsed.
+2026-10-19 14:07:12.860714 : Adding pbmc10k to PeakMatrix for Chr (22 of 24)!, 2.696 mins elapsed.
+2026-10-19 14:07:16.830445 : Adding pbmc10k to PeakMatrix for Chr (23 of 24)!, 2.762 mins elapsed.
+2026-10-19 14:07:20.911905 : Adding pbmc10k to PeakMatrix for Chr (24 of 24)!, 2.83 mins elapsed.
+ArchR logging successful to : ArchRLogs/ArchR-addPeakMatrix-413cdfc282-Date-2026-10-19_Time-14-04-31.041877.log
+time	addPeakMatrix  171.3  s
+  ok    ReadsInPeaks == recount insertions in peaks (uncapped), every cell
+  ok    FRIP == ReadsInPeaks / insertions on chroms with a peak, every cell
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415f055836-Date-2026-10-19_Time-14-07-22.063122.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4170809156-Date-2026-10-19_Time-14-07-34.60397.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41144c2d4b-Date-2026-10-19_Time-14-07-39.101776.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41267023d5-Date-2026-10-19_Time-14-07-45.342383.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41351aca9b-Date-2026-10-19_Time-14-07-51.245238.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4114752642-Date-2026-10-19_Time-14-07-53.469965.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-413a15d6bb-Date-2026-10-19_Time-14-07-57.085184.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-411235207b-Date-2026-10-19_Time-14-08-00.461971.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4126058d1b-Date-2026-10-19_Time-14-08-05.07283.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4165c199ac-Date-2026-10-19_Time-14-08-11.135072.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4151601e43-Date-2026-10-19_Time-14-08-12.949179.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4168a6e927-Date-2026-10-19_Time-14-08-20.393235.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4166cbc601-Date-2026-10-19_Time-14-08-28.150702.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-415619f981-Date-2026-10-19_Time-14-08-31.039076.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4131861cdb-Date-2026-10-19_Time-14-08-32.416996.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4127fbe89a-Date-2026-10-19_Time-14-08-34.934587.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4134d68c58-Date-2026-10-19_Time-14-08-41.582589.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41369d7d8b-Date-2026-10-19_Time-14-08-45.277862.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4129533a62-Date-2026-10-19_Time-14-08-50.313426.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4119a7b6a2-Date-2026-10-19_Time-14-08-56.2984.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41591c59e8-Date-2026-10-19_Time-14-09-01.114349.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-4152dec863-Date-2026-10-19_Time-14-09-05.283459.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-41307dad99-Date-2026-10-19_Time-14-09-09.442539.log
+If there is an issue, please report to github with logFile!
+ArchR logging to : ArchRLogs/ArchR-getMatrixFromArrow-411fab25b3-Date-2026-10-19_Time-14-09-11.829339.log
+If there is an issue, please report to github with logFile!
+  ok    PeakMatrix == recount per chrom with ceiling 4 (nnz, sum, sum of squares, checksum)
+peak_matrix	peaks  165376  nnz  115744013  sum_capped  278516752  sum_uncapped  302861260  median_FRIP  0.650229
+time	PeakMatrix checks  110.3  s
+Checking Inputs...
+ArchR logging to : ArchRLogs/ArchR-addIterativeLSI-411f2c8fd9-Date-2026-10-19_Time-14-09-12.257038.log
+If there is an issue, please report to github with logFile!
+2026-10-19 14:09:12.326363 : Computing Total Across All Features, 0 mins elapsed.
+2026-10-19 14:09:13.015361 : Computing Top Features, 0.012 mins elapsed.
+###########
+2026-10-19 14:09:13.789904 : Running LSI (1 of 2) on Top Features, 0.025 mins elapsed.
+###########
+2026-10-19 14:09:13.82375 : Sampling Cells (N = 10000) for Estimated LSI, 0.025 mins elapsed.
+2026-10-19 14:09:13.824345 : Creating Sampled Partial Matrix, 0.025 mins elapsed.
+2026-10-19 14:10:06.032129 : Computing Estimated LSI (projectAll = FALSE), 0.896 mins elapsed.
+2026-10-19 14:10:44.139206 : Identifying Clusters, 1.531 mins elapsed.
+2026-10-19 14:10:53.426299 : Identified 11 Clusters, 1.685 mins elapsed.
+2026-10-19 14:10:53.436004 : Saving LSI Iteration, 1.686 mins elapsed.
+2026-10-19 14:11:03.106725 : Creating Cluster Matrix on the total Group Features, 1.847 mins elapsed.
+2026-10-19 14:11:19.145892 : Computing Variable Features, 2.114 mins elapsed.
+###########
+2026-10-19 14:11:19.333217 : Running LSI (2 of 2) on Variable Features, 2.117 mins elapsed.
+###########
+2026-10-19 14:11:19.344086 : Creating Partial Matrix, 2.117 mins elapsed.
+2026-10-19 14:12:13.890404 : Computing LSI, 3.027 mins elapsed.
+2026-10-19 14:12:31.792587 : Finished Running IterativeLSI, 3.325 mins elapsed.
+Warning message:
+`aes_()` was deprecated in ggplot2 3.0.0.
+ℹ Please use tidy evaluation idioms with `aes()`
+ℹ The deprecated feature was likely used in the ArchR package.
+  Please report the issue to the authors. 
+time	addIterativeLSI  199.5  s
+ArchR logging to : ArchRLogs/ArchR-addClusters-411b5673f9-Date-2026-10-19_Time-14-12-31.799758.log
+If there is an issue, please report to github with logFile!
+2026-10-19 14:12:31.889098 : Running Seurats FindClusters (Stuart et al. Cell 2019), 0.001 mins elapsed.
+Computing nearest neighbor graph
+Computing SNN
+Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
+
+Number of nodes: 10246
+Number of edges: 381427
+
+Running Louvain algorithm...
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Maximum modularity in 10 random starts: 0.9017
+Number of communities: 25
+Elapsed time: 0 seconds
+2026-10-19 14:12:38.931063 : Testing Biased Clusters, 0.118 mins elapsed.
+2026-10-19 14:12:39.01863 : Identified Biased Clusters (n = 3), set filterBias = TRUE to re-assign these cells: , 0.12 mins elapsed.
+Biased Clusters : Cluster24 Cluster3 Cluster6 
+2026-10-19 14:12:39.019588 : Testing Outlier Clusters, 0.12 mins elapsed.
+2026-10-19 14:12:39.020651 : Assigning Cluster Names to 25 Clusters, 0.12 mins elapsed.
+2026-10-19 14:12:39.068348 : Finished addClusters, 0.121 mins elapsed.
+time	addClusters  7.3  s
+clusters	n  25  sizes  C20:2157,C5:1340,C3:1013,C7:963,C6:948,C12:649,C2:557,C16:463,C11:321,C25:317,C21:305,C22:173,C4:168,C8:166,C19:116,C24:115,C1:109,C10:79,C23:62,C15:60,C17:53,C9:31,C13:29,C14:27,C18:25
+lsi	dims  30  cells  10246
+vs_signac	clusters_ARI  0.672378  signac_clusters  18  spearman_TSS  0.700448  spearman_FRiP  0.995176
+ArchR logging to : ArchRLogs/ArchR-getMarkerFeatures-4120cce6da-Date-2026-10-19_Time-14-12-42.159271.log
+If there is an issue, please report to github with logFile!
+2026-10-19 14:12:42.272785 : Matching Known Biases, 0.001 mins elapsed.
+2026-10-19 14:12:46.162395 : Computing Pairwise Tests (1 of 25), 0.066 mins elapsed.
+2026-10-19 14:12:46.207379 : Computing Pairwise Tests (2 of 25), 0.067 mins elapsed.
+2026-10-19 14:12:46.252532 : Computing Pairwise Tests (3 of 25), 0.068 mins elapsed.
+2026-10-19 14:12:46.297824 : Computing Pairwise Tests (4 of 25), 0.069 mins elapsed.
+2026-10-19 14:12:46.343713 : Computing Pairwise Tests (5 of 25), 0.069 mins elapsed.
+2026-10-19 14:12:46.390244 : Computing Pairwise Tests (6 of 25), 0.07 mins elapsed.
+2026-10-19 14:12:46.436762 : Computing Pairwise Tests (7 of 25), 0.071 mins elapsed.
+2026-10-19 14:12:46.484014 : Computing Pairwise Tests (8 of 25), 0.072 mins elapsed.
+2026-10-19 14:13:07.908836 : Computing Pairwise Tests (9 of 25), 0.429 mins elapsed.
+2026-10-19 14:13:08.498797 : Computing Pairwise Tests (10 of 25), 0.439 mins elapsed.
+2026-10-19 14:13:08.718906 : Computing Pairwise Tests (11 of 25), 0.442 mins elapsed.
+2026-10-19 14:13:09.658905 : Computing Pairwise Tests (12 of 25), 0.458 mins elapsed.
+2026-10-19 14:13:10.066688 : Computing Pairwise Tests (13 of 25), 0.465 mins elapsed.
+2026-10-19 14:13:10.169024 : Computing Pairwise Tests (14 of 25), 0.466 mins elapsed.
+2026-10-19 14:13:10.22954 : Computing Pairwise Tests (15 of 25), 0.467 mins elapsed.
+2026-10-19 14:13:10.328905 : Computing Pairwise Tests (16 of 25), 0.469 mins elapsed.
+2026-10-19 14:13:29.608941 : Computing Pairwise Tests (17 of 25), 0.79 mins elapsed.
+2026-10-19 14:13:30.41878 : Computing Pairwise Tests (18 of 25), 0.804 mins elapsed.
+2026-10-19 14:13:31.428878 : Computing Pairwise Tests (19 of 25), 0.821 mins elapsed.
+2026-10-19 14:13:31.778885 : Computing Pairwise Tests (20 of 25), 0.827 mins elapsed.
+2026-10-19 14:13:32.043379 : Computing Pairwise Tests (21 of 25), 0.831 mins elapsed.
+2026-10-19 14:13:32.14907 : Computing Pairwise Tests (22 of 25), 0.833 mins elapsed.
+2026-10-19 14:13:33.432454 : Computing Pairwise Tests (23 of 25), 0.854 mins elapsed.
+2026-10-19 14:13:33.55199 : Computing Pairwise Tests (24 of 25), 0.856 mins elapsed.
+2026-10-19 14:13:51.37901 : Computing Pairwise Tests (25 of 25), 1.153 mins elapsed.
+###########
+2026-10-19 14:14:12.930326 : Completed Pairwise Tests, 1.512 mins elapsed.
+###########
+ArchR logging successful to : ArchRLogs/ArchR-getMarkerFeatures-4120cce6da-Date-2026-10-19_Time-14-12-42.159271.log
+time	getMarkerFeatures  94  s
+marker	MS4A1  C16  log2FC  4.10058  FDR  6.97022e-96
+marker	CD79A  C16  log2FC  1.02233  FDR  2.76998e-24
+marker	CD3E  C3  log2FC  0.673764  FDR  1.43032e-15
+marker	CD8A  C7  log2FC  2.01581  FDR  8.54082e-73
+marker	IL7R  C5  log2FC  1.16981  FDR  5.46333e-48
+marker	CD14  C20  log2FC  0.891483  FDR  3.08365e-38
+marker	LYZ  C20  log2FC  1.22438  FDR  7.04292e-41
+marker	FCGR3A  C12  log2FC  0.583836  FDR  8.14549e-13
+marker	NKG7  C12  log2FC  2.04328  FDR  4.43193e-52
+marker	GNLY  C12  log2FC  1.52348  FDR  1.50822e-48
+marker	CD1C  C20  log2FC  2.26487  FDR  8.4034e-66
+marker	PPBP  C21  log2FC  1.25106  FDR  0.083157
+markers	genes_FDR<=0.01_log2FC>=1_per_cluster  C1:3,C2:244,C3:278,C4:53,C5:195,C6:143,C7:100,C8:219,C9:0,C10:49,C11:320,C12:513,C13:46,C14:0,C15:81,C16:748,C17:0,C18:0,C19:675,C20:1434,C21:799,C22:675,C23:4,C24:2131,C25:49
+md5	cell_qc  48758c6a5e86b5deb8fda98122c1d4e8  clusters  0b7230c69de65c8bfb3f57bf80791568  gene_scores  3149de994c70dc03c5fb0031c7d4106a
+peak_rss	VmHWM: 7872392 kB
+time	archr_total  1576.9  s
+checks: 16 run, all ok
+ARCHR OK

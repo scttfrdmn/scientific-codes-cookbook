@@ -1,0 +1,78 @@
+{
+  "task_id": "cookbook-archr-real-reference",
+  "container": "quay.io/aarchbio/r-archr@sha256:a71267afe8ca5a73e10e62b563d88b959bdec10cc0faedfc71d2410652376c6a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e (spawn#707); the body is staged, not inlined\n# (EC2 user data is capped at 16 KiB, spawn#1063).\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH\ncd /tmp\nprintf 'b872a8837a7b4675120ddb3119dae9f1e1d00d67bfb5164e9a56ad28bc6060d5  recount\\n2b4151a480f1ef4254b52964f9e3de407dfaa5ca5880c6f6f4446b3c9226b74c  reference.sh\\n106925db5774e106cbd2eef33e70b0e59321409ab4b28dc15484c398f5afc55e  pins.sha256\\n0813248a84f875de50735866461cde046dde1cd994d520a03bfefd414f19c32f  fragments.tsv.gz\\n5267f3afe6426e9f010957d46a50ebb97ab629167e2d1d76576afbf7b2be9f93  peaks.bed\\nd4fd832aafc71a364d1cb7e89f8449ce0a245a349407782e335cf2ba8687a525  cells.txt\\n216e21dfea6318d019a02e3fb76a15c1d51a537bf114fa9ff287dd96785b345f  genes.tsv\\n' > inputs.sha256\nsha256sum -c inputs.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash /tmp/reference.sh > reference.log 2>&1; RC=$?\ncat reference.log\ntest \"$RC\" = 0 && grep -q '^REFERENCE OK' reference.log || { echo \"FAIL: reference.sh exited $RC\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/recount-linux-arm64",
+      "destination": "/tmp/recount"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/reference.sh",
+      "destination": "/tmp/reference.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/fragments.tsv.gz",
+      "destination": "/tmp/fragments.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/peaks.bed",
+      "destination": "/tmp/peaks.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/ref/cells.txt",
+      "destination": "/tmp/cells.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/ref/genes.tsv",
+      "destination": "/tmp/genes.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/ref/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/ref/"
+    },
+    {
+      "source": "/tmp/ref-canary/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/ref-canary/"
+    },
+    {
+      "source": "/tmp/reference.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/reference/reference.log"
+    },
+    {
+      "source": "/tmp/fetched.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/reference/fetched.sha256"
+    },
+    {
+      "source": "/tmp/ref.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/reference/ref.sha256"
+    },
+    {
+      "source": "/tmp/ref-canary.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/reference/ref-canary.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

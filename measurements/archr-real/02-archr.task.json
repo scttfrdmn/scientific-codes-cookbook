@@ -1,0 +1,83 @@
+{
+  "task_id": "cookbook-archr-real",
+  "container": "quay.io/aarchbio/r-archr@sha256:a71267afe8ca5a73e10e62b563d88b959bdec10cc0faedfc71d2410652376c6a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e (spawn#707).\n# spawn's task shell drops the image PATH; aarchbio's prefix is /opt/conda, bioconda's x86 /usr/local.\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH HOME=/tmp\nexport ARCHR_THREADS=8 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 OPENBLAS_VERBOSE=2\ncd /tmp\n: > archr.log\nprintf '0813248a84f875de50735866461cde046dde1cd994d520a03bfefd414f19c32f  fragments.tsv.gz\\n0062587c718db8596887ba8aaba056561daf62345fd15aef182a7d67e036b07e  fragments.tsv.gz.tbi\\na2f114226e4c2b1de3f2da942bbb82bf189ae7d35fe6dbc28de7811efd8ae883  signac/barcodes.tsv\\naf382f0059c8986f307edc22793e0635655a0dfdc0f476e9ced6fa6f761c09ab  archr-real.R\\nc92e763af17271446194991e71917ac220593a5a3d40a06667be24178ef08cf2  ref/blacklist.bed.gz\\nd4fd832aafc71a364d1cb7e89f8449ce0a245a349407782e335cf2ba8687a525  ref/cells.txt\\nf97ebbd3485a9fd06d1999e1969a1396d1b28361076f406f3edbc4369ae2f4be  ref/cells_recount.tsv\\n2c49968ec40d099dfd03d6930c7b224688dadb415c34495f36807ccb3f0253bb  ref/chrom.sizes\\n1ede36b7f1e293256312bb350e999257fda59da431109211e234d2a550bbafea  ref/chrom_kept.tsv\\ne1315befcce01f2d7b2fcfd23e4a6e38f50d81c7a2a63ae21249ce8ff8a4819b  ref/genes_archr.tsv\\nc6ac558b71abfe53722c01c8f2a6d22fb7cfe3d95940fa1cb32575330bba568b  ref/matrix_stats.tsv\\n5ce7d4908a57d9aacd506d8b6fa786f53c9e129efb6d297e7bea1850db290f3d  ref/peaks_archr.tsv\\nb891916e636fecd76d24e6094cdcf62b9fc5bca790e43de8e1fea61fbb16e9ff  ref/tss_archr.tsv\\n' > pins.sha256\nsha256sum -c pins.sha256 > pins.log 2>&1 || { cat pins.log; echo \"FAIL: a staged file does not match its pin\"; exit 1; }\necho \"all $(wc -l < pins.sha256) staged files match their pins\"\n{ uname -m; nproc; grep -m1 -E 'model name|CPU part' /proc/cpuinfo; grep -c ^processor /proc/cpuinfo;\n  echo \"threads per core (cpu0 siblings): $(cat /sys/devices/system/cpu/cpu0/topology/thread_siblings_list)\"; } > cpu.txt 2>&1; cat cpu.txt\n# ArchR's Arrow file and temp files go on the root disk (disk_gib), not the half-RAM /tmp tmpfs (spawn#1179).\nW=/var/tmp/archr; mkdir -p $W && cd $W || { echo \"FAIL: no work dir\"; exit 1; }\nexport TMPDIR=$W/tmp; mkdir -p $TMPDIR\nfor f in fragments.tsv.gz fragments.tsv.gz.tbi archr-real.R ref signac; do ln -s /tmp/$f $f; done\nT0=$(date +%s)\nRscript archr-real.R > /tmp/archr.log 2>&1; RC=$?\nT1=$(date +%s)\ncat /tmp/archr.log\necho \"archr-real.R rc $RC in $((T1-T0)) s\"\nfor f in /sys/fs/cgroup/memory.peak /sys/fs/cgroup/memory/memory.max_usage_in_bytes; do [ -r \"$f\" ] && echo \"cgroup_peak $(cat $f) ($f)\"; done\ndu -sh $W 2>/dev/null; df -h /var/tmp /tmp 2>/dev/null\ncp cell_qc.tsv clusters.tsv lsi.tsv.gz markers_canonical.tsv /tmp/ 2>/dev/null\ntar -czf /tmp/archr-logs.tar.gz ArchRLogs QualityControl 2>/dev/null\ntest \"$RC\" = 0 || { echo \"FAIL: an ArchR check failed or ArchR died\"; exit 1; }\ngrep -q '^ARCHR OK' /tmp/archr.log || { echo \"FAIL: archr-real.R did not reach completion\"; exit 1; }\ntest -s /tmp/cell_qc.tsv && test -s /tmp/clusters.tsv || { echo \"FAIL: outputs are empty\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 80
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/fragments.tsv.gz",
+      "destination": "/tmp/fragments.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/fragments.tsv.gz.tbi",
+      "destination": "/tmp/fragments.tsv.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/archr-real.R",
+      "destination": "/tmp/archr-real.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/archr-real/ref/",
+      "destination": "/tmp/ref/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/signac-real/ref/barcodes.tsv",
+      "destination": "/tmp/signac/barcodes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/signac-real/r1/lsi_u.tsv.gz",
+      "destination": "/tmp/signac/lsi_u.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/signac-real/r1/qc.tsv",
+      "destination": "/tmp/signac/qc.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/archr.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/archr.log"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/cpu.txt"
+    },
+    {
+      "source": "/tmp/cell_qc.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/cell_qc.tsv"
+    },
+    {
+      "source": "/tmp/clusters.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/clusters.tsv"
+    },
+    {
+      "source": "/tmp/lsi.tsv.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/lsi.tsv.gz"
+    },
+    {
+      "source": "/tmp/markers_canonical.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/markers_canonical.tsv"
+    },
+    {
+      "source": "/tmp/archr-logs.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/archr-real/r1/archr-logs.tar.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
