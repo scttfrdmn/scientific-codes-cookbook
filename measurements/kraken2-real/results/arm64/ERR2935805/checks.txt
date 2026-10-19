@@ -1,0 +1,13 @@
+pairs processed == ENA read_count                    want 47832553                      ok   (47832553)
+Mbp processed == ENA base_count                      want 9662.18                       ok   (9662.18)
+classified + unclassified == processed               want 47832553                      ok   (47832553)
+report taxids unique                                 want 7195                          ok   (7195)
+report unclassified row == log unclassified          want 7564918                       ok   (7564918)
+report root clade == log classified                  want 40267635                      ok   (40267635)
+sum(taxon_reads) over all rows == processed          want 47832553                      ok   (47832553)
+every clade == taxon + sum(children)                 7194 clades, want 0 off            ok   (0 off)
+per-read lines: C == classified, U == unclassified   want 40267635 / 7564918            ok   ({'U': 7564918, 'C': 40267635})
+per-read tally == report taxon_reads, every taxid    4700 taxids, want 0 off            ok   (0 off)
+unexpected genera above 1% of classified             want 0 (the closed list)           ok   (0; largest Mycobacterium 0.0246%)
+top 3 genera, in order == the D6310 ladder           want Listeria>Pseudomonas>Bacillus ok   (Listeria>Pseudomonas>Bacillus)
+failures 0

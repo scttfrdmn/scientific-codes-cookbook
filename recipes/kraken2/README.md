@@ -46,9 +46,7 @@ kraken2 --db db --paired --threads 8 --report out.report --output /dev/null \
 unpacked `.k2d` must coexist, plus 3.6 GiB of reads: measured tmpfs peak **17,538 MB**. tmpfs is half
 of RAM, so a 32 GiB box offers 16 GiB and cannot hold it. Host memory peaked at 29,819 MB.
 
-**No generation table here.** At 68 s of compute against 92 s of index transfer, the chip is not the
-lever — amortising the index across samples is. [Five data paths, measured](../../measurements/star-real/README.md)
-is the relevant comparison, not a Graviton ladder.
+**Which box — [measured](../../measurements/kraken2-real/README.md)** on two whole ZymoBIOMICS runs (56.6M pairs, 12.3 Gbp) in one task: billed **$0.055 Graviton4, $0.059 AMD (1.18× faster), $0.064 Intel**. Every pair is classified identically on all three chips, and the published mixtures hold at genus rank. kraken2 keeps only ~2 of 8 threads busy and half the bill is index staging, so the chip is not the lever — amortising the index across samples is ([five data paths](../../measurements/star-real/README.md)).
 
 <details>
 <summary>As shipped: a fourth tool on one read count, a virus that should be there, pins</summary>

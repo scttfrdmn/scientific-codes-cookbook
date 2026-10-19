@@ -1,0 +1,13 @@
+pairs processed == ENA read_count                    want 8785731                       ok   (8785731)
+Mbp processed == ENA base_count                      want 2653.29                       ok   (2653.29)
+classified + unclassified == processed               want 8785731                       ok   (8785731)
+report taxids unique                                 want 5310                          ok   (5310)
+report unclassified row == log unclassified          want 652227                        ok   (652227)
+report root clade == log classified                  want 8133504                       ok   (8133504)
+sum(taxon_reads) over all rows == processed          want 8785731                       ok   (8785731)
+every clade == taxon + sum(children)                 5309 clades, want 0 off            ok   (0 off)
+per-read lines: C == classified, U == unclassified   want 8133504 / 652227              ok   ({'C': 8133504, 'U': 652227})
+per-read tally == report taxon_reads, every taxid    3438 taxids, want 0 off            ok   (0 off)
+unexpected genera above 1% of classified             want 0 (the closed list)           ok   (0; largest Mycobacterium 0.1787%)
+top 8 genera == the 8 Zymo bacteria                  want the D6300 list                ok   (Pseudomonas,Salmonella,Bacillus,Enterococcus,Listeria,Limosilactobacillus,Staphylococcus,Escherichia)
+failures 0
