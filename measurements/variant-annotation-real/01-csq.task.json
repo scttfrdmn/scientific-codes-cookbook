@@ -1,0 +1,75 @@
+{
+  "task_id": "cookbook-varann-real-csq",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (csq\\.sh|hs37d5\\.chr20-22\\.fa|lib\\.sh|pairs\\.awk|Homo_sapiens\\.GRCh37\\.87\\.chromosome\\.20\\.gff3\\.gz|Homo_sapiens\\.GRCh37\\.87\\.chromosome\\.21\\.gff3\\.gz|Homo_sapiens\\.GRCh37\\.87\\.chromosome\\.22\\.gff3\\.gz|ALL\\.chr20\\.phase3_shapeit2_mvncall_integrated_v5a\\.20130502\\.genotypes\\.vcf\\.gz|ALL\\.chr21\\.phase3_shapeit2_mvncall_integrated_v5a\\.20130502\\.genotypes\\.vcf\\.gz|ALL\\.chr22\\.phase3_shapeit2_mvncall_integrated_v5a\\.20130502\\.genotypes\\.vcf\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 10 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash csq.sh \n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/csq.sh",
+      "destination": "/tmp/csq.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/pairs.awk",
+      "destination": "/tmp/pairs.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/Homo_sapiens.GRCh37.87.chromosome.20.gff3.gz",
+      "destination": "/tmp/Homo_sapiens.GRCh37.87.chromosome.20.gff3.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/Homo_sapiens.GRCh37.87.chromosome.21.gff3.gz",
+      "destination": "/tmp/Homo_sapiens.GRCh37.87.chromosome.21.gff3.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/Homo_sapiens.GRCh37.87.chromosome.22.gff3.gz",
+      "destination": "/tmp/Homo_sapiens.GRCh37.87.chromosome.22.gff3.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bcftools-real/hs37d5.chr20-22.fa",
+      "destination": "/tmp/hs37d5.chr20-22.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/variant-annotation-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/variant-annotation-real/csq/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

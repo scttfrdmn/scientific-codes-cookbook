@@ -6,7 +6,6 @@ images:
   - quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e
   - quay.io/aarchbio/ensembl-vep@sha256:48593f3f9f40cd15c77adcf68f83fb7ee00d7fa35849d449cece48a504c76e01
 last_verified_x86_64: 2026-10-13
-last_verified_amd: 2026-10-18
 images_x86_64:
   - quay.io/biocontainers/snpeff@sha256:832e86061ab3c1ef4339ec42f10fb98c4eaaecd498cd37d2bbe747e6bcc14de7
   - quay.io/biocontainers/bcftools@sha256:186c45de3059dbb1837006c27788284c89d17f8e693e7804624b6cf6ca5caca0
@@ -18,23 +17,17 @@ last_verified: 2026-09-22
 
 snpEff, `bcftools csq` and VEP annotate the same VCF against the same reference and GFF on Graviton4, all three checked against consequences chosen before the variants existed. The catalog's annotation recipe, for anyone downstream of a variant caller.
 
-> **What this covers.** A 1 kb contig with one two-exon gene, five variants — synonymous, missense, nonsense, frameshift, splice-donor. A snpEff database built from a GFF, `bcftools csq`, VEP in offline GFF mode, and reconciling three notations. Not a real annotation database, ClinVar/dbNSFP, VEP plugins, or transcript prioritisation.
-
 ## Run it
 
 ```bash
 for s in $(make -s spec RECIPE=variant-annotation); do spawn task run --spec "$s" --wait; done
 snpEff build -c snpEff.config -gff3 -noCheckProtein -v chrA          # toy DB from your GFF
 snpEff ann   -c snpEff.config -noStats -hgvs1LetterAa chrA variants.vcf > ann.vcf
-
 bgzip -c genes.gff > genes.gff.gz
 bcftools csq -f chrA.fa -g genes.gff.gz -l -Ov variants.vcf > csq.vcf   # the second annotator
-
 tabix -p gff genes.sorted.gff.gz                                       # VEP wants it indexed
 vep -i variants.vcf --gff genes.sorted.gff.gz --fasta chrA.fa --vcf -o vep.vcf --species custom
 ```
-
-Three tasks, one per annotator: snpEff builds the fixture, its database and the truth table; bcftools and then VEP annotate the same bytes and each is reconciled against the truth and the others.
 
 ## Make it yours
 
@@ -43,14 +36,21 @@ Three tasks, one per annotator: snpEff builds the fixture, its database and the 
 | toy contig + designed gene | your reference + a real GFF | for snpEff, prefer a **pre-built database** (`snpEff download GRCh38.105`) over building your own; build only for non-model organisms. |
 | the hand-written GFF3 | your annotation | **both tools need Ensembl-style `ID=gene:`/`ID=transcript:` prefixes and correct CDS `phase`** — this is where custom-GFF annotation actually fails, see below. |
 | five constructed variants | your caller's VCF (e.g. from [freebayes](../freebayes/README.md) or [gatk4](../gatk4/README.md)) | annotation is deterministic given a transcript model, so the interesting failures are all in the GFF, not the variants. |
-| `-hgvs1LetterAa` | snpEff's default 3-letter HGVS | one-letter output is what makes the tools mechanically comparable; see the conventions table. |
 | VEP `--gff` + `--fasta` | `--cache` or `--database` | **offline GFF mode needs no annotation cache at all**, which is why VEP is reachable here; a real run usually wants the species cache. |
 
 **Leave the fixture:** 40 codons let every consequence be read off the genetic code by hand, which is what makes these exact assertions rather than plausibility checks. **Scale it** to a real GFF when you need real transcripts — and expect the phase and ID-prefix problems below to be the whole difficulty.
 
 ## Shape, size, cost
 
-Three tasks. snpEff and bcftools on `c8g.large` (TTL 15m/12m, caps $0.05); **VEP on `c8g.xlarge` with `disk_gib: 40`** because its image is **4.68 GB** — by far the largest in the catalog, where the others are tens of MB. That pull *is* the runtime: VEP's task took **5m43s** end to end for seconds of annotation. The bioconda snpEff wrapper pins `-Xmx1g`, so 4 GiB is ample there. **These timings are not compute cost.**
+Three tasks. snpEff and bcftools on `c8g.large` (TTL 15m/12m, caps $0.05); **VEP on `c8g.xlarge` with `disk_gib: 40`** because its image is **4.68 GB** — by far the largest in the catalog, where the others are tens of MB. That pull *is* the runtime: VEP's task took **5m43s** end to end for seconds of annotation. The bioconda snpEff wrapper pins `-Xmx1g`, so 4 GiB is ample there. **These timings are not compute cost.** **Which box — [measured](../../measurements/variant-annotation-real/README.md)** on 1000 Genomes chr20–22 sites (4.04M records) against Ensembl GRCh37.87, all three annotators, one verified chain:
+
+| chip | tool wall | **billed $/result** | `csq` / `snpEff ann` / VEP ×16 forks |
+|---|---|---|---|
+| Graviton4 | 1,541 s | 0.2303 | 6 / 467 / 729 s |
+| Xeon 6975P-C | 1,344 s | 0.2707 | 7 / 433 / 592 s |
+| **EPYC 9R45** | **927 s** | **0.2196** | 5 / 270 / 417 s |
+
+**Take AMD, and use csq where its conventions suit you**: it is 50–120× faster than the others, and VEP is three-quarters of the bill. At scale, 96.1% of 187,611 coding-SNV pairs agree on every field. The rest are three conventions; the main one is snpEff and csq numbering residues one lower than Ensembl (and VEP) on 332 transcripts whose CDS starts mid-codon. Outputs are byte-identical across chips.
 
 <details>
 <summary>As shipped: exact consequences, three-annotator agreement, the notation problem, which tool is the frameshift outlier, the junction-spanning codon, pins</summary>
