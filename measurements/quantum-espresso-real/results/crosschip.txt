@@ -1,0 +1,21 @@
+x86_64  A  |E - E_Graviton4| = 0.00e+00 Ry (want < 1e-06)  [ok]
+x86_64  A  max|F - F_Graviton4| = 0.00e+00 Ry/au (want <= SCF corrections 1.15e-03)  [ok]
+x86_64  A  Fermi 0.7845 vs 0.7845 eV, iterations 27 vs 27  [reported: path]
+x86_64  B  |E - E_Graviton4| = 0.00e+00 Ry (want < 1e-06)  [ok]
+x86_64  B  max|F - F_Graviton4| = 0.00e+00 Ry/au (want <= SCF corrections 8.96e-04)  [ok]
+x86_64  B  Fermi 0.7845 vs 0.7845 eV, iterations 29 vs 29  [reported: path]
+amd     A  |E - E_Graviton4| = 0.00e+00 Ry (want < 1e-06)  [ok]
+amd     A  max|F - F_Graviton4| = 0.00e+00 Ry/au (want <= SCF corrections 1.15e-03)  [ok]
+amd     A  Fermi 0.7845 vs 0.7845 eV, iterations 27 vs 27  [reported: path]
+amd     B  |E - E_Graviton4| = 0.00e+00 Ry (want < 1e-06)  [ok]
+amd     B  max|F - F_Graviton4| = 0.00e+00 Ry/au (want <= SCF corrections 8.96e-04)  [ok]
+amd     B  Fermi 0.7845 vs 0.7845 eV, iterations 29 vs 29  [reported: path]
+
+chip     run  E (Ry)              iterations  scf accuracy  wall
+arm64    A    -11427.0940218      27          8.3e-09       48m59.96s
+arm64    B    -11427.09402183     29          5.4e-09       55m28.08s
+x86_64   A    -11427.0940218      27          8.3e-09       29m41.84s
+x86_64   B    -11427.09402183     29          5.4e-09       31m37.98s
+amd      A    -11427.0940218      27          8.3e-09       13m13.14s
+amd      B    -11427.09402183     29          5.4e-09       14m31.01s
+CROSS-CHIP PASSED

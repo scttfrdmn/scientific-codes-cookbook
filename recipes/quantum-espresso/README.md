@@ -7,7 +7,6 @@ env_x86_64: dft-d47602c11d46
 spawn_version: 0.131.0
 last_verified: 2026-10-17
 last_verified_x86_64: 2026-10-17
-last_verified_amd: 2026-10-18
 ---
 # Quantum ESPRESSO — the silicon lattice constant, cross-checked against GPAW
 
@@ -37,9 +36,17 @@ The recipe drives five such SCFs across lattice constants (through ASE, so QE an
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 6m, cap $0.04. Each QE SCF is ~3 s; the ten EOS points (five per code) are ~1 min. Recorded command window **3m21s** — boot and the 1.25 GB `dft` image pull are the rest. **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB — the two vCPUs are the two MPI ranks), TTL 6m, cap $0.04. Each QE SCF is ~3 s; the ten EOS points (five per code) are ~1 min. Recorded command window **3m21s** — boot and the 1.25 GB `dft` image pull are the rest. **These timings are not compute cost.** **Sizing:** the 2-atom cell is CPU-light; a real cell scales with atoms × k-points, and QE's plane-wave SCF is MPI-parallel — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real system on its cell, not this one.
 
-**Sizing:** the 2-atom cell is CPU-light; a real cell scales with atoms × k-points, and QE's plane-wave SCF is MPI-parallel — the [scaling knee](../../patterns/sizing.md) is where more ranks stop paying. Size a real system on its cell, not this one.
+## Which box — [measured](../../measurements/quantum-espresso-real/README.md) on AUSURF112 (112 Au atoms, 800 bands, 16 ranks)
+
+| chip | instance | wall, two converged SCFs | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 6,271 s | 0.6381 | 1.146 |
+| Xeon 6975P-C | `c8i.4xlarge` | 3,684 s | 0.7497 | 0.797 |
+| **EPYC 9R45** | `c8a.4xlarge` | **1,667 s** | 0.8622 | **0.427** |
+
+**Take AMD:** 3.7× faster than Graviton4 and 63% cheaper billed; the gap is in ZGEMM, not the FFTs. Energy, forces and iteration count are identical to the printed digit on all three chips, and `-nk 2` pools are 6–13% *slower* than the default on one node.
 
 <details>
 <summary>As shipped: the two-code cross-check, why energy isn't compared, pins, smoke check, run + verify</summary>

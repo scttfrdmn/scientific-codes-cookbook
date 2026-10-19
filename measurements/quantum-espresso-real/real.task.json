@@ -1,0 +1,91 @@
+{
+  "task_id": "cookbook-quantum-espresso-real-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf '45c38d9850547a5380f2825ccab0266cd9b028dfa2f3d966d44176bfca64eeaf  run.sh\\n6f275f06074ff953b80b9fb07f02437e40ffe2698b648c88ed270f41bc3adb3e  check.py\\ned61b445f64a3002a93ec001d34f476ac1bd4a5603599533d997b1c4eae9fe8a  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16 '-nk 2'\n"
+  ],
+  "container": "quay.io/aarchsci/dft@sha256:7574f6b15d6b0ec2d1bc27ebaabf97298e1ac619711754eb10da8b1f54600d03",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quantum-espresso-real/ausurf.in",
+      "destination": "/tmp/ausurf.in"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quantum-espresso-real/Au.pbe-nd-van.UPF",
+      "destination": "/tmp/Au.pbe-nd-van.UPF"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quantum-espresso-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quantum-espresso-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quantum-espresso-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/check.txt"
+    },
+    {
+      "source": "/tmp/out/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/results.tsv"
+    },
+    {
+      "source": "/tmp/out/forces-A.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/forces-A.tsv"
+    },
+    {
+      "source": "/tmp/out/forces-B.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/forces-B.tsv"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/runs.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/runs.txt"
+    },
+    {
+      "source": "/tmp/out/input-edits.diff",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/input-edits.diff"
+    },
+    {
+      "source": "/tmp/out/pw-A.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/pw-A.out"
+    },
+    {
+      "source": "/tmp/out/pw-B.out",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/pw-B.out"
+    },
+    {
+      "source": "/tmp/quantum-espresso-real-out.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quantum-espresso-real/r2/quantum-espresso-real-out.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

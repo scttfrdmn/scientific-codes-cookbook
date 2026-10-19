@@ -1,0 +1,20 @@
+A: QE version                      v7.5 want 7.5  [ok]
+A: MPI ranks from pw.x             16 want 16  [ok]
+A: the AUSURF112 system            nat=112 nbnd=800 nelec=1232.00 want 112/800/1232  [ok]
+A: SCF converged                   27 iterations, scf accuracy 8.30e-09 Ry want < 1e-08  [ok]
+A: forces on all atoms             112 of 112 finite  [ok]
+B: QE version                      v7.5 want 7.5  [ok]
+B: MPI ranks from pw.x             16 want 16  [ok]
+B: the AUSURF112 system            nat=112 nbnd=800 nelec=1232.00 want 112/800/1232  [ok]
+B: SCF converged                   29 iterations, scf accuracy 5.40e-09 Ry want < 1e-08  [ok]
+B: forces on all atoms             112 of 112 finite  [ok]
+B: k-point pools                   npool=2 want 2 (-nk 2)  [ok]
+A: one pool                        npool=1  [ok]
+decomposition: total energy        |E_A-E_B| = 3.00e-08 Ry want < 1e-06  [ok]
+decomposition: forces              max|F_A-F_B| = 3.09e-05 Ry/au want <= SCF corrections 1.02e-03  [ok]
+decomposition: Fermi level         |Ef_A-Ef_B| = 0.0e+00 eV  [reported]
+A:                                 net force 3.0e-08 2.0e-08 1.0e-08 Ry/au, 2 k-points, 48m59.96s wall  [reported]
+B:                                 net force 2.0e-08 1.0e-08 -1.0e-08 Ry/au, 2 k-points, 55m28.08s wall  [reported]
+----
+E(A) = -11427.09402180 Ry  E(B) = -11427.09402183 Ry  Ef = 0.7845 eV  iterations 27 / 29
+CHECKS PASSED
