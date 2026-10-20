@@ -1,0 +1,48 @@
+arm64  Neoverse-V2                  tpc 1  tool  2299 s (ewt 48, pmc 2251)  window  2364 s  $/hr 1.2762  compute $ 0.8150  billed $ 0.8380  cgroup 30.73 GiB  worker rss 1.57 GiB  355807 tok/s  openblas neoversev2 (libopenblas.so.0)  completed
+x86_64 Intel(R) Xeon(R) 6975P-C     tpc 2  tool  2708 s (ewt 45, pmc 2663)  window  2766 s  $/hr 1.4994  compute $ 1.1279  billed $ 1.1520  cgroup 30.86 GiB  worker rss 1.56 GiB  300209 tok/s  openblas Cooperlake (libopenblas.so.0)  completed
+amd    AMD EPYC 9R45                tpc 1  tool  2531 s (ewt 58, pmc 2473)  window  2577 s  $/hr 1.7243  compute $ 1.2123  billed $ 1.2343  cgroup 30.28 GiB  worker rss 1.60 GiB  323915 tok/s  openblas Cooperlake (libopenblas.so.0)  completed
+x86_64 vs arm64: tok   identical on 89339 of 89339 articles
+x86_64 vs arm64: lemma identical on 89315 of 89339 articles
+x86_64 vs arm64: tag   identical on 89280 of 89339 articles
+x86_64 vs arm64: pos   identical on 89289 of 89339 articles
+x86_64 vs arm64: morph identical on 89295 of 89339 articles
+x86_64 vs arm64: dep   identical on 89146 of 89339 articles
+x86_64 vs arm64: sent  identical on 89330 of 89339 articles
+x86_64 vs arm64: ent   identical on 89316 of 89339 articles
+x86_64 vs arm64: tokens count identical on 89339 of 89339 articles; total 795195869 vs 795195869
+x86_64 vs arm64: sents  count identical on 89331 of 89339 articles; total 42559835 vs 42559838
+x86_64 vs arm64: ents   count identical on 89321 of 89339 articles; total 85216979 vs 85216979
+x86_64 vs arm64: pos_counts totals {"ADJ": -1, "ADP": 2, "ADV": -1, "DET": -1, "NOUN": -2, "NUM": -1, "PART": -1, "PROPN": -4, "PUNCT": 7, "SCONJ": -1, "SYM": -3, "VERB": 9, "X": -3}
+x86_64 vs arm64: ent_counts totals {"CARDINAL": -1, "DATE": 3, "EVENT": 1, "ORG": -1, "PERSON": -1, "PRODUCT": -1}
+x86_64 vs arm64: tag_counts totals {",": -1, "-LRB-": 1, "-RRB-": 1, ".": 3, ":": 1, "ADD": -1, "CD": -1, "DT": -1, "FW": 1, "HYPH": 2, "IN": 2, "JJ": -1, "LS": -1, "MD": -1, "NN": -2, "NNP": -2, "NNPS": -2, "RB": -1, "SYM": -3, "TO": -1, "VB": 2, "VBD": -3, "VBN": 10, "XX": -2}
+x86_64 vs arm64: EWT scores identical on 27 of 27
+amd vs arm64: tok   identical on 89339 of 89339 articles
+amd vs arm64: lemma identical on 89317 of 89339 articles
+amd vs arm64: tag   identical on 89282 of 89339 articles
+amd vs arm64: pos   identical on 89287 of 89339 articles
+amd vs arm64: morph identical on 89296 of 89339 articles
+amd vs arm64: dep   identical on 89134 of 89339 articles
+amd vs arm64: sent  identical on 89329 of 89339 articles
+amd vs arm64: ent   identical on 89322 of 89339 articles
+amd vs arm64: tokens count identical on 89339 of 89339 articles; total 795195869 vs 795195869
+amd vs arm64: sents  count identical on 89329 of 89339 articles; total 42559835 vs 42559838
+amd vs arm64: ents   count identical on 89326 of 89339 articles; total 85216980 vs 85216979
+amd vs arm64: pos_counts totals {"ADP": 1, "NOUN": -4, "NUM": -1, "PART": -1, "PROPN": -2, "PUNCT": 9, "SCONJ": -1, "SYM": -3, "VERB": 6, "X": -4}
+amd vs arm64: ent_counts totals {"CARDINAL": 1, "DATE": 4, "LOC": 1, "NORP": -1, "ORG": -2, "PERSON": -1, "PRODUCT": -1}
+amd vs arm64: tag_counts totals {",": -1, "-LRB-": 1, ".": 4, ":": 1, "ADD": -1, "CD": -1, "FW": 1, "HYPH": 4, "IN": 1, "LS": -2, "MD": -1, "NN": -6, "NNP": -2, "NNS": 2, "SYM": -3, "TO": -1, "VB": 1, "VBD": -3, "VBN": 8, "XX": -2}
+amd vs arm64: EWT scores identical on 27 of 27
+amd vs x86_64: tok   identical on 89339 of 89339 articles
+amd vs x86_64: lemma identical on 89331 of 89339 articles
+amd vs x86_64: tag   identical on 89303 of 89339 articles
+amd vs x86_64: pos   identical on 89309 of 89339 articles
+amd vs x86_64: morph identical on 89312 of 89339 articles
+amd vs x86_64: dep   identical on 89226 of 89339 articles
+amd vs x86_64: sent  identical on 89336 of 89339 articles
+amd vs x86_64: ent   identical on 89323 of 89339 articles
+amd vs x86_64: tokens count identical on 89339 of 89339 articles; total 795195869 vs 795195869
+amd vs x86_64: sents  count identical on 89337 of 89339 articles; total 42559835 vs 42559835
+amd vs x86_64: ents   count identical on 89328 of 89339 articles; total 85216980 vs 85216979
+amd vs x86_64: pos_counts totals {"ADJ": 1, "ADP": -1, "ADV": 1, "DET": 1, "NOUN": -2, "PROPN": 2, "PUNCT": 2, "VERB": -3, "X": -1}
+amd vs x86_64: ent_counts totals {"CARDINAL": 2, "DATE": 1, "EVENT": -1, "LOC": 1, "NORP": -1, "ORG": -1}
+amd vs x86_64: tag_counts totals {"-RRB-": -1, ".": 1, "DT": 1, "HYPH": 2, "IN": -1, "JJ": 1, "LS": -1, "NN": -4, "NNPS": 2, "NNS": 2, "RB": 1, "VB": -1, "VBN": -2}
+amd vs x86_64: EWT scores identical on 27 of 27

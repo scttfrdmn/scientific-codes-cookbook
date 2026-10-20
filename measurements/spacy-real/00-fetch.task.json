@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-spacy-real-fetch",
+  "container": "quay.io/aarchsci/nlp@sha256:436dc03828933d9e176ee751038a8a63e4d41b393ed693bfed9f442efe90e397",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '3c9c466a2e1776c104108a9f6348708c1cf0d347d6057cbfaac6edb16d9ffe5c  fetch.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out\npython3 -u fetch.py 10000000 10099999 /tmp/out 2>&1 | tee /tmp/out/fetch.log\ntest \"${PIPESTATUS[0]}\" = 0 || { echo 'FAIL: fetch'; exit 1; }\n(cd /tmp/out/ewt && sha256sum * > /tmp/out/ewt.sha256)\ncat /tmp/out/ewt.sha256\ndu -sh /tmp/out/*\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/pmc/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/pmc/"
+    },
+    {
+      "source": "/tmp/out/ewt/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/ewt/"
+    },
+    {
+      "source": "/tmp/out/ewt.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/fetched-ewt.sha256"
+    },
+    {
+      "source": "/tmp/out/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

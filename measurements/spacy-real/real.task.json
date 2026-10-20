@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-spacy-real-r1",
+  "container": "quay.io/aarchsci/nlp@sha256:436dc03828933d9e176ee751038a8a63e4d41b393ed693bfed9f442efe90e397",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '41b689b8a0f29c903feca59bce72af83a686aaac693e3199df4f9bf9f02f6e31  run.sh\\nfdb3a74e004fe1358cc9e845667a9c8f367e17354c5c9c11701a02558990fc43  real.py\\n7467d18dd0c9826363c82704a38c8b2e9e2ff97ba61c037c5c425df6c852179b  ewt.py\\n4b1a4f1dca714494f6f061bd30e9ac718b1cf7514abf697acfef5c0c6e8c544d  shards.sha256\\nd8b1bf94547ffbca6299dd0404bd25f539ae294b1bd8a4adbcdbe03effceced4  ewt.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 32 \n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/pmc/",
+      "destination": "/tmp/pmc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/ewt/",
+      "destination": "/tmp/ewt/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/ewt.py",
+      "destination": "/tmp/ewt.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/shards.sha256",
+      "destination": "/tmp/shards.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spacy-real/ewt.sha256",
+      "destination": "/tmp/ewt.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/spacy-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}

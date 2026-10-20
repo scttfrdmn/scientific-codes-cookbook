@@ -37,6 +37,10 @@ docs = list(nlp.pipe(texts, batch_size=64))     # == [nlp(t) for t in texts], ev
 
 **Leave the fixture.** No identity depends on what the text says, only that it exercises whitespace, Unicode, URLs, contractions and abbreviations, and generating it keeps the run offline. **Scale it** by pointing `texts` at a real corpus: every identity holds at any size.
 
+## Which box — [measured](../../measurements/spacy-real/README.md) on 89,339 PMC full-text articles
+
+**Billed per corpus (795M tokens, 32 processes): Graviton4 `c8g.8xlarge` $0.84 (2,299 s), Intel `c8i.8xlarge` $1.15 (2,708 s), AMD `c8a.8xlarge` $1.23 (2,531 s).** Graviton4 annotates 356k tokens/s, 1.18× Intel and 1.10× AMD, and is cheapest per token. One `sm` process peaks at 1.6 GiB, so a `c` box holds one per vCPU. Every exact check above holds at that scale on all three chips. On UD English-EWT, spaCy's `Scorer` and the CoNLL 2018 scorer agree to the integer count (test XPOS 0.923, tokens F1 0.956). Tokenization is identical across chips; the neural layers differ on at most 0.23% of articles, a path that follows the CPU.
+
 ## Shape, size, cost
 
 One task on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 40m as a **backstop** with `cost_limit` $0.25 as the real guard. The suite runs serially as spaCy's CI does, **148 s**, and the identities take seconds, inside a ~4-minute window ([layout](../../patterns/layout-and-effective-cost.md)).
@@ -153,8 +157,8 @@ vectors appearing in `en_core_web_sm`. Check the bucket regardless
 **The 667 `--slow` tests and the 532 backend-dependent ones** (above): the first are off in
 spaCy's CI too, and the second need tokenizer packages this env does not carry. **spaCy's other CI
 steps** (download, convert, debug, train and assemble CLIs), which fetch models at run time.
-**Training** (`spacy train`, config, GPU) and
-**accuracy** against a labelled corpus. **Larger models and transformers** (`md`, `lg`, `trf`), not
-in this env. **Multiprocess `nlp.pipe(n_process=...)`**.
+**Training** (`spacy train`, config, GPU). **Larger models and transformers** (`md`, `lg`, `trf`), not
+in this env. Accuracy against a labelled corpus and `nlp.pipe(n_process=...)` are in
+[the PMC + EWT measurement](../../measurements/spacy-real/README.md), not this run.
 
 </details>
