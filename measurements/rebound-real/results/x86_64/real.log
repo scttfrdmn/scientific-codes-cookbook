@@ -1,0 +1,61 @@
+versions {'rebound': '5.0.1', 'numpy': '2.5.3', 'jplephem': '2.24'}
+PASS	libREBOUND built with FP contraction off (REBOUND's own test_fpcontract)	reb_check_fp_contract() = 0
+PASS	DE440 covers every checkpoint	J2000 -450.0 .. +650.1 yr
+PASS	ten bodies: Sun + nine system barycentres	N = 10
+ias15 fwd Newton: 98161 steps, 2.7 s
+ias15 fwd GR: 98160 steps, 49.5 s
+ias15 bwd Newton: 65445 steps, 1.4 s
+ias15 bwd GR: 65449 steps, 33.0 s
+PASS	IAS15 energy, fwd 600 yr, |dE/E| < eps*sqrt(N)	3.12e-15 < 6.96e-14 (N=98161)
+PASS	IAS15 angular momentum, fwd 600 yr, |dL|/|L| < eps*sqrt(N)	3.79e-16 < 6.96e-14
+PASS	IAS15 energy, bwd 400 yr, |dE/E| < eps*sqrt(N)	3.62e-15 < 5.68e-14 (N=65445)
+PASS	IAS15 angular momentum, bwd 400 yr, |dL|/|L| < eps*sqrt(N)	3.79e-16 < 5.68e-14
+heliocentric position error vs DE440, km (Mercury Venus EMB Mars Jupiter Saturn Uranus Neptune Pluto)
+   -1 Newton 65.8 97.3 56.2 38 0.774 0.294 0.3 0.333 0.292
+   -1 GR     0.0736 0.0254 117 0.172 0.206 0.257 0.288 0.33 0.29
+   +1 Newton 57.7 98.8 56 39.7 0.887 0.361 0.29 0.295 0.241
+   +1 GR     0.0741 0.0387 117 0.0666 0.186 0.253 0.283 0.293 0.241
+  -10 Newton 1.79e+03 919 560 384 58.6 11.3 7.18 10.5 10.2
+  -10 GR     0.503 0.156 1.17e+03 6.7 6.71 3.66 6.05 10.2 9.99
+  +10 Newton 1.82e+03 900 560 343 67.9 19.1 4.02 5.5 5.33
+  +10 GR     0.45 0.0539 1.17e+03 0.64 0.515 4.63 3.56 5.24 5.17
+ -100 Newton 8.38e+03 9.09e+03 5.6e+03 4.5e+03 475 194 233 1.07e+03 796
+ -100 GR     8.39 1.89 1.17e+04 30.5 34.9 5.18 181 1.03e+03 765
+ +100 Newton 7.37e+03 9.15e+03 5.59e+03 4.09e+03 465 220 200 1e+03 759
+ +100 GR     6.33 4.39 1.17e+04 25.9 33.3 16.5 154 960 739
+ +300 Newton 4.94e+04 2.77e+04 1.68e+04 1.02e+04 1.46e+03 745 926 2.63e+03 6.42e+03
+ +300 GR     2.95 17.9 3.51e+04 43.8 92.9 47 730 2.52e+03 6.32e+03
+ -400 Newton 2.85e+04 3.72e+04 2.24e+04 1.42e+04 1.94e+03 907 982 2.92e+03 3.62e+03
+ -400 GR     49.2 9.79 4.68e+04 191 149 42.6 760 2.79e+03 3.47e+03
+ +600 Newton 4.58e+04 5.45e+04 3.36e+04 2.82e+04 2.91e+03 1.3e+03 1.5e+03 7.86e+03 1.17e+04
+ +600 GR     9.56 43.2 7.01e+04 390 202 95.6 1.2e+03 7.66e+03 1.15e+04
+PASS	+-1 yr, Sun-1PN model: every body but the EMB within 1e-8 of its distance of DE440	worst 1.1e-09 (Mercury); EMB 8.0e-07 reported
+PASS	GR is what separates Mercury from DE440 (+600 yr): Newton err > 10x GR err	45772 km vs 10 km (4790x)
+PASS	GR is what separates Mercury from DE440 (-400 yr): Newton err > 10x GR err	28527 km vs 49 km (579x)
+PASS	Mercury GR perihelion advance == 6 pi GM/(c^2 a(1-e^2)) per orbit, fwd 600 yr, within 1%	42.958 vs 42.981 arcsec/century
+PASS	Mercury GR perihelion advance == 6 pi GM/(c^2 a(1-e^2)) per orbit, bwd 400 yr, within 1%	42.996 vs 42.981 arcsec/century
+whfast plain dt=4: dE 8.241e-10 dL 1.923e-14 N 91313 0.1 s
+whfast plain dt=2: dE 2.040e-10 dL 4.340e-14 N 182625 0.3 s
+whfast plain dt=1: dE 5.067e-11 dL 8.256e-14 N 365250 0.6 s
+PASS	WHFast is second order: halving dt cuts max|dE/E| by 4 (+-10%), 4->2 d	x4.040
+PASS	WHFast is second order: halving dt cuts max|dE/E| by 4 (+-10%), 2->1 d	x4.026
+PASS	WHFast conserves L to round-off whatever dt (dt=4 d): |dL|/|L| < 10*eps*sqrt(N)	1.92e-14 < 6.71e-13
+PASS	WHFast conserves L to round-off whatever dt (dt=2 d): |dL|/|L| < 10*eps*sqrt(N)	4.34e-14 < 9.49e-13
+PASS	WHFast conserves L to round-off whatever dt (dt=1 d): |dL|/|L| < 10*eps*sqrt(N)	8.26e-14 < 1.34e-12
+PASS	WHFast + 17th-order correctors beats plain WHFast at dt=4 d by > 100x	7.86e-13 vs 8.24e-10
+PASS	WHFast c17 dt=4 d, 1000 yr: |dE/E| < 1e-9 (REBOUND's own test bound for corrector 17)	7.86e-13
+WHFast c17 vs IAS15, worst body: {100: 2.9569028773221047, 600: 20.8939839318294} km
+PASS	IAS15 +100 yr is deterministic: two reruns, identical bytes	identical
+failed: none
+maxrss_kib real.py 53756
+PASS	nominal run reached 100 Myr (201 checkpoints)	201 checkpoints, t = 100.000000 Myr
+PASS	nominal: WHFast c17 |dE/E| < 1e-9 over 100 Myr (REBOUND's own test bound for corrector 17)	1.46e-11
+PASS	nominal: WHFast conserves L to round-off: |dL|/|L| < 10*eps*sqrt(N)	1.02e-11 < 2.12e-10 (N=9131250000)
+PASS	nominal: every orbit stays bound (e < 1, a > 0) at every checkpoint	max e 0.2747 (Pluto 0.2747, Mercury 0.2568)
+PASS	shadow run reached 100 Myr (201 checkpoints)	201 checkpoints, t = 100.000000 Myr
+PASS	shadow: WHFast c17 |dE/E| < 1e-9 over 100 Myr (REBOUND's own test bound for corrector 17)	9.97e-12
+PASS	shadow: WHFast conserves L to round-off: |dL|/|L| < 10*eps*sqrt(N)	4.11e-12 < 2.12e-10 (N=9131250000)
+PASS	shadow: every orbit stays bound (e < 1, a > 0) at every checkpoint	max e 0.2747 (Pluto 0.2747, Mercury 0.2568)
+PASS	the shadow starts 1 m from the nominal run	1.000002 m
+shadow Mercury separation (m) at 10/25/50/75/100 Myr: ['1.47e+08', '3.16e+08', '6.52e+08', '1.39e+09', '1.89e+09']
+e-folding fit: {'lyapunov_time_myr': 26.17558342443021, 'window_myr': [0.5, 98.5], 'points': 157}

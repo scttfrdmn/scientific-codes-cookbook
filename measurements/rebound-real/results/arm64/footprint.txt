@@ -1,0 +1,11 @@
+real.py wall_s 142 exit 0
+long-shadow wall_s 14393 exit 0
+long-nominal wall_s 14535 exit 0 (ends when the slower of the two cores' work ends)
+longcheck wall_s 0 exit 0
+total wall_s 14535
+cgroup memory.peak 50487296
+cgroup memory.max max
+maxrss_kib real.py 50944
+maxrss_kib long.py shift=0 40352
+maxrss_kib long.py shift=1 40588
+tmpfs            3973980 117532   3856448   3% /tmp

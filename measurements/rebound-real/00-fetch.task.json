@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-rebound-real-fetch",
+  "container": "quay.io/aarchsci/astro@sha256:9568095c64864dbcf4ad2759ad1aa5457bfa4e12530282378f706c3d394dc753",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\n# JPL's DE440 planetary ephemeris and its GM constants, from NAIF's generic-kernel archive, fetched\n# on AWS. Both files are frozen releases (DE440: Park et al. 2021, AJ 161:105); the sha256 recorded\n# here is the pin.\npython3 -u - <<'PYEOF' || { echo \"FAIL: fetch\"; exit 1; }\nimport hashlib, urllib.request\nB = \"https://naif.jpl.nasa.gov/pub/naif/generic_kernels/\"\nF = {\"de440.bsp\": \"spk/planets/\", \"gm_de440.tpc\": \"pck/\"}\nout = open(\"data.sha256\", \"w\")\nfor name, d in F.items():\n    h = hashlib.sha256(); n = 0\n    with urllib.request.urlopen(B + d + name, timeout=900) as r, open(name, \"wb\") as fh:\n        while True:\n            b = r.read(1 << 22)\n            if not b:\n                break\n            h.update(b); fh.write(b); n += len(b)\n    print(name, n, h.hexdigest(), flush=True)\n    out.write(\"%s  %s\\n\" % (h.hexdigest(), name))\nout.close()\nfrom jplephem.spk import SPK\nk = SPK.open(\"de440.bsp\")\nwith open(\"headers.txt\", \"w\") as fh:\n    fh.write(str(k) + \"\\n\")\n    fh.write(\"\\n\".join(k.daf.comments().splitlines()[:60]) + \"\\n\")\nprint(open(\"headers.txt\").read())\nPYEOF\ncat data.sha256\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/de440/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

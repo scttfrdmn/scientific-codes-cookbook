@@ -1,0 +1,102 @@
+{
+  "task_id": "cookbook-rebound-real-r0",
+  "container": "quay.io/aarchsci/astro@sha256:9568095c64864dbcf4ad2759ad1aa5457bfa4e12530282378f706c3d394dc753",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf 'd3c8b48afd901c7cd646448fff6ecdc19cada6438b0e4230d49414b7c71f5c58  run.sh\\n5df43699353e24ec07a3509930801bac4ff79711d1e8520f5bc5edabd831e604  ic.py\\n43efe28502d0c393648b84899cd9923929934506e98135158c8edeb5dee72eb5  real.py\\n89f08c87b8f517ccea95853cc68b256580470ea62de6f82efc93f3f6207d141d  long.py\\ne8ec31668dfc28090dbfa9faf0b3dd311d2d98a006eaaf02589d13bfd5a26c98  longcheck.py\\nf907942d7144bf226522475b508a051875105a0b1dd3099d486e9e3e6876e9cf  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 1\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/de440/",
+      "destination": "/tmp/de440/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/ic.py",
+      "destination": "/tmp/ic.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/long.py",
+      "destination": "/tmp/long.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/longcheck.py",
+      "destination": "/tmp/longcheck.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rebound-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/real.log"
+    },
+    {
+      "source": "/tmp/out/long-nominal.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/long-nominal.log"
+    },
+    {
+      "source": "/tmp/out/long-shadow.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/long-shadow.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/results.json"
+    },
+    {
+      "source": "/tmp/out/long.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/long.json"
+    },
+    {
+      "source": "/tmp/out/ephem.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/ephem.npz"
+    },
+    {
+      "source": "/tmp/out/long-nominal.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/long-nominal.npz"
+    },
+    {
+      "source": "/tmp/out/long-shadow.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/long-shadow.npz"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rebound-real/r0/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

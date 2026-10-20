@@ -1,0 +1,150 @@
+== x86_64 vs arm64
+  failed checks: arm64 none | x86_64 none
+  check verdicts identical: True
+  DE440 initial state: identical
+  DE440 evaluations at checkpoints: identical
+  IAS15 gr_pos_-1          bit-identical
+  IAS15 gr_pos_+1          bit-identical
+  IAS15 gr_pos_-10         bit-identical
+  IAS15 gr_pos_+10         bit-identical
+  IAS15 gr_pos_-100        bit-identical
+  IAS15 gr_pos_+100        bit-identical
+  IAS15 gr_pos_+300        bit-identical
+  IAS15 gr_pos_-400        bit-identical
+  IAS15 gr_pos_+600        bit-identical
+  IAS15 newton_pos_-1      bit-identical
+  IAS15 newton_pos_+1      bit-identical
+  IAS15 newton_pos_-10     bit-identical
+  IAS15 newton_pos_+10     bit-identical
+  IAS15 newton_pos_-100    bit-identical
+  IAS15 newton_pos_+100    bit-identical
+  IAS15 newton_pos_+300    bit-identical
+  IAS15 newton_pos_-400    bit-identical
+  IAS15 newton_pos_+600    bit-identical
+  WHFast nominal: every checkpoint bit-identical through 100.0 Myr
+  WHFast shadow: every checkpoint bit-identical through 100.0 Myr
+  ias15_fwd                arm64 {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 3.7784876823425293, 'wall_gr': 71.93977761268616}
+                           x86_64 {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 2.680899143218994, 'wall_gr': 49.49723148345947}
+  ias15_bwd                arm64 {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 2.51857328414917, 'wall_gr': 47.99846410751343}
+                           x86_64 {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 1.350222110748291, 'wall_gr': 32.97440266609192}
+  gr_precession            arm64 {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364973, 'measured_bwd': 42.99609437354321, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+                           x86_64 {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364988, 'measured_bwd': 42.996094373543556, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+  whfast_ladder_ratios     arm64 [4.0399081323493515, 4.02585091374921]
+                           x86_64 [4.0399081323493515, 4.02585091374921]
+  whfast_c17_1000yr        arm64 {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 136.47499526045598}
+                           x86_64 {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 85.15065256790764}
+  whfast_c17_vs_ias15_km   arm64 {'100': 2.9569028773221047, '600': 20.8939839318294}
+                           x86_64 {'100': 2.9569028773221047, '600': 20.8939839318294}
+  long dE_max     arm64 1.4556294236904985e-11 | x86_64 1.4556294236904985e-11
+  long dL_max     arm64 1.0202333898205841e-11 | x86_64 1.0202333898205841e-11
+  long us_per_step arm64 1.5751505161523003 | x86_64 0.9807165494706026
+  long wall_s     arm64 14383.093150615692 | x86_64 8955.16799235344
+== amd vs arm64
+  failed checks: arm64 none | amd none
+  check verdicts identical: True
+  DE440 initial state: identical
+  DE440 evaluations at checkpoints: identical
+  IAS15 gr_pos_-1          bit-identical
+  IAS15 gr_pos_+1          bit-identical
+  IAS15 gr_pos_-10         bit-identical
+  IAS15 gr_pos_+10         bit-identical
+  IAS15 gr_pos_-100        bit-identical
+  IAS15 gr_pos_+100        bit-identical
+  IAS15 gr_pos_+300        bit-identical
+  IAS15 gr_pos_-400        bit-identical
+  IAS15 gr_pos_+600        bit-identical
+  IAS15 newton_pos_-1      bit-identical
+  IAS15 newton_pos_+1      bit-identical
+  IAS15 newton_pos_-10     bit-identical
+  IAS15 newton_pos_+10     bit-identical
+  IAS15 newton_pos_-100    bit-identical
+  IAS15 newton_pos_+100    bit-identical
+  IAS15 newton_pos_+300    bit-identical
+  IAS15 newton_pos_-400    bit-identical
+  IAS15 newton_pos_+600    bit-identical
+  WHFast nominal: every checkpoint bit-identical through 100.0 Myr
+  WHFast shadow: every checkpoint bit-identical through 100.0 Myr
+  ias15_fwd                arm64 {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 3.7784876823425293, 'wall_gr': 71.93977761268616}
+                           amd {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 1.9279799461364746, 'wall_gr': 40.30897283554077}
+  ias15_bwd                arm64 {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 2.51857328414917, 'wall_gr': 47.99846410751343}
+                           amd {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 1.2857966423034668, 'wall_gr': 26.83139443397522}
+  gr_precession            arm64 {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364973, 'measured_bwd': 42.99609437354321, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+                           amd {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364988, 'measured_bwd': 42.996094373543556, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+  whfast_ladder_ratios     arm64 [4.0399081323493515, 4.02585091374921]
+                           amd [4.0399081323493515, 4.02585091374921]
+  whfast_c17_1000yr        arm64 {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 136.47499526045598}
+                           amd {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 81.97876874246454}
+  whfast_c17_vs_ias15_km   arm64 {'100': 2.9569028773221047, '600': 20.8939839318294}
+                           amd {'100': 2.9569028773221047, '600': 20.8939839318294}
+  long dE_max     arm64 1.4556294236904985e-11 | amd 1.4556294236904985e-11
+  long dL_max     arm64 1.0202333898205841e-11 | amd 1.0202333898205841e-11
+  long us_per_step arm64 1.5751505161523003 | amd 0.9439925016890154
+  long wall_s     arm64 14383.093150615692 | amd 8619.831531047821
+== amd vs x86_64
+  failed checks: x86_64 none | amd none
+  check verdicts identical: True
+  DE440 initial state: identical
+  DE440 evaluations at checkpoints: identical
+  IAS15 gr_pos_-1          bit-identical
+  IAS15 gr_pos_+1          bit-identical
+  IAS15 gr_pos_-10         bit-identical
+  IAS15 gr_pos_+10         bit-identical
+  IAS15 gr_pos_-100        bit-identical
+  IAS15 gr_pos_+100        bit-identical
+  IAS15 gr_pos_+300        bit-identical
+  IAS15 gr_pos_-400        bit-identical
+  IAS15 gr_pos_+600        bit-identical
+  IAS15 newton_pos_-1      bit-identical
+  IAS15 newton_pos_+1      bit-identical
+  IAS15 newton_pos_-10     bit-identical
+  IAS15 newton_pos_+10     bit-identical
+  IAS15 newton_pos_-100    bit-identical
+  IAS15 newton_pos_+100    bit-identical
+  IAS15 newton_pos_+300    bit-identical
+  IAS15 newton_pos_-400    bit-identical
+  IAS15 newton_pos_+600    bit-identical
+  WHFast nominal: every checkpoint bit-identical through 100.0 Myr
+  WHFast shadow: every checkpoint bit-identical through 100.0 Myr
+  ias15_fwd                x86_64 {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 2.680899143218994, 'wall_gr': 49.49723148345947}
+                           amd {'steps': 98161, 'dE': 3.122081509298354e-15, 'dL': 3.7899469303819243e-16, 'brouwer': 6.95680311446104e-14, 'wall_newton': 1.9279799461364746, 'wall_gr': 40.30897283554077}
+  ias15_bwd                x86_64 {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 1.350222110748291, 'wall_gr': 32.97440266609192}
+                           amd {'steps': 65445, 'dE': 3.61504174760862e-15, 'dL': 3.793863739416379e-16, 'brouwer': 5.6803940192444573e-14, 'wall_newton': 1.2857966423034668, 'wall_gr': 26.83139443397522}
+  gr_precession            x86_64 {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364988, 'measured_bwd': 42.996094373543556, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+                           amd {'theory_arcsec_cy': 42.980668572684834, 'measured_fwd': 42.95758819364988, 'measured_bwd': 42.996094373543556, 'a': 0.38709821218415974, 'e': 0.205630293370557}
+  whfast_ladder_ratios     x86_64 [4.0399081323493515, 4.02585091374921]
+                           amd [4.0399081323493515, 4.02585091374921]
+  whfast_c17_1000yr        x86_64 {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 85.15065256790764}
+                           amd {'dE': 7.86271580104875e-13, 'dL': 6.408031738775851e-14, 'steps': 91313, 'us_per_step': 81.97876874246454}
+  whfast_c17_vs_ias15_km   x86_64 {'100': 2.9569028773221047, '600': 20.8939839318294}
+                           amd {'100': 2.9569028773221047, '600': 20.8939839318294}
+  long dE_max     x86_64 1.4556294236904985e-11 | amd 1.4556294236904985e-11
+  long dL_max     x86_64 1.0202333898205841e-11 | amd 1.0202333898205841e-11
+  long us_per_step x86_64 0.9807165494706026 | amd 0.9439925016890154
+  long wall_s     x86_64 8955.16799235344 | amd 8619.831531047821
+== arm64: shadow (Mercury +1 m at J2000) vs nominal
+  shadow |dE/E| max 9.97e-12, |dL|/|L| max 4.11e-12; nominal |dE/E| max 1.46e-11 (first half 8.42e-12, second 1.46e-11)
+  Myr                           1       10       25       50       75      100
+  Mercury separation (m)  1.3e+07  1.5e+08  3.2e+08  6.5e+08  1.4e+09  1.9e+09
+  Mercury |de|            3.0e-10  1.6e-08  3.4e-08  4.2e-07  7.6e-06  2.6e-05
+  e-folding time of max|de|, 10-100 Myr: 8.3 Myr
+  e-folding time of max|de|, 20-80 Myr: 6.9 Myr
+  Mercury  e range 0.0746-0.2568, a range 1.2e-05 (relative)
+  Pluto    e range 0.2088-0.2747, a range 2.1e-02 (relative)
+== x86_64: shadow (Mercury +1 m at J2000) vs nominal
+  shadow |dE/E| max 9.97e-12, |dL|/|L| max 4.11e-12; nominal |dE/E| max 1.46e-11 (first half 8.42e-12, second 1.46e-11)
+  Myr                           1       10       25       50       75      100
+  Mercury separation (m)  1.3e+07  1.5e+08  3.2e+08  6.5e+08  1.4e+09  1.9e+09
+  Mercury |de|            3.0e-10  1.6e-08  3.4e-08  4.2e-07  7.6e-06  2.6e-05
+  e-folding time of max|de|, 10-100 Myr: 8.3 Myr
+  e-folding time of max|de|, 20-80 Myr: 6.9 Myr
+  Mercury  e range 0.0746-0.2568, a range 1.2e-05 (relative)
+  Pluto    e range 0.2088-0.2747, a range 2.1e-02 (relative)
+== amd: shadow (Mercury +1 m at J2000) vs nominal
+  shadow |dE/E| max 9.97e-12, |dL|/|L| max 4.11e-12; nominal |dE/E| max 1.46e-11 (first half 8.42e-12, second 1.46e-11)
+  Myr                           1       10       25       50       75      100
+  Mercury separation (m)  1.3e+07  1.5e+08  3.2e+08  6.5e+08  1.4e+09  1.9e+09
+  Mercury |de|            3.0e-10  1.6e-08  3.4e-08  4.2e-07  7.6e-06  2.6e-05
+  e-folding time of max|de|, 10-100 Myr: 8.3 Myr
+  e-folding time of max|de|, 20-80 Myr: 6.9 Myr
+  Mercury  e range 0.0746-0.2568, a range 1.2e-05 (relative)
+  Pluto    e range 0.2088-0.2747, a range 2.1e-02 (relative)

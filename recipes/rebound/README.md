@@ -18,15 +18,12 @@ Integrates the outer solar system on Graviton4 and checks the integrator against
 ```bash
 spawn task run --spec "$(make -s spec RECIPE=rebound)" --wait   # nothing to stage
 make ls RECIPE=rebound
-
 import rebound, math
 sim = rebound.Simulation(); sim.integrator = "ias15"
-sim.add("outer solar system"); sim.move_to_com()      # compiled-in, no download
+sim.add("outer solar system"); sim.move_to_com()      # compiled into REBOUND, not a Horizons fetch
 e0 = sim.energy(); sim.integrate(1e3 * 11.86 * 2 * math.pi)
 print(abs((sim.energy() - e0) / e0))                   # 3.365e-15
 ```
-
-**Nothing is staged and nothing is fetched.** `"outer solar system"` is a dataset compiled into REBOUND, not a JPL Horizons lookup.
 
 ## Make it yours
 
@@ -38,6 +35,16 @@ print(abs((sim.energy() - e0) / e0))                   # 3.365e-15
 | `sim.dt` (WHFast only) | — | **IAS15 ignores `dt`**; it picks its own. Setting it on IAS15 and expecting an effect is a common wrong turn. |
 
 **Leave the fixture.** The outer solar system over 1000 Jupiter orbits is REBOUND's own test configuration, which is what makes 1e-14 a *published* bound rather than one invented here. **Scale it** by adding bodies or extending the timespan once the check passes — but note IAS15's cost grows with N², so a 1000-body run wants WHFast or Mercurius.
+
+## Which box — [measured](../../measurements/rebound-real/README.md) on the DE440 Solar System for 100 Myr
+
+| chip | instance | tool wall | compute $ | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.xlarge` | 14,535 s | 0.6441 | 0.6508 |
+| **Intel** | `c8i.xlarge` | **9,053 s** | **0.4713** | **0.4774** |
+| AMD | `c8a.xlarge` | 8,700 s | 0.5209 | 0.5269 |
+
+The Sun and nine barycentres from JPL's DE440 at J2000: IAS15 against DE440 over its whole 1550–2650 span, then two WHFast runs (17th-order correctors, dt = 4 d) for 100 Myr, one with Mercury moved 1 m. Every conservation and order law holds on every chip. With a 1PN Sun, Mercury is 74 m off DE440 after a year and precesses 42.96″/century relativistically. **Intel is cheapest, because a WHFast step costs 0.98 µs there and 1.57 µs on Graviton4**; the 100-Myr trajectories are bit-identical on all three chips anyway. Each process is single-threaded and peaks under 55 MB.
 
 ## Shape, size, cost
 
@@ -137,7 +144,8 @@ bucket regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 ### Not covered
 
 Collisions and close encounters (`sim.collision`, Mercurius/Trace hybrid switching), non-gravitational
-forces via REBOUNDx, variational equations and chaos indicators, and anything needing real ephemerides
-— `sim.add("Jupiter")` queries Horizons at run time, which a recipe here may not do.
+forces via REBOUNDx, and variational equations and chaos indicators. `sim.add("Jupiter")` queries
+Horizons at run time, which a recipe here may not do; real ephemerides are staged instead, as DE440
+in [rebound-real](../../measurements/rebound-real/README.md).
 
 </details>
