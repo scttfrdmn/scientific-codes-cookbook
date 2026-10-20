@@ -1,0 +1,47 @@
+{
+  "task_id": "cookbook-pangenome-real-prep",
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH HOME=/tmp TMPDIR=/var/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 5dccb0f137a8f8045f40754cf24f0a24f95e7212b27216ba79681e6071eb7422 prep.sh; printf '%s  %s\\n' 17814fe2c4046c0b82e803e0507b15af871bbf3b7cb0f7511f3aa340404f6f09 lib.sh; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/prep.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "disk_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/ilmn.chr20.bam",
+      "destination": "/tmp/ilmn.chr20.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/hprc/chr20.d9.vg",
+      "destination": "/tmp/chr20.d9.vg"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

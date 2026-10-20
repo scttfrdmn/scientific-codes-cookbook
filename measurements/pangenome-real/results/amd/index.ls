@@ -1,0 +1,4 @@
+-rw-r--r--    1 1000     1000      58265440 Oct 20 18:05 /var/tmp/w/idx.dist
+-rw-r--r--    1 1000     1000     115784104 Oct 20 18:04 /var/tmp/w/idx.giraffe.gbz
+-rw-r--r--    1 1000     1000     730132386 Oct 20 18:05 /var/tmp/w/idx.shortread.withzip.min
+-rw-r--r--    1 1000     1000      17800373 Oct 20 18:05 /var/tmp/w/idx.shortread.zipcodes

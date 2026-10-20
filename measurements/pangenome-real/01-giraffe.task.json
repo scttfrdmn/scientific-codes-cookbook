@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-pangenome-real-giraffe",
+  "container": "quay.io/aarchbio/vg@sha256:0c9767627faac4a98586fe99ffebb4e701903deb8cd5983ff12746344e8b0ccf",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH HOME=/tmp TMPDIR=/var/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 20266472996cc9da78e33751984785c78dfaf10503dbf8adbf2094150fef4659 giraffe.sh; printf '%s  %s\\n' 17814fe2c4046c0b82e803e0507b15af871bbf3b7cb0f7511f3aa340404f6f09 lib.sh; printf '%s  %s\\n' 5c4d8bdcde4c3441ac72acab08e851ceb6148957be4395395b05a2938e124484 pins.sha256; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/giraffe.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "disk_gib": 100,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/giraffe.sh",
+      "destination": "/tmp/giraffe.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/hprc/chr20.d9.vg",
+      "destination": "/tmp/chr20.d9.vg"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/prep/r1.fq.gz",
+      "destination": "/tmp/r1.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/prep/r2.fq.gz",
+      "destination": "/tmp/r2.fq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pangenome-real/prep/linear.tsv.gz",
+      "destination": "/tmp/linear.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pangenome-real/giraffe/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

@@ -1,0 +1,21 @@
+vg binary architecture == host	62	62	ok
+pins.sha256 covers all five inputs	5	5	ok
+staged inputs match their pins	0	0	ok
+vg paths -M exit	0	0	ok
+HG002 is not in the graph (held out of HPRC v1.1)	0	0	ok
+vg paths -F exit	0	0	ok
+one GRCh38 path, unbroken	1	1	ok
+GRCh38 path sequence sha256 == chr20.fa sequence sha256	2442701218d3b2f7e2d7cacd78774e1628fd48a7a13b58bee53ab8b7cb3d1af4	2442701218d3b2f7e2d7cacd78774e1628fd48a7a13b58bee53ab8b7cb3d1af4	ok
+convert exit	0	0	ok
+autoindex exit	0	0	ok
+giraffe exit	0	0	ok
+GAF records == 2 * pairs (every read written)	18254444	18254444	ok
+mates adjacent in the GAF	0	0	ok
+GAF read names unique per pair	0	0	ok
+every mapped record carries cs:Z	0	0	ok
+cs:Z consumes exactly the query and target spans, every record	0	0	ok
+target span inside the path, every record	0	0	ok
+surject exit	0	0	ok
+surjected primary records == 2 * pairs	18254444	18254444	ok
+joined reads == 2 * pairs - surject's mate-less records	18178130	18178130	ok
+confident placements agree with novoalign (>= 0.98)	yes	yes	ok

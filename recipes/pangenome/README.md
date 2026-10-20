@@ -19,8 +19,7 @@ Builds a pangenome graph from chr20 plus 82,818 real variants on Graviton4, then
 ## Run it
 
 ```bash
-# nothing new to stage -- reuses the chr20 reference and GIAB VCF from bwa and gatk4
-for s in $(make -s spec RECIPE=pangenome); do spawn task run --spec "$s" --wait; done
+for s in $(make -s spec RECIPE=pangenome); do spawn task run --spec "$s" --wait; done   # stages nothing new
 make ls RECIPE=pangenome
 
 vg construct -r chr20.fa -v truth.chr20.vcf.gz -R chr20 -t 8 > chr20.vg
@@ -43,7 +42,15 @@ odgi build -g chr20.gfa -o chr20.og && odgi stats -i chr20.og -S
 
 ## Shape, size, cost
 
-Two tasks on `m8g.2xlarge` / `m8g.xlarge`, TTL 90m and 45m as backstops, caps $0.40 and $0.20. Construction dominates; the GFA export and odgi conversion are seconds.
+Two tasks on `m8g.2xlarge` / `m8g.xlarge`, TTL 90m and 45m as backstops, caps $0.40 and $0.20. Construction dominates; the GFA export and odgi conversion are seconds. **Which box, [measured](../../measurements/pangenome-real/README.md)** on Giraffe mapping HG002's chr20 reads to the HPRC v1.1 chr20 graph, 16 threads:
+
+| chip | instance | index | giraffe (9.13M pairs) | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | 423 s | 246 s | **0.199** |
+| Xeon 6975P-C | `m8i.4xlarge` | 334 s | 273 s | 0.332 |
+| EPYC 9R45 | `m8a.4xlarge` | 385 s | **162 s** | 0.318 |
+
+**Graviton4 is cheapest per sample indexed and mapped; AMD maps 1.5× faster and is 11% cheaper per sample once the index exists.** Alignments are byte-identical on all three chips, the graph's GRCh38 path spells `chr20.fa` back exactly, and 99.80% of confidently placed reads land within 5 bp of novoalign's placement. vg never passed 3.2 GiB.
 
 <details>
 <summary>As shipped: a byte-exact reference path, a cross-tool structural check, and what each one proves</summary>
@@ -156,9 +163,8 @@ what the graph contains — but check the bucket regardless
 
 ### Not covered
 
-**Read mapping onto the graph** — `vg giraffe` against the staged chr20 BAM, MAPQ-gated against
-bwa's linear alignments, is the obvious next check and the one that would make this a caller-grade
-comparison. Also: `vg autoindex`/`giraffe` index construction, graph-aware variant calling
+Read mapping onto the graph is in [pangenome-real](../../measurements/pangenome-real/README.md),
+not in this recipe's tasks. Also not covered: graph-aware variant calling
 (`vg call`), `odgi viz`/`odgi sort` layout operations, and true multi-assembly pangenomes via
 `seqwish` and `wfmash` (both published in the same namespace).
 
