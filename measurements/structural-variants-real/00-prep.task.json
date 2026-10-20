@@ -1,0 +1,71 @@
+{
+  "task_id": "cookbook-structural-variants-real-prep",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 17b7fa1704cab8fe5f36eef6f6db61a1a876ae5373c1a90bdd9a4022a8f8df33 prep.sh; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/prep.sh 32\n"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "disk_gib": 200,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/human.hg19.excl.tsv",
+      "destination": "/tmp/human.hg19.excl.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002.hs37d5.60x.1.bam",
+      "destination": "/tmp/HG002.hs37d5.60x.1.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002.hs37d5.60x.1.bam.bai",
+      "destination": "/tmp/HG002.hs37d5.60x.1.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.vcf.gz",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.vcf.gz.tbi",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.bed",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/ref/hs37d5.fa.gz",
+      "destination": "/tmp/hs37d5.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/ref/hs37d5.fa.gz.fai",
+      "destination": "/tmp/hs37d5.fa.gz.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/var/tmp/derived/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/"
+    },
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}

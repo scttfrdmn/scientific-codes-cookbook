@@ -1,0 +1,70 @@
+2026-10-20 14:47:08,394 [INFO] Truvari v5.5.0
+2026-10-20 14:47:08,394 [INFO] Command /opt/conda/bin/truvari bench -b /tmp/HG002_SVs_Tier1_v0.6.vcf.gz -c /var/tmp/score/x86_64.manta.giab.comp.vcf.gz -o /var/tmp/score/x86_64.manta.giab --includebed /tmp/HG002_SVs_Tier1_v0.6.bed --passonly -r 2000 -C 2000 -p 0
+2026-10-20 14:47:08,395 [INFO] Params:
+{
+    "base": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz",
+    "comp": "/var/tmp/score/x86_64.manta.giab.comp.vcf.gz",
+    "output": "/var/tmp/score/x86_64.manta.giab",
+    "includebed": "/tmp/HG002_SVs_Tier1_v0.6.bed",
+    "extend": 0,
+    "debug": false,
+    "reference": null,
+    "refdist": 2000,
+    "pctseq": 0.0,
+    "pctsize": 0.7,
+    "pctovl": 0.0,
+    "typeignore": false,
+    "no_roll": false,
+    "chunksize": 2000,
+    "bSample": "HG002",
+    "cSample": "HG002",
+    "dup_to_ins": false,
+    "bnddist": 100,
+    "sizemin": 50,
+    "sizefilt": 30,
+    "sizemax": 50000,
+    "passonly": true,
+    "no_ref": false,
+    "pick": "single",
+    "ignore_monref": true,
+    "check_multi": true,
+    "check_monref": true,
+    "no_single_bnd": true,
+    "write_resolved": false,
+    "decompose": true,
+    "short_circuit": false,
+    "skip_gt": false,
+    "max_resolve": 25000,
+    "dynthresh": null
+}
+2026-10-20 14:47:08,465 [WARNING] 61 contigs present in comparison VCF header are not in baseline VCF.
+2026-10-20 14:47:08,707 [INFO] Including 34830 bed regions
+2026-10-20 14:47:12,357 [INFO] Zipped 24070 variants Counter({'base': 20041, 'comp': 4029})
+2026-10-20 14:47:12,358 [INFO] 9645 chunks of 24070 variants Counter({'__filtered': 10783, 'base': 9641, 'comp': 3646})
+2026-10-20 14:47:13,308 [INFO] Stats: {
+    "TP-base": 3485,
+    "TP-comp": 3485,
+    "FP": 155,
+    "FN": 6156,
+    "precision": 0.9574175824175825,
+    "recall": 0.36147702520485425,
+    "f1": 0.5248098787741887,
+    "base cnt": 9641,
+    "comp cnt": 3640,
+    "TP-comp_TP-gt": 3372,
+    "TP-comp_FP-gt": 113,
+    "TP-base_TP-gt": 3372,
+    "TP-base_FP-gt": 113,
+    "gt_concordance": 0.9675753228120516,
+    "gt_matrix": {
+        "(1, 1)": {
+            "(1, 1)": 1711,
+            "(0, 1)": 33
+        },
+        "(0, 1)": {
+            "(0, 1)": 1661,
+            "(1, 1)": 80
+        }
+    }
+}
+2026-10-20 14:47:13,309 [INFO] Finished bench

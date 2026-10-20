@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-structural-variants-real-manta",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' a4b32d886d8a6a0f10f175fa2785e347576d13ddbf22aa99ebfc96c059dc952d manta.sh; printf '%s  %s\\n' e12e7e59a76c982db4dde6494f96532dacf15e4fdfd171f2f6d9457a6d1aa61b pins.sha256; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/manta.sh 32 150\n"
+  ],
+  "container": "quay.io/aarchbio/manta@sha256:0cae7f334d4a0929f985dfdbf24801de50c421e29fc529d71ba35f342ea1e0d5",
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "disk_gib": 120,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/manta.sh",
+      "destination": "/tmp/manta.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/HG002.hs37d5.30x.bam",
+      "destination": "/tmp/HG002.hs37d5.30x.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/HG002.hs37d5.30x.bam.bai",
+      "destination": "/tmp/HG002.hs37d5.30x.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/hs37d5.fa",
+      "destination": "/tmp/hs37d5.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/hs37d5.fa.fai",
+      "destination": "/tmp/hs37d5.fa.fai"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/manta/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 4.0
+  }
+}

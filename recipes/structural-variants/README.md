@@ -22,41 +22,43 @@ last_verified: 2026-09-22
 
 delly and manta each call a 1 kb deletion on Graviton4, against a deletion removed from the sample before any read existed. The catalog's first SV recipe, for anyone calling CNVs or rearrangements from short reads.
 
-> **What this covers.** A 20 kb contig, a sample carrying one 1000 bp deletion, 32× paired reads. Alignment, two germline SV callers on the same BAM, and locating the deletion a third way from coverage. Not insertions, inversions, translocations, somatic or population calling, or CNV segmentation.
-
 ## Run it
 
 ```bash
 for s in $(make -s spec RECIPE=structural-variants); do spawn task run --spec "$s" --wait; done
 bwa mem -R '@RG\tID:s1\tSM:sample1' ref.fa R1.fq R2.fq > aln.sam   # delly needs @RG SM
 samtools sort -o sample.bam aln.sam && samtools index sample.bam && samtools faidx ref.fa
-
 delly sr -g ref.fa -o sv.bcf sample.bam        # 'sr', not 'call' — see below
 bcftools query -f '%CHROM\t%POS\t%INFO/SVTYPE\t%INFO/END\t%INFO/SVLEN\n' sv.bcf
 configManta.py --bam sample.bam --referenceFasta ref.fa --runDir mrun   # the second caller
 mrun/runWorkflow.py -m local -j 2 -g 6                                  # -g is load-bearing
 ```
 
-Five tasks: bwa aligns, samtools sorts and finds the deletion from coverage, delly calls, bcftools reads the BCF, manta calls the same BAM for comparison.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| 20 kb contig, one planted deletion | your reference + BAM | delly needs a **coordinate-sorted, indexed BAM with `@RG … SM:`** and an indexed reference; it refuses a BAM with no read group. |
+| 20 kb contig, one planted deletion | your reference + BAM | delly needs a **coordinate-sorted, indexed BAM with `@RG … SM:`** and an indexed reference; it refuses a BAM with no read group, and a library it can't model (`MAD=0`, below) silently yields nothing. |
 | `delly sr` | `delly lr` (long reads), `delly asm`, `delly cnv` | **delly 2.6.0 renamed `call` to `sr`.** Every tutorial online still says `call`, which now errors with `Unrecognized command call` and no hint. |
 | one germline sample | tumour/normal | somatic calling is `delly sr` on both BAMs then `delly filter -f somatic`; the shape here doesn't change. |
-| delly **and** manta | either alone | they agree on the deletion exactly — but **not on how to write it down**, so read the convention table before merging their VCFs. |
-| 32× uniform coverage | your real depth | sensitivity follows depth **and** insert-size spread — a library delly can't model (see `MAD` below) silently yields nothing. |
+| delly **and** manta | either alone | they agree on the deletion exactly — but **not on how to write it down**, so read the convention table before merging their VCFs. On a real genome manta finds 4× the benchmark deletions delly does. |
 
-**Leave the fixture:** one planted deletion in 20 kb makes the breakpoint and the absence of false positives exactly assertable. **Scale it** to a real BAM for sensitivity; the commands don't change.
+**Leave the fixture:** one planted deletion in 20 kb makes the breakpoint and the absence of false positives exactly assertable. **Scale it** to a real BAM for sensitivity; the commands don't change — [measured](../../measurements/structural-variants-real/README.md) below.
 
-## Shape, size, cost
+## Which box — [measured](../../measurements/structural-variants-real/README.md) on a whole 30× HG002 genome vs GIAB Tier 1 (32 threads)
 
-Five tasks, four on `c8g.large` (2 vCPU / 4 GiB) and **manta on `c8g.xlarge` (8 GiB)** because its merge step demands 4 GiB whatever the genome size. TTL 12–15m, caps $0.05 each. Every step is seconds at this size; the windows are almost entirely image pull. **These timings are not compute cost.**
+| chip | instance | manta | delly | **billed $/genome, both callers** |
+|---|---|---|---|---|
+| Graviton4 | `r8g.8xlarge` | 230 s | 1,140 s | **1.20** |
+| Xeon 6975P-C | `r8i.8xlarge` | 320 s | 1,160 s | 1.40 |
+| EPYC 9R45 | `r8a.8xlarge` | **199 s** | **890 s** | 1.21 |
+
+**Graviton4 or AMD; not Intel.** AMD is fastest and its dearer hour cancels that almost exactly. Both callers need under 3.5 GiB; the 256 GiB box is for the 60 GiB BAM in the half-RAM `/tmp`. Manta finds 61% of the benchmark's deletions at 0.957 precision, delly 15% at 0.892; calls are byte-identical on all three chips. The fixture's five tasks run on `c8g.large` (manta on `c8g.xlarge`, for its 4 GiB merge step) in seconds of compute; those windows are image pull, **not compute cost**.
 
 <details>
 <summary>As shipped: exact breakpoints, two callers that disagree on notation, three signals, the delly sr rename, manta's memory floor, pins</summary>
+
+**What the fixture covers.** A 20 kb contig, a sample carrying one 1000 bp deletion, 32× paired reads. Alignment, two germline SV callers on the same BAM, and locating the deletion a third way from coverage. Not inversions, translocations, somatic or population calling, or CNV segmentation; insertions and real deletions are scored only in the [whole-genome measurement](../../measurements/structural-variants-real/README.md).
 
 ### The checks
 
@@ -91,7 +93,7 @@ Both callers place the deletion at exactly `8001..9000`. Neither agrees with the
 | **manta** 1.6.0 | 8000 | **9000** | **−1000** | `POS+1 .. END` |
 | **delly** 2.6.0 | 8000 | **9001** | **−1001** | `POS+1 .. END-1` |
 
-manta follows the VCF spec: `END` is the **last deleted base** and `|SVLEN|` is the **deleted length**. delly's `END` is the base **after** the deletion and its `|SVLEN|` is `END − POS`. Each is internally consistent, each recovers the planted deletion exactly — and **one arithmetic cannot read both**.
+manta follows the VCF spec: `END` is the **last deleted base** and `|SVLEN|` is the **deleted length**. delly's `END` is the base **after** the deletion and its `|SVLEN|` is `END − POS`. That `END` belongs to delly's **symbolic** `<DEL>` records. [On a whole genome](../../measurements/structural-variants-real/README.md) delly writes every precise deletion with explicit alleles, and then its `END` is the last deleted base, like manta's. `|SVLEN|` = deleted length + 1 holds on both forms, on all 6,965 deletions. Each is internally consistent, each recovers the planted deletion exactly — and **one arithmetic cannot read both**.
 
 The consequences are not cosmetic. `test $((-SVLEN)) -eq 1000` passes on manta and **red-fails delly on a completely correct call**. Merge the two VCFs with a single formula and every delly deletion comes out 1 bp long and fails to match its manta twin, so the same event is reported twice as two disagreeing variants. This is the sharpest form of [assert the claim you mean](../../practices/cross-checks.md): the claim is *the deleted interval*, and only that is comparable across tools.
 

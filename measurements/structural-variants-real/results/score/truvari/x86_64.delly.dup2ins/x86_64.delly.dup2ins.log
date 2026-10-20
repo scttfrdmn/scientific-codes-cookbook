@@ -1,0 +1,71 @@
+2026-10-20 14:47:25,926 [INFO] Truvari v5.5.0
+2026-10-20 14:47:25,926 [INFO] Command /opt/conda/bin/truvari bench -b /tmp/HG002_SVs_Tier1_v0.6.vcf.gz -c /var/tmp/score/x86_64.delly.dup2ins.comp.vcf.gz -o /var/tmp/score/x86_64.delly.dup2ins --includebed /tmp/HG002_SVs_Tier1_v0.6.bed --passonly -r 2000 -C 2000 -p 0 -d
+2026-10-20 14:47:25,927 [INFO] Params:
+{
+    "base": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz",
+    "comp": "/var/tmp/score/x86_64.delly.dup2ins.comp.vcf.gz",
+    "output": "/var/tmp/score/x86_64.delly.dup2ins",
+    "includebed": "/tmp/HG002_SVs_Tier1_v0.6.bed",
+    "extend": 0,
+    "debug": false,
+    "reference": null,
+    "refdist": 2000,
+    "pctseq": 0.0,
+    "pctsize": 0.7,
+    "pctovl": 0.0,
+    "typeignore": false,
+    "no_roll": false,
+    "chunksize": 2000,
+    "bSample": "HG002",
+    "cSample": "HG002",
+    "dup_to_ins": true,
+    "bnddist": 100,
+    "sizemin": 50,
+    "sizefilt": 30,
+    "sizemax": 50000,
+    "passonly": true,
+    "no_ref": false,
+    "pick": "single",
+    "ignore_monref": true,
+    "check_multi": true,
+    "check_monref": true,
+    "no_single_bnd": true,
+    "write_resolved": false,
+    "decompose": true,
+    "short_circuit": false,
+    "skip_gt": false,
+    "max_resolve": 25000,
+    "dynthresh": null
+}
+2026-10-20 14:47:25,999 [WARNING] 61 contigs present in comparison VCF header are not in baseline VCF.
+2026-10-20 14:47:26,238 [INFO] Including 34830 bed regions
+2026-10-20 14:47:29,742 [INFO] Zipped 21396 variants Counter({'base': 20041, 'comp': 1355})
+2026-10-20 14:47:29,742 [INFO] 9671 chunks of 21396 variants Counter({'__filtered': 10806, 'base': 9641, 'comp': 949})
+2026-10-20 14:47:30,652 [INFO] Stats: {
+    "TP-base": 718,
+    "TP-comp": 718,
+    "FP": 147,
+    "FN": 8923,
+    "precision": 0.8300578034682081,
+    "recall": 0.07447360232341044,
+    "f1": 0.13668379973348566,
+    "base cnt": 9641,
+    "comp cnt": 865,
+    "TP-comp_TP-gt": 659,
+    "TP-comp_FP-gt": 59,
+    "TP-base_TP-gt": 659,
+    "TP-base_FP-gt": 59,
+    "gt_concordance": 0.9178272980501393,
+    "gt_matrix": {
+        "(0, 1)": {
+            "(0, 1)": 434,
+            "(1, 1)": 12,
+            "(0, 0)": 1
+        },
+        "(1, 1)": {
+            "(1, 1)": 225,
+            "(0, 1)": 46
+        }
+    }
+}
+2026-10-20 14:47:30,652 [INFO] Finished bench

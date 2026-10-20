@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-structural-variants-real-score",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 01439cb20c6fed336ba97250d0137ad62bd9e021ff0be69b170a57fa198766cd score.py; printf '%s  %s\\n' e12e7e59a76c982db4dde6494f96532dacf15e4fdfd171f2f6d9457a6d1aa61b pins.sha256; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\ngrep -E '  HG002_SVs_Tier1_v0\\.6\\.' pins.sha256 > truth.sha256 && sha256sum -c truth.sha256 || { echo 'FAIL: the benchmark does not match its pin'; exit 1; }\npython3 -u /tmp/score.py arm64 2>&1 | tee /tmp/out/score.log\nexit ${PIPESTATUS[0]}\n"
+  ],
+  "container": "quay.io/aarchbio/truvari@sha256:de287df70065b73658d75a52cc24e595e38df4f32cff364aca31121e5754de82",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.vcf.gz",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.vcf.gz.tbi",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/giab/HG002_SVs_Tier1_v0.6.bed",
+      "destination": "/tmp/HG002_SVs_Tier1_v0.6.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/manta/diploidSV.vcf.gz",
+      "destination": "/tmp/arm64.diploidSV.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/manta/diploidSV.vcf.gz.tbi",
+      "destination": "/tmp/arm64.diploidSV.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/delly/delly.bcf",
+      "destination": "/tmp/arm64.delly.bcf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/delly/delly.bcf.csi",
+      "destination": "/tmp/arm64.delly.bcf.csi"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/structural-variants-real/score-arm64/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}
