@@ -1,0 +1,403 @@
+[K
+== This is sourmash version 4.9.4. ==
+[K== Please cite Irber et. al (2024), doi:10.21105/joss.06830. ==
+
+[Kcomputing signatures for files: /var/tmp/s/g/GCF_052109555.1.fna.gz, /var/tmp/s/g/GCA_032579735.1.fna.gz, /var/tmp/s/g/GCF_030460245.1.fna.gz, /var/tmp/s/g/GCF_006539465.1.fna.gz, /var/tmp/s/g/GCF_030718895.1.fna.gz, /var/tmp/s/g/GCF_037465365.1.fna.gz, /var/tmp/s/g/GCF_002355155.1.fna.gz, /var/tmp/s/g/GCA_000738185.1.fna.gz, /var/tmp/s/g/GCF_012030345.1.fna.gz, /var/tmp/s/g/GCF_000477875.1.fna.gz, /var/tmp/s/g/GCF_030486665.1.fna.gz, /var/tmp/s/g/GCF_000196335.1.fna.gz, /var/tmp/s/g/GCF_051156355.1.fna.gz, /var/tmp/s/g/GCF_017942225.1.fna.gz, /var/tmp/s/g/GCF_002213075.1.fna.gz, /var/tmp/s/g/GCA_001974705.1.fna.gz, /var/tmp/s/g/GCA_000988285.1.fna.gz, /var/tmp/s/g/GCF_026650325.1.fna.gz, /var/tmp/s/g/GCA_052377495.1.fna.gz, /var/tmp/s/g/GCF_930989755.1.fna.gz, /var/tmp/s/g/GCA_963538505.1.fna.gz, /var/tmp/s/g/GCF_030229905.2.fna.gz, /var/tmp/s/g/GCA_023388385.1.fna.gz, /var/tmp/s/g/GCF_042659685.1.fna.gz, /var/tmp/s/g/GCF_038484615.1.fna.gz, /var/tmp/s/g/GCF_046519445.1.fna.gz, /var/tmp/s/g/GCF_027570045.1.fna.gz, /var/tmp/s/g/GCF_030454485.1.fna.gz, /var/tmp/s/g/GCF_041898185.1.fna.gz, /var/tmp/s/g/GCF_026650665.1.fna.gz, /var/tmp/s/g/GCF_045369965.1.fna.gz, /var/tmp/s/g/GCF_002861365.1.fna.gz, /var/tmp/s/g/GCF_001922285.1.fna.gz, /var/tmp/s/g/GCF_030516155.1.fna.gz, /var/tmp/s/g/GCA_030230685.1.fna.gz, /var/tmp/s/g/GCF_016628425.2.fna.gz, /var/tmp/s/g/GCF_008930885.1.fna.gz, /var/tmp/s/g/GCA_019114135.1.fna.gz, /var/tmp/s/g/GCF_003989305.1.fna.gz, /var/tmp/s/g/GCF_052100095.1.fna.gz, /var/tmp/s/g/GCA_003638845.1.fna.gz, /var/tmp/s/g/GCF_000498915.1.fna.gz, /var/tmp/s/g/GCF_014335065.1.fna.gz, /var/tmp/s/g/GCF_002202525.1.fna.gz, /var/tmp/s/g/GCF_048823295.1.fna.gz, /var/tmp/s/g/GCF_039822665.1.fna.gz, /var/tmp/s/g/GCA_938010395.1.fna.gz, /var/tmp/s/g/GCA_052264725.1.fna.gz, /var/tmp/s/g/GCF_031458315.1.fna.gz, /var/tmp/s/g/GCF_024453935.1.fna.gz, /var/tmp/s/g/GCF_052085265.1.fna.gz, /var/tmp/s/g/GCF_001263755.1.fna.gz, /var/tmp/s/g/GCF_965245335.1.fna.gz, /var/tmp/s/g/GCF_001643035.1.fna.gz, /var/tmp/s/g/GCF_001838285.1.fna.gz, /var/tmp/s/g/GCF_030229215.1.fna.gz, /var/tmp/s/g/GCF_030213645.1.fna.gz, /var/tmp/s/g/GCF_051549835.1.fna.gz, /var/tmp/s/g/GCF_946222985.1.fna.gz, /var/tmp/s/g/GCF_032578415.1.fna.gz, /var/tmp/s/g/GCF_015831155.1.fna.gz, /var/tmp/s/g/GCF_032097115.1.fna.gz, /var/tmp/s/g/GCF_040946545.1.fna.gz, /var/tmp/s/g/GCF_052103875.1.fna.gz, /var/tmp/s/g/GCF_041450035.1.fna.gz, /var/tmp/s/g/GCF_900155535.1.fna.gz, /var/tmp/s/g/GCF_001814945.1.fna.gz, /var/tmp/s/g/GCF_013135535.1.fna.gz, /var/tmp/s/g/GCF_003688955.1.fna.gz, /var/tmp/s/g/GCF_025145255.1.fna.gz, /var/tmp/s/g/GCF_040717595.1.fna.gz, /var/tmp/s/g/GCF_046717765.1.fna.gz, /var/tmp/s/g/GCF_046097335.1.fna.gz, /var/tmp/s/g/GCF_900447205.1.fna.gz, /var/tmp/s/g/GCF_023652215.1.fna.gz, /var/tmp/s/g/GCF_963556575.1.fna.gz, /var/tmp/s/g/GCF_001053555.1.fna.gz, /var/tmp/s/g/GCF_025143905.1.fna.gz, /var/tmp/s/g/GCF_001810195.1.fna.gz, /var/tmp/s/g/GCF_024580295.1.fna.gz, /var/tmp/s/g/GCF_026410345.1.fna.gz, /var/tmp/s/g/GCA_946502855.1.fna.gz, /var/tmp/s/g/GCF_041450355.1.fna.gz, /var/tmp/s/g/GCA_046097355.1.fna.gz, /var/tmp/s/g/GCA_963510645.1.fna.gz, /var/tmp/s/g/GCF_037908335.1.fna.gz, /var/tmp/s/g/GCF_030440575.1.fna.gz, /var/tmp/s/g/GCF_030176395.1.fna.gz, /var/tmp/s/g/GCF_050034055.1.fna.gz, /var/tmp/s/g/GCF_001518935.2.fna.gz, /var/tmp/s/g/GCA_007676915.1.fna.gz, /var/tmp/s/g/GCF_030232265.1.fna.gz, /var/tmp/s/g/GCF_030229555.1.fna.gz, /var/tmp/s/g/GCF_007489295.1.fna.gz, /var/tmp/s/g/GCF_002203275.1.fna.gz, /var/tmp/s/g/GCF_001807495.1.fna.gz, /var/tmp/s/g/GCF_004332375.1.fna.gz, /var/tmp/s/g/GCA_947255035.1.fna.gz, /var/tmp/s/g/GCF_000297795.2.fna.gz, /var/tmp/s/g/GCF_036959285.1.fna.gz, /var/tmp/s/g/GCF_007858615.1.fna.gz, /var/tmp/s/g/GCF_046097515.1.fna.gz, /var/tmp/s/g/GCF_000987865.1.fna.gz, /var/tmp/s/g/GCA_052092045.1.fna.gz, /var/tmp/s/g/GCF_030457965.1.fna.gz, /var/tmp/s/g/GCF_023652875.1.fna.gz, /var/tmp/s/g/GCF_033877495.1.fna.gz, /var/tmp/s/g/GCF_015830205.1.fna.gz, /var/tmp/s/g/GCF_025150595.1.fna.gz, /var/tmp/s/g/GCA_905365335.1.fna.gz, /var/tmp/s/g/GCA_052263715.1.fna.gz, /var/tmp/s/g/GCF_016127615.1.fna.gz, /var/tmp/s/g/GCF_028527805.1.fna.gz, /var/tmp/s/g/GCF_903986455.1.fna.gz, /var/tmp/s/g/GCF_030233875.1.fna.gz, /var/tmp/s/g/GCF_903986075.1.fna.gz, /var/tmp/s/g/GCA_024968345.1.fna.gz, /var/tmp/s/g/GCF_002201065.1.fna.gz, /var/tmp/s/g/GCF_030232585.1.fna.gz, /var/tmp/s/g/GCF_000380545.1.fna.gz, /var/tmp/s/g/GCA_030535535.1.fna.gz, /var/tmp/s/g/GCF_016889365.1.fna.gz, /var/tmp/s/g/GCF_040225615.1.fna.gz, /var/tmp/s/g/GCF_002202905.1.fna.gz, /var/tmp/s/g/GCF_030408675.1.fna.gz, /var/tmp/s/g/GCF_009791415.1.fna.gz, /var/tmp/s/g/GCF_048822995.1.fna.gz, /var/tmp/s/g/GCF_000805675.1.fna.gz, /var/tmp/s/g/GCF_963535515.1.fna.gz, /var/tmp/s/g/GCF_001875725.1.fna.gz, /var/tmp/s/g/GCA_042645085.1.fna.gz, /var/tmp/s/g/GCF_024587035.1.fna.gz, /var/tmp/s/g/GCF_048823955.1.fna.gz, /var/tmp/s/g/GCA_965240915.1.fna.gz, /var/tmp/s/g/GCF_900478035.1.fna.gz, /var/tmp/s/g/GCF_036959605.1.fna.gz, /var/tmp/s/g/GCF_008042455.1.fna.gz, /var/tmp/s/g/GCA_002316455.1.fna.gz, /var/tmp/s/g/GCF_030176715.1.fna.gz, /var/tmp/s/g/GCF_001975925.1.fna.gz, /var/tmp/s/g/GCF_052106085.1.fna.gz, /var/tmp/s/g/GCF_001806875.1.fna.gz, /var/tmp/s/g/GCF_949152235.1.fna.gz, /var/tmp/s/g/GCF_015830525.1.fna.gz, /var/tmp/s/g/GCF_008726455.1.fna.gz, /var/tmp/s/g/GCF_002115215.1.fna.gz, /var/tmp/s/g/GCF_009708045.1.fna.gz, /var/tmp/s/g/GCF_041197815.1.fna.gz, /var/tmp/s/g/GCF_001889835.1.fna.gz, /var/tmp/s/g/GCA_052261315.1.fna.gz, /var/tmp/s/g/GCF_943912665.1.fna.gz, /var/tmp/s/g/GCF_002203595.1.fna.gz, /var/tmp/s/g/GCF_019048165.1.fna.gz, /var/tmp/s/g/GCF_020097615.1.fna.gz, /var/tmp/s/g/GCF_051156035.1.fna.gz, /var/tmp/s/g/GCA_003721315.1.fna.gz, /var/tmp/s/g/GCF_030228895.1.fna.gz, /var/tmp/s/g/GCF_945649885.1.fna.gz, /var/tmp/s/g/GCF_000248375.2.fna.gz, /var/tmp/s/g/GCF_036959945.1.fna.gz, /var/tmp/s/g/GCF_021560295.1.fna.gz, /var/tmp/s/g/GCF_000738175.1.fna.gz, /var/tmp/s/g/GCF_022347385.1.fna.gz, /var/tmp/s/g/GCF_043090265.1.fna.gz, /var/tmp/s/g/GCF_021713535.1.fna.gz, /var/tmp/s/g/GCF_903986295.1.fna.gz, /var/tmp/s/g/GCF_003202335.1.fna.gz, /var/tmp/s/g/GCF_016628845.1.fna.gz, /var/tmp/s/g/GCF_048823635.1.fna.gz, /var/tmp/s/g/GCF_001876145.1.fna.gz, /var/tmp/s/g/GCF_002994655.1.fna.gz, /var/tmp/s/g/GCF_030227185.1.fna.gz, /var/tmp/s/g/GCF_947255095.1.fna.gz, /var/tmp/s/g/GCF_001833025.1.fna.gz, /var/tmp/s/g/GCF_037645925.1.fna.gz, /var/tmp/s/g/GCF_001812455.1.fna.gz, /var/tmp/s/g/GCF_014837045.1.fna.gz, /var/tmp/s/g/GCF_013868015.1.fna.gz, /var/tmp/s/g/GCF_029674605.1.fna.gz, /var/tmp/s/g/GCF_020743395.1.fna.gz, /var/tmp/s/g/GCF_022346205.1.fna.gz, /var/tmp/s/g/GCA_001764565.1.fna.gz, /var/tmp/s/g/GCF_022345825.1.fna.gz, /var/tmp/s/g/GCF_023155155.1.fna.gz, /var/tmp/s/g/GCA_945916015.1.fna.gz, /var/tmp/s/g/GCF_000158635.1.fna.gz, /var/tmp/s/g/GCF_050848985.1.fna.gz, /var/tmp/s/g/GCF_023651875.1.fna.gz, /var/tmp/s/g/GCF_015830835.1.fna.gz, /var/tmp/s/g/GCF_030176075.1.fna.gz, /var/tmp/s/g/GCF_024968405.1.fna.gz, /var/tmp/s/g/GCF_030515655.1.fna.gz, /var/tmp/s/g/GCF_963510835.1.fna.gz, /var/tmp/s/g/GCF_048284795.1.fna.gz, /var/tmp/s/g/GCF_052092525.1.fna.gz, /var/tmp/s/g/GCF_023652535.1.fna.gz, /var/tmp/s/g/GCF_003932275.1.fna.gz, /var/tmp/s/g/GCF_901482565.1.fna.gz
+[KComputing a total of 1 signature(s) for each input.
+[K... reading sequences from /var/tmp/s/g/GCF_052109555.1.fna.gz
+[K.../var/tmp/s/g/GCF_052109555.1.fna.gz 55 sequences[Kcalculated 1 signatures for 56 sequences in /var/tmp/s/g/GCF_052109555.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_032579735.1.fna.gz
+[K.../var/tmp/s/g/GCA_032579735.1.fna.gz 34 sequences[Kcalculated 1 signatures for 35 sequences in /var/tmp/s/g/GCA_032579735.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030460245.1.fna.gz
+[K.../var/tmp/s/g/GCF_030460245.1.fna.gz 348 sequences[Kcalculated 1 signatures for 349 sequences in /var/tmp/s/g/GCF_030460245.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_006539465.1.fna.gz
+[K.../var/tmp/s/g/GCF_006539465.1.fna.gz 89 sequences[Kcalculated 1 signatures for 90 sequences in /var/tmp/s/g/GCF_006539465.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030718895.1.fna.gz
+[K.../var/tmp/s/g/GCF_030718895.1.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_030718895.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_037465365.1.fna.gz
+[K.../var/tmp/s/g/GCF_037465365.1.fna.gz 43 sequences[Kcalculated 1 signatures for 44 sequences in /var/tmp/s/g/GCF_037465365.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002355155.1.fna.gz
+[K.../var/tmp/s/g/GCF_002355155.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_002355155.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_000738185.1.fna.gz
+[K.../var/tmp/s/g/GCA_000738185.1.fna.gz 48 sequences[Kcalculated 1 signatures for 49 sequences in /var/tmp/s/g/GCA_000738185.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_012030345.1.fna.gz
+[K.../var/tmp/s/g/GCF_012030345.1.fna.gz 61 sequences[Kcalculated 1 signatures for 62 sequences in /var/tmp/s/g/GCF_012030345.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000477875.1.fna.gz
+[K.../var/tmp/s/g/GCF_000477875.1.fna.gz 5 sequences[Kcalculated 1 signatures for 6 sequences in /var/tmp/s/g/GCF_000477875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030486665.1.fna.gz
+[K.../var/tmp/s/g/GCF_030486665.1.fna.gz 5 sequences[Kcalculated 1 signatures for 6 sequences in /var/tmp/s/g/GCF_030486665.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000196335.1.fna.gz
+[K.../var/tmp/s/g/GCF_000196335.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_000196335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_051156355.1.fna.gz
+[K.../var/tmp/s/g/GCF_051156355.1.fna.gz 63 sequences[Kcalculated 1 signatures for 64 sequences in /var/tmp/s/g/GCF_051156355.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_017942225.1.fna.gz
+[K.../var/tmp/s/g/GCF_017942225.1.fna.gz 31 sequences[Kcalculated 1 signatures for 32 sequences in /var/tmp/s/g/GCF_017942225.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002213075.1.fna.gz
+[K.../var/tmp/s/g/GCF_002213075.1.fna.gz 34 sequences[Kcalculated 1 signatures for 35 sequences in /var/tmp/s/g/GCF_002213075.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_001974705.1.fna.gz
+[K.../var/tmp/s/g/GCA_001974705.1.fna.gz 55 sequences[Kcalculated 1 signatures for 56 sequences in /var/tmp/s/g/GCA_001974705.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_000988285.1.fna.gz
+[K.../var/tmp/s/g/GCA_000988285.1.fna.gz 9 sequences[Kcalculated 1 signatures for 10 sequences in /var/tmp/s/g/GCA_000988285.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_026650325.1.fna.gz
+[K.../var/tmp/s/g/GCF_026650325.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_026650325.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_052377495.1.fna.gz
+[K.../var/tmp/s/g/GCA_052377495.1.fna.gz 93 sequences[Kcalculated 1 signatures for 94 sequences in /var/tmp/s/g/GCA_052377495.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_930989755.1.fna.gz
+[K.../var/tmp/s/g/GCF_930989755.1.fna.gz 262 sequences[Kcalculated 1 signatures for 263 sequences in /var/tmp/s/g/GCF_930989755.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_963538505.1.fna.gz
+[K.../var/tmp/s/g/GCA_963538505.1.fna.gz 362 sequences[Kcalculated 1 signatures for 363 sequences in /var/tmp/s/g/GCA_963538505.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030229905.2.fna.gz
+[K.../var/tmp/s/g/GCF_030229905.2.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_030229905.2.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_023388385.1.fna.gz
+[K.../var/tmp/s/g/GCA_023388385.1.fna.gz 288 sequences[Kcalculated 1 signatures for 289 sequences in /var/tmp/s/g/GCA_023388385.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_042659685.1.fna.gz
+[K.../var/tmp/s/g/GCF_042659685.1.fna.gz 4 sequences[Kcalculated 1 signatures for 5 sequences in /var/tmp/s/g/GCF_042659685.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_038484615.1.fna.gz
+[K.../var/tmp/s/g/GCF_038484615.1.fna.gz 20 sequences[Kcalculated 1 signatures for 21 sequences in /var/tmp/s/g/GCF_038484615.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_046519445.1.fna.gz
+[K.../var/tmp/s/g/GCF_046519445.1.fna.gz 16 sequences[Kcalculated 1 signatures for 17 sequences in /var/tmp/s/g/GCF_046519445.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_027570045.1.fna.gz
+[K.../var/tmp/s/g/GCF_027570045.1.fna.gz 23 sequences[Kcalculated 1 signatures for 24 sequences in /var/tmp/s/g/GCF_027570045.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030454485.1.fna.gz
+[K.../var/tmp/s/g/GCF_030454485.1.fna.gz 100 sequences[Kcalculated 1 signatures for 101 sequences in /var/tmp/s/g/GCF_030454485.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_041898185.1.fna.gz
+[K.../var/tmp/s/g/GCF_041898185.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_041898185.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_026650665.1.fna.gz
+[K.../var/tmp/s/g/GCF_026650665.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_026650665.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_045369965.1.fna.gz
+[K.../var/tmp/s/g/GCF_045369965.1.fna.gz 64 sequences[Kcalculated 1 signatures for 65 sequences in /var/tmp/s/g/GCF_045369965.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002861365.1.fna.gz
+[K.../var/tmp/s/g/GCF_002861365.1.fna.gz 40 sequences[Kcalculated 1 signatures for 41 sequences in /var/tmp/s/g/GCF_002861365.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001922285.1.fna.gz
+[K.../var/tmp/s/g/GCF_001922285.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_001922285.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030516155.1.fna.gz
+[K.../var/tmp/s/g/GCF_030516155.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_030516155.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_030230685.1.fna.gz
+[K.../var/tmp/s/g/GCA_030230685.1.fna.gz 53 sequences[Kcalculated 1 signatures for 54 sequences in /var/tmp/s/g/GCA_030230685.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_016628425.2.fna.gz
+[K.../var/tmp/s/g/GCF_016628425.2.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_016628425.2.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_008930885.1.fna.gz
+[K.../var/tmp/s/g/GCF_008930885.1.fna.gz 13 sequences[Kcalculated 1 signatures for 14 sequences in /var/tmp/s/g/GCF_008930885.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_019114135.1.fna.gz
+[K.../var/tmp/s/g/GCA_019114135.1.fna.gz 127 sequences[Kcalculated 1 signatures for 128 sequences in /var/tmp/s/g/GCA_019114135.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_003989305.1.fna.gz
+[K.../var/tmp/s/g/GCF_003989305.1.fna.gz 53 sequences[Kcalculated 1 signatures for 54 sequences in /var/tmp/s/g/GCF_003989305.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_052100095.1.fna.gz
+[K.../var/tmp/s/g/GCF_052100095.1.fna.gz 75 sequences[Kcalculated 1 signatures for 76 sequences in /var/tmp/s/g/GCF_052100095.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_003638845.1.fna.gz
+[K.../var/tmp/s/g/GCA_003638845.1.fna.gz 316 sequences[Kcalculated 1 signatures for 317 sequences in /var/tmp/s/g/GCA_003638845.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000498915.1.fna.gz
+[K.../var/tmp/s/g/GCF_000498915.1.fna.gz 14 sequences[Kcalculated 1 signatures for 15 sequences in /var/tmp/s/g/GCF_000498915.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_014335065.1.fna.gz
+[K.../var/tmp/s/g/GCF_014335065.1.fna.gz 59 sequences[Kcalculated 1 signatures for 60 sequences in /var/tmp/s/g/GCF_014335065.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002202525.1.fna.gz
+[K.../var/tmp/s/g/GCF_002202525.1.fna.gz 89 sequences[Kcalculated 1 signatures for 90 sequences in /var/tmp/s/g/GCF_002202525.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_048823295.1.fna.gz
+[K.../var/tmp/s/g/GCF_048823295.1.fna.gz 100 sequences[Kcalculated 1 signatures for 101 sequences in /var/tmp/s/g/GCF_048823295.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_039822665.1.fna.gz
+[K.../var/tmp/s/g/GCF_039822665.1.fna.gz 5 sequences[Kcalculated 1 signatures for 6 sequences in /var/tmp/s/g/GCF_039822665.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_938010395.1.fna.gz
+[K.../var/tmp/s/g/GCA_938010395.1.fna.gz 29 sequences[Kcalculated 1 signatures for 30 sequences in /var/tmp/s/g/GCA_938010395.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_052264725.1.fna.gz
+[K.../var/tmp/s/g/GCA_052264725.1.fna.gz 108 sequences[Kcalculated 1 signatures for 109 sequences in /var/tmp/s/g/GCA_052264725.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_031458315.1.fna.gz
+[K.../var/tmp/s/g/GCF_031458315.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_031458315.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_024453935.1.fna.gz
+[K.../var/tmp/s/g/GCF_024453935.1.fna.gz 31 sequences[Kcalculated 1 signatures for 32 sequences in /var/tmp/s/g/GCF_024453935.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_052085265.1.fna.gz
+[K.../var/tmp/s/g/GCF_052085265.1.fna.gz 82 sequences[Kcalculated 1 signatures for 83 sequences in /var/tmp/s/g/GCF_052085265.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001263755.1.fna.gz
+[K.../var/tmp/s/g/GCF_001263755.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_001263755.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_965245335.1.fna.gz
+[K.../var/tmp/s/g/GCF_965245335.1.fna.gz 225 sequences[Kcalculated 1 signatures for 226 sequences in /var/tmp/s/g/GCF_965245335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001643035.1.fna.gz
+[K.../var/tmp/s/g/GCF_001643035.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_001643035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001838285.1.fna.gz
+[K.../var/tmp/s/g/GCF_001838285.1.fna.gz 72 sequences[Kcalculated 1 signatures for 73 sequences in /var/tmp/s/g/GCF_001838285.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030229215.1.fna.gz
+[K.../var/tmp/s/g/GCF_030229215.1.fna.gz 57 sequences[Kcalculated 1 signatures for 58 sequences in /var/tmp/s/g/GCF_030229215.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030213645.1.fna.gz
+[K.../var/tmp/s/g/GCF_030213645.1.fna.gz 122 sequences[Kcalculated 1 signatures for 123 sequences in /var/tmp/s/g/GCF_030213645.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_051549835.1.fna.gz
+[K.../var/tmp/s/g/GCF_051549835.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_051549835.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_946222985.1.fna.gz
+[K.../var/tmp/s/g/GCF_946222985.1.fna.gz 98 sequences[Kcalculated 1 signatures for 99 sequences in /var/tmp/s/g/GCF_946222985.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_032578415.1.fna.gz
+[K.../var/tmp/s/g/GCF_032578415.1.fna.gz 185 sequences[Kcalculated 1 signatures for 186 sequences in /var/tmp/s/g/GCF_032578415.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_015831155.1.fna.gz
+[K.../var/tmp/s/g/GCF_015831155.1.fna.gz 47 sequences[Kcalculated 1 signatures for 48 sequences in /var/tmp/s/g/GCF_015831155.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_032097115.1.fna.gz
+[K.../var/tmp/s/g/GCF_032097115.1.fna.gz 437 sequences[Kcalculated 1 signatures for 438 sequences in /var/tmp/s/g/GCF_032097115.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_040946545.1.fna.gz
+[K.../var/tmp/s/g/GCF_040946545.1.fna.gz 19 sequences[Kcalculated 1 signatures for 20 sequences in /var/tmp/s/g/GCF_040946545.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_052103875.1.fna.gz
+[K.../var/tmp/s/g/GCF_052103875.1.fna.gz 93 sequences[Kcalculated 1 signatures for 94 sequences in /var/tmp/s/g/GCF_052103875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_041450035.1.fna.gz
+[K.../var/tmp/s/g/GCF_041450035.1.fna.gz 40 sequences[Kcalculated 1 signatures for 41 sequences in /var/tmp/s/g/GCF_041450035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_900155535.1.fna.gz
+[K.../var/tmp/s/g/GCF_900155535.1.fna.gz 12 sequences[Kcalculated 1 signatures for 13 sequences in /var/tmp/s/g/GCF_900155535.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001814945.1.fna.gz
+[K.../var/tmp/s/g/GCF_001814945.1.fna.gz 53 sequences[Kcalculated 1 signatures for 54 sequences in /var/tmp/s/g/GCF_001814945.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_013135535.1.fna.gz
+[K.../var/tmp/s/g/GCF_013135535.1.fna.gz 19 sequences[Kcalculated 1 signatures for 20 sequences in /var/tmp/s/g/GCF_013135535.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_003688955.1.fna.gz
+[K.../var/tmp/s/g/GCF_003688955.1.fna.gz 39 sequences[Kcalculated 1 signatures for 40 sequences in /var/tmp/s/g/GCF_003688955.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_025145255.1.fna.gz
+[K.../var/tmp/s/g/GCF_025145255.1.fna.gz 5 sequences[Kcalculated 1 signatures for 6 sequences in /var/tmp/s/g/GCF_025145255.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_040717595.1.fna.gz
+[K.../var/tmp/s/g/GCF_040717595.1.fna.gz 34 sequences[Kcalculated 1 signatures for 35 sequences in /var/tmp/s/g/GCF_040717595.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_046717765.1.fna.gz
+[K.../var/tmp/s/g/GCF_046717765.1.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_046717765.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_046097335.1.fna.gz
+[K.../var/tmp/s/g/GCF_046097335.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_046097335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_900447205.1.fna.gz
+[K.../var/tmp/s/g/GCF_900447205.1.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_900447205.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_023652215.1.fna.gz
+[K.../var/tmp/s/g/GCF_023652215.1.fna.gz 24 sequences[Kcalculated 1 signatures for 25 sequences in /var/tmp/s/g/GCF_023652215.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_963556575.1.fna.gz
+[K.../var/tmp/s/g/GCF_963556575.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_963556575.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001053555.1.fna.gz
+[K.../var/tmp/s/g/GCF_001053555.1.fna.gz 81 sequences[Kcalculated 1 signatures for 82 sequences in /var/tmp/s/g/GCF_001053555.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_025143905.1.fna.gz
+[K.../var/tmp/s/g/GCF_025143905.1.fna.gz 66 sequences[Kcalculated 1 signatures for 67 sequences in /var/tmp/s/g/GCF_025143905.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001810195.1.fna.gz
+[K.../var/tmp/s/g/GCF_001810195.1.fna.gz 58 sequences[Kcalculated 1 signatures for 59 sequences in /var/tmp/s/g/GCF_001810195.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_024580295.1.fna.gz
+[K.../var/tmp/s/g/GCF_024580295.1.fna.gz 80 sequences[Kcalculated 1 signatures for 81 sequences in /var/tmp/s/g/GCF_024580295.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_026410345.1.fna.gz
+[K.../var/tmp/s/g/GCF_026410345.1.fna.gz 14 sequences[Kcalculated 1 signatures for 15 sequences in /var/tmp/s/g/GCF_026410345.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_946502855.1.fna.gz
+[K.../var/tmp/s/g/GCA_946502855.1.fna.gz 219 sequences[Kcalculated 1 signatures for 220 sequences in /var/tmp/s/g/GCA_946502855.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_041450355.1.fna.gz
+[K.../var/tmp/s/g/GCF_041450355.1.fna.gz 37 sequences[Kcalculated 1 signatures for 38 sequences in /var/tmp/s/g/GCF_041450355.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_046097355.1.fna.gz
+[K.../var/tmp/s/g/GCA_046097355.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCA_046097355.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_963510645.1.fna.gz
+[K.../var/tmp/s/g/GCA_963510645.1.fna.gz 308 sequences[Kcalculated 1 signatures for 309 sequences in /var/tmp/s/g/GCA_963510645.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_037908335.1.fna.gz
+[K.../var/tmp/s/g/GCF_037908335.1.fna.gz 38 sequences[Kcalculated 1 signatures for 39 sequences in /var/tmp/s/g/GCF_037908335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030440575.1.fna.gz
+[K.../var/tmp/s/g/GCF_030440575.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_030440575.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030176395.1.fna.gz
+[K.../var/tmp/s/g/GCF_030176395.1.fna.gz 16 sequences[Kcalculated 1 signatures for 17 sequences in /var/tmp/s/g/GCF_030176395.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_050034055.1.fna.gz
+[K.../var/tmp/s/g/GCF_050034055.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_050034055.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001518935.2.fna.gz
+[K.../var/tmp/s/g/GCF_001518935.2.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_001518935.2.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_007676915.1.fna.gz
+[K.../var/tmp/s/g/GCA_007676915.1.fna.gz 230 sequences[Kcalculated 1 signatures for 231 sequences in /var/tmp/s/g/GCA_007676915.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030232265.1.fna.gz
+[K.../var/tmp/s/g/GCF_030232265.1.fna.gz 82 sequences[Kcalculated 1 signatures for 83 sequences in /var/tmp/s/g/GCF_030232265.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030229555.1.fna.gz
+[K.../var/tmp/s/g/GCF_030229555.1.fna.gz 81 sequences[Kcalculated 1 signatures for 82 sequences in /var/tmp/s/g/GCF_030229555.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_007489295.1.fna.gz
+[K.../var/tmp/s/g/GCF_007489295.1.fna.gz 4 sequences[Kcalculated 1 signatures for 5 sequences in /var/tmp/s/g/GCF_007489295.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002203275.1.fna.gz
+[K.../var/tmp/s/g/GCF_002203275.1.fna.gz 58 sequences[Kcalculated 1 signatures for 59 sequences in /var/tmp/s/g/GCF_002203275.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001807495.1.fna.gz
+[K.../var/tmp/s/g/GCF_001807495.1.fna.gz 40 sequences[Kcalculated 1 signatures for 41 sequences in /var/tmp/s/g/GCF_001807495.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_004332375.1.fna.gz
+[K.../var/tmp/s/g/GCF_004332375.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_004332375.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_947255035.1.fna.gz
+[K.../var/tmp/s/g/GCA_947255035.1.fna.gz 191 sequences[Kcalculated 1 signatures for 192 sequences in /var/tmp/s/g/GCA_947255035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000297795.2.fna.gz
+[K.../var/tmp/s/g/GCF_000297795.2.fna.gz 31 sequences[Kcalculated 1 signatures for 32 sequences in /var/tmp/s/g/GCF_000297795.2.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_036959285.1.fna.gz
+[K.../var/tmp/s/g/GCF_036959285.1.fna.gz 4 sequences[Kcalculated 1 signatures for 5 sequences in /var/tmp/s/g/GCF_036959285.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_007858615.1.fna.gz
+[K.../var/tmp/s/g/GCF_007858615.1.fna.gz 18 sequences[Kcalculated 1 signatures for 19 sequences in /var/tmp/s/g/GCF_007858615.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_046097515.1.fna.gz
+[K.../var/tmp/s/g/GCF_046097515.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_046097515.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000987865.1.fna.gz
+[K.../var/tmp/s/g/GCF_000987865.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_000987865.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_052092045.1.fna.gz
+[K.../var/tmp/s/g/GCA_052092045.1.fna.gz 153 sequences[Kcalculated 1 signatures for 154 sequences in /var/tmp/s/g/GCA_052092045.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030457965.1.fna.gz
+[K.../var/tmp/s/g/GCF_030457965.1.fna.gz 116 sequences[Kcalculated 1 signatures for 117 sequences in /var/tmp/s/g/GCF_030457965.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_023652875.1.fna.gz
+[K.../var/tmp/s/g/GCF_023652875.1.fna.gz 19 sequences[Kcalculated 1 signatures for 20 sequences in /var/tmp/s/g/GCF_023652875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_033877495.1.fna.gz
+[K.../var/tmp/s/g/GCF_033877495.1.fna.gz 1 sequences[Kcalculated 1 signatures for 2 sequences in /var/tmp/s/g/GCF_033877495.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_015830205.1.fna.gz
+[K.../var/tmp/s/g/GCF_015830205.1.fna.gz 65 sequences[Kcalculated 1 signatures for 66 sequences in /var/tmp/s/g/GCF_015830205.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_025150595.1.fna.gz
+[K.../var/tmp/s/g/GCF_025150595.1.fna.gz 87 sequences[Kcalculated 1 signatures for 88 sequences in /var/tmp/s/g/GCF_025150595.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_905365335.1.fna.gz
+[K.../var/tmp/s/g/GCA_905365335.1.fna.gz 282 sequences[Kcalculated 1 signatures for 283 sequences in /var/tmp/s/g/GCA_905365335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_052263715.1.fna.gz
+[K.../var/tmp/s/g/GCA_052263715.1.fna.gz 51 sequences[Kcalculated 1 signatures for 52 sequences in /var/tmp/s/g/GCA_052263715.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_016127615.1.fna.gz
+[K.../var/tmp/s/g/GCF_016127615.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_016127615.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_028527805.1.fna.gz
+[K.../var/tmp/s/g/GCF_028527805.1.fna.gz 17 sequences[Kcalculated 1 signatures for 18 sequences in /var/tmp/s/g/GCF_028527805.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_903986455.1.fna.gz
+[K.../var/tmp/s/g/GCF_903986455.1.fna.gz 52 sequences[Kcalculated 1 signatures for 53 sequences in /var/tmp/s/g/GCF_903986455.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030233875.1.fna.gz
+[K.../var/tmp/s/g/GCF_030233875.1.fna.gz 38 sequences[Kcalculated 1 signatures for 39 sequences in /var/tmp/s/g/GCF_030233875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_903986075.1.fna.gz
+[K.../var/tmp/s/g/GCF_903986075.1.fna.gz 41 sequences[Kcalculated 1 signatures for 42 sequences in /var/tmp/s/g/GCF_903986075.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_024968345.1.fna.gz
+[K.../var/tmp/s/g/GCA_024968345.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCA_024968345.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002201065.1.fna.gz
+[K.../var/tmp/s/g/GCF_002201065.1.fna.gz 40 sequences[Kcalculated 1 signatures for 41 sequences in /var/tmp/s/g/GCF_002201065.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030232585.1.fna.gz
+[K.../var/tmp/s/g/GCF_030232585.1.fna.gz 49 sequences[Kcalculated 1 signatures for 50 sequences in /var/tmp/s/g/GCF_030232585.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000380545.1.fna.gz
+[K.../var/tmp/s/g/GCF_000380545.1.fna.gz 47 sequences[Kcalculated 1 signatures for 48 sequences in /var/tmp/s/g/GCF_000380545.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_030535535.1.fna.gz
+[K.../var/tmp/s/g/GCA_030535535.1.fna.gz 124 sequences[Kcalculated 1 signatures for 125 sequences in /var/tmp/s/g/GCA_030535535.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_016889365.1.fna.gz
+[K.../var/tmp/s/g/GCF_016889365.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_016889365.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_040225615.1.fna.gz
+[K.../var/tmp/s/g/GCF_040225615.1.fna.gz 37 sequences[Kcalculated 1 signatures for 38 sequences in /var/tmp/s/g/GCF_040225615.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002202905.1.fna.gz
+[K.../var/tmp/s/g/GCF_002202905.1.fna.gz 32 sequences[Kcalculated 1 signatures for 33 sequences in /var/tmp/s/g/GCF_002202905.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030408675.1.fna.gz
+[K.../var/tmp/s/g/GCF_030408675.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_030408675.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_009791415.1.fna.gz
+[K.../var/tmp/s/g/GCF_009791415.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_009791415.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_048822995.1.fna.gz
+[K.../var/tmp/s/g/GCF_048822995.1.fna.gz 109 sequences[Kcalculated 1 signatures for 110 sequences in /var/tmp/s/g/GCF_048822995.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000805675.1.fna.gz
+[K.../var/tmp/s/g/GCF_000805675.1.fna.gz 37 sequences[Kcalculated 1 signatures for 38 sequences in /var/tmp/s/g/GCF_000805675.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_963535515.1.fna.gz
+[K.../var/tmp/s/g/GCF_963535515.1.fna.gz 13 sequences[Kcalculated 1 signatures for 14 sequences in /var/tmp/s/g/GCF_963535515.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001875725.1.fna.gz
+[K.../var/tmp/s/g/GCF_001875725.1.fna.gz 30 sequences[Kcalculated 1 signatures for 31 sequences in /var/tmp/s/g/GCF_001875725.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_042645085.1.fna.gz
+[K.../var/tmp/s/g/GCA_042645085.1.fna.gz 244 sequences[Kcalculated 1 signatures for 245 sequences in /var/tmp/s/g/GCA_042645085.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_024587035.1.fna.gz
+[K.../var/tmp/s/g/GCF_024587035.1.fna.gz 50 sequences[Kcalculated 1 signatures for 51 sequences in /var/tmp/s/g/GCF_024587035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_048823955.1.fna.gz
+[K.../var/tmp/s/g/GCF_048823955.1.fna.gz 108 sequences[Kcalculated 1 signatures for 109 sequences in /var/tmp/s/g/GCF_048823955.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_965240915.1.fna.gz
+[K.../var/tmp/s/g/GCA_965240915.1.fna.gz 554 sequences[Kcalculated 1 signatures for 555 sequences in /var/tmp/s/g/GCA_965240915.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_900478035.1.fna.gz
+[K.../var/tmp/s/g/GCF_900478035.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_900478035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_036959605.1.fna.gz
+[K.../var/tmp/s/g/GCF_036959605.1.fna.gz 6 sequences[Kcalculated 1 signatures for 7 sequences in /var/tmp/s/g/GCF_036959605.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_008042455.1.fna.gz
+[K.../var/tmp/s/g/GCF_008042455.1.fna.gz 32 sequences[Kcalculated 1 signatures for 33 sequences in /var/tmp/s/g/GCF_008042455.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_002316455.1.fna.gz
+[K.../var/tmp/s/g/GCA_002316455.1.fna.gz 63 sequences[Kcalculated 1 signatures for 64 sequences in /var/tmp/s/g/GCA_002316455.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030176715.1.fna.gz
+[K.../var/tmp/s/g/GCF_030176715.1.fna.gz 29 sequences[Kcalculated 1 signatures for 30 sequences in /var/tmp/s/g/GCF_030176715.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001975925.1.fna.gz
+[K.../var/tmp/s/g/GCF_001975925.1.fna.gz 180 sequences[Kcalculated 1 signatures for 181 sequences in /var/tmp/s/g/GCF_001975925.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_052106085.1.fna.gz
+[K.../var/tmp/s/g/GCF_052106085.1.fna.gz 81 sequences[Kcalculated 1 signatures for 82 sequences in /var/tmp/s/g/GCF_052106085.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001806875.1.fna.gz
+[K.../var/tmp/s/g/GCF_001806875.1.fna.gz 87 sequences[Kcalculated 1 signatures for 88 sequences in /var/tmp/s/g/GCF_001806875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_949152235.1.fna.gz
+[K.../var/tmp/s/g/GCF_949152235.1.fna.gz 32 sequences[Kcalculated 1 signatures for 33 sequences in /var/tmp/s/g/GCF_949152235.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_015830525.1.fna.gz
+[K.../var/tmp/s/g/GCF_015830525.1.fna.gz 232 sequences[Kcalculated 1 signatures for 233 sequences in /var/tmp/s/g/GCF_015830525.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_008726455.1.fna.gz
+[K.../var/tmp/s/g/GCF_008726455.1.fna.gz 64 sequences[Kcalculated 1 signatures for 65 sequences in /var/tmp/s/g/GCF_008726455.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002115215.1.fna.gz
+[K.../var/tmp/s/g/GCF_002115215.1.fna.gz 31 sequences[Kcalculated 1 signatures for 32 sequences in /var/tmp/s/g/GCF_002115215.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_009708045.1.fna.gz
+[K.../var/tmp/s/g/GCF_009708045.1.fna.gz 47 sequences[Kcalculated 1 signatures for 48 sequences in /var/tmp/s/g/GCF_009708045.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_041197815.1.fna.gz
+[K.../var/tmp/s/g/GCF_041197815.1.fna.gz 18 sequences[Kcalculated 1 signatures for 19 sequences in /var/tmp/s/g/GCF_041197815.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001889835.1.fna.gz
+[K.../var/tmp/s/g/GCF_001889835.1.fna.gz 39 sequences[Kcalculated 1 signatures for 40 sequences in /var/tmp/s/g/GCF_001889835.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_052261315.1.fna.gz
+[K.../var/tmp/s/g/GCA_052261315.1.fna.gz 86 sequences[Kcalculated 1 signatures for 87 sequences in /var/tmp/s/g/GCA_052261315.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_943912665.1.fna.gz
+[K.../var/tmp/s/g/GCF_943912665.1.fna.gz 124 sequences[Kcalculated 1 signatures for 125 sequences in /var/tmp/s/g/GCF_943912665.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002203595.1.fna.gz
+[K.../var/tmp/s/g/GCF_002203595.1.fna.gz 43 sequences[Kcalculated 1 signatures for 44 sequences in /var/tmp/s/g/GCF_002203595.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_019048165.1.fna.gz
+[K.../var/tmp/s/g/GCF_019048165.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_019048165.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_020097615.1.fna.gz
+[K.../var/tmp/s/g/GCF_020097615.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_020097615.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_051156035.1.fna.gz
+[K.../var/tmp/s/g/GCF_051156035.1.fna.gz 57 sequences[Kcalculated 1 signatures for 58 sequences in /var/tmp/s/g/GCF_051156035.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_003721315.1.fna.gz
+[K.../var/tmp/s/g/GCA_003721315.1.fna.gz 41 sequences[Kcalculated 1 signatures for 42 sequences in /var/tmp/s/g/GCA_003721315.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030228895.1.fna.gz
+[K.../var/tmp/s/g/GCF_030228895.1.fna.gz 43 sequences[Kcalculated 1 signatures for 44 sequences in /var/tmp/s/g/GCF_030228895.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_945649885.1.fna.gz
+[K.../var/tmp/s/g/GCF_945649885.1.fna.gz 206 sequences[Kcalculated 1 signatures for 207 sequences in /var/tmp/s/g/GCF_945649885.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000248375.2.fna.gz
+[K.../var/tmp/s/g/GCF_000248375.2.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_000248375.2.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_036959945.1.fna.gz
+[K.../var/tmp/s/g/GCF_036959945.1.fna.gz 6 sequences[Kcalculated 1 signatures for 7 sequences in /var/tmp/s/g/GCF_036959945.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_021560295.1.fna.gz
+[K.../var/tmp/s/g/GCF_021560295.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_021560295.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000738175.1.fna.gz
+[K.../var/tmp/s/g/GCF_000738175.1.fna.gz 62 sequences[Kcalculated 1 signatures for 63 sequences in /var/tmp/s/g/GCF_000738175.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_022347385.1.fna.gz
+[K.../var/tmp/s/g/GCF_022347385.1.fna.gz 58 sequences[Kcalculated 1 signatures for 59 sequences in /var/tmp/s/g/GCF_022347385.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_043090265.1.fna.gz
+[K.../var/tmp/s/g/GCF_043090265.1.fna.gz 29 sequences[Kcalculated 1 signatures for 30 sequences in /var/tmp/s/g/GCF_043090265.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_021713535.1.fna.gz
+[K.../var/tmp/s/g/GCF_021713535.1.fna.gz 35 sequences[Kcalculated 1 signatures for 36 sequences in /var/tmp/s/g/GCF_021713535.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_903986295.1.fna.gz
+[K.../var/tmp/s/g/GCF_903986295.1.fna.gz 47 sequences[Kcalculated 1 signatures for 48 sequences in /var/tmp/s/g/GCF_903986295.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_003202335.1.fna.gz
+[K.../var/tmp/s/g/GCF_003202335.1.fna.gz 72 sequences[Kcalculated 1 signatures for 73 sequences in /var/tmp/s/g/GCF_003202335.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_016628845.1.fna.gz
+[K.../var/tmp/s/g/GCF_016628845.1.fna.gz 41 sequences[Kcalculated 1 signatures for 42 sequences in /var/tmp/s/g/GCF_016628845.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_048823635.1.fna.gz
+[K.../var/tmp/s/g/GCF_048823635.1.fna.gz 105 sequences[Kcalculated 1 signatures for 106 sequences in /var/tmp/s/g/GCF_048823635.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001876145.1.fna.gz
+[K.../var/tmp/s/g/GCF_001876145.1.fna.gz 85 sequences[Kcalculated 1 signatures for 86 sequences in /var/tmp/s/g/GCF_001876145.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_002994655.1.fna.gz
+[K.../var/tmp/s/g/GCF_002994655.1.fna.gz 68 sequences[Kcalculated 1 signatures for 69 sequences in /var/tmp/s/g/GCF_002994655.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030227185.1.fna.gz
+[K.../var/tmp/s/g/GCF_030227185.1.fna.gz 51 sequences[Kcalculated 1 signatures for 52 sequences in /var/tmp/s/g/GCF_030227185.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_947255095.1.fna.gz
+[K.../var/tmp/s/g/GCF_947255095.1.fna.gz 39 sequences[Kcalculated 1 signatures for 40 sequences in /var/tmp/s/g/GCF_947255095.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001833025.1.fna.gz
+[K.../var/tmp/s/g/GCF_001833025.1.fna.gz 33 sequences[Kcalculated 1 signatures for 34 sequences in /var/tmp/s/g/GCF_001833025.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_037645925.1.fna.gz
+[K.../var/tmp/s/g/GCF_037645925.1.fna.gz 37 sequences[Kcalculated 1 signatures for 38 sequences in /var/tmp/s/g/GCF_037645925.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_001812455.1.fna.gz
+[K.../var/tmp/s/g/GCF_001812455.1.fna.gz 81 sequences[Kcalculated 1 signatures for 82 sequences in /var/tmp/s/g/GCF_001812455.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_014837045.1.fna.gz
+[K.../var/tmp/s/g/GCF_014837045.1.fna.gz 32 sequences[Kcalculated 1 signatures for 33 sequences in /var/tmp/s/g/GCF_014837045.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_013868015.1.fna.gz
+[K.../var/tmp/s/g/GCF_013868015.1.fna.gz 38 sequences[Kcalculated 1 signatures for 39 sequences in /var/tmp/s/g/GCF_013868015.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_029674605.1.fna.gz
+[K.../var/tmp/s/g/GCF_029674605.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_029674605.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_020743395.1.fna.gz
+[K.../var/tmp/s/g/GCF_020743395.1.fna.gz 233 sequences[Kcalculated 1 signatures for 234 sequences in /var/tmp/s/g/GCF_020743395.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_022346205.1.fna.gz
+[K.../var/tmp/s/g/GCF_022346205.1.fna.gz 50 sequences[Kcalculated 1 signatures for 51 sequences in /var/tmp/s/g/GCF_022346205.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_001764565.1.fna.gz
+[K.../var/tmp/s/g/GCA_001764565.1.fna.gz 953 sequences[Kcalculated 1 signatures for 954 sequences in /var/tmp/s/g/GCA_001764565.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_022345825.1.fna.gz
+[K.../var/tmp/s/g/GCF_022345825.1.fna.gz 32 sequences[Kcalculated 1 signatures for 33 sequences in /var/tmp/s/g/GCF_022345825.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_023155155.1.fna.gz
+[K.../var/tmp/s/g/GCF_023155155.1.fna.gz 4 sequences[Kcalculated 1 signatures for 5 sequences in /var/tmp/s/g/GCF_023155155.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCA_945916015.1.fna.gz
+[K.../var/tmp/s/g/GCA_945916015.1.fna.gz 368 sequences[Kcalculated 1 signatures for 369 sequences in /var/tmp/s/g/GCA_945916015.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_000158635.1.fna.gz
+[K.../var/tmp/s/g/GCF_000158635.1.fna.gz 9 sequences[Kcalculated 1 signatures for 10 sequences in /var/tmp/s/g/GCF_000158635.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_050848985.1.fna.gz
+[K.../var/tmp/s/g/GCF_050848985.1.fna.gz 70 sequences[Kcalculated 1 signatures for 71 sequences in /var/tmp/s/g/GCF_050848985.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_023651875.1.fna.gz
+[K.../var/tmp/s/g/GCF_023651875.1.fna.gz 21 sequences[Kcalculated 1 signatures for 22 sequences in /var/tmp/s/g/GCF_023651875.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_015830835.1.fna.gz
+[K.../var/tmp/s/g/GCF_015830835.1.fna.gz 71 sequences[Kcalculated 1 signatures for 72 sequences in /var/tmp/s/g/GCF_015830835.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030176075.1.fna.gz
+[K.../var/tmp/s/g/GCF_030176075.1.fna.gz 34 sequences[Kcalculated 1 signatures for 35 sequences in /var/tmp/s/g/GCF_030176075.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_024968405.1.fna.gz
+[K.../var/tmp/s/g/GCF_024968405.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_024968405.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_030515655.1.fna.gz
+[K.../var/tmp/s/g/GCF_030515655.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_030515655.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_963510835.1.fna.gz
+[K.../var/tmp/s/g/GCF_963510835.1.fna.gz 89 sequences[Kcalculated 1 signatures for 90 sequences in /var/tmp/s/g/GCF_963510835.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_048284795.1.fna.gz
+[K.../var/tmp/s/g/GCF_048284795.1.fna.gz 23 sequences[Kcalculated 1 signatures for 24 sequences in /var/tmp/s/g/GCF_048284795.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_052092525.1.fna.gz
+[K.../var/tmp/s/g/GCF_052092525.1.fna.gz 100 sequences[Kcalculated 1 signatures for 101 sequences in /var/tmp/s/g/GCF_052092525.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_023652535.1.fna.gz
+[K.../var/tmp/s/g/GCF_023652535.1.fna.gz 30 sequences[Kcalculated 1 signatures for 31 sequences in /var/tmp/s/g/GCF_023652535.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_003932275.1.fna.gz
+[K.../var/tmp/s/g/GCF_003932275.1.fna.gz 48 sequences[Kcalculated 1 signatures for 49 sequences in /var/tmp/s/g/GCF_003932275.1.fna.gz
+[K... reading sequences from /var/tmp/s/g/GCF_901482565.1.fna.gz
+[K.../var/tmp/s/g/GCF_901482565.1.fna.gz 0 sequences[Kcalculated 1 signatures for 1 sequences in /var/tmp/s/g/GCF_901482565.1.fna.gz
+[Ksaved 198 signature(s) to '/var/tmp/s/sig/chunk05.zip'. Note: signature license is CC0.

@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-mash-real-prep",
+  "container": "quay.io/aarchbio/sra-tools@sha256:7145cf2f6f2e9265b7ace204d86b6ed1cbbd0b8b3ef31cbadf32bfa271229afd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\ngrep -E ' (prep\\.sh|fetch1\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 2 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash prep.sh g__Corynebacterium || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/fetch1.sh",
+      "destination": "/tmp/fetch1.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/prep/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

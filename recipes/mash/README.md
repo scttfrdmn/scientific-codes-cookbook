@@ -13,9 +13,6 @@ last_verified: 2026-10-01
 
 Sketches 20 complete RefSeq genomes and recovers all ten species from the distances alone. For anyone using MinHash to compare genomes at scale.
 
-> **The compute here is sub-second; 99% of what you pay for is boot.** That is mash working as
-> designed, and it is why this recipe has no instance-generation table — see below.
-
 ## Run it
 
 ```bash
@@ -26,6 +23,16 @@ make ls    RECIPE=mash   # dist.tsv + smoke-check.txt
 mash sketch -p 8 -k 21 -s 10000 -o all GCF_*.fna.gz
 mash dist   -p 8 all.msh all.msh > dist.tsv      # 400 ordered pairs
 ```
+
+## Which box — [measured](../../measurements/mash-real/README.md) (all 3,158 GTDB R232 *Corynebacterium* genomes, 16 threads)
+
+| chip | instance | sketch + all-vs-all | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | **68.8 s** | 0.6381 | **0.0122** | **0.0340** |
+| Intel | `c8i.4xlarge` | 99.9 s | 0.7497 | 0.0208 | 0.0591 |
+| AMD | `c8a.4xlarge` | 69.9 s | 0.8622 | 0.0167 | 0.0505 |
+
+**Graviton4 is cheapest; Intel's 8 SMT cores are 1.45× slower.** 9,972,964 distances, byte-identical on all three chips. mash's nearest representative matches GTDB's species call for 2,832 of 2,837 genomes, and sourmash on the same bytes agrees with mash on 2,834.
 
 ## Make it yours
 
@@ -41,13 +48,8 @@ is what makes the check below sharp; it is not what makes mash interesting at yo
 
 ## Shape, size, cost
 
-`c8g.2xlarge`: **sub-second of mash inside a 106 s billed window, $0.0094.**
-
-**This recipe deliberately has no generation table.** Every other converted recipe here carries a
-Graviton2→5 ladder, but mash's work is under a second, so a four-chip comparison would measure boot
-and nothing else — a table of four near-identical numbers that says nothing about the chip. The
-honest statement is the one above: for sketching at this scale the instance generation is irrelevant,
-and the lever is batching more genomes into one boot rather than buying a faster core.
+`c8g.2xlarge`: **sub-second of mash inside a 106 s billed window, $0.0094.** On the fixture the bill
+is boot; the lever is batching more genomes into one boot, not a faster core.
 
 <details>
 <summary>As shipped: 20 independent tests against NCBI's own labels, clean separation, pins</summary>

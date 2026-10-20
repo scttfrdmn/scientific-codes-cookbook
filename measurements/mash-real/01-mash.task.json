@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-mash-real",
+  "container": "quay.io/aarchbio/mash@sha256:abad0c5f4d3365661ffc5533bc6eb5f1bd07d773ea61b1abd1bfc00c1df813fe",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\ngrep -E ' (run\\.sh|genomes\\.tar|genomes\\.tsv|species\\.tsv)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 4 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh 16 || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/prep/genomes.tar",
+      "destination": "/tmp/genomes.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/prep/genomes.tsv",
+      "destination": "/tmp/genomes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mash-real/prep/species.tsv",
+      "destination": "/tmp/species.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mash-real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
