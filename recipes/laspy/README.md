@@ -25,6 +25,15 @@ las.x == las.X * las.header.scales[0] + las.header.offsets[0]    # exact, by spe
 np.asarray(las.z).mean()                            # 434.1025 — PDAL's published value
 ```
 
+## Which box — [measured](../../measurements/laspy-real/README.md) (a whole 3DEP delivery: 128 source LAZ tiles, 4.64 G points, streamed, split and rewritten)
+| chip | instance | laspy wall | peak RSS / worker | $/hr | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 467 s | 418 MiB | 0.7181 | **0.160** |
+| Intel | `m8i.4xlarge` | 651 s | 436 MiB | 0.8467 | 0.243 |
+| AMD | `m8a.4xlarge` | **389 s** | 437 MiB | 0.9738 | 0.179 |
+
+Every record, header, VLR and EVLR round-trips, PDAL reads all 256 files laspy wrote to the same counts, and the written LAZ is byte-identical on all three chips; Graviton4 is cheapest, AMD fastest. **Streaming, call `writer.write_evlrs(header.evlrs)` before `close()`**: the streaming writer drops EVLRs, which is where a 3DEP LAS 1.4 tile keeps its CRS, and laspy also rewrites the Classification Lookup VLR ([both measured](../../measurements/laspy-real/README.md#what-laspys-defaults-lose)).
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -166,5 +175,10 @@ this reads all 10.6M points at once into 16 GiB. **Writing at scale** — the wr
 synthetic points. **LAS 1.4 and point formats 6–10**, including the 64-bit point counts that
 matter for modern surveys. **Spatial indexing** (`.lax`) and the COPC format, both of which
 `pointcloud` also leaves alone.
+
+All of these but the last are covered at scale by
+[laspy-real](../../measurements/laspy-real/README.md): every field of point format 6, the VLRs, EVLRs
+and CRS, chunked reading and writing, and LAS 1.4's 64-bit counts, over 4.64 G points of USGS 3DEP
+source tiles. Spatial indexing and COPC remain uncovered.
 
 </details>

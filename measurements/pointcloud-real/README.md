@@ -94,8 +94,9 @@ The mean-Z bound is set before the run, not fitted to it. Summing n doubles naiv
 (n−1)·2⁻⁵³·Σ|z|, so each tile's mean errs by at most (n−1)·2⁻⁵³·max|z|; the bound is that,
 weighted by n over the tiles. The observed difference is 1/1000 of it.
 
-**The data's own oddities, reported:** 57,303 points have `ReturnNumber` 0, which LAS forbids. Both
-decoders agree on them, and the LAS header has no slot for them, so points-by-return is compared on
+**The data's own oddities, reported:** 57,303 points have `ReturnNumber` 0, which LAS forbids. The cause is in the EPT, not the decoders:
+its nodes are LAS 1.2 point format 1, whose return number is 3 bits, so the delivered tiles' returns 8, 9
+and 10 wrap to 0, 1 and 2 ([laspy-real](../laspy-real/README.md) read the source LAZ). Both decoders agree on them, and the LAS header has no slot for them, so points-by-return is compared on
 returns 1–15. The classes are 1 (2.80 G), 2 ground (1.84 G), 9 water, 7 and 18 noise, and 20.
 
 ## Across chips: fixed point or path

@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-laspy-real",
+  "container": "quay.io/aarchsci/pointcloud@sha256:7817e0291f05f6bc209aa5999363503897647daf4eb9d6df153b1965629d6ffc",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH\ncd /tmp\ncat pins.sha256 | sha256sum -c || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nexport LR_PROBE_TILES=0\nbash /tmp/real.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 100
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/laz/",
+      "destination": "/tmp/laz/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/src.tsv",
+      "destination": "/tmp/src.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/manifest.json",
+      "destination": "/tmp/manifest.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/CA_LassenNP_2020.vpc",
+      "destination": "/tmp/CA_LassenNP_2020.vpc"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/laspy-real/pins.tsv",
+      "destination": "/tmp/pins.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/laspy-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

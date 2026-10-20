@@ -1,0 +1,68 @@
+ok   lazrs backend available                                    unknown
+ok   staged tiles == the RODA listing                           128 staged, 128 listed
+ok   every tile's size == RODA's                                128 tiles, 0 mismatches
+ok   single-part tiles: MD5 == RODA ETag                        62 tiles, 0 mismatches
+ok   multipart tiles: part-MD5 ETag == RODA's                   66 tiles, 66 verified, part sizes [5] MiB
+ok   every tile's sha256 == pins.tsv                            128 tiles, 0 mismatches
+ok   manifest.json matches its sha256 pin                       7e8228139e5234d6
+ok   CA_LassenNP_2020.vpc matches its sha256 pin                25ef26882938f4fd
+ok   EPT manifest: 128 sources, all inserted, all from this RODA prefix 128
+  laspy 16 / 128 tiles, 106 s
+  laspy 32 / 128 tiles, 172 s
+  laspy 48 / 128 tiles, 231 s
+  laspy 64 / 128 tiles, 283 s
+  laspy 80 / 128 tiles, 331 s
+  laspy 96 / 128 tiles, 370 s
+  laspy 112 / 128 tiles, 384 s
+  laspy 128 / 128 tiles, 389 s
+ok   source: LAS 1.4, point format 6                            128 tiles; 0 mismatches []
+ok   source: header point count == decoded (64-bit field)       128 tiles; 0 mismatches []
+ok   source: header bounds == decoded extents, within half a quantum 128 tiles; 0 mismatches []
+ok   source: header points-by-return (15) == decoded            128 tiles; 0 mismatches []
+ok   source: carries an EVLR (the WKT CRS)                      128 tiles; 0 mismatches []
+ok   VPC: pc:count and proj:bbox == decoded                     128 tiles; 0 mismatches []
+ok   EPT sources manifest: points == decoded                    128 tiles; 0 mismatches []
+ok   EPT sources manifest: Z bounds == decoded                  128 tiles; 0 mismatches []
+ok   chunk invariance: record bytes identical at 2000000 and 1234567 128 tiles; 0 mismatches []
+ok   split: ground + rest == source points; ground == class 2   128 tiles; 0 mismatches []
+ok   split: every raw field summed over ground + rest == source 128 tiles; 0 mismatches []
+ok   split: class histograms partition the source's             128 tiles; 0 mismatches []
+ok   written LAZ decodes to the exact records written (sha256)  256 files; 0 mismatches []
+ok   written header: point count == decoded                     256 files; 0 mismatches []
+ok   written header: bounds == decoded extents, exactly         256 files; 0 mismatches []
+ok   written header: points-by-return == decoded                256 files; 0 mismatches []
+ok   written header: version, PDRF, scale, offset, encoding, system id kept 256 files; 0 mismatches []
+ok   written VLRs == source VLRs, bytes (laszip VLR aside)      256 files; 0 mismatches []
+ok   written EVLRs == source EVLRs, bytes                       256 files; 0 mismatches []
+ok   written CRS (parse_crs) == source CRS                      256 files; 0 mismatches []
+ok   PDAL read every laspy-written file                         256 files; 0 failed []
+ok   PDAL count == laspy count, every dimension                 0 mismatches []
+ok   PDAL min/max X Y Z == laspy                                0 mismatches []
+ok   PDAL class histogram == laspy                              0 mismatches []
+ok   PDAL return-number histogram == laspy                      0 mismatches []
+ok   PDAL mean Z == laspy's exact mean, within summation error  0 mismatches; worst |d| / bound = 9.04e-01 (USGS_LPC_CA_LassenNP_LowerBearCreekHUC10_2020_D20_10TFK627491.rest: PDAL 1748.003396, exact 1748.00339551416, |d| 4.86e-07, accumulation 3.76e-08 + print 5.00e-07)
+ok   every tile: Z scale 0.01, offset 0 (raw Z is absolute cm)  offset 0.0
+ok   project points == the EPT's (pointcloud-real)              4642900288 vs 4642900288
+ok   project class histogram == the EPT's                       {"1": 2795004557, "2": 1835934506, "7": 846371, "9": 10614581, "18": 23116, "20": 477157}
+ok   no return number 0 in the delivered tiles                  returns [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+note project return histogram == the EPT's, raw                 {"1": 3265932729, "2": 860087662, "3": 366196152, "4": 118139481, "5": 27305272, "6": 4596795, "7": 580341, "8": 57303, "9": 4536, "10": 17}
+ok   project return histogram mod 8 == the EPT's (PDRF 1 holds 3 bits) {"1": 3265937265, "2": 860087679, "3": 366196152, "4": 118139481, "5": 27305272, "6": 4596795, "7": 580341, "0": 57303}
+ok   project sum of Z (cm, exact) == the EPT's                  953651753831395 vs 953651753831395
+ok   project Z range == the EPT's                               110777..271099 cm
+ok   project points == sum of VPC pc:count                      4642900288
+ok   control: without write_evlrs() the EVLRs and the CRS are lost source CRS present, written EVLRs 0, parse_crs None, WKT bit still set True
+ok   control: default round trip rewrites the class lookup exactly as predicted 5 of 256 descriptions altered: 12:LEX_PotenialGND->LEXPotenialGND, 13:LEX_TempClass1->LEXTempClass1, 14:LEX_TempClass2->LEXTempClass2, 15:LEX_PotentialVE->LEXPotentialVE, 16:LEX_PotenialBLD->LEXPotenialBLD
+ok   control: every other VLR survives the default round trip   2 VLRs
+time wall_s_hash 2.8
+time wall_s_laspy 389.1
+time avg_cores_laspy 15.85
+time peak_rss_mib_laspy_worker 437
+time sum_s_split 2905.3
+time sum_s_reread_out 1661.0
+time sum_s_reread_src 1605.9
+time wall_s_pdal 131.0
+time avg_cores_pdal 15.98
+time peak_rss_mib_pdal 121
+time source_bytes 26173428355
+time wall_s_total 524.5
+LASPY REAL OK
