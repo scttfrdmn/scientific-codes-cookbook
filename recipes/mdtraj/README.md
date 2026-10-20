@@ -38,6 +38,10 @@ u = mda.Universe("big.gro", "out.xtc")          # the SAME bytes, a second parse
 **Leave the system** — a real solvated box at 23k atoms, so the parse and the analysis are both at
 realistic size. **Scale it** by frames or atoms; both cost linearly.
 
+## Which box — [measured](../../measurements/mdtraj-real/README.md) on the whole Folding@home FAST run of SARS-CoV-2 Mpro
+
+**120,060 frames (2.4 µs, 4,682 atoms) through RMSD, Rg, φ/ψ, DSSP, SASA and all CA–CA distances, 30 processes on an `8xlarge`: AMD `c8a` $0.40 billed (784 s), Graviton4 `c8g` $0.42 (1,072 s), Intel `c8i` $0.76 (1,759 s).** Shrake-Rupley SASA is 93–95% of the compute (0.18–0.25 core-s per frame); the rest is about a minute. MDAnalysis decodes the same bytes to 3.8e-7 nm and every check holds on all three chips. Decoded coordinates are bit-identical across chips; the float32 analyses differ in the last bits, which flips 3 of 36.7M DSSP residue-frames.
+
 ## Shape, size, cost
 
 `c8g.2xlarge`: minimisation + **100 ps of NVT in 151 s**, ~$0.02, producing a 41 MB XTC.

@@ -1,0 +1,33 @@
+graviton4 Neoverse-V2                  tpc 1  tool  1072 s  window  1172 s  $/hr 1.2762  compute $ 0.3800  billed $ 0.4155  cgroup 35.39 GiB  worker rss 1.26 GiB  112 frames/s  openblas neoversev2 (libopenblas.so.0)  completed 0
+intel     Intel(R) Xeon(R) 6975P-C     tpc 2  tool  1759 s  window  1817 s  $/hr 1.4994  compute $ 0.7326  billed $ 0.7568  cgroup 35.68 GiB  worker rss 1.28 GiB  68 frames/s  openblas none in /var/tmp/env/lib  completed 0
+amd       AMD EPYC 9R45                tpc 1  tool   784 s  window   832 s  $/hr 1.7243  compute $ 0.3755  billed $ 0.3985  cgroup 38.84 GiB  worker rss 1.27 GiB  153 frames/s  openblas none in /var/tmp/env/lib  completed 0
+intel vs graviton4: xyz       identical on 60 of 60 files
+intel vs graviton4: box       identical on 60 of 60 files
+intel vs graviton4: rmsd      identical on 0 of 60 files; max |diff| 7.38e-06 nm
+intel vs graviton4: rg        identical on 60 of 60 files
+intel vs graviton4: phi       identical on 0 of 60 files
+intel vs graviton4: psi       identical on 0 of 60 files
+intel vs graviton4: dist      identical on 41 of 60 files
+intel vs graviton4: dssp      identical on 58 of 60 files; 3 of 36738360 residue-frames differ
+intel vs graviton4: sasa      identical on 0 of 60 files; total SASA max |diff| 2.50e-03 nm^2
+intel vs graviton4: JAC DCD decode identical; worst constraint deviation MDTraj identical, MDAnalysis identical
+amd vs graviton4: xyz       identical on 60 of 60 files
+amd vs graviton4: box       identical on 60 of 60 files
+amd vs graviton4: rmsd      identical on 0 of 60 files; max |diff| 7.38e-06 nm
+amd vs graviton4: rg        identical on 60 of 60 files
+amd vs graviton4: phi       identical on 0 of 60 files
+amd vs graviton4: psi       identical on 0 of 60 files
+amd vs graviton4: dist      identical on 41 of 60 files
+amd vs graviton4: dssp      identical on 58 of 60 files; 3 of 36738360 residue-frames differ
+amd vs graviton4: sasa      identical on 0 of 60 files; total SASA max |diff| 2.50e-03 nm^2
+amd vs graviton4: JAC DCD decode identical; worst constraint deviation MDTraj identical, MDAnalysis identical
+amd vs intel: xyz       identical on 60 of 60 files
+amd vs intel: box       identical on 60 of 60 files
+amd vs intel: rmsd      identical on 60 of 60 files
+amd vs intel: rg        identical on 60 of 60 files
+amd vs intel: phi       identical on 60 of 60 files
+amd vs intel: psi       identical on 60 of 60 files
+amd vs intel: dist      identical on 60 of 60 files
+amd vs intel: dssp      identical on 60 of 60 files
+amd vs intel: sasa      identical on 60 of 60 files
+amd vs intel: JAC DCD decode identical; worst constraint deviation MDTraj identical, MDAnalysis identical

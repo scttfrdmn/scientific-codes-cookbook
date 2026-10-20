@@ -1,0 +1,39 @@
+versions                           obs   mdtraj 1.11.2, MDAnalysis 2.10.0, numpy 2.5.4, 30 workers
+files                              ok    60 distinct XTCs, 2.140 GB  want 60
+atoms                              ok    [4682] in every XTC, the topology and MDAnalysis
+frames_two_libraries               ok    120,060 frames in total, identical per file in MDTraj, MDAnalysis and the round trip
+frames_per_file                    obs   2001..2001
+time_step_ps                       obs   20..20; time 0..40000 ps
+dt_constant                        ok    every file's frame times strictly increase by one step (spread < 1e-3 ps)
+on_the_xtc_grid                    ok    max |1000x - round(1000x)| = 1.01e-03 quanta  want < 0.01 (precision 1000, decoded exactly)
+coords_two_libraries               ok    max|MDTraj - MDAnalysis| = 3.81e-07 nm over 1,686,362,760 values  want < 1e-05
+box_two_libraries                  ok    max|diff| = 1.34e-06 nm, angles 1.14e-05 deg (box angles 60.00 60.00 90.00)
+time_two_libraries                 ok    max|diff| = 0.00e+00 ps
+xtc_round_trip_mdtraj              ok    MDTraj writes every file back to XTC and reads it: max|diff| = 0.00e+00 nm  want exactly 0
+xtc_round_trip_mdanalysis          ok    MDAnalysis reads MDTraj's XTC: max|diff| vs the original = 0.00e+00 A  want exactly 0
+xtc_rewrite_bytes                  obs   same size as the original 60 of 60, byte-identical 0 of 60
+ca_selection_same                  ok    [306] CA atoms, the same indices in both libraries
+rmsd_mdtraj_vs_mdanalysis          ok    max|rmsd^2 diff| = 2.96e-06 nm^2 over 120,060 frames  want < 1e-05 (float32 QCP vs float64 QCP)
+rmsd_mdanalysis_vs_svd             ok    max|rmsd^2 diff| = 2.09e-14 nm^2  want < 1e-09 (QCP vs an independent float64 Kabsch SVD)
+rmsd_rigid_motion_invariant        ok    random rotation+translation of every frame: max|rmsd^2 diff| = 3.99e-06 nm^2  want < 1e-05
+rg_mdtraj_vs_mdanalysis_coords     ok    unweighted Rg, max rel diff 5.54e-09  want < 1e-05 (no mass table on either side)
+rg_rigid_motion_invariant          ok    max rel diff 1.45e-08
+dihedral_definitions_same          ok    phi [305] / psi [305] quadruplets: MDTraj's == MDAnalysis's own phi_selection/psi_selection
+dihedrals_mdtraj_vs_mdanalysis     ok    max wrapped |diff| = 2.38e-05 rad  want < 0.001
+periodic_distances_two_libraries   ok    46,665 CA-CA pairs/frame, minimum image: max|diff| = 5.97e-06 nm  want < 1e-05
+sasa_atom_sums_to_residue          ok    Shrake-Rupley per-atom summed == per-residue, max rel 2.14e-07
+rmsd_ca_nm                         obs   mean 0.2530, max 0.4913
+rg_nm                              obs   mean 2.2179
+dssp                               obs   H 0.2547  E 0.2683 (MDTraj, simplified)
+dssp_mda_residues                  obs   [305]
+dssp_agree_mdanalysis              obs   0.9677 of residue-frames (60 files; a different DSSP implementation, reported)
+sasa_total_nm2                     obs   mean 149.3
+worker_maxrss_gib                  obs   1.26
+cpu_seconds_by_step                obs   total 31808, mdtraj_sasa 30293, mda_dssp 823, distances 485, roundtrip 79, dihedrals 41, mdtraj_dssp 36, mda_load 27, mdtraj_load 22, mdtraj_rmsd 2
+== openmm-mdanalysis-real's DHFR DCD, identical bytes ==
+jac_atoms_frames                   ok    23558 atoms, 100 frames in MDTraj; 23558 / 100 in MDAnalysis  want 23558 / 100
+jac_coords_two_libraries           ok    max|10*MDTraj - MDAnalysis| = 1.14e-05 A  want < 1e-4 (float32 A -> nm -> A)
+jac_constraints_mdtraj_vs_mdanalysis ok    every one of 2,229,000 constrained distances: max|MDTraj - MDAnalysis| = 1.57e-05 A  want < 1e-4
+jac_mdanalysis_reproduces_sibling  ok    worst |d-d0|/d0 1.5416e-05  == 1.54e-05, recorded by openmm-mdanalysis-real on these bytes
+jac_mdtraj_constraints_decode      ok    worst |d-d0|/d0 read by MDTraj 2.3423e-05  want < 1e-4 (openmm-mdanalysis-real's float32-DCD bound)
+ALL CHECKS PASSED

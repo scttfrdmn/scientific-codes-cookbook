@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-mdtraj-real-r1",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707); run.sh sets its own options.\nset -uo pipefail\ncd /tmp\nprintf '7fb0f9a0215bcc28aaf5635d8159211b8d0f37b85079f3b88e70774ce268291c  run.sh\\n296c1b480223404e1c7931b9539a8ea6d98d9da945f6d46d18d08dfec7ae4c28  real.py\\ne70f2bf7ed2ffef39ef34cb754d88cbc350ecfe8cbc6735489e0d695619adc0f  check.py\\n8be060b1fa933972d98e2156d320a9b192143e6af3e9e8871ad683a4b76c16aa  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 30 \n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/fah-nsp5-fast/FAST_simulations/",
+      "destination": "/tmp/fah/FAST_simulations/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/fah-nsp5-fast/input_files/",
+      "destination": "/tmp/fah/input_files/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/jac/",
+      "destination": "/tmp/jacin/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openmm-mdanalysis-real/amber20/Amber20_Benchmark_Suite.tar.gz",
+      "destination": "/tmp/Amber20_Benchmark_Suite.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mdtraj-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mdtraj-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}
