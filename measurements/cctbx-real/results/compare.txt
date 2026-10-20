@@ -1,0 +1,41 @@
+cohort 181: ok 167, skip 0, error 14
+  error Crystal symmetry mismatch between different file   3  2abr 4abj 5ab3
+  error Inconsistent symmetry information found            1  5abg
+  error One or more rotation matrices is not proper. See   7  4ab7 4abn 4aby 5ab4 5ab6 5abj 5abm
+  error Unknown chemical element type                      3  3abk 3abl 3abm
+|R-work recomputed - deposited| over 167: median 0.0065, <=0.01 117, <=0.02 150, <=0.05 162, max 0.1378
+|R-free recomputed - deposited| over 152: median 0.0057, <=0.01 111, <=0.02 129, <=0.05 145, max 0.1244
+  worst 3abg  deposited 0.158  recomputed 0.2958  d_min 2.30  free 3263
+  worst 1ab1  deposited 0.147  recomputed 0.2384  d_min 0.89  free 0
+  worst 8abq  deposited 0.2521  recomputed 0.3300  d_min 2.81  free 1024
+  worst 5ab5  deposited 0.1981  recomputed 0.2691  d_min 2.00  free 2535
+  worst 2abz  deposited 0.189  recomputed 0.2435  d_min 2.16  free 3354
+  worst 4abl  deposited 0.16067  recomputed 0.2058  d_min 1.15  free 2673
+control R-work: median 0.6947, min 0.4933; min margin over real R 0.2653
+space groups 30, reflections 1799..291546 (total 8969502), atoms 554..31975
+no free set: 15; f_obs_label chosen: 39; r_free_flags_label chosen: 55; reflection-file cell != model cell: 32
+per-entry wall: median 9.5 s, max 110.0 s; peak worker RSS 922 MiB
+== results/x86_64 vs results/arm64
+  same entries, same status and reason: True
+  n_refl      identical on all ok: False
+  n_free      identical on all ok: True
+  n_atoms     identical on all ok: True
+  rw          bit-identical 15 of 167; max |diff| 2.915e-04
+  rf          bit-identical 22 of 167; max |diff| 6.606e-04
+  rw_control  bit-identical 31 of 167; max |diff| 4.413e-03
+  p1_rel      bit-identical 19 of 167; max |diff| 1.213e-14
+  gemmi_rel   bit-identical 0 of 167; max |diff| 5.612e-08
+  d_min       bit-identical 145 of 167; max |diff| 8.882e-16
+  sum of per-entry wall vs reference: 1.224x
+== results/amd vs results/arm64
+  same entries, same status and reason: True
+  n_refl      identical on all ok: False
+  n_free      identical on all ok: True
+  n_atoms     identical on all ok: True
+  rw          bit-identical 15 of 167; max |diff| 2.915e-04
+  rf          bit-identical 22 of 167; max |diff| 6.606e-04
+  rw_control  bit-identical 31 of 167; max |diff| 4.413e-03
+  p1_rel      bit-identical 19 of 167; max |diff| 1.213e-14
+  gemmi_rel   bit-identical 0 of 167; max |diff| 5.612e-08
+  d_min       bit-identical 145 of 167; max |diff| 8.882e-16
+  sum of per-entry wall vs reference: 0.781x

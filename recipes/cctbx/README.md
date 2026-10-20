@@ -19,10 +19,8 @@ Compares cctbx and gemmi on every space group in the International Tables, on Gr
 make stage RECIPE=cctbx      # once: the checks only — the structure ships inside cctbx
 spawn task run --spec "$(make -s spec RECIPE=cctbx)" --wait
 make ls RECIPE=cctbx
-
 sgtbx.space_group(sgtbx.space_group_symbols(225)).order_z()   # 192
 len(list(gemmi.find_spacegroup_by_number(225).operations()))  # 192 — independently
-
 uc = uctbx.unit_cell((10, 12, 14, 90, 102.5, 90))
 uc.reciprocal().reciprocal().parameters() == uc.parameters()  # exactly
 ```
@@ -42,6 +40,15 @@ uc.reciprocal().reciprocal().parameters() == uc.parameters()  # exactly
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All of it — 230 space-group comparisons, 847 reflections, a dual-parsed structure — is **5 s** of a 1m09s window; 38 s is installing Docker and 25 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/cctbx-real/README.md) (181 PDB entries, model_vs_data, 16 workers)
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 245 s | 0.6381 | 0.043 | **0.062** |
+| Xeon 6975P-C | `c8i.4xlarge` | 285 s | 0.7497 | 0.059 | 0.085 |
+| EPYC 9R45 | `c8a.4xlarge` | **188 s** | 0.8622 | 0.045 | 0.068 |
+
+**Rescoring deposited entries from the PDB's own files works on every chip.** The median recomputed R-work is 0.0065 from the deposited value, and gemmi's F_calc matches to 1.5e-7. AMD is fastest and Graviton4 is cheapest. R after scaling is a path: x86 and Graviton4 differ by ≤3e-4, and Intel and AMD match bit for bit.
 
 <details>
 <summary>As shipped: 230 of 230 space groups agreeing across two implementations, each cross-check with a control, and a structure that needs no staging</summary>

@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-cctbx-real",
+  "container": "quay.io/aarchsci/structbio@sha256:9fd80ad08baf5b1f79c0e433d0fb30eec1d2f810b34594ad556d8f4fb8bb5479",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nsha256sum -c --status cohort.sha256 || { echo \"FAIL: a staged entry does not match cohort.sha256\"; exit 1; }\nsha256sum -c scripts.sha256 || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nexport CCTBX_PROBE_IDS=\"\"\nbash /tmp/real.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cctbx-real/pdb-20260101/ab/",
+      "destination": "/tmp/pdb/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cctbx-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cctbx-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cctbx-real/cohort.sha256",
+      "destination": "/tmp/cohort.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cctbx-real/scripts.sha256",
+      "destination": "/tmp/scripts.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cctbx-real/r1/results.tsv"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cctbx-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cctbx-real/r1/host.txt"
+    },
+    {
+      "source": "/tmp/out/logs.tar.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cctbx-real/r1/logs.tar.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}
