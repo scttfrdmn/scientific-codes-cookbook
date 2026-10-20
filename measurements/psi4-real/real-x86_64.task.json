@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-psi4-real-real-x8664",
+  "container": "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb169ab520904d1d1caacb1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '094934a26c0d2c8f6400b6f8fbc85d08478e213849a202f6b9c054ee144df083  run.sh\\n2519aae85257407c16f0467e029d05c653a4fa9873e3b43ed90e996d26c629b9  psi4_s66.py\\n2aa20589f8aab1b130003f442c732f843d1919c30c76864cef71b0cbc3f52589  check_s66.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh real 4 4 28000\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "x86_64",
+    "families": [
+      "r8i"
+    ],
+    "disk_gib": 300
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/dess66/DESS66.zip",
+      "destination": "/tmp/in/DESS66.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/dess66/dess66.sha256",
+      "destination": "/tmp/in/dess66.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/psi4_s66.py",
+      "destination": "/tmp/psi4_s66.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/check_s66.py",
+      "destination": "/tmp/check_s66.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/psi4-real/real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6h",
+    "on_complete": "terminate",
+    "cost_limit": 3.9
+  }
+}

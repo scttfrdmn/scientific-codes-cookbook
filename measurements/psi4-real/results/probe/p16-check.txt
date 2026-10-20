@@ -1,0 +1,27 @@
+ok   every calculation finished                                 0 of 4 failed []
+ok   one result per selected geometry, no duplicate geom_id     3 results, 3 selected, 3 distinct
+obs  Psi4's hartree2kcalmol (CODATA 2014's is 627.5094740631)   [627.5094737775374]
+ok   published: sapt_all == sum of its 8 published terms, every row max |d| 2.00e-05 kcal/mol <= 6e-05
+ok   published: tz_MP2_all == tz_HF + os + ss, every row        max |d| 1.00e-05 kcal/mol <= 6e-05
+ok   Psi4: SAPT0 TOTAL == sum of its 8 terms, every geometry    max |d| 8.88e-16 kcal/mol <= 1e-09
+ok   Psi4: MP2 interaction == HF + os + ss, every geometry      max |d| 1.10e-11 kcal/mol <= 1e-09
+obs  == DESS66 sapt_es                                          3 geometries, max |d| 3.63e-04 (row 21), median 2.55e-05 kcal/mol
+obs  == DESS66 sapt_ex                                          3 geometries, max |d| 3.24e-05 (row 21), median 9.22e-06 kcal/mol
+obs  == DESS66 sapt_exs2                                        3 geometries, max |d| 2.91e-05 (row 21), median 1.15e-05 kcal/mol
+obs  == DESS66 sapt_ind                                         3 geometries, max |d| 1.11e-04 (row 21), median 1.19e-05 kcal/mol
+obs  == DESS66 sapt_exind                                       3 geometries, max |d| 3.80e-06 (row 21), median 2.15e-06 kcal/mol
+obs  == DESS66 sapt_disp                                        3 geometries, max |d| 1.47e-05 (row 21), median 8.22e-06 kcal/mol
+obs  == DESS66 sapt_exdisp_os                                   3 geometries, max |d| 2.83e-06 (row 0), median 1.36e-06 kcal/mol
+obs  == DESS66 sapt_exdisp_ss                                   3 geometries, max |d| 3.79e-06 (row 35), median 2.68e-06 kcal/mol
+obs  == DESS66 sapt_delta_HF                                    3 geometries, max |d| 6.93e-05 (row 21), median 3.10e-05 kcal/mol
+obs  == DESS66 sapt_all                                         3 geometries, max |d| 5.24e-04 (row 21), median 5.06e-05 kcal/mol
+obs  == DESS66 tz_HF                                            3 geometries, max |d| 5.08e-04 (row 21), median 8.71e-05 kcal/mol
+obs  == DESS66 tz_MP2_os                                        3 geometries, max |d| 8.32e-05 (row 0), median 5.08e-05 kcal/mol
+obs  == DESS66 tz_MP2_ss                                        3 geometries, max |d| 1.06e-04 (row 0), median 1.22e-05 kcal/mol
+obs  == DESS66 tz_MP2_all                                       3 geometries, max |d| 4.45e-04 (row 21), median 1.10e-04 kcal/mol
+obs  SAPT0 terms invariant under rotation + translation (1 dimers) max |d| 2.44e-08 kcal/mol
+obs  sapt_all - silver-standard reference                       MAE 1.617, mean -1.617, max |d| 4.183 kcal/mol
+obs  tz_MP2_all - silver-standard reference                     MAE 0.506, mean 0.506, max |d| 1.153 kcal/mol
+
+jobs_wall_s 1287.2  sum_job_wall_s 1287.2  max geometry rss 23698 MiB
+RESULT: PASS

@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-psi4-real-fetch",
+  "container": "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\npython3 -u - <<'PYEOF' 2>&1 | tee /tmp/fetch.log\n# DESS66 / DESS66x8 (Donchev et al., Sci. Data 8, 55 (2021); Zenodo 10.5281/zenodo.5676284 v1.0.0),\n# fetched on AWS and checked against the md5 Zenodo publishes before anything is kept.\nimport csv\nimport hashlib\nimport urllib.request\nimport zipfile\n\nF = [(\"DESS66.zip\", \"48930e4d01b0844b2c0c1fd2db7cc16b\"), (\"DESS66x8.zip\", \"9df3c70f54f7f52856ee4d53a0b532f5\")]\nfor name, md5 in F:\n    req = urllib.request.Request(\"https://zenodo.org/records/5676284/files/%s?download=1\" % name,\n                                 headers={\"User-Agent\": \"curl/8\"})\n    b = urllib.request.urlopen(req, timeout=600).read()\n    got = hashlib.md5(b).hexdigest()\n    print(name, len(b), \"md5\", got, \"zenodo\", md5, flush=True)\n    assert got == md5, name + \": md5 does not match Zenodo's\"\n    open(name, \"wb\").write(b)\n    z = zipfile.ZipFile(name)\n    names = z.namelist()\n    print(\"  %d members; first: %s\" % (len(names), names[:8]))\n    for n in names:\n        if n.endswith(\"_meta.csv\") or n.endswith(\"README.md\"):\n            print(\"=====\", n)\n            print(z.read(n).decode())\n        elif n.endswith(\".csv\"):\n            rows = list(csv.reader(z.read(n).decode().splitlines()))\n            print(\"=====\", n, \"rows\", len(rows) - 1)\n            for r in rows[:3]:\n                print(r)\nPYEOF\n[ \"${PIPESTATUS[0]}\" = 0 ] || { echo 'FAIL: fetch'; exit 1; }\nsha256sum *.zip | tee dess66.sha256\ncp /tmp/fetch.log /tmp/out/fetch.log\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/psi4-real/dess66/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

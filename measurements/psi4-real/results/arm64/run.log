@@ -1,0 +1,114 @@
+read 66 rows of DESS66.csv; 66 geometries + 6 rotated + the same in the control, 4 workers x 4 threads, 28000 MB each, conv tight
+1/78  1326 s  row 36  1326 s
+2/78  1397 s  row 35  1397 s
+3/78  1451 s  row 34  1451 s
+4/78  1518 s  row 33  1518 s
+5/78  2115 s  row 37  789 s
+6/78  2234 s  row 39  836 s
+7/78  2596 s  row 40  1145 s
+8/78  2630 s  row 42  1112 s
+9/78  2880 s  row 45  764 s
+10/78  2946 s  row 38  712 s
+11/78  3165 s  row 61  534 s
+12/78  3360 s  row 60  480 s
+13/78  3447 s  row 14  501 s
+14/78  3556 s  row 41  961 s
+15/78  3978 s  row 23  618 s
+16/78  4187 s  row 16  1022 s
+17/78  4402 s  row 27  845 s
+18/78  4516 s  row 25  1070 s
+19/78  4574 s  row 46  597 s
+20/78  4751 s  row 56  564 s
+21/78  4875 s  row 43  300 s
+22/78  4984 s  row 26  582 s
+23/78  5297 s  row 28  780 s
+24/78  5311 s  row 48  560 s
+25/78  5417 s  row 24  542 s
+26/78  5500 s  row 47  516 s
+27/78  5669 s  row 44  252 s
+28/78  5811 s  row 57  514 s
+29/78  5821 s  row 22  510 s
+30/78  5871 s  row 52  371 s
+31/78  6084 s  row 10  213 s
+32/78  6134 s  row 21  465 s
+33/78  6158 s  row 51  347 s
+34/78  6174 s  row 62  352 s
+35/78  6297 s  row 13  213 s
+36/78  6354 s  row 6  196 s
+37/78  6362 s  row 12  188 s
+38/78  6366 s  row 55  232 s
+39/78  6512 s  row 20  215 s
+40/78  6554 s  row 29  200 s
+41/78  6576 s  row 54  210 s
+42/78  6668 s  row 30  307 s
+43/78  6702 s  row 63  190 s
+44/78  6772 s  row 18  196 s
+45/78  6772 s  row 65  219 s
+46/78  6861 s  row 32  193 s
+47/78  6871 s  row 19  169 s
+48/78  6936 s  row 49  164 s
+49/78  6981 s  row 3  120 s
+50/78  6991 s  row 15  119 s
+51/78  7035 s  row 31  263 s
+52/78  7056 s  row 9  66 s
+53/78  7067 s  row 53  131 s
+54/78  7111 s  row 5  55 s
+55/78  7123 s  row 8  56 s
+56/78  7137 s  row 64  156 s
+57/78  7161 s  row 4  49 s
+58/78  7161 s  row 17  126 s
+59/78  7165 s  row 2  28 s
+60/78  7187 s  row 1  26 s
+61/78  7189 s  row 7  24 s
+62/78  7190 s  row 11  30 s
+63/78  7199 s  row 59  76 s
+64/78  7204 s  row 0  14 s
+65/78  7204 s  row 58  15 s
+66/78  7205 s  row 0  6 s
+67/78  7209 s  row 50  22 s
+68/78  7212 s  row 58  8 s
+69/78  7214 s  row 50  10 s
+70/78  7216 s  row 1  11 s
+71/78  7221 s  row 7  11 s
+72/78  7223 s  row 0  8 s
+73/78  7224 s  row 2  13 s
+74/78  7230 s  row 58  14 s
+75/78  7240 s  row 50  19 s
+76/78  7246 s  row 1  23 s
+77/78  7248 s  row 7  23 s
+78/78  7253 s  row 2  23 s
+ok   every calculation finished                                 0 of 78 failed []
+ok   one result per selected geometry, no duplicate geom_id     66 results, 66 selected, 66 distinct
+ok   the published set is S66: 66 rows, 66 distinct geom_id and system names 66 rows, 66 geom_id, 66 names
+obs  Psi4's hartree2kcalmol (CODATA 2014's is 627.5094740631)   [627.5094737775374]
+ok   published: sapt_all == sum of its 8 published terms, every row max |d| 2.00e-05 kcal/mol <= 6e-05
+ok   published: tz_MP2_all == tz_HF + os + ss, every row        max |d| 1.00e-05 kcal/mol <= 6e-05
+ok   Psi4: SAPT0 TOTAL == sum of its 8 terms, every geometry    max |d| 3.55e-15 kcal/mol <= 1e-09
+ok   Psi4: MP2 interaction == HF + os + ss, every geometry      max |d| 4.72e-11 kcal/mol <= 1e-09
+ok   == DESS66 sapt_es, every geometry                          66 geometries, max |d| 4.07e-04 (row 19), median 2.20e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_ex, every geometry                          66 geometries, max |d| 5.31e-04 (row 19), median 3.73e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exs2, every geometry                        66 geometries, max |d| 5.19e-04 (row 19), median 3.79e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_ind, every geometry                         66 geometries, max |d| 1.96e-04 (row 19), median 1.39e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exind, every geometry                       66 geometries, max |d| 7.75e-05 (row 19), median 9.11e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_disp, every geometry                        66 geometries, max |d| 1.04e-04 (row 19), median 1.87e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exdisp_os, every geometry                   66 geometries, max |d| 9.84e-06 (row 19), median 3.28e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exdisp_ss, every geometry                   66 geometries, max |d| 1.15e-05 (row 13), median 3.52e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_delta_HF, every geometry                    66 geometries, max |d| 1.67e-04 (row 19), median 1.07e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_all, every geometry                         66 geometries, max |d| 5.23e-04 (row 21), median 2.19e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_HF, every geometry                            66 geometries, max |d| 5.08e-04 (row 21), median 3.09e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_os, every geometry                        66 geometries, max |d| 6.65e-04 (row 59), median 1.23e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_ss, every geometry                        66 geometries, max |d| 1.24e-03 (row 59), median 9.58e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_all, every geometry                       66 geometries, max |d| 4.45e-04 (row 21), median 1.88e-05 kcal/mol <= 1e-02 (0 over)
+ok   SAPT0 terms invariant under rotation + translation (6 dimers) max |d| 2.00e-07 kcal/mol <= 1e-05
+ok   control: Psi4's default SAPT0 misses DESS66 by > bound (6 dimers) least worst-column miss 3.322e-01 kcal/mol (sapt_ind, row 50)
+       control row 0   es +0.0213  ex +0.3105  exs2 +0.3077  ind -1.3262  exind +0.9430  disp -0.3763  exdisp_os +0.0480  exdisp_ss +0.1495  delta_HF +0.1244  all -0.1059
+       control row 58  es +0.0212  ex +0.0989  exs2 +0.0985  ind -0.4131  exind +0.2618  disp -0.1866  exdisp_os +0.0204  exdisp_ss +0.0579  delta_HF +0.1333  all -0.0062
+       control row 50  es +0.0027  ex +0.0473  exs2 +0.0472  ind -0.3322  exind +0.2526  disp -0.1979  exdisp_os +0.0183  exdisp_ss +0.0699  delta_HF +0.1138  all -0.0256
+       control row 1   es +0.0410  ex +0.2458  exs2 +0.2434  ind -1.5164  exind +1.0461  disp -0.4185  exdisp_os +0.0513  exdisp_ss +0.1638  delta_HF +0.2746  all -0.1122
+       control row 7   es +0.0097  ex +0.3163  exs2 +0.3133  ind -1.3985  exind +1.0014  disp -0.3990  exdisp_os +0.0514  exdisp_ss +0.1552  delta_HF +0.1573  all -0.1063
+       control row 2   es -0.0346  ex +0.3087  exs2 +0.3033  ind -2.5547  exind +1.7812  disp -0.6060  exdisp_os +0.0799  exdisp_ss +0.2724  delta_HF +0.5805  all -0.1726
+obs  sapt_all - silver-standard reference                       MAE 1.123, mean -1.123, max |d| 4.562 kcal/mol
+obs  tz_MP2_all - silver-standard reference                     MAE 0.491, mean -0.172, max |d| 2.014 kcal/mol
+
+jobs_wall_s 7252.7  sum_job_wall_s 28985.3  max geometry rss 18666 MiB
+RESULT: PASS

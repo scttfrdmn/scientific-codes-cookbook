@@ -1,0 +1,35 @@
+ok   every calculation finished                                 0 of 78 failed []
+ok   one result per selected geometry, no duplicate geom_id     66 results, 66 selected, 66 distinct
+ok   the published set is S66: 66 rows, 66 distinct geom_id and system names 66 rows, 66 geom_id, 66 names
+obs  Psi4's hartree2kcalmol (CODATA 2014's is 627.5094740631)   [627.5094737775374]
+ok   published: sapt_all == sum of its 8 published terms, every row max |d| 2.00e-05 kcal/mol <= 6e-05
+ok   published: tz_MP2_all == tz_HF + os + ss, every row        max |d| 1.00e-05 kcal/mol <= 6e-05
+ok   Psi4: SAPT0 TOTAL == sum of its 8 terms, every geometry    max |d| 7.11e-15 kcal/mol <= 1e-09
+ok   Psi4: MP2 interaction == HF + os + ss, every geometry      max |d| 5.57e-11 kcal/mol <= 1e-09
+ok   == DESS66 sapt_es, every geometry                          66 geometries, max |d| 4.07e-04 (row 19), median 2.24e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_ex, every geometry                          66 geometries, max |d| 5.31e-04 (row 19), median 3.73e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exs2, every geometry                        66 geometries, max |d| 5.19e-04 (row 19), median 3.79e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_ind, every geometry                         66 geometries, max |d| 1.96e-04 (row 19), median 1.39e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exind, every geometry                       66 geometries, max |d| 7.75e-05 (row 19), median 9.09e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_disp, every geometry                        66 geometries, max |d| 1.04e-04 (row 19), median 1.87e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exdisp_os, every geometry                   66 geometries, max |d| 9.84e-06 (row 19), median 3.28e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_exdisp_ss, every geometry                   66 geometries, max |d| 1.15e-05 (row 13), median 3.52e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_delta_HF, every geometry                    66 geometries, max |d| 1.67e-04 (row 19), median 9.47e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 sapt_all, every geometry                         66 geometries, max |d| 5.27e-04 (row 21), median 2.30e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_HF, every geometry                            66 geometries, max |d| 5.09e-04 (row 21), median 3.33e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_os, every geometry                        66 geometries, max |d| 6.65e-04 (row 59), median 1.22e-05 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_ss, every geometry                        66 geometries, max |d| 1.24e-03 (row 59), median 9.58e-06 kcal/mol <= 1e-02 (0 over)
+ok   == DESS66 tz_MP2_all, every geometry                       66 geometries, max |d| 4.46e-04 (row 21), median 1.95e-05 kcal/mol <= 1e-02 (0 over)
+ok   SAPT0 terms invariant under rotation + translation (6 dimers) max |d| 4.16e-07 kcal/mol <= 1e-05
+ok   control: Psi4's default SAPT0 misses DESS66 by > bound (6 dimers) least worst-column miss 3.322e-01 kcal/mol (sapt_ind, row 50)
+       control row 0   es +0.0213  ex +0.3105  exs2 +0.3077  ind -1.3262  exind +0.9430  disp -0.3763  exdisp_os +0.0480  exdisp_ss +0.1495  delta_HF +0.1244  all -0.1059
+       control row 58  es +0.0212  ex +0.0989  exs2 +0.0985  ind -0.4131  exind +0.2618  disp -0.1866  exdisp_os +0.0204  exdisp_ss +0.0579  delta_HF +0.1333  all -0.0062
+       control row 50  es +0.0027  ex +0.0473  exs2 +0.0472  ind -0.3322  exind +0.2526  disp -0.1979  exdisp_os +0.0183  exdisp_ss +0.0699  delta_HF +0.1138  all -0.0256
+       control row 1   es +0.0410  ex +0.2458  exs2 +0.2434  ind -1.5164  exind +1.0461  disp -0.4185  exdisp_os +0.0513  exdisp_ss +0.1638  delta_HF +0.2746  all -0.1122
+       control row 7   es +0.0097  ex +0.3163  exs2 +0.3133  ind -1.3985  exind +1.0014  disp -0.3990  exdisp_os +0.0514  exdisp_ss +0.1552  delta_HF +0.1573  all -0.1063
+       control row 2   es -0.0346  ex +0.3087  exs2 +0.3033  ind -2.5547  exind +1.7812  disp -0.6060  exdisp_os +0.0799  exdisp_ss +0.2724  delta_HF +0.5805  all -0.1726
+obs  sapt_all - silver-standard reference                       MAE 1.123, mean -1.123, max |d| 4.562 kcal/mol
+obs  tz_MP2_all - silver-standard reference                     MAE 0.491, mean -0.172, max |d| 2.014 kcal/mol
+
+jobs_wall_s 4683.3  sum_job_wall_s 18714.2  max geometry rss 18712 MiB
+RESULT: PASS
