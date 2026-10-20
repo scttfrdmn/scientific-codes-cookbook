@@ -1,0 +1,56 @@
+== arm64: FBP recomputed from the replicate trees
+  fbp == round(100 x fraction)       ok   916 of 916 supports, 20 replicates; 0 disagree
+  support tree topology == best tree ok   same splits
+  tbe recompute == reported on cherries ok   0 of 275 cherries differ
+  tbe recomputed (reported)          --   916 of 916 reported TBE == FBP/100; max |reported - recomputed| 0.9662 (cherries, where they must agree: 275)
+== x86_64: FBP recomputed from the replicate trees
+  fbp == round(100 x fraction)       ok   916 of 916 supports, 20 replicates; 0 disagree
+  support tree topology == best tree ok   same splits
+  tbe recompute == reported on cherries ok   0 of 275 cherries differ
+  tbe recomputed (reported)          --   916 of 916 reported TBE == FBP/100; max |reported - recomputed| 0.9662 (cherries, where they must agree: 275)
+== amd: FBP recomputed from the replicate trees
+  fbp == round(100 x fraction)       ok   916 of 916 supports, 20 replicates; 0 disagree
+  support tree topology == best tree ok   same splits
+  tbe recompute == reported on cherries ok   0 of 275 cherries differ
+  tbe recomputed (reported)          --   916 of 916 reported TBE == FBP/100; max |reported - recomputed| 0.9662 (cherries, where they must agree: 275)
+== arm64: e45188d1ac186424, 13 searches, final -256799.798588
+== x86_64: e45188d1ac186424, 13 searches, final -256799.798588
+== amd: e45188d1ac186424, 13 searches, final -256799.798588
+== x86_64 against Graviton4
+  bestTree byte-identical          True
+  bootstraps byte-identical        False
+  replicate #11  differs            same topology True; logL -261103.182047 vs -261103.182273
+  per-search logL identical        13 of 13/13
+  final logL                       -256799.798588 vs -256799.798588
+  RF distance best trees           0 of max 1832
+  FBP on shared splits             916 shared, max |diff| 0, mean 0.00
+== amd against Graviton4
+  bestTree byte-identical          True
+  bootstraps byte-identical        False
+  replicate #11  differs            same topology True; logL -261103.182047 vs -261103.182273
+  per-search logL identical        13 of 13/13
+  final logL                       -256799.798588 vs -256799.798588
+  RF distance best trees           0 of max 1832
+  FBP on shared splits             916 shared, max |diff| 0, mean 0.00
+== arm64 iqtree
+eval_rc                     0   want 0 (EVAL OK: a fixed point, every tip, LG+G4)
+raxml_final_logL            -256799.798588   (alpha 1.001580)
+iqtree_first_pass_logL      -256799.7983
+iqtree_fixed_point_logL     -256799.7983   (alpha 1.0000)
+abs_diff                    0.000288   want < 0.01
+CROSSCHECK OK
+== x86_64 iqtree
+eval_rc                     0   want 0 (EVAL OK: a fixed point, every tip, LG+G4)
+raxml_final_logL            -256799.798588   (alpha 1.001580)
+iqtree_first_pass_logL      -256799.7983
+iqtree_fixed_point_logL     -256799.7983   (alpha 1.0000)
+abs_diff                    0.000288   want < 0.01
+CROSSCHECK OK
+== amd iqtree
+eval_rc                     0   want 0 (EVAL OK: a fixed point, every tip, LG+G4)
+raxml_final_logL            -256799.798588   (alpha 1.001580)
+iqtree_first_pass_logL      -256799.7983
+iqtree_fixed_point_logL     -256799.7983   (alpha 1.0000)
+abs_diff                    0.000288   want < 0.01
+CROSSCHECK OK
+COMPARE OK

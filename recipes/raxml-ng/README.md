@@ -13,7 +13,7 @@ last_verified: 2026-10-01
 
 Infers a maximum-likelihood tree for a 114-taxon Pfam alignment under LG+G4, landing on −52706.731409 — a value [IQ-TREE reaches independently](../iqtree/README.md) to 1 part in 1e8. For anyone building trees on ARM.
 
-> **The optimum is identical on all four Graviton generations, to all six decimals.** Fixed seed plus pinned threads make the search deterministic; the chip changes only how long it takes.
+> **The optimum is identical on four Graviton generations, and on Graviton4, Intel and AMD at 919 taxa.** Fixed seed plus pinned threads make the search deterministic; the chip changes only how long it takes.
 
 ## Run it
 
@@ -26,7 +26,34 @@ raxml-ng --search --msa pfam38.2_seed_alignment.fa --model LG+G4 \
   --threads 8 --workers 1 --seed 12345 --prefix rx
 ```
 
-## Which box — measured (same alignment, same seed, 8 threads)
+## Which box — measured (same seed, 8 threads, `2xlarge`)
+
+On a [whole 919-taxon gene family](../../measurements/raxml-ng-real/README.md), ML search + 20 bootstraps:
+
+| chip | instance | search + 20 bootstraps | **$/result** |
+|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 30,812 s | 2.74 |
+| Xeon 6975P-C | `c8i.2xlarge` | 24,394 s | 2.55 |
+| **EPYC 9R45** | `c8a.2xlarge` | **9,361 s** | **1.13** |
+
+**Take AMD:** 3.3× Graviton4's speed for 59% less, and the best tree is byte-identical on all three chips. The x86 build runs the `AVX2` kernel and the arm64 build runs `SSE3`. A bootstrap replicate costs $0.031 on AMD and $0.073 on Graviton4. Graviton generations on the fixture are below the fold.
+
+## Make it yours
+
+| In the recipe | Swap for | What to know |
+|---|---|---|
+| Pfam PF26127.1 (114 × 477) | your alignment | cost grows with taxa × sites × rate categories; 114 taxa is a real tree, not a fixture. |
+| `--threads 8 --workers 1` | your core count | **not** `AUTO`: thread count feeds the adaptive heuristic's starting trees, so it changes which optimum you land on. Pin it, with `--seed`. |
+| `--model LG+G4` | your model | changes the likelihood, so the cross-check with IQ-TREE only holds at matched models. |
+| no bootstrap | `--bootstrap` + `--support` | in 2.0.2 the TBE file holds FBP ÷ 100 on every branch ([measured](../../measurements/raxml-ng-real/README.md)). Recompute TBE elsewhere. |
+
+**Leave the workload** — a curated 114-taxon alignment, so the timings and the agreement transfer.
+**Scale it** by taxa, and re-pin threads and seed before quoting any exact number.
+
+<details>
+<summary>As shipped: internal identities, the cross-code agreement, pins</summary>
+
+### Across Graviton generations, on the fixture
 
 | generation | instance | search | **$/search** | log-likelihood |
 |---|---|---|---|---|
@@ -36,20 +63,6 @@ raxml-ng --search --msa pfam38.2_seed_alignment.fa --model LG+G4 \
 | **Graviton5** | `c9g.2xlarge` | **313.0 s** | **0.0303** | −52706.731409 |
 
 Graviton2→5 is **2.04× faster and 37% cheaper**. But **Graviton4 is 7.3% *dearer* than Graviton3** here — it buys only 2% of wall for 10% more per hour. That is the sharpest instance of a step that does not pay; [two DFT codes show the same thing](../../patterns/cost-per-result.md), and all three have likelihood-or-matrix inner loops rather than the throughput the newer chips added.
-
-## Make it yours
-
-| In the recipe | Swap for | What to know |
-|---|---|---|
-| Pfam PF26127.1 (114 × 477) | your alignment | cost grows with taxa × sites × rate categories; 114 taxa is a real tree, not a fixture. |
-| `--threads 8 --workers 1` | your core count | **not** `AUTO`: thread count feeds the adaptive heuristic's starting trees, so it changes which optimum you land on. Pin it, with `--seed`. |
-| `--model LG+G4` | your model | changes the likelihood, so the cross-check with IQ-TREE only holds at matched models. |
-
-**Leave the workload** — a curated 114-taxon alignment, so the timings and the agreement transfer.
-**Scale it** by taxa, and re-pin threads and seed before quoting any exact number.
-
-<details>
-<summary>As shipped: internal identities, the cross-code agreement, pins</summary>
 
 ### The checks
 

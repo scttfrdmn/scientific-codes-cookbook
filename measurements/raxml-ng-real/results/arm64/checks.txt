@@ -1,0 +1,24 @@
+taxa_read_by_raxml           ok   919  want 919 (taxa in the FASTA)
+sites_read_by_raxml          ok   533  want 533
+patterns                     ok   517  want 517 (distinct columns, counted independently)
+gaps_pct                     ok   57.59%  want 57.59%
+invariant_pct                ok   12.20%  want 12.20%
+tips_in_best_tree            ok   919  want 919
+free_parameters              ok   1836  want 2n-2 = 1836 (2n-3 branches + alpha)
+aic_identity                 ok   517271.597176  want 2k-2lnL = 517271.597176
+bic_identity                 ok   525126.962510  want k ln(n)-2lnL = 525126.962511
+final_is_best_of_searches    ok   -256799.798588  want the best of 13 searches (-256799.798588)
+ml_trees_vs_searches         ok   13  want 13
+start_trees_vs_searches      ok   13  want 13
+likelihood_at_own_point      ok   -256799.798585  want -256799.798588 (evaluated, nothing optimised)
+reopt_does_not_climb         ok   -256799.798206  want <= -256799.798588 + 0.01 (nothing beats the maximum)
+bootstrap_replicates         ok   20 trees, 20 with all 919 tips  want 20
+fbp_supports                 ok   916 (916 integer 0..100)  want n-3 = 916
+tbe_supports                 ok   916 (916 in 0..1)  want n-3 = 916
+tbe_ge_fbp                   ok   916 of 916  want all (TBE >= FBP per branch, by definition; FBP is rounded to 1%)
+raxml_reported_finished      ok   1  want 1
+model_is_LG+G4m              ok   1  want 1
+all_sites_in_partition       ok   1  want 1
+best_log_likelihood          -256799.798588  (reported)
+aicc                         7262735.597176  (reported; a valid criterion only when sites > k+1)
+ALL CHECKS OK
