@@ -14,8 +14,6 @@ last_verified: 2026-10-13
 
 `icoFoam` solves the lid-driven cavity — the canonical incompressible-laminar CFD test — and writes a real velocity and pressure field, verified by mass conservation. For anyone who knows OpenFOAM and wants it on arm64.
 
-> **What this covers.** OpenFOAM v2412 (`blockMesh` + `icoFoam`) running the shipped `cavity` tutorial (20×20 mesh, Re=10) to a converged field on Graviton4 — from the **upstream `opencfd/openfoam-default` multi-arch image**, the catalog's first recipe sourced from an official upstream container rather than an aarch.* env, and its first CFD code. Not a benchmark: the Reynolds number and mesh are the tutorial's, too coarse for a Ghia-type profile match (see Make it yours).
-
 ## Run it
 
 ```bash
@@ -28,8 +26,6 @@ blockMesh          # generate the 20x20 cavity mesh
 icoFoam            # solve incompressible laminar Navier-Stokes to t=0.5 s
 ```
 
-One tool, one image — OpenFOAM bundles its own utilities (`blockMesh`, `icoFoam`, `postProcess`), so unlike the aarch.bio [one-tool-per-image](../../practices/container-path.md) chains this is a single task running several OpenFOAM commands.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -38,13 +34,21 @@ One tool, one image — OpenFOAM bundles its own utilities (`blockMesh`, `icoFoa
 | `icoFoam` (incompressible, laminar) | the solver your physics needs (`simpleFoam`, `pimpleFoam`, …) | each ships in the same image; the continuity identity below is solver-agnostic. |
 | Re=10 (nu=0.01, U=1, L=0.1) | a higher Reynolds number | **the one number that limits the fixture:** at Re=10 the flow is a single viscous vortex — too coarse and viscous to match published benchmark data. |
 
-**Leave the fixture** to prove OpenFOAM runs and conserves mass — the cavity is deterministic and hand-checkable. **Scale it** to reproduce a published result: a 129×129 mesh at Re=100/400/1000, run to steady state with `simpleFoam`, matches [Ghia et al. (1982)](https://doi.org/10.1016/0021-9991(82)90058-4) centerline velocities — the [reproduce-a-published-result](../../practices/reference-from-tests.md) move, a real validation rather than this working example.
+**Leave the fixture** to prove OpenFOAM runs and conserves mass — the cavity is deterministic and hand-checkable. **Scale it** to reproduce a published result — the [measured run](../../measurements/openfoam-real/README.md) below does that for NASA TMR's NACA 0012 (230k cells, `rhoSimpleFoam` + Spalart–Allmaras), the [reproduce-a-published-result](../../practices/reference-from-tests.md) move; for a laminar check, a 129×129 cavity at Re=100–1000 against [Ghia et al. (1982)](https://doi.org/10.1016/0021-9991(82)90058-4).
 
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.03. The solve is **0.03 s** on 400 cells; boot, Docker install, and the 0.38 GB image pull are the whole task. Recorded command window **57 s** (≈ $0.0013), so TTL retightened 8m → 5m from the real run ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.**
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.03. The solve is **0.03 s** on 400 cells; boot, Docker install, and the 0.38 GB image pull are the whole task. Recorded command window **57 s** (≈ $0.0013), so TTL retightened 8m → 5m from the real run ([why](../../practices/what-this-does-not-cover.md)). **These timings are not compute cost.** **Sizing:** the tutorial is trivial and CPU-bound on one core; a real case scales with mesh — cells drive RAM and cores, and `decomposePar` splits the domain for MPI, where the [scaling knee](../../patterns/sizing.md) lives. No family question for the fixture; size a real mesh on its cell count.
 
-**Sizing:** the tutorial is trivial and CPU-bound on one core; a real case scales with mesh — cells drive RAM and cores, and `decomposePar` splits the domain for MPI, where the [scaling knee](../../patterns/sizing.md) lives. No family question for the fixture; size a real mesh on its cell count.
+## Which box — [measured](../../measurements/openfoam-real/README.md) (NASA TMR NACA 0012, SA, 897×257 grid, `rhoSimpleFoam`, α = 10° + 15°, 16 ranks)
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | 3,990 s | 0.6381 | **0.707** | **0.721** |
+| Intel | `c8i.4xlarge` | 4,834 s | 0.7497 | 1.007 | 1.023 |
+| AMD | `c8a.4xlarge` | **3,247 s** | 0.8622 | 0.778 | 0.793 |
+
+**Take Graviton4 for cost, AMD for wall time:** AMD is 1.23× faster but 10% dearer per result; Intel is slower and 42% dearer. Lift and drag agree across chips to 9 digits and sit inside NASA TMR's seven-code range, on the same vertices SU2 solved; the one failure, SU2-vs-OpenFOAM drag at 15° (4.15% against ±4%), is reported, not loosened. Peak memory 1.1 GiB.
 
 <details>
 <summary>As shipped: what the check proves, pins, smoke check, run + verify</summary>

@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-openfoam-real-r1",
+  "container": "docker.io/opencfd/openfoam-default@sha256:b8b674f7d634a7b272efa00beabfe13eefdfe9d83b28281522544d06d47a17e4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(grep -c . pins.sha256) files verified\"\nbash run.sh 16 20000\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/su2-real/data/n0012_897-257.su2",
+      "destination": "/tmp/data/n0012_897-257.su2"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openfoam-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openfoam-real/case.sh",
+      "destination": "/tmp/case.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openfoam-real/su2ToFoam.awk",
+      "destination": "/tmp/su2ToFoam.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openfoam-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openfoam-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

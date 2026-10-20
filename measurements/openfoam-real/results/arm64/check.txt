@@ -1,0 +1,29 @@
+OpenFOAM v2412 rhoSimpleFoam SA -- NACA 0012, TMR 897x257 grid; 16 MPI ranks, cap 20000 iterations
+native                     rhoSimpleFoam ELF e_machine 183 on aarch64  [ok]
+mesh_size                  checkMesh: 229376 cells, 460672 points (896x256 quads; SU2's 230336 vertices x 2 planes)  [ok]
+mesh_valid                 checkMesh topology + openness + pyramids + volumes: 9/9 OK; flagged: 1 (***High aspect ratio cells found, Max as;)  [ok]
+mesh: ***High aspect ratio cells found, Max aspect ratio: 3.17847e+07, number of cells 29164;Min volume = 9.5796e-11. Max volume = 843.777.  Total volume = 875558.  Cell volumes OK.;Mesh non-orthogonality Max: 19.7298 average: 1.63492;
+freestream: U 52.08356843 m/s, rho 2.126485923 kg/m3, p 183127.4388 Pa, mu 1.845916251e-05 Pa s, nuTilda 2.604178421e-05, nut 1.826729228e-06 m2/s
+stage 1: 500 iterations, consistent/p/rho/eqn relaxation no 0.7 0.01 0.5; stage 2: to iteration 20000, yes 1 1 0.9
+a10 rhoSimpleFoam exit 0 (stage 1) / 0 (stage 2), wall 2108 s
+a10_mpi                    rhoSimpleFoam reports nProcs 16, launched 16  [ok]
+a10_completed              End sentinel, exit 0  [ok]
+a15 rhoSimpleFoam exit 0 (stage 1) / 0 (stage 2), wall 1882 s
+a15_mpi                    rhoSimpleFoam reports nProcs 16, launched 16  [ok]
+a15_completed              End sentinel, exit 0  [ok]
+a10_converged              20000 iterations; last two 1000-iteration changes CL 5.33e-06, 7.72e-06 and CD 3.23e-07, 3.62e-07 (contracting); remaining iterative error ~ CL 1.09e-05, CD 2.23e-04 relative, want < 1e-3 and 4e-3  [ok]
+a10_residuals              final initial residuals Ux p e nuTilda: 3.09989389969e-09 1.80971570637e-09 1.33129123658e-08 0.000214317446744
+a10_mass                   net farfield mass flux / sum|flux| = 2.695e-13, want < 1e-9 (the wall carries none)  [ok]
+a10_yplus                  max y+ on the airfoil 3.324549921482e-01
+tmr_CL10                   OpenFOAM 1.09092 vs TMR 7-code mean 1.09351: -0.24%, bound +-1%  [ok]
+su2_CL10                   OpenFOAM 1.090921 vs SU2 1.096666, same vertices: -0.52%, bound +-1% (TMR code-to-code)  [ok]
+tmr_CD10                   OpenFOAM 0.01223 vs TMR 7-code mean 0.01236: -0.98%, bound +-4%  [ok]
+su2_CD10                   OpenFOAM 0.012234 vs SU2 0.012597, same vertices: -2.88%, bound +-4% (TMR code-to-code)  [ok]
+a15_converged              20000 iterations; last two 1000-iteration changes CL 6.76e-06, 3.89e-05 and CD 3.80e-07, 2.14e-06 (contracting); remaining iterative error ~ CL 9.15e-07, CD 3.91e-06 relative, want < 1e-3 and 4e-3  [ok]
+a15_residuals              final initial residuals Ux p e nuTilda: 6.5200187105e-09 3.26629198657e-09 5.68786691035e-09 0.000403161299736
+a15_mass                   net farfield mass flux / sum|flux| = 2.743e-12, want < 1e-9 (the wall carries none)  [ok]
+a15_yplus                  max y+ on the airfoil 4.426722809745e-01
+tmr_CL15                   OpenFOAM 1.55099 vs TMR 7-code mean 1.55176: -0.05%, bound +-1%  [ok]
+su2_CL15                   OpenFOAM 1.550994 vs SU2 1.555788, same vertices: -0.31%, bound +-1% (TMR code-to-code)  [ok]
+tmr_CD15                   OpenFOAM 0.02096 vs TMR 7-code mean 0.02127: -1.46%, bound +-4%  [ok]
+su2_CD15                   OpenFOAM 0.020962 vs SU2 0.021870, same vertices: -4.15%, bound +-4% (TMR code-to-code)  [FAIL]

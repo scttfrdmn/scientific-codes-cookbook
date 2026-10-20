@@ -1,0 +1,22 @@
+a10 partition (cells per rank) identical on all chips: True  [ok]
+a15 partition (cells per rank) identical on all chips: True  [ok]
+arm64   a10  work: 20000 SIMPLE iterations, 1337977 GAMG iterations, 2084 s solver, 1.557 ms per GAMG iteration
+arm64   a15  work: 20000 SIMPLE iterations, 1169221 GAMG iterations, 1858 s solver, 1.589 ms per GAMG iteration
+x86_64  a10  work: 20000 SIMPLE iterations, 1363253 GAMG iterations, 2533 s solver, 1.858 ms per GAMG iteration
+x86_64  a15  work: 20000 SIMPLE iterations, 1172292 GAMG iterations, 2265 s solver, 1.932 ms per GAMG iteration
+amd     a10  work: 20000 SIMPLE iterations, 1363253 GAMG iterations, 1695 s solver, 1.243 ms per GAMG iteration
+amd     a15  work: 20000 SIMPLE iterations, 1172292 GAMG iterations, 1514 s solver, 1.291 ms per GAMG iteration
+x86_64  a10  CL  1.0909207494 vs 1.0909207487  |d| 7.00e-10  bound 5.33e-05  [ok]
+x86_64  a10  CD  0.0122344483 vs 0.0122344482  |d| 1.00e-10  bound 3.24e-06  [ok]
+x86_64  a10  path: coefficient history first differs at iteration 1, max |d| 1.12e-06; p residual first differs at iteration 1
+x86_64  a15  CL  1.5509941111 vs 1.5509941041  |d| 7.00e-09  bound 6.76e-05  [ok]
+x86_64  a15  CD  0.0209618664 vs 0.0209618702  |d| 3.80e-09  bound 3.80e-06  [ok]
+x86_64  a15  path: coefficient history first differs at iteration 1, max |d| 2.78e-06; p residual first differs at iteration 1
+amd     a10  CL  1.0909207494 vs 1.0909207487  |d| 7.00e-10  bound 5.33e-05  [ok]
+amd     a10  CD  0.0122344483 vs 0.0122344482  |d| 1.00e-10  bound 3.24e-06  [ok]
+amd     a10  path: coefficient history first differs at iteration 1, max |d| 1.12e-06; p residual first differs at iteration 1
+amd     a15  CL  1.5509941111 vs 1.5509941041  |d| 7.00e-09  bound 6.76e-05  [ok]
+amd     a15  CD  0.0209618664 vs 0.0209618702  |d| 3.80e-09  bound 3.80e-06  [ok]
+amd     a15  path: coefficient history first differs at iteration 1, max |d| 2.78e-06; p residual first differs at iteration 1
+x86_64 vs amd a10: coefficient history identical: True
+x86_64 vs amd a15: coefficient history identical: True
