@@ -1,0 +1,71 @@
+{
+  "task_id": "cookbook-lineage-real-pangolin-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '957ed51ec296a928bf3acb6acfd67b6868a1c9b9d20b898be1232b24f2695ae0  pangolin.sh\\n5b0b57ca3f3dee1f5bddaf934e5c622d6951815e32d522fb61fede82a3e2f5fa  timed.py\\nb25b88ed84bbf78f5afd1b2583e17112d3161e14bde8a9781ce56356fd3fe090  check.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/pangolin.sh 8 query.fasta.gz\n"
+  ],
+  "container": "quay.io/aarchbio/pangolin@sha256:32551903d08cbe39fc70fcf924326fec08c100b8416346acd0302bb0e7f2a03a",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "disk_gib": 80,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/pangolin.sh",
+      "destination": "/tmp/pangolin.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/timed.py",
+      "destination": "/tmp/timed.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/query.fasta.gz",
+      "destination": "/tmp/query.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/sub.fasta.gz",
+      "destination": "/tmp/sub.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/alias_key.json",
+      "destination": "/tmp/alias_key_v1.41.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/lineage-real/r1/nextclade/nextclade.tsv.gz",
+      "destination": "/tmp/nextclade.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/lineage-real/r1/nextclade/nextclade_sub.tsv",
+      "destination": "/tmp/nextclade_sub.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage-real/r1/pangolin/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

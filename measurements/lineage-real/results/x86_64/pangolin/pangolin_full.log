@@ -1,0 +1,212 @@
+Assuming unrestricted shared filesystem usage.
+host: 937d11364bb6
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 8
+Rules claiming more threads will be scaled down.
+Job stats:
+job                      count
+---------------------  -------
+align_to_reference           1
+get_constellations           1
+create_seq_hash              1
+cache_sequence_assign        1
+scorpio                      1
+sequence_qc                  1
+merged_info                  1
+all                          1
+total                        8
+
+Select jobs to execute...
+Execute 2 jobs...
+
+[Tue Oct 20 20:03:32 2026]
+localrule align_to_reference:
+    input: /tmp/query.fasta.gz, /usr/local/lib/python3.11/site-packages/pangolin/data/reference.fasta
+    output: /var/tmp/p_full/alignment.fasta
+    log: /var/tmp/p_full/logs/minimap2_sam.log
+    jobid: 1
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:03:32 2026]
+localrule get_constellations:
+    output: /var/tmp/p_full/get_constellations.txt
+    jobid: 2
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:03:35 2026]
+Finished jobid: 2 (Rule: get_constellations)
+1 of 8 steps (12%) done
+[Tue Oct 20 20:05:35 2026]
+Finished jobid: 1 (Rule: align_to_reference)
+2 of 8 steps (25%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:05:35 2026]
+localrule create_seq_hash:
+    input: /var/tmp/p_full/alignment.fasta
+    output: /var/tmp/p_full/hash_map.csv, /var/tmp/p_full/hashed.aln.fasta
+    jobid: 5
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[32m****
+Query sequences collapsed from [0m100000[32m to [0m91690[32m unique sequences.[0m
+[Tue Oct 20 20:05:43 2026]
+Finished jobid: 5 (Rule: create_seq_hash)
+3 of 8 steps (38%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:05:43 2026]
+localrule scorpio:
+    input: /var/tmp/p_full/hashed.aln.fasta
+    output: /var/tmp/p_full/VOC_report.scorpio.csv
+    log: /var/tmp/p_full/logs/scorpio.log
+    jobid: 6
+    reason: Forced execution
+    threads: 8
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:15:05 2026]
+Finished jobid: 6 (Rule: scorpio)
+4 of 8 steps (50%) done
+Select jobs to execute...
+Execute 2 jobs...
+
+[Tue Oct 20 20:15:05 2026]
+localrule cache_sequence_assign:
+    input: /var/tmp/p_full/hash_map.csv
+    output: /var/tmp/p_full/designation_status.csv
+    jobid: 7
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:15:05 2026]
+localrule sequence_qc:
+    input: /var/tmp/p_full/hashed.aln.fasta
+    output: /var/tmp/p_full/pass_qc.fasta, /var/tmp/p_full/seq_status.csv
+    jobid: 4
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[32m****
+[0m96540[32m sequences assigned via designations.[0m
+[Tue Oct 20 20:15:09 2026]
+Finished jobid: 7 (Rule: cache_sequence_assign)
+5 of 8 steps (62%) done
+[32m****
+Running sequence QC[0m
+[32mTotal passing QC: [0m91674
+[Tue Oct 20 20:15:12 2026]
+Finished jobid: 4 (Rule: sequence_qc)
+6 of 8 steps (75%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:15:12 2026]
+localrule merged_info:
+    input: /tmp/query.fasta.gz, /var/tmp/p_full/seq_status.csv, /var/tmp/p_full/VOC_report.scorpio.csv, /var/tmp/p_full/designation_status.csv, /var/tmp/p_full/hash_map.csv
+    output: /var/tmp/p_full/preprocessing.csv
+    jobid: 3
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:15:21 2026]
+Finished jobid: 3 (Rule: merged_info)
+7 of 8 steps (88%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:15:21 2026]
+localrule all:
+    input: /var/tmp/p_full/alignment.fasta, /var/tmp/p_full/get_constellations.txt, /var/tmp/p_full/preprocessing.csv
+    jobid: 0
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:15:21 2026]
+Finished jobid: 0 (Rule: all)
+8 of 8 steps (100%) done
+Complete log(s): /var/tmp/p_full/.snakemake/log/2026-10-20T200332.522621.snakemake.log
+Assuming unrestricted shared filesystem usage.
+host: 937d11364bb6
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 8
+Rules claiming more threads will be scaled down.
+Job stats:
+job                count
+---------------  -------
+usher_cache            1
+usher_inference        1
+usher_to_report        1
+all                    1
+total                  4
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:15:21 2026]
+localrule usher_cache:
+    input: /var/tmp/p_full/pass_qc.fasta, /var/tmp/p_full/hash_map.csv
+    output: /var/tmp/p_full/cache_assigned.csv, /var/tmp/p_full/not_cache_assigned.fasta
+    jobid: 1
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:15:26 2026]
+Finished jobid: 1 (Rule: usher_cache)
+1 of 4 steps (25%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:15:26 2026]
+localrule usher_inference:
+    input: /var/tmp/p_full/not_cache_assigned.fasta, /usr/local/lib/python3.11/site-packages/pangolin/data/reference.fasta, /usr/local/lib/python3.11/site-packages/pangolin_data/data/lineageTree.pb
+    output: /var/tmp/p_full/clades.txt
+    log: /var/tmp/p_full/logs/usher.log
+    jobid: 3
+    reason: Forced execution
+    threads: 8
+    resources: tmpdir=/var/tmp
+Using UShER as inference engine.
+[Tue Oct 20 20:22:46 2026]
+Finished jobid: 3 (Rule: usher_inference)
+2 of 4 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:22:46 2026]
+localrule usher_to_report:
+    input: /var/tmp/p_full/clades.txt
+    output: /var/tmp/p_full/inference_report.csv
+    jobid: 2
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+Using UShER as inference engine.
+[Tue Oct 20 20:28:24 2026]
+Finished jobid: 2 (Rule: usher_to_report)
+3 of 4 steps (75%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 20:28:24 2026]
+localrule all:
+    input: /var/tmp/p_full/cache_assigned.csv, /var/tmp/p_full/inference_report.csv
+    jobid: 0
+    reason: Forced execution
+    resources: tmpdir=/var/tmp
+[Tue Oct 20 20:28:24 2026]
+Finished jobid: 0 (Rule: all)
+4 of 4 steps (100%) done
+Complete log(s): /var/tmp/p_full/.snakemake/log/2026-10-20T201521.716890.snakemake.log
+[32m****
+Pangolin running in usher mode.
+****[0m
+[32m
+--no-temp: [0mall intermediate files will be written to /var/tmp/p_full
+
+[32mMaximum ambiguity allowed is 0.3.
+****[0m
+[32mQuery file:	[0m/tmp/query.fasta.gz
+[32m****
+Data files found:[0m
+usher_pb:	/usr/local/lib/python3.11/site-packages/pangolin_data/data/lineageTree.pb
+[32m****[0m
+[32m****
+Output file written to: [0m/var/tmp/p_full/pangolin_full.csv

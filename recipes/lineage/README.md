@@ -21,13 +21,19 @@ Calls Pango lineages for 165 SARS-CoV-2 genomes with both tools on Graviton4 and
 ```bash
 make stage RECIPE=lineage       # once: a pinned Nextclade dataset + the Pango alias table
 for s in $(make -s spec RECIPE=lineage); do spawn task run --spec "$s" --wait; done
-make ls RECIPE=lineage
 
 nextclade run --input-dataset dataset --output-tsv nextclade.tsv dataset/sequences.fasta
 pangolin dataset/sequences.fasta --outfile pangolin.csv --skip-designation-cache
 ```
 
-Two tasks: Nextclade calls and stages its results, then pangolin calls the same sequences and compares.
+## Which box — [measured](../../measurements/lineage-real/README.md) (100,000 INSDC genomes with pango-designation v1.38 labels)
+| chip | instance | pangolin wall | Nextclade wall | $/hr | **billed $/result, both** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 1515 s | 297 s | 0.3590 | 0.213 |
+| Intel | `m8i.2xlarge` | 1495 s | 391 s | 0.4234 | 0.256 |
+| AMD | `m8a.2xlarge` | **628 s** | **205 s** | 0.4869 | **0.148** |
+
+pangolin's call is hierarchy-compatible with the curators' designation for 99.75% of genomes and exact for 97.99%. Every output field of both tools is identical on all three chips. AMD is fastest and cheapest. **Set `OMPI_MCA_plm_rsh_agent=false`**, or this image's pangolin falls back to the old `usher` and prints `usher-sampled is not installed`. That cost 40× on 2,000 genomes.
 
 ## Make it yours
 
@@ -36,14 +42,14 @@ Two tasks: Nextclade calls and stages its results, then pangolin calls the same 
 | the dataset's example sequences | your consensus FASTA | both tools take a multi-FASTA of assembled genomes, not reads. |
 | dataset tag `2026-09-07--17-10-15Z` | `nextclade dataset list --include-old` | **pin a tag.** 25 historical versions are retained back to 2024-01-16; `nextclade dataset get` without one is a moving target. |
 | **unalias before comparing** | — | **keep this.** `C.*` *is* `B.1.1.1.*` and `BA.*` is `B.1.1.529.*` — comparing printed names treats a rename as a disagreement. |
-| `--skip-designation-cache` | drop it | pangolin otherwise tries to refresh its designation cache, which a recipe here may not do at run time. |
+| `--skip-designation-cache` | drop it | without it, a genome whose aligned bytes hash to a designated sequence gets that designation by lookup from pangolin-data, not by placement — 96.5% of the [measured](../../measurements/lineage-real/README.md) set. |
 | exact string match | hierarchy-compatible | a call of `BA.2` against `BA.2.3` is a granularity difference, not an error. Decide which you actually mean. |
 
 **Leave the fixture.** 165 sequences is the dataset's own declared example set, pinned by the same tag as the reference and tree — so there is no second source to keep true. **Scale it** to your own genomes once it passes; both tools handle thousands per run.
 
 ## Shape, size, cost
 
-Two tasks on `m8g.large` / `m8g.xlarge`, TTL 30m and 40m, caps $0.10 and $0.15. Both callers finish 165 genomes in well under a minute; the recorded windows are mostly boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+Two tasks, Nextclade and then pangolin on the same sequences with the comparison, on `m8g.large` / `m8g.xlarge`, TTL 30m and 40m, caps $0.10 and $0.15. Both callers finish 165 genomes in well under a minute; the recorded windows are mostly boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: perfect compatible agreement, the naming convention that faked a disagreement, and the check that is not available</summary>
@@ -106,7 +112,8 @@ form:
   non-pinnable UI query.
 - **pango-designation**'s authoritative `lineages.csv` keys on **GISAID virus names**, whose
   sequences cannot be redistributed — you can pin the labels and never legally stage the bytes
-  they label.
+  they label. The INSDC copies of over a million of those samples can be staged, matched by name,
+  which is what [lineage-real](../../measurements/lineage-real/README.md) scores against.
 
 So the check is cross-code instead. Note the distinction that made the fix above possible:
 `alias_key.json` from the *same* repository keys on lineage **prefixes**, carries no GISAID data,

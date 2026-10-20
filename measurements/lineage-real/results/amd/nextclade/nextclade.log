@@ -1,0 +1,32 @@
+2026-10-20 19:53:04.830 [W] dataset_download.rs:220: When reading dataset: The following files are present in the dataset archive, but are not declared in its pathogen.json:
+  - ._genome_annotation.gff3
+  - ._pathogen.json
+  - ._reference.fasta
+  - ._sequences.fasta
+  - ._tree.json
+The following files are not present in the dataset archive, but are declared in its pathogen.json:
+  - CHANGELOG.md
+  - README.md
+
+Context:
+Files declared in pathogen.json:
+  - CHANGELOG.md
+  - README.md
+  - genome_annotation.gff3
+  - pathogen.json
+  - reference.fasta
+  - sequences.fasta
+  - tree.json
+Files present in the archive:
+  - ._genome_annotation.gff3
+  - ._pathogen.json
+  - ._reference.fasta
+  - ._sequences.fasta
+  - ._tree.json
+  - genome_annotation.gff3
+  - pathogen.json
+  - reference.fasta
+  - sequences.fasta
+  - tree.json
+
+This is not an error. Nextclade ignores unknown file declarations and undeclared files. But this could be a mistake by the dataset author. For example, there could be a typo in pathogen.json file declaration, or a file could have been added to the dataset, but not declared in the pathogen.json. In this case, Nextclade analysis could be missing some of the features intended by the author. Contact the author to resolve this. It could also be that the dataset contains files for a newer version of Nextclade, and that the currently used version does not recognize these files. In which case try to upgrade Nextclade.

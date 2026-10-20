@@ -1,0 +1,33 @@
+Q0   ok   100000 query genomes, all distinct, all labelled; 2000 in the invariance subset
+P1_full ok   full: 100000 rows for 100000 genomes, 100000 distinct
+P1_sub_t1 ok   sub_t1: 2000 rows for 2000 genomes, 2000 distinct
+P2   ok   versions reported: [('4.4', 'PUSHER-v1.38')]
+P3   ok   101949 placement histograms, 0 not a partition or conflict != (b-a)/b
+P4   ok   51 QC fails, all Unassigned
+P5   ok   96540 of 100000 genomes hash to a designated sequence; is_designated set on exactly those: True
+P6   ok   2000 genomes alone at 1 thread vs in the batch at T threads: 0 rows differ
+N1   ok   100000 rows for 100000 genomes, 100000 distinct
+N2   ok   100000 rows checked (0 with errors skipped); violations per identity: {'sub': 0, 'del': 0, 'ins': 0, 'mis': 0, 'nonacgtn': 0, 'unkaa': 0, 'aasub': 0, 'aadel': 0, 'priv': 0, 'cov': 0}
+N3   ok   2000 genomes at -j 1 vs their rows at -j T: 0 differ
+A1   ok   561 aliases in v1.38, all present and unchanged in v1.41 (608 entries)
+t_pangolin_vs_designation      {'genomes': 100000, 'both_assigned': 99949, 'unassigned': 51, 'exact': 97936, 'exact_rate': 0.97986, 'compatible': 99704, 'compatible_rate': 0.997549, 'compatible_finer': 1122, 'compatible_coarser': 646}
+t_pangolin_vs_designation_hash_matched      {'genomes': 96540, 'both_assigned': 96534, 'unassigned': 6, 'exact': 94634, 'exact_rate': 0.980318, 'compatible': 96302, 'compatible_rate': 0.997597, 'compatible_finer': 1057, 'compatible_coarser': 611}
+t_pangolin_vs_designation_not_hash_matched      {'genomes': 3460, 'both_assigned': 3415, 'unassigned': 45, 'exact': 3302, 'exact_rate': 0.966911, 'compatible': 3402, 'compatible_rate': 0.996193, 'compatible_finer': 65, 'compatible_coarser': 35}
+t_hash_table_label_vs_designation      {'genomes': 96540, 'both_assigned': 96540, 'unassigned': 0, 'exact': 96482, 'exact_rate': 0.999399, 'compatible': 96534, 'compatible_rate': 0.999938, 'compatible_finer': 48, 'compatible_coarser': 4}
+t_pangolin_vs_designation_route_strain      {'genomes': 97419, 'both_assigned': 97371, 'unassigned': 48, 'exact': 95391, 'exact_rate': 0.979665, 'compatible': 97126, 'compatible_rate': 0.997484, 'compatible_finer': 1099, 'compatible_coarser': 636}
+t_pangolin_vs_designation_route_cog      {'genomes': 2581, 'both_assigned': 2578, 'unassigned': 3, 'exact': 2545, 'exact_rate': 0.987199, 'compatible': 2578, 'compatible_rate': 1.0, 'compatible_finer': 23, 'compatible_coarser': 10}
+t_nextclade_vs_designation      {'genomes': 100000, 'both_assigned': 100000, 'unassigned': 0, 'exact': 92505, 'exact_rate': 0.92505, 'compatible': 99565, 'compatible_rate': 0.99565, 'compatible_finer': 1801, 'compatible_coarser': 5259}
+x_nextclade_vs_pangolin      {'genomes': 100000, 'both_assigned': 99949, 'unassigned': 51, 'exact': 93199, 'exact_rate': 0.932466, 'compatible': 99645, 'compatible_rate': 0.996958, 'compatible_finer': 1253, 'compatible_coarser': 5193}
+  T1 incompatible MW030987.1   pangolin=B.1.369        designated=B.1.564        Usher placements: B.1.369(1/1)
+  T1 incompatible OP223895.1   pangolin=BF.24          designated=BF.5           Usher placements: BF.24(1/1)
+  T1 incompatible MW341833.1   pangolin=B.1.369        designated=B.1.564        Usher placements: B.1.369(1/1)
+  T1 incompatible PQ028417.1   pangolin=JN.1.16.1      designated=JN.1.64.1      Usher placements: JN.1.16.1(1/2) JN.1.64.1(1/2)
+  T1 incompatible OP010331.2   pangolin=BA.5.5         designated=BA.5.1.1       Usher placements: BA.5.5(1/1); scorpio lineage BA.2 conflict
+  T1 incompatible OX646739.1   pangolin=B.1.532        designated=B.1.1.115      Usher placements: B.1.532(1/1)
+  T1 incompatible PX089643.1   pangolin=XFG.3.15       designated=XFG.3.16       Usher placements: XFG.3.15(1/1); scorpio lineage BA.2 confli
+  T1 incompatible MW587789.1   pangolin=A              designated=B              Usher placements: A(2/2)
+  T1 incompatible OW154534.1   pangolin=BA.1.1.11      designated=BA.1.1.1       Usher placements: BA.1.1.11(1/1)
+  T1 incompatible OQ602208.1   pangolin=XBB.1.18.1     designated=XBB.1.5        Usher placements: XBB.1.18.1(1/1)
+T1   ok   pangolin (UShER) hierarchy-compatible with the designation: 0.9975 (floor 0.95)
+X1   ok   Nextclade hierarchy-compatible with pangolin: 0.9970 (floor 0.80)
+ALL CHECKS PASS

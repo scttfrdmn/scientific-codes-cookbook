@@ -1,0 +1,154 @@
+{
+ "Q0": {
+  "ok": true,
+  "detail": "100000 query genomes, all distinct, all labelled; 2000 in the invariance subset"
+ },
+ "P1_full": {
+  "ok": true,
+  "detail": "full: 100000 rows for 100000 genomes, 100000 distinct"
+ },
+ "P1_sub_t1": {
+  "ok": true,
+  "detail": "sub_t1: 2000 rows for 2000 genomes, 2000 distinct"
+ },
+ "P2": {
+  "ok": true,
+  "detail": "versions reported: [('4.4', 'PUSHER-v1.38')]"
+ },
+ "P3": {
+  "ok": true,
+  "detail": "101949 placement histograms, 0 not a partition or conflict != (b-a)/b"
+ },
+ "P4": {
+  "ok": true,
+  "detail": "51 QC fails, all Unassigned"
+ },
+ "P5": {
+  "ok": true,
+  "detail": "96540 of 100000 genomes hash to a designated sequence; is_designated set on exactly those: True"
+ },
+ "P6": {
+  "ok": true,
+  "detail": "2000 genomes alone at 1 thread vs in the batch at T threads: 0 rows differ"
+ },
+ "N1": {
+  "ok": true,
+  "detail": "100000 rows for 100000 genomes, 100000 distinct"
+ },
+ "N2": {
+  "ok": true,
+  "detail": "100000 rows checked (0 with errors skipped); violations per identity: {'sub': 0, 'del': 0, 'ins': 0, 'mis': 0, 'nonacgtn': 0, 'unkaa': 0, 'aasub': 0, 'aadel': 0, 'priv': 0, 'cov': 0}"
+ },
+ "N3": {
+  "ok": true,
+  "detail": "2000 genomes at -j 1 vs their rows at -j T: 0 differ"
+ },
+ "A1": {
+  "ok": true,
+  "detail": "561 aliases in v1.38, all present and unchanged in v1.41 (608 entries)"
+ },
+ "t_pangolin_vs_designation": {
+  "genomes": 100000,
+  "both_assigned": 99949,
+  "unassigned": 51,
+  "exact": 97936,
+  "exact_rate": 0.97986,
+  "compatible": 99704,
+  "compatible_rate": 0.997549,
+  "compatible_finer": 1122,
+  "compatible_coarser": 646
+ },
+ "t_pangolin_vs_designation_hash_matched": {
+  "genomes": 96540,
+  "both_assigned": 96534,
+  "unassigned": 6,
+  "exact": 94634,
+  "exact_rate": 0.980318,
+  "compatible": 96302,
+  "compatible_rate": 0.997597,
+  "compatible_finer": 1057,
+  "compatible_coarser": 611
+ },
+ "t_pangolin_vs_designation_not_hash_matched": {
+  "genomes": 3460,
+  "both_assigned": 3415,
+  "unassigned": 45,
+  "exact": 3302,
+  "exact_rate": 0.966911,
+  "compatible": 3402,
+  "compatible_rate": 0.996193,
+  "compatible_finer": 65,
+  "compatible_coarser": 35
+ },
+ "t_hash_table_label_vs_designation": {
+  "genomes": 96540,
+  "both_assigned": 96540,
+  "unassigned": 0,
+  "exact": 96482,
+  "exact_rate": 0.999399,
+  "compatible": 96534,
+  "compatible_rate": 0.999938,
+  "compatible_finer": 48,
+  "compatible_coarser": 4
+ },
+ "t_pangolin_vs_designation_route_strain": {
+  "genomes": 97419,
+  "both_assigned": 97371,
+  "unassigned": 48,
+  "exact": 95391,
+  "exact_rate": 0.979665,
+  "compatible": 97126,
+  "compatible_rate": 0.997484,
+  "compatible_finer": 1099,
+  "compatible_coarser": 636
+ },
+ "t_pangolin_vs_designation_route_cog": {
+  "genomes": 2581,
+  "both_assigned": 2578,
+  "unassigned": 3,
+  "exact": 2545,
+  "exact_rate": 0.987199,
+  "compatible": 2578,
+  "compatible_rate": 1.0,
+  "compatible_finer": 23,
+  "compatible_coarser": 10
+ },
+ "t_nextclade_vs_designation": {
+  "genomes": 100000,
+  "both_assigned": 100000,
+  "unassigned": 0,
+  "exact": 92505,
+  "exact_rate": 0.92505,
+  "compatible": 99565,
+  "compatible_rate": 0.99565,
+  "compatible_finer": 1801,
+  "compatible_coarser": 5259
+ },
+ "x_nextclade_vs_pangolin": {
+  "genomes": 100000,
+  "both_assigned": 99949,
+  "unassigned": 51,
+  "exact": 93199,
+  "exact_rate": 0.932466,
+  "compatible": 99645,
+  "compatible_rate": 0.996958,
+  "compatible_finer": 1253,
+  "compatible_coarser": 5193
+ },
+ "T1": {
+  "ok": true,
+  "detail": "pangolin (UShER) hierarchy-compatible with the designation: 0.9975 (floor 0.95)"
+ },
+ "X1": {
+  "ok": true,
+  "detail": "Nextclade hierarchy-compatible with pangolin: 0.9970 (floor 0.80)"
+ },
+ "digests": {
+  "pangolin_all": "6da7cc73800a8aa30a263aedeb02386d1aa534b11e6e6c4c7681125656766dc3",
+  "pangolin_lineage": "d5d55857111f8aa637a5fb88f8dfd02ec230360f79e2fadefcc2315e7e50d145",
+  "pangolin_sub_t1_all": "76f4b4d5d813d052d17720aed2f8240e95fcaa87e51e8fca6129780eec96fb9b",
+  "nextclade_all": "fb33746b2d9c792b57ba2d15d813857fc4504d7ef416e98dbb04923054ab9e2b",
+  "nextclade_pango": "91bbd757b992e220ad1294aaaae7dd25360475f03c8d0027887b40623727d081"
+ },
+ "failed": []
+}

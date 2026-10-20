@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-lineage-real-choose-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'e73601644e08e10af0b680d2891e1020fe013fff7cde2568dfd25f4fc7a9db11  choose.sh\\n884322e888d5e1c14ce32ac73a4b7d3facefbfeea821cc26083ace7c91bf1aa3  choose.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/choose.sh 100000 2000 20261020\n"
+  ],
+  "container": "quay.io/aarchbio/pangolin@sha256:32551903d08cbe39fc70fcf924326fec08c100b8416346acd0302bb0e7f2a03a",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/choose.sh",
+      "destination": "/tmp/choose.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/choose.py",
+      "destination": "/tmp/choose.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/nextstrain/sequences.fasta.zst",
+      "destination": "/tmp/nextstrain/sequences.fasta.zst"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/nextstrain/metadata.tsv.zst",
+      "destination": "/tmp/nextstrain/metadata.tsv.zst"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/nextstrain/cog_uk_accessions.tsv.zst",
+      "destination": "/tmp/nextstrain/cog_uk_accessions.tsv.zst"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.8
+  }
+}

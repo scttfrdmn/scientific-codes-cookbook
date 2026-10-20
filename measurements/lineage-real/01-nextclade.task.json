@@ -1,0 +1,59 @@
+{
+  "task_id": "cookbook-lineage-real-nextclade-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'cb1167b9569a891a2e9461d0d766f6d7e293461c9f3f4a1f8e6d5e43bf40f8d6  nextclade.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/nextclade.sh 8 query.fasta.gz\n"
+  ],
+  "container": "quay.io/aarchbio/nextclade@sha256:7cbf30abb4fa7fbc9b9a2c608b9ed361d8527514af139fb6c1883dce16e16f62",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/nextclade.sh",
+      "destination": "/tmp/nextclade.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/query.fasta.gz",
+      "destination": "/tmp/query.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/sub.fasta.gz",
+      "destination": "/tmp/sub.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/truth.tsv",
+      "destination": "/tmp/truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage-real/sel/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/dataset.tar",
+      "destination": "/tmp/dataset.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lineage/pins.sha256",
+      "destination": "/tmp/dataset.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lineage-real/r1/nextclade/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
