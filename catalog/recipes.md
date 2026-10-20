@@ -301,7 +301,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
+| [cctbx](../recipes/cctbx/README.md) | Compares cctbx and gemmi on every space group in the International Tables, on Graviton4, then reads a real structure with both. For anyone doing crystallographic computing on ARM. | structbio | stage | 2026-10-20 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 
 ## tomography
 
