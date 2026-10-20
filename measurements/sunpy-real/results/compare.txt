@@ -1,0 +1,61 @@
+arm64   completed Neoverse-V2 tpc=1  real.py  330.3 s  window  454 s  $/hr 0.7181  compute $ 0.0659  billed $ 0.0906  worker rss 1.91 GiB  cgroup 25.2 GiB  per-image 15.1 s  corename neoversev2
+         per-phase CPU s: checksum 53  load 236  meta 9  pixels 4268  derotate 600
+x86_64  completed Intel(R) Xeon(R) 6975P-C tpc=2  real.py  722.1 s  window  816 s  $/hr 0.8467  compute $ 0.1698  billed $ 0.1919  worker rss 1.92 GiB  cgroup 27.4 GiB  per-image 33.1 s  corename Cooperlake
+         per-phase CPU s: checksum 98  load 462  meta 14  pixels 9669  derotate 1125
+amd     completed AMD EPYC 9R45 tpc=1  real.py  501.3 s  window  587 s  $/hr 0.9738  compute $ 0.1356  billed $ 0.1588  worker rss 1.92 GiB  cgroup 28.0 GiB  per-image 23.0 s  corename Cooperlake
+         per-phase CPU s: checksum 58  load 296  meta 8  pixels 6738  derotate 800
+== x86_64 vs arm64 (343 images, 343 in common)
+  derot_sha256                     differs in 343 images, worst relative nan
+  derot_sum                        differs in 335 images, worst relative 6.97e-15
+  hae_date_hgln_minus_hdr_deg      differs in 239 images, worst relative 3.34e-12
+  hae_date_hgln_minus_sunpy_deg    differs in 239 images, worst relative 4.57e-13
+  hae_date_hglt_minus_crlt_deg     differs in 211 images, worst relative 7.39e-12
+  hae_date_r_minus_dsun_m          differs in 167 images, worst relative 6.10e+295
+  hae_j2000_hgln_minus_hdr_deg     differs in 299 images, worst relative 1.79e-09
+  hae_j2000_hgln_minus_sunpy_deg   differs in 231 images, worst relative 4.22e-05
+  hae_j2000_hglt_minus_crlt_deg    differs in 215 images, worst relative 3.12e-12
+  hae_j2000_r_minus_dsun_m         differs in 131 images, worst relative 6.10e+295
+  hgc_lon_offset_deg               differs in 243 images, worst relative 1.11e-14
+  hgc_lon_offset_spread_deg        differs in 102 images, worst relative 1.00e+00
+  hgc_offset_minus_hdr_deg         differs in 239 images, worst relative 2.36e-09
+  limb_radius_px                   differs in 126 images, worst relative 5.97e-16
+  map_dsun                         differs in 126 images, worst relative 4.05e-16
+  n_on_disc_pred                   differs in 123 images, worst relative 1.31e-15
+  ncc_derot                        differs in 341 images, worst relative 6.11e-14
+  obs_crln_minus_hdr_deg           differs in 159 images, worst relative 1.06e-09
+  obs_dsun_minus_hdr_m             differs in 190 images, worst relative 1.13e-05
+  obs_hae_minus_hdr_km             differs in 222 images, worst relative 2.29e-13
+  obs_hgln_minus_hdr_deg           differs in 298 images, worst relative 1.79e-09
+  obs_hglt_minus_crlt_deg          differs in 267 images, worst relative 5.71e-12
+  roundtrip_px_max                 differs in 139 images, worst relative 8.37e-05
+  roundtrip_px_max_at_rho          differs in 213 images, worst relative 3.69e-14
+  roundtrip_px_max_inner99         differs in 139 images, worst relative 8.37e-05
+  identical in every image: checksum_ok, checksum_total, data_sha256, datasum, datasum_hdr, datasum_ok, date_obs, derot_finite, dt_hours, dtype, file, file_bytes, hgc_lat_minus_hgs_max_deg, limb_mismatch_worst_rel, map_class, map_rsun_meters, map_rsun_obs, n_blank, n_derot, n_hdu, n_limb_mismatch, n_nan, n_on_disc, ncc_raw, observer_from, r_sun_px_rel, region_shape, rsun_obs, rsun_rel_arcsin, rsun_rel_arctan, rsun_x2_2, self_derot_finite_match, self_derot_max_rel, shape, stats, stats_hdr
+== amd vs arm64 (343 images, 343 in common)
+  derot_sha256                     differs in 343 images, worst relative nan
+  derot_sum                        differs in 335 images, worst relative 6.97e-15
+  hae_date_hgln_minus_hdr_deg      differs in 239 images, worst relative 3.34e-12
+  hae_date_hgln_minus_sunpy_deg    differs in 239 images, worst relative 4.57e-13
+  hae_date_hglt_minus_crlt_deg     differs in 211 images, worst relative 7.39e-12
+  hae_date_r_minus_dsun_m          differs in 167 images, worst relative 6.10e+295
+  hae_j2000_hgln_minus_hdr_deg     differs in 299 images, worst relative 1.79e-09
+  hae_j2000_hgln_minus_sunpy_deg   differs in 231 images, worst relative 4.22e-05
+  hae_j2000_hglt_minus_crlt_deg    differs in 215 images, worst relative 3.12e-12
+  hae_j2000_r_minus_dsun_m         differs in 131 images, worst relative 6.10e+295
+  hgc_lon_offset_deg               differs in 243 images, worst relative 1.11e-14
+  hgc_lon_offset_spread_deg        differs in 102 images, worst relative 1.00e+00
+  hgc_offset_minus_hdr_deg         differs in 239 images, worst relative 2.36e-09
+  limb_radius_px                   differs in 126 images, worst relative 5.97e-16
+  map_dsun                         differs in 126 images, worst relative 4.05e-16
+  n_on_disc_pred                   differs in 123 images, worst relative 1.31e-15
+  ncc_derot                        differs in 341 images, worst relative 6.11e-14
+  obs_crln_minus_hdr_deg           differs in 159 images, worst relative 1.06e-09
+  obs_dsun_minus_hdr_m             differs in 190 images, worst relative 1.13e-05
+  obs_hae_minus_hdr_km             differs in 222 images, worst relative 2.29e-13
+  obs_hgln_minus_hdr_deg           differs in 298 images, worst relative 1.79e-09
+  obs_hglt_minus_crlt_deg          differs in 267 images, worst relative 5.71e-12
+  roundtrip_px_max                 differs in 139 images, worst relative 8.37e-05
+  roundtrip_px_max_at_rho          differs in 213 images, worst relative 3.69e-14
+  roundtrip_px_max_inner99         differs in 139 images, worst relative 8.37e-05
+  identical in every image: checksum_ok, checksum_total, data_sha256, datasum, datasum_hdr, datasum_ok, date_obs, derot_finite, dt_hours, dtype, file, file_bytes, hgc_lat_minus_hgs_max_deg, limb_mismatch_worst_rel, map_class, map_rsun_meters, map_rsun_obs, n_blank, n_derot, n_hdu, n_limb_mismatch, n_nan, n_on_disc, ncc_raw, observer_from, r_sun_px_rel, region_shape, rsun_obs, rsun_rel_arcsin, rsun_rel_arctan, rsun_x2_2, self_derot_finite_match, self_derot_max_rel, shape, stats, stats_hdr
+COMPARE DONE

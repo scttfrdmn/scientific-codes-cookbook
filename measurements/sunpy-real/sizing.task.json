@@ -1,0 +1,87 @@
+{
+  "task_id": "cookbook-sunpy-real-sizing",
+  "container": "quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '05eaa3ee27275a01043c264aa20d4ae39faf541e7b2ad0ee202824187dad96c5  run.sh\\n1330471df721093c956f61a5ccd7a7f418a19b5e3d0581973edb79760dd909ee  real.py\\n4076fcf0236e689c917f5a190d99e490403b6615bc97ff990844a192856062b7  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh sdo_aia_h2_20170906T000000_0171_v1.fits sdo_aia_h2_20170906T060000_0171_v1.fits sdo_aia_h2_20170906T110000_0171_v1.fits sdo_aia_h2_20170906T120000_0171_v1.fits sdo_aia_h2_20170906T130000_0171_v1.fits sdo_aia_h2_20170906T180000_0171_v1.fits\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T000000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T000000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T060000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T060000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T110000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T110000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T120000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T120000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T130000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T130000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/aia/sdo_aia_h2_20170906T180000_0171_v1.fits",
+      "destination": "/work/in/sdo_aia_h2_20170906T180000_0171_v1.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sunpy-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/results.json"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sunpy-real/sizing/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}

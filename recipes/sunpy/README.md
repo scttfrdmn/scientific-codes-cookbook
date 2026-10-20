@@ -37,11 +37,17 @@ differential_rotation(1*u.day, 30*u.deg, model="howard")            # Howard 199
 | the limb asserted at `1e-6` | the measured `2e-12` | the claim worth making is *arcsin not arctan*, which `1e-6` settles with 10× margin. `2e-12` would assert something about floating-point tangency instead. |
 | `observer="earth"` | a spacecraft's position | every frame identity below is observer-relative; Stonyhurst longitude is *defined* from the observer's central meridian. |
 
-**There is no fixture to leave or scale** — every reference is a defined constant or a closed form, which is why this recipe fetches nothing and needs no data pin. **Scale it** by pointing the frame checks at a real observation: the identities are per-coordinate and cost nothing at image size.
+**There is no fixture to leave or scale** — every reference is a defined constant or a closed form, which is why this recipe fetches nothing and needs no data pin. **Scale it** by pointing the frame checks at a real observation, which the measurement below does for a whole day of AIA.
 
 ## Shape, size, cost
 
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All of it — 8,784 hourly `B0` epochs, 1,000 Carrington rotations, a 50-step limb bisection — is **14 s** of a 1m17s window ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All of it — 8,784 hourly `B0` epochs, 1,000 Carrington rotations, a 50-step limb bisection — is **14 s** of a 1m17s window ([layout](../../patterns/layout-and-effective-cost.md)). **Which box — [measured](../../measurements/sunpy-real/README.md)** on all 343 AIA 171 Å images of 2017-09-06 (8.6 G pixels through the frames and back, plus a derotated flare-region cube), 16 workers on a `4xlarge`. **Take Graviton4:** the per-pixel transforms are 83–85% of the CPU, and it runs them 1.5× faster than AMD and 2.2× faster than Intel. All 22 assertions hold on every chip, including the limb to zero pixels in 8.6 G and FITS checksums recomputed from the raw bytes. Size by memory: each worker peaks at 1.9 GiB.
+
+| chip | instance | tool wall | compute $ | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | **330 s** | **0.0659** | **0.0906** |
+| Intel | `m8i.4xlarge` | 722 s | 0.1698 | 0.1919 |
+| AMD | `m8a.4xlarge` | 501 s | 0.1356 | 0.1588 |
 
 <details>
 <summary>As shipped: an exact closed form with two analytically-sized controls, three definitional frame identities, four published rotation laws, and a constant that is not what it looks like</summary>
@@ -268,8 +274,9 @@ constant note — but check the bucket regardless
 
 ### Not covered
 
-**Real solar data.** No FITS is read, so `Map.rotate`, `submap`, reprojection, the AIA/HMI/LASCO
-instrument loaders and their metadata fixups — most of what sunpy is used for — are untouched.
+**Real solar data, in this recipe.** No FITS is read here. The [measurement](../../measurements/sunpy-real/README.md)
+covers the AIA loader, `submap`, `reproject_to` and `propagate_with_solar_surface` on a day of AIA;
+`Map.rotate` and the HMI/LASCO loaders and their metadata fixups are untouched by either.
 Nothing here exercises `Fido`, the search and download layer, which is unavoidable: a hermetic
 recipe cannot query VSO or JSOC, so the half of sunpy that talks to data archives has no coverage
 and would need a pinned local mirror.
