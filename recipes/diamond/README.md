@@ -2,12 +2,12 @@
 tool: diamond
 tool_version: 2.2.6
 image: quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5
-last_verified_x86_64: 2026-10-19
-last_verified_amd: 2026-10-19
+last_verified_x86_64: 2026-10-20
+last_verified_amd: 2026-10-20
 images_x86_64:
   - quay.io/biocontainers/diamond@sha256:9332914da176d757220e9a9bbce9cd681ab00dc804e8ce97a4b3dcb8a018fa87
 spawn_version: 0.135.1
-last_verified: 2026-10-19
+last_verified: 2026-10-20
 ---
 # DIAMOND — the same search as BLAST+, 31× faster, 0.43% of the hits lost
 
