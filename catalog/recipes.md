@@ -190,7 +190,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [gromacs](../recipes/gromacs/README.md) | Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM. | md | stage | 2026-10-19 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
 | [lammps](../recipes/lammps/README.md) | Runs LAMMPS' own rhodopsin benchmark (CHARMM, PPPM, NPT) replicated to 128,000 atoms and reports ns/day and $/ns. For anyone sizing a biomolecular MD run on ARM. | md | stage | 2026-10-19 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
 | [mdtraj](../recipes/mdtraj/README.md) | Runs 100 ps of 23,262-atom water in GROMACS, then has MDTraj and MDAnalysis decode the same XTC and agree to 2.4e-07 nm. For anyone analysing trajectories. | md | stage | 2026-10-19 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
-| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-19 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
+| [plumed](../recipes/plumed/README.md) | Couples PLUMED to 100 ps of GROMACS on 23,262 atoms and reads back CVs that match the force field exactly. For anyone adding CVs or biasing to an MD run. | md | build-in-task | 2026-10-20 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
 
 ## neuroimaging
 
