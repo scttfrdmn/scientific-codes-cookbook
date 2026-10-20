@@ -1,0 +1,63 @@
+version datashader                           0.19.1
+version numba                                0.68.0
+version pandas                               3.0.6
+version dask                                 2026.8.0
+version pyarrow                              25.0.0
+version numpy                                2.5.4
+numba threads                                16
+threadpool openblas                          0.3.34 Cooperlake threads=1
+files                                        24
+PASS all files present                       24 of 24
+rows (parquet footers)                       339897217
+points (pickups + dropoffs)                  679794434
+dask partitions                              8
+PASS rows read == parquet footers            339897217 vs 339897217
+time read+persist s                          19.89
+time pickups summary (cold, incl. JIT) s     4.28
+time dropoffs count s                        0.76
+time pickups count (warm) s                  0.69
+time pickups count 2048 s                    0.29
+time pickups count 1024 s                    0.18
+time datashader total s                      6.20
+TOOL_WALL_S                                  26.10
+datashader rate (warm pickups count), points/s 4.947e+08
+PASS raster dims (y column, x column)        ('plat', 'plon')
+PASS y ascending, cell centres on the dyadic grid y[0]=40.50006103515625 x[0]=-74.24993896484375
+PASS sum('pax') is NaN exactly where its count == 0 14496006
+PASS sum('cents') is NaN exactly where its count == 0 14496006
+time reference (numpy + per-batch pandas) s  41.87
+reference worker peak RSS GiB                2.06
+PASS reference rows == footers               339897217
+pickups inside extent                        333451537
+dropoffs inside extent                       333422546
+pickups non-finite                           0
+passenger_count NaN / fare NaN               0 / 0
+PASS count('cents') total == numpy inside non-NaN fares 333451537 vs 333451537
+dropoffs non-finite                          110
+pickups outside extent (finite)              6445680
+PASS pickups: raster total == numpy inside-count 333451537 vs 333451537
+PASS dropoffs: raster total == numpy inside-count 333422546 vs 333422546
+PASS passengers: raster total == numpy inside-sum np.float64(560947025.0) vs 560947025.0
+PASS fare cents: raster total == numpy inside-sum np.float64(328796517140.0) vs 328796517140.0
+PASS cents sums below 2^53 (exact)           3.336e+11
+PASS pickup count == histogram2d.T, every cell 0 of 16777216 cells differ
+PASS dropoff count == histogram2d.T, every cell 0 of 16777216 cells differ
+PASS pickup passengers == histogram2d.T, every cell 0 of 16777216 cells differ
+PASS pickup fare cents == histogram2d.T, every cell 0 of 16777216 cells differ
+PASS control: pickup count without the transpose differs 3601078 cells differ
+PASS dask persisted == sum of 2M-row pandas rasters 0 cells differ
+PASS pickup count warm repeat == summary count bit-identical
+PASS 2048-wide raster == 4096 block-summed 2x2 0 cells differ
+PASS 1024-wide raster == 4096 block-summed 4x4 0 cells differ
+empty pickup cells                           14496006
+PASS mean is NaN exactly where count('cents') == 0 14496006
+PASS mean == sum / count exactly             max |diff| 0.000e+00
+busiest pickup cell (lon, lat, trips)        -73.99408 40.75116 244829
+non-empty pickup / dropoff cells             2281210 / 2950829
+mean fare over inside pickups $              9.860399
+sha256 n_pu                                  046050e3e88b6b52c3bdfb9336675cafbe5962cf004003d449dc3c0ac1b6f737
+sha256 n_do                                  00e0cc399513ec4e0874878803c016b35fa18d48938420e81d0517e1719dd3f9
+sha256 pax_pu                                4873e1c597cb28a275ea0673315421f68d5e8280e9d3101fa37c218a28621b34
+sha256 cents_pu                              3f9a4f9b7272903a68c60f954d3b788c296d2758fb054b8d27860766d5f9dc21
+peak RSS main process GiB                    42.08
+DATASHADER REAL OK                           

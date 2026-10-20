@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-datashader-real-fetch",
+  "container": "quay.io/aarchsci/geo-ml@sha256:7414b1df7c155b7d820cc062d88b61e5081b3d2ba4685c57a29b591cd67748de",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\n# NYC TLC yellow-taxi trips 2009-2010, the only years the TLC still publishes with coordinates,\n# fetched ON AWS from the TLC's own CloudFront origin. The sha256 recorded here is the pin.\npython3 -u - <<'PYEOF' || { echo \"FAIL: fetch\"; exit 1; }\nimport hashlib, urllib.request\nfrom concurrent.futures import ThreadPoolExecutor\nimport pyarrow.parquet as pq\nU = \"https://d37ci6vzurychx.cloudfront.net/trip-data/\"\nnames = [\"yellow_tripdata_%d-%02d.parquet\" % (y, m) for y in (2009, 2010) for m in range(1, 13)]\ndef get(name):\n    for attempt in range(3):\n        try:\n            h = hashlib.sha256(); n = 0\n            with urllib.request.urlopen(U + name, timeout=900) as r, open(name, \"wb\") as fh:\n                want = int(r.headers[\"Content-Length\"])\n                while True:\n                    b = r.read(1 << 22)\n                    if not b:\n                        break\n                    h.update(b); fh.write(b); n += len(b)\n            assert n == want, \"%s: %d bytes, Content-Length %d\" % (name, n, want)\n            return name, n, h.hexdigest()\n        except Exception as e:\n            print(\"retry\", name, repr(e), flush=True)\n    raise SystemExit(\"FAIL: %s did not download\" % name)\nwith ThreadPoolExecutor(6) as ex:\n    got = list(ex.map(get, names))\nwith open(\"data.sha256\", \"w\") as out, open(\"rows.tsv\", \"w\") as rows:\n    for name, n, sha in got:\n        out.write(\"%s  %s\\n\" % (sha, name))\n        md = pq.ParquetFile(name).metadata\n        rows.write(\"%s\\t%d\\t%d\\t%d\\n\" % (name, n, md.num_rows, md.num_row_groups))\n        print(name, n, md.num_rows, sha, flush=True)\nPYEOF\ncat data.sha256 rows.tsv\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/tlc/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

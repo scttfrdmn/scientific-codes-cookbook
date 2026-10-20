@@ -41,6 +41,14 @@ np.asarray(agg).T == H                        # vs np.histogram2d — note the t
 
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 30m as a **backstop** with `cost_limit` $0.15 as the real guard. The whole check — generating 50M points, three aggregations, and a 1024² `histogram2d` — is **20 s** of a 1m26s window; 40 s is installing Docker and 24 s pulling the image. The aggregation itself is **0.18 s**, so these timings are not compute cost ([layout](../../patterns/layout-and-effective-cost.md)).
 
+## Which box — [measured](../../measurements/datashader-real/README.md) (680 M NYC taxi points through dask, 16 threads, every cell == `histogram2d`)
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `r8g.4xlarge` | 22.7 s | 0.9426 | **0.0060** | **0.0432** |
+| Intel | `r8i.4xlarge` | 26.1 s | 1.1114 | 0.0081 | 0.0494 |
+| AMD | `r8a.4xlarge` | **18.3 s** | 1.2781 | 0.0065 | 0.0469 |
+
 <details>
 <summary>As shipped: bit-identical to np.histogram2d over 1,048,576 cells, two exact invariances, and the orientation asserted rather than assumed</summary>
 
@@ -173,9 +181,11 @@ aggregation is checked here.
 untouched, and the antialiasing path with them — line rasterization has its own edge rules that
 none of the above exercises.
 
-**dask and out-of-core.** 50M rows fit in memory, so the dask-backed and partitioned paths are
-not run, and nothing here speaks to the chunked aggregation most large jobs use. **GPU
-(cudf/cupy)** likewise — Round Two. **Categorical aggregation** (`ds.count_cat`), **`ds.std`/`var`**
+**Out-of-core dask.** This fixture is pandas only. The dask path, persisted in memory, is run on
+680 M real points in [datashader-real](../../measurements/datashader-real/README.md), where the
+partitioned raster equals the sum of per-batch pandas rasters cell for cell; a frame larger than
+RAM, and a distributed cluster, are not run anywhere. **GPU
+(cudf/cupy)** is not run either — Round Two. **Categorical aggregation** (`ds.count_cat`), **`ds.std`/`var`**
 and the `where`/`first`/`last` reductions. **Non-linear axes** (`ds.Canvas(x_axis_type="log")`),
 where the bin-edge agreement asserted above would need re-deriving rather than re-using.
 

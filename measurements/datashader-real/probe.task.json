@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-datashader-real-probe",
+  "container": "quay.io/aarchsci/geo-ml@sha256:7414b1df7c155b7d820cc062d88b61e5081b3d2ba4685c57a29b591cd67748de",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '565d6e2f4f1a563cce0b5a45a4a9ba5ea1771b02f49168ca9b970974620eef9f  run.sh\\n7e5896169ff728f23679bc030db5e7d0f97d07bd92ff908325aecda62c7952bf  real.py\\ndeba3d1713d2b25483d99e8d8a67f7e46e99e6deced12d7da7101d3f941ab66a  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nEXPECT_FILES=2 NT=16 bash /tmp/run.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 120,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/tlc/yellow_tripdata_2009-01.parquet",
+      "destination": "/tmp/tlc/yellow_tripdata_2009-01.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/tlc/yellow_tripdata_2010-01.parquet",
+      "destination": "/tmp/tlc/yellow_tripdata_2010-01.parquet"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/results.json"
+    },
+    {
+      "source": "/tmp/out/rasters.npz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/rasters.npz"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/datashader-real/probe/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}
