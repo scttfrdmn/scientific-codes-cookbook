@@ -36,6 +36,16 @@ One task, a few seconds of compute. `c8g.large`, ~$0.02, **~73s** wall — boot 
 
 **Sizing:** no family question — QUAST's metrics are light on any assembly; a larger assembly is a longer run, not a heavier box. Any 8g box fits.
 
+## Which box — [measured](../../measurements/quast-real/README.md) (14 whole *E. coli* genomes, `-r` + `-g`, `-t 8`)
+
+| chip | instance | QUAST wall | billed | peak RSS | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 12.6 s | 103 s | 248 MiB | 0.00112 | **0.0091** |
+| Xeon 6975P-C | `c8i.2xlarge` | 14.3 s | 144 s | 252 MiB | 0.00149 | 0.0150 |
+| EPYC 9R45 | `c8a.2xlarge` | **9.9 s** | 90 s | 250 MiB | 0.00119 | 0.0108 |
+
+**Any chip; the bill is boot.** Nine published MG1655 genomes, a SPAdes assembly and three planted controls against U00096.3: all 54 report files are byte-identical on the three chips, every length statistic matches an independent recomputation, and planted errors come back exact. QUAST's own compute is about 10% of each bill.
+
 <details>
 <summary>As shipped: why QUAST rather than assembler-vs-assembler, pins, smoke check</summary>
 

@@ -1,0 +1,345 @@
+/usr/local/bin/quast.py controls/self.fasta controls/planted.fasta controls/chimera.fasta spades_contigs.fasta spades_scaffolds.fasta pacbio_2014.fna.gz pacbio_2016.fna.gz pacbio_2018.fna.gz pacbio_2026.fna.gz hybrid_2022.fna.gz ont_2023.fna.gz ont_2024.fna.gz illumina_2015.fna.gz illumina_2017.fna.gz -r GCF_000005845.2.fna.gz -g ref.gff -t 8 -o q --labels self,planted,chimera,spades_contigs,spades_scaffolds,pacbio_2014,pacbio_2016,pacbio_2018,pacbio_2026,hybrid_2022,ont_2023,ont_2024,illumina_2015,illumina_2017
+
+Version: 5.3.0
+
+System information:
+  OS: Linux-6.18.54-121.166.amzn2023.x86_64-x86_64-with-glibc2.36 (linux_64)
+  Python version: 3.13.1
+  CPUs number: 8
+
+Started: 2026-10-20 18:10:56
+
+Logging to /tmp/q/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: default, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 95.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/GCF_000005845.2.fna.gz ==> GCF_000005845.2
+
+Contigs:
+  Pre-processing...
+  1  controls/self.fasta ==> self
+  2  controls/planted.fasta ==> planted
+  3  controls/chimera.fasta ==> chimera
+  4  spades_contigs.fasta ==> spades_contigs
+  5  spades_scaffolds.fasta ==> spades_scaffolds
+  6  pacbio_2014.fna.gz ==> pacbio_2014
+  7  pacbio_2016.fna.gz ==> pacbio_2016
+  8  pacbio_2018.fna.gz ==> pacbio_2018
+  9  pacbio_2026.fna.gz ==> pacbio_2026
+  10 hybrid_2022.fna.gz ==> hybrid_2022
+  11 ont_2023.fna.gz ==> ont_2023
+  12 ont_2024.fna.gz ==> ont_2024
+  13 illumina_2015.fna.gz ==> illumina_2015
+  14 illumina_2017.fna.gz ==> illumina_2017
+
+2026-10-20 18:10:57
+Running Basic statistics processor...
+  Reference genome:
+    GCF_000005845.2.fna, length = 4641652, num fragments = 1, GC % = 50.79
+  Contig files: 
+    1  self
+    2  planted
+    3  chimera
+    4  spades_contigs
+    5  spades_scaffolds
+    6  pacbio_2014
+    7  pacbio_2016
+    8  pacbio_2018
+    9  pacbio_2026
+    10 hybrid_2022
+    11 ont_2023
+    12 ont_2024
+    13 illumina_2015
+    14 illumina_2017
+  Calculating N50 and L50...
+    1  self, N50 = 4641652, L50 = 1, auN = 4641652.0, Total length = 4641652, GC % = 50.79, # N's per 100 kbp =  0.00
+    2  planted, N50 = 4641652, L50 = 1, auN = 4641652.0, Total length = 4641652, GC % = 50.79, # N's per 100 kbp =  0.00
+    3  chimera, N50 = 600000, L50 = 3, auN = 738613.5, Total length = 4641652, GC % = 50.79, # N's per 100 kbp =  0.00
+    4  spades_contigs, N50 = 178400, L50 = 9, auN = 198328.1, Total length = 4589418, GC % = 50.74, # N's per 100 kbp =  0.00
+    5  spades_scaffolds, N50 = 178400, L50 = 9, auN = 198411.1, Total length = 4589518, GC % = 50.74, # N's per 100 kbp =  2.18
+    6  pacbio_2014, N50 = 4636831, L50 = 1, auN = 4636831.0, Total length = 4636831, GC % = 50.79, # N's per 100 kbp =  0.00
+    7  pacbio_2016, N50 = 4659625, L50 = 1, auN = 4659625.0, Total length = 4659625, GC % = 50.78, # N's per 100 kbp =  0.00
+    8  pacbio_2018, N50 = 4639694, L50 = 1, auN = 4639694.0, Total length = 4639694, GC % = 50.79, # N's per 100 kbp =  0.00
+    9  pacbio_2026, N50 = 4642108, L50 = 1, auN = 4642108.0, Total length = 4642108, GC % = 50.79, # N's per 100 kbp =  0.00
+    10 hybrid_2022, N50 = 4675188, L50 = 1, auN = 4675188.0, Total length = 4675188, GC % = 50.79, # N's per 100 kbp =  0.00
+    11 ont_2023, N50 = 4636433, L50 = 1, auN = 4636433.0, Total length = 4636433, GC % = 50.81, # N's per 100 kbp =  0.00
+    12 ont_2024, N50 = 4597530, L50 = 1, auN = 4597530.0, Total length = 4597530, GC % = 50.76, # N's per 100 kbp =  0.00
+    13 illumina_2015, N50 = 4641665, L50 = 1, auN = 4641665.0, Total length = 4641665, GC % = 50.79, # N's per 100 kbp =  0.00
+    14 illumina_2017, N50 = 4643559, L50 = 1, auN = 4643559.0, Total length = 4643559, GC % = 50.76, # N's per 100 kbp =  0.00
+  Drawing Nx plot...
+    saved to /tmp/q/basic_stats/Nx_plot.pdf
+  Drawing NGx plot...
+    saved to /tmp/q/basic_stats/NGx_plot.pdf
+  Drawing cumulative plot...
+    saved to /tmp/q/basic_stats/cumulative_plot.pdf
+  Drawing GC content plot...
+    saved to /tmp/q/basic_stats/GC_content_plot.pdf
+  Drawing self GC content plot...
+    saved to /tmp/q/basic_stats/self_GC_content_plot.pdf
+  Drawing planted GC content plot...
+    saved to /tmp/q/basic_stats/planted_GC_content_plot.pdf
+  Drawing chimera GC content plot...
+    saved to /tmp/q/basic_stats/chimera_GC_content_plot.pdf
+  Drawing spades_contigs GC content plot...
+    saved to /tmp/q/basic_stats/spades_contigs_GC_content_plot.pdf
+  Drawing spades_scaffolds GC content plot...
+    saved to /tmp/q/basic_stats/spades_scaffolds_GC_content_plot.pdf
+  Drawing pacbio_2014 GC content plot...
+    saved to /tmp/q/basic_stats/pacbio_2014_GC_content_plot.pdf
+  Drawing pacbio_2016 GC content plot...
+    saved to /tmp/q/basic_stats/pacbio_2016_GC_content_plot.pdf
+  Drawing pacbio_2018 GC content plot...
+    saved to /tmp/q/basic_stats/pacbio_2018_GC_content_plot.pdf
+  Drawing pacbio_2026 GC content plot...
+    saved to /tmp/q/basic_stats/pacbio_2026_GC_content_plot.pdf
+  Drawing hybrid_2022 GC content plot...
+    saved to /tmp/q/basic_stats/hybrid_2022_GC_content_plot.pdf
+  Drawing ont_2023 GC content plot...
+    saved to /tmp/q/basic_stats/ont_2023_GC_content_plot.pdf
+  Drawing ont_2024 GC content plot...
+    saved to /tmp/q/basic_stats/ont_2024_GC_content_plot.pdf
+  Drawing illumina_2015 GC content plot...
+    saved to /tmp/q/basic_stats/illumina_2015_GC_content_plot.pdf
+  Drawing illumina_2017 GC content plot...
+    saved to /tmp/q/basic_stats/illumina_2017_GC_content_plot.pdf
+  Drawing Coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/coverage_histogram.pdf
+  Drawing spades_contigs coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/spades_contigs_coverage_histogram.pdf
+  Drawing spades_scaffolds coverage histogram (bin size: 1x)...
+    saved to /tmp/q/basic_stats/spades_scaffolds_coverage_histogram.pdf
+Done.
+
+2026-10-20 18:11:00
+Running Contig analyzer...
+  1  self
+  2  planted
+  1  Logging to files /tmp/q/contigs_reports/contigs_report_self.stdout and contigs_report_self.stderr...
+  2  Logging to files /tmp/q/contigs_reports/contigs_report_planted.stdout and contigs_report_planted.stderr...
+  3  chimera
+  1  Aligning contigs to the reference
+  2  Aligning contigs to the reference
+  4  spades_contigs
+  3  Logging to files /tmp/q/contigs_reports/contigs_report_chimera.stdout and contigs_report_chimera.stderr...
+  3  Aligning contigs to the reference
+  5  spades_scaffolds
+  4  Logging to files /tmp/q/contigs_reports/contigs_report_spades_contigs.stdout and contigs_report_spades_contigs.stderr...
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/q/contigs_reports/contigs_report_spades_scaffolds.stdout and contigs_report_spades_scaffolds.stderr...
+  6  pacbio_2014
+  5  Aligning contigs to the reference
+  7  pacbio_2016
+  6  Logging to files /tmp/q/contigs_reports/contigs_report_pacbio_2014.stdout and contigs_report_pacbio_2014.stderr...
+  8  pacbio_2018
+  6  Aligning contigs to the reference
+  7  Logging to files /tmp/q/contigs_reports/contigs_report_pacbio_2016.stdout and contigs_report_pacbio_2016.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/q/contigs_reports/contigs_report_pacbio_2018.stdout and contigs_report_pacbio_2018.stderr...
+  8  Aligning contigs to the reference
+  2  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/planted.fasta > q/contigs_reports/minimap_output/planted.coords_tmp \
+     2>> q/contigs_reports/contigs_report_planted.stderr
+  4  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/spades_contigs.fasta > q/contigs_reports/minimap_output/spades_contigs.coords_tmp \
+     2>> q/contigs_reports/contigs_report_spades_contigs.stderr
+  1  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/self.fasta > q/contigs_reports/minimap_output/self.coords_tmp \
+     2>> q/contigs_reports/contigs_report_self.stderr
+  5  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/spades_scaffolds.fasta > q/contigs_reports/minimap_output/spades_scaffolds.coords_tmp \
+     2>> q/contigs_reports/contigs_report_spades_scaffolds.stderr
+  3  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/chimera.fasta > q/contigs_reports/minimap_output/chimera.coords_tmp \
+     2>> q/contigs_reports/contigs_report_chimera.stderr
+  6  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/pacbio_2014.fna > q/contigs_reports/minimap_output/pacbio_2014.coords_tmp \
+     2>> q/contigs_reports/contigs_report_pacbio_2014.stderr
+  7  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/pacbio_2016.fna > q/contigs_reports/minimap_output/pacbio_2016.coords_tmp \
+     2>> q/contigs_reports/contigs_report_pacbio_2016.stderr
+  8  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/pacbio_2018.fna > q/contigs_reports/minimap_output/pacbio_2018.coords_tmp \
+     2>> q/contigs_reports/contigs_report_pacbio_2018.stderr
+  5  Analysis is finished.
+
+  4  Analysis is finished.
+
+  9  pacbio_2026
+  10 hybrid_2022
+  9  Logging to files /tmp/q/contigs_reports/contigs_report_pacbio_2026.stdout and contigs_report_pacbio_2026.stderr...
+  9  Aligning contigs to the reference
+  10 Logging to files /tmp/q/contigs_reports/contigs_report_hybrid_2022.stdout and contigs_report_hybrid_2022.stderr...
+  10 Aligning contigs to the reference
+  9  /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/pacbio_2026.fna > q/contigs_reports/minimap_output/pacbio_2026.coords_tmp \
+     2>> q/contigs_reports/contigs_report_pacbio_2026.stderr
+  10 /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/hybrid_2022.fna > q/contigs_reports/minimap_output/hybrid_2022.coords_tmp \
+     2>> q/contigs_reports/contigs_report_hybrid_2022.stderr
+  3  Analysis is finished.
+
+  11 ont_2023
+  11 Logging to files /tmp/q/contigs_reports/contigs_report_ont_2023.stdout and contigs_report_ont_2023.stderr...
+  11 Aligning contigs to the reference
+  11 /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/ont_2023.fna > q/contigs_reports/minimap_output/ont_2023.coords_tmp \
+     2>> q/contigs_reports/contigs_report_ont_2023.stderr
+  2  Analysis is finished.
+
+  12 ont_2024
+  12 Logging to files /tmp/q/contigs_reports/contigs_report_ont_2024.stdout and contigs_report_ont_2024.stderr...
+  12 Aligning contigs to the reference
+  12 /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/ont_2024.fna > q/contigs_reports/minimap_output/ont_2024.coords_tmp \
+     2>> q/contigs_reports/contigs_report_ont_2024.stderr
+  1  Analysis is finished.
+
+  13 illumina_2015
+  13 Logging to files /tmp/q/contigs_reports/contigs_report_illumina_2015.stdout and contigs_report_illumina_2015.stderr...
+  13 Aligning contigs to the reference
+  7  Analysis is finished.
+
+  14 illumina_2017
+  14 Logging to files /tmp/q/contigs_reports/contigs_report_illumina_2017.stdout and contigs_report_illumina_2017.stderr...
+  14 Aligning contigs to the reference
+  14 /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/illumina_2017.fna > q/contigs_reports/minimap_output/illumina_2017.coords_tmp \
+     2>> q/contigs_reports/contigs_report_illumina_2017.stderr
+  13 /usr/local/bin/minimap2 -c -x asm10 -B5 -O4,16 --no-long-join -r 200 -N 50 -s \
+     65 -z 200 --mask-level 0.9 --min-occ 200 -g 2500 --score-N 2 --cs -t 1 q/quast_corrected_input/GCF_000005845.2.fna \
+     q/quast_corrected_input/illumina_2015.fna > q/contigs_reports/minimap_output/illumina_2015.coords_tmp \
+     2>> q/contigs_reports/contigs_report_illumina_2015.stderr
+  8  Analysis is finished.
+
+  6  Analysis is finished.
+
+  9  Analysis is finished.
+
+  11 Analysis is finished.
+
+  13 Analysis is finished.
+
+  10 Analysis is finished.
+
+  14 Analysis is finished.
+
+  12 Analysis is finished.
+
+  Creating total report...
+    saved to /tmp/q/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/q/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/q/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+  Drawing misassemblies by types plot...
+    saved to /tmp/q/contigs_reports/misassemblies_plot.pdf
+  Drawing misassemblies FRCurve plot...
+    saved to /tmp/q/contigs_reports/misassemblies_frcurve_plot.pdf
+Done.
+
+2026-10-20 18:11:02
+Running NA-NGA calculation...
+  1  self, Largest alignment = 4641652, NA50 = 4641652, NGA50 = 4641652, LA50 = 1, LGA50 = 1
+  2  planted, Largest alignment = 4641652, NA50 = 4641652, NGA50 = 4641652, LA50 = 1, LGA50 = 1
+  3  chimera, Largest alignment = 650000, NA50 = 600000, NGA50 = 600000, LA50 = 4, LGA50 = 4
+  4  spades_contigs, Largest alignment = 414105, NA50 = 176019, NGA50 = 176019, LA50 = 9, LGA50 = 9
+  5  spades_scaffolds, Largest alignment = 414105, NA50 = 176019, NGA50 = 176019, LA50 = 9, LGA50 = 9
+  6  pacbio_2014, Largest alignment = 4536239, NA50 = 4536239, NGA50 = 4536239, LA50 = 1, LGA50 = 1
+  7  pacbio_2016, Largest alignment = 3976500, NA50 = 3976500, NGA50 = 3976500, LA50 = 1, LGA50 = 1
+  8  pacbio_2018, Largest alignment = 4547067, NA50 = 4547067, NGA50 = 4547067, LA50 = 1, LGA50 = 1
+  9  pacbio_2026, Largest alignment = 3976106, NA50 = 3976106, NGA50 = 3976106, LA50 = 1, LGA50 = 1
+  10 hybrid_2022, Largest alignment = 1359737, NA50 = 1261419, NGA50 = 1261419, LA50 = 2, LGA50 = 2
+  11 ont_2023, Largest alignment = 4636433, NA50 = 4636433, NGA50 = 4636433, LA50 = 1, LGA50 = 1
+  12 ont_2024, Largest alignment = 1648706, NA50 = 384227, NGA50 = 384227, LA50 = 3, LGA50 = 3
+  13 illumina_2015, Largest alignment = 4641665, NA50 = 4641665, NGA50 = 4641665, LA50 = 1, LGA50 = 1
+  14 illumina_2017, Largest alignment = 1686885, NA50 = 1555637, NGA50 = 1555637, LA50 = 2, LGA50 = 2
+  Drawing cumulative plot...
+    saved to /tmp/q/aligned_stats/cumulative_plot.pdf
+  Drawing NAx plot...
+    saved to /tmp/q/aligned_stats/NAx_plot.pdf
+  Drawing NGAx plot...
+    saved to /tmp/q/aligned_stats/NGAx_plot.pdf
+Done.
+
+2026-10-20 18:11:02
+Running Genome analyzer...
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  Loaded 9523 genomic features of type "ANY"
+  1  self
+  2  planted
+  3  chimera
+  4  spades_contigs
+  5  spades_scaffolds
+  6  pacbio_2014
+  7  pacbio_2016
+  8  pacbio_2018
+  1  Analysis is finished.
+  2  Analysis is finished.
+  9  pacbio_2026
+  3  Analysis is finished.
+  10 hybrid_2022
+  4  Analysis is finished.
+  11 ont_2023
+  5  Analysis is finished.
+  6  Analysis is finished.
+  12 ont_2024
+  7  Analysis is finished.
+  13 illumina_2015
+  8  Analysis is finished.
+  14 illumina_2017
+  9  Analysis is finished.
+  10 Analysis is finished.
+  11 Analysis is finished.
+  12 Analysis is finished.
+  13 Analysis is finished.
+  14 Analysis is finished.
+  Drawing genomic features cumulative plot...
+    saved to /tmp/q/genome_stats/features_cumulative_plot.pdf
+  Drawing genomic features FRCurve plot...
+    saved to /tmp/q/genome_stats/features_frcurve_plot.pdf
+  Drawing # complete genomic features histogram...
+    saved to /tmp/q/genome_stats/complete_features_histogram.pdf
+  Drawing Genome fraction, % histogram...
+    saved to /tmp/q/genome_stats/genome_fraction_histogram.pdf
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 18:11:04
+Creating large visual summaries...
+This may take a while: press Ctrl-C to skip this step..
+  1 of 2: Creating PDF with all tables and plots...
+  2 of 2: Creating Icarus viewers...
+Done
+
+2026-10-20 18:11:06
+RESULTS:
+  Text versions of total report are saved to /tmp/q/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/q/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/q/report.html
+  PDF version (tables and plots) is saved to /tmp/q/report.pdf
+  Icarus (contig browser) is saved to /tmp/q/icarus.html
+  Log is saved to /tmp/q/quast.log
+
+Finished: 2026-10-20 18:11:06
+Elapsed time: 0:00:09.443292
+NOTICEs: 2; WARNINGs: 0; non-fatal ERRORs: 0
+
+Thank you for using QUAST!

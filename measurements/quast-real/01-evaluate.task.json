@@ -1,0 +1,106 @@
+{
+  "task_id": "cookbook-quast-real-evaluate",
+  "container": "quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\ngrep -E ' (run\\.sh|mkcontrols\\.py|check\\.py|assemblies\\.tsv|spades-real\\.report\\.tsv|GCF_000005845\\.2\\.fna\\.gz|GCF_000005845\\.2\\.gff\\.gz|spades_contigs\\.fasta|spades_scaffolds\\.fasta|pacbio_2014\\.fna\\.gz|pacbio_2016\\.fna\\.gz|pacbio_2018\\.fna\\.gz|pacbio_2026\\.fna\\.gz|hybrid_2022\\.fna\\.gz|ont_2023\\.fna\\.gz|ont_2024\\.fna\\.gz|illumina_2015\\.fna\\.gz|illumina_2017\\.fna\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 18 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash run.sh 8 assemblies.tsv || exit 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/mkcontrols.py",
+      "destination": "/tmp/mkcontrols.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/assemblies.tsv",
+      "destination": "/tmp/assemblies.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/spades-real.report.tsv",
+      "destination": "/tmp/spades-real.report.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/spades-real/prep/GCF_000005845.2.fna.gz",
+      "destination": "/tmp/GCF_000005845.2.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/GCF_000005845.2.gff.gz",
+      "destination": "/tmp/GCF_000005845.2.gff.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/spades-real/DRR171213/contigs.fasta",
+      "destination": "/tmp/spades_contigs.fasta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/spades-real/DRR171213/scaffolds.fasta",
+      "destination": "/tmp/spades_scaffolds.fasta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/pacbio_2014.fna.gz",
+      "destination": "/tmp/pacbio_2014.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/pacbio_2016.fna.gz",
+      "destination": "/tmp/pacbio_2016.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/pacbio_2018.fna.gz",
+      "destination": "/tmp/pacbio_2018.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/pacbio_2026.fna.gz",
+      "destination": "/tmp/pacbio_2026.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/hybrid_2022.fna.gz",
+      "destination": "/tmp/hybrid_2022.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/ont_2023.fna.gz",
+      "destination": "/tmp/ont_2023.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/ont_2024.fna.gz",
+      "destination": "/tmp/ont_2024.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/illumina_2015.fna.gz",
+      "destination": "/tmp/illumina_2015.fna.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/quast-real/prep/illumina_2017.fna.gz",
+      "destination": "/tmp/illumina_2017.fna.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/quast-real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.25
+  }
+}
