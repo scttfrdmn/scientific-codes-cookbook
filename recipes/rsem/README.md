@@ -41,9 +41,15 @@ Three tasks: RSEM builds the fixture and its reference, bowtie2 aligns to the tr
 
 **Leave the fixture:** a planted 3:1 with deliberately lopsided unique regions is what makes the EM's advantage measurable rather than asserted. **Scale it** to a real transcriptome whenever; the identities below hold at any size.
 
-## Shape, size, cost
+## Shape, size, cost — [measured](../../measurements/rsem-real/README.md) on a whole 15.8M-pair sample, all 465,769 Ensembl 116 transcripts, `-p 16`
 
-Three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. Every step is seconds at this size; the windows are almost entirely image pull. **These timings are not compute cost.**
+| chip | instance | RSEM (of which EM) | peak RSS | billed $/sample |
+|---|---|---|---|---|
+| **Graviton4** | `m8g.4xlarge` | 2250 s (1526 s) | 10.9 GiB | **0.489** |
+| Xeon 6975P-C | `m8i.4xlarge` | 3238 s (2572 s) | 10.9 GiB | 0.801 |
+| EPYC 9R45 | `m8a.4xlarge` | **1909 s** (1457 s) | 10.9 GiB | 0.555 |
+
+All three chips print identical output, byte for byte. Read bookkeeping and count conservation are exact, every gene is the sum of its isoforms, and transcript ranks agree with salmon on the same reads at Spearman 0.944 (genes 0.981). With the `-k 200` bowtie2 alignment (1534 s on 32 Graviton4 cores, $0.61), a sample costs about $1.10, against salmon's $0.022. `--seed` changes nothing without `--calc-pme` or an output BAM, and the thread count is what to pin. The fixture itself is three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each, in windows that are almost entirely image pull. **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: three exact identities, the naive method inverting the answer, why TPM ≠ the read ratio, the missing aligner, pins</summary>

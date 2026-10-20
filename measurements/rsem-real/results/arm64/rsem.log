@@ -1,0 +1,37 @@
+rsem-parse-alignments /tmp/ens116 /var/tmp/rsem/tmp/ERR188026 /tmp/out/ERR188026.stat/ERR188026 /tmp/aln.sam.gz 3 -tag XM
+Done!
+
+rsem-build-read-index 32 1 0 /var/tmp/rsem/tmp/ERR188026_alignable_1.fq /var/tmp/rsem/tmp/ERR188026_alignable_2.fq
+Build Index /var/tmp/rsem/tmp/ERR188026_alignable_1.fq is Done!
+Build Index /var/tmp/rsem/tmp/ERR188026_alignable_2.fq is Done!
+
+rsem-run-em /tmp/ens116 3 /tmp/out/ERR188026 /var/tmp/rsem/tmp/ERR188026 /tmp/out/ERR188026.stat/ERR188026 -p 16
+Refs.loadRefs finished!
+Thread 0 : N = 865851, NHit = 24623609
+Thread 1 : N = 867660, NHit = 24623486
+Thread 2 : N = 869022, NHit = 24623489
+Thread 3 : N = 865520, NHit = 24623482
+Thread 4 : N = 866732, NHit = 24623524
+Thread 5 : N = 867492, NHit = 24623515
+Thread 6 : N = 865051, NHit = 24623482
+Thread 7 : N = 867810, NHit = 24623477
+Thread 8 : N = 860555, NHit = 24623486
+Thread 9 : N = 864638, NHit = 24623479
+Thread 10 : N = 865493, NHit = 24623497
+Thread 11 : N = 906863, NHit = 24623496
+Thread 12 : N = 911371, NHit = 24623487
+Thread 13 : N = 855959, NHit = 24623489
+Thread 14 : N = 857766, NHit = 24623589
+Thread 15 : N = 860242, NHit = 24623050
+EM_init finished!
+estimateFromReads, N0 finished.
+estimateFromReads, N1 finished.
+Expression Results are written!
+Time Used for EM.cpp : 0 h 25 m 26 s
+
+rm -rf /var/tmp/rsem/tmp
+
+-- trimmed: 7726 ROUND lines (first, last):
+ROUND = 1, SUM = 15800126.9999999, bChange = 6178.14, totNum = 465619
+ROUND = 7726, SUM = 15800126.9999998, bChange = 0.000899369, totNum = 0
+Parsed 395000000 entries

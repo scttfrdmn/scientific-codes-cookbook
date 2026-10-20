@@ -1,0 +1,83 @@
+{
+  "task_id": "cookbook-rsem-real-crosschip-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '195441864ccb72d5665fdcdb41f7f2020efd7e653bac447113464b1048d887ac  crosschip.R\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nRscript /tmp/crosschip.R /tmp/c\n"
+  ],
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/crosschip.R",
+      "destination": "/tmp/crosschip.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.isoforms.results",
+      "destination": "/tmp/c/arm64/ERR188026.isoforms.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.genes.results",
+      "destination": "/tmp/c/arm64/ERR188026.genes.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.cnt",
+      "destination": "/tmp/c/arm64/ERR188026.cnt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.theta",
+      "destination": "/tmp/c/arm64/ERR188026.theta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/rsem-real/r2/quant/ERR188026.isoforms.results",
+      "destination": "/tmp/c/x86_64/ERR188026.isoforms.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/rsem-real/r2/quant/ERR188026.genes.results",
+      "destination": "/tmp/c/x86_64/ERR188026.genes.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/rsem-real/r2/quant/ERR188026.cnt",
+      "destination": "/tmp/c/x86_64/ERR188026.cnt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/rsem-real/r2/quant/ERR188026.theta",
+      "destination": "/tmp/c/x86_64/ERR188026.theta"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/rsem-real/r2/quant/ERR188026.isoforms.results",
+      "destination": "/tmp/c/amd/ERR188026.isoforms.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/rsem-real/r2/quant/ERR188026.genes.results",
+      "destination": "/tmp/c/amd/ERR188026.genes.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/rsem-real/r2/quant/ERR188026.cnt",
+      "destination": "/tmp/c/amd/ERR188026.cnt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/rsem-real/r2/quant/ERR188026.theta",
+      "destination": "/tmp/c/amd/ERR188026.theta"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/c/crosschip.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/crosschip.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

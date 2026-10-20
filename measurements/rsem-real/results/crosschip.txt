@@ -1,0 +1,57 @@
+== x86_64 vs arm64 ==
+PASS	.cnt (read bookkeeping) identical	TRUE
+obs	isoforms.results byte-identical	TRUE
+obs	genes.results byte-identical	TRUE
+obs	theta byte-identical	FALSE
+obs	theta line 2: components differing / of / max rel diff (components >= 1e-7)	116513 / 465770 / 2.452e-13
+obs	theta line 3: components differing / of / max rel diff (components >= 1e-7)	111249 / 465770 / 2.452e-13
+PASS	isoforms.results same ids in the same order	TRUE
+obs	isoforms.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM Spearman (either detected)	1
+obs	isoforms.results detected (TPM > 0)	104811 vs 104811
+PASS	genes.results same ids in the same order	TRUE
+obs	genes.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM Spearman (either detected)	1
+obs	genes.results detected (TPM > 0)	18893 vs 18893
+== amd vs arm64 ==
+PASS	.cnt (read bookkeeping) identical	TRUE
+obs	isoforms.results byte-identical	TRUE
+obs	genes.results byte-identical	TRUE
+obs	theta byte-identical	FALSE
+obs	theta line 2: components differing / of / max rel diff (components >= 1e-7)	116513 / 465770 / 2.452e-13
+obs	theta line 3: components differing / of / max rel diff (components >= 1e-7)	111249 / 465770 / 2.452e-13
+PASS	isoforms.results same ids in the same order	TRUE
+obs	isoforms.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM Spearman (either detected)	1
+obs	isoforms.results detected (TPM > 0)	104811 vs 104811
+PASS	genes.results same ids in the same order	TRUE
+obs	genes.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM Spearman (either detected)	1
+obs	genes.results detected (TPM > 0)	18893 vs 18893
+== amd vs x86_64 ==
+PASS	.cnt (read bookkeeping) identical	TRUE
+obs	isoforms.results byte-identical	TRUE
+obs	genes.results byte-identical	TRUE
+obs	theta byte-identical	TRUE
+obs	theta line 2: components differing / of / max rel diff (components >= 1e-7)	0 / 465770 / 0
+obs	theta line 3: components differing / of / max rel diff (components >= 1e-7)	0 / 465770 / 0
+PASS	isoforms.results same ids in the same order	TRUE
+obs	isoforms.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	isoforms.results TPM Spearman (either detected)	1
+obs	isoforms.results detected (TPM > 0)	104811 vs 104811
+PASS	genes.results same ids in the same order	TRUE
+obs	genes.results expected_count: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results effective_length: rows differing / max |diff| / sum |diff|	0 / 0 / 0
+obs	genes.results TPM Spearman (either detected)	1
+obs	genes.results detected (TPM > 0)	18893 vs 18893

@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-rsem-real-quant-r2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '0656509cbea7c41db93439c23336ae3b15c4d054956db86e0ca4820e1f3b0a0e  quant.sh\\n63c839f32f47d8e220e1ca673e4ee3817ee018257486bb112eb1ebc0649638e2  check.R\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/quant.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "disk_gib": 80,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/quant.sh",
+      "destination": "/tmp/quant.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/check.R",
+      "destination": "/tmp/check.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/ref/ens116.grp",
+      "destination": "/tmp/ens116.grp"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/ref/ens116.ti",
+      "destination": "/tmp/ens116.ti"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/ref/ens116.seq",
+      "destination": "/tmp/ens116.seq"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/sam/aln.sam.gz",
+      "destination": "/tmp/aln.sam.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/prepare/gene_map.tsv",
+      "destination": "/tmp/gene_map.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/salmon.quant.sf",
+      "destination": "/tmp/salmon.quant.sf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

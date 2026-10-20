@@ -1,0 +1,47 @@
+{
+  "task_id": "cookbook-rsem-real-prepare-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf 'a29e090180dc72f429a36c6175453eec412ab44fe74b3a171ec01fe435816ffb  prepare.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/prepare.sh\n"
+  ],
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/prepare.sh",
+      "destination": "/tmp/prepare.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ensembl116_cdna.fa.gz",
+      "destination": "/tmp/ensembl116_cdna.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/salmon/r1/quant-c8g-16t.sf",
+      "destination": "/tmp/salmon.quant.sf"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/prepare/"
+    },
+    {
+      "source": "/tmp/ref/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/ref/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

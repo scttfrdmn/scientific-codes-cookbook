@@ -1,0 +1,32 @@
+obs	N0 N1 N2 N_tot	1882102 13918025 0 15800127	
+PASS	N_tot	15800127	== 15800127 (ENA read_count)
+PASS	N0+N1+N2	15800127	== N_tot
+obs	alignable fraction N1/N_tot	0.880880577732	
+PASS	isoform rows	465769	== transcripts in the map
+PASS	isoform ids == map ids	TRUE	set equality
+PASS	isoform gene_id == map gene	0	== 0 mismatches
+PASS	gene rows	41145	== distinct genes in the map
+PASS	effective_length <= length	0	== 0 violations
+PASS	TPM where effective_length == 0	0	== 0
+obs	isoforms with TPM > 0	104811	
+PASS	sum isoform TPM	999996.96	== 1e6 within 0.005 x 104811 printed nonzero values
+PASS	sum gene TPM	999999.3	== 1e6 within 0.005 x 18893
+obs	isoforms with expected_count > 0	105801	
+obs	theta'[0] x (N0+N1) - N0	1.67638063431e-08	obs: alignable reads' posterior mass on the noise component
+PASS	sum expected_count	13918024.05	== N1 - noise within 0.005 x 105801 printed nonzero values
+obs	N1 - sum expected_count	0.949999999255	obs
+PASS	expected_count >= 0	0	== 0 negatives
+obs	TPM / FPKM constant k	1.16264304913	
+PASS	rows off the TPM = k FPKM line	0	== 0 (bound: both roundings + k's)
+PASS	genes where expected_count != sum of isoforms	0	== 0 (bound 0.005 x (isoforms + 1))
+PASS	genes where TPM != sum of isoforms	0	== 0 (bound 0.005 x (isoforms + 1))
+PASS	genes where FPKM != sum of isoforms	0	== 0 (bound 0.005 x (isoforms + 1))
+PASS	expressed genes whose IsoPct does not sum to 100	0	== 0 (bound 0.005 x isoforms + 0.01)
+obs	salmon rows / RSEM rows	453553 465769	obs: salmon collapses identical sequences
+PASS	salmon ids not in RSEM	0	== 0 (same FASTA)
+obs	transcripts detected by RSEM / salmon / both	104811 96795 79993	
+PASS	transcript Spearman (both detected)	0.944144428083	>= 0.85 (salmon~kallisto, same reads: 0.908; quant-depth)
+obs	genes detected by both	17748	
+PASS	gene Spearman (both detected)	0.981205550293	>= 0.90 (isoform ambiguity summed out)
+obs	transcript log-Pearson (both detected)	0.956462464897	
+obs	salmon sum NumReads / RSEM sum expected_count	14913565.02 13918024.05	
