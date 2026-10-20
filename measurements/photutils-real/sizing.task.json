@@ -1,0 +1,99 @@
+{
+  "task_id": "cookbook-photutils-real-sizing",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '09e43f86995b628d831528223286e7a7f4ca09888c424e08ae5311cd031b5341  run.sh\\nd388809a74a9f2d77dfab2bfdd71a8952094f0a1f555d93afd015977b4bcb72b  real.py\\n099f5467c3aab26cec38c79903c95aee1f50566faee51f7b1bdd1b46577839c8  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 000,001\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.000.stk.r.unconv.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.000.stk.r.unconv.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.000.stk.r.unconv.wt.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.000.stk.r.unconv.wt.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.000.stk.r.unconv.mask.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.000.stk.r.unconv.mask.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/astropy-real/cmf/rings.v3.skycell.1749.000.stk.r.cmf",
+      "destination": "/work/in/cmf/rings.v3.skycell.1749.000.stk.r.cmf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.001.stk.r.unconv.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.001.stk.r.unconv.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.001.stk.r.unconv.wt.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.001.stk.r.unconv.wt.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/rings.v3.skycell.1749.001.stk.r.unconv.mask.fits",
+      "destination": "/work/in/ps1/rings.v3.skycell.1749.001.stk.r.unconv.mask.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/astropy-real/cmf/rings.v3.skycell.1749.001.stk.r.cmf",
+      "destination": "/work/in/cmf/rings.v3.skycell.1749.001.stk.r.cmf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/results.json"
+    },
+    {
+      "source": "/tmp/out/cells.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/cells.tar"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/sizing/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

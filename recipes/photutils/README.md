@@ -13,8 +13,6 @@ last_verified: 2026-09-13
 
 photutils performs the core image photometry an astronomy pipeline runs — aperture flux, source detection, background estimation — on Graviton4. The `astro` env's second recipe: a photometry workflow, where [astropy](../astropy/README.md) proved the units/coordinates/time core. For anyone doing photometry who knows the library.
 
-> **What this covers.** photutils 3.0 measuring aperture flux, detecting injected sources, and estimating a background — each checked by **reproducing a value constructed independently of the tool** (an analytic integral, known source positions, a known constant). No live archive data. Note: SEP (the independent C Source-Extractor) is *not* in this env, so there's no second implementation to cross-check against — photutils and astropy are one ecosystem, and agreement between them would be self-report; reproduction against constructed truth is the stronger shape available here.
-
 ## Run it
 
 ```bash
@@ -27,8 +25,6 @@ ap = CircularAperture([(x0, y0)], r=5 * sigma)
 flux = aperture_photometry(image, ap, method="exact")["aperture_sum"]   # → 2πAσ² for a Gaussian
 ```
 
-The recipe wraps three such operations — aperture photometry, `DAOStarFinder` detection, `Background2D` — each against a synthetic image whose answer is known analytically.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -39,11 +35,19 @@ The recipe wraps three such operations — aperture photometry, `DAOStarFinder` 
 
 **Leave the fixture:** synthetic sources give an analytic answer to check against, which real images can't. **Scale it** to your data and detectors — the operations and the reproduction-against-truth discipline carry over.
 
+## Which box — [measured](../../measurements/photutils-real/README.md) on a whole Pan-STARRS1 projection cell
+
+| chip | instance | tool wall | compute $ | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `r8g.4xlarge` | 784 s | **0.2053** | **0.2796** |
+| Intel | `r8i.4xlarge` | 1,181 s | 0.3646 | 0.4405 |
+| AMD | `r8a.4xlarge` | **719 s** | 0.2553 | 0.3344 |
+
+The run is all 100 r-band deep stacks of PS1 projection cell 1749: 3.9 G pixels, `Background2D` → detect → deblend → `SourceCatalog`, giving 5.9 M sources, plus exact apertures at all 8.6 M IPP detections. All 13 identities hold on every image on every chip, and the segmentation maps are bit-identical across chips. **Graviton4 is cheapest: 16% under AMD, 37% under Intel.** AMD is 9% faster but dearer per hour. Deblending is half the CPU time. **Memory picks the family:** 5.6 GiB per one-image worker, so 16 workers need an `r` box.
+
 ## Shape, size, cost
 
-One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **79 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.**
-
-**Sizing:** no family question — small synthetic images, CPU-light. Real work (large mosaics, deep source catalogs, PSF fitting) sizes by image dimensions and source count, shifting to RAM; size it on the data.
+One task, `c8g.large` (2 vCPU / 4 GiB), TTL 3m, cap $0.03. The compute is **~1 s**; recorded command window **79 s** — boot and the 0.57 GB `astro` image pull are the whole task. **These timings are not compute cost.** The fixture's three synthetic images are CPU-light; real work sizes by image dimensions and source count, and shifts to RAM (the table above).
 
 <details>
 <summary>As shipped: three reproductions against constructed truth, why no cross-tool, pins, smoke check, run + verify</summary>

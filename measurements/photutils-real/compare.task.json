@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-photutils-real-compare",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH HOME=/tmp\nmkdir -p /tmp/out\necho '35f8ce587fa4d011ed71abe5af23f23f61cc0580b5de3f8f4bf34eef835c2063  /tmp/compare.py' | sha256sum -c - || { echo 'FAIL: compare.py does not match its pin'; exit 1; }\npython3 -u /tmp/compare.py /tmp/cmp > /tmp/out/compare.log 2>&1; RC=$?\ncat /tmp/out/compare.log\n[ $RC = 0 ] && grep -q 'COMPARE DONE' /tmp/out/compare.log && test -s /tmp/out/crosschip.txt || { echo FAIL; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/cells.tar",
+      "destination": "/tmp/cmp/arm64/cells.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/results.json",
+      "destination": "/tmp/cmp/arm64/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/arm64/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/photutils-real/r1/cells.tar",
+      "destination": "/tmp/cmp/x86_64/cells.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/photutils-real/r1/results.json",
+      "destination": "/tmp/cmp/x86_64/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/photutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/x86_64/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/photutils-real/r1/cells.tar",
+      "destination": "/tmp/cmp/amd/cells.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/photutils-real/r1/results.json",
+      "destination": "/tmp/cmp/amd/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/photutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/amd/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/compare.py",
+      "destination": "/tmp/compare.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/crosschip.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/compare/crosschip.txt"
+    },
+    {
+      "source": "/tmp/out/compare.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/compare/compare.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

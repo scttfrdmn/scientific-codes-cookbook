@@ -1,0 +1,75 @@
+{
+  "task_id": "cookbook-photutils-real-r1",
+  "container": "quay.io/aarchsci/astro@sha256:430fb49e6352fe1e24fe52fcf9c1a3587d41e86a34c3b733dd2098ee126e9c82",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '09e43f86995b628d831528223286e7a7f4ca09888c424e08ae5311cd031b5341  run.sh\\nd388809a74a9f2d77dfab2bfdd71a8952094f0a1f555d93afd015977b4bcb72b  real.py\\n099f5467c3aab26cec38c79903c95aee1f50566faee51f7b1bdd1b46577839c8  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh \n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 60
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/ps1/",
+      "destination": "/work/in/ps1/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/astropy-real/cmf/",
+      "destination": "/work/in/cmf/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/photutils-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/results.json"
+    },
+    {
+      "source": "/tmp/out/cells.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/cells.tar"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/photutils-real/r1/staged.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

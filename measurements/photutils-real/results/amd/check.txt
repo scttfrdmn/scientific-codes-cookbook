@@ -1,0 +1,19 @@
+bkg_affine             ok   100/100 cells; e.g. 1.08e-14 / 2.72e-15
+detect_definition      ok   100/100 cells; e.g. 28431 regions >= 10 px (scipy) vs 28431 segments, pixel sets identical
+deblend_support        ok   100/100 cells; e.g. 10043440 labelled px
+deblend_one_parent     ok   100/100 cells; e.g. 0 children straddle a parent
+deblend_flux           ok   100/100 cells; e.g. max |sum children - parent| / (4 n eps sum|x|) = 0.009
+deblend_area           ok   100/100 cells; e.g. areas exact
+catalog_flux           ok   100/100 cells; e.g. max |segment_flux - bincount| / (4 n eps sum|x|) = 0.044
+catalog_area           ok   100/100 cells; e.g. 46448 sources
+image_conservation     ok   100/100 cells; e.g. |lab + unlab - total| = 3.815e-06 (bound 1.1e+03)
+annulus_additivity     ok   100/100 cells; e.g. max rel 5.45e-16 over 62494 IPP positions
+aperture_area          ok   100/100 cells; e.g. max |sum w / (pi r^2) - 1| = 5.55e-16
+error_is_sqrt_var      ok   100/100 cells; e.g. max |err^2 / sum var - 1| = 6.66e-16 over 62270 apertures
+ipp_centroid           ok   median photutils - IPP over 37961 isolated stars: dx +0.0019 dy +0.0006 px (a half-pixel convention error is 0.5); MAD 0.0803/0.0724
+ipp_detected           obs  37907 of 37961 isolated IPP stars lie in a photutils segment; the 54 misses are in cells 037,039,065,074, local background 255-2323 counts (all-cell median -83.8)
+ipp_flux_r12           obs  photutils (own background) / IPP APER_FLUX (r 12 px, unconvolved) over 37916 stars: median 1.12441, MAD 0.09817
+ipp_flux_r12_raw       obs  same, no background subtracted: median 0.98035, MAD 0.08276
+totals                 obs  3132904 parents -> 5894052 deblended sources; IPP catalogue 8594614 rows
+wall 717.7 s, 16 processes, stage CPU-seconds {'decode': 115.1, 'background': 459.2, 'convolve': 3511.6, 'detect': 38.1, 'deblend': 3191.9, 'catalog': 179.9, 'apertures': 1365.8}
+PHOTUTILS REAL OK
