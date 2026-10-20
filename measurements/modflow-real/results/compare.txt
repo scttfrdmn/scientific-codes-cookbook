@@ -1,0 +1,69 @@
+
+==== postcal
+Graviton4	nonconverged periods	1,17,32,83	(archive 6.3.0: 1,32,35,37,69,83)
+Intel	nonconverged periods	1,32,83	(archive 6.3.0: 1,32,35,37,69,83)
+AMD	nonconverged periods	1,32,83	(archive 6.3.0: 1,32,35,37,69,83)
+Graviton4	vs archive, 90 periods converged in both: worst max|dh| 2.574e-01 m, worst p99 2.680e-05 m, worst median 5.421e-12 m, at most 1 of 42822 cells over 0.1 m
+Graviton4	vs archive, 7 periods non-converged in either: worst max|dh| 6.388e-01 m, worst p99 1.976e-05 m
+PASS	Graviton4 postcal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 2.680e-05 m
+Graviton4	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 1.633e-04, median 0.000e+00, max rel 9.992e-05
+Graviton4	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 7.861e+01, median 2.888e-05, max rel 4.409e-04
+Intel	vs archive, 91 periods converged in both: worst max|dh| 3.092e-01 m, worst p99 3.163e-04 m, worst median 6.889e-12 m, at most 4 of 42822 cells over 0.1 m
+Intel	vs archive, 6 periods non-converged in either: worst max|dh| 6.388e-01 m, worst p99 1.691e-05 m
+PASS	Intel postcal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 3.163e-04 m
+Intel	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 1.637e-04, median 0.000e+00, max rel 3.703e-05
+Intel	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 2.081e+02, median 3.548e-05, max rel 7.402e-04
+AMD	vs archive, 91 periods converged in both: worst max|dh| 3.092e-01 m, worst p99 3.163e-04 m, worst median 6.889e-12 m, at most 4 of 42822 cells over 0.1 m
+AMD	vs archive, 6 periods non-converged in either: worst max|dh| 6.388e-01 m, worst p99 1.691e-05 m
+PASS	AMD postcal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 3.163e-04 m
+AMD	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 1.637e-04, median 0.000e+00, max rel 3.703e-05
+AMD	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 2.081e+02, median 3.548e-05, max rel 7.402e-04
+Graviton4 vs Intel	heads bit-identical in 0 of 97 periods; first difference at period 1; max |dh| 4.911e-01 m, worst p99 3.148e-04 m, worst median 8.360e-12 m, at most 4 cells over 0.1 m
+Graviton4 vs Intel	mobile_bay.gwf.head.obs.csv: max |diff| 1.518e-04
+Graviton4 vs Intel	mobile_bay.gwf.sfr.obs.csv: max |diff| 2.081e+02
+Graviton4 vs Intel	GWF percent discrepancy: max per-period difference 7.650e-02 (percentage points)
+Graviton4 vs Intel	non-converged periods: 1,17,32,83 vs 1,32,83
+Graviton4 vs AMD	heads bit-identical in 0 of 97 periods; first difference at period 1; max |dh| 4.911e-01 m, worst p99 3.148e-04 m, worst median 8.360e-12 m, at most 4 cells over 0.1 m
+Graviton4 vs AMD	mobile_bay.gwf.head.obs.csv: max |diff| 1.518e-04
+Graviton4 vs AMD	mobile_bay.gwf.sfr.obs.csv: max |diff| 2.081e+02
+Graviton4 vs AMD	GWF percent discrepancy: max per-period difference 7.650e-02 (percentage points)
+Graviton4 vs AMD	non-converged periods: 1,17,32,83 vs 1,32,83
+Intel vs AMD	heads bit-identical in 97 of 97 periods; first difference at period None; max |dh| 0.000e+00 m, worst p99 0.000e+00 m, worst median 0.000e+00 m, at most 0 cells over 0.1 m
+Intel vs AMD	mobile_bay.gwf.head.obs.csv: max |diff| 0.000e+00
+Intel vs AMD	mobile_bay.gwf.sfr.obs.csv: max |diff| 0.000e+00
+Intel vs AMD	GWF percent discrepancy: max per-period difference 0.000e+00 (percentage points)
+Intel vs AMD	non-converged periods: 1,32,83 vs 1,32,83
+
+==== precal
+Graviton4	nonconverged periods	none	(archive 6.3.0: none)
+Intel	nonconverged periods	none	(archive 6.3.0: none)
+AMD	nonconverged periods	none	(archive 6.3.0: none)
+Graviton4	vs archive, 97 periods converged in both: worst max|dh| 1.944e-01 m, worst p99 5.666e-06 m, worst median 5.863e-11 m, at most 1 of 42822 cells over 0.1 m
+PASS	Graviton4 precal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 5.666e-06 m
+Graviton4	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 5.790e-05, median 0.000e+00, max rel 2.111e-06
+Graviton4	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 4.177e+00, median 8.294e-05, max rel 2.432e-05
+Intel	vs archive, 97 periods converged in both: worst max|dh| 2.352e-01 m, worst p99 4.012e-06 m, worst median 9.034e-11 m, at most 1 of 42822 cells over 0.1 m
+PASS	Intel precal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 4.012e-06 m
+Intel	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 1.189e-04, median 0.000e+00, max rel 4.485e-06
+Intel	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 3.502e+00, median 1.900e-04, max rel 2.039e-05
+AMD	vs archive, 97 periods converged in both: worst max|dh| 2.352e-01 m, worst p99 4.012e-06 m, worst median 9.034e-11 m, at most 1 of 42822 cells over 0.1 m
+PASS	AMD precal: 99% of active cells within the solver's head closure (0.1 m) of the archive, every period converged in both	worst p99 4.012e-06 m
+AMD	mobile_bay.gwf.head.obs.csv vs archive: 36 obs x 97 times, same names and times True, max |diff| 1.189e-04, median 0.000e+00, max rel 4.485e-06
+AMD	mobile_bay.gwf.sfr.obs.csv vs archive: 10 obs x 97 times, same names and times True, max |diff| 3.502e+00, median 1.900e-04, max rel 2.039e-05
+Graviton4 vs Intel	heads bit-identical in 0 of 97 periods; first difference at period 1; max |dh| 2.156e-01 m, worst p99 4.546e-06 m, worst median 1.107e-10 m, at most 1 cells over 0.1 m
+Graviton4 vs Intel	mobile_bay.gwf.head.obs.csv: max |diff| 6.101e-05
+Graviton4 vs Intel	mobile_bay.gwf.sfr.obs.csv: max |diff| 1.398e+00
+Graviton4 vs Intel	GWF percent discrepancy: max per-period difference 5.947e-03 (percentage points)
+Graviton4 vs Intel	non-converged periods: none vs none
+Graviton4 vs AMD	heads bit-identical in 0 of 97 periods; first difference at period 1; max |dh| 2.156e-01 m, worst p99 4.546e-06 m, worst median 1.107e-10 m, at most 1 cells over 0.1 m
+Graviton4 vs AMD	mobile_bay.gwf.head.obs.csv: max |diff| 6.101e-05
+Graviton4 vs AMD	mobile_bay.gwf.sfr.obs.csv: max |diff| 1.398e+00
+Graviton4 vs AMD	GWF percent discrepancy: max per-period difference 5.947e-03 (percentage points)
+Graviton4 vs AMD	non-converged periods: none vs none
+Intel vs AMD	heads bit-identical in 97 of 97 periods; first difference at period None; max |dh| 0.000e+00 m, worst p99 0.000e+00 m, worst median 0.000e+00 m, at most 0 cells over 0.1 m
+Intel vs AMD	mobile_bay.gwf.head.obs.csv: max |diff| 0.000e+00
+Intel vs AMD	mobile_bay.gwf.sfr.obs.csv: max |diff| 0.000e+00
+Intel vs AMD	GWF percent discrepancy: max per-period difference 0.000e+00 (percentage points)
+Intel vs AMD	non-converged periods: none vs none
+
+COMPARE OK

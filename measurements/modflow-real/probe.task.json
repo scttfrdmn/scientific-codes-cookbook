@@ -1,0 +1,155 @@
+{
+  "task_id": "cookbook-modflow-real-probe",
+  "container": "quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nexport MF_PROBE_NPER=3\nbash /tmp/real.sh\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/archive/model.zip",
+      "destination": "/tmp/archive/model.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/archive/output.zip",
+      "destination": "/tmp/archive/output.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/results.tsv"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/host.txt"
+    },
+    {
+      "source": "/tmp/out/mf6-postcal.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/mf6-postcal.stdout"
+    },
+    {
+      "source": "/tmp/out/heads-postcal.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/heads-postcal.sha256"
+    },
+    {
+      "source": "/tmp/out/vs-archive-postcal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/vs-archive-postcal.tsv"
+    },
+    {
+      "source": "/tmp/out/budget-postcal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/budget-postcal.tsv"
+    },
+    {
+      "source": "/tmp/out/budget-terms-postcal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/budget-terms-postcal.tsv"
+    },
+    {
+      "source": "/tmp/out/postcal-mobile_bay.hds",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/postcal-mobile_bay.hds"
+    },
+    {
+      "source": "/tmp/out/postcal-mobile_bay.gwf.head.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/postcal-mobile_bay.gwf.head.obs.csv"
+    },
+    {
+      "source": "/tmp/out/postcal-mobile_bay.gwf.sfr.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/postcal-mobile_bay.gwf.sfr.obs.csv"
+    },
+    {
+      "source": "/tmp/out/archive-postcal-mobile_bay.gwf.head.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/archive-postcal-mobile_bay.gwf.head.obs.csv"
+    },
+    {
+      "source": "/tmp/out/archive-postcal-mobile_bay.gwf.sfr.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/archive-postcal-mobile_bay.gwf.sfr.obs.csv"
+    },
+    {
+      "source": "/tmp/out/postcal-mfsim.lst.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/postcal-mfsim.lst.gz"
+    },
+    {
+      "source": "/tmp/out/postcal-mobile_bay.lst.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/postcal-mobile_bay.lst.gz"
+    },
+    {
+      "source": "/tmp/out/mf6-precal.stdout",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/mf6-precal.stdout"
+    },
+    {
+      "source": "/tmp/out/heads-precal.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/heads-precal.sha256"
+    },
+    {
+      "source": "/tmp/out/vs-archive-precal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/vs-archive-precal.tsv"
+    },
+    {
+      "source": "/tmp/out/budget-precal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/budget-precal.tsv"
+    },
+    {
+      "source": "/tmp/out/budget-terms-precal.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/budget-terms-precal.tsv"
+    },
+    {
+      "source": "/tmp/out/precal-mobile_bay.hds",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/precal-mobile_bay.hds"
+    },
+    {
+      "source": "/tmp/out/precal-mobile_bay.gwf.head.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/precal-mobile_bay.gwf.head.obs.csv"
+    },
+    {
+      "source": "/tmp/out/precal-mobile_bay.gwf.sfr.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/precal-mobile_bay.gwf.sfr.obs.csv"
+    },
+    {
+      "source": "/tmp/out/archive-precal-mobile_bay.gwf.head.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/archive-precal-mobile_bay.gwf.head.obs.csv"
+    },
+    {
+      "source": "/tmp/out/archive-precal-mobile_bay.gwf.sfr.obs.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/archive-precal-mobile_bay.gwf.sfr.obs.csv"
+    },
+    {
+      "source": "/tmp/out/precal-mfsim.lst.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/precal-mfsim.lst.gz"
+    },
+    {
+      "source": "/tmp/out/precal-mobile_bay.lst.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/probe/precal-mobile_bay.lst.gz"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

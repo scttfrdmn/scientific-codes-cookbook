@@ -20,12 +20,21 @@ make stage RECIPE=modflow      # once: the flopy model builder (there is no data
 spawn task run --spec "$(make -s spec RECIPE=modflow)" --wait
 make ls RECIPE=modflow
 
-# the model is built in flopy, then solved by the mf6 binary:
 flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=1, ncol=101, delr=10.0, delc=1.0, top=20.0, botm=0.0)
 flopy.mf6.ModflowGwfnpf(gwf, icelltype=0, k=10.0)                  # icelltype 0 = confined
 flopy.mf6.ModflowGwfchd(gwf, stress_period_data=[[(0,0,0), 10.0], [(0,0,100), 2.0]])
 sim.write_simulation(); sim.run_simulation()                       # -> mf6 6.8.1
 ```
+
+## Which box — [measured](../../measurements/modflow-real/README.md) on a published USGS model: Mobile Bay, 1908–2015, both archived simulations
+
+| chip | `xlarge`, 2 serial mf6 | postcal / precal wall | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `m8g` | 4090 / 2598 s | 0.212 |
+| Xeon 6975P-C | `m8i` | 3467 / 2131 s | 0.211 |
+| **EPYC 9R45** | `m8a` | **2831 / 1746 s** | **0.197** |
+
+**Take AMD:** it is 1.44× faster than Graviton4 and 7% cheaper per result. mf6 is serial (the conda build links no MPI and no BLAS), so buy the fastest core, not more cores. The 42,822-cell Newton model with SFR and UZF closes its budgets on every chip. It matches the USGS archive's own 6.3.0 heads, 99% of cells within 3.2e-4 m. Inputs written on Windows need their `\` path separators changed to `/` before Linux mf6 can find the files. The fixture itself is one `m8g.large` task (TTL 30m as a **backstop**, `cost_limit` $0.10 as the guard). Its five 1-D solves take milliseconds; the recorded **58 s** is boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 ## Make it yours
 
@@ -38,11 +47,7 @@ sim.write_simulation(); sim.run_simulation()                       # -> mf6 6.8.
 | `ModflowGwfrch` (list) | `ModflowGwfrcha` (array) | the list package takes a per-cell **rate**; MODFLOW multiplies by cell area itself. |
 | nothing staged | your model files | **modflow6's conda package ships no example problems** — only `mf6`, `libmf6.so` and `get-modflow`, confirmed by probing the image. Build with flopy or stage your own. |
 
-**Leave the fixture.** 101 cells is 25 unknowns' worth of science, and the point is that the answer is known in closed form — no larger grid gives you that. **Scale it** once it passes; this env also carries obspy, and `get-modflow` fetches the USGS example suite if you want published benchmarks.
-
-## Shape, size, cost
-
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.10 as the real guard. Five 1-D solves of at most 201 cells are milliseconds; the recorded **58 s** is boot, Docker install and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+**Leave the fixture.** 101 cells is 25 unknowns' worth of science, and the point is that the answer is known in closed form — no larger grid gives you that. **Scale it** once it passes: a published USGS model archive runs as-is once its paths are fixed ([measured](../../measurements/modflow-real/README.md)).
 
 <details>
 <summary>As shipped: an exact analytical reference, Darcy's law to machine precision, conservation from the binary budget, and a measured second-order rate</summary>
@@ -181,6 +186,8 @@ void the closed form), 2-D and 3-D grids, DISV/DISU unstructured discretisations
 drains and evapotranspiration, solute transport (GWT) and the flow–transport exchange, parallel
 MPI solves, and the USGS `modflow6-examples` benchmark suite — `get-modflow` is in this image and
 would fetch it, which is the obvious next recipe and would turn this into a published-benchmark
-reproduction rather than a manufactured one.
+reproduction rather than a manufactured one. Transient Newton flow with SFR, UZF, RIV, WEL and
+CHD on a 2-D published model is covered by the [real-workload measurement](../../measurements/modflow-real/README.md),
+against the USGS archive's own heads.
 
 </details>

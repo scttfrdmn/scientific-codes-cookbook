@@ -1,0 +1,57 @@
+postcal	input_files	423
+precal	input_files	423
+all	unpack_s	0.9
+postcal	check	PASS	path separators rewritten only on file-naming lines	416 separators; off-path: none
+postcal	check	PASS	SAVE_FLOWS added to the name file, nothing else	mobile_bay.nam options: SAVE_FLOWS NEWTON UNDER_RELAXATION
+precal	check	PASS	path separators rewritten only on file-naming lines	416 separators; off-path: none
+precal	check	PASS	SAVE_FLOWS added to the name file, nothing else	mobile_bay.nam options: SAVE_FLOWS NEWTON UNDER_RELAXATION
+postcal	mf6_started_pid	403
+precal	mf6_started_pid	404
+precal	mf6_wall_s	1746.4
+precal	mf6_exit	0
+precal	mf6_peak_rss_mib	553.0
+precal	mf6_user_s	1745.9
+postcal	mf6_wall_s	2831.0
+postcal	mf6_exit	0
+postcal	mf6_peak_rss_mib	553.5
+postcal	mf6_user_s	2830.3
+all	solve_done_s	2832.2
+postcal	mf6_version_running	6.8.1
+postcal	check	PASS	mf6 6.8.1 ran	6.8.1
+postcal	check	PASS	completion sentinel on stdout	Normal termination of simulation
+postcal	nonconverged_periods	1,32,83
+postcal	nonconverged_periods_archive_6.3.0	1,32,35,37,69,83
+postcal	grid	nlay 1 nrow 260 ncol 232; active 42822 of 60320; connections 213000
+postcal	check	PASS	connectivity rows are exactly the active cells	60320 user nodes, 42822 with connections, 42822 active
+postcal	check	PASS	one head record per stress period	97 records
+postcal	check	PASS	every active cell has a finite head at every period	worst period: 0 bad cells
+postcal	cbb_terms	STO-SS,STO-SY,FLOW-JA-FACE,WEL,RIV,CHD,SFR,UZF-GWRCH,UZF-GWD
+postcal	check	PASS	budget file carries every flow term, storage included	missing: none
+postcal	check	PASS	one budget record set per stress period	97
+postcal	check	PASS	FLOW-JA-FACE exactly antisymmetric, every period	max |q_nm + q_mn| = 0.000e+00
+postcal	check	PASS	every term's net flow, and the model's, binary == listing	worst diff / printed precision = 0.905
+postcal	check	PASS	every term's gross in and out, binary == listing (CHD excepted, below)	worst diff / printed precision = 0.995
+postcal	chd_gross_listing_minus_binary_max	1219.4993
+postcal	check	PASS	GWF budget closes within 1% on every converged period	max |discrepancy| = 1.336e-01 %
+postcal	check	PASS	SFR budget closes within 1% on every converged period	max |discrepancy| = 0.000e+00 %
+postcal	check	PASS	UZF budget closes within 1% on every converged period	max |discrepancy| = 5.069e-06 %
+precal	mf6_version_running	6.8.1
+precal	check	PASS	mf6 6.8.1 ran	6.8.1
+precal	check	PASS	completion sentinel on stdout	Normal termination of simulation
+precal	nonconverged_periods	none
+precal	nonconverged_periods_archive_6.3.0	none
+precal	grid	nlay 1 nrow 260 ncol 232; active 42822 of 60320; connections 213000
+precal	check	PASS	connectivity rows are exactly the active cells	60320 user nodes, 42822 with connections, 42822 active
+precal	check	PASS	one head record per stress period	97 records
+precal	check	PASS	every active cell has a finite head at every period	worst period: 0 bad cells
+precal	cbb_terms	STO-SS,STO-SY,FLOW-JA-FACE,WEL,RIV,CHD,SFR,UZF-GWRCH,UZF-GWD
+precal	check	PASS	budget file carries every flow term, storage included	missing: none
+precal	check	PASS	one budget record set per stress period	97
+precal	check	PASS	FLOW-JA-FACE exactly antisymmetric, every period	max |q_nm + q_mn| = 0.000e+00
+precal	check	PASS	every term's net flow, and the model's, binary == listing	worst diff / printed precision = 0.922
+precal	check	PASS	every term's gross in and out, binary == listing (CHD excepted, below)	worst diff / printed precision = 0.999
+precal	chd_gross_listing_minus_binary_max	2409.3914
+precal	check	PASS	GWF budget closes within 1% on every converged period	max |discrepancy| = 5.349e-01 %
+precal	check	PASS	SFR budget closes within 1% on every converged period	max |discrepancy| = 0.000e+00 %
+precal	check	PASS	UZF budget closes within 1% on every converged period	max |discrepancy| = 5.466e-06 %
+all	total_s	2836.5

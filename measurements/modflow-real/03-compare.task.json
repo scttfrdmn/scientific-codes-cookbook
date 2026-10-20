@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-modflow-real-compare",
+  "container": "quay.io/aarchsci/geoscience@sha256:f0f72f5b0fe3119ecd1578b5d2e475c438bf716e01c0033adfca89a066ebcb70",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nsha256sum -c compare.sha256 || { echo \"FAIL: compare.py does not match its pin\"; exit 1; }\nmkdir -p /tmp/out\npython3 -u compare.py /tmp/c/Graviton4 /tmp/c/Intel /tmp/c/AMD 2>&1 | tee /tmp/out/compare.txt\nRC=${PIPESTATUS[0]}\n[ \"$RC\" = 0 ] || { echo \"FAIL: compare exit $RC\"; exit 1; }\ngrep -q 'COMPARE OK' /tmp/out/compare.txt || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/r1/",
+      "destination": "/tmp/c/Graviton4/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/modflow-real/r1/",
+      "destination": "/tmp/c/Intel/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/modflow-real/r1/",
+      "destination": "/tmp/c/AMD/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/compare.py",
+      "destination": "/tmp/compare.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/modflow-real/compare.sha256",
+      "destination": "/tmp/compare.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/compare.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/modflow-real/compare/compare.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
