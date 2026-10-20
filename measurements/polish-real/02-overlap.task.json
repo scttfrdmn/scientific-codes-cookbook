@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-polish-real-overlap",
+  "container": "quay.io/aarchbio/minimap2@sha256:ef4a5fb788815f5f9fd88544affa6764b5dacfc425aaf249a4adcd51416c041a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/var/tmp HOME=/var/tmp\ncd /tmp\ngrep -E ' (common\\.sh|run\\.py|overlap\\.sh|ERR12813217\\.fastq\\.gz|draft\\.fa)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 5 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash overlap.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/common.sh",
+      "destination": "/tmp/common.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/run.py",
+      "destination": "/tmp/run.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/overlap.sh",
+      "destination": "/tmp/overlap.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/reads/ERR12813217.fastq.gz",
+      "destination": "/tmp/ERR12813217.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/draft/draft.fa",
+      "destination": "/tmp/draft.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/var/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/overlap/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.8
+  }
+}

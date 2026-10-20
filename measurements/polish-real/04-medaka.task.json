@@ -1,0 +1,75 @@
+{
+  "task_id": "cookbook-polish-real-medaka",
+  "container": "quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/var/tmp HOME=/var/tmp\ncd /tmp\ngrep -E ' (common\\.sh|run\\.py|medaka\\.sh|score\\.py|ERR12813217\\.fastq\\.gz|draft\\.fa|truth\\.fa|paper-flye-medaka-100x\\.fa|r1041_e82_400bps_sup_v4\\.3\\.0_model_pt\\.tar\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 9 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash medaka.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 60
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/common.sh",
+      "destination": "/tmp/common.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/run.py",
+      "destination": "/tmp/run.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/medaka.sh",
+      "destination": "/tmp/medaka.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/fetched/truth.fa",
+      "destination": "/tmp/truth.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/fetched/paper-flye-medaka-100x.fa",
+      "destination": "/tmp/paper-flye-medaka-100x.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/fetched/r1041_e82_400bps_sup_v4.3.0_model_pt.tar.gz",
+      "destination": "/tmp/r1041_e82_400bps_sup_v4.3.0_model_pt.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/reads/ERR12813217.fastq.gz",
+      "destination": "/tmp/ERR12813217.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/draft/draft.fa",
+      "destination": "/tmp/draft.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/polish-real/racon/racon.fa",
+      "destination": "/tmp/racon.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/var/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/polish-real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

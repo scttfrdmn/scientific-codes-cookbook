@@ -24,28 +24,34 @@ racon and medaka each rebuild a consensus from real Oxford Nanopore reads on Gra
 make stage RECIPE=polish                    # once: 165 ONT reads (120x) + the 6,361 bp reference
 for s in $(make -s spec RECIPE=polish); do spawn task run --spec "$s" --wait; done
 make ls RECIPE=polish                       # score.tsv is the answer
-
 minimap2 -x map-ont -t 2 draft.fa reads.fastq > ov.paf
 racon -t 2 reads.fastq ov.paf draft.fa > polished-racon.fa
 medaka_consensus -i reads.fastq -d draft.fa -o med -t 2 -m r1041_e82_400bps_hac_v6.0.0
 ```
 
-Three tasks, one tool each: minimap2 aligns, racon polishes, medaka polishes and scores all three.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| planted-error draft | your assembly (e.g. from [flye](../flye/README.md)) | a real draft has no answer key, so the check becomes *directional* — fewer errors after than before. |
+| planted-error draft | your assembly (e.g. from [flye](../flye/README.md)) | a real draft has no answer key, so the check becomes *directional*. On a Flye draft, [measured](../../measurements/polish-real/README.md): medaka 27 → 10 errors, one racon round 27 → **411**, so keep racon for unpolished drafts (iterated, a fresh PAF per round). |
 | `sample_01` / `barcode01` | any of the 192 samples in the dataset | `sample_sheet.csv` maps alias → barcode → reference; keep the triple consistent or you score against the wrong plasmid. |
 | `r1041_e82_400bps_hac_v6.0.0` | the model matching **your** basecaller | medaka's accuracy depends on this more than on anything else here. `medaka tools list_models` lists what the image carries. |
-| one racon round | two to four rounds | racon is normally iterated, re-aligning between rounds. Each round needs a fresh PAF. |
 
 **Leave the fixture.** The errors are planted so the count is exact (21), but the *sequence*, the *reads* and the *truth* are all the depositors', so the reads carry a real basecaller error profile — which is the thing a polisher exists to remove. **Scale it** by swapping the draft for a real assembly when you want to measure how much polishing actually helps.
 
+## Which box — [measured](../../measurements/polish-real/README.md) (whole *E. coli* run, 486×, `-t 8`)
+
+| chip | instance | racon | medaka | **billed $ (both)** |
+|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 582 s | 317 s | 0.1068 |
+| Xeon 6975P-C | `m8i.2xlarge` | 523 s | 253 s | 0.1163 |
+| **EPYC 9R45** | `m8a.2xlarge` | **402 s** | **191 s** | **0.0984** |
+
+**AMD is fastest and 8% cheaper than Graviton4; the consensus is byte-identical on all three.** medaka keeps only ~4 of 8 CPUs busy, and Flye's draft ($0.14) costs more than both polishes.
+
 ## Shape, size, cost
 
-Three tasks: minimap2 and racon on `c8g.large` (2 vCPU / 4 GiB, caps $0.05), medaka on `c8g.xlarge` (4 vCPU / 8 GiB, cap $0.12) because it loads a PyTorch model. Measured: alignment and racon are each under a second, **medaka 14 s**. Windows are almost entirely image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+Three tasks, one tool each: minimap2 and racon on `c8g.large` (2 vCPU / 4 GiB, caps $0.05), medaka on `c8g.xlarge` (4 vCPU / 8 GiB, cap $0.12) because it loads a PyTorch model. Measured: alignment and racon are each under a second, **medaka 14 s**. Windows are almost entirely image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: both reach zero errors, why racon's zero is weaker than medaka's, pins</summary>

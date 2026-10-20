@@ -1,0 +1,39 @@
+{
+  "task_id": "cookbook-polish-real-fetch",
+  "container": "quay.io/aarchbio/medaka@sha256:9389bbfdcd569497790eae188c825adf70f33236c284f16dbeeb016128a1015e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/var/tmp HOME=/var/tmp\ncd /tmp\ngrep -E ' (fetch\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 1 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash fetch.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 30
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/fetch.sh",
+      "destination": "/tmp/fetch.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/var/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/fetched/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-polish-real-prep",
+  "container": "quay.io/aarchbio/sra-tools@sha256:7145cf2f6f2e9265b7ace204d86b6ed1cbbd0b8b3ef31cbadf32bfa271229afd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/var/tmp HOME=/var/tmp\ncd /tmp\ngrep -E ' (prep\\.sh)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 1 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash prep.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/prep.sh",
+      "destination": "/tmp/prep.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/ERR12813217.sra",
+      "destination": "/tmp/ERR12813217.sra"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/var/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/polish-real/reads/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

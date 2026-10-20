@@ -1,0 +1,70 @@
+Checking program versions
+This is medaka 2.2.2
+Program    Version    Required   Pass     
+bcftools   1.24       1.11       True     
+bgzip      1.24       1.11       True     
+minimap2   2.31       2.11       True     
+samtools   1.24       1.11       True     
+tabix      1.24       1.11       True     
+[19:46:35 - MdlStrTGZ] Successfully removed temporary files from /var/tmp/tmpz0n0rbhf.
+[19:46:36 - MdlStrTGZ] Successfully removed temporary files from /var/tmp/tmpmoh8dp5a.
+[19:46:37 - MdlStrTGZ] Successfully removed temporary files from /var/tmp/tmpc98l3ut_.
+[19:46:38 - MdlStrTGZ] Successfully removed temporary files from /var/tmp/tmpac8sdz20.
+Aligning basecalls to draft
+Creating fai index file /tmp/draft.fa.fai
+Creating mmi index file /tmp/draft.fa.map-ont.mmi
+[M::mm_idx_gen::0.086*1.01] collected minimizers
+[M::mm_idx_gen::0.108*1.41] sorted minimizers
+[M::main::0.138*1.32] loaded/built the index for 1 target sequence(s)
+[M::mm_idx_stat] kmer size: 15; skip: 10; is_hpc: 0; #seq: 1
+[M::mm_idx_stat::0.146*1.31] distinct minimizers: 936772 (97.15% are singletons); average occurrences: 1.045; average spacing: 5.351; total length: 5236920
+[M::main] Version: 2.31-r1302
+[M::main] CMD: minimap2 -I 16G -x map-ont -d /tmp/draft.fa.map-ont.mmi /tmp/draft.fa
+[M::main] Real time: 0.151 sec; CPU: 0.196 sec; Peak RSS: 0.052 GB
+[M::main::0.044*1.02] loaded/built the index for 1 target sequence(s)
+[M::mm_mapopt_update::0.053*1.01] mid_occ = 10
+[M::mm_idx_stat] kmer size: 15; skip: 10; is_hpc: 0; #seq: 1
+[M::mm_idx_stat::0.059*1.01] distinct minimizers: 936772 (97.15% are singletons); average occurrences: 1.045; average spacing: 5.351; total length: 5236920
+[M::worker_pipeline::31.062*6.44] mapped 78519 sequences
+[M::worker_pipeline::51.389*6.78] mapped 76208 sequences
+[M::worker_pipeline::70.859*6.92] mapped 77402 sequences
+[M::worker_pipeline::90.948*7.01] mapped 80998 sequences
+[M::worker_pipeline::106.582*7.00] mapped 76803 sequences
+[M::worker_pipeline::106.832*6.99] mapped 7103 sequences
+[M::main] Version: 2.31-r1302
+[M::main] CMD: minimap2 -x map-ont --secondary=no -L --MD -A 2 -B 4 -O 4,24 -E 2,1 -t 8 -a /tmp/draft.fa.map-ont.mmi /tmp/ERR12813217.fastq.gz
+[M::main] Real time: 106.882 sec; CPU: 746.481 sec; Peak RSS: 2.673 GB
+[bam_sort_core] merging from 0 files and 8 in-memory blocks...
+Running medaka inference
+[19:48:44 - Predict] Reducing threads, anymore is a waste.
+[19:48:44 - Predict] It looks like you attempted to set a high number of threads. We have scaled this down to an optimal number. If you wish to improve performance please see https://nanoporetech.github.io/medaka/installation.html#improving-parallelism.
+[19:48:44 - Predict] Setting pytorch intra/inter-op threads to 2/1.
+[19:48:44 - Predict] PyTorch reports intra/inter-op threads as 2/1.
+[19:48:44 - Predict] Processing region(s): contig_1:0-5236920
+[19:48:44 - Predict] Using model: /tmp/r1041_e82_400bps_sup_v4.3.0_model_pt.tar.gz.
+[19:48:44 - Predict] Using minimum mapQ threshold of 1 for read filtering.
+[19:48:44 - MdlStrTGZ] Model GRUModel(
+  (gru): GRU(10, 128, num_layers=2, batch_first=True, bidirectional=True)
+  (linear): Linear(in_features=256, out_features=5, bias=True)
+)
+[19:48:44 - MdlStrTGZ] loading weights from /var/tmp/tmp5fqnz_rk/model/weights.pt
+[19:48:44 - MdlStrTGZ] Successfully removed temporary files from /var/tmp/tmp5fqnz_rk.
+[19:48:44 - Predict] Model device: cpu
+[19:48:44 - Predict] Running prediction at full precision
+[19:48:44 - Predict] Processing 6 long region(s) with batching.
+[19:48:44 - PWorker] Running inference for 5.2M draft bases.
+[19:51:46 - PWorker] Processed 12 batches
+[19:51:46 - PWorker] All done, 0 remainder regions.
+[19:51:46 - Predict] Finished processing all regions.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+[19:51:47 - DataIndx] Loaded 1/1 (100.00%) sample files.
+Polished assembly written to /var/tmp/med/consensus.fasta, have a nice day.
+rc 0
+wall_s 317.3
+ru_maxrss_children_kib 8146020
+avg_busy_cpus 4.11
