@@ -96,7 +96,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | [cftime](../recipes/cftime/README.md) | Checks the time axis itself on Graviton4: every CF calendar, two published astronomical constants, and 292,194 days cross-validated against two unrelated implementations. For anyone whose netCDF time coordinate has to be right. | climate | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 | [climate](../recipes/climate/README.md) | `xESMF` conservatively regrids a field from one global grid to another — the interpolation every climate workflow runs before models and observations can be compared. | climate | stage | 2026-10-19 | 2026-10-03 | 2026-10-17 | 2026-10-18 |
 | [gfs-thickness](../recipes/gfs-thickness/README.md) | Reads an operational GFS analysis in GRIB2 on Graviton4 and verifies the file's geopotential heights against its own temperature and humidity through the hypsometric equation. For anyone working with operational weather data on ARM. | climate | stage | 2026-10-19 | 2026-10-08 | 2026-10-17 | 2026-10-18 |
-| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-19 | 2026-10-08 | 2026-10-17 | 2026-10-18 |
+| [gsw](../recipes/gsw/README.md) | Reproduces the TEOS-10 check-value table on Graviton4 — density, sound speed, enthalpy and more, each against the published expected value at its published tolerance. For anyone doing physical oceanography on ARM. | climate | build-in-task | 2026-10-20 | 2026-10-08 | 2026-10-17 | 2026-10-18 |
 
 ## comp-chem
 
