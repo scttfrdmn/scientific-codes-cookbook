@@ -1,0 +1,31 @@
+arm64   stringtie   window   454 s  $/hr 0.3590  billed $ 0.0453  Graviton4 cpu_part 0xd4f  tpc 1  completed
+arm64     denovo_p8  wall   48.6 s  maxrss 0.09 GiB  compute $ 0.0048
+arm64     guided_p8  wall  100.6 s  maxrss 1.24 GiB  compute $ 0.0100
+arm64     denovo_p1  wall   60.0 s  maxrss 0.04 GiB  compute $ 0.0060
+arm64     guided_p1  wall  122.8 s  maxrss 1.04 GiB  compute $ 0.0122
+arm64   gffcompare  window   242 s  $/hr 0.1795  billed $ 0.0121  aarch64  tpc -  completed
+x86_64  stringtie   window   526 s  $/hr 0.4234  billed $ 0.0619  Intel(R) Xeon(R) 6975P-C  tpc 2  completed
+x86_64    denovo_p8  wall   40.3 s  maxrss 0.09 GiB  compute $ 0.0047
+x86_64    guided_p8  wall  138.0 s  maxrss 1.24 GiB  compute $ 0.0162
+x86_64    denovo_p1  wall   48.0 s  maxrss 0.04 GiB  compute $ 0.0056
+x86_64    guided_p1  wall  156.2 s  maxrss 1.04 GiB  compute $ 0.0184
+x86_64  gffcompare  window   407 s  $/hr 0.2117  billed $ 0.0239  x86_64  tpc -  completed
+amd     stringtie   window   325 s  $/hr 0.4869  billed $ 0.0440  AMD EPYC 9R45  tpc 1  completed
+amd       denovo_p8  wall   27.2 s  maxrss 0.09 GiB  compute $ 0.0037
+amd       guided_p8  wall   63.4 s  maxrss 1.24 GiB  compute $ 0.0086
+amd       denovo_p1  wall   34.6 s  maxrss 0.04 GiB  compute $ 0.0047
+amd       guided_p1  wall   77.2 s  maxrss 1.04 GiB  compute $ 0.0104
+amd     gffcompare  window   171 s  $/hr 0.2434  billed $ 0.0116  x86_64  tpc -  completed
+x86_64  denovo_p1  5b99f994b3a6 vs Graviton4 5b99f994b3a6  [identical]
+x86_64  denovo_p8  5b99f994b3a6 vs Graviton4 5b99f994b3a6  [identical]
+x86_64  guided_p1  697deafa4263 vs Graviton4 697deafa4263  [identical]
+x86_64  guided_p8  697deafa4263 vs Graviton4 697deafa4263  [identical]
+x86_64  reference  - vs Graviton4 -  [identical]
+x86_64  gffcompare/check.txt identical
+amd     denovo_p1  5b99f994b3a6 vs Graviton4 5b99f994b3a6  [identical]
+amd     denovo_p8  5b99f994b3a6 vs Graviton4 5b99f994b3a6  [identical]
+amd     guided_p1  697deafa4263 vs Graviton4 697deafa4263  [identical]
+amd     guided_p8  697deafa4263 vs Graviton4 697deafa4263  [identical]
+amd     reference  - vs Graviton4 -  [identical]
+amd     gffcompare/check.txt identical
+CROSS-CHIP IDENTICAL

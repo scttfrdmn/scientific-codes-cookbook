@@ -1,0 +1,59 @@
+{
+  "task_id": "cookbook-ta-real-align-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '5435288d098363eb00a42126d8899fb3197ac3e8b74ce123628821b4476e292a  align.sh\\n5b0b57ca3f3dee1f5bddaf934e5c622d6951815e32d522fb61fede82a3e2f5fa  timed.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/align.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/hisat2@sha256:5a967484d6a941ddaba4b57f88ff892a579e0a18cd8c305b45cf9f49bacf10e8",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "disk_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/align.sh",
+      "destination": "/tmp/align.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/timed.py",
+      "destination": "/tmp/timed.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.primary_assembly.fa.gz",
+      "destination": "/tmp/GRCh38.primary_assembly.fa.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/align/"
+    },
+    {
+      "source": "/tmp/idx/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/hisat2-index-GRCh38-116/"
+    },
+    {
+      "source": "/tmp/sam/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/sam/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

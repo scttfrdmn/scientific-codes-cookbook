@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-ta-real-stringtie-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '066f43d1088e93a000b4d150553b36f0d75684bef291a76fe577a03a47f53841  stringtie.sh\\n5b0b57ca3f3dee1f5bddaf934e5c622d6951815e32d522fb61fede82a3e2f5fa  timed.py\\nf06418da0f3c7ba99a3fdde9d0e15b30f6c7ed0a912a98426d6ab7dadf0533a8  check_st.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/stringtie.sh 8\n"
+  ],
+  "container": "quay.io/aarchbio/stringtie@sha256:e0eb6ef15f2c8d329c3b24381b7614b80e97f056dece5fbd2f4ec2f6121b6964",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/stringtie.sh",
+      "destination": "/tmp/stringtie.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/timed.py",
+      "destination": "/tmp/timed.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/check_st.py",
+      "destination": "/tmp/check_st.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/bam/ERR188026.hisat2.bam",
+      "destination": "/tmp/ERR188026.hisat2.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/bam/ERR188026.hisat2.bam.bai",
+      "destination": "/tmp/ERR188026.hisat2.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/bam/junctions.tsv",
+      "destination": "/tmp/junctions.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/bam/chrom.sizes",
+      "destination": "/tmp/chrom.sizes"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.116.gtf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

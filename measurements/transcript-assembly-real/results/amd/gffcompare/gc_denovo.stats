@@ -1,0 +1,30 @@
+# gffcompare v0.12.10 | Command line was:
+#gffcompare -r /var/tmp/gc/genes.gtf -o /tmp/out/gc_denovo /tmp/denovo_p8.gtf
+#
+
+#= Summary for dataset: /tmp/denovo_p8.gtf 
+#     Query mRNAs :   28999 in   19009 loci  (27355 multi-exon transcripts)
+#            (5892 multi-transcript loci, ~1.5 transcripts per locus)
+# Reference mRNAs :  645196 in   71465 loci  (616207 multi-exon)
+# Super-loci w/ reference transcripts:    12691
+#-----------------| Sensitivity | Precision  |
+        Base level:    15.4     |    95.6    |
+        Exon level:    16.5     |    83.7    |
+      Intron level:    16.3     |    97.6    |
+Intron chain level:     2.0     |    45.1    |
+  Transcript level:     1.9     |    43.2    |
+       Locus level:    11.5     |    44.9    |
+
+     Matching intron chains:   12330
+       Matching transcripts:   12515
+              Matching loci:    8188
+
+          Missed exons:  679994/1120474	( 60.7%)
+           Novel exons:    1624/136861	(  1.2%)
+        Missed introns:  377676/698582	( 54.1%)
+         Novel introns:     499/116972	(  0.4%)
+           Missed loci:   58552/71465	( 81.9%)
+            Novel loci:     384/19009	(  2.0%)
+
+ Total union super-loci across all input datasets: 13075 
+28999 out of 28999 consensus transcripts written in /tmp/out/gc_denovo.annotated.gtf (0 discarded as redundant)

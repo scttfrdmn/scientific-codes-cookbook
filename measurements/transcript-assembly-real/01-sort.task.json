@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-ta-real-sort-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '8f144b541bebdf1a2886474ff2c07643ae615acbaf052e7bbf9f0b38d8d332a0  sort.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/sort.sh 8\n"
+  ],
+  "container": "quay.io/aarchbio/samtools@sha256:1191739637fb6f46ef97c02b28f693b25ca3ca61f90e1337f349b7b7cc0be4f7",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "disk_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/sort.sh",
+      "destination": "/tmp/sort.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/sam/aln.sam",
+      "destination": "/tmp/aln.sam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/align/sam.sha256",
+      "destination": "/tmp/sam.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/bam/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

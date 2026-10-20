@@ -1,0 +1,88 @@
+denovo query_transcripts (check_st) 28999
+denovo tmap_rows 28999   want == query transcripts
+denovo stats_query_mRNAs 28999   want == query transcripts
+denovo class_code_total 28999   want == tmap rows
+denovo multi_exon_'='_in_tmap 12330   check_st chain matches 12330
+denovo query_introns gffcompare 116972   check_st distinct 116972   want equal
+denovo reference_introns gffcompare 698582   check_st distinct 698582   want equal
+denovo intron_level sens/prec gffcompare 16.3 97.6   recomputed 16.3 97.6   want equal
+denovo '=' disagreements: 0
+denovo         Base level:    15.4     |    95.6    |
+denovo         Exon level:    16.5     |    83.7    |
+denovo       Intron level:    16.3     |    97.6    |
+denovo Intron chain level:     2.0     |    45.1    |
+denovo   Transcript level:     1.9     |    43.2    |
+denovo        Locus level:    11.5     |    44.9    |
+denovo -R         Base level:    30.7     |    95.6    |
+denovo -R         Exon level:    29.2     |    83.7    |
+denovo -R       Intron level:    28.0     |    97.6    |
+denovo -R Intron chain level:     3.2     |    45.1    |
+denovo -R   Transcript level:     3.2     |    43.2    |
+denovo -R        Locus level:    63.4     |    44.9    |
+denovo      Matching intron chains:   12330
+denovo        Matching transcripts:   12515
+denovo               Matching loci:    8188
+denovo           Missed exons:  679994/1120474	( 60.7%)
+denovo            Novel exons:    1624/136861	(  1.2%)
+denovo         Missed introns:  377676/698582	( 54.1%)
+denovo          Novel introns:     499/116972	(  0.4%)
+denovo            Missed loci:   58552/71465	( 81.9%)
+denovo             Novel loci:     384/19009	(  2.0%)
+denovo class = 12515
+denovo class c 9544
+denovo class j 4144
+denovo class k 1720
+denovo class m 226
+denovo class o 203
+denovo class i 193
+denovo class n 177
+denovo class x 106
+denovo class u 76
+denovo class e 54
+denovo class p 31
+denovo class y 7
+denovo class s 3
+guided query_transcripts (check_st) 85818
+guided tmap_rows 85818   want == query transcripts
+guided stats_query_mRNAs 85818   want == query transcripts
+guided class_code_total 85818   want == tmap rows
+guided multi_exon_'='_in_tmap 64307   check_st chain matches 64307
+guided query_introns gffcompare 126568   check_st distinct 126568   want equal
+guided reference_introns gffcompare 698582   check_st distinct 698582   want equal
+guided intron_level sens/prec gffcompare 17.8 98.4   recomputed 17.8 98.4   want equal
+guided '=' disagreements: 0
+guided         Base level:    32.2     |    98.8    |
+guided         Exon level:    25.8     |    93.3    |
+guided       Intron level:    17.8     |    98.4    |
+guided Intron chain level:    10.4     |    83.6    |
+guided   Transcript level:    11.3     |    84.6    |
+guided        Locus level:    23.7     |    74.7    |
+guided -R         Base level:    57.7     |    98.8    |
+guided -R         Exon level:    42.8     |    93.3    |
+guided -R       Intron level:    29.2     |    98.4    |
+guided -R Intron chain level:    15.7     |    83.6    |
+guided -R   Transcript level:    17.5     |    84.6    |
+guided -R        Locus level:    90.2     |    74.7    |
+guided      Matching intron chains:   63918
+guided        Matching transcripts:   72619
+guided               Matching loci:   16959
+guided           Missed exons:  635129/1120474	( 56.7%)
+guided            Novel exons:    1204/223703	(  0.5%)
+guided         Missed introns:  371162/698582	( 53.1%)
+guided          Novel introns:     385/126568	(  0.3%)
+guided            Missed loci:   52658/71465	( 73.7%)
+guided             Novel loci:     299/25018	(  1.2%)
+guided class = 73040
+guided class c 8181
+guided class j 2937
+guided class k 848
+guided class m 192
+guided class i 166
+guided class o 141
+guided class n 108
+guided class u 81
+guided class e 54
+guided class x 36
+guided class p 26
+guided class y 6
+guided class s 2

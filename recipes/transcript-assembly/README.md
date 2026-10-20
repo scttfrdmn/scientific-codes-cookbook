@@ -26,15 +26,11 @@ hisat2 aligns transcript reads across splice junctions and StringTie rebuilds th
 
 ```bash
 for s in $(make -s spec RECIPE=transcript-assembly); do spawn task run --spec "$s" --wait; done
-hisat2-build genome.fa idx
-hisat2 -x idx -U reads.fq -S aln.sam            # finds junctions with NO annotation given
+hisat2-build genome.fa idx && hisat2 -x idx -U reads.fq -S aln.sam   # junctions found with NO annotation
 samtools sort -o sample.bam aln.sam && samtools index sample.bam
-
 stringtie -o assembled.gtf -l ASM sample.bam    # de novo, no reference GTF
 gffcompare -r truth.gtf -o gffcmp assembled.gtf # score it against the annotation
 ```
-
-Four tasks: hisat2 builds the fixture and aligns, samtools sorts, StringTie assembles, gffcompare scores.
 
 ## Make it yours
 
@@ -47,9 +43,15 @@ Four tasks: hisat2 builds the fixture and aligns, samtools sorts, StringTie asse
 
 **Leave the fixture:** one gene and two introns make the whole intron chain exactly assertable. **Scale it** to real data when you want sensitivity numbers — and read gffcompare's *intron chain* line before its base line, for the reason below.
 
-## Shape, size, cost
+## Shape, size, cost — [measured](../../measurements/transcript-assembly-real/README.md) on a whole 15.8M-pair sample, whole GRCh38 + Ensembl 116, `-p 8`
 
-Four tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m / 12m / 12m / 12m, caps $0.05 each. `hisat2-build` on 12 kb and every other step are seconds; the windows are almost entirely image pull. **These timings are not compute cost.**
+| chip | instance | de novo | guided | gffcompare | billed $/sample |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 48.6 s | 100.6 s | 43 s | 0.045 + 0.012 |
+| Xeon 6975P-C | `m8i.2xlarge` | 40.3 s | 138.0 s | 84 s | 0.062 + 0.024 |
+| **EPYC 9R45** | `m8a.2xlarge` | **27.2 s** | **63.4 s** | **27 s** | **0.044 + 0.012** |
+
+The assemblies are identical on all three chips and at `-p 1`, once ids and record order are set aside: 28,999 transcripts de novo, every intron read-supported, 97.6% intron precision against Ensembl. Threads buy only 1.1–1.3×, and peak RSS is 1.24 GiB, so run samples side by side on small boxes. AMD is fastest and cheapest. The boot is most of the bill on any chip. The fixture itself is four tasks (hisat2 builds and aligns, samtools sorts, StringTie assembles, gffcompare scores) on `c8g.large` (2 vCPU / 4 GiB), TTL 15m / 12m / 12m / 12m, caps $0.05 each: seconds of compute in windows that are almost entirely image pull. **These timings are not compute cost.**
 
 <details>
 <summary>As shipped: an exact intron chain, why base sensitivity is the one number below 100, the assertions that are directional, pins</summary>

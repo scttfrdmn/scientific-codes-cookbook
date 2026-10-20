@@ -1,0 +1,30 @@
+# gffcompare v0.12.10 | Command line was:
+#gffcompare -R -r /var/tmp/gc/genes.gtf -o /tmp/out/gcR_guided /tmp/guided_p8.gtf
+#
+
+#= Summary for dataset: /tmp/guided_p8.gtf 
+#     Query mRNAs :   85818 in   25018 loci  (76439 multi-exon transcripts)
+#            (10882 multi-transcript loci, ~3.4 transcripts per locus)
+# Reference mRNAs :  415534 in   18807 loci  (406102 multi-exon)
+# Super-loci w/ reference transcripts:    18677
+#-----------------| Sensitivity | Precision  |
+        Base level:    57.7     |    98.8    |
+        Exon level:    42.8     |    93.3    |
+      Intron level:    29.2     |    98.4    |
+Intron chain level:    15.7     |    83.6    |
+  Transcript level:    17.5     |    84.6    |
+       Locus level:    90.2     |    74.7    |
+
+     Matching intron chains:   63918
+       Matching transcripts:   72619
+              Matching loci:   16959
+
+          Missed exons:  189664/675009	( 28.1%)
+           Novel exons:    1204/223703	(  0.5%)
+        Missed introns:   99524/426944	( 23.3%)
+         Novel introns:     385/126568	(  0.3%)
+           Missed loci:       0/18807	(  0.0%)
+            Novel loci:     299/25018	(  1.2%)
+
+ Total union super-loci across all input datasets: 18976 
+85818 out of 85818 consensus transcripts written in /tmp/out/gcR_guided.annotated.gtf (0 discarded as redundant)

@@ -1,0 +1,63 @@
+{
+  "task_id": "cookbook-ta-real-gffcompare-r3",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '41d73b412be0eb1b285c3b92683e6dfda1f9ee4314b053551ca8872bdfdc2666  gffcompare.sh\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/gffcompare.sh\n"
+  ],
+  "container": "quay.io/aarchbio/gffcompare@sha256:9674f300816f52f289453f514c14ebcc8dd6ab1361b2f29ac1c1b283e66e3547",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/gffcompare.sh",
+      "destination": "/tmp/gffcompare.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/star-real/GRCh38.116.gtf.gz",
+      "destination": "/tmp/GRCh38.116.gtf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/transcript-assembly-real/ref.sha256",
+      "destination": "/tmp/ref.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/denovo_p8.gtf",
+      "destination": "/tmp/denovo_p8.gtf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/guided_p8.gtf",
+      "destination": "/tmp/guided_p8.gtf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/check.json",
+      "destination": "/tmp/check.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/denovo_p8.chainmatch.ids",
+      "destination": "/tmp/denovo_p8.chainmatch.ids"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/stringtie/guided_p8.chainmatch.ids",
+      "destination": "/tmp/guided_p8.chainmatch.ids"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/transcript-assembly-real/r3/gffcompare/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}
