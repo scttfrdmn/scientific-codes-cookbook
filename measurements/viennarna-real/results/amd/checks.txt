@@ -1,0 +1,30 @@
+ok   families in Rfam.seed == 4227 (the 15.1 README)            4227
+ok   every family: SS_cons, equal widths, balanced; ids unique  0 bad []
+ok   RNAfold -p -j16 run 1 exit 0                               rc 0
+ok   RNAfold -p -j16 run 2 exit 0                               rc 0
+ok   two -j16 runs agree on every record both computed          0 differ, 0 of them non-numeric in a run
+ok   every non-numeric record refolds cleanly at -j1            0 records, 0.0 s
+ok   first 5000 records: -j1 output == -j<threads> output       2557109 bytes, 57.9 s
+ok   fold.out records == input sequences                        109390 / 109390
+ok   seed.fa and ref.tsv in step                                
+ok   every record: not header/sequence                          0 of 109390 []
+ok   every record: not format                                   0 of 109390 []
+ok   every record: not mfe unbalanced                           0 of 109390 []
+ok   every record: not centroid unbalanced                      0 of 109390 []
+ok   every record: not mfe noncanonical                         0 of 109390 []
+ok   every record: not centroid noncanonical                    0 of 109390 []
+ok   every record: not mfe hairpin<3                            0 of 109390 []
+ok   every record: not centroid hairpin<3                       0 of 109390 []
+ok   every record: not eval(mfe) != printed mfe                 0 of 109390 []
+ok   every record: not eval(centroid) != printed                0 of 109390 []
+ok   every record: not G > mfe                                  0 of 109390 []
+ok   every record: not in-space centroid below mfe              0 of 109390 []
+ok   every record: not frequency inconsistent with E, G         0 of 109390 []
+ok   every record: not in-space Rfam structure below the mfe    0 of 109390 []
+ok   no other error                                             []
+ok   enumerated records                                         1287
+ok   subopt: every structure, once (== independent count)       0 bad []
+ok   subopt: lowest energy and its structure == mfe             0 bad
+ok   McCaskill G == -kT ln sum exp(-E/kT), pf_smooth=0          max |dG| 2.103e-12 kcal/mol (RF01325|CP000667.1/1140523-1140494)
+ok   McCaskill bpp == enumerated pair probabilities             max |dp| 3.148e-12 (RF01325|CP000667.1/1140523-1140494)
+ok   RNAfold's printed G == library G to its 2 decimals         max 0.0050

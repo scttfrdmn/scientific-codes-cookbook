@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-viennarna-real-rfam151",
+  "container": "quay.io/aarchbio/viennarna@sha256:df02a2dc5052d8afdba41acbf18b69df253a2ca7d93b070df247bd4cdd47c51e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\n[ \"$(wc -l < pins.sha256)\" -eq 3 ] && sha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna-real/Rfam.seed.gz",
+      "destination": "/tmp/Rfam.seed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/viennarna-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/viennarna-real/rfam151/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

@@ -41,6 +41,16 @@ diff -ru rnafold.small.d2.mfe.gold out          # must be empty
 
 One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. Seven folds over 50 short sequences finish in well under a second; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
+### Which box — [measured](../../measurements/viennarna-real/README.md) (`RNAfold -p -j16`, all 109,390 Rfam 15.1 seed RNAs)
+
+| chip | instance | fold wall | peak RSS | billed $/result |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | 1,743 s | 3.8 GiB | **0.32** |
+| Xeon 6975P-C | `c8i.4xlarge` (8 cores × SMT) | 2,935 s | 4.0 GiB | 0.62 |
+| EPYC 9R45 | `c8a.4xlarge` | 1,731 s | 3.9 GiB | 0.43 |
+
+**Take Graviton4.** The output is byte-identical on all three chips, partition function included, and AMD's equal speed costs 35% more per hour. `-j` keeps every core busy, and 96% of the work is the 622 sequences over 1 kb. After any `-p -j` batch, **grep stderr for `overflow`**: one pass in seven printed an overflowed ensemble (`[100000.00]`, frequency `inf`) for one 1.8 kb RNA and still exited 0. That RNA folds cleanly on its own.
+
 <details>
 <summary>As shipped: seven byte-exact whole-file comparisons, why that is stronger than an MFE value, and two gold-free identities</summary>
 
@@ -143,8 +153,8 @@ malformed structure — but check the bucket regardless
 
 ### Not covered
 
-The partition function and base-pair probabilities (`-p`), which would add the free
-ensemble-free-energy ≤ MFE inequality; constrained folding; RNAalifold and consensus structures;
+The partition function and base-pair probabilities (`-p`) in this task; they are checked at scale,
+against exhaustive enumeration, in [viennarna-real](../../measurements/viennarna-real/README.md). Constrained folding; RNAalifold and consensus structures;
 RNAcofold for hybridisation; the alternative energy parameter sets (`dna_mathews*`,
 `rna_andronescu2007`) that ViennaRNA's own suite also covers; and comparison against
 [infernal](https://github.com/playgroundlogic/aarchbio)'s covariance models, which is a
