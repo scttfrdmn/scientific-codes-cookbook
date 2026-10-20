@@ -1,0 +1,66 @@
+createdb /tmp/UP000005640_9606_HUMAN_v6.tar db --file-include .*\.cif\.gz$ --threads 16 
+
+MMseqs Version:        	8.ef4e960
+Chain name mode        	0
+Write mapping file     	0
+Mask b-factor threshold	0
+Coord store mode       	2
+Write lookup file      	1
+Tar Inclusion Regex    	.*
+Tar Exclusion Regex    	^$
+File Inclusion Regex   	.*\.cif\.gz$
+File Exclusion Regex   	^$
+Threads                	16
+Verbosity              	3
+
+Output file: db
+[=================================================================] 1 0s 0ms
+Time for merging to db_ss: 0h 0m 0s 8ms
+Time for merging to db_h: 0h 0m 0s 3ms
+Time for merging to db_ca: 0h 0m 0s 25ms
+Time for merging to db: 0h 0m 0s 7ms
+Reordering by identifier
+Time for merging to db_h: 0h 0m 0s 4ms
+Time for merging to db_ss: 0h 0m 0s 7ms
+Time for merging to db_ca: 0h 0m 0s 25ms
+Time for merging to db: 0h 0m 0s 7ms
+Ignore 0 out of 23586.
+Too short: 0, incorrect: 0, not proteins: 0.
+Time for processing: 0h 0m 21s 752ms
+createsubdb sub.keys db qsub 
+
+MMseqs Version: 	8.ef4e960
+Subdb mode      	0
+Database ID mode	0
+Verbosity       	3
+
+Time for merging to qsub: 0h 0m 0s 0ms
+Time for processing: 0h 0m 0s 2ms
+createsubdb sub.keys db_ss qsub_ss 
+
+MMseqs Version: 	8.ef4e960
+Subdb mode      	0
+Database ID mode	0
+Verbosity       	3
+
+Time for merging to qsub_ss: 0h 0m 0s 0ms
+Time for processing: 0h 0m 0s 2ms
+createsubdb sub.keys db_ca qsub_ca 
+
+MMseqs Version: 	8.ef4e960
+Subdb mode      	0
+Database ID mode	0
+Verbosity       	3
+
+Time for merging to qsub_ca: 0h 0m 0s 0ms
+Time for processing: 0h 0m 0s 3ms
+qsub_h exists and will be overwritten
+createsubdb sub.keys db_h qsub_h 
+
+MMseqs Version: 	8.ef4e960
+Subdb mode      	0
+Database ID mode	0
+Verbosity       	3
+
+Time for merging to qsub_h: 0h 0m 0s 0ms
+Time for processing: 0h 0m 0s 1ms

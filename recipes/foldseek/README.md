@@ -36,11 +36,17 @@ foldseek convertalis db db aln aln.tsv --format-output "query,target,alntmscore,
 | self-hit check | your own | **this is the part worth copying** — make your queries members of your database and nothing can outscore a structure's alignment to itself. Algorithmic, so no band. |
 | `.cif` | `.pdb`, `.pdb.gz` | foldseek reads all of them. Predicted structures (AlphaFold/ESMFold output) work too. |
 
-**Leave the fixture.** 16 entries is 3 MB and hand-checkable, and it deliberately contains a structurally redundant pair so the check is tested against a real tie. **Scale it** to a real database once it passes — foldseek's whole point is searching millions of structures fast.
+**Leave the fixture.** 16 entries is 3 MB and hand-checkable, and it deliberately contains a structurally redundant pair so the check is tested against a real tie. The same check at scale is below.
 
-## Shape, size, cost
+## Which box — [measured](../../measurements/foldseek-real/README.md) (whole AFDB v6 human proteome, all vs all, 16 threads)
 
-One task on `c8g.xlarge` (4 vCPU / 8 GiB), TTL 25m, cap $0.08. `createdb` plus 138 all-against-all TMalign alignments take seconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | tool wall | billed $/result |
+|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 2930 s | 0.621 |
+| Xeon 6975P-C | `c8i.4xlarge` | 3144 s | 0.745 |
+| **EPYC 9R45** | `c8a.4xlarge` | **1715 s** | **0.501** |
+
+**Take AMD**: 1.7× Graviton4's speed and 19% cheaper per result. Memory peaks at 4 GiB. All 23,586 proteins but ataxin-8 (poly-Q, which the defaults cannot score) find themselves as a perfect alignment on every chip. The Graviton4 and x86 builds disagree on 52 of 5.5M hits. The fixture runs on a `c8g.xlarge` in seconds, so its window is boot and image pull: **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: an algorithmic check with no band, a deliberate tie, and why chains outnumber files</summary>
@@ -146,10 +152,11 @@ outscored by another, or a structure absent from the results — but check the b
 
 ### Not covered
 
-Searching a real database (the point of the tool), `foldseek easy-search`, clustering
-(`foldseek cluster`), the `prostt5` sequence-to-structure mode, comparison against **TM-align** —
-now published in aarchbio and the obvious cross-code partner for TM-score — and scoring *predicted*
-structures, which is where this would meet an ESMFold recipe
-([#1](https://github.com/scttfrdmn/scientific-codes-cookbook/issues/1)).
+`foldseek easy-search`, clustering (`foldseek cluster`), the `prostt5` sequence-to-structure
+mode, comparison against **TM-align** (now published in aarchbio, and the obvious cross-code
+partner for TM-score), and an ESMFold recipe's own predictions
+([#1](https://github.com/scttfrdmn/scientific-codes-cookbook/issues/1)). A real database search,
+over 23,586 AlphaFold predictions on three chips, is in
+[foldseek-real](../../measurements/foldseek-real/README.md).
 
 </details>

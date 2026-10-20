@@ -1,0 +1,33 @@
+{
+  "task_id": "cookbook-foldseek-real-compare",
+  "container": "quay.io/aarchbio/foldseek@sha256:871c61cc7c37557742972ef4f57fecf47a9eb3494f95f5fb28b9edc132b3644b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c compare.sha256 || { echo \"FAIL: compare.sh does not match its pin\"; exit 1; }\n# Intel and AMD run the same bioconda binary and their tables are byte-identical (sha_sorted_tsv);\n# each is compared against Graviton4 anyway.\nbash compare.sh arm64.tsv.gz amd.tsv.gz graviton4_vs_amd\nbash compare.sh arm64.tsv.gz intel.tsv.gz graviton4_vs_intel\nls -la /tmp/out\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/runs/foldseek-real/real/aln.sorted.tsv.gz", "destination": "/tmp/arm64.tsv.gz"},
+    {"source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/foldseek-real/real/aln.sorted.tsv.gz", "destination": "/tmp/intel.tsv.gz"},
+    {"source": "s3://${COOKBOOK_BUCKET}/runs-amd/foldseek-real/real/aln.sorted.tsv.gz", "destination": "/tmp/amd.tsv.gz"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/foldseek-real/compare.sh", "destination": "/tmp/compare.sh"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/foldseek-real/compare.sha256", "destination": "/tmp/compare.sha256"}
+  ],
+  "outputs": [
+    {"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/foldseek-real/compare/"}
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

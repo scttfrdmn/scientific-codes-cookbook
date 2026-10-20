@@ -1,0 +1,31 @@
+{
+  "task_id": "cookbook-foldseek-real",
+  "container": "quay.io/aarchbio/foldseek@sha256:871c61cc7c37557742972ef4f57fecf47a9eb3494f95f5fb28b9edc132b3644b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nbash real.sh 16 full\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/foldseek-real/data/UP000005640_9606_HUMAN_v6.tar", "destination": "/tmp/UP000005640_9606_HUMAN_v6.tar"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/foldseek-real/real.sh", "destination": "/tmp/real.sh"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/foldseek-real/pins.sha256", "destination": "/tmp/pins.sha256"}
+  ],
+  "outputs": [
+    {"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/foldseek-real/real/"}
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
