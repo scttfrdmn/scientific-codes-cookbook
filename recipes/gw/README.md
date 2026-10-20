@@ -31,10 +31,14 @@ bilby.run_sampler(likelihood, priors, sampler="dynesty", nlive=200, sample="rwal
 |---|---|---|
 | `rstate=np.random.default_rng(SEED)` | `seed=SEED` | **Bilby drops `seed=` for dynesty** with a warning (`Kwargs contain both 'rstate' and 'seed', ignoring 'seed'`) and runs unseeded: two "seeded" runs gave different posteriors. Pass the generator and the run is byte-identical — here across a laptop and Graviton4. |
 | chirp mass, mass ratio, distance free | the full 15-parameter BBH prior | the checks (truth inside the 99% interval, a 2% offset outside it) carry over unchanged; wall time does not — budget hours, and raise `npool`. |
-| simulated noise from `aLIGOZeroDetHighPower` | real strain | stage a GWOSC file pinned by sha256 to S3 rather than fetching it in the task, and estimate the PSD from off-source data. |
+| simulated noise from `aLIGOZeroDetHighPower` | real strain | stage a GWOSC file pinned by sha256 to S3 rather than fetching it in the task — [measured on GW150914](../../measurements/gw-real/README.md). To compare with a GWTC-2.1 posterior, set `BILBY_INCORRECT_PSD_NORMALIZATION=TRUE`: bilby 2.x dropped a window-power PSD scaling the release used, which moves every SNR by ×0.935. |
 | `import pycbc` | `import pycbc.waveform`, `.filter`, `.psd`, … | a bare `import pycbc` succeeds even when its submodules are broken; import what you use. |
 
 **Leave the fixture** for a first run: a planted signal is the only data whose answer is known exactly. **Scale it** by freeing parameters — nothing in the assertions depends on the problem size.
+
+## Which box — [measured](../../measurements/gw-real/README.md) on GW150914, real GWOSC strain
+
+**Billed $/event: Graviton4 `c8g.16xlarge` $3.17 (4,476 s), Intel `c8i.16xlarge` $3.86 (4,636 s), AMD `c8a.16xlarge` $3.39 (3,543 s).** One event is a PyCBC search of the GWOSC hour, which finds GW150914 blind in both detectors, plus full 15-parameter Bilby PE with XPHM and calibration. The sampler is 96% of the run and scales with cores, so **take the most cores per dollar: Graviton4 is cheapest and AMD fastest.** The rebuilt GWTC-2.1 likelihood matches the release to 0.041 in ln L, and the Bayes factor and medians match. The posterior's tails come out narrower than the published ones on every chip: a 5-SE quantile test fails, and that failure is reported, not loosened.
 
 ## Shape, size, cost
 

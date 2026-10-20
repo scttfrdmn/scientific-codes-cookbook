@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-gw-real-fetch",
+  "container": "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\nprintf '79ef557c6f22e86bf28808ecc22707cc460b09a18b0fbadde21793c3d6fbffa2  fetch.py\\n97811d33f5548f127b002c4d98d4855aaeb3b0e58aacdd938eb6251da0b07a9c  inspect_release.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nmkdir -p /tmp/out /tmp/log\npython3 -u fetch.py /tmp/out 2>&1 | tee /tmp/log/fetch.log\ngrep -q 'FETCH OK' /tmp/log/fetch.log || { echo 'FAIL: fetch'; exit 1; }\npython3 -u inspect_release.py /tmp/out/IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo.h5 > /tmp/log/inspect.txt 2>&1\ntail -3 /tmp/log/inspect.txt\nls -l /tmp/out\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/inspect_release.py",
+      "destination": "/tmp/inspect_release.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/"
+    },
+    {
+      "source": "/tmp/log/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw-real/fetch/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

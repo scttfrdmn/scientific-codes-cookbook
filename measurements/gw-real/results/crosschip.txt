@@ -1,0 +1,59 @@
+== fixed points (same bytes, same parameters) ==
+ln_noise_evidence_ours                               -7288.1157 | -7288.1157 | -7288.1157
+                                                     identical to the printed digits on all three
+ln_noise_evidence_bilby2_normalisation               -6376.3228 | -6376.3228 | -6376.3228
+                                                     identical to the printed digits on all three
+lnL_ours_minus_published_500_samples                 median -4.296e-03 max|.| 4.130e-02 | median -4.366e-03 max|.| 4.122e-02 | median -4.366e-03 max|.| 4.122e-02
+lnL_maxL_with_lalsim_6.1.0_defaults_minus_published  -0.0037 | -0.0036 | -0.0036
+H1_mf_snr_bilby                                      21.221077-2.052640j (|.| 21.320118) | 21.221094-2.052511j (|.| 21.320123) | 21.221094-2.052511j (|.| 21.320123)
+L1_mf_snr_bilby                                      15.168211-1.696516j (|.| 15.262791) | 15.168236-1.696396j (|.| 15.262803) | 15.168236-1.696396j (|.| 15.262803)
+H1_mf_snr_pycbc                                      21.221077-2.052640j | 21.221094-2.052511j | 21.221094-2.052511j
+L1_mf_snr_pycbc                                      15.168211-1.696516j | 15.168236-1.696396j | 15.168236-1.696396j
+
+== search (PyCBC over the hour) ==
+H1 arm64   on-source t=1126259462.427734 snr=19.691195 rchisq=1.036456 newsnr=19.511021 41.161+32.251 | loudest off-source newsnr 6.5035
+H1 x86_64  on-source t=1126259462.427734 snr=19.691195 rchisq=1.036456 newsnr=19.511021 41.161+32.251 | loudest off-source newsnr 6.5035
+H1 amd     on-source t=1126259462.427734 snr=19.691195 rchisq=1.036456 newsnr=19.511021 41.161+32.251 | loudest off-source newsnr 6.5035
+H1 x86_64 vs arm64: 20 triggers, same times and templates: True; max rel SNR difference 2.4e-10
+H1 amd vs arm64: 20 triggers, same times and templates: True; max rel SNR difference 2.4e-10
+L1 arm64   on-source t=1126259462.421387 snr=13.529783 rchisq=0.574010 newsnr=13.529783 35.557+35.557 | loudest off-source newsnr 6.4603
+L1 x86_64  on-source t=1126259462.421387 snr=13.529783 rchisq=0.574010 newsnr=13.529783 35.557+35.557 | loudest off-source newsnr 6.4603
+L1 amd     on-source t=1126259462.421387 snr=13.529783 rchisq=0.574010 newsnr=13.529783 35.557+35.557 | loudest off-source newsnr 6.4603
+L1 x86_64 vs arm64: 20 triggers, same times and templates: True; max rel SNR difference 4.9e-10
+L1 amd vs arm64: 20 triggers, same times and templates: True; max rel SNR difference 4.9e-10
+
+== the sampler (a path) ==
+ln_bayes_factor                          304.231 +- 0.251 | 304.270 +- 0.257 | 304.270 +- 0.257
+posterior_samples                        2722 | 2610 | 2610
+n_likelihood_evaluations                 20456245 | 20123289 | 20123289
+kish_ess                                 3925 | 3775 | 3775
+bootstrap_se_over_kish_binomial_median   0.962 | 0.967 | 0.967
+median_chirp_mass                        ours 30.4094 | ours 30.4747 | ours 30.4747
+median_mass_ratio                        ours 0.8503 | ours 0.8565 | ours 0.8565
+median_chi_eff                           ours -0.0540 | ours -0.0507 | ours -0.0507
+median_luminosity_distance               ours 466.3417 | ours 468.0067 | ours 468.0067
+median_theta_jn                          ours 2.7185 | ours 2.7161 | ours 2.7161
+
+== F(published quantile) per chip, and the run-to-run spread against the bootstrap SE ==
+x86_64 and amd run one build; their quantiles are identical, so the independent paths are arm64 and x86.
+parameter            arm64 F(q05,q50,q95)        x86_64                      amd                         |dF| arm64-x86 / sqrt2   max|z| arm64, x86
+chirp_mass           [0.0362 0.507  0.9558]      [0.0261 0.4768 0.9598]      [0.0261 0.4768 0.9598]      [0.0071 0.0214 0.0028]   4.40, 9.98
+mass_ratio           [0.0393 0.4855 0.9509]      [0.0301 0.4731 0.9387]      [0.0301 0.4731 0.9387]      [0.0065 0.0088 0.0086]   3.93, 8.18
+mass_1               [0.0457 0.518  0.9642]      [0.0474 0.5328 0.9691]      [0.0474 0.5328 0.9691]      [0.0012 0.0105 0.0035]   5.22, 7.08
+mass_2               [0.0408 0.4842 0.9513]      [0.033  0.4648 0.9562]      [0.033  0.4648 0.9562]      [0.0055 0.0137 0.0035]   3.23, 6.02
+chi_eff              [0.038  0.4969 0.9532]      [0.0251 0.476  0.9627]      [0.0251 0.476  0.9627]      [0.0091 0.0148 0.0067]   3.85, 10.97
+chi_p                [0.0525 0.5659 0.9707]      [0.0487 0.5484 0.9641]      [0.0487 0.5484 0.9641]      [0.0027 0.0124 0.0047]   8.78, 5.32
+a_1                  [0.0501 0.5527 0.9711]      [0.0551 0.5553 0.9653]      [0.0551 0.5553 0.9653]      [0.0035 0.0018 0.0041]   8.02, 5.71
+a_2                  [0.062  0.5439 0.9672]      [0.0556 0.539  0.9622]      [0.0556 0.539  0.9622]      [0.0045 0.0035 0.0035]   5.85, 4.85
+cos_tilt_1           [0.0373 0.5065 0.9505]      [0.0474 0.5325 0.9572]      [0.0474 0.5325 0.9572]      [0.0071 0.0184 0.0047]   3.80, 3.52
+cos_tilt_2           [0.0427 0.5011 0.9423]      [0.0357 0.4624 0.9528]      [0.0357 0.4624 0.9528]      [0.0049 0.0274 0.0074]   2.20, 4.54
+theta_jn             [0.0394 0.4681 0.9502]      [0.0272 0.4711 0.956 ]      [0.0272 0.4711 0.956 ]      [0.0086 0.0021 0.0041]   3.45, 9.01
+azimuth              [0.0329 0.5014 0.9724]      [0.0178 0.4823 0.9719]      [0.0178 0.4823 0.9719]      [0.0107 0.0135 0.0004]   8.61, 14.04
+zenith               [0.0416 0.5222 0.9633]      [0.0442 0.5352 0.9689]      [0.0442 0.5352 0.9689]      [0.0018 0.0092 0.004 ]   4.58, 6.83
+geocent_time         [0.0387 0.504  0.9753]      [0.0299 0.4866 0.9719]      [0.0299 0.4866 0.9719]      [0.0062 0.0123 0.0024]   9.57, 7.60
+luminosity_distance  [0.0353 0.4835 0.9607]      [0.0383 0.4766 0.9471]      [0.0383 0.4766 0.9471]      [0.0021 0.0049 0.0096]   3.56, 2.75
+ra                   [0.0327 0.5055 0.9724]      [0.0299 0.5226 0.9805]      [0.0299 0.5226 0.9805]      [0.002  0.0121 0.0057]   5.42, 7.17
+dec                  [0.058  0.5805 0.9769]      [0.0663 0.5916 0.9789]      [0.0663 0.5916 0.9789]      [0.0059 0.0078 0.0014]   8.47, 9.39
+
+median over the 51 tests of (per-run SD from the pair) / (bootstrap SE): 1.40
+max |z| with each test's SE replaced by the larger of the bootstrap SE and the pair's spread: 9.51

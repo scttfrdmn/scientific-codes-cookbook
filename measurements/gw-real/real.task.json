@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-gw-real-r1",
+  "container": "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\nprintf 'd685517ba79cf79617cdb11c63fb458fbc9f1a020f3e7b25e2804c8a6f0db8ec  run.sh\\n6408004f3517e0a7e6e61b5208096a52c4ce5685d7c1f30033c890944d4d5dca  gwreal.py\\nfe3719dfdf4e8112845aa4be859f170d19f6fffa5440253ba17c61aff817aa05  search.py\\n4eb80e0cc25f3eba6eff61e6d1bcf1ac4ed7331b260dd24fb00b0737f34249ff  pe.py\\n67e7a24fd9d68cc038dfa7c1f2520b00449970aa08e67cae59506bd13b35c2a8  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\ngrep -E '  (H-H1_LOSC_16_V1-1126256640-4096\\.hdf5|L-L1_LOSC_16_V1-1126256640-4096\\.hdf5|IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo\\.h5|H-H1_LOSC_4_V1-1126256640-4096\\.hdf5|L-L1_LOSC_4_V1-1126256640-4096\\.hdf5)$' inputs.sha256 | sed 's|  |  data/|' > data.sha256\ntest \"$(wc -l < data.sha256)\" = 5 || { echo 'FAIL: pins missing'; exit 1; }\nsha256sum -c data.sha256 || { echo 'FAIL: staged data does not match inputs.sha256'; exit 1; }\nbash /tmp/run.sh 64 500\n"
+  ],
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/H-H1_LOSC_16_V1-1126256640-4096.hdf5",
+      "destination": "/tmp/data/H-H1_LOSC_16_V1-1126256640-4096.hdf5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/L-L1_LOSC_16_V1-1126256640-4096.hdf5",
+      "destination": "/tmp/data/L-L1_LOSC_16_V1-1126256640-4096.hdf5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo.h5",
+      "destination": "/tmp/data/IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo.h5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/H-H1_LOSC_4_V1-1126256640-4096.hdf5",
+      "destination": "/tmp/data/H-H1_LOSC_4_V1-1126256640-4096.hdf5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/data/L-L1_LOSC_4_V1-1126256640-4096.hdf5",
+      "destination": "/tmp/data/L-L1_LOSC_4_V1-1126256640-4096.hdf5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/gwreal.py",
+      "destination": "/tmp/gwreal.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/search.py",
+      "destination": "/tmp/search.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/pe.py",
+      "destination": "/tmp/pe.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6h",
+    "on_complete": "terminate",
+    "cost_limit": 6.0
+  }
+}
