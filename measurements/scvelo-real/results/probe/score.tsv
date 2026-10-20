@@ -1,0 +1,46 @@
+observable	value
+scvelo	0.3.4
+scanpy	1.12.4
+anndata	0.13.4
+pandas	3.0.6
+numpy	2.5.4
+scipy	1.18.1
+n_jobs	16
+dataset	89267 cells x 53801 genes; X csr_matrix; layers 'spliced': csr_matrix float32, 'unspliced': csr_matrix float32, None: csr_matrix float32
+obs_columns	barcode,sample,stage,sequencing.batch,theiler,doub.density,doublet,cluster,cluster.sub,cluster.stage,cluster.theiler,stripped,celltype,colour,umapX,umapY,haem_gephiX,haem_gephiY,haem_subclust,endo_gephiX,endo_gephiY,endo_trajectoryName,endo_trajectoryDPT,endo_gutX,endo_gutY,endo_gutDPT,endo_gutCluster,cell_velocyto_loom
+uns_keys	
+raw_counts	spliced 1053349716 (nnz 265831609), unspliced 63682585 (nnz 45350099), unspliced fraction 0.0570
+layer_None	sum 1053349716, nnz 265831609
+X_relation	X == spliced: True; X == spliced + unspliced: False; sum(X) 1053349716
+cells_with_zero_counts	spliced 0, unspliced 0
+filter_genes	min_shared_counts=20 keeps 10766 of 53801 genes
+initial_sizes	== raw row sums exactly, both layers; spliced+unspliced sums to 1117032301 molecules
+one_factor_spliced	every entry == raw x median(11288)/initial_size, max rel 1.42e-07 over 248575128 entries
+one_factor_unspliced	every entry == raw x median(667)/initial_size, max rel 1.42e-07 over 43004900 entries
+hvg	2000 genes; sha 8572a7c64ce1e8e1
+moments	Ms rel 5.04e-07, Mu rel 3.76e-07; 30-257 cells per neighbourhood (mean 43.3)
+graph	3777600 edges, sha 60247dcfba1ac5cb
+Ms_sha	ff9d66f5d1bd8141
+ss_gamma_vs_numpy	max rel 1.41e-05 over 2000 genes (0 with no signal, both 0: True)
+ss_velocity_identity	max |velocity - (Mu - gamma Ms)| 0.000e+00
+velocity_genes_deterministic	1138 of 2000
+probe_velocity_stochastic_default	raises ValueError: setting an array element with a sequence.
+workaround_stochastic	leastsq_generalized no-offset branch with .item() (numpy 2.5 refuses array->scalar)
+stoch_velocity_identity	max |velocity - (Mu - gamma Ms)| 0.000e+00
+stoch_vs_ss_gamma	Spearman 0.9882 over 2000 genes; 1138 stochastic velocity genes
+probe_recover_dynamics_default	raises TypeError: unique requires a Series, Index, ExtensionArray, np.ndarray or NumpyExtensionArray got list.
+workaround_unique	make_unique_list -> dict.fromkeys (pandas.unique rejects a list)
+dynamical_genes	64 (the steady-state velocity genes, sampled)
+dynamical_fitted	64 of 64 genes recoverable
+likelihood_quantiles	min 0.0000, q25 0.0000, median 0.0000, q75 0.1780, max 0.2874
+njobs_invariance	16 genes refit with n_jobs=1 vs n_jobs=16: rates+likelihood identical True, max |dfit_t| 0.000e+00
+probe_velocity_dynamical	raises ValueError: output array is read-only
+dyn_velocity_identity	max |v - (beta Mu - gamma Ms)| / max|v| 8.84e-08 over 64 genes
+dyn_velocity_genes	29
+dyn_vs_ss_gamma_over_beta	Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9824
+probe_velocity_graph	works (38.4 s)
+velocity_graph	24153035 edges, sha 9839e3f963a25fa8
+probe_latent_time	works (44.3 s)
+pseudotime_vs_stage	Spearman 0.6241 over 89267 staged cells (reported, not asserted)
+peak_rss_gib	34.05
+wall_s	340.7

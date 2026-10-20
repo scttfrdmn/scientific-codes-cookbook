@@ -1,0 +1,134 @@
+== Graviton4 vs x86_64
+score rows identical: 26 -- scvelo, scanpy, anndata, pandas, numpy, scipy, dataset, obs_columns, uns_keys, raw_counts, layer_None, X_relation, cells_with_zero_counts, filter_genes, initial_sizes, one_factor_spliced, one_factor_unspliced, hvg, ss_velocity_identity, velocity_genes_deterministic, workaround_stochastic, stoch_velocity_identity, workaround_unique, dynamical_genes, dynamical_fitted, njobs_invariance
+differs  moments                        A: Ms rel 5.04e-07, Mu rel 3.76e-07; 30-257 cells per neighbourhood (mean 43.3)
+                                        B: Ms rel 5.33e-07, Mu rel 3.76e-07; 30-257 cells per neighbourhood (mean 43.3)
+differs  graph                          A: 3777600 edges, sha 60247dcfba1ac5cb
+                                        B: 3777598 edges, sha c2214d8ec89761e5
+differs  Ms_sha                         A: ff9d66f5d1bd8141
+                                        B: ee54bff04f0a85ae
+differs  ss_gamma_vs_numpy              A: max rel 1.41e-05 over 2000 genes, worst rel/bound 0.027 (bound 2(n+1)u, n = 4464-89267 selected cells); 1 genes would select different cells in float64 (0 with no signal, both 0: True)
+                                        B: max rel 1.42e-05 over 2000 genes, worst rel/bound 0.027 (bound 2(n+1)u, n = 4464-89267 selected cells); 2 genes would select different cells in float64 (0 with no signal, both 0: True)
+differs  stoch_vs_ss_gamma              A: Spearman 0.9882 over 2000 genes; 1138 stochastic velocity genes
+                                        B: Spearman 0.9883 over 2000 genes; 1138 stochastic velocity genes
+differs  likelihood_quantiles           A: min 7.36e-195, q25 1.3e-30, median 4.07e-05, q75 0.1709, max 0.4815; 562 of 1138 above scVelo's 0.001 cut
+                                        B: min 1.38e-155, q25 5.01e-31, median 2.75e-05, q75 0.1711, max 0.4804; 563 of 1138 above scVelo's 0.001 cut
+differs  dyn_velocity_identity          A: max |v - (beta Mu - gamma Ms)| / max|v| 8.43e-08 over 1138 genes
+                                        B: max |v - (beta Mu - gamma Ms)| / max|v| 7.92e-08 over 1138 genes
+differs  dyn_velocity_genes             A: 499
+                                        B: 498
+differs  dyn_vs_ss_gamma_over_beta      A: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9828
+                                        B: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9832
+differs  velocity_graph                 A: 24153035 edges, sha 9839e3f963a25fa8
+                                        B: 24153567 edges, sha 74a22c44c9d11f66
+differs  pseudotime_vs_stage            A: Spearman 0.6241 over 89267 staged cells (reported, not asserted)
+                                        B: Spearman 0.6239 over 89267 staged cells (reported, not asserted)
+hvg list (members and order): identical
+genes sent to recover_dynamics (the steady-state velocity genes): 1138 vs 1138, shared 1138
+steady-state gamma on 1138 genes: 1 bit-identical, max rel diff 1.72e-02
+stoch_genes: 1138 vs 1138, shared 1138
+dynamical fit on 1138 genes fitted by both: 0 bit-identical in all of fit_alpha,fit_beta,fit_gamma,fit_t_,fit_scaling,fit_likelihood
+  fit_alpha       identical    0  median rel 2.11e-03  max rel 5.70e-01  Spearman 0.998222
+  fit_beta        identical    0  median rel 3.63e-04  max rel 2.94e-01  Spearman 0.999497
+  fit_gamma       identical    1  median rel 1.54e-03  max rel 2.39e-01  Spearman 0.988956
+  fit_t_          identical    8  median rel 2.22e-02  max rel 1.67e+00  Spearman 0.923902
+  fit_scaling     identical    0  median rel 3.32e-04  max rel 9.71e-01  Spearman 0.998495
+  fit_likelihood  identical    0  median rel 5.17e-02  max rel 2.19e+70  Spearman 0.996026
+  likelihood > 0.001 (scVelo's dynamical-genes cut): 562 vs 563, both 562
+  gamma/beta Spearman 0.999068
+velocity pseudotime: differs, max |diff| 5.082e-02, Spearman 0.999990
+
+== Graviton4 vs amd
+score rows identical: 26 -- scvelo, scanpy, anndata, pandas, numpy, scipy, dataset, obs_columns, uns_keys, raw_counts, layer_None, X_relation, cells_with_zero_counts, filter_genes, initial_sizes, one_factor_spliced, one_factor_unspliced, hvg, ss_velocity_identity, velocity_genes_deterministic, workaround_stochastic, stoch_velocity_identity, workaround_unique, dynamical_genes, dynamical_fitted, njobs_invariance
+differs  moments                        A: Ms rel 5.04e-07, Mu rel 3.76e-07; 30-257 cells per neighbourhood (mean 43.3)
+                                        B: Ms rel 5.33e-07, Mu rel 3.76e-07; 30-257 cells per neighbourhood (mean 43.3)
+differs  graph                          A: 3777600 edges, sha 60247dcfba1ac5cb
+                                        B: 3777590 edges, sha c23f6c550247d34a
+differs  Ms_sha                         A: ff9d66f5d1bd8141
+                                        B: 3d3223c802d4727e
+differs  ss_gamma_vs_numpy              A: max rel 1.41e-05 over 2000 genes, worst rel/bound 0.027 (bound 2(n+1)u, n = 4464-89267 selected cells); 1 genes would select different cells in float64 (0 with no signal, both 0: True)
+                                        B: max rel 1.42e-05 over 2000 genes, worst rel/bound 0.027 (bound 2(n+1)u, n = 4464-89267 selected cells); 2 genes would select different cells in float64 (0 with no signal, both 0: True)
+differs  stoch_vs_ss_gamma              A: Spearman 0.9882 over 2000 genes; 1138 stochastic velocity genes
+                                        B: Spearman 0.9883 over 2000 genes; 1138 stochastic velocity genes
+differs  likelihood_quantiles           A: min 7.36e-195, q25 1.3e-30, median 4.07e-05, q75 0.1709, max 0.4815; 562 of 1138 above scVelo's 0.001 cut
+                                        B: min 1.48e-155, q25 2.67e-31, median 2.99e-05, q75 0.1717, max 0.4806; 564 of 1138 above scVelo's 0.001 cut
+differs  dyn_velocity_identity          A: max |v - (beta Mu - gamma Ms)| / max|v| 8.43e-08 over 1138 genes
+                                        B: max |v - (beta Mu - gamma Ms)| / max|v| 8.16e-08 over 1138 genes
+differs  dyn_velocity_genes             A: 499
+                                        B: 500
+differs  dyn_vs_ss_gamma_over_beta      A: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9828
+                                        B: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9826
+differs  velocity_graph                 A: 24153035 edges, sha 9839e3f963a25fa8
+                                        B: 24154112 edges, sha 6b98635b07cd6c93
+hvg list (members and order): identical
+genes sent to recover_dynamics (the steady-state velocity genes): 1138 vs 1138, shared 1138
+steady-state gamma on 1138 genes: 1 bit-identical, max rel diff 3.30e-02
+stoch_genes: 1138 vs 1138, shared 1138
+dynamical fit on 1138 genes fitted by both: 0 bit-identical in all of fit_alpha,fit_beta,fit_gamma,fit_t_,fit_scaling,fit_likelihood
+  fit_alpha       identical    0  median rel 2.15e-03  max rel 5.70e-01  Spearman 0.998065
+  fit_beta        identical    1  median rel 4.13e-04  max rel 2.11e-01  Spearman 0.999487
+  fit_gamma       identical    1  median rel 1.70e-03  max rel 2.39e-01  Spearman 0.989578
+  fit_t_          identical    7  median rel 2.32e-02  max rel 1.74e+00  Spearman 0.896688
+  fit_scaling     identical    1  median rel 3.77e-04  max rel 1.63e+00  Spearman 0.998728
+  fit_likelihood  identical    0  median rel 5.10e-02  max rel 1.96e+63  Spearman 0.996193
+  likelihood > 0.001 (scVelo's dynamical-genes cut): 562 vs 564, both 562
+  gamma/beta Spearman 0.999143
+
+== Intel vs AMD (the same x86 env twin)
+score rows identical: 29 -- scvelo, scanpy, anndata, pandas, numpy, scipy, dataset, obs_columns, uns_keys, raw_counts, layer_None, X_relation, cells_with_zero_counts, filter_genes, initial_sizes, one_factor_spliced, one_factor_unspliced, hvg, moments, ss_gamma_vs_numpy, ss_velocity_identity, velocity_genes_deterministic, workaround_stochastic, stoch_velocity_identity, stoch_vs_ss_gamma, workaround_unique, dynamical_genes, dynamical_fitted, njobs_invariance
+differs  graph                          A: 3777598 edges, sha c2214d8ec89761e5
+                                        B: 3777590 edges, sha c23f6c550247d34a
+differs  Ms_sha                         A: ee54bff04f0a85ae
+                                        B: 3d3223c802d4727e
+differs  likelihood_quantiles           A: min 1.38e-155, q25 5.01e-31, median 2.75e-05, q75 0.1711, max 0.4804; 563 of 1138 above scVelo's 0.001 cut
+                                        B: min 1.48e-155, q25 2.67e-31, median 2.99e-05, q75 0.1717, max 0.4806; 564 of 1138 above scVelo's 0.001 cut
+differs  dyn_velocity_identity          A: max |v - (beta Mu - gamma Ms)| / max|v| 7.92e-08 over 1138 genes
+                                        B: max |v - (beta Mu - gamma Ms)| / max|v| 8.16e-08 over 1138 genes
+differs  dyn_velocity_genes             A: 498
+                                        B: 500
+differs  dyn_vs_ss_gamma_over_beta      A: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9832
+                                        B: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9826
+differs  velocity_graph                 A: 24153567 edges, sha 74a22c44c9d11f66
+                                        B: 24154112 edges, sha 6b98635b07cd6c93
+hvg list (members and order): identical
+genes sent to recover_dynamics (the steady-state velocity genes): 1138 vs 1138, shared 1138
+steady-state gamma on 1138 genes: 1 bit-identical, max rel diff 3.24e-02
+stoch_genes: 1138 vs 1138, shared 1138
+dynamical fit on 1138 genes fitted by both: 2 bit-identical in all of fit_alpha,fit_beta,fit_gamma,fit_t_,fit_scaling,fit_likelihood
+  fit_alpha       identical    3  median rel 5.06e-04  max rel 4.35e-01  Spearman 0.998823
+  fit_beta        identical    5  median rel 1.92e-04  max rel 2.29e-01  Spearman 0.999591
+  fit_gamma       identical    3  median rel 6.38e-04  max rel 1.77e-01  Spearman 0.990951
+  fit_t_          identical   14  median rel 9.76e-03  max rel 2.87e+00  Spearman 0.933687
+  fit_scaling     identical    3  median rel 1.66e-04  max rel 1.63e+00  Spearman 0.998342
+  fit_likelihood  identical    2  median rel 2.36e-02  max rel 7.68e+30  Spearman 0.998381
+  likelihood > 0.001 (scVelo's dynamical-genes cut): 563 vs 564, both 563
+  gamma/beta Spearman 0.999230
+
+== Graviton4: the 64-gene sizing probe vs the full run (a gene's fit must not depend on the others)
+score rows identical: 30 -- scvelo, scanpy, anndata, pandas, numpy, scipy, dataset, obs_columns, uns_keys, raw_counts, layer_None, X_relation, cells_with_zero_counts, filter_genes, initial_sizes, one_factor_spliced, one_factor_unspliced, hvg, moments, graph, Ms_sha, ss_velocity_identity, velocity_genes_deterministic, workaround_stochastic, stoch_velocity_identity, stoch_vs_ss_gamma, workaround_unique, njobs_invariance, velocity_graph, pseudotime_vs_stage
+differs  ss_gamma_vs_numpy              A: max rel 1.41e-05 over 2000 genes (0 with no signal, both 0: True)
+                                        B: max rel 1.41e-05 over 2000 genes, worst rel/bound 0.027 (bound 2(n+1)u, n = 4464-89267 selected cells); 1 genes would select different cells in float64 (0 with no signal, both 0: True)
+differs  dynamical_genes                A: 64 (the steady-state velocity genes, sampled)
+                                        B: 1138 (the steady-state velocity genes)
+differs  dynamical_fitted               A: 64 of 64 genes recoverable
+                                        B: 1138 of 1138 genes recoverable
+differs  likelihood_quantiles           A: min 0.0000, q25 0.0000, median 0.0000, q75 0.1780, max 0.2874
+                                        B: min 7.36e-195, q25 1.3e-30, median 4.07e-05, q75 0.1709, max 0.4815; 562 of 1138 above scVelo's 0.001 cut
+differs  dyn_velocity_identity          A: max |v - (beta Mu - gamma Ms)| / max|v| 8.84e-08 over 64 genes
+                                        B: max |v - (beta Mu - gamma Ms)| / max|v| 8.43e-08 over 1138 genes
+differs  dyn_velocity_genes             A: 29
+                                        B: 499
+differs  dyn_vs_ss_gamma_over_beta      A: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9824
+                                        B: Spearman(fit_gamma/fit_beta, steady-state gamma) 0.9828
+hvg list (members and order): identical
+genes sent to recover_dynamics (the steady-state velocity genes): 64 vs 1138, shared 64
+steady-state gamma on 64 genes: 64 bit-identical, max rel diff 0.00e+00
+stoch_genes: 64 vs 64, shared 64
+dynamical fit on 64 genes fitted by both: 64 bit-identical in all of fit_alpha,fit_beta,fit_gamma,fit_t_,fit_scaling,fit_likelihood
+  fit_alpha       identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  fit_beta        identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  fit_gamma       identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  fit_t_          identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  fit_scaling     identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  fit_likelihood  identical   64  median rel 0.00e+00  max rel 0.00e+00  Spearman 1.000000
+  likelihood > 0.001 (scVelo's dynamical-genes cut): 30 vs 30, both 30
+  gamma/beta Spearman 1.000000

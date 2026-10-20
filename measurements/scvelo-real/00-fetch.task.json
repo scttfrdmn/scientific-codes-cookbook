@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-scvelo-real-fetch",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p /tmp/out\npython3 -u fetch.py /tmp/out > /tmp/fetch.log 2>&1\nRC=$?\ncat /tmp/fetch.log\n[ \"$RC\" = 0 ] || { echo \"FAIL: fetch\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/scvelo-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/scvelo-real/data/"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/scvelo-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

@@ -25,6 +25,16 @@ scv.tl.recover_dynamics(adata, var_names="all", t_max=False, n_jobs=1) # t_max=F
 scv.tl.velocity(adata, mode="dynamical_residuals")                    # mode="dynamical" fails here
 ```
 
+## Which box — [measured](../../measurements/scvelo-real/README.md) on the whole gastrulation atlas (89,267 cells, 1,138 dynamical genes)
+
+| chip | `r8*.4xlarge`, 16 workers | scVelo wall | **billed $/result** |
+|---|---|---|---|
+| **Graviton4** | `r8g` | **587 s** | **0.209** |
+| Xeon 6975P-C | `r8i` (8 cores × 2) | 1078 s | 0.368 |
+| EPYC 9R45 | `r8a` | 636 s | 0.255 |
+
+**Take Graviton4: fastest and cheapest.** `recover_dynamics` is 77–82% of the run on every chip, and memory picks the box (61 GiB peak with workers). Every identity holds at 89k cells on all three chips, and a gene's fit is bit-identical whatever the worker count. **On this env the default `scv.tl.velocity(adata)` (stochastic) raises on numpy 2.5**, and `velocity_pseudotime`'s ARPACK solve stalled on AMD's graph. The measurement has the shim and the cap.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
