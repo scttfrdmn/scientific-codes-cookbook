@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-cftime-real-decode",
+  "container": "quay.io/aarchsci/climate@sha256:7c6b07a02ca6e5b8907c19b0a930d177f137a58783b89135d84ae4d9b9a3a63b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport TMPDIR=/tmp HOME=/tmp OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nT0=$(date +%s)\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\n( cd axes && sha256sum -c ../axes.sha256 > /dev/null ) || { echo \"FAIL: the staged axes do not match axes.sha256\"; exit 1; }\necho \"pins ok in $(( $(date +%s) - T0 ))s\"\nW=$(getconf _NPROCESSORS_ONLN)\n{ echo \"arch $(uname -m)\"; echo \"cpus $W\"; grep -m1 -E 'model name|CPU part' /proc/cpuinfo; echo \"threads_per_core $(awk -F, '{print NF}' /sys/devices/system/cpu/cpu0/topology/thread_siblings_list)\"; grep MemTotal /proc/meminfo; python3 -c 'import sys,cftime,numpy,xarray,numcodecs; print(\"python\",sys.version.split()[0],\"cftime\",getattr(cftime,\"__version__\",\"unknown\"),\"numpy\",numpy.__version__,\"xarray\",xarray.__version__,\"numcodecs\",numcodecs.__version__)'; } > host.txt 2>&1\ncat host.txt\nT0=$(date +%s)\npython3 -u decode.py axes out \"$W\" > decode.log 2>&1\nRC=$?\ncat decode.log\necho \"decode.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncp host.txt out/\ntest \"$RC\" = 0 || { echo \"FAIL: the decode failed\"; exit 1; }\npython3 -u check.py pangeo-cmip6.csv.gz out > check.log 2>&1\nRC=$?\ncat check.log\ntest \"$RC\" = 0 || { echo \"FAIL: a check failed\"; exit 1; }\ngrep -q 'CFTIME REAL OK' check.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ngzip -n out/stores.jsonl out/vars.jsonl\ndf -h /tmp | tail -1\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/axes/",
+      "destination": "/tmp/axes/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/axes.sha256",
+      "destination": "/tmp/axes.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/pangeo-cmip6.csv.gz",
+      "destination": "/tmp/pangeo-cmip6.csv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/decode.py",
+      "destination": "/tmp/decode.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/refcal.py",
+      "destination": "/tmp/refcal.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/decode.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cftime-real/r1/decode.log"
+    },
+    {
+      "source": "/tmp/check.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cftime-real/r1/check.log"
+    },
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cftime-real/r1/out/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

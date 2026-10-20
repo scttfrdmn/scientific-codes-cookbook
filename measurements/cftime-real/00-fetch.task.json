@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-cftime-real-fetch",
+  "container": "quay.io/aarchsci/climate@sha256:7c6b07a02ca6e5b8907c19b0a930d177f137a58783b89135d84ae4d9b9a3a63b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nT0=$(date +%s)\npython3 -u fetch.py pangeo-cmip6.csv.gz axes 16 32 > fetch.log 2>&1\nRC=$?\ncat fetch.log\necho \"fetch.py exit $RC in $(( $(date +%s) - T0 ))s\"\ntest \"$RC\" = 0 || { echo \"FAIL: the fetch failed\"; exit 1; }\n( cd axes && sha256sum *.bin *.jsonl ) > axes.sha256\ncat axes.sha256\ndu -sh axes; df -h /tmp | tail -1\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/pangeo-cmip6.csv.gz",
+      "destination": "/tmp/pangeo-cmip6.csv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/decode.py",
+      "destination": "/tmp/decode.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/refcal.py",
+      "destination": "/tmp/refcal.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/axes/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/axes/"
+    },
+    {
+      "source": "/tmp/axes.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/cftime-real/axes.sha256"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cftime-real/fetch/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

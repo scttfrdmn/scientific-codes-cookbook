@@ -19,13 +19,9 @@ Checks the time axis itself on Graviton4: every CF calendar, two published astro
 make stage RECIPE=cftime     # once: the checks only — the references are published constants
 spawn task run --spec "$(make -s spec RECIPE=cftime)" --wait
 make ls RECIPE=cftime
-
-# J2000.0 is Julian Day 2451545.0 by astronomical convention — not cftime's opinion
-cftime.date2num(cftime.datetime(2000, 1, 1, 12, calendar="proleptic_gregorian"),
-                "days since -4713-11-24 12:00:00", calendar="proleptic_gregorian")
-
-cftime.num2date(np.arange(292194.0), "days since 1600-01-01",
-                calendar="proleptic_gregorian")   # == stdlib datetime, == numpy.datetime64
+PG = "proleptic_gregorian"   # next: J2000.0 is Julian Day 2451545.0 by convention, not cftime's opinion
+cftime.date2num(cftime.datetime(2000, 1, 1, 12, calendar=PG), "days since -4713-11-24 12:00:00", calendar=PG)
+cftime.num2date(np.arange(292194.0), "days since 1600-01-01", calendar=PG)   # == stdlib datetime, == numpy
 ```
 
 ## Make it yours
@@ -36,13 +32,23 @@ cftime.num2date(np.arange(292194.0), "days since 1600-01-01",
 | the `standard` control | the agreement alone | **keep it.** A three-way match across 292,194 days would also hold for code that ignored `calendar=` entirely. The control is what makes the agreement mean something. |
 | 1600–2400 | your own span | stdlib `datetime` cannot represent year < 1, and `numpy.datetime64[D]` tops out near ±9999 — so a wider span loses one or both referees. |
 | `noleap` / `360_day` | `standard` | model output often uses these, and they are **not** approximations to fix up: a `360_day` year is 12 exact 30-day months, so day-of-year arithmetic that assumes 365 is wrong by 5 days by December. |
-| these calendars | a real netCDF axis | [climate](../climate/README.md) and [cdo-nco](../cdo-nco/README.md) move real fields; this page is only about the time coordinate. |
+| these calendars | a real file's axis | decode with `use_cftime=True`: xarray's default `datetime64[ns]` path silently wrapped three CMIP6 axes past 2262 ([measured](../../measurements/cftime-real/README.md)). [climate](../climate/README.md) and [cdo-nco](../cdo-nco/README.md) move real fields. |
 
 **Leave the fixture.** Nothing is fetched and no file is read: the references are published constants (JD 2451545.0, MJD 51544), the CF calendar definitions, and two implementations that ship with Python. **Scale it** by running the same cross-check over your own span — the method transfers, but mind the referees' range limits above.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All checks, including 292,194 days converted three ways, are **6 s** of a 1m10s window; 39 s is installing Docker and 24 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
+
+**Which box — [measured](../../measurements/cftime-real/README.md)** on every time axis in CMIP6 on AWS:
+
+| chip | instance | decode wall | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `c8g.8xlarge` | 2,085 s | 1.2762 | **0.781** |
+| Intel | `c8i.8xlarge` | 2,781 s | 1.4994 | 1.196 |
+| AMD | `c8a.8xlarge` | **1,716 s** | 1.7243 | 0.860 |
+
+All 7.29 billion time values in 512,171 zarr stores, 88 models, seven calendar spellings: cftime matches an exact-integer referee on every one, and the results are byte-identical on all three chips. **Graviton4 is cheapest, AMD fastest.** The run also found 236 stores whose time bytes are float64 under an int64 label, and three where xarray's default (non-cftime) decode silently wraps 1,395 dates by 584 years; `use_cftime=True` gets them right.
 
 <details>
 <summary>As shipped: two published constants, a three-way cross-check over 292,194 days, and the control that stops it being vacuous</summary>
@@ -183,11 +189,9 @@ year length or month structure, or any lossy unit conversion — but check the b
 
 ### Not covered
 
-**Reading a real time axis.** No netCDF file is opened: `xarray.decode_cf` and
-`num2date` on file-backed data are where most people actually meet cftime, and the
-attribute handling there (`units`, `calendar`, `_FillValue`, bounds variables) is untested.
-[climate](../climate/README.md) and [cdo-nco](../cdo-nco/README.md) move real fields but
-do not assert their time coordinates.
+**Reading a real time axis — in this recipe.** No netCDF file is opened here. File-backed
+`xarray.decode_cf` and `num2date`, with real `units`, `calendar` and bounds attributes, are covered
+at archive scale by [cftime-real](../../measurements/cftime-real/README.md) (zarr, not netCDF).
 
 **`date2index` and `time2index`**, the search functions, including their `select="before"/"after"/
 "nearest"` modes. **Leap seconds and UTC/TAI**, which CF does not model and this does not raise.
