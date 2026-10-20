@@ -1,0 +1,36 @@
+pixels 100 spectra 40800 of which targets 33530 line slots 244800
+info  fibermap EBV vs the SFD lookup emlinefit uses, targets: max |diff| 1.295e-06 mag
+PASS  every pixel read                                                   100 pixels
+PASS  specutils DESI loader == raw HDUs (wave, flux, ivar, mask, TARGETID) 100 of 100 pixels bit-identical
+PASS  TARGETIDs unique, same set in coadd and emline                     40800 spectra
+PASS  every line slot of every spectrum accounted for                    244800 slots
+FAIL  ref NDOF == catalogue NDOF, every slot (sub-pixel fits exempt)     244800 slots, 149478 fitted by DESI; 2 differ, all sigma < 0.34 A
+PASS  ref CONT == catalogue CONT, <= 1e-06 relative                      149477 of 149477 bit-identical, max rel 0.000e+00
+PASS  catalogue EW == FLUX / ((1+z) CONT) (the rest-frame definition)    max rel 1.576e-07 on 149477
+PASS  ref FLUX == catalogue FLUX on well-posed fits, <= 2 sqrt(10 ftol chi2) sigma 34369 fits; max 2.070e-04 sigma (tol 4.869e-03-7.820e-02)
+PASS  a specutils fit for every slot both DESI runs fitted               149477 of 149477
+PASS  fit_lines window pixels - free params == catalogue NDOF            every fitted slot
+PASS  fit_lines' inclusive window == emlinefit's strict window           pixel counts equal
+info  specutils fit exceptions: 0 []
+PASS  same chi2 minimum on >= 99.9% of well-posed fits (|dchi2|/chi2 <= 1e-07) 34363 of 34369; specutils lower in 3, DESI lower in 3
+PASS  at the same minimum, specutils F == DESI F, <= 2 sqrt(10 ftol chi2) sigma max 1.175e-02 sigma; max dF/tol 7.481e-01
+info  different minimum: pix 10019 row 463 HBETA z=0.4789  sigma DESI 0.682 specutils 0.309  F DESI 1.275 specutils 0.9921  dchi2/chi2 -1.762e-03
+info  different minimum: pix 10021 row 867 OII z=1.0822  sigma DESI 0.517 specutils 0.516  F DESI 1.496 specutils 1.494  dchi2/chi2 -2.790e-07
+info  different minimum: pix 10046 row 256 OIII z=0.6785  sigma DESI 0.509 specutils 0.142  F DESI 2.005 specutils 0.6709  dchi2/chi2 +1.311e-02
+info  different minimum: pix 10084 row 419 OIII z=0.7533  sigma DESI 7.814 specutils 0.467  F DESI 6.699 specutils 1.133  dchi2/chi2 +4.630e-02
+info  different minimum: pix 10091 row 270 HGAMMA z=0.1268  sigma DESI 0.458 specutils 0.101  F DESI 2.18 specutils 0.6185  dchi2/chi2 +1.659e-02
+info  different minimum: pix 10098 row 308 OIII z=0.8084  sigma DESI 0.473 specutils 0.040  F DESI 1.891 specutils 3.431  dchi2/chi2 -1.382e-02
+PASS  at the same minimum, specutils EW == catalogue EW (relative, from the F tolerance) max rel 1.180e-03
+info  FLUX_IVAR, specutils (absolute-sigma covariance x chi2/dof) vs catalogue, same minimum: median 2.782e-05, p99 4.031e-04, max 2.971e-03
+info  OII    DESI-fitted  35095  well-posed  14826  same minimum  14825  specutils lower    1  |dF|/sigma max 2.118e-03
+info  OII    S/N>=20 (2515): line_flux over +-3 sigma / fitted Gaussian flux, median 1.0099 (a Gaussian holds 0.9973); centroid vs redrock z nan km/s (MAD nan)
+info  HDELTA DESI-fitted  31255  well-posed   1405  same minimum   1405  specutils lower    0  |dF|/sigma max 2.037e-03
+info  HGAMMA DESI-fitted  28776  well-posed   3692  same minimum   3691  specutils lower    0  |dF|/sigma max 5.992e-03
+info  HGAMMA S/N>=20 (32): line_flux over +-3 sigma / fitted Gaussian flux, median 1.0141 (a Gaussian holds 0.9973); centroid vs redrock z -3.948e+00 km/s (MAD 3.080e+00)
+info  HBETA  DESI-fitted  23818  well-posed   5369  same minimum   5368  specutils lower    1  |dF|/sigma max 1.509e-03
+info  HBETA  S/N>=20 (307): line_flux over +-3 sigma / fitted Gaussian flux, median 1.0176 (a Gaussian holds 0.9973); centroid vs redrock z -2.257e+00 km/s (MAD 3.630e+00)
+info  OIII   DESI-fitted  22060  well-posed   6812  same minimum   6809  specutils lower    1  |dF|/sigma max 1.175e-02
+info  OIII   fit_lines' default (analytic Jacobian, ties ignored): off the minimum in 6608 of 6812, chi2 above DESI's in 6797; |F/F_DESI - 1| median 1.935e-02, p90 9.629e-02; |dF| median 2.501e-01 sigma
+info  OIII   S/N>=20 (1822): line_flux over +-3 sigma / fitted Gaussian flux, median 1.0268 (a Gaussian holds 0.9973); centroid vs redrock z -4.266e-01 km/s (MAD 3.188e+00)
+info  HALPHA DESI-fitted   8473  well-posed   2265  same minimum   2265  specutils lower    0  |dF|/sigma max 5.726e-03
+info  HALPHA S/N>=20 (457): line_flux over +-3 sigma / fitted Gaussian flux, median 1.0145 (a Gaussian holds 0.9973); centroid vs redrock z -6.079e-01 km/s (MAD 1.704e+00)

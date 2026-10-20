@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-specutils-real-stage-sfd",
+  "container": "quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport HOME=/tmp\nmkdir -p /tmp/out\necho 'f8aef73dc2dae555d51d54c0f9d2a0d44467e8dbd986f77eb9b286263550f867  /tmp/stage_sfd.py' | sha256sum -c - || { echo 'FAIL: stage_sfd.py does not match its pin'; exit 1; }\npython3 -u /tmp/stage_sfd.py /tmp/out > /tmp/out/stage_sfd.log 2>&1; RC=$?\ncat /tmp/out/stage_sfd.log\n[ $RC = 0 ] && grep -q 'SFD STAGED' /tmp/out/stage_sfd.log || { echo FAIL; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/stage_sfd.py",
+      "destination": "/tmp/stage_sfd.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/SFD_dust_4096_ngp.fits",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/SFD_dust_4096_ngp.fits"
+    },
+    {
+      "source": "/tmp/out/SFD_dust_4096_sgp.fits",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/SFD_dust_4096_sgp.fits"
+    },
+    {
+      "source": "/tmp/out/sfd.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/sfd.sha256"
+    },
+    {
+      "source": "/tmp/out/stage_sfd.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/stage_sfd.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-specutils-real-compare",
+  "container": "quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH HOME=/tmp\nmkdir -p /tmp/out\necho '6a711130af578bb2efe2365380fefc575a8b431cdd431cf6b13824a19fac565f  /tmp/compare.py' | sha256sum -c - || { echo 'FAIL: compare.py does not match its pin'; exit 1; }\npython3 -u /tmp/compare.py /tmp/cmp > /tmp/out/compare.log 2>&1; RC=$?\ncat /tmp/out/compare.log\n[ $RC = 0 ] && grep -q 'COMPARE DONE' /tmp/out/compare.log && test -s /tmp/out/crosschip.txt || { echo FAIL; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/r1/pix.tar",
+      "destination": "/tmp/cmp/arm64/pix.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/r1/results.json",
+      "destination": "/tmp/cmp/arm64/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/arm64/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/specutils-real/r1/pix.tar",
+      "destination": "/tmp/cmp/x86_64/pix.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/specutils-real/r1/results.json",
+      "destination": "/tmp/cmp/x86_64/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/specutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/x86_64/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/specutils-real/r1/pix.tar",
+      "destination": "/tmp/cmp/amd/pix.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/specutils-real/r1/results.json",
+      "destination": "/tmp/cmp/amd/results.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/specutils-real/r1/check.txt",
+      "destination": "/tmp/cmp/amd/check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/compare.py",
+      "destination": "/tmp/compare.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/crosschip.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/compare/crosschip.txt"
+    },
+    {
+      "source": "/tmp/out/compare.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/compare/compare.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

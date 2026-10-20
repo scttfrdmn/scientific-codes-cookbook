@@ -1,0 +1,119 @@
+{
+  "task_id": "cookbook-specutils-real-sizing",
+  "container": "quay.io/aarchsci/astro@sha256:c09e88de976ec1184dbc4461bbb19477e9d39a991ef8aceeddb012da8d356a1c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '1d595054c98c56173ca8868c67abc1c86999abbd9893906f7e7c3525ffd64d8d  run.sh\\n80d92a9f3c21a4e29498ab7ebd6047ae43431a53d8124dc5edbea14528337892  real.py\\n07dff1ec3718d3778e8315ef8cc6355af01b90dac89118c98745bdc9135280bf  check.py\\n1ae2b63d3d95a0d76adc7a7a274a6c623b79dd972a12cf193fffcf52c5ccc589  desiutil_log.py\\nc1a05f4abeabe3e6dfad40bb62f3bb6821ebc2083e4210ddb58401b6fc2384c7  pins.sha256\\n2d49a47e7f95d1b8630c2e5b57b690a60404e75f309121da2b7915c1e14ac26e  sfd.sha256\\ned51e9c567fdd3061e14889a6ff6c453c0bb2e0a442310f567f5122f14556678  desispec_emlinefit.py\\n4649129279f59732bb74174bc2202369ffc9bbf10b52fa65e1c158746d1c4ddf  desiutil_dust.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 10000,10001\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 20
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desi/coadd-main-dark-10000.fits",
+      "destination": "/work/in/coadd-main-dark-10000.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desi/emline-main-dark-10000.fits",
+      "destination": "/work/in/emline-main-dark-10000.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desi/coadd-main-dark-10001.fits",
+      "destination": "/work/in/coadd-main-dark-10001.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desi/emline-main-dark-10001.fits",
+      "destination": "/work/in/emline-main-dark-10001.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/SFD_dust_4096_ngp.fits",
+      "destination": "/work/sfd/SFD_dust_4096_ngp.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd/SFD_dust_4096_sgp.fits",
+      "destination": "/work/sfd/SFD_dust_4096_sgp.fits"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desiutil_log.py",
+      "destination": "/tmp/desiutil_log.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/sfd.sha256",
+      "destination": "/tmp/sfd.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desispec_emlinefit.py",
+      "destination": "/tmp/desispec_emlinefit.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/specutils-real/desiutil_dust.py",
+      "destination": "/tmp/desiutil_dust.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/check.txt"
+    },
+    {
+      "source": "/tmp/out/check.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/check.log"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/results.json"
+    },
+    {
+      "source": "/tmp/out/pix.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/pix.tar"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/staged.sha256"
+    },
+    {
+      "source": "/tmp/out/progress.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/specutils-real/sizing/progress.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

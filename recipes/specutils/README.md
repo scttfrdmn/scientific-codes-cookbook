@@ -42,6 +42,14 @@ FluxConservingResampler()(spec, coarse * u.AA)              # integral exact at 
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. The analysis plus 12 resamplings is **6 s** of a 1m36s window ([layout](../../patterns/layout-and-effective-cost.md)).
 
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 169 s | 0.6381 | 0.0300 | **0.0853** |
+| Intel | `c8i.4xlarge` | 248 s | 0.7497 | 0.0516 | 0.1097 |
+| AMD | `c8a.4xlarge` | **125 s** | 0.8622 | **0.0299** | 0.0960 |
+
+**Which box, [measured](../../measurements/specutils-real/README.md) on DESI DR1 (40,800 spectra, six lines each, 16 workers): Graviton4 for the bill, AMD for the clock.** `fit_lines` re-measures DESI's own emission-line catalogue on the same χ² minimum in 99.98% of 34,369 well-posed fits. **Pass `estimate_jacobian=True` for any tied model:** the default fitter ignores ties and is off by a median 1.9% on [O III].
+
 <details>
 <summary>As shipped: an analytic EW to 1.5e-16, exact conservation at every spacing, and a graded control from a sibling class</summary>
 
@@ -166,12 +174,10 @@ than 1e-3 of the EW at 10 Å — but check the bucket regardless
 
 ### Not covered
 
-**Real spectra.** No FITS is read, so nothing here touches `Spectrum.read`, the loaders for SDSS
-or JWST products, WCS spectral axes, or the air/vacuum and velocity-frame conversions that make up
-most of a reduction.
-
-**Line fitting** — `fit_lines`, the `astropy.modeling` integration, and multi-component
-deblending, which is how equivalent widths are actually measured on noisy data. **Uncertainties**:
+**Real spectra, here.** No FITS is read by this recipe. The DESI coadd loader and `fit_lines` on
+real spectra are covered at scale by [specutils-real](../../measurements/specutils-real/README.md);
+the SDSS and JWST loaders, WCS spectral axes and air/vacuum or velocity-frame conversions are not
+covered anywhere yet. Multi-component deblending is not covered either. **Uncertainties**:
 every flux here is exact, so propagation through resampling and the `snr` machinery is untested.
 **Continuum fitting** (`fit_generic_continuum`) — the continuum is handed in as a constant, which
 is the easy case. The solar coordinate frames this env also carries are covered separately by
