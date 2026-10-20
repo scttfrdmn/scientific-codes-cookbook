@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-earth-observation-real-pin",
+  "container": "quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp\nmkdir -p /tmp/out\necho \"d2199add14b49002fbfe25e0d574b0f01f2486a70b7d472a23632002c5a1e48d  /tmp/pin.py\" | sha256sum -c - || { echo \"FAIL: pin.py does not match its pin\"; exit 1; }\necho \"9143f202f46c0fe7e235590adbd78e9a912008abd216657dc4bdf17c610827e6  /tmp/scenes.txt\" | sha256sum -c - || { echo \"FAIL: scenes.txt does not match its pin\"; exit 1; }\nT0=$(date +%s)\npython3 -u pin.py /tmp/scenes.txt /tmp/items /tmp/out 32 > /tmp/out/pin.log 2>&1\nRC=$?\necho \"pin.py exit $RC in $(( $(date +%s) - T0 ))s\" | tee -a /tmp/out/pin.log\ncat /tmp/out/pin.log\ntest \"$RC\" = 0 && grep -q 'PIN OK' /tmp/out/pin.log || { echo \"FAIL: pin.py\"; exit 1; }\ntest \"$(wc -l < /tmp/out/pins-data.sha256)\" -eq 612 || { echo \"FAIL: want 612 pins\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/items/",
+      "destination": "/tmp/items/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/scenes.txt",
+      "destination": "/tmp/scenes.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/pin.py",
+      "destination": "/tmp/pin.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/earth-observation-real/pin/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

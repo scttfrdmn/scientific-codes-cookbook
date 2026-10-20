@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-earth-observation-real",
+  "container": "quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH\ncd /tmp\ngrep -E '  (real\\.py|real\\.sh|scenes\\.txt|sizes\\.tsv)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 4 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\n( cd /tmp/items && grep -E '/item\\.json$' /tmp/pins.sha256 | sed 's|/item\\.json$|.json|' | sha256sum -c - > /tmp/items.check 2>&1 ) || { tail -5 /tmp/items.check; echo \"FAIL: a staged STAC item does not match its pin\"; exit 1; }\necho \"$(grep -c ': OK' /tmp/items.check) STAC items match their pins\"\nbash real.sh 16 1\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/items/",
+      "destination": "/tmp/items/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/scenes.txt",
+      "destination": "/tmp/scenes.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/sizes.tsv",
+      "destination": "/tmp/sizes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/real.py",
+      "destination": "/tmp/real.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/earth-observation-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

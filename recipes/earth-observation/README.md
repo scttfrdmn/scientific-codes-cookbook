@@ -38,17 +38,17 @@ counts = np.bincount(scl.ravel(), minlength=12)
 `high_proba_clouds` is **3 of them**, so cropping trades the catalogue's strongest reference for a
 number with nothing to check it against.
 
-## Which box
+## Which box — [measured](../../measurements/earth-observation-real/README.md) (the tile's whole 2024: 153 scenes, 31.9 GB, 16 workers)
 
-`c8g.xlarge` (4 vCPU / 8 GiB). Measured: stage-in of 450 MB in **4 s**, then **7 s** of compute —
-1.9 s to read 2 × 120,560,400 uint16 and **0.3 s** for the NDVI itself. Docker install (43 s) and
-the image pull (47 s) are 88% of the 102 s window, so **these timings are not compute cost**
-([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | wall | compute $ | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | **100 s** | **0.026** | 0.075 |
+| Intel | `r8i.4xlarge` | 140 s | 0.043 | **0.070** |
+| AMD | `r8a.4xlarge` | 102 s | 0.036 | 0.078 |
 
-RAM, not vCPU, picks the size: the bands plus their float32 working copies peak near 3 GB, and
-staging lands in `/tmp` = [tmpfs at half the instance's RAM](../../patterns/data-movement.md). The
-arithmetic is memory-bandwidth-bound — Graviton4 did the NDVI **5× faster than a laptop** (0.3 s vs
-1.5 s) while the read took the same 1.9 s on both.
+The one-scene recipe itself fits `c8g.xlarge` (7 s of compute in a 102 s window). At scale **RAM picks the box** (~5 GiB per worker; an `m8g.4xlarge` hit its ceiling); boot leaves billed costs within 12%
+([not compute cost](../../patterns/layout-and-effective-cost.md)); every output is byte-identical on all three. **Before you
+swap scenes:** the `< 2e-6` bound below fails on 70 of the 153 (ESA prints float32); the write-up's bound holds on all.
 
 <details>
 <summary>As shipped: reproducing published percentages, two independent derivations, pins, run + verify</summary>
