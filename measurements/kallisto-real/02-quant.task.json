@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-kallisto-real-quant-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '494600eb82e26f2c4cf48ca78b4c4b8b64a187fe567fdaf89acd2e96b319db04  quant.sh\\n1868eb373123ec74cdc26db71b469f0b8f7e018f8d18a6c36f8071152136b6c0  reads.md5\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nbash /tmp/quant.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/kallisto@sha256:b8f0e24c8a014b202f7ef9eeafffd4a6fa1cd27ac4214850cd65b0b1f684f18d",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 30,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto-real/quant.sh",
+      "destination": "/tmp/quant.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto-real/reads.md5",
+      "destination": "/tmp/reads.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto/kallisto.idx",
+      "destination": "/tmp/kallisto.idx"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_1.fastq.gz",
+      "destination": "/tmp/ERR188026_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/salmon-real/ERR188026_2.fastq.gz",
+      "destination": "/tmp/ERR188026_2.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

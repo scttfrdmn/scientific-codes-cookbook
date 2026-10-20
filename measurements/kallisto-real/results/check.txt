@@ -1,0 +1,95 @@
+PASS	salmon ids in the gene map / RSEM ids == gene map ids	TRUE TRUE	both TRUE (same FASTA)
+PASS	arm64 A: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	arm64 A: n_processed n_pseudoaligned n_unique	15800127 14510404 1219979	
+PASS	arm64 A: sum est_counts - n_pseudoaligned	-0.0296939313412	|.| <= 28.8794 (half-ulp of every printed est_count)
+PASS	arm64 A: sum tpm - 1e6	-0.130797471618	|.| <= 2.0903
+PASS	arm64 A: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	arm64 A: tpm where est_counts == 0	0	== 0
+PASS	arm64 A: transcript Spearman vs salmon (n)	0.908434983556 87156	>= 0.85
+PASS	arm64 A: transcript Spearman vs RSEM (n)	0.888151469411 95847	>= 0.85
+PASS	arm64 A: gene Spearman vs salmon (n)	0.981489190816 18837	>= 0.90
+PASS	arm64 A: gene Spearman vs RSEM (n)	0.988469145673 18387	>= 0.90
+obs	arm64 A: transcript log(1+TPM) Pearson vs salmon	0.965647615447	
+obs	arm64 A: detected (tpm > 0)	139428	
+PASS	arm64 B: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	arm64 B: n_processed n_pseudoaligned n_unique	15800127 14434932 1180313	
+PASS	arm64 B: sum est_counts - n_pseudoaligned	-0.438978869468	|.| <= 28.3194 (half-ulp of every printed est_count)
+PASS	arm64 B: sum tpm - 1e6	-0.0949597352883	|.| <= 2.0960
+PASS	arm64 B: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	arm64 B: tpm where est_counts == 0	0	== 0
+PASS	arm64 B: transcript Spearman vs salmon (n)	0.906447183386 85830	>= 0.85
+PASS	arm64 B: transcript Spearman vs RSEM (n)	0.890843762435 96062	>= 0.85
+PASS	arm64 B: gene Spearman vs salmon (n)	0.980172866335 18638	>= 0.90
+PASS	arm64 B: gene Spearman vs RSEM (n)	0.988291523304 18371	>= 0.90
+obs	arm64 B: transcript log(1+TPM) Pearson vs salmon	0.961431244328	
+obs	arm64 B: detected (tpm > 0)	137121	
+PASS	x86_64 A: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	x86_64 A: n_processed n_pseudoaligned n_unique	15800127 14510404 1219979	
+PASS	x86_64 A: sum est_counts - n_pseudoaligned	-1.36279820278	|.| <= 28.8840 (half-ulp of every printed est_count)
+PASS	x86_64 A: sum tpm - 1e6	0.036525191972	|.| <= 2.0857
+PASS	x86_64 A: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	x86_64 A: tpm where est_counts == 0	0	== 0
+PASS	x86_64 A: transcript Spearman vs salmon (n)	0.90831773113 87167	>= 0.85
+PASS	x86_64 A: transcript Spearman vs RSEM (n)	0.888018412059 95865	>= 0.85
+PASS	x86_64 A: gene Spearman vs salmon (n)	0.981493933614 18837	>= 0.90
+PASS	x86_64 A: gene Spearman vs RSEM (n)	0.988471053656 18387	>= 0.90
+obs	x86_64 A: transcript log(1+TPM) Pearson vs salmon	0.965641047902	
+obs	x86_64 A: detected (tpm > 0)	139552	
+PASS	x86_64 B: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	x86_64 B: n_processed n_pseudoaligned n_unique	15800127 14434932 1180313	
+PASS	x86_64 B: sum est_counts - n_pseudoaligned	-0.438978869468	|.| <= 28.3194 (half-ulp of every printed est_count)
+PASS	x86_64 B: sum tpm - 1e6	-0.0949597352883	|.| <= 2.0960
+PASS	x86_64 B: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	x86_64 B: tpm where est_counts == 0	0	== 0
+PASS	x86_64 B: transcript Spearman vs salmon (n)	0.906447183386 85830	>= 0.85
+PASS	x86_64 B: transcript Spearman vs RSEM (n)	0.890843762435 96062	>= 0.85
+PASS	x86_64 B: gene Spearman vs salmon (n)	0.980172866335 18638	>= 0.90
+PASS	x86_64 B: gene Spearman vs RSEM (n)	0.988291523304 18371	>= 0.90
+obs	x86_64 B: transcript log(1+TPM) Pearson vs salmon	0.961431244328	
+obs	x86_64 B: detected (tpm > 0)	137121	
+PASS	amd A: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	amd A: n_processed n_pseudoaligned n_unique	15800127 14510404 1219979	
+PASS	amd A: sum est_counts - n_pseudoaligned	-0.218145398423	|.| <= 28.8841 (half-ulp of every printed est_count)
+PASS	amd A: sum tpm - 1e6	-0.00432339508552	|.| <= 2.0857
+PASS	amd A: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	amd A: tpm where est_counts == 0	0	== 0
+PASS	amd A: transcript Spearman vs salmon (n)	0.908267138843 87169	>= 0.85
+PASS	amd A: transcript Spearman vs RSEM (n)	0.888006638232 95867	>= 0.85
+PASS	amd A: gene Spearman vs salmon (n)	0.981493969094 18837	>= 0.90
+PASS	amd A: gene Spearman vs RSEM (n)	0.988471453453 18387	>= 0.90
+obs	amd A: transcript log(1+TPM) Pearson vs salmon	0.965635099394	
+obs	amd A: detected (tpm > 0)	139571	
+PASS	amd B: ids == gene map transcripts, in FASTA order	TRUE	set equality
+obs	amd B: n_processed n_pseudoaligned n_unique	15800127 14434932 1180313	
+PASS	amd B: sum est_counts - n_pseudoaligned	-0.438978869468	|.| <= 28.3194 (half-ulp of every printed est_count)
+PASS	amd B: sum tpm - 1e6	-0.0949597352883	|.| <= 2.0960
+PASS	amd B: rows off tpm = K est/eff	0	== 0 (bound: printed roundings + K's)
+PASS	amd B: tpm where est_counts == 0	0	== 0
+PASS	amd B: transcript Spearman vs salmon (n)	0.906447183386 85830	>= 0.85
+PASS	amd B: transcript Spearman vs RSEM (n)	0.890843762435 96062	>= 0.85
+PASS	amd B: gene Spearman vs salmon (n)	0.980172866335 18638	>= 0.90
+PASS	amd B: gene Spearman vs RSEM (n)	0.988291523304 18371	>= 0.90
+obs	amd B: transcript log(1+TPM) Pearson vs salmon	0.961431244328	
+obs	amd B: detected (tpm > 0)	137121	
+obs	arm64: A vs B transcript Spearman (either detected)	0.916322478693	
+obs	x86_64: A vs B transcript Spearman (either detected)	0.916423634857	
+obs	amd: A vs B transcript Spearman (either detected)	0.916446642163	
+PASS	index sha256 on arm64 / x86_64 / amd	424b034309f15ae991747c9623f373b845e69bc39db4c295f11f7706f3187faa 424b034309f15ae991747c9623f373b845e69bc39db4c295f11f7706f3187faa 424b034309f15ae991747c9623f373b845e69bc39db4c295f11f7706f3187faa	one file
+PASS	x86_64 vs arm64, A: n_processed n_pseudoaligned n_unique identical	TRUE	pseudoalignment is per read, so thread order cannot move it
+obs	x86_64 vs arm64, A: abundance.tsv byte-identical	FALSE	
+obs	x86_64 vs arm64, A: rows differing / max rel diff est_counts (est >= 1) / max |diff| eff_length	465699 0.0959360923774 0.3169	
+obs	x86_64 vs arm64, A: tpm Spearman (either detected)	0.999999228622	
+PASS	x86_64 vs arm64, B: n_processed n_pseudoaligned n_unique identical	TRUE	pseudoalignment is per read, so thread order cannot move it
+PASS	x86_64 vs arm64, B: abundance.tsv byte-identical	TRUE	fixed point
+obs	x86_64 vs arm64, B: rows differing / max rel diff est_counts (est >= 1) / max |diff| eff_length	0 0 0	
+obs	x86_64 vs arm64, B: tpm Spearman (either detected)	1	
+PASS	amd vs arm64, A: n_processed n_pseudoaligned n_unique identical	TRUE	pseudoalignment is per read, so thread order cannot move it
+obs	amd vs arm64, A: abundance.tsv byte-identical	FALSE	
+obs	amd vs arm64, A: rows differing / max rel diff est_counts (est >= 1) / max |diff| eff_length	465699 0.11815254155 0.2219	
+obs	amd vs arm64, A: tpm Spearman (either detected)	0.99999905997	
+PASS	amd vs arm64, B: n_processed n_pseudoaligned n_unique identical	TRUE	pseudoalignment is per read, so thread order cannot move it
+PASS	amd vs arm64, B: abundance.tsv byte-identical	TRUE	fixed point
+obs	amd vs arm64, B: rows differing / max rel diff est_counts (est >= 1) / max |diff| eff_length	0 0 0	
+obs	amd vs arm64, B: tpm Spearman (either detected)	1	
+PASS	amd vs x86_64, B: abundance.tsv byte-identical	TRUE	fixed point
+obs	amd vs x86_64, A: abundance.tsv byte-identical	FALSE	

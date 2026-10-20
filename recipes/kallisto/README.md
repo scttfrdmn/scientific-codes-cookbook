@@ -13,7 +13,7 @@ last_verified: 2026-10-13
 
 Pseudoaligns the full 15.8M-fragment ERR188026 run against all 465,769 Ensembl 116 transcripts, and agrees with salmon on abundance rank to 0.9083. For anyone choosing a quantifier.
 
-> **salmon is 3.1× faster and 3.1× cheaper on the same reads** (74 s against 231 s), and builds its index in 50 s where kallisto takes 491. The two agree on the science; the cost difference is the reason to choose.
+> **salmon is 3.0× faster and 3.0× cheaper on the same reads** (74 s against 221 s), and builds its index in 50 s where kallisto takes 491. The two agree on the science; the cost difference is the reason to choose.
 
 ## Run it
 
@@ -26,17 +26,19 @@ kallisto index -i kallisto.idx ensembl116_cdna.fa.gz
 kallisto quant -i kallisto.idx -o out -t 16 ERR188026_1.fastq.gz ERR188026_2.fastq.gz
 ```
 
-## Next to salmon — same reads, same reference, same box
+## Next to salmon, and across chips — same reads, same reference, 16 threads
 
-| | index build | index size | quant (16t) | **$/quant** | mapped |
-|---|---|---|---|---|---|
-| [salmon](../salmon/README.md) | **50 s** | 1.6 GiB | **74 s** | **0.01312** | 94.39% |
-| kallisto | 491 s | **0.87 GiB** | 231 s | 0.04094 | 91.8% |
+| | box | index build | quant | compute $ | **billed $/result** | mapped |
+|---|---|---|---|---|---|---|
+| [salmon](../salmon/README.md) | `c8g.4xlarge` | **50 s** | **74 s** | **0.0131** | **0.0222** | 94.39% |
+| kallisto | `c8g.4xlarge` (Graviton4) | 491 s | 221 s | 0.0392 | 0.0496 | 91.8% |
+| kallisto | `c8i.4xlarge` (Intel) | | 233 s | 0.0485 | 0.0610 | 91.8% |
+| kallisto | `c8a.4xlarge` (AMD) | | 162 s | 0.0388 | 0.0493 | 91.8% |
 
-Both on `c8g.4xlarge` at 16 threads, both reading 15,800,127 fragments. **salmon wins on time and money
-at every step**; kallisto's only edge is a smaller index. The abundances agree (below), so this is a
-cost decision, not an accuracy one — and if you already have kallisto in a pipeline, the agreement is
-your evidence that switching will not move your results.
+**salmon wins on time and money on every chip**; kallisto's only edge is a smaller index (0.87 GiB
+against 1.6). Across chips ([measured](../../measurements/kallisto-real/README.md)), AMD is 1.36×
+faster and ties Graviton4 per result, Intel costs 24% more, and conservation, the salmon rank and the
+RSEM gene rank (0.988) hold on all three. The abundances agree, so this is a cost decision.
 
 ## Make it yours
 
@@ -44,7 +46,7 @@ your evidence that switching will not move your results.
 |---|---|---|
 | `ERR188026` | your FASTQs | one sample per task; a cohort is this task [fanned out](../../patterns/job-arrays.md) against the one index. |
 | Ensembl 116 cDNA | your transcriptome | the index is built once and reused — 491 s is a one-time cost, not per sample. |
-| `-t 16` | fewer threads | quant is ~4 min at 16; the data path, not the chip, is the limit at this size. |
+| `-t 16` | fewer threads | quant is ~4 min at 16 and most of the bill; the chip moves it 1.4× (table above). |
 
 **Leave the workload** — a complete run against a complete transcriptome, so the timings and the
 agreement both transfer. **Scale it** by fanning samples out against the one index.

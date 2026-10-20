@@ -1,0 +1,114 @@
+{
+  "task_id": "cookbook-kallisto-real-check-r1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nprintf '445ea8045ae32e690da1a196e4f2a448f91fb5ba7f82e7d70a27186e6db5b9a5  check.R\\ncb4e1ff0e71da3cabd9665fb6303ca545f8e06a40c50a8e9e1b814ace48cd93f  siblings.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: staged script does not match its pin'; exit 1; }\nsha256sum -c siblings.sha256 || { echo 'FAIL: a sibling output does not match its pin'; exit 1; }\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\nRscript /tmp/check.R /tmp/c /tmp/gene_map.tsv /tmp/salmon.quant.sf /tmp/ERR188026.isoforms.results /tmp/ERR188026.genes.results\n"
+  ],
+  "container": "quay.io/aarchbio/rsem@sha256:76f449f796624084750956f93d40cc50e59184990e7fd82e36fed2837dd40847",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto-real/check.R",
+      "destination": "/tmp/check.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kallisto-real/siblings.sha256",
+      "destination": "/tmp/siblings.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/salmon.quant.sf",
+      "destination": "/tmp/salmon.quant.sf"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/rsem-real/prepare/gene_map.tsv",
+      "destination": "/tmp/gene_map.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.isoforms.results",
+      "destination": "/tmp/ERR188026.isoforms.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/rsem-real/r2/quant/ERR188026.genes.results",
+      "destination": "/tmp/ERR188026.genes.results"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/pins-check.txt",
+      "destination": "/tmp/c/arm64/pins-check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/A/abundance.tsv",
+      "destination": "/tmp/c/arm64/A/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/A/run_info.json",
+      "destination": "/tmp/c/arm64/A/run_info.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/B/abundance.tsv",
+      "destination": "/tmp/c/arm64/B/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/quant/B/run_info.json",
+      "destination": "/tmp/c/arm64/B/run_info.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/kallisto-real/r1/quant/pins-check.txt",
+      "destination": "/tmp/c/x86_64/pins-check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/kallisto-real/r1/quant/A/abundance.tsv",
+      "destination": "/tmp/c/x86_64/A/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/kallisto-real/r1/quant/A/run_info.json",
+      "destination": "/tmp/c/x86_64/A/run_info.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/kallisto-real/r1/quant/B/abundance.tsv",
+      "destination": "/tmp/c/x86_64/B/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/kallisto-real/r1/quant/B/run_info.json",
+      "destination": "/tmp/c/x86_64/B/run_info.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/kallisto-real/r1/quant/pins-check.txt",
+      "destination": "/tmp/c/amd/pins-check.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/kallisto-real/r1/quant/A/abundance.tsv",
+      "destination": "/tmp/c/amd/A/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/kallisto-real/r1/quant/A/run_info.json",
+      "destination": "/tmp/c/amd/A/run_info.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/kallisto-real/r1/quant/B/abundance.tsv",
+      "destination": "/tmp/c/amd/B/abundance.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/kallisto-real/r1/quant/B/run_info.json",
+      "destination": "/tmp/c/amd/B/run_info.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/c/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/kallisto-real/r1/check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
