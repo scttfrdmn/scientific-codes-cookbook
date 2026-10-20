@@ -1,0 +1,37 @@
+{
+  "task_id": "cookbook-gfs-thickness-real",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl\ncd /tmp\nmkdir -p /tmp/out\necho \"791d20817a3adfb67abdcca0e737b82b9612196b877e6681dcf0966889dd5152  gfs.py\" | sha256sum -c - || { echo \"FAIL: gfs.py does not match its pin\"; exit 1; }\n{ uname -m; nproc; lscpu 2>/dev/null | grep -E 'Model name|Thread|Core|Socket|NUMA node\\(s\\)'; grep -m1 -E 'model name|CPU part' /proc/cpuinfo; } > /tmp/out/host.txt 2>&1\npython3 -u -c 'import ctypes,glob,sys; ls=sorted(glob.glob(sys.prefix+\"/lib/libopenblas*.so*\")); f=ctypes.CDLL(ls[0]).openblas_get_corename if ls else None; f and setattr(f,\"restype\",ctypes.c_char_p); print(\"openblas_corename\", f().decode() if f else \"no libopenblas\")' >> /tmp/out/host.txt 2>&1\ncat /tmp/out/host.txt\nT0=$(date +%s)\npython3 -u gfs.py pin /tmp/gfs gfs-cycle.md5 /tmp/out/gfs-cycle.sha256 > /tmp/out/pin.log 2>&1\nRC=$?\ncat /tmp/out/pin.log\necho \"pin exit $RC in $(( $(date +%s) - T0 ))s\"\ntest \"$RC\" = 0 || { echo \"FAIL: staged bytes do not match the source\"; exit 1; }\nT0=$(date +%s)\npython3 -u gfs.py run /tmp/gfs /tmp/out 32 all > /tmp/out/run.log 2>&1\nRC=$?\necho \"run exit $RC in $(( $(date +%s) - T0 ))s\"\necho \"memory.peak_gib $(awk '{printf \"%.2f\", $1/1073741824}' /sys/fs/cgroup/memory.peak 2>/dev/null)\" >> /tmp/out/host.txt\ndf -h /tmp | tail -1 >> /tmp/out/host.txt\ncat /tmp/out/run.log\ncat /tmp/out/host.txt\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'GFS THICKNESS REAL OK' /tmp/out/run.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 256,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness-real/cycle/", "destination": "/tmp/gfs/"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness-real/gfs.py", "destination": "/tmp/gfs.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness-real/gfs-cycle.md5", "destination": "/tmp/gfs-cycle.md5"}
+  ],
+  "outputs": [
+    {"source": "/tmp/out/host.txt", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/host.txt"},
+    {"source": "/tmp/out/pin.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/pin.log"},
+    {"source": "/tmp/out/gfs-cycle.sha256", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/gfs-cycle.sha256"},
+    {"source": "/tmp/out/run.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/run.log"},
+    {"source": "/tmp/out/per-hour.tsv", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/per-hour.tsv"},
+    {"source": "/tmp/out/per-hour.json", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/per-hour.json"},
+    {"source": "/tmp/out/summary.json", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/summary.json"},
+    {"source": "/tmp/out/thick/", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/thick/"}
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

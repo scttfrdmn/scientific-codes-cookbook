@@ -1,0 +1,31 @@
+{
+  "task_id": "cookbook-gfs-thickness-real-compare",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"d8f420b1eaf864c0f9c5f195d35cba1dc2966604b65dda132713ac96bc6f4353  compare.py\" | sha256sum -c - || { echo \"FAIL: compare.py does not match its pin\"; exit 1; }\npython3 -u compare.py /tmp/a /tmp/x /tmp/m > /tmp/compare.log 2>&1\nRC=$?\ncat /tmp/compare.log\ntest \"$RC\" = 0 || { echo \"FAIL: compare failed\"; exit 1; }\ngrep -q 'COMPARE OK' /tmp/compare.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/r1/thick/", "destination": "/tmp/a/"},
+    {"source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/gfs-thickness-real/r1/thick/", "destination": "/tmp/x/"},
+    {"source": "s3://${COOKBOOK_BUCKET}/runs-amd/gfs-thickness-real/r1/thick/", "destination": "/tmp/m/"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/gfs-thickness-real/compare.py", "destination": "/tmp/compare.py"}
+  ],
+  "outputs": [
+    {"source": "/tmp/compare.log", "destination": "s3://${COOKBOOK_BUCKET}/runs/gfs-thickness-real/compare/compare.log"}
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

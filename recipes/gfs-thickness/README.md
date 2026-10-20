@@ -21,9 +21,8 @@ spawn task run --spec "$(make -s spec RECIPE=gfs-thickness)" --wait
 make ls RECIPE=gfs-thickness
 
 import xarray as xr, metpy.calc as mpcalc
-ds = xr.open_dataset("gfs.pgrb2.1p00.f000", engine="cfgrib",
-        backend_kwargs={"indexpath": "",
-                        "filter_by_keys": {"typeOfLevel": "isobaricInhPa", "shortName": "t"}})
+ds = xr.open_dataset("gfs.pgrb2.1p00.f000", engine="cfgrib", backend_kwargs={"indexpath": "",
+        "filter_by_keys": {"typeOfLevel": "isobaricInhPa", "shortName": "t"}})
 mpcalc.thickness_hydrostatic(p, T, mixing_ratio=w)   # 5725.61 m vs the file's 5711.69 m
 ```
 
@@ -37,11 +36,19 @@ mpcalc.thickness_hydrostatic(p, T, mixing_ratio=w)   # 5725.61 m vs the file's 5
 | one `shortName` per open | all isobaric variables | **this is the part worth copying** — a GFS file holds variables on *different* vertical coordinates, and a combined open silently drops the mismatched ones. See below. |
 | the `.idx` sidecar | — | NOAA publishes a wgrib2 inventory beside every file: byte offset, variable and level per message. It's both a manifest and a way to range-get single fields. |
 
-**Leave the fixture.** One 1° analysis is 40 MiB and carries 696 messages — enough that the thickness check spans 13 pressure levels, small enough to be free. **Scale it** to 0.25° or a forecast series once it passes; the check is resolution-independent.
+**Leave the fixture.** One 1° analysis is 40 MiB and carries 696 messages — enough that the thickness check spans 13 pressure levels, small enough to be free. **Scale it** to 0.25° or a forecast series once it passes; the check is resolution-independent, **but only above ground**: where surface pressure is under 1000 hPa, GFS's 1000 hPa fields are extrapolated and disagree with themselves by up to 4.4% ([measured](../../measurements/gfs-thickness-real/README.md)), so mask on `PRES:surface` ≥ 1000 hPa first.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 25m, cap $0.08. Decode plus the calculations take seconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+
+**At scale ([measured](../../measurements/gfs-thickness-real/README.md): a whole 0.25° cycle, 209 hours, 113 GB, 32 processes):** Graviton4 is cheapest per result, and AMD is level with it on speed. Intel's 16 SMT cores take 1.74× as long. **Staging 113 GB is about 60% of every bill**, and tmpfs (half the RAM) is what forces `r8.8xlarge`. Every check holds on all three chips at 1.6e11 decoded values. The decode is byte-identical; thickness differs by ≤3 ulp, x86 against ARM.
+
+| chip | instance | gfs.py wall | $/hr | compute $/result | billed | **billed $/result** |
+|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.8xlarge` | 128 s | 1.8851 | **0.0668** | 829 s | **0.4341** |
+| Xeon 6975P-C | `r8i.8xlarge` | 223 s | 2.2227 | 0.1374 | 1007 s | 0.6217 |
+| EPYC 9R45 | `r8a.8xlarge` | **124 s** | 2.5562 | 0.0881 | **822 s** | 0.5837 |
 
 <details>
 <summary>As shipped: the file checked against itself, a discretisation-justified band, and the cfgrib trap that passes silently</summary>
@@ -151,7 +158,7 @@ thickness disagreement beyond 2%, or a broken involution — but check the bucke
 
 ### Not covered
 
-Forecast hours beyond the analysis, 0.25° resolution, GRIB2 *writing*, range-getting single
+GRIB2 *writing*, range-getting single
 messages via the `.idx` offsets (which is how you avoid downloading 40 MiB for one field), MetPy's
 soundings and skew-T plots, and the CAPE/CIN family of derived quantities.
 
