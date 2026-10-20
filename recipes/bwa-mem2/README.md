@@ -13,11 +13,11 @@ images_x86_64:
 spawn_version: 0.111.4
 last_verified: 2026-10-13
 ---
-# bwa-mem2 — 1.6× faster than bwa, and it did not make the run cheaper
+# bwa-mem2 — 1.6–2.1× faster than bwa, with byte-identical output; whether it is cheaper depends on the box
 
 Aligns a whole sequencing run (24.1M pairs) to all of GRCh38 with both aligners on one box, and prices the trade. For anyone deciding whether to swap `bwa mem` for `bwa-mem2`.
 
-> **It is faster and it costs more.** 1.6× the throughput, but a 3.14× index that forces 4× the RAM — so per result it came out ~45% dearer. The escape is to stop copying the index.
+> **On the box each aligner needs, it costs more; on the same box, it costs less.** Its 3.14× index forces 4× the RAM, so bwa on `c8g` against bwa-mem2 on `r8g` came out ~45% dearer per result. With both on the same `r8` box, bwa-mem2 was 24–40% cheaper on every chip ([measured](../../measurements/bwa-mem2-real/README.md)). The escape from the RAM cost is to stop copying the index.
 
 ## Run it
 
@@ -32,14 +32,15 @@ bwa-mem2 mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
   SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz | gzip -1 > aln.sam.gz
 ```
 
-## The trade, measured on one `r8g.4xlarge` at 16 threads
+## Which box — [measured](../../measurements/bwa-mem2-real/README.md) on a whole genome (HG00096, 73.3M pairs), `r8*.4xlarge`, 16 threads
 
-| | wall (n=2) | reads/s | index on disk | records |
-|---|---|---|---|---|
-| `bwa mem` | 817 s, 927 s | 52,101–59,116 | **5.26 GiB** | 48,817,006 |
-| `bwa-mem2 mem` | **542 s, 529 s** | **89,110–91,300** | **16.48 GiB** | 48,817,006 |
+| chip | bwa-mem2 kernel | bwa align | **bwa-mem2 align** | bwa billed $ | **bwa-mem2 billed $** |
+|---|---|---|---|---|---|
+| **Graviton4** | `AVX` (128-bit) | 2,383 s | 1,517 s | 0.697 | **0.531** |
+| Xeon 6975P-C | `avx512bw` | 3,080 s | 1,505 s | 1.115 | 0.674 |
+| EPYC 9R45 | `avx512bw` | 1,992 s | **1,030 s** | 0.866 | 0.579 |
 
-**≈1.6× faster (1.51–1.75× across runs), for 3.14× the index** — and the index sets the instance, not just the disk bill. Staging is [tmpfs at half of RAM](../../practices/container-path.md), so 16.5 GiB of index needs ~34 GiB to stage plus ~18 for the aligner: a 128 GiB box, where bwa does the job on 32. Per result on each tool's cheapest viable box, **bwa `c8g.4xlarge` $0.1508 vs bwa-mem2 `r8g.4xlarge` $0.2186** — the speedup is real, the saving is not. Swap it in only if wall-clock is what you are buying — and note **the index build pays back in wall clock and never in cost**: mem2 saves 398 s per alignment against the 831 s its index took to build, so you are ahead on time from the third alignment on, while the per-result gap above *widens* with every run.
+**Graviton4 is cheapest per genome for either aligner, and AMD is fastest.** bwa-mem2's x86 margin (about 2×) includes its AVX-512 kernel, which the arm64 build doesn't have. All 148,188,350 records came out identical across the three chips and between the two aligners, once bwa's newer `MQ` tag is set aside. On a fixed box bwa-mem2 is cheaper, but the box is not fixed. On one run (`SRR062634`, table below the fold) it was **≈1.6× faster for 3.14× the index**, and the index sets the instance, not just the disk bill. Staging is [tmpfs at half of RAM](../../practices/container-path.md), so 16.5 GiB of index needs ~34 GiB to stage plus ~18 for the aligner: a 128 GiB box, where bwa does the job on 32. Per result on each tool's cheapest viable box, **bwa `c8g.4xlarge` $0.1508 vs bwa-mem2 `r8g.4xlarge` $0.2186** — the speedup is real, the saving is not. Swap it in only if wall-clock is what you are buying — and note **the index build pays back in wall clock and never in cost**: mem2 saves 398 s per alignment against the 831 s its index took to build, so you are ahead on time from the third alignment on, while the cheapest-box cost gap *widens* with every run.
 
 ## Make it yours
 
@@ -53,6 +54,13 @@ bwa-mem2 mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 
 <details>
 <summary>As shipped: the cross-implementation identity, the index build, pins</summary>
+
+### The single-run trade (`SRR062634`, one `r8g.4xlarge`, 16 threads, timed through `| gzip -1`)
+
+| | wall (n=2) | reads/s | index on disk | records |
+|---|---|---|---|---|
+| `bwa mem` | 817 s, 927 s | 52,101–59,116 | **5.26 GiB** | 48,817,006 |
+| `bwa-mem2 mem` | **542 s, 529 s** | **89,110–91,300** | **16.48 GiB** | 48,817,006 |
 
 ### The identity, and what it does and does not say
 

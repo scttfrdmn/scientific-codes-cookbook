@@ -1,0 +1,95 @@
+{
+  "task_id": "cookbook-bwamem2-real-bwa",
+  "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH HOME=/tmp TMPDIR=/var/tmp\ncd /tmp\n{ printf '%s  %s\\n' 859e6ba6ee57a9594058e5df5c5fea88bda3897ab329104865e93fcc1b337d5a align.sh; printf '%s  %s\\n' dbc35ed65220d056d06cab5dce0e4bfcce13d0916b5552857a12f7032f9441a6 lib.sh; printf '%s  %s\\n' b28481bd45b4e157f790cf5f4f1217b36de36a079ca71006b1e896afe4f2177d sample.tsv; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/align.sh bwa 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 124,
+    "disk_gib": 80,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/align.sh",
+      "destination": "/tmp/align.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/sample.tsv",
+      "destination": "/tmp/sample.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.amb"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.ann"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.pac"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.sa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/GRCh38_full_analysis_set_plus_decoy_hla.fa.alt",
+      "destination": "/tmp/GRCh38_full_analysis_set_plus_decoy_hla.fa.alt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062634_2.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/reads/SRR062635_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062635_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/reads/SRR062635_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062635_2.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/reads/SRR062641_1.filt.fastq.gz",
+      "destination": "/tmp/SRR062641_1.filt.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-mem2-real/reads/SRR062641_2.filt.fastq.gz",
+      "destination": "/tmp/SRR062641_2.filt.fastq.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-mem2-real/bwa/out/"
+    },
+    {
+      "source": "/tmp/red/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-mem2-real/bwa/red/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
