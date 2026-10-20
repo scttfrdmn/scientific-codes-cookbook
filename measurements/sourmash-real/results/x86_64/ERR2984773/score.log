@@ -1,0 +1,39 @@
+PASS sketch(R1+R2) == merge(R1,R2)      201687 hashes, 2109682 weighted   want identical hash->abundance map
+PASS gather ranks                       19 matches   want 0..n-1
+PASS query_n_hashes == sketch           201687   want 201687
+PASS query_bp == hashes * scaled        201687000   want 201687000
+PASS total_weighted_hashes == sum(abund) 2109682   want 2109682
+PASS remaining_bp chain                 last 176855000   want query_bp - running sum(unique_intersect_bp)
+PASS matches.zip holds every match      19   want 19
+PASS greedy replay, every row           19 rows   want |match & remaining| * scaled == unique_intersect_bp, abund == n_unique_weighted_found
+PASS sum_weighted_found running total   1520266   want running sum of n_unique_weighted_found
+PASS query & union(matches) == assigned 24832   want a hash in any chosen match was assigned to one
+PASS each rank's f_weighted sums to 1   7 ranks, worst 1.1e-16   want <= 1e-9 (float sum)
+PASS classified species == gather's weighted cover 0.720613818 vs 0.720613818   want <= 1e-9
+PASS every clade == sum of its children 26 parents, worst 5.6e-17   want <= 1e-9
+PASS required Zymo species detected     8/8   want all
+PASS unexpected species above 1%        0 (top: Escherichia sp004211955 0.386%; Salmonella diarizonae 0.327%; Pseudomonas paraeruginosa 0.254%)   want 0
+species	truth_pct	sourmash_pct	gtdb_species
+Listeria monocytogenes	12	9.284290	Listeria monocytogenes_B,Listeria monocytogenes_D
+Pseudomonas aeruginosa	12	10.792859	Pseudomonas aeruginosa
+Bacillus subtilis	12	10.720336	Bacillus spizizenii
+Saccharomyces cerevisiae	2	0.000000	-
+Escherichia coli	12	5.914493	Escherichia coli,Escherichia coli_F
+Salmonella enterica	12	8.989364	Salmonella enterica
+Limosilactobacillus fermentum	12	9.578173	Limosilactobacillus fermentum
+Enterococcus faecalis	12	7.480843	Enterococcus faecalis
+Cryptococcus neoformans	2	0.000000	-
+Staphylococcus aureus	12	7.400357	Staphylococcus aureus
+(unexpected)	-	0.385888	Escherichia sp004211955
+(unexpected)	-	0.327064	Salmonella diarizonae
+(unexpected)	-	0.253972	Pseudomonas paraeruginosa
+(unexpected)	-	0.238377	Escherichia sp002965065
+(unexpected)	-	0.179838	Escherichia ruysiae
+(unexpected)	-	0.138741	Pseudomonas_E fluorescens_X
+(unexpected)	-	0.138552	Salmonella houtenae
+(unexpected)	-	0.125043	Escherichia sp005843885
+(unexpected)	-	0.113192	Escherichia fergusonii
+(unclassified)	-	27.938618	-
+sketch_md5 e6766ed677cdcfbf35ced35f391dfc56 content_sha256 5a5c74a5a1408b39894bb52fcac889957f419c5db9b47239376f382bf735300d hashes 201687 weighted 2109682
+gather.csv_sha256 91a123586472ba817d594f2f193005dfad75641eb7d4ddf8def686ec0f30097c
+ERR2984773.summarized.csv_sha256 82ab10dce57d956407c05e07e6957e7d9f55148a654463bb3e7a695c1195abc4

@@ -1,0 +1,103 @@
+ERR2984773 sketch_R1 rc 0 wall_s 52.2 maxrss_gib 0.121
+ERR2984773 sketch_R2 rc 0 wall_s 52.7 maxrss_gib 0.127
+ERR2984773 sketch_R1R2 rc 0 wall_s 104.7 maxrss_gib 0.136
+ERR2984773 sketch_all3 wall_s 104.7
+ERR2984773 merge rc 0 wall_s 1.1 maxrss_gib 0.151
+ERR2935805 sketch_R1 rc 0 wall_s 218.4 maxrss_gib 0.129
+ERR2935805 sketch_R2 rc 0 wall_s 219.6 maxrss_gib 0.141
+ERR2984773 gather rc 0 wall_s 275.0 maxrss_gib 3.977
+ERR2984773 tax rc 0 wall_s 2.4 maxrss_gib 0.270
+ERR2984773 score rc 0 wall_s 1.3 maxrss_gib 0.185
+PASS sketch(R1+R2) == merge(R1,R2)      201687 hashes, 2109682 weighted   want identical hash->abundance map
+PASS gather ranks                       19 matches   want 0..n-1
+PASS query_n_hashes == sketch           201687   want 201687
+PASS query_bp == hashes * scaled        201687000   want 201687000
+PASS total_weighted_hashes == sum(abund) 2109682   want 2109682
+PASS remaining_bp chain                 last 176855000   want query_bp - running sum(unique_intersect_bp)
+PASS matches.zip holds every match      19   want 19
+PASS greedy replay, every row           19 rows   want |match & remaining| * scaled == unique_intersect_bp, abund == n_unique_weighted_found
+PASS sum_weighted_found running total   1520266   want running sum of n_unique_weighted_found
+PASS query & union(matches) == assigned 24832   want a hash in any chosen match was assigned to one
+PASS each rank's f_weighted sums to 1   7 ranks, worst 1.1e-16   want <= 1e-9 (float sum)
+PASS classified species == gather's weighted cover 0.720613818 vs 0.720613818   want <= 1e-9
+PASS every clade == sum of its children 26 parents, worst 5.6e-17   want <= 1e-9
+PASS required Zymo species detected     8/8   want all
+PASS unexpected species above 1%        0 (top: Escherichia sp004211955 0.386%; Salmonella diarizonae 0.327%; Pseudomonas paraeruginosa 0.254%)   want 0
+species	truth_pct	sourmash_pct	gtdb_species
+Listeria monocytogenes	12	9.284290	Listeria monocytogenes_B,Listeria monocytogenes_D
+Pseudomonas aeruginosa	12	10.792859	Pseudomonas aeruginosa
+Bacillus subtilis	12	10.720336	Bacillus spizizenii
+Saccharomyces cerevisiae	2	0.000000	-
+Escherichia coli	12	5.914493	Escherichia coli,Escherichia coli_F
+Salmonella enterica	12	8.989364	Salmonella enterica
+Limosilactobacillus fermentum	12	9.578173	Limosilactobacillus fermentum
+Enterococcus faecalis	12	7.480843	Enterococcus faecalis
+Cryptococcus neoformans	2	0.000000	-
+Staphylococcus aureus	12	7.400357	Staphylococcus aureus
+(unexpected)	-	0.385888	Escherichia sp004211955
+(unexpected)	-	0.327064	Salmonella diarizonae
+(unexpected)	-	0.253972	Pseudomonas paraeruginosa
+(unexpected)	-	0.238377	Escherichia sp002965065
+(unexpected)	-	0.179838	Escherichia ruysiae
+(unexpected)	-	0.138741	Pseudomonas_E fluorescens_X
+(unexpected)	-	0.138552	Salmonella houtenae
+(unexpected)	-	0.125043	Escherichia sp005843885
+(unexpected)	-	0.113192	Escherichia fergusonii
+(unclassified)	-	27.938618	-
+sketch_md5 e6766ed677cdcfbf35ced35f391dfc56 content_sha256 5a5c74a5a1408b39894bb52fcac889957f419c5db9b47239376f382bf735300d hashes 201687 weighted 2109682
+gather.csv_sha256 91a123586472ba817d594f2f193005dfad75641eb7d4ddf8def686ec0f30097c
+ERR2984773.summarized.csv_sha256 82ab10dce57d956407c05e07e6957e7d9f55148a654463bb3e7a695c1195abc4
+ERR2935805 sketch_R1R2 rc 0 wall_s 441.1 maxrss_gib 0.161
+ERR2935805 sketch_all3 wall_s 441.1
+ERR2935805 merge rc 0 wall_s 1.2 maxrss_gib 0.187
+ERR2935805 gather rc 0 wall_s 312.7 maxrss_gib 4.008
+ERR2935805 tax rc 0 wall_s 2.4 maxrss_gib 0.271
+ERR2935805 score rc 0 wall_s 1.6 maxrss_gib 0.244
+PASS sketch(R1+R2) == merge(R1,R2)      353242 hashes, 6551824 weighted   want identical hash->abundance map
+PASS gather ranks                       21 matches   want 0..n-1
+PASS query_n_hashes == sketch           353242   want 353242
+PASS query_bp == hashes * scaled        353242000   want 353242000
+PASS total_weighted_hashes == sum(abund) 6551824   want 6551824
+PASS remaining_bp chain                 last 335331000   want query_bp - running sum(unique_intersect_bp)
+PASS matches.zip holds every match      21   want 21
+PASS greedy replay, every row           21 rows   want |match & remaining| * scaled == unique_intersect_bp, abund == n_unique_weighted_found
+PASS sum_weighted_found running total   5567992   want running sum of n_unique_weighted_found
+PASS query & union(matches) == assigned 17911   want a hash in any chosen match was assigned to one
+PASS each rank's f_weighted sums to 1   7 ranks, worst 1.1e-16   want <= 1e-9 (float sum)
+PASS classified species == gather's weighted cover 0.849838457 vs 0.849838457   want <= 1e-9
+PASS every clade == sum of its children 21 parents, worst 1.1e-16   want <= 1e-9
+PASS required Zymo species detected     2/2   want all
+PASS unexpected species above 1%        0 (top: Listeria farberi 0.310%; Pseudomonas paraeruginosa 0.184%; Listeria cayugensis 0.109%)   want 0
+PASS top two == the 89.1% and 8.9% species Listeria monocytogenes_B 73.45%, Pseudomonas aeruginosa 7.74%   want L. monocytogenes > P. aeruginosa > all
+species	truth_pct	sourmash_pct	gtdb_species
+Listeria monocytogenes	89.1	75.485254	Listeria monocytogenes_B,Listeria monocytogenes,Listeria monocytogenes_D,Listeria monocytogenes_C
+Pseudomonas aeruginosa	8.9	7.739463	Pseudomonas aeruginosa
+Bacillus subtilis	0.89	0.784316	Bacillus spizizenii
+Saccharomyces cerevisiae	0.89	0.000000	-
+Escherichia coli	0.089	0.037257	Escherichia coli,Escherichia coli_F
+Salmonella enterica	0.089	0.059312	Salmonella enterica
+Limosilactobacillus fermentum	0.0089	0.007769	Limosilactobacillus fermentum
+Enterococcus faecalis	0.00089	0.000000	-
+Cryptococcus neoformans	0.00089	0.000000	-
+Staphylococcus aureus	0.000089	0.000000	-
+(unexpected)	-	0.309563	Listeria farberi
+(unexpected)	-	0.183827	Pseudomonas paraeruginosa
+(unexpected)	-	0.108703	Listeria cayugensis
+(unexpected)	-	0.100613	Pseudomonas_E fluorescens_X
+(unexpected)	-	0.090280	Listeria innocua
+(unexpected)	-	0.068149	Listeria cossartiae
+(unexpected)	-	0.002091	Salmonella diarizonae
+(unexpected)	-	0.002045	Escherichia sp004211955
+(unexpected)	-	0.001938	Listeria swaminathanii
+(unexpected)	-	0.001755	Listeria welshimeri
+(unexpected)	-	0.001511	Escherichia ruysiae
+(unclassified)	-	15.016154	-
+sketch_md5 26658125cb2458f842b14d8873d8f574 content_sha256 84a81014d98ff697c46242231421a33b73fdfc1c14fcefb40d7587314215e81a hashes 353242 weighted 6551824
+gather.csv_sha256 8ed37d67ceb475f7566c9282c15b8753fcbb7b21f18b846169ba14f2f9e59e90
+ERR2935805.summarized.csv_sha256 75f7edfe14a4d8fce9d3ce1fc135caefcc88fb1f0d22f535b952e248a85f003a
+all tool_wall_s 759.0
+RESULT ERR2984773 ok
+RESULT ERR2935805 ok
+Filesystem           1M-blocks      Used Available Use% Mounted on
+tmpfs                    31797     12446     19351  39% /tmp
+cgroup_memory_peak_bytes 626888704

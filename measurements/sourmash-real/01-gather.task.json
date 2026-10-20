@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-sourmash-real-gather",
+  "container": "quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out\nT0=$(date +%s)\ngrep -E ' (gtdb-rs226-reps\\.k31\\.sig\\.zip|gtdb-rs226-reps\\.lineages\\.csv|run\\.py|score\\.py|zymo\\.tsv|ERR2984773_[12]\\.fastq\\.gz|ERR2935805_[12]\\.fastq\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 9 ] && sha256sum -c pins.sel > out/pins-check.txt 2>&1 || { cat out/pins-check.txt; echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins_check_s $(( $(date +%s) - T0 ))\" | tee out/pins-time.txt\n{\n  echo \"uname_m $(uname -m)\"\n  echo \"online_cpus $(grep -c '^processor' /proc/cpuinfo)\"\n  echo \"physical_cores $(cat /sys/devices/system/cpu/cpu*/topology/thread_siblings_list | sort -u | wc -l)\"\n  awk -F': *' '/^model name|^CPU part|^CPU implementer/{print $1\": \"$2}' /proc/cpuinfo | sort | uniq -c\n  echo \"mem_total_kib $(awk '/^MemTotal/{print $2}' /proc/meminfo)\"\n  echo \"sourmash $(sourmash --version 2>&1 | tail -1)\"\n  python3 --version\n} > out/host.txt 2>&1\nawk '/^online_cpus/{c=$2} /^physical_cores/{p=$2} END{printf \"threads_per_core %d\\n\", (p>0)?c/p:0}' out/host.txt >> out/host.txt\ncat out/host.txt\npython3 -u run.py /tmp/out gtdb-rs226-reps.k31.sig.zip gtdb-rs226-reps.lineages.csv zymo.tsv ERR2984773:even ERR2935805:log 2>&1 | tee out/run.log\nRC=${PIPESTATUS[0]}\ndf -m /tmp | tee -a out/run.log\necho \"cgroup_memory_peak_bytes $(cat /sys/fs/cgroup/memory.peak 2>/dev/null)\" | tee -a out/run.log\n[ \"$RC\" = 0 ] || { echo \"FAIL: run.py exit $RC\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/gtdb-rs226/gtdb-rs226-reps.k31.sig.zip",
+      "destination": "/tmp/gtdb-rs226-reps.k31.sig.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/gtdb-rs226/gtdb-rs226-reps.lineages.csv",
+      "destination": "/tmp/gtdb-rs226-reps.lineages.csv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz",
+      "destination": "/tmp/ERR2984773_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz",
+      "destination": "/tmp/ERR2984773_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_1.fastq.gz",
+      "destination": "/tmp/ERR2935805_1.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz",
+      "destination": "/tmp/ERR2935805_2.fastq.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/run.py",
+      "destination": "/tmp/run.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/zymo.tsv",
+      "destination": "/tmp/zymo.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/sourmash-real/zymo/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

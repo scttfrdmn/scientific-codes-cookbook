@@ -1,0 +1,15 @@
+PASS sketch(R1+R2) == merge(R1,R2)      201687 hashes, 2109682 weighted   want identical hash->abundance map
+PASS gather ranks                       19 matches   want 0..n-1
+PASS query_n_hashes == sketch           201687   want 201687
+PASS query_bp == hashes * scaled        201687000   want 201687000
+PASS total_weighted_hashes == sum(abund) 2109682   want 2109682
+PASS remaining_bp chain                 last 176855000   want query_bp - running sum(unique_intersect_bp)
+PASS matches.zip holds every match      19   want 19
+PASS greedy replay, every row           19 rows   want |match & remaining| * scaled == unique_intersect_bp, abund == n_unique_weighted_found
+PASS sum_weighted_found running total   1520266   want running sum of n_unique_weighted_found
+PASS query & union(matches) == assigned 24832   want a hash in any chosen match was assigned to one
+PASS each rank's f_weighted sums to 1   7 ranks, worst 1.1e-16   want <= 1e-9 (float sum)
+PASS classified species == gather's weighted cover 0.720613818 vs 0.720613818   want <= 1e-9
+PASS every clade == sum of its children 26 parents, worst 5.6e-17   want <= 1e-9
+PASS required Zymo species detected     8/8   want all
+PASS unexpected species above 1%        0 (top: Escherichia sp004211955 0.386%; Salmonella diarizonae 0.327%; Pseudomonas paraeruginosa 0.254%)   want 0

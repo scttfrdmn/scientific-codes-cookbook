@@ -33,7 +33,7 @@ sourmash compare ./*.sig --csv sim.csv
 | 20 RefSeq genomes | your genomes or assemblies | reused byte-for-byte from [mash](../mash/README.md) — the comparison only means anything on identical bytes. |
 | `scaled=1000` | smaller for more resolution | FracMinHash keeps 1/scaled of hashes, so a 4 Mb genome gives ~4,000 — distant pairs then share *none*, which matters below. |
 | `k=21` | `k=31` (sourmash's usual default) | **k=21 is chosen to match mash.** A k=31 sketch against a k=21 one compares methods, not genomes. |
-| `compare` | `gather` / `search` against a database | the canonical sourmash job; needs a prepared database, which this recipe does not stage. |
+| `compare` | `gather` / `search` against a database | the canonical sourmash job, [measured](../../measurements/sourmash-real/README.md) on whole metagenomes against GTDB R226. |
 
 **Scale it by genome count** — sketching is per-genome and comparison is per-pair on small sketches,
 so the input is the only thing that grows.
@@ -42,9 +42,14 @@ so the input is the only thing that grows.
 
 `c8g.2xlarge`: **15 s of sourmash inside a 166 s billed window, $0.0147.**
 
-**No generation table, for the same reason [mash](../mash/README.md) has none** — at this scale the
-work is seconds and a four-chip ladder would measure boot. Sketching is not where instance choice
-pays off.
+**No generation table, for the same reason [mash](../mash/README.md) has none** — on this fixture the
+work is seconds and a four-chip ladder would measure boot.
+
+**Which box — [measured](../../measurements/sourmash-real/README.md)** on the real job: two whole
+ZymoBIOMICS runs (113M reads, 12.3 Gbp) sketched and `gather`ed against all 143,384 GTDB R226
+representatives in one 8-vCPU task. Billed for both: **$0.157 Graviton4, $0.148 AMD (1.42× faster), $0.174
+Intel (1.04×).** Sketches, gather tables and taxonomy are byte-identical on all three chips, and 8/8 bacteria
+with nothing else above 1% hold at full depth. Sketching (single-threaded per file) is the long pole.
 
 <details>
 <summary>As shipped: the same NCBI truth mash was checked on, and why the all-pairs rank statistic is the wrong metric</summary>

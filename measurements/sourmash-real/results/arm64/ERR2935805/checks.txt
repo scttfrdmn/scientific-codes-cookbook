@@ -1,0 +1,16 @@
+PASS sketch(R1+R2) == merge(R1,R2)      353242 hashes, 6551824 weighted   want identical hash->abundance map
+PASS gather ranks                       21 matches   want 0..n-1
+PASS query_n_hashes == sketch           353242   want 353242
+PASS query_bp == hashes * scaled        353242000   want 353242000
+PASS total_weighted_hashes == sum(abund) 6551824   want 6551824
+PASS remaining_bp chain                 last 335331000   want query_bp - running sum(unique_intersect_bp)
+PASS matches.zip holds every match      21   want 21
+PASS greedy replay, every row           21 rows   want |match & remaining| * scaled == unique_intersect_bp, abund == n_unique_weighted_found
+PASS sum_weighted_found running total   5567992   want running sum of n_unique_weighted_found
+PASS query & union(matches) == assigned 17911   want a hash in any chosen match was assigned to one
+PASS each rank's f_weighted sums to 1   7 ranks, worst 1.1e-16   want <= 1e-9 (float sum)
+PASS classified species == gather's weighted cover 0.849838457 vs 0.849838457   want <= 1e-9
+PASS every clade == sum of its children 21 parents, worst 1.1e-16   want <= 1e-9
+PASS required Zymo species detected     2/2   want all
+PASS unexpected species above 1%        0 (top: Listeria farberi 0.310%; Pseudomonas paraeruginosa 0.184%; Listeria cayugensis 0.109%)   want 0
+PASS top two == the 89.1% and 8.9% species Listeria monocytogenes_B 73.45%, Pseudomonas aeruginosa 7.74%   want L. monocytogenes > P. aeruginosa > all

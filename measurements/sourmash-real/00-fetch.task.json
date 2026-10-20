@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-sourmash-real-fetch",
+  "container": "quay.io/aarchbio/sourmash@sha256:29733e7ac937dd17d8c7b84130f36b41da1a33f02abab0b2276c92c2683abd10",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out\npython3 -u /tmp/fetch.py /tmp/out > /tmp/out/db.sha256 2> /tmp/out/fetch.log\nRC=$?\ncat /tmp/out/db.sha256 /tmp/out/fetch.log\n[ $RC = 0 ] || { echo \"FAIL: fetch exit $RC\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 15,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/sourmash-real/gtdb-rs226/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}
