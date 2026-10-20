@@ -39,14 +39,16 @@ PRINT ARG=d,a,c FILE=COLVAR STRIDE=100
 | 7,754-water box | your own system | nothing is staged — spc216 and tip3p ship in the GROMACS package. |
 | `DISTANCE` / `ANGLE` / `COORDINATION` | `METAD`, `RESTRAINT`, any CV | the coupling is what this recipe proves; the CV is yours to choose. |
 | `STRIDE=100` | every step | PLUMED evaluates its CVs every step regardless; `STRIDE` only thins the output. |
+| live coupling | `plumed driver` on saved trajectories | run `plumed --no-mpi driver`: this MPI build's `MPI_Init` costs 1.06 s per call, same COLVAR ([measured](../../measurements/plumed-real/README.md)). |
 
 **Leave the system** — 23k atoms with PLUMED in the loop is a realistic coupling cost. **Scale it**
 by CV expense: a `COORDINATION` over every pair is O(N²) per step and will dominate GROMACS.
 
 ## Shape, size, cost
 
-`c8g.2xlarge`: minimisation + **100 ps of coupled NVT in 153 s**, ~$0.02. GROMACS's own
-generation scaling is measured in [its recipe](../gromacs/README.md); PLUMED adds the CV cost on top.
+`c8g.2xlarge`: minimisation + **100 ps of coupled NVT in 153 s**, ~$0.02 ([GROMACS's own scaling](../gromacs/README.md)).
+**Driver at scale, [measured](../../measurements/plumed-real/README.md):** 16,000 RODA trajectories, 174 M CVs equal to
+numpy and cpptraj: **$0.158** compute on `c8g.4xlarge`, $0.190 `c8i`, $0.211 `c8a`; walls tie, so price decides.
 
 <details>
 <summary>As shipped: CVs checked against force-field constants, and one observation deliberately not asserted</summary>

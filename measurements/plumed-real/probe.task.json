@@ -1,0 +1,13 @@
+{
+  "task_id": "cookbook-plumed-real-probe",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": ["bash", "-c", "set +e\n# spawn runs task commands under bash -e (spawn#707); the scripts set their own options.\ncd /tmp && bash /tmp/run.sh probe 16 320\n"],
+  "resources": {"cpu": 16, "memory_gib": 32, "architecture": "arm64", "families": ["c8g"]},
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/plumed-real/run.sh", "destination": "/tmp/run.sh"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/plumed-real/real.py", "destination": "/tmp/real.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/plumed-real/fetch.py", "destination": "/tmp/fetch.py"}
+  ],
+  "outputs": [{"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/plumed-real/probe/"}],
+  "lifecycle": {"ttl": "40m", "on_complete": "terminate", "cost_limit": 0.30}
+}

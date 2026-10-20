@@ -1,0 +1,58 @@
+numpy 2.5.4 mdtraj 1.11.2 netCDF4 1.7.4
+1000 trajectories in 128 s
+2000 trajectories in 257 s
+3000 trajectories in 378 s
+4000 trajectories in 506 s
+5000 trajectories in 634 s
+6000 trajectories in 755 s
+7000 trajectories in 883 s
+8000 trajectories in 1005 s
+9000 trajectories in 1133 s
+10000 trajectories in 1262 s
+11000 trajectories in 1383 s
+12000 trajectories in 1511 s
+13000 trajectories in 1639 s
+14000 trajectories in 1761 s
+15000 trajectories in 1889 s
+16000 trajectories in 2010 s
+all_processed              ok   16000 trajectories, 0 errors []
+frames_conserved           ok   3200000 frames = 3200000 COLVAR rows = 3200000 sander energy records
+sander_completed           ok   16000/16000 .out reach 'Final Performance Info', SHAKE tol 1e-5
+restart_is_last_frame      ok   16000/16000 float32(restart) == last frame, bit for bit
+dcd_lossless               ok   16000/16000 DCD PLUMED read == NetCDF bytes exactly
+colvar_columns             ok   16000/16000
+plumed_eq_numpy            ok   max 5.00e-11  want <= 1e-09 (rad, nm)
+plumed_eq_cpptraj          ok   max 5.00e-11 where |sin phi| >= 0.01 (want <= 1e-09); everywhere within TOL + 32 eps/|sin phi|: worst raw 6.91e-09 at phi = -3.1415926 rad, max (dev-1e-10)*|sin phi| = 2.0e-16
+bonds_eq_numpy             ok   max 5.00e-11 nm over 113760000 constraint-frames
+shake_fixed_point          ok   max |r-r0|/r0 6.721e-06 over 113760000 constraint-frames; bound 1.272e-05 (tol + float32 storage)
+chirality_conserved        ok   15520000 chirality torsions, 0 positive, min |value| 1.766 rad
+deterministic_rerun        ok   50/50 COLVARs byte-identical on a second pass
+xchip_agree                ok   max 1.00e-10 vs Graviton4; 15825/16000 COLVARs byte-identical
+observed cis_frames          191096 (|omega| < 90 deg, over 12800000 omega-frames; 72753 of them X-Pro)
+observed distinct_trajectories 10404 of 16000 (sander seed ig = ['71277'] in every .out)
+wall_s                       2009.9
+plumed_driver_wall_s         24587.2 (sum over trajectories)
+plumed_driver_cpu_s          8097.7 (user+sys, sum over trajectories)
+children_maxrss_gib          0.319
+rama (central residues of the distinct trajectories: alphaR, alphaL, other frames)
+  ALA    311000 frames  aR 0.693  aL 0.032  other 0.275
+  ARG    311600 frames  aR 0.201  aL 0.084  other 0.715
+  ASN    308200 frames  aR 0.452  aL 0.077  other 0.471
+  ASP    317000 frames  aR 0.567  aL 0.037  other 0.396
+  CYS    306400 frames  aR 0.639  aL 0.048  other 0.313
+  GLN    316000 frames  aR 0.422  aL 0.052  other 0.526
+  GLU    310000 frames  aR 0.680  aL 0.032  other 0.288
+  GLY    311200 frames  aR 0.245  aL 0.614  other 0.141
+  HIE    309800 frames  aR 0.486  aL 0.043  other 0.471
+  ILE    316200 frames  aR 0.664  aL 0.020  other 0.316
+  LEU    308800 frames  aR 0.685  aL 0.025  other 0.291
+  LYS    315600 frames  aR 0.176  aL 0.086  other 0.738
+  MET    312800 frames  aR 0.644  aL 0.041  other 0.315
+  PHE    314400 frames  aR 0.638  aL 0.024  other 0.338
+  PRO    315000 frames  aR 0.682  aL 0.002  other 0.316
+  SER    312200 frames  aR 0.481  aL 0.071  other 0.448
+  THR    309600 frames  aR 0.614  aL 0.031  other 0.355
+  TRP    308200 frames  aR 0.426  aL 0.030  other 0.544
+  TYR    314800 frames  aR 0.503  aL 0.035  other 0.462
+  VAL    313600 frames  aR 0.666  aL 0.024  other 0.310
+ALL CHECKS PASSED

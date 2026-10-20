@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-plumed-real-startup",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707).\nset -uo pipefail\nP=\"${CONDA_PREFIX:-/opt/conda}\"\nexport PATH=$P/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C OMP_NUM_THREADS=1 PLUMED_NUM_THREADS=1 PLUMED_KERNEL=$P/lib/libplumedKernel.so\nmkdir -p /tmp/out /tmp/w && cd /tmp/w\n# Where does a 200-frame `plumed driver` spend its 1.5 s? Same input, with and without MPI_Init.\n# One cohort trajectory, checked against its pinned sha256 in the cohort manifest.\npython3 -u - <<'PYEOF' > /tmp/out/startup.txt 2>&1\nimport hashlib, subprocess, tarfile, time, urllib.request, resource\nn = \"NALAALAALAALACALA-R2.tar.bz2\"\nd = urllib.request.urlopen(\"https://toyokounqpeptides.s3.us-west-2.amazonaws.com/5pep/\" + n, timeout=60).read()\nprint(n, hashlib.sha256(d).hexdigest())\nopen(n, \"wb\").write(d); tarfile.open(n).extractall(\".\", filter=\"data\")\nsubprocess.run([\"cpptraj\", \"-p\", \"p.1.top\", \"-y\", n[:-8] + \".dmd.1.traj\", \"-x\", \"x.dcd\"], capture_output=True, check=True)\nopen(\"p.dat\", \"w\").write(\"phi: TORSION ATOMS=11,13,15,21\\nPRINT ARG=phi FILE=COLVAR FMT=%.10f\\n\")\nfor mode in [\"mpi\", \"no-mpi\", \"mpi\", \"no-mpi\"]:\n    pre = [] if mode == \"mpi\" else [\"--no-mpi\"]\n    u0 = resource.getrusage(resource.RUSAGE_CHILDREN); t0 = time.time()\n    for i in range(20):\n        p = subprocess.run([\"plumed\"] + pre + [\"driver\", \"--mf_dcd\", \"x.dcd\", \"--plumed\", \"p.dat\"], capture_output=True, text=True)\n        assert p.returncode == 0, p.stdout[-300:] + p.stderr[-300:]\n    t = time.time() - t0; u1 = resource.getrusage(resource.RUSAGE_CHILDREN)\n    cpu = (u1.ru_utime - u0.ru_utime) + (u1.ru_stime - u0.ru_stime)\n    print(\"%-7s per run: wall %.3f s  cpu %.3f s  COLVAR %s\" % (mode, t / 20, cpu / 20, hashlib.sha256(open(\"COLVAR\", \"rb\").read()).hexdigest()[:16]))\nfor pre in ([], [\"--no-mpi\"]):\n    t0 = time.time(); subprocess.run([\"plumed\"] + pre + [\"info\", \"--version\"], capture_output=True)\n    print(\"plumed %s info --version: %.3f s\" % (\" \".join(pre), time.time() - t0))\nPYEOF\ncat /tmp/out/startup.txt\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/startup.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/plumed-real/startup/startup.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

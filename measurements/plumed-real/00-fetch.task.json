@@ -1,0 +1,9 @@
+{
+  "task_id": "cookbook-plumed-real-fetch",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": ["bash", "-c", "set +e\n# spawn runs task commands under bash -e (spawn#707).\nset -uo pipefail\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\npython3 -u fetch.py /tmp/cohort 2>&1 | tee /tmp/fetch.log\nrc=${PIPESTATUS[0]}\ncp /tmp/fetch.log /tmp/cohort/fetch.log\nls -l /tmp/cohort\nexit $rc\n"],
+  "resources": {"cpu": 8, "memory_gib": 16, "architecture": "arm64", "families": ["c8g"]},
+  "inputs": [{"source": "s3://${COOKBOOK_BUCKET}/inputs/plumed-real/fetch.py", "destination": "/tmp/fetch.py"}],
+  "outputs": [{"source": "/tmp/cohort/", "destination": "s3://${COOKBOOK_BUCKET}/inputs/plumed-real/cohort/"}],
+  "lifecycle": {"ttl": "40m", "on_complete": "terminate", "cost_limit": 0.25}
+}
