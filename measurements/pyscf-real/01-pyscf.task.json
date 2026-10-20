@@ -1,0 +1,83 @@
+{
+  "task_id": "cookbook-pyscf-real-pyscf-r2",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf 'f9fcf3ff7bad839a258bdbedc035623bdbc0a922bf21c7b201fb8842d7b82793  run.sh\\n0574c0bc932ffea228c75727f0689fe651d6a12a1df1f81e95ccdceb3a6848ee  qm9.py\\nd9ec6e254da1366e5652cd338b250622003fa45dc994d50bee6add32715cbf58  pyscf_run.py\\n4b5d0561a4ea30249b6602a8aca1d75fa66082dcca283f8ccb1c922f0da38ea6  psi4_run.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh pyscf 16 6 5 real\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/qm9/dsgdb9nsd.xyz.tar.bz2",
+      "destination": "/tmp/qm9/dsgdb9nsd.xyz.tar.bz2"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/qm9/uncharacterized.txt",
+      "destination": "/tmp/qm9/uncharacterized.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/qm9/qm9.sha256",
+      "destination": "/tmp/qm9.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/qm9.py",
+      "destination": "/tmp/qm9.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/pyscf_run.py",
+      "destination": "/tmp/pyscf_run.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/psi4_run.py",
+      "destination": "/tmp/psi4_run.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/pyscf.jsonl",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/pyscf.jsonl"
+    },
+    {
+      "source": "/tmp/out/atoms.json",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/atoms.json"
+    },
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/check.txt"
+    },
+    {
+      "source": "/tmp/out/run.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/run.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/sources.check",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pyscf-real/r2/pyscf/sources.check"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8h",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}

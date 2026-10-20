@@ -1,0 +1,28 @@
+{
+  "task_id": "cookbook-pyscf-real-fetch",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\nmkdir -p /tmp/out && cd /tmp/out\n# QM9 (Ramakrishnan et al., Sci. Data 1, 140022; figshare collection 10.6084/m9.figshare.c.978904),\n# fetched on AWS and checked against the md5 figshare computed for each file before it is kept.\npython3 -u - <<'PYEOF' || { echo \"FAIL: fetch\"; exit 1; }\nimport hashlib, urllib.request\nF = [(\"3195389\", \"dsgdb9nsd.xyz.tar.bz2\", \"ad1ebd51ee7f5b3a6e32e974e5d54012\"),\n     (\"3195398\", \"dsC7O2H10nsd.xyz.tar.bz2\", \"c750c9f3832e6f63ad64bfb3bd12a045\"),\n     (\"3195404\", \"uncharacterized.txt\", \"a361887bacb427b8a0ce7903d92a53b4\"),\n     (\"3195395\", \"atomref.txt\", \"2d30b2df8329d8fd805c0a4d158a0a0f\"),\n     (\"3195401\", \"validation.txt\", \"7f356bccd797af35e4e54b783ac7d79d\"),\n     (\"3195392\", \"readme.txt\", \"c6581a03f673746528c57acfc6b79679\")]\nfor fid, name, md5 in F:\n    m = hashlib.md5()\n    req = urllib.request.Request(\"https://ndownloader.figshare.com/files/\" + fid, headers={\"User-Agent\": \"curl/8\"})\n    with urllib.request.urlopen(req, timeout=600) as r, open(name, \"wb\") as fh:\n        while True:\n            b = r.read(1 << 20)\n            if not b:\n                break\n            m.update(b); fh.write(b)\n    print(name, \"md5\", m.hexdigest(), \"figshare\", md5)\n    assert m.hexdigest() == md5, name + \": md5 does not match figshare's computed_md5\"\nPYEOF\nsha256sum *.bz2 *.txt | tee qm9.sha256\nls -l\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/pyscf-real/qm9/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

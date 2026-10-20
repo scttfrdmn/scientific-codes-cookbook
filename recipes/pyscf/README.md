@@ -12,7 +12,7 @@ last_verified_amd: 2026-10-18
 
 `pyscf` computes the RHF/STO-3G energy of H₂, cross-checked against [psi4](../psi4/README.md) — the same SCF from a second quantum-chemistry codebase.
 
-> **What this covers.** One SCF on H₂ in a minimal basis — proof PySCF's native integral/SCF stack is correct on Graviton4 and agrees with a second code. Not a benchmark; no correlated method, large basis, or big molecule.
+> **What this covers.** One SCF on H₂ in a minimal basis — proof PySCF's native integral/SCF stack is correct on Graviton4 and agrees with a second code. Not a benchmark; B3LYP, MP2 and CCSD(T) on 783 real molecules are [measured](../../measurements/pyscf-real/README.md) below.
 
 ## Run it
 
@@ -36,6 +36,10 @@ One task, one SCF. The molecule is three lines of inline geometry, so nothing is
 | the cross-check tolerance (< 1e-5 Ha) | keep it — it's method-justified | **load-bearing:** both codes run *exact* integrals (Psi4 with `SCF_TYPE PK`), agreeing to 3e-7 Ha; Psi4's density-fitting default would differ by 2.4e-5 — [match the modes](../../practices/cross-checks.md). |
 
 Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** the cross-code identity holds at any molecule size, and H₂ makes it hand-checkable. Leave-it.
+
+## Which box — [measured](../../measurements/pyscf-real/README.md) on every QM9 molecule up to six heavy atoms
+
+**Billed $/stratum (783 molecules: B3LYP and MP2 on all, CCSD(T) to five heavy atoms): AMD `m8a.4xlarge` $0.51 (1830 s), Graviton4 `m8g.4xlarge` $0.68 (3280 s), Intel `m8i.4xlarge` $0.83 (3461 s).** PySCF reproduces QM9's published Gaussian B3LYP energies to 5.1e-5 Ha and agrees with Psi4 on RHF, MP2 and CCSD(T) to 5e-9 Ha. Every PySCF check holds on all three chips; Psi4 runs on Graviton4 only, as its x86 build does not import. **AMD wins outright**, and CCSD(T)'s dense BLAS is where Graviton4 falls furthest behind. Size by memory: a worker per vCPU needs up to 2.8 GiB here, so `m8g`, not `c8g`. **To reproduce a Gaussian number, don't trust the basis name.** PySCF's `6-31g(2df,p)` is not Gaussian's: the 2d exponents differ, and Gaussian uses 6D/7F. It lands 0.3–8 mHa off QM9, and nothing fails.
 
 ## Shape, size, cost
 

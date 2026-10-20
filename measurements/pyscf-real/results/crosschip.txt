@@ -1,0 +1,45 @@
+== PySCF, 783 molecules on each chip ==
+x86_64 vs arm64  b3lyp_e     n= 783  max|d| 2.05e-12  max rel 8.0e-15  bit-identical   54/783
+x86_64 vs arm64  b3lyp_homo  n= 783  max|d| 1.65e-07  max rel 5.5e-07  bit-identical   18/783
+x86_64 vs arm64  b3lyp_lumo  n= 783  max|d| 6.57e-08  max rel 6.9e-07  bit-identical   16/783
+x86_64 vs arm64  b3lyp_mu    n= 783  max|d| 4.60e-07  max rel 9.1e-01  bit-identical    0/783
+x86_64 vs arm64  rhf         n= 783  max|d| 1.15e-11  max rel 4.0e-14  bit-identical   22/783
+x86_64 vs arm64  mp2_corr    n= 783  max|d| 9.38e-11  max rel 1.2e-10  bit-identical    2/783
+x86_64 vs arm64  ccsd_corr   n= 175  max|d| 1.13e-09  max rel 1.4e-09  bit-identical    0/175
+x86_64 vs arm64  t_corr      n= 175  max|d| 9.46e-11  max rel 3.8e-09  bit-identical    0/175
+x86_64 vs arm64  rhf_rotated n=  31  max|d| 3.41e-12  max rel 1.3e-14  bit-identical    0/31
+x86_64 vs arm64  lib_e       n=  31  max|d| 1.14e-12  max rel 4.6e-15  bit-identical    3/31
+amd    vs arm64  b3lyp_e     n= 783  max|d| 2.39e-12  max rel 1.0e-14  bit-identical   37/783
+amd    vs arm64  b3lyp_homo  n= 783  max|d| 2.24e-13  max rel 9.2e-13  bit-identical   22/783
+amd    vs arm64  b3lyp_lumo  n= 783  max|d| 5.61e-13  max rel 2.1e-10  bit-identical    9/783
+amd    vs arm64  b3lyp_mu    n= 783  max|d| 6.63e-10  max rel 7.9e-01  bit-identical    0/783
+amd    vs arm64  rhf         n= 783  max|d| 1.15e-11  max rel 4.0e-14  bit-identical   22/783
+amd    vs arm64  mp2_corr    n= 783  max|d| 9.38e-11  max rel 1.2e-10  bit-identical    2/783
+amd    vs arm64  ccsd_corr   n= 175  max|d| 1.13e-09  max rel 1.4e-09  bit-identical    0/175
+amd    vs arm64  t_corr      n= 175  max|d| 9.46e-11  max rel 3.8e-09  bit-identical    0/175
+amd    vs arm64  rhf_rotated n=  31  max|d| 3.41e-12  max rel 1.3e-14  bit-identical    0/31
+amd    vs arm64  lib_e       n=  31  max|d| 1.82e-12  max rel 8.7e-15  bit-identical    3/31
+x86_64 vs amd    b3lyp_e     n= 783  max|d| 1.88e-12  max rel 1.2e-14  bit-identical   61/783
+x86_64 vs amd    b3lyp_homo  n= 783  max|d| 1.65e-07  max rel 5.5e-07  bit-identical   11/783
+x86_64 vs amd    b3lyp_lumo  n= 783  max|d| 6.57e-08  max rel 6.9e-07  bit-identical   18/783
+x86_64 vs amd    b3lyp_mu    n= 783  max|d| 4.60e-07  max rel 6.4e-01  bit-identical    0/783
+x86_64 vs amd    rhf         n= 783  max|d| 0.00e+00  max rel 0.0e+00  bit-identical  783/783
+x86_64 vs amd    mp2_corr    n= 783  max|d| 0.00e+00  max rel 0.0e+00  bit-identical  783/783
+x86_64 vs amd    ccsd_corr   n= 175  max|d| 9.00e-12  max rel 1.6e-11  bit-identical   10/175
+x86_64 vs amd    t_corr      n= 175  max|d| 9.80e-13  max rel 3.8e-11  bit-identical    9/175
+x86_64 vs amd    rhf_rotated n=  31  max|d| 0.00e+00  max rel 0.0e+00  bit-identical   31/31
+x86_64 vs amd    lib_e       n=  31  max|d| 1.71e-12  max rel 5.9e-15  bit-identical    3/31
+
+== each chip's PySCF against Graviton4's Psi4 ==
+PySCF arm64  vs Psi4 arm64  rhf       n= 783  max|d| 2.78e-10
+PySCF arm64  vs Psi4 arm64  mp2_corr  n= 783  max|d| 5.00e-09
+PySCF arm64  vs Psi4 arm64  ccsd_corr n= 175  max|d| 3.24e-09
+PySCF arm64  vs Psi4 arm64  t_corr    n= 175  max|d| 1.24e-09
+PySCF x86_64 vs Psi4 arm64  rhf       n= 783  max|d| 2.78e-10
+PySCF x86_64 vs Psi4 arm64  mp2_corr  n= 783  max|d| 5.00e-09
+PySCF x86_64 vs Psi4 arm64  ccsd_corr n= 175  max|d| 3.24e-09
+PySCF x86_64 vs Psi4 arm64  t_corr    n= 175  max|d| 1.24e-09
+PySCF amd    vs Psi4 arm64  rhf       n= 783  max|d| 2.78e-10
+PySCF amd    vs Psi4 arm64  mp2_corr  n= 783  max|d| 5.00e-09
+PySCF amd    vs Psi4 arm64  ccsd_corr n= 175  max|d| 3.24e-09
+PySCF amd    vs Psi4 arm64  t_corr    n= 175  max|d| 1.24e-09

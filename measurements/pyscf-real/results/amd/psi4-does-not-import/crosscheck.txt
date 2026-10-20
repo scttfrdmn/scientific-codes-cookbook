@@ -1,0 +1,9 @@
+ok   PySCF and Psi4 ran the same molecules                PySCF 783, Psi4 783, stratum 783
+FAIL no Psi4 calculation failed                           783 failed [(274, 'm . import core\nImportError: /var/tmp/env/lib/python3.14/site-packages/psi4/core.cpython-314-x86_64-linux-gnu.so: undefined symbol: _ZN7einsums13random_engineE\n'), (311, 'm . import core\nImportError: /var/tmp/env/lib/python3.14/site-packages/psi4/core.cpython-314-x86_64-linux-gnu.so: undefined symbol: _ZN7einsums13random_engineE\n'), (272, 'm . import core\nImportError: /var/tmp/env/lib/python3.14/site-packages/psi4/core.cpython-314-x86_64-linux-gnu.so: undefined symbol: _ZN7einsums13random_engineE\n')]
+FAIL PySCF == Psi4: rhf, every molecule                   0 of 0 molecules, max |d| nan Ha <= 1e-08 (0 over), median nan
+FAIL PySCF == Psi4: mp2_corr, every molecule              0 of 0 molecules, max |d| nan Ha <= 1e-07 (0 over), median nan
+FAIL PySCF == Psi4: ccsd_corr, every molecule             0 of 0 molecules, max |d| nan Ha <= 1e-07 (0 over), median nan
+FAIL PySCF == Psi4: t_corr, every molecule                0 of 0 molecules, max |d| nan Ha <= 1e-07 (0 over), median nan
+
+jobs_wall_s 14.2  cpu_s 51.3  max molecule rss 0 MiB  max scratch left 0 MiB
+RESULT: FAIL no Psi4 calculation failed, PySCF == Psi4: rhf, every molecule, PySCF == Psi4: mp2_corr, every molecule, PySCF == Psi4: ccsd_corr, every molecule, PySCF == Psi4: t_corr, every molecule
