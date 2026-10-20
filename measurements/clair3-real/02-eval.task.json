@@ -1,0 +1,87 @@
+{
+  "task_id": "cookbook-clair3-real-eval",
+  "container": "quay.io/aarchbio/picard@sha256:c6a742e8277b9010df9aa3b9a6bb40651792ff319627cc1c2bf8a70ac633e6bd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (eval\\.sh|lib\\.sh|RTG\\.jar|chr20\\.fa|chr20\\.fa\\.fai|bench\\.chr20\\.vcf\\.gz|bench\\.bed)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 7 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash eval.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/eval.sh",
+      "destination": "/tmp/eval.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/RTG.jar",
+      "destination": "/tmp/RTG.jar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/bench.chr20.vcf.gz",
+      "destination": "/tmp/bench.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/giab/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed",
+      "destination": "/tmp/bench.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/arm64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/x86_64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/amd.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/arm64.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/x86_64.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/amd.vcf.gz.tbi"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/eval/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

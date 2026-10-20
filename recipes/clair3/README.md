@@ -19,25 +19,20 @@ Calls variants on whole chr20 of NA12878 at 36× and scores them against the GIA
 ## Run it
 
 ```bash
-# nothing new to stage -- reuses the GIAB fixture from recipes/gatk4,
-# and task 2 reads task 1's VCF from this recipe's own run prefix
+# nothing to stage: reuses recipes/gatk4's GIAB fixture; task 2 (bcftools) scores task 1's VCF
 for s in $(make -s spec RECIPE=clair3); do spawn task run --spec "$s" --wait; done
 make run RECIPE=clair3 ARCH=x86_64      # same specs, x86 pins, writes runs-x86_64/
-make ls RECIPE=clair3
 
-run_clair3.sh --bam_fn=NA12878.chr20.30x.bam --ref_fn=chr20.fa \
-  --threads=8 --platform=ilmn --model_path=/opt/conda/bin/models/ilmn \
-  --ctg_name=chr20 --output=clair3_out
+run_clair3.sh --bam_fn=NA12878.chr20.30x.bam --ref_fn=chr20.fa --threads=8 --platform=ilmn \
+  --model_path=/opt/conda/bin/models/ilmn --ctg_name=chr20 --output=clair3_out
 ```
-
-Two tasks: Clair3 calls, then bcftools scores against GIAB.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `--platform=ilmn` | `ont`, `hifi` | **21 models ship in this image** at `/opt/conda/bin/models/` — `ilmn`, `hifi`, and 15+ ONT. No download; that is why the package is 429 MB. |
-| `FILTER=PASS` | — | **keep this.** `merge_output.vcf.gz` is a decision log, not a variant set: it carries a `RefCall` row for every position judged reference (179,453 here against 118,312 PASS). |
+| `FILTER=PASS` | — | **keep this.** `merge_output.vcf.gz` is a decision log, not a variant set: it carries a `RefCall` row for every position judged reference (179,453 here against 118,312 PASS; the HiFi run writes none, only `LowQual`). |
 | **no QUAL threshold** | — | **do not add GATK's `QUAL>=30`.** Clair3's QUAL median is 23.2; that cutoff discards 82% of its correct calls. See below. |
 | `--ctg_name=chr20` | drop it, or `--include_all_ctgs` | whole-genome is ~25× this work. Clair3 parallelises well — 8 threads did chr20 in 12.5 min. |
 | GIAB NA12878 | your sample | the truth set and its BED are what make this a correctness check rather than a smoke test. |
@@ -47,6 +42,15 @@ Two tasks: Clair3 calls, then bcftools scores against GIAB.
 ## Shape, size, cost
 
 Two tasks: `m8g.2xlarge` (8 vCPU / 32 GiB) for calling, `m8g.large` for scoring. TTL 240m as a **backstop** with `cost_limit` $1.20 as the real guard, since Clair3 had not been clocked on this fixture. Measured: **751 s** of Clair3, well inside both.
+
+## Which box — [measured](../../measurements/clair3-real/README.md) (HG002 chr20, 49× HiFi Revio, 16 threads)
+| chip | instance | Clair3 wall | $/hr | **billed $/result** | SNV / indel F1 vs GIAB v4.2.1 |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 411 s | 0.6381 | 0.0909 | 0.99961 / 0.96682 |
+| Xeon 6975P-C | `c8i.4xlarge` | 274 s | 0.7497 | 0.0906 | identical |
+| **EPYC 9R45** | `c8a.4xlarge` | **205 s** | 0.8622 | **0.0695** | identical |
+
+**Take AMD.** Every call is identical on all three chips; only QUAL/GQ move in the last digit. Indel errors are all in tandem repeats — easy-region indels score 1.00000 ([by stratum](../../measurements/clair3-real/README.md#scores-against-the-truth-resultsstratstratifiedtsv-identical-on-all-three-chips)).
 
 <details>
 <summary>As shipped: F1 against GIAB, the shared-denominator identity, and two filters that are not interchangeable</summary>
@@ -175,7 +179,7 @@ that is not 69,210, or SNV metrics below their floors — but check the bucket r
 
 ### Not covered
 
-Whole-genome calling, long-read platforms (`ont`/`hifi` models are bundled and unexercised),
+Whole-genome calling, ONT (the `hifi_revio` model is exercised in [clair3-real](../../measurements/clair3-real/README.md)),
 phasing with `--enable_phasing`, GVCF output, somatic calling (ClairS is a different tool), and
 `hap.py`-style haplotype-aware comparison, which is what would let the indel numbers be asserted
 rather than reported.

@@ -1,0 +1,123 @@
+{
+  "task_id": "cookbook-clair3-real-strat",
+  "container": "quay.io/aarchbio/bcftools@sha256:8171fe74464620a0585cc8998fd9bacbfc04480ac5571229f22f390ecfd5658e",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (strat\\.sh|lib\\.sh|bench\\.chr20\\.vcf\\.gz|bench\\.bed|strat\\.easy\\.bed\\.gz|strat\\.alldifficult\\.bed\\.gz|strat\\.lowmapsegdup\\.bed\\.gz|strat\\.notlowmapsegdup\\.bed\\.gz|strat\\.trhomopolymer\\.bed\\.gz|strat\\.segdups\\.bed\\.gz|strat\\.lowmap\\.bed\\.gz|strat\\.complexsv\\.bed\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 12 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash strat.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat.sh",
+      "destination": "/tmp/strat.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/bench.chr20.vcf.gz",
+      "destination": "/tmp/bench.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/giab/HG002_GRCh38_1_22_v4.2.1_benchmark_noinconsistent.bed",
+      "destination": "/tmp/bench.bed"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/easy.bed.gz",
+      "destination": "/tmp/strat.easy.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/alldifficult.bed.gz",
+      "destination": "/tmp/strat.alldifficult.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/lowmapsegdup.bed.gz",
+      "destination": "/tmp/strat.lowmapsegdup.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/notlowmapsegdup.bed.gz",
+      "destination": "/tmp/strat.notlowmapsegdup.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/trhomopolymer.bed.gz",
+      "destination": "/tmp/strat.trhomopolymer.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/segdups.bed.gz",
+      "destination": "/tmp/strat.segdups.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/lowmap.bed.gz",
+      "destination": "/tmp/strat.lowmap.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/clair3-real/strat/complexsv.bed.gz",
+      "destination": "/tmp/strat.complexsv.bed.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/arm64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/x86_64.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/clair3-real/call/clair3.vcf.gz",
+      "destination": "/tmp/amd.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/arm64.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/x86_64.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/clair3-real/call/clair3.vcf.gz.tbi",
+      "destination": "/tmp/amd.vcf.gz.tbi"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/eval/arm64/",
+      "destination": "/tmp/arm64/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/eval/x86_64/",
+      "destination": "/tmp/x86_64/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/eval/amd/",
+      "destination": "/tmp/amd/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/eval/results.tsv",
+      "destination": "/tmp/eval.results.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/clair3-real/strat/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

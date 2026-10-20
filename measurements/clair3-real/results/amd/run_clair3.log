@@ -1,0 +1,125 @@
+
+[INFO] Check environment variables
+[INFO] Create folder /var/tmp/w/clair3_out/log
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/pileup_output
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/merge_output
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/phase_output
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/gvcf_tmp_output
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/full_alignment_output
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/phase_output/phase_vcf
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/phase_output/phase_bam
+[INFO] Create folder /var/tmp/w/clair3_out/tmp/full_alignment_output/candidate_bed
+[INFO] Call variant in contigs: chr20
+[INFO] Chunk number for each contig: 13
+[INFO] 1/7 Call variants using pileup model
+Calling variants ...
+Total processed positions in chr20 (chunk 9/13) : 10009
+Total time elapsed: 6.20 s
+Calling variants ...
+Total processed positions in chr20 (chunk 8/13) : 11928
+Total time elapsed: 6.38 s
+Calling variants ...
+Total processed positions in chr20 (chunk 5/13) : 11108
+Total time elapsed: 6.58 s
+Calling variants ...
+Total processed positions in chr20 (chunk 12/13) : 12616
+Total time elapsed: 6.68 s
+Calling variants ...
+Total processed positions in chr20 (chunk 3/13) : 11111
+Total time elapsed: 6.64 s
+Calling variants ...
+Total processed positions in chr20 (chunk 2/13) : 11878
+Total time elapsed: 6.81 s
+Calling variants ...
+Total processed positions in chr20 (chunk 11/13) : 13750
+Total time elapsed: 6.88 s
+Calling variants ...
+Total processed positions in chr20 (chunk 4/13) : 12475
+Total time elapsed: 6.92 s
+Calling variants ...
+Total processed positions in chr20 (chunk 10/13) : 13501
+Total time elapsed: 6.88 s
+Calling variants ...
+Total processed positions in chr20 (chunk 1/13) : 16201
+Total time elapsed: 7.49 s
+Calling variants ...
+Total processed positions in chr20 (chunk 7/13) : 46529
+Total time elapsed: 15.26 s
+Calling variants ...
+Total processed positions in chr20 (chunk 13/13) : 19697
+Total time elapsed: 7.63 s
+Calling variants ...
+Total processed positions in chr20 (chunk 6/13) : 81487
+Total time elapsed: 23.23 s
+
+[INFO] 2/7 Select heterozygous SNP variants for Whatshap phasing and haplotagging
+[INFO] Select heterozygous pileup variants exceeding phasing quality cutoff 22
+[INFO] Total heterozygous SNP positions selected: chr20: 53834
+
+[INFO] 3/7 Phase VCF file using Whatshap
+This is WhatsHap 2.8 running under Python 3.11.16
+Working on 1 sample from 1 family
+
+# Working on contig chr20 in individual SAMPLE
+Found 53834 usable heterozygous variants (0 skipped due to missing genotypes)
+Number of supplementary alignments: 0
+Number of non-singleton groups: 0
+Skipped 0 groups
+Found 152148 reads covering 53683 variants
+Kept 134371 reads that cover at least two variants each
+Selected 33939 most phase-informative reads covering 53638 variants
+Phasing 1 sample by solving the MEC problem ...
+Largest block contains 2252 variants (4.2% of accessible variants) between position 29205413 and 29451269
+Changed 80 genotypes while writing VCF
+
+# Resource usage
+Maximum memory usage: 0.554 GB
+Time spent reading BAM/CRAM:                   19.9 s
+Time spent parsing VCF:                         0.3 s
+Time spent selecting reads:                     7.0 s
+Time spent phasing:                           115.0 s
+Time spent writing VCF:                         0.6 s
+Time spent finding components:                  0.4 s
+Time spent on rest:                             0.5 s
+Total elapsed time:                           143.7 s
+
+[INFO] 5/7 Select candidates for full-alignment calling
+[INFO] Set variants quality cutoff 21.0
+[INFO] Set reference calls quality cutoff 19.0
+[INFO] Low quality reference calls to be processed in chr20: 39078
+[INFO] Low quality variants to be processed in chr20: 42531
+
+[INFO] 6/7 Call low-quality variants using full-alignment model
+Calling variants ...
+Total processed positions in chr20 (chunk 9/9) : 1609
+Total time elapsed: 2.61 s
+Calling variants ...
+Total processed positions in chr20 (chunk 2/9) : 10000
+Total time elapsed: 13.46 s
+Calling variants ...
+Total processed positions in chr20 (chunk 4/9) : 10000
+Total time elapsed: 13.50 s
+Calling variants ...
+Total processed positions in chr20 (chunk 5/9) : 10000
+Total time elapsed: 14.13 s
+Calling variants ...
+Total processed positions in chr20 (chunk 6/9) : 10000
+Total time elapsed: 14.99 s
+Calling variants ...
+Total processed positions in chr20 (chunk 3/9) : 10000
+Total time elapsed: 19.21 s
+Calling variants ...
+Total processed positions in chr20 (chunk 8/9) : 10000
+Total time elapsed: 23.73 s
+Calling variants ...
+Total processed positions in chr20 (chunk 7/9) : 10000
+Total time elapsed: 23.85 s
+Calling variants ...
+Total processed positions in chr20 (chunk 1/9) : 10000
+Total time elapsed: 28.87 s
+
+[INFO] 7/7 Merge pileup VCF and full-alignment VCF
+[INFO] Pileup variants processed in chr20: 99372
+[INFO] Full-alignment variants processed in chr20: 39422
+
+[INFO] Finish calling, output file: /var/tmp/w/clair3_out/merge_output.vcf.gz
