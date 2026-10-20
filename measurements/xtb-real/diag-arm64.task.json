@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-xtb-real-d2-arm64",
+  "container": "docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358557db8a0d9a7d11a07d1d224f1b2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\nprintf '0bdaa5f5f3643e622bc3b2226932226291b8d37ca53f309173effc6f2cc48bc1  diag.sh\\ncc5c1fc1558552dfa706a950d4401815c73b8d3fdb91bc1c5d71277866171a29  diag.py\\n95fa63f61fadc28b4ffb9fb635e10752fd728eafaf9ea1861158be9b76bab07b  xtb_run.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/diag.sh 8 \n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 30
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/gmtkn55/gmtkn55-v1.tar.gz",
+      "destination": "/tmp/in/gmtkn55-v1.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/gmtkn55/gmtkn55-v1.sha256",
+      "destination": "/tmp/in/gmtkn55-v1.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/diag.sh",
+      "destination": "/tmp/diag.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/diag.py",
+      "destination": "/tmp/diag.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/xtb_run.py",
+      "destination": "/tmp/xtb_run.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/xtb-real/d2/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

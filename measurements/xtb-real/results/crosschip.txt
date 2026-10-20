@@ -1,0 +1,28 @@
+structures in every run 2462
+== x86_64 vs arm64
+  bench energy  max|dE| 1.002e-12 Eh, bit-identical 2432 of 2458, converged on one only: none
+  tight energy  max|dE| 1.002e-12 Eh, bit-identical 2438 of 2458, converged on one only: none
+  5-point FD derivative max|diff| 7.514e-10
+  analytic gradient |g_a-g_b|/|g_a|: median 9.04e+00 p90 2.06e+01 max 4.09e+02; >1e-6 on 2354 of 2354; bit-identical 0
+== amd vs arm64
+  bench energy  max|dE| 1.002e-12 Eh, bit-identical 2432 of 2458, converged on one only: none
+  tight energy  max|dE| 1.002e-12 Eh, bit-identical 2438 of 2458, converged on one only: none
+  5-point FD derivative max|diff| 7.514e-10
+  analytic gradient |g_a-g_b|/|g_a|: median 9.04e+00 p90 2.06e+01 max 4.09e+02; >1e-6 on 2354 of 2354; bit-identical 0
+== amd vs x86_64
+  bench energy  max|dE| 0.000e+00 Eh, bit-identical 2458 of 2458, converged on one only: none
+  tight energy  max|dE| 0.000e+00 Eh, bit-identical 2458 of 2458, converged on one only: none
+  5-point FD derivative max|diff| 8.319e-11
+  analytic gradient |g_a-g_b|/|g_a|: median 0.00e+00 p90 0.00e+00 max 4.12e-12; >1e-6 on 0 of 2354; bit-identical 2342
+== each chip's analytic gradient against its own 5-point FD (|err| <= 1e-7 + 1e-5|FD|)
+  arm64  fail 2354 of 2354; rel err median 8.77e+00 p90 5.04e+01 max 8.47e+04
+  x86_64 fail  133 of 2354; rel err median 8.34e-08 p90 1.55e-06 max 3.81e+01
+  amd    fail  133 of 2354; rel err median 8.34e-08 p90 1.55e-06 max 3.81e+01
+  Intel and AMD fail the same structures: True
+  |g_arm64| / |g_x86| where x86 passes: median 8.6, p10 2.9, p90 20.1, min 0.01, max 408.3 (n 2221)
+  arm64 FD vs x86 analytic (x86-passing): max|diff| 1.18e-07
+== where the x86 gradient fails, by subset (failing / with FD)
+  PNICO23 17/69, YBDE18 14/29, BH76 13/80, HEAVY28 13/38, BHPERI 12/61, IL16 12/42, PX13 12/29, BUT14DIOL 10/65, ACONF 8/18, ADIM6 6/12, WCPT18 5/28, CDIE20 3/36, RG18 3/22, AL2X6 2/11, DC13 2/29, PCONF21 1/21
+  by element present (failing / structures containing it):
+  te 6/11, sb 4/10, ar 2/7, bi 2/9, pb 2/10, p 23/179, ne 1/8, f 21/225, b 8/93, h 131/2137, c 91/1686, cl 7/147, n 38/811, al 2/50, o 34/971, s 5/162, br 1/37, i 1/45, li 0/31, na 0/14, be 0/8, ca 0/1, k 0/3, mg 0/17, si 0/67, as 0/2, ge 0/2, se 0/2, sn 0/2, kr 0/3, he 0/4
+RESULT energies agree across chips

@@ -1,0 +1,22 @@
+structures_run	2462	ok
+bench_scf_not_converged	4 CARBHB12/1N G21IP/b+ G21IP/be+ G21IP/c+	ok
+tight_scf_not_converged	4 CARBHB12/1N G21IP/b+ G21IP/be+ G21IP/c+	ok
+nonconverged_exit_is_xtb_scc_error_CARBHB12/1N	1	ok
+nonconverged_exit_is_xtb_scc_error_G21IP/b+	1	ok
+nonconverged_exit_is_xtb_scc_error_G21IP/be+	1	ok
+nonconverged_exit_is_xtb_scc_error_G21IP/c+	1	ok
+bench_vs_tight_max_abs_Eh	3.037e-03	
+reactions	1505 in 55 subsets	ok
+published_mae_reproduced_at_print_precision	39 of 42; differ: CARBHB12 1.14 vs 1.79 NBPRC 10.53 vs 10.51 WATER27 3.15 vs 3.05	ok
+wtmad2_42_subsets	20.11 (Table IV prints 18.89; its own MAEs under this formula give 20.17)	
+fd_structures	2354 of 2355 multi-atom	
+fd_rel_err_quantiles_50_90_99_max	8.77e+00 5.04e+01 4.73e+02 8.47e+04	
+fd_rel_err_gt_1e-06	2354	
+fd_rel_err_gt_0.0001	2354	
+fd_rel_err_gt_0.01	2350	
+fd_rel_err_gt_1	2167	
+fd_gradient_is_derivative_of_energy	2354 of 2354 fail ACONF/B_G ACONF/B_T ACONF/H_g+t+g- ACONF/H_g+x-g- ACONF/H_g+x-t+ ACONF/H_ggg ACONF/H_gtg ACONF/H_gtt ACONF/H_t+g+x- ACONF/H_tgg ACONF/H_tgt ACONF/H_ttt	FAIL
+fd_truncation_ratio_2h_over_h_median	4.00 (O(h^2) predicts 4)	
+translation_max_abs_sum_g	1.252e-14	ok
+rotation_torque_gt_1e-07	1552 of 2458, max 2.964e-02	FAIL
+RESULT	FAIL: fd_gradient_is_derivative_of_energy rotation_torque_gt_1e-07

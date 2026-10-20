@@ -10,7 +10,7 @@ last_verified_amd: 2026-10-18
 ---
 # xtb — GFN2 on water, against xtb's own committed test values
 
-Reproduces the total energy, gradient norm and HOMO-LUMO gap that xtb's own unit test asserts, on x86. **On Graviton it fails: conda-forge's linux-aarch64 xtb 6.7.1 computes wrong gradients with right energies** ([xtb-feedstock#50](https://github.com/conda-forge/xtb-feedstock/issues/50)), so don't optimise or run dynamics with it on ARM yet.
+Reproduces the total energy, gradient norm and HOMO-LUMO gap that xtb's own unit test asserts, on x86. **GFN2 energies are right on every chip; its gradient is not.** It is wrong on every structure on Graviton ([xtb-feedstock#50](https://github.com/conda-forge/xtb-feedstock/issues/50)) and on 5.6% of GMTKN55 on x86 ([measured](../../measurements/xtb-real/README.md)). Don't trust `--opt`, `--hess` or `--omd` yet.
 
 ## Run it
 
@@ -31,10 +31,20 @@ xtb coord --gfn 2 --etemp 300.0 --acc 1.0 --grad
 |---|---|---|
 | Turbomole `coord` | your geometry | **`coord` is Bohr, `.xyz` is Ångström.** Converting units rounds, and that rounding moves the total energy at the 1e-7 level this recipe asserts. Keep `coord` for reference work. |
 | `--gfn 2` | `--gfn 1`, `--gfn 0`, `--gfnff` | GFN2 is the default and the best general-purpose choice; GFN-FF is a force field, orders of magnitude faster and much less accurate. |
-| single point | `--opt`, `--hess`, `--omd` | geometry optimisation, frequencies, dynamics — all built on the gradient, so **x86 only** until the aarch64 build is fixed. A non-zero gradient norm here is expected — this is a fixed geometry, not a minimum. |
+| single point | `--opt`, `--hess`, `--omd` | geometry optimisation, frequencies, dynamics — all built on the gradient, which is **wrong on aarch64 everywhere and on x86 for 133 of 2,354 GMTKN55 structures** (upstream's own binary too). `xtb --tblite` gave the right gradient on both chips with tblite 0.4 ([diagnosis](../../measurements/xtb-real/README.md#the-gradient-what-is-wrong-where)); this env's tblite 0.6.0 segfaults. A non-zero gradient norm here is expected — this is a fixed geometry, not a minimum. |
 | `--etemp 300 --acc 1.0` | tighter `--acc` | passed explicitly so the recipe does not depend on defaults staying put; they happen to be xtb's current defaults. |
 
 **Leave the fixture.** Three atoms is the point: the energy is a *published* number in xtb's own repository, which no larger molecule here would give you, and C2v water makes the symmetry identity below available for free. **Scale it** to real molecules once the check passes — GFN2 handles hundreds of atoms in seconds.
+
+## Which box — [measured](../../measurements/xtb-real/README.md) (all of GMTKN55, 2,462 structures, 16 workers)
+
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 19 s | 0.6381 | 0.0034 | 0.0300 |
+| Intel | `c8i.4xlarge` | 24 s | 0.7497 | 0.0050 | 0.0344 |
+| **AMD** | `c8a.4xlarge` | **14 s** | 0.8622 | **0.0034** | **0.0251** |
+
+**Energies are chip-independent** (1e-12 Eh across chips; 39 of 42 published GFN2 subset MAEs reproduced to the digit), so pick on price: AMD. The whole benchmark is shorter than boot, so 85–89% of the bill is not xtb.
 
 ## Shape, size, cost
 
