@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-gemmi-real",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nexport SAMPLE=1 MANIFEST=/tmp/manifest.tsv.gz OUT=/tmp/out\nbash /tmp/real.sh\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gemmi-real/manifest.tsv.gz",
+      "destination": "/tmp/manifest.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gemmi-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gemmi-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gemmi-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/entries.tsv.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/entries.tsv.gz"
+    },
+    {
+      "source": "/tmp/out/summary.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/summary.tsv"
+    },
+    {
+      "source": "/tmp/out/exceptions.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/exceptions.tsv"
+    },
+    {
+      "source": "/tmp/out/spacegroups.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/spacegroups.tsv"
+    },
+    {
+      "source": "/tmp/out/timing.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/timing.tsv"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gemmi-real/r1/host.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 3.0
+  }
+}

@@ -32,15 +32,22 @@ gemmi.read_structure("structure.pdb")    # within half a %8.3f grid step of what
 |---|---|---|
 | mmCIF for coordinates you keep | PDB | **PDB's field is `%8.3f`**, so it quantizes to 0.001 Å and loses up to **5e-4 Å**. Measured: `4.985e-04` through PDB versus `4.998e-08` through mmCIF. |
 | the float32-ULP tolerance | exact equality across parsers | **don't.** biopython, MDAnalysis and MDTraj all store **float32** (`get_coord()` included), and MDTraj works in nm — so bit-equality with gemmi's float64 is impossible by dtype, not by error. |
-| the synthetic 400-atom structure | a real PDB entry | nothing is fetched here. Real entries bring altlocs, insertion codes and multiple models, none of which this exercises. |
+| the synthetic 400-atom structure | real entries, or the whole archive | nothing is fetched here. [gemmi-real](../../measurements/gemmi-real/README.md) reads all 246,905 entries in both formats plus every structure-factor file; MTZ handling stays untested. |
 | `gemmi` from this env | — | it is now a **declared** member of `md` ([aarchsci#36](https://github.com/playgroundlogic/aarchsci/issues/36)); it used to arrive transitively. The run still records the resolved version to `gemmi-version.txt`. |
-| symmetry only | structure-factor work | MTZ/reflection handling is untouched; this page is the symmetry and coordinate layer. |
 
 **Leave the fixture.** Nothing is fetched and no structure is read: the references are published space-group orders, a closed-form volume, and closure under composition — none of which is data. **Scale it** by asserting more of the 230 space groups; the closure check costs O(n²) in the group order and `F m -3 m` already does 36,864 products.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All checks are **7 s** of a 1m39s window; 24 s is installing Docker and 46 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
+
+| chip | instance | tool wall | $/hr | compute $/result | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.8xlarge` | 1497 s | 1.2762 | **0.531** | **0.591** |
+| Xeon 6975P-C | `c8i.8xlarge` | 1687 s | 1.4994 | 0.703 | 0.744 |
+| EPYC 9R45 | `c8a.8xlarge` | **1395 s** | 1.7243 | 0.668 | 0.710 |
+
+**Which box — [measured](../../measurements/gemmi-real/README.md) on the whole PDB archive (246,905 entries, 440 GB): take Graviton4.** It reads every mmCIF, PDB-format and structure-factor file in the archive 17–21% cheaper per result. AMD is 7% faster, but it costs more per hour. The job streams from S3 and keeps only about half the 32 vCPUs busy on every chip, so the bytes, not the cores, set the speed. All three agree byte for byte on everything gemmi reads. Running at that scale turned up 10 defects in the archive's own files. One is a PDB-format coordinate whose sign was lost when the value overflowed its column.
 
 <details>
 <summary>As shipped: a published table, a group axiom with no reference value at all, two tolerances derived from a format and a dtype, and a control</summary>
@@ -167,12 +174,13 @@ non-identical bytes from two writes — but check the bucket regardless
 
 ### Not covered
 
-**Real structures.** No PDB entry is fetched, so altlocs, insertion codes, multiple models,
-anisotropic B-factors, non-standard residues and the ligand/entity machinery are all untested —
-and those are where real mmCIF parsing gets hard.
+**Real structures, in this recipe's own run.** It fetches no PDB entry. Altlocs, insertion codes,
+multiple models, ANISOU and the entity bookkeeping are tested on the whole archive, both formats,
+by [gemmi-real](../../measurements/gemmi-real/README.md). Ligand chemistry and monomer libraries
+are not.
 
-**Reflection data.** MTZ and structure factors, which are half of what gemmi is for, plus the
-`gemmi sf2map`/`map2sf` paths. **Symmetry beyond the operation list**: reciprocal-space
+**Reflection data beyond reading it.** gemmi-real parses all 190,671 structure-factor files, but
+MTZ, `sf2map`/`map2sf` and R-factor recomputation are untested. **Symmetry beyond the operation list**: reciprocal-space
 asymmetric units, Wyckoff positions, and `gemmi.NearestImage`/contact searches. **Format
 conversion at scale** — one 400-atom structure says nothing about a 10⁶-atom cryo-EM model.
 **The 218 space groups not asserted**, and all non-standard settings. **Monomer libraries and

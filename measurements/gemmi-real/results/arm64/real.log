@@ -1,0 +1,115 @@
+gemmi	0.7.5
+python	3.14.8
+workers	64  sample	1/1  big	52428800
+manifest entries	246905
+entries to read	246905  (440.3 GB gzipped)
+big entries	91 on 6 workers, the rest on 64
+progress	10000/246814	211 s	112.3 GB	531 MB/s
+progress	20000/246814	311 s	160.9 GB	518 MB/s
+progress	30000/246814	393 s	196.4 GB	499 MB/s
+progress	40000/246814	468 s	225.0 GB	481 MB/s
+progress	50000/246814	539 s	248.9 GB	462 MB/s
+progress	60000/246814	604 s	269.3 GB	446 MB/s
+progress	70000/246814	666 s	286.9 GB	431 MB/s
+progress	80000/246814	725 s	302.5 GB	417 MB/s
+progress	90000/246814	782 s	316.4 GB	404 MB/s
+progress	100000/246814	838 s	328.8 GB	392 MB/s
+progress	110000/246814	892 s	340.0 GB	381 MB/s
+progress	120000/246814	945 s	350.0 GB	371 MB/s
+progress	130000/246814	997 s	359.1 GB	360 MB/s
+progress	140000/246814	1050 s	367.3 GB	350 MB/s
+progress	150000/246814	1103 s	374.6 GB	340 MB/s
+progress	160000/246814	1155 s	381.2 GB	330 MB/s
+progress	170000/246814	1206 s	387.1 GB	321 MB/s
+progress	180000/246814	1254 s	392.3 GB	313 MB/s
+progress	190000/246814	1299 s	396.8 GB	305 MB/s
+progress	200000/246814	1343 s	400.9 GB	298 MB/s
+progress	210000/246814	1386 s	404.3 GB	292 MB/s
+progress	220000/246814	1425 s	407.1 GB	286 MB/s
+progress	230000/246814	1459 s	409.3 GB	281 MB/s
+progress	240000/246814	1485 s	410.8 GB	277 MB/s
+progress	246814/246814	1497 s	411.3 GB	275 MB/s
+small entries done	1497 s
+big entries done	1497 s
+slowest entries	5s74:193s 5s73:157s 5sbf:128s 5qkb:101s 5rkz:98s 5rob:85s 5sds:46s 5r7x:45s
+entries	246905
+cif_ok	246905
+cif_err	0
+block_eq_id	246905
+atoms_eq_atom_site	246905
+models_eq_ids	246905
+atoms_total	2878368146
+pdb_present	234600
+pdb_ok	234600
+pdb_equal	234574
+pdb_differ	3
+pdb_reordered	23
+pdb_one_unit anisou_u lines|entries	11901454|9082
+pdb_one_unit anisou_u+anisou_u_negzero lines|entries	11823|4775
+pdb_one_unit anisou_u_negzero lines|entries	47804|7710
+pdb_one_unit atom_b lines|entries	19983|1886
+pdb_one_unit atom_xyz_negzero lines|entries	21|21
+pdb_one_unit cryst1_abc lines|entries	2|2
+pdb_one_unit cryst1_ang lines|entries	284|284
+pdb_one_unit cryst1_z lines|entries	14379|14379
+pdb_one_unit hetatm_b lines|entries	283|114
+pdb_one_unit hetatm_resseq_mod10000 lines|entries	1801|9
+pdb_one_unit hetatm_xyz_negzero lines|entries	3|3
+pdb_one_unit mtrix1_num lines|entries	179|95
+pdb_one_unit mtrix1_num+mtrix1_num_negzero lines|entries	1|1
+pdb_one_unit mtrix1_num_negzero lines|entries	356|103
+pdb_one_unit mtrix2_num lines|entries	155|86
+pdb_one_unit mtrix2_num_negzero lines|entries	382|83
+pdb_one_unit mtrix3_num lines|entries	127|83
+pdb_one_unit mtrix3_num_negzero lines|entries	331|79
+sf_present	190671
+sf_ok	190667
+sf_reflections	15791827832
+sf_blocks	236570
+sf_cell_eq_model	145825
+sf_cell_le_1e-3	160173
+sg_num_recorded	231334
+sg_num_agree	231332
+sg_unknown_to_gemmi	2
+entity_nmol_entries_bad	1
+poly_wt_entities	560052
+poly_wt_entries_within_1e-3	221739
+poly_wt_entries	246879
+poly_wt_maxrel_p50	9.964e-07
+poly_wt_maxrel_p99	1.783e-01
+poly_wt_maxrel_p99.9	8.685e-01
+dmin_compared	190478
+dmin_within_0.01	166998
+dmin_within_0.1	179066
+nobs_compared	189037
+nobs_exact	28910
+nfree_exact	96913
+fetch_retries	1
+wall_s	1497.1
+child_cpu_s	23128.7
+avg_cores	15.45
+child_maxrss_mib	5565
+gb_read	440.28
+sg_distinct	92
+sg_closure_fail	0
+errclass sf_err RuntimeError	1
+errclass sf_err ValueError	3
+entries.tsv sha256	8d7fe367c91aa52f2584b77bec5fb4d09fe089ef217d0035913acc0145aabe53
+PASS	the archive's published count: 246,905 entries
+PASS	every mmCIF matches its pin and gemmi reads it
+PASS	every block is named for its entry
+PASS	gemmi's atom count == the _atom_site rows, every entry
+PASS	gemmi's models == the distinct model numbers, every entry
+PASS	every PDB-format file matches its pin and gemmi reads it
+sf_err	breaking 4 (known 4)
+PASS	every structure-factor file matches its pin; gemmi reads all but the known-malformed
+PASS	...and the malformed ones fail on parsing, never on the pin or the transport
+PASS	every space group in the archive is closed under composition
+PASS	gemmi's space-group number == the recorded Int_Tables_number, every symbol gemmi knows
+sg_unknown	breaking 2 (known 2)
+PASS	the symbols gemmi does not know are the known non-standard ones
+entity_nmol	breaking 1 (known 1)
+PASS	every entity's recorded molecule count == its asym units (water aside), but the known
+pdb_differ	breaking 3 (known 3)
+PASS	every PDB-format file == its mmCIF through gemmi, but for one-unit rounding and the known
+GEMMI REAL OK
