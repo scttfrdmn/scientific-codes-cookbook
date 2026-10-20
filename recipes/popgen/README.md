@@ -42,7 +42,13 @@ mts.tables.equals(other.tables, ignore_provenance=True)   # NOT `tables ==`
 
 ## Shape, size, cost
 
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All of it — 25 simulations, 1,481 trees of invariant checking, two cross-validations — is **5 s** of a 1m19s window; 39 s is installing Docker and 34 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All of it — 25 simulations, 1,481 trees of invariant checking, two cross-validations — is **5 s** of a 1m19s window; 39 s is installing Docker and 34 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)). **Which box — [measured](../../measurements/popgen-real/README.md)**, at real scale: scikit-allel over all of 1000 Genomes Phase 3 (77.8 M SNPs × 2,504 samples) plus msprime simulating a whole 2.88 Gb genome for 3,336 haplotypes, 16 processes per box. The VCF reader (~1 MB/s of gzip per process) is ~70% of the compute. Every count and statistic is identical on all three chips; the arm64 and x86 builds differ only by one ulp in the simulated mutation times.
+
+| chip | instance | tool wall | **billed $/result** | peak RSS / process |
+|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 1,618 s | 0.349 | 2.93 GiB |
+| Intel | `m8i.4xlarge` | 2,110 s | 0.517 | 2.84 GiB |
+| **AMD** | `m8a.4xlarge` | **1,166 s** | **0.335** | 2.91 GiB |
 
 <details>
 <summary>As shipped: integer tree invariants, an exact accounting for an apparent disagreement, and a closed form bounded by its own standard error</summary>
@@ -188,15 +194,18 @@ a mean π more than 4 SE from `4·Ne·μ` — but check the bucket regardless
 
 ### Not covered
 
-**Demography.** One constant-size panmictic population. Population splits, migration, bottlenecks
-and admixture are the reason people use msprime, and `demes` ships in this env unexercised — a
-demographic model's expected `π` per deme is the natural next closed form.
+**Demography, here.** One constant-size panmictic population. The
+[real-workload run](../../measurements/popgen-real/README.md) covers Gutenkunst's three-population
+Out-of-Africa model (splits, migration, growth) at 1000G scale, with tskit and scikit-allel
+cross-checked per deme. A closed form for per-deme `π` is still not asserted, and `demes` is
+unexercised.
 
 **Selection.** Everything here is neutral, so nothing touches sweeps, background selection or
 `msprime`'s SLiM interop (`pyslim` is present and unused). **The DTWF and other ancestry models** —
 only the default Hudson coalescent runs. **Site frequency spectrum beyond the sum**: the shape of
 the AFS has a closed form (`E[AFS_i] ∝ 1/i` under neutrality) that is not asserted here.
-**tszip** compression, present and unexercised. **Large sample sizes**: n = 40 over 1 Mb is small,
-so nothing here speaks to memory or runtime at cohort scale.
+**tszip** compression, present and unexercised. **Large sample sizes** are in the
+[measurement](../../measurements/popgen-real/README.md): n = 3,336 over 2.88 Gb, at 2.9 GiB per
+chromosome process.
 
 </details>

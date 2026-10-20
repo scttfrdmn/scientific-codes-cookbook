@@ -1,0 +1,93 @@
+ok	jobs without an exception	44 of 44
+ok	SNPs per chromosome == PLINK 1.9 import (plink-real)	22 of 22 chromosomes equal, 77818345 vs 77818345 SNPs
+ok	ALT count from GT == INFO AC, every SNP	0 mismatches
+ok	called alleles == INFO AN == 5008, every SNP	0 mismatches
+ok	per-population ALT count == round(<POP>_AF x 2N)	0 mismatches over 389091725 rows
+ok	five populations' counts sum to INFO AC	0 mismatches
+ok	no missing genotype calls	0
+ok	pair partition C(n,2)pi_T == within + between, every site	worst relative 2.86e-16 over 77818345 sites
+ok	control: partition with next-site between terms fails	fails at 73387368 of 77571636 sites (94.6%)
+ok	hudson_fst num/den == between - mean within / between	worst abs 0.00e+00
+ok	individuals -> sample nodes: 1668 -> 3336	1668 / 3336
+ok	every tree iterated (== num_trees)	19992103
+ok	every tree single-rooted	0 of 19992103
+ok	every tree has 2n-2 = 6670 edges	0 wrong
+ok	every internal node binary, along the genome	0 parent segments with != 0 or 2 children
+ok	no sample node is a parent	0
+ok	infinite sites: num_sites == num_mutations	48802039 / 48802039
+ok	same seed reproduces chr22's tables	True
+ok	control: another seed does not	False
+ok	tskit == scikit-allel: pi within YRI/CEU/CHB (< m*eps)	worst relative 9.63e-12
+ok	tskit == scikit-allel: divergence, 3 pairs (< m*eps)	worst relative 2.31e-11
+ok	tskit == scikit-allel: pi, pooled (< m*eps)	worst relative 2.49e-11
+ok	tskit == scikit-allel: segregating sites, exact	22 chromosomes
+ok	allel decoded every site	48802039
+ok	sim pair partition, every site	worst relative 3.92e-16
+ok	sim hudson_fst num/den identities	worst abs 0.00e+00
+ok	Hudson Fst: tskit pi/dxy == allel hudson_fst	worst relative 4.62e-11 (bound 1.3e-07)
+ok	tskit Fst == 1 - 2(dX+dY)/(dX+2dXY+dY)	worst abs 2.22e-16
+ok	Tajima formula == allel.tajima_d on a chunk	4.44e-16
+ok	Tajima's D: tskit == allel's pi and S, per chromosome	worst abs 2.17e-11
+ok	site pi == MU x branch pi: sum z^2 < chi2_22(0.9999)	sum z^2 29.79 < 55.52, max |z| 2.95
+ok	mutations == MU x branch length: sum z^2 < chi2_22(0.9999)	sum z^2 16.54 < 55.52, max |z| 2.26
+obs	vcf_chromosomes	22
+obs	vcf_records	81271745
+obs	biallelic_acgt_snps	77818345
+obs	sample_sizes	AFR=661 AMR=347 EAS=504 EUR=503 SAS=489
+obs	real_AFR_pairwise_diffs_per_haplotype_pair	2855926.9
+obs	real_AFR_segregating_snps	38945238
+obs	real_AFR_tajima_D	-1.2557
+obs	real_AFR_het_per_sample	2835466
+obs	real_AFR_nonref_snps_per_sample	4281055
+obs	real_AMR_pairwise_diffs_per_haplotype_pair	2260825.2
+obs	real_AMR_segregating_snps	25914509
+obs	real_AMR_tajima_D	-1.1383
+obs	real_AMR_het_per_sample	2195721
+obs	real_AMR_nonref_snps_per_sample	3602977
+obs	real_EAS_pairwise_diffs_per_haplotype_pair	2010933.8
+obs	real_EAS_segregating_snps	21796963
+obs	real_EAS_tajima_D	-0.9111
+obs	real_EAS_het_per_sample	1996543
+obs	real_EAS_nonref_snps_per_sample	3516346
+obs	real_EUR_pairwise_diffs_per_haplotype_pair	2150322.3
+obs	real_EUR_segregating_snps	22132889
+obs	real_EUR_tajima_D	-0.8035
+obs	real_EUR_het_per_sample	2138108
+obs	real_EUR_nonref_snps_per_sample	3518567
+obs	real_SAS_pairwise_diffs_per_haplotype_pair	2213553.3
+obs	real_SAS_segregating_snps	24589570
+obs	real_SAS_tajima_D	-0.9699
+obs	real_SAS_het_per_sample	2175789
+obs	real_SAS_nonref_snps_per_sample	3587078
+obs	real_hudson_fst_AFR_AMR	0.10523 +- 0.00088 (jackknife SE)
+obs	real_hudson_fst_AFR_EAS	0.14995 +- 0.00134 (jackknife SE)
+obs	real_hudson_fst_AFR_EUR	0.12333 +- 0.00116 (jackknife SE)
+obs	real_hudson_fst_AFR_SAS	0.11329 +- 0.00082 (jackknife SE)
+obs	real_hudson_fst_AMR_EAS	0.06490 +- 0.00103 (jackknife SE)
+obs	real_hudson_fst_AMR_EUR	0.02370 +- 0.00031 (jackknife SE)
+obs	real_hudson_fst_AMR_SAS	0.03026 +- 0.00037 (jackknife SE)
+obs	real_hudson_fst_EAS_EUR	0.09947 +- 0.00141 (jackknife SE)
+obs	real_hudson_fst_EAS_SAS	0.06316 +- 0.00085 (jackknife SE)
+obs	real_hudson_fst_EUR_SAS	0.03333 +- 0.00044 (jackknife SE)
+obs	real_snps_seen_in_one_superpop_only	52488762 of 77594213 (67.6%)
+obs	real_singletons	34309095
+obs	real_repeated_records	4
+obs	sim_chromosomes	22
+obs	sim_bp	2881033286
+obs	sim_samples	3336 haplotypes = 1668 diploids
+obs	sim_trees	19992103
+obs	sim_edges	78396830
+obs	sim_sites	48802039
+obs	sim_hudson_fst_YRI_CEU	0.14448
+obs	sim_tskit_Fst_YRI_CEU_chr_range	0.07305 .. 0.08226
+obs	sim_hudson_fst_YRI_CHB	0.16119
+obs	sim_tskit_Fst_YRI_CHB_chr_range	0.08315 .. 0.09096
+obs	sim_hudson_fst_CEU_CHB	0.09973
+obs	sim_tskit_Fst_CEU_CHB_chr_range	0.04934 .. 0.05430
+obs	sim_YRI_pairwise_diffs_per_haplotype_pair	2366038.9
+obs	sim_YRI_tajima_D	-0.6625
+obs	sim_CEU_pairwise_diffs_per_haplotype_pair	1702766.8
+obs	sim_CEU_tajima_D	-1.0304
+obs	sim_CHB_pairwise_diffs_per_haplotype_pair	1621682.1
+obs	sim_CHB_tajima_D	-1.2748
+obs	sim_tables_sha256_by_chrom	1:e949d06a06ae8f59 2:82154fa23ac74364 3:472d44387a4bd2d7 4:008c6601ad76b250 5:7bb7cd20eb281710 6:ea5bf6273266fd61 7:e3704fc37173da4e 8:b57f94fd2b6a5148 9:7f8e80fc51906d29 10:46820022c245b548 11:9d7ec66cbc134ebc 12:c5fe97f478ccd080 13:71a2ec7ea36d8053 14:159d19dc4e9bc68d 15:26de64c7bbba1b08 16:6905c4ba3695eac7 17:e849ec578e8df063 18:a7c8a19f35d1648d 19:cb3ec0109693f4f3 20:db2fafc56080e492 21:8678e6216c317d8c 22:b1cafa9798b84912

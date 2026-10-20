@@ -1,0 +1,83 @@
+{
+  "task_id": "cookbook-popgen-real-probe",
+  "container": "quay.io/aarchsci/popgen@sha256:aac6868e30955dc02250502f7c282625be12093081af943f48f2cbe90ae8760c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf 'c14255dc8003ca7ea5b2a7099becf48f5c7f4996fe841cc36564d356b1e25534  run.sh\\n29d7d7fcb0de656a399deb833eb099e771762540421cdb6e279e7ddd4bba8b5c  real.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 16 21 22\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
+      "destination": "/tmp/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/integrated_call_samples_v3.20130502.ALL.panel",
+      "destination": "/tmp/integrated_call_samples_v3.20130502.ALL.panel"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/plink-real-id-all.txt",
+      "destination": "/tmp/plink-real-id-all.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/jobs.jsonl",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/jobs.jsonl"
+    },
+    {
+      "source": "/tmp/out/phases.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/phases.txt"
+    },
+    {
+      "source": "/tmp/out/pins.check",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/probe/pins.check"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}

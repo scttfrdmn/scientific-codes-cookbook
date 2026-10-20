@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-popgen-real-colhash",
+  "container": "quay.io/aarchsci/popgen@sha256:aac6868e30955dc02250502f7c282625be12093081af943f48f2cbe90ae8760c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '29d7d7fcb0de656a399deb833eb099e771762540421cdb6e279e7ddd4bba8b5c  real.py\\n834b46183e152a3c9b5ae50b55dc0d6960c30e236be08c2391e62723e708b920  colhash.py\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nexport OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 HOME=/tmp\nmkdir -p /tmp/out\npython3 -u colhash.py 2>&1 | tee /tmp/out/colhash.txt\ntest \"${PIPESTATUS[0]}\" = 0 || { echo 'FAIL: colhash'; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/popgen-real/colhash.py",
+      "destination": "/tmp/colhash.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/colhash.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/popgen-real/colhash/colhash.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.08
+  }
+}
