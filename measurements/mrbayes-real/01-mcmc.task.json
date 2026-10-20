@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-mrbayes-real-mcmc",
+  "container": "quay.io/aarchbio/mrbayes@sha256:a320f21c5742641ec3db1bd6b443df81bb513589acfe1f8974640fcd1c6556ab",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (mcmc\\.sh|fasta2nexus\\.awk|nexus2newick\\.awk|aln\\.fa|iqout\\.treefile|iqout\\.iqtree|rx\\.raxml\\.bestTree|rx\\.raxml\\.bestModel)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 8 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash mcmc.sh 5000000 1\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/iqtree/pfam38.2_seed_alignment.fa",
+      "destination": "/tmp/aln.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/mcmc.sh",
+      "destination": "/tmp/mcmc.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/fasta2nexus.awk",
+      "destination": "/tmp/fasta2nexus.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/nexus2newick.awk",
+      "destination": "/tmp/nexus2newick.awk"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/iqout.treefile",
+      "destination": "/tmp/iqout.treefile"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/iqout.iqtree",
+      "destination": "/tmp/iqout.iqtree"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/rx.raxml.bestTree",
+      "destination": "/tmp/rx.raxml.bestTree"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/rx.raxml.bestModel",
+      "destination": "/tmp/rx.raxml.bestModel"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mrbayes-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mrbayes-real/mcmc/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "12h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

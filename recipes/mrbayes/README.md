@@ -14,9 +14,8 @@ last_verified: 2026-10-11
 ---
 # MrBayes — a Bayesian tree on the same alignment the ML recipes use
 
-> **This chain is not converged.** ASDSF is **0.038** after 100,000 generations against the
-> conventional 0.01 target. The topology checks below are exact and the cross-method
-> comparison is real, but a publication run needs roughly 15× more generations — see below.
+> **This chain is not converged:** ASDSF **0.038** after 100,000 generations, against 0.01. The checks below are exact, but
+> a [converged run](../../measurements/mrbayes-real/README.md) took 560,000 generations on 8 MPI ranks.
 
 Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then compares the consensus with the RAxML-NG and IQ-TREE trees from the same bytes. For anyone doing Bayesian phylogenetics on ARM.
 
@@ -25,31 +24,33 @@ Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then 
 ```bash
 make stage RECIPE=iqtree         # the alignment lives here; this recipe does NOT copy it
 make stage RECIPE=mrbayes        # just the two awk converters
-for s in $(make -s spec RECIPE=mrbayes); do spawn task run --spec "$s" --wait; done
-
+for s in $(make -s spec RECIPE=mrbayes); do spawn task run --spec "$s" --wait; done   # task 2: IQ-TREE RF vs both ML trees
 # task 1, inside MrBayes:
 lset rates=gamma ngammacat=4;  prset aamodelpr=fixed(lg);   # == the ML recipes' LG+G4
-mcmcp ngen=100000 samplefreq=100 nchains=4 nruns=2 stoprule=yes stopval=0.01;  mcmc;
-sumt burnin=250 conformat=simple;  sump burnin=250;
+mcmcp ngen=100000 samplefreq=100 nchains=4 nruns=2 stoprule=yes stopval=0.01;  mcmc;  sumt burnin=250 conformat=simple;  sump burnin=250;
 ```
-
-Two tasks: MrBayes samples and converts its consensus to Newick, then IQ-TREE computes Robinson-Foulds distances against both ML trees.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `ngen=100000` | 1.5M+ | ASDSF fell 0.1515 → 0.0382 from 2k → 100k generations, so convergence to 0.01 needs **~1.5M** — about **25 h** on this box at the measured 16.4 gen/s. |
+| `ngen=100000` | a cap, with `stoprule=yes` | the [measured run](../../measurements/mrbayes-real/README.md) stopped itself at ASDSF < 0.01 after **560,000** generations, not the ~1.5M a 1/√n extrapolation predicted. Where it stops depends on the seed. |
+| `mb`, `nchains=4` | `mpirun -np 8 mb-mpi` | serial `mb` cost is linear in chains (16.4 gen/s at 4, 33.3 at 2). Both images ship `mb-mpi`: one rank per chain (2 runs × 4) ran **5.2×** faster on `c8g.2xlarge` than `mb` on `c8g.large`. |
 | `fixed(lg)` | WAG, or `mixed` | **LG is what makes the comparison honest** — it is the model [raxml-ng](../raxml-ng/README.md) and [iqtree](../iqtree/README.md) ran. A different matrix would make a method difference look like disagreement. `prset` needs the data loaded *first* or every model is rejected. |
 | the shared alignment | your own | staging **fails** if iqtree has not staged it rather than making a copy; a cross-check only means anything on identical bytes. |
-| `nchains=4` | 2 | measured 16.4 gen/s at 4 chains versus 33.3 at 2 — cost is roughly linear in chains, so halving them buys twice the generations at the same price. |
 | `seed=`/`swapseed=` fixed | unset | a fixed seed reproduces **exactly** here; without it nothing exact can be asserted ([same rule as the assemblers](../../practices/cross-checks.md)). |
 
 **Leave the alignment.** 114 taxa × 477 sites is a real tree, and it is the one both ML recipes used — which is the whole point. **Scale it** by raising `ngen` first; the chain length, not the data, is what is short here.
 
-## Shape, size, cost
+## Shape, size, cost — [measured](../../measurements/mrbayes-real/README.md) to convergence (560,000 generations, 8 ranks)
 
-Task 1 on `c8g.large` (2 vCPU / 4 GiB): the MCMC is **5,787 s** of a 1h39m window, so unlike most recipes here the compute *is* the cost. TTL 3h is a **backstop** with `cost_limit` $0.25 as the real guard; actual ≈ **$0.13**. Task 2 is 48 s and about a cent. Single-threaded — 115.88 s CPU for 116 s wall in the probe, so extra cores buy nothing ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | instance | wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 6,528 s | 0.3190 | 0.5785 | 0.5892 |
+| Xeon 6975P-C | `c8i.2xlarge` | 6,101 s | 0.3748 | 0.6352 | 0.6508 |
+| **EPYC 9R45** | `c8a.2xlarge` | **1,765 s** | 0.4311 | **0.2113** | **0.2195** |
+
+**Take AMD:** 3.7× Graviton4's speed at 37% of its price per posterior (the x86 build has an SSE likelihood kernel, the arm64 build none), with the same checks passing and the same consensus topology on every chip. As shipped, task 1 on `c8g.large` (2 vCPU / 4 GiB): the MCMC is **5,787 s** of a 1h39m window, so unlike most recipes here the compute *is* the cost. TTL 3h is a **backstop** with `cost_limit` $0.25 as the real guard; actual ≈ **$0.13**. Task 2 is 48 s and about a cent. Serial `mb` is single-threaded (115.88 s CPU for 116 s wall in the probe), so extra cores buy nothing unless you run `mb-mpi` ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: exact sampling arithmetic, a sum-to-one over topologies, three methods on one alignment with a calibrating control, and a convergence figure deliberately not asserted</summary>
@@ -76,7 +77,7 @@ Task 1 on `c8g.large` (2 vCPU / 4 GiB): the MCMC is **5,787 s** of a 1h39m windo
 | **RF: IQ-TREE vs RAxML-NG** | *reported* | **0** |
 | RF: majrule vs all-compatible | *reported* | 0 |
 | **control: vs an unrelated topology** | must be large | **446** / 452 |
-| bipartitions with PP ≥ 0.95 | *reported* | 160 of 161 |
+| bipartitions with PP ≥ 0.95 | *reported* | 76 of 160 (from `mb.tstat` column 3; the in-task line counts column 2, `#obs`, and prints 160 — [#114](https://github.com/scttfrdmn/scientific-codes-cookbook/issues/114)) |
 | ASDSF | *reported, **not** asserted* | **0.038156** |
 
 ### What is exact here, and why those things and not the tree
@@ -134,8 +135,8 @@ normalisation is not something this recipe established.
 
 RF is **reported, not asserted**, for the reason the mafft↔muscle comparison is also an
 observation: a consensus from an unconverged chain is partly a statement about chain length.
-160 of 161 bipartitions carry PP ≥ 0.95, which is a strong-looking posterior — on a chain whose
-ASDSF says the two runs still disagree about split frequencies.
+76 of its 160 bipartitions carry PP ≥ 0.95, on a chain whose ASDSF says the two runs still
+disagree about split frequencies.
 
 ### The convergence figure, and what it would cost to fix
 
@@ -220,7 +221,7 @@ or Bayes factor run, which is much of why people choose MrBayes; the harmonic-me
 **Partitioned models, relaxed clocks and calibrated dating** — all absent, and the clock models are
 the other main reason to reach for this tool. **`aamodelpr=mixed`**, which samples over the first
 ten matrices (LG is index 10 and so excluded — worth knowing before reaching for it).
-**MPI**: this image is the serial build, so nothing here speaks to `mb-mpi` scaling across chains.
+**MPI** past one rank per chain: the image ships `mb-mpi`, measured only at 8 ranks for 8 chains, in [mrbayes-real](../../measurements/mrbayes-real/README.md).
 **Nucleotide data** entirely. **Prior sensitivity** — one prior set is run, so nothing shows how
 much the posterior owes to it.
 

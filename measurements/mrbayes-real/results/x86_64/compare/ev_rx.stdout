@@ -1,0 +1,162 @@
+IQ-TREE version 3.1.3 for Linux x86 64-bit built Jul 26 2026
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    d01d8050737f (AVX512, FMA3, 3 GB RAM)
+Command: iqtree3 -s aln.fa -te rx.raxml.bestTree -m LG+G4{0.923198} -blfix -T 1 --prefix ev_rx -redo
+Seed:    300799 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Tue Oct 20 07:09:37 2026
+Kernel:  AVX+FMA - 1 threads (2 CPU cores detected)
+
+HINT: Use -nt option to specify number of threads because your CPU has 2 cores!
+HINT: -nt AUTO will automatically determine the best number of threads to use.
+
+Reading alignment file aln.fa ... Fasta format detected
+Reading fasta file: done in 0.000416994 secs using 99.76% CPU
+Alignment most likely contains protein sequences
+Constructing alignment: done in 0.000463963 secs using 100% CPU
+Alignment has 114 sequences with 477 columns, 465 distinct patterns
+409 parsimony-informative, 33 singleton sites, 35 constant sites
+                            Gap/Ambiguity  Composition  p-value
+Analyzing sequences: done in 7.39098e-05 secs using 100.1% CPU
+   1  A0A5N5JXU2_9PEZI_1904_2337    9.01%    passed     95.51%
+   2  A0A066X7M5_COLSU_1919_2349    9.64%    passed     93.53%
+   3  G2QFS7_THET4_1937_2367        9.64%    passed     93.74%
+   4  G5EHH4_PYRO7_1954_2384        9.64%    passed     98.81%
+   5  A0A1Y2DQJ9_9PEZI_1942_2372    9.64%    passed     99.89%
+   6  A0A423WIL3_9PEZI_1964_2390   10.48%    passed     78.99%
+   7  A0A8J5TN48_FUSOX_485_913     10.06%    passed     77.57%
+   8  A0A1J7JUJ1_9PEZI_1940_2371    9.43%    passed     61.04%
+   9  Q7SG86_NEUCR_1955_2387        9.22%    passed     67.76%
+  10  A0A194VAE1_CYTMA_1990_2423    9.01%    passed     92.23%
+  11  R8BQS1_PHAM7_1923_2355        9.22%    passed     95.75%
+  12  A0A5N5JX91_9PEZI_1894_2320   10.48%    passed     99.82%
+  13  A0A161YMS5_9PEZI_1966_2396    9.64%    passed     99.01%
+  14  A0A0F8A071_9HYPO_1929_2358    9.85%    passed     96.25%
+  15  A0A1Y2D5Y0_9PEZI_1920_2349    9.85%    passed     71.28%
+  16  A0A2P5I3A1_9PEZI_1906_2337    9.43%    passed     99.63%
+  17  A0A1L7WPB4_9HELO_1971_2399   10.06%    passed     89.97%
+  18  A0A0F4G8B7_9PEZI_1978_2411    9.01%    passed     86.91%
+  19  A0A074VI40_AURM1_1953_2385    9.22%    passed     86.17%
+  20  A0A3D8S126_9HELO_1993_2423    9.64%    passed     80.20%
+  21  A0A1Y2A7F7_9PLEO_2020_2447   10.27%    passed     76.29%
+  22  A0A8E2JV78_9PEZI_1964_2393    9.85%    passed     86.91%
+  23  A0A1F5LMR1_9EURO_1952_2379   10.27%    passed     95.54%
+  24  A0A8H3U9Z3_VENIN_1845_2277    9.22%    passed     69.62%
+  25  A0A6A6YA45_9PEZI_1950_2382    9.22%    passed     99.11%
+  26  A0A8E2JNR0_9PEZI_1979_2410    9.43%    passed     96.69%
+  27  A0A4Z1PCL3_9PEZI_1946_2380    8.81%    passed     96.62%
+  28  A0A1Y1YKM0_9PLEO_1961_2392    9.43%    passed     98.40%
+  29  A0A8H3IEJ8_9LECA_1966_2398    9.22%    passed     97.54%
+  30  A0A8H3IS89_9LECA_524_955      9.43%    passed     95.55%
+  31  A0A165JMJ0_XYLHT_1878_2308    9.64%    passed     95.99%
+  32  R1G9U9_BOTPV_1905_2335        9.64%    passed     99.41%
+  33  A0A6G1GHD4_9PEZI_1912_2340   10.06%    passed     99.97%
+  34  A0A8H7AG82_9EURO_1846_2278    9.22%    passed     94.36%
+  35  A0A0F4YNI0_TALEM_1965_2397    9.22%    passed     99.97%
+  36  A0A1V6U7S2_9EURO_1952_2384    9.22%    passed     95.43%
+  37  A0A0F4YV28_TALEM_1899_2331    9.22%    passed     96.84%
+  38  A0A232M4F6_9EURO_1947_2379    9.22%    passed     99.89%
+  39  A0A364L4X1_TALAM_1899_2331    9.22%    passed     99.81%
+  40  A0A165IVS1_XYLHT_1987_2418    9.43%    passed     97.06%
+  41  A0A317SQN4_9PEZI_1828_2261    9.01%    passed     85.85%
+  42  A0A4Z1J1S7_9HELO_2036_2465    9.85%    passed     99.60%
+  43  A0A2D3V031_9PEZI_1902_2336    8.81%    passed     89.52%
+  44  A0A0F4GHP4_9PEZI_1975_2407    9.22%    passed     93.23%
+  45  W9WVP5_9EURO_2021_2452        9.43%    passed     99.98%
+  46  A0A0D1XT68_EXOME_2014_2445    9.43%    passed     99.67%
+  47  W2RW05_CYPE1_1987_2418        9.43%    passed     97.54%
+  48  A0A3M0W243_9EURO_1991_2420    9.85%    passed     93.27%
+  49  C1G7L4_PARBD_1980_2410        9.64%    passed     71.83%
+  50  J3K516_COCIM_1793_2220       10.27%    passed     96.80%
+  51  A0A1L9SIA6_9EURO_2023_2452    9.85%    passed     92.86%
+  52  A0A017SLG0_ASPRC_1998_2429    9.43%    passed     97.54%
+  53  Q0CRR2_ASPTN_2000_2432        9.22%    passed     72.35%
+  54  A0A319A0V1_9EURO_1990_2422    9.22%    passed     96.18%
+  55  A0A3F3PYJ8_9EURO_1987_2418    9.43%    passed     84.90%
+  56  A0A0M8PA13_9EURO_1889_2320    9.43%    passed     96.25%
+  57  A0A2H3ILE5_9EURO_1980_2410    9.64%    passed     83.93%
+  58  A0A5M3ZHZ6_ASPTE_1980_2408   10.06%    passed     89.30%
+  59  A0A0G2H5X9_PHACM_2013_2442    9.85%    passed     98.95%
+  60  A0A0G2EBL8_PHACM_1897_2323   10.48%    passed     95.98%
+  61  A0A3D8RFU8_9HELO_1927_2353   10.48%    passed     83.67%
+  62  A0A074XHG5_AURPU_1940_2368   10.06%    passed     81.10%
+  63  A0A0E9NP83_SAICN_2128_2562    8.81%    passed     77.04%
+  64  A0A1U7LH10_NEOID_2023_2439   12.58%    passed     99.23%
+  65  R4XDE2_TAPDE_2008_2443        8.60%    passed     84.01%
+  66  MOK13_SCHPO_1921_2355         8.81%    passed     47.25%
+  67  S9XJC4_SCHCR_1920_2354        8.81%    passed     84.12%
+  68  MOK14_SCHPO_934_1366          9.22%    passed     10.20%
+  69  S9X7P4_SCHCR_952_1385         9.01%    failed      3.84%
+  70  MOK11_SCHPO_1962_2394         9.22%    passed     83.39%
+  71  E3KGE8_PUCGT_1998_2432        8.81%    passed     99.68%
+  72  A0A5B0NN89_PUCGR_834_1267     9.01%    passed     89.28%
+  73  A0A4Q1BRH5_TREME_2000_2429    9.85%    passed     99.56%
+  74  A0A427XD47_9TREE_2001_2430    9.85%    passed     95.40%
+  75  A0A7D8V295_VANHU_1052_1481    9.85%    passed     56.78%
+  76  A0A550CXY7_9AGAR_1913_2341   10.06%    passed     94.35%
+  77  D8PT52_SCHCM_1919_2347       10.06%    passed     18.32%
+  78  A0A8H6TTE7_MYCCL_1892_2320   10.06%    passed     97.26%
+  79  A0A5C3QZ56_9AGAR_1893_2321   10.06%    passed     74.15%
+  80  A0A0D0DTV7_9AGAM_1908_2336   10.06%    passed     99.83%
+  81  A0A4S4L527_9AGAM_1963_2390   10.27%    passed     99.46%
+  82  A0A165H7V8_9BASI_1941_2369   10.06%    passed     94.44%
+  83  A0A166GUZ5_9AGAM_1929_2357   10.06%    passed     98.69%
+  84  A0A074RVB8_9AGAM_2535_2963   10.06%    passed     97.98%
+  85  A0A0C3QEG3_9AGAM_1948_2376   10.06%    passed     91.48%
+  86  G4TAV5_SERID_1752_2181        9.85%    passed     22.08%
+  87  A0A1M2W7B7_TRAPU_1916_2344   10.06%    passed     89.36%
+  88  A0A5E3WBU5_9AGAM_1911_2337   10.48%    passed     71.60%
+  89  A0A1Q3ELC9_LENED_1971_2399   10.06%    passed     93.65%
+  90  A0A1Q3EL61_LENED_1936_2365    9.85%    passed     63.51%
+  91  A0A165P4D6_9APHY_1910_2338   10.06%    passed     91.97%
+  92  S9VSR4_SCHCR_1915_2338       11.11%    passed     34.26%
+  93  A0A0D1Z1Z7_9EURO_2209_2642    9.01%    passed     84.24%
+  94  A0A0D1YUT5_9EURO_925_1364     7.76%    passed     72.94%
+  95  A0A8T9C6X2_9HELO_1946_2376    9.64%    passed     99.31%
+  96  A0A3D8R7P3_9HELO_2025_2452   10.27%    passed     66.79%
+  97  A0A4Z1PLH6_9PEZI_1840_2261   11.53%    passed     76.84%
+  98  A0A3M7MT37_9EURO_1796_2214   12.16%    passed     22.82%
+  99  A0A0N1H582_9EURO_1866_2294   10.06%    passed      5.36%
+ 100  A0A0G2F2P2_PHACM_1983_2411   10.06%    passed     79.84%
+ 101  A0A8H7AM64_9EURO_1983_2411   10.06%    passed     90.15%
+ 102  A0A1Y1ZT35_9PLEO_1963_2392    9.85%    passed     83.44%
+ 103  A0A5N5D364_9PEZI_1621_2057    8.39%    failed      0.09%
+ 104  A0A194V2P4_CYTMA_1933_2362    9.85%    passed     99.91%
+ 105  A0A2T3A887_9PEZI_1962_2392    9.64%    passed     98.03%
+ 106  A0A8H6G3K8_9LECA_2145_2575    9.64%    passed     98.46%
+ 107  A0A4U0XK31_9PEZI_239_670      9.43%    passed     97.97%
+ 108  A0A165H1G3_XYLHT_2054_2485    9.43%    passed     80.36%
+ 109  A0A3D8RN56_9HELO_1980_2410    9.64%    passed     99.29%
+ 110  A0A6J3M2J3_9PEZI_1879_2306   10.27%    passed     96.98%
+ 111  A0A2S6CNR5_9PEZI_1976_2403   10.27%    passed     91.41%
+ 112  A0A1V8U4U3_9PEZI_1985_2412   10.27%    passed     98.48%
+ 113  A0A3M7AHW0_HORWE_1560_1985   10.69%    passed     99.27%
+ 114  A0A4U0W9B1_9PEZI_59_485      10.48%    passed     98.63%
+****  TOTAL                         9.71%  2 sequences failed composition chi2 test (p-value<5%; df=19)
+Checking for duplicate sequences: done in 0.000173092 secs using 99.95% CPU
+Reading input tree file rx.raxml.bestTree ...
+
+NOTE: 34 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.010)
+1. Initial log-likelihood: -52706.731
+Optimal log-likelihood: -52706.731
+Gamma shape alpha: 0.923
+Parameters optimization took 1 rounds (0.035 sec)
+Wrote distance file to... 
+BEST SCORE FOUND : -52706.731
+Total tree length: 44.869
+
+Total number of iterations: 0
+CPU time used for tree search: 0.000 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.000 sec (0h:0m:0s)
+Total CPU time used: 0.034 sec (0h:0m:0s)
+Total wall-clock time used: 0.044 sec (0h:0m:0s)
+
+Analysis results written to: 
+  IQ-TREE report:                ev_rx.iqtree
+  Maximum-likelihood tree:       ev_rx.treefile
+  Screen log file:               ev_rx.log
+
+Date and Time: Tue Oct 20 07:09:37 2026
