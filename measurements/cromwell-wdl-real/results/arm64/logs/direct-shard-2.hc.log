@@ -1,0 +1,93 @@
+Using GATK jar /opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar
+Running:
+    java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=2 -Xmx6G -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -jar /opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar HaplotypeCaller -R /tmp/in/chr20.fa -I /tmp/in/NA12878.chr20.30x.bam -L /tmp/in/scatter-16/temp_0003_of_16/scattered.interval_list -O NA12878.chr20.30x.g.vcf.gz -contamination 0 -G StandardAnnotation -G StandardHCAnnotation -G AS_StandardAnnotation -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 -ERC GVCF
+13:39:16.776 WARN  GATKAnnotationPluginDescriptor - Redundant enabled annotation group (StandardAnnotation) is enabled for this tool by default
+13:39:16.779 WARN  GATKAnnotationPluginDescriptor - Redundant enabled annotation group (StandardHCAnnotation) is enabled for this tool by default
+13:39:16.905 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.intel.gkl.NativeLibraryLoader in an unnamed module (file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+13:39:16.918 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression6738732131093539225.so: /tmp/libgkl_compression6738732131093539225.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+13:39:16.925 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+13:39:16.932 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression708832421318771105.so: /tmp/libgkl_compression708832421318771105.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+13:39:17.204 INFO  HaplotypeCaller - ------------------------------------------------------------
+13:39:17.207 INFO  HaplotypeCaller - The Genome Analysis Toolkit (GATK) v4.6.2.0
+13:39:17.207 INFO  HaplotypeCaller - For support and documentation go to https://software.broadinstitute.org/gatk/
+13:39:17.207 INFO  HaplotypeCaller - Executing as ?@38db4b9cf78f on Linux v6.18.54-121.166.amzn2023.aarch64 aarch64
+13:39:17.207 INFO  HaplotypeCaller - Java runtime: OpenJDK 64-Bit Server VM v25.0.2-internal-adhoc.conda.src
+13:39:17.208 INFO  HaplotypeCaller - Start Date/Time: October 20, 2026, 1:39:16 PM UTC
+13:39:17.209 INFO  HaplotypeCaller - ------------------------------------------------------------
+13:39:17.209 INFO  HaplotypeCaller - ------------------------------------------------------------
+13:39:17.210 INFO  HaplotypeCaller - HTSJDK Version: 4.2.0
+13:39:17.210 INFO  HaplotypeCaller - Picard Version: 3.4.0
+13:39:17.211 INFO  HaplotypeCaller - Built for Spark Version: 3.5.0
+13:39:17.213 INFO  HaplotypeCaller - HTSJDK Defaults.COMPRESSION_LEVEL : 2
+13:39:17.213 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_READ_FOR_SAMTOOLS : false
+13:39:17.213 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_WRITE_FOR_SAMTOOLS : true
+13:39:17.213 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_WRITE_FOR_TRIBBLE : false
+13:39:17.214 INFO  HaplotypeCaller - Deflater: JdkDeflater
+13:39:17.214 INFO  HaplotypeCaller - Inflater: JdkInflater
+13:39:17.222 INFO  HaplotypeCaller - GCS max retries/reopens: 20
+13:39:17.222 INFO  HaplotypeCaller - Requester pays: disabled
+13:39:17.233 INFO  HaplotypeCaller - Initializing engine
+13:39:17.299 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+13:39:17.301 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+13:39:17.544 INFO  FeatureManager - Using codec IntervalListCodec to read file file:///tmp/in/scatter-16/temp_0003_of_16/scattered.interval_list
+13:39:17.576 INFO  IntervalArgumentCollection - Processing 4000000 bp from intervals
+13:39:17.587 INFO  HaplotypeCaller - Done initializing engine
+13:39:17.593 INFO  HaplotypeCallerEngine - Tool is in reference confidence mode and the annotation, the following changes will be made to any specified annotations: 'StrandBiasBySample' will be enabled. 'ChromosomeCounts', 'FisherStrand', 'StrandOddsRatio' and 'QualByDepth' annotations have been disabled
+13:39:17.610 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so
+13:39:17.612 WARN  NativeLibraryLoader - Unable to load libgkl_utils.so from native/libgkl_utils.so (/tmp/libgkl_utils3540906289345572763.so: /tmp/libgkl_utils3540906289345572763.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+13:39:17.612 WARN  IntelSmithWaterman - Intel GKL Utils not loaded
+13:39:17.612 INFO  SmithWatermanAligner - AVX accelerated SmithWaterman implementation is not supported, falling back to the Java implementation
+13:39:17.618 INFO  HaplotypeCallerEngine - Standard Emitting and Calling confidence set to -0.0 for reference-model confidence output
+13:39:17.618 INFO  HaplotypeCallerEngine - All sites annotated with PLs forced to true for reference-model confidence output
+13:39:17.648 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so
+13:39:17.648 WARN  NativeLibraryLoader - Unable to load libgkl_utils.so from native/libgkl_utils.so (/tmp/libgkl_utils12265473148523640294.so: /tmp/libgkl_utils12265473148523640294.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+13:39:17.649 WARN  IntelPairHmm - Intel GKL Utils not loaded
+13:39:17.649 INFO  PairHMM - OpenMP multi-threaded AVX-accelerated native PairHMM implementation is not supported
+13:39:17.649 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so
+13:39:17.650 WARN  NativeLibraryLoader - Unable to load libgkl_utils.so from native/libgkl_utils.so (/tmp/libgkl_utils4262675571321076643.so: /tmp/libgkl_utils4262675571321076643.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+13:39:17.650 WARN  IntelPairHmm - Intel GKL Utils not loaded
+13:39:17.651 WARN  PairHMM - ***WARNING: Machine does not have the AVX instruction set support needed for the accelerated AVX PairHmm. Falling back to the MUCH slower LOGLESS_CACHING implementation!
+13:39:17.653 WARN  IntelDeflaterFactory - Intel Deflater not supported, using Java.util.zip.Deflater
+13:39:17.729 INFO  ProgressMeter - Starting traversal
+13:39:17.730 INFO  ProgressMeter -        Current Locus  Elapsed Minutes     Regions Processed   Regions/Minute
+13:39:20.993 WARN  InbreedingCoeff - InbreedingCoeff will not be calculated at position chr20:9004584 and possibly subsequent; at least 10 samples must have called genotypes
+13:39:27.899 INFO  ProgressMeter -        chr20:9058323              0.2                   220           1298.2
+13:39:37.966 INFO  ProgressMeter -        chr20:9259080              0.3                  1110           3291.2
+13:39:47.976 INFO  ProgressMeter -        chr20:9493012              0.5                  2150           4265.2
+13:39:58.353 INFO  ProgressMeter -        chr20:9770251              0.7                  3570           5272.9
+13:40:02.845 WARN  DepthPerSampleHC - org.broadinstitute.hellbender.tools.walkers.annotator.DepthPerSampleHC$$Lambda/0x000000002672f238@6614b4aa
+13:40:02.846 WARN  StrandBiasBySample - org.broadinstitute.hellbender.tools.walkers.annotator.StrandBiasBySample$$Lambda/0x000000002672f468@1ea38528
+13:40:08.365 INFO  ProgressMeter -        chr20:9997465              0.8                  4780           5664.1
+13:40:18.378 INFO  ProgressMeter -       chr20:10216023              1.0                  5910           5846.9
+13:40:28.502 INFO  ProgressMeter -       chr20:10479872              1.2                  7270           6163.5
+13:40:38.634 INFO  ProgressMeter -       chr20:10779149              1.3                  8670           6429.9
+13:40:48.642 INFO  ProgressMeter -       chr20:11151626              1.5                 10430           6883.6
+13:40:58.708 INFO  ProgressMeter -       chr20:11382291              1.7                 11700           6952.0
+13:41:08.724 INFO  ProgressMeter -       chr20:11666684              1.8                 13160           7113.9
+13:41:18.921 INFO  ProgressMeter -       chr20:11947311              2.0                 14570           7213.5
+13:41:28.968 INFO  ProgressMeter -       chr20:12342698              2.2                 16310           7456.7
+13:41:39.008 INFO  ProgressMeter -       chr20:12548634              2.4                 17340           7364.2
+13:41:49.026 INFO  ProgressMeter -       chr20:12885423              2.5                 19000           7534.9
+13:41:52.263 INFO  HaplotypeCaller - 8325 read(s) filtered by: MappingQualityReadFilter 
+0 read(s) filtered by: MappingQualityAvailableReadFilter 
+0 read(s) filtered by: MappedReadFilter 
+0 read(s) filtered by: NotSecondaryAlignmentReadFilter 
+102505 read(s) filtered by: NotDuplicateReadFilter 
+0 read(s) filtered by: PassesVendorQualityCheckReadFilter 
+0 read(s) filtered by: NonZeroReferenceLengthAlignmentReadFilter 
+0 read(s) filtered by: GoodCigarReadFilter 
+0 read(s) filtered by: WellformedReadFilter 
+110830 total reads filtered out of 959443 reads processed
+13:41:52.263 INFO  ProgressMeter -       chr20:12999617              2.6                 19591           7606.5
+13:41:52.263 INFO  ProgressMeter - Traversal complete. Processed 19591 total regions in 2.6 minutes.
+13:41:52.264 WARN  IntelDeflaterFactory - Intel Deflater not supported, using Java.util.zip.Deflater
+13:41:52.266 INFO  PairHMM - Total compute time in PairHMM computeLogLikelihoods() : 55.39882317
+13:41:52.266 INFO  SmithWatermanAligner - Total compute time in java Smith-Waterman : 14.68 sec
+13:41:52.267 INFO  HaplotypeCaller - Shutting down engine
+[October 20, 2026, 1:41:52 PM UTC] org.broadinstitute.hellbender.tools.walkers.haplotypecaller.HaplotypeCaller done. Elapsed time: 2.59 minutes.
+Runtime.totalMemory()=1082130432

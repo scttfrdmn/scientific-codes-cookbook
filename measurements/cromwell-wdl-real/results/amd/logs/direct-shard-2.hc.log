@@ -1,0 +1,87 @@
+Using GATK jar /usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar
+Running:
+    java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=2 -Xmx6G -XX:GCTimeLimit=50 -XX:GCHeapFreeLimit=10 -jar /usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar HaplotypeCaller -R /tmp/in/chr20.fa -I /tmp/in/NA12878.chr20.30x.bam -L /tmp/in/scatter-16/temp_0003_of_16/scattered.interval_list -O NA12878.chr20.30x.g.vcf.gz -contamination 0 -G StandardAnnotation -G StandardHCAnnotation -G AS_StandardAnnotation -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 -ERC GVCF
+15:36:32.141 WARN  GATKAnnotationPluginDescriptor - Redundant enabled annotation group (StandardAnnotation) is enabled for this tool by default
+15:36:32.143 WARN  GATKAnnotationPluginDescriptor - Redundant enabled annotation group (StandardHCAnnotation) is enabled for this tool by default
+15:36:32.206 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.intel.gkl.NativeLibraryLoader in an unnamed module (file:/usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+15:36:32.302 INFO  HaplotypeCaller - ------------------------------------------------------------
+15:36:32.304 INFO  HaplotypeCaller - The Genome Analysis Toolkit (GATK) v4.6.2.0
+15:36:32.304 INFO  HaplotypeCaller - For support and documentation go to https://software.broadinstitute.org/gatk/
+15:36:32.304 INFO  HaplotypeCaller - Executing as ?@ee18a33bb2ae on Linux v6.18.54-121.166.amzn2023.x86_64 amd64
+15:36:32.304 INFO  HaplotypeCaller - Java runtime: OpenJDK 64-Bit Server VM v24.0.2-internal-adhoc.conda.src
+15:36:32.304 INFO  HaplotypeCaller - Start Date/Time: October 20, 2026, 3:36:32 PM GMT
+15:36:32.305 INFO  HaplotypeCaller - ------------------------------------------------------------
+15:36:32.305 INFO  HaplotypeCaller - ------------------------------------------------------------
+15:36:32.307 INFO  HaplotypeCaller - HTSJDK Version: 4.2.0
+15:36:32.307 INFO  HaplotypeCaller - Picard Version: 3.4.0
+15:36:32.307 INFO  HaplotypeCaller - Built for Spark Version: 3.5.0
+15:36:32.310 INFO  HaplotypeCaller - HTSJDK Defaults.COMPRESSION_LEVEL : 2
+15:36:32.310 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_READ_FOR_SAMTOOLS : false
+15:36:32.310 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_WRITE_FOR_SAMTOOLS : true
+15:36:32.310 INFO  HaplotypeCaller - HTSJDK Defaults.USE_ASYNC_IO_WRITE_FOR_TRIBBLE : false
+15:36:32.310 INFO  HaplotypeCaller - Deflater: IntelDeflater
+15:36:32.311 INFO  HaplotypeCaller - Inflater: IntelInflater
+15:36:32.311 INFO  HaplotypeCaller - GCS max retries/reopens: 20
+15:36:32.311 INFO  HaplotypeCaller - Requester pays: disabled
+15:36:32.313 INFO  HaplotypeCaller - Initializing engine
+15:36:32.422 INFO  FeatureManager - Using codec IntervalListCodec to read file file:///tmp/in/scatter-16/temp_0003_of_16/scattered.interval_list
+15:36:32.432 INFO  IntervalArgumentCollection - Processing 4000000 bp from intervals
+15:36:32.436 INFO  HaplotypeCaller - Done initializing engine
+15:36:32.438 INFO  HaplotypeCallerEngine - Tool is in reference confidence mode and the annotation, the following changes will be made to any specified annotations: 'StrandBiasBySample' will be enabled. 'ChromosomeCounts', 'FisherStrand', 'StrandOddsRatio' and 'QualByDepth' annotations have been disabled
+15:36:32.440 INFO  NativeLibraryLoader - Loading libgkl_utils.so from jar:file:/usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_utils.so
+15:36:32.442 INFO  NativeLibraryLoader - Loading libgkl_smithwaterman.so from jar:file:/usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_smithwaterman.so
+15:36:32.443 INFO  IntelSmithWaterman - Using CPU-supported AVX-512 instructions
+15:36:32.443 INFO  SmithWatermanAligner - Using AVX accelerated SmithWaterman implementation
+15:36:32.445 INFO  HaplotypeCallerEngine - Standard Emitting and Calling confidence set to -0.0 for reference-model confidence output
+15:36:32.445 INFO  HaplotypeCallerEngine - All sites annotated with PLs forced to true for reference-model confidence output
+15:36:32.456 INFO  NativeLibraryLoader - Loading libgkl_pairhmm_omp.so from jar:file:/usr/local/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_pairhmm_omp.so
+15:36:32.463 INFO  IntelPairHmm - Using CPU-supported AVX-512 instructions
+15:36:32.464 INFO  IntelPairHmm - Flush-to-zero (FTZ) is enabled when running PairHMM
+15:36:32.464 INFO  IntelPairHmm - Available threads: 16
+15:36:32.464 INFO  IntelPairHmm - Requested threads: 4
+15:36:32.464 INFO  PairHMM - Using the OpenMP multi-threaded AVX-accelerated native PairHMM implementation
+15:36:32.497 INFO  ProgressMeter - Starting traversal
+15:36:32.498 INFO  ProgressMeter -        Current Locus  Elapsed Minutes     Regions Processed   Regions/Minute
+15:36:33.929 WARN  InbreedingCoeff - InbreedingCoeff will not be calculated at position chr20:9004584 and possibly subsequent; at least 10 samples must have called genotypes
+15:36:42.582 INFO  ProgressMeter -        chr20:9109548              0.2                   450           2677.5
+15:36:52.623 INFO  ProgressMeter -        chr20:9335244              0.3                  1440           4293.2
+15:37:02.695 INFO  ProgressMeter -        chr20:9579228              0.5                  2570           5106.5
+15:37:12.743 INFO  ProgressMeter -        chr20:9780458              0.7                  3630           5411.9
+15:37:17.117 WARN  DepthPerSampleHC - org.broadinstitute.hellbender.tools.walkers.annotator.DepthPerSampleHC$$Lambda/0x00007f4dcb583c30@27888275
+15:37:17.117 WARN  StrandBiasBySample - org.broadinstitute.hellbender.tools.walkers.annotator.StrandBiasBySample$$Lambda/0x00007f4dcb586000@4ad2c2a
+15:37:22.842 INFO  ProgressMeter -        chr20:9974584              0.8                  4660           5553.8
+15:37:32.868 INFO  ProgressMeter -       chr20:10150037              1.0                  5610           5575.6
+15:37:42.907 INFO  ProgressMeter -       chr20:10405756              1.2                  6840           5828.9
+15:37:52.928 INFO  ProgressMeter -       chr20:10590883              1.3                  7860           5863.5
+15:38:02.930 INFO  ProgressMeter -       chr20:10934242              1.5                  9350           6203.6
+15:38:12.963 INFO  ProgressMeter -       chr20:11161781              1.7                 10480           6258.9
+15:38:23.079 INFO  ProgressMeter -       chr20:11354059              1.8                 11500           6239.8
+15:38:33.113 INFO  ProgressMeter -       chr20:11483542              2.0                 12330           6133.6
+15:38:43.175 INFO  ProgressMeter -       chr20:11809128              2.2                 13750           6313.3
+15:38:53.198 INFO  ProgressMeter -       chr20:11995741              2.3                 14820           6319.8
+15:39:03.214 INFO  ProgressMeter -       chr20:12380360              2.5                 16500           6568.6
+15:39:13.264 INFO  ProgressMeter -       chr20:12628148              2.7                 17770           6632.0
+15:39:23.302 INFO  ProgressMeter -       chr20:12926358              2.8                 19210           6748.1
+15:39:26.145 INFO  HaplotypeCaller - 8325 read(s) filtered by: MappingQualityReadFilter 
+0 read(s) filtered by: MappingQualityAvailableReadFilter 
+0 read(s) filtered by: MappedReadFilter 
+0 read(s) filtered by: NotSecondaryAlignmentReadFilter 
+102505 read(s) filtered by: NotDuplicateReadFilter 
+0 read(s) filtered by: PassesVendorQualityCheckReadFilter 
+0 read(s) filtered by: NonZeroReferenceLengthAlignmentReadFilter 
+0 read(s) filtered by: GoodCigarReadFilter 
+0 read(s) filtered by: WellformedReadFilter 
+110830 total reads filtered out of 959443 reads processed
+15:39:26.146 INFO  ProgressMeter -       chr20:12999617              2.9                 19591           6769.3
+15:39:26.146 INFO  ProgressMeter - Traversal complete. Processed 19591 total regions in 2.9 minutes.
+15:39:26.148 INFO  VectorLoglessPairHMM - Time spent in setup for JNI call : 0.13575272400000002
+15:39:26.148 INFO  PairHMM - Total compute time in PairHMM computeLogLikelihoods() : 98.01085553300001
+15:39:26.152 INFO  SmithWatermanAligner - Total compute time in native Smith-Waterman : 1.70 sec
+15:39:26.153 INFO  HaplotypeCaller - Shutting down engine
+[October 20, 2026, 3:39:26 PM GMT] org.broadinstitute.hellbender.tools.walkers.haplotypecaller.HaplotypeCaller done. Elapsed time: 2.90 minutes.
+Runtime.totalMemory()=1086324736

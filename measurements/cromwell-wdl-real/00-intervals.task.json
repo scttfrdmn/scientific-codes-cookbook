@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-cromwell-wdl-real-intervals",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 8191fb33a99f9ec562e7481cd5738fa59ef647b0604f4975f11fcc0f3c8fa8ff intervals.sh; } > /tmp/scripts.sha256\nsha256sum -c /tmp/scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/intervals.sh\n"
+  ],
+  "container": "quay.io/aarchbio/gatk4@sha256:92065598dde922a2223eb57863606c4bf8558b11af938ada9637efb9d0d8d0fc",
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/intervals.sh",
+      "destination": "/tmp/intervals.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gatk4/chr20.dict",
+      "destination": "/tmp/chr20.dict"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/wgs_calling_regions.hg38.interval_list",
+      "destination": "/tmp/wgs_calling_regions.hg38.interval_list"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/intervals/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

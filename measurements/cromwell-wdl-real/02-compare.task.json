@@ -1,0 +1,45 @@
+{
+  "task_id": "cookbook-cromwell-wdl-real-compare",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 557a548ff12a858ddda5c77591599e8e2c5a24289528076ef9b9c29b13163b0e compare.py; } > /tmp/scripts.sha256\nsha256sum -c /tmp/scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\npython3 -u compare.py /tmp/out/compare.txt arm64=/tmp/arm64.g.vcf.gz x86_64=/tmp/x86_64.g.vcf.gz amd=/tmp/amd.g.vcf.gz 2>&1 | tee /tmp/out/compare.log\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/compare.py",
+      "destination": "/tmp/compare.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/cromwell-wdl-real/run/NA12878.chr20.30x.g.vcf.gz",
+      "destination": "/tmp/arm64.g.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/cromwell-wdl-real/run/NA12878.chr20.30x.g.vcf.gz",
+      "destination": "/tmp/x86_64.g.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/cromwell-wdl-real/run/NA12878.chr20.30x.g.vcf.gz",
+      "destination": "/tmp/amd.g.vcf.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cromwell-wdl-real/compare/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.2
+  }
+}

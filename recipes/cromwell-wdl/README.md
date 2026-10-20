@@ -13,7 +13,7 @@ last_verified: 2026-09-20
 
 Cromwell executes a scatter-gather WDL workflow on Graviton4 and is checked against a closed-form arithmetic result. For anyone whose pipelines are written in WDL — including GATK's published best-practice workflows.
 
-> **What this covers.** WDL draft-2, Cromwell's local backend, one scatter of 8 shards and a gather. The workflow computes something trivial on purpose: the subject under test is the **engine**, not the arithmetic. Not Cromwell's server mode, call caching, or a cloud backend.
+> **What this covers.** WDL draft-2 on Cromwell's local backend, one scatter of 8 shards and a gather. The workflow is trivial on purpose: the subject under test is the **engine**, not the arithmetic. The real use — Broad's published GVCF workflow over a whole chromosome, with call caching — is measured below.
 
 ## Run it
 
@@ -23,22 +23,23 @@ womtool validate sumcheck.wdl          # static check first
 cromwell run sumcheck.wdl -m meta.json # local backend
 ```
 
-```wdl
-scatter (i in range(shards)) {
-  call partial { input: lo = i*per + 1, hi = (i+1)*per }
-}
-call gather { input: parts = partial.sum }
-```
+## Which box — [measured](../../measurements/cromwell-wdl-real/README.md) on Broad's GVCF workflow, NA12878 chr20 at 36× (16 shards)
 
-One task: validate the WDL, run it, then verify the shards and the gathered total independently.
+| chip | instance | workflow wall | slowest shard | $/hr | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | 5,089 s | 4,999 s | 0.9426 | 1.357 |
+| Xeon 6975P-C | `r8i.4xlarge` | 507 s | 452 s | 1.1114 | 0.190 |
+| **EPYC 9R45** | `r8a.4xlarge` | **396 s** | **314 s** | 1.2781 | **0.179** |
+
+**Take AMD; the engine is not the cost.** Cromwell adds about a minute, reproduces all 17 task outputs byte for byte against the same commands run without it, and its call cache reruns the workflow in 38 s, re-running exactly the calls whose inputs changed. The wall is GATK's: Java-only PairHMM on Graviton leaves one pericentromeric shard running 83 minutes while 15 cores idle, so on Graviton split that region finer.
 
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `sumcheck.wdl` (8 shards, sums 1…1000) | your own WDL — e.g. a [GATK best-practice](../gatk4/README.md) workflow | those ship as WDL, which is the reason this recipe exists; the engine is the same, only the tasks change. |
-| Cromwell's local backend | a real backend (`-Dconfig.file=…`) | the local backend runs each task as a shell command on one box. Distributing tasks across instances is what [nf-spawn / the workflow adapters](../../patterns/execution-shapes.md) do, and spawn ships a `miniwdl-spawn` adapter for WDL specifically. |
-| WDL draft-2 | `version 1.0` | Cromwell 0.40 is from 2018 and is what bioconda currently packages; newer WDL features may need a newer Cromwell than this image provides. |
+| Cromwell's local backend | a real backend (`-Dconfig.file=…`) | the local backend runs each task on one box. A task with `runtime { docker }` needs the Docker socket, which a spawn container task does not expose: run Cromwell from a host task, as the [measurement](../../measurements/cromwell-wdl-real/README.md) does. Distributing tasks across instances is what [nf-spawn / the workflow adapters](../../patterns/execution-shapes.md) do, and spawn ships a `miniwdl-spawn` adapter for WDL specifically. |
+| WDL draft-2 | `version 1.0` | bioconda's `cromwell` 0.40 is Cromwell 40, which ran Broad's `version 1.0` GVCF workflow unmodified; newer WDL features may need a newer Cromwell than this image provides. |
 
 **Leave the fixture:** a trivial computation with a known closed form is precisely what makes engine failures visible — if a shard is dropped or a gather mis-collects, the number is wrong and nothing else has to be interpreted. **Scale it** to your real workflow once you trust the engine.
 

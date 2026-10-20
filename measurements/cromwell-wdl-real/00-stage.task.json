@@ -1,0 +1,37 @@
+{
+  "task_id": "cookbook-cromwell-wdl-real-stage",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 4c6e12cc3cc7b2e18f4bbbb865461c415435bf65914e13aaa4ccd58f43fa73c3 fetch.sh; printf '%s  %s\\n' 4d112a3e4a84eedd8c3364e1c1bb7d9d5e4d7958a924776a459da4562b8efc3d pins.sha256; } > /tmp/scripts.sha256\nsha256sum -c /tmp/scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/fetch.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/fetch.sh",
+      "destination": "/tmp/fetch.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/cromwell-wdl-real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

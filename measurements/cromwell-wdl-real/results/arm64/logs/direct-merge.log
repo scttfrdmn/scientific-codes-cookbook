@@ -1,0 +1,849 @@
+Using GATK jar /opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar
+Running:
+    java -Dsamjdk.use_async_io_read_samtools=false -Dsamjdk.use_async_io_write_samtools=true -Dsamjdk.use_async_io_write_tribble=false -Dsamjdk.compression_level=2 -Xmx2G -jar /opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar MergeVcfs --INPUT /tmp/cw/direct/shard-0/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-1/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-2/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-3/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-4/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-5/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-6/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-7/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-8/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-9/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-10/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-11/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-12/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-13/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-14/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-15/NA12878.chr20.30x.g.vcf.gz --OUTPUT NA12878.chr20.30x.g.vcf.gz
+14:59:23.360 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by com.intel.gkl.NativeLibraryLoader in an unnamed module (file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+14:59:23.382 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression2132456728323372447.so: /tmp/libgkl_compression2132456728323372447.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+14:59:23.384 INFO  NativeLibraryLoader - Loading libgkl_compression.so from jar:file:/opt/conda/share/gatk4-4.6.2.0-1/gatk-package-4.6.2.0-local.jar!/com/intel/gkl/native/libgkl_compression.so
+14:59:23.388 WARN  NativeLibraryLoader - Unable to load libgkl_compression.so from native/libgkl_compression.so (/tmp/libgkl_compression1074591083293562952.so: /tmp/libgkl_compression1074591083293562952.so: cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform))
+[Tue Oct 20 14:59:23 UTC 2026] MergeVcfs --INPUT /tmp/cw/direct/shard-0/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-1/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-2/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-3/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-4/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-5/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-6/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-7/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-8/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-9/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-10/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-11/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-12/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-13/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-14/NA12878.chr20.30x.g.vcf.gz --INPUT /tmp/cw/direct/shard-15/NA12878.chr20.30x.g.vcf.gz --OUTPUT NA12878.chr20.30x.g.vcf.gz --VERBOSITY INFO --QUIET false --VALIDATION_STRINGENCY STRICT --COMPRESSION_LEVEL 2 --MAX_RECORDS_IN_RAM 500000 --CREATE_INDEX true --CREATE_MD5_FILE false --help false --version false --showHidden false --USE_JDK_DEFLATER false --USE_JDK_INFLATER false
+[Tue Oct 20 14:59:23 UTC 2026] Executing as ?@bdc0d121b3de on Linux 6.18.54-121.166.amzn2023.aarch64 aarch64; OpenJDK 64-Bit Server VM 25.0.2-internal-adhoc.conda.src; Deflater: Jdk; Inflater: Jdk; Provider GCS is available; Picard version: Version:4.6.2.0
+14:59:23.510 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.510 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.516 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.527 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.534 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.534 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.535 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.537 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.539 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.539 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.540 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.542 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.543 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.543 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.545 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.547 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.548 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.549 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.549 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.551 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.552 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.553 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.553 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.555 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.556 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.556 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.557 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.559 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.560 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.560 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.561 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.563 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.564 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.564 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.565 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.567 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.568 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.568 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.569 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.570 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.572 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.572 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.572 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.574 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.575 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.575 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.576 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.577 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.579 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.579 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.579 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.581 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.582 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.582 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.583 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.584 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.586 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.586 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.586 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.588 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.589 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.589 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.590 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.592 WARN  IntelInflaterFactory - IntelInflater is not supported, using Java.util.zip.Inflater
+14:59:23.604 WARN  IntelDeflaterFactory - Intel Deflater not supported, using Java.util.zip.Deflater
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        10,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:122,905
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        20,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:200,832
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        30,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:275,557
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        40,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:350,558
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        50,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:433,227
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        60,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:502,406
+INFO	2026-10-20 14:59:23	MergeVcfs	Processed        70,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:573,478
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed        80,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:653,055
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed        90,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:733,575
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       100,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:812,873
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       110,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:892,955
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       120,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:986,109
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       130,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,072,171
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       140,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,160,521
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       150,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,248,282
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       160,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,340,455
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       170,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,429,920
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       180,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,522,463
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       190,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,622,304
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       200,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,709,109
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       210,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,795,742
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       220,000 records.  Elapsed time: 00:00:00s.  Time for last 10,000:    0s.  Last read position: chr20:1,889,734
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       230,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:1,973,102
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       240,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,063,860
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       250,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,151,116
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       260,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,234,293
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       270,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,316,566
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       280,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,393,836
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       290,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,475,525
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       300,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,549,379
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       310,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,634,826
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       320,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,713,038
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       330,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,789,110
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       340,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,863,669
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       350,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:2,930,570
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       360,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,006,962
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       370,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,082,966
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       380,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,139,561
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       390,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,205,267
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       400,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,274,288
+INFO	2026-10-20 14:59:24	MergeVcfs	Processed       410,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,341,672
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       420,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,418,307
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       430,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,485,944
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       440,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,560,088
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       450,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,643,370
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       460,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,735,448
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       470,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,817,375
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       480,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,874,723
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       490,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,927,928
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       500,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:3,996,373
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       510,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,074,071
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       520,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,145,941
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       530,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,222,060
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       540,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,301,192
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       550,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,389,842
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       560,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,482,074
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       570,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,572,559
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       580,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,654,213
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       590,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,745,762
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       600,000 records.  Elapsed time: 00:00:01s.  Time for last 10,000:    0s.  Last read position: chr20:4,834,325
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       610,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:4,923,212
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       620,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:4,989,607
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       630,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,042,220
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       640,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,102,587
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       650,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,179,862
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       660,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,255,887
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       670,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,346,905
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       680,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,431,468
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       690,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,514,057
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       700,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,590,894
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       710,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,650,173
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       720,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,715,843
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       730,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,776,942
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       740,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,847,345
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       750,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:5,929,969
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       760,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,010,162
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       770,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,091,347
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       780,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,173,900
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       790,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,255,167
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       800,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,341,297
+INFO	2026-10-20 14:59:25	MergeVcfs	Processed       810,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,428,483
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       820,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,516,424
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       830,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,599,805
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       840,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,688,343
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       850,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,779,610
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       860,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,863,494
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       870,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:6,944,044
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       880,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,031,993
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       890,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,113,557
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       900,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,203,300
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       910,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,288,954
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       920,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,379,327
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       930,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,461,825
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       940,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,548,289
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       950,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,630,131
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       960,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,715,726
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       970,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,795,899
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       980,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,882,394
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed       990,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:7,965,767
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,000,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:8,052,514
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,010,000 records.  Elapsed time: 00:00:02s.  Time for last 10,000:    0s.  Last read position: chr20:8,136,544
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,020,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,221,199
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,030,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,307,610
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,040,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,392,204
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,050,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,479,324
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,060,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,554,107
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,070,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,636,752
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,080,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,720,906
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,090,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,803,117
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,100,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,880,895
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,110,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:8,964,848
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,120,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,045,644
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,130,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,124,558
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,140,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,205,321
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,150,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,293,347
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,160,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,372,273
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,170,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,456,181
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,180,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,540,775
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,190,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,630,279
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,200,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,716,227
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,210,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,797,627
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,220,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,881,840
+INFO	2026-10-20 14:59:26	MergeVcfs	Processed     1,230,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:9,958,860
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,240,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,043,104
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,250,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,125,749
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,260,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,206,277
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,270,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,289,332
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,280,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,373,309
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,290,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,446,329
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,300,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,526,080
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,310,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,606,762
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,320,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,692,380
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,330,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,774,127
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,340,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,861,290
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,350,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:10,951,948
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,360,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,034,690
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,370,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,121,962
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,380,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,203,770
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,390,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,287,257
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,400,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,368,538
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,410,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,448,982
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,420,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,526,447
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,430,000 records.  Elapsed time: 00:00:03s.  Time for last 10,000:    0s.  Last read position: chr20:11,607,431
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,440,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:11,689,876
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,450,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:11,770,735
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,460,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:11,845,270
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,470,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:11,922,136
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,480,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,008,577
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,490,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,090,326
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,500,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,174,702
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,510,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,260,867
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,520,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,344,845
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,530,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,429,388
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,540,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,511,795
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,550,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,591,722
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,560,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,671,289
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,570,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,753,710
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,580,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,834,622
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,590,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:12,921,938
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,600,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,004,090
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,610,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,084,811
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,620,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,167,292
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,630,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,246,223
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,640,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,328,680
+INFO	2026-10-20 14:59:27	MergeVcfs	Processed     1,650,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,412,184
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,660,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,497,249
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,670,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,572,394
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,680,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,647,154
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,690,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,713,275
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,700,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,787,890
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,710,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,870,834
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,720,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:13,937,951
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,730,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,008,821
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,740,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,080,362
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,750,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,152,746
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,760,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,232,432
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,770,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,314,639
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,780,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,396,876
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,790,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,478,547
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,800,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,560,013
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,810,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,643,860
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,820,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,728,806
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,830,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,813,312
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,840,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,890,951
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,850,000 records.  Elapsed time: 00:00:04s.  Time for last 10,000:    0s.  Last read position: chr20:14,969,570
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,860,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,048,453
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,870,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,125,666
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,880,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,204,558
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,890,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,285,176
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,900,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,369,142
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,910,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,457,112
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,920,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,543,196
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,930,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,618,239
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,940,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,698,983
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,950,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,779,281
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,960,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,864,772
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,970,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:15,951,141
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,980,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,036,558
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     1,990,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,116,343
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,000,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,201,020
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,010,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,273,960
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,020,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,362,254
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,030,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,448,937
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,040,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,533,093
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,050,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,609,852
+INFO	2026-10-20 14:59:28	MergeVcfs	Processed     2,060,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,688,351
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,070,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,770,609
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,080,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,855,022
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,090,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:16,937,641
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,100,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,021,333
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,110,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,105,455
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,120,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,197,600
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,130,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,284,941
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,140,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,371,454
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,150,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,452,028
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,160,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,534,320
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,170,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,602,350
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,180,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,702,888
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,190,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,788,683
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,200,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,877,006
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,210,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:17,956,795
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,220,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,013,940
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,230,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,072,813
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,240,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,138,018
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,250,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,210,558
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,260,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,285,555
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,270,000 records.  Elapsed time: 00:00:05s.  Time for last 10,000:    0s.  Last read position: chr20:18,373,392
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,280,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,454,067
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,290,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,537,544
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,300,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,606,107
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,310,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,689,309
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,320,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,771,938
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,330,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,866,571
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,340,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:18,946,029
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,350,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,034,794
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,360,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,123,842
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,370,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,212,563
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,380,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,304,175
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,390,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,385,258
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,400,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,476,817
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,410,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,576,245
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,420,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,667,479
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,430,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,747,922
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,440,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,824,219
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,450,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,900,953
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,460,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:19,979,993
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,470,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,053,620
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,480,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,132,286
+INFO	2026-10-20 14:59:29	MergeVcfs	Processed     2,490,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,222,695
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,500,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,310,590
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,510,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,376,391
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,520,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,472,260
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,530,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,555,796
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,540,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,648,029
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,550,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,734,726
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,560,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,820,120
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,570,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,901,440
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,580,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:20,989,362
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,590,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,078,271
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,600,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,166,590
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,610,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,241,844
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,620,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,312,048
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,630,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,397,268
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,640,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,474,230
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,650,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,554,349
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,660,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,637,940
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,670,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,727,714
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,680,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,809,424
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,690,000 records.  Elapsed time: 00:00:06s.  Time for last 10,000:    0s.  Last read position: chr20:21,902,854
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,700,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:21,987,070
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,710,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,066,577
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,720,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,145,330
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,730,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,226,201
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,740,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,310,180
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,750,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,395,321
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,760,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,488,736
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,770,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,570,275
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,780,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,653,505
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,790,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,738,886
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,800,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,824,187
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,810,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,905,206
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,820,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:22,985,859
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,830,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,081,308
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,840,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,170,849
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,850,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,258,490
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,860,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,341,120
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,870,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,435,067
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,880,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,519,206
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,890,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,596,441
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,900,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,683,372
+INFO	2026-10-20 14:59:30	MergeVcfs	Processed     2,910,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,764,349
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,920,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,846,649
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,930,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:23,932,472
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,940,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,013,004
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,950,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,100,282
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,960,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,192,770
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,970,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,279,447
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,980,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,367,588
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     2,990,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,458,920
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,000,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,551,770
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,010,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,639,019
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,020,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,727,772
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,030,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,814,597
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,040,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:24,917,421
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,050,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,001,300
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,060,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,100,058
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,070,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,179,696
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,080,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,279,414
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,090,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,364,771
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,100,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,431,645
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,110,000 records.  Elapsed time: 00:00:07s.  Time for last 10,000:    0s.  Last read position: chr20:25,509,935
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,120,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:25,578,131
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,130,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:25,651,203
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,140,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:25,732,734
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,150,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:25,880,639
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,160,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:25,959,821
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,170,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,095,980
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,180,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,164,510
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,190,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,250,561
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,200,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,312,234
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,210,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,376,236
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,220,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:26,601,996
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,230,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:28,514,399
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,240,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:28,598,121
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,250,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:28,761,751
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,260,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:28,834,475
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,270,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:28,913,755
+INFO	2026-10-20 14:59:31	MergeVcfs	Processed     3,280,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,025,148
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,290,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,119,875
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,300,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,259,451
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,310,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,341,804
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,320,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,410,987
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,330,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,485,476
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,340,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,572,257
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,350,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,660,634
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,360,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,717,200
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,370,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,772,773
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,380,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,835,671
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,390,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:29,890,974
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,400,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:30,140,358
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,410,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:30,206,887
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,420,000 records.  Elapsed time: 00:00:08s.  Time for last 10,000:    0s.  Last read position: chr20:30,282,956
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,430,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,360,019
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,440,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,423,900
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,450,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,505,595
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,460,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,573,147
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,470,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,646,246
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,480,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,723,149
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,490,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,848,344
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,500,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,913,876
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,510,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:30,982,037
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,520,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,076,711
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,530,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,167,411
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,540,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,204,656
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,550,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,255,540
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,560,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,340,129
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,570,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,417,564
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,580,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,471,401
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,590,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,540,596
+INFO	2026-10-20 14:59:32	MergeVcfs	Processed     3,600,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,610,205
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,610,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,659,683
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,620,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,728,543
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,630,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,792,569
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,640,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,882,121
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,650,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:31,962,081
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,660,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,039,023
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,670,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,114,052
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,680,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,178,464
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,690,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,262,484
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,700,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,324,278
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,710,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,392,695
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,720,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,479,370
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,730,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,562,577
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,740,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,641,804
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,750,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,708,277
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,760,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,755,998
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,770,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,828,914
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,780,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,899,647
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,790,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:32,991,166
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,800,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:33,087,974
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,810,000 records.  Elapsed time: 00:00:09s.  Time for last 10,000:    0s.  Last read position: chr20:33,177,965
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,820,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,270,021
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,830,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,361,631
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,840,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,423,984
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,850,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,469,912
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,860,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,518,921
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,870,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,586,169
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,880,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,674,941
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,890,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,738,284
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,900,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,800,964
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,910,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,886,170
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,920,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:33,957,025
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,930,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,031,508
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,940,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,120,091
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,950,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,189,115
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,960,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,266,360
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,970,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,338,348
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,980,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,385,348
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     3,990,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,453,685
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     4,000,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,526,249
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     4,010,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,606,490
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     4,020,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,668,902
+INFO	2026-10-20 14:59:33	MergeVcfs	Processed     4,030,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,730,749
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,040,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,805,391
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,050,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,870,178
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,060,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:34,955,409
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,070,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,045,192
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,080,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,116,853
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,090,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,182,261
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,100,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,250,774
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,110,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,339,751
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,120,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,412,572
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,130,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,470,754
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,140,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,546,932
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,150,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,612,291
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,160,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,683,666
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,170,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,746,275
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,180,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,796,604
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,190,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,849,923
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,200,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,912,486
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,210,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:35,990,670
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,220,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:36,058,603
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,230,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:36,131,144
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,240,000 records.  Elapsed time: 00:00:10s.  Time for last 10,000:    0s.  Last read position: chr20:36,211,283
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,250,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,296,563
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,260,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,385,103
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,270,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,463,116
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,280,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,536,906
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,290,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,606,734
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,300,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,662,509
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,310,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,722,583
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,320,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,783,881
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,330,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,856,076
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,340,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,927,828
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,350,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:36,981,602
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,360,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,036,340
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,370,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,091,636
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,380,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,159,924
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,390,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,233,864
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,400,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,313,592
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,410,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,390,344
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,420,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,467,998
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,430,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,557,507
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,440,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,640,297
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,450,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,727,124
+INFO	2026-10-20 14:59:34	MergeVcfs	Processed     4,460,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,813,372
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,470,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,906,198
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,480,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:37,990,913
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,490,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,076,990
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,500,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,153,552
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,510,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,245,088
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,520,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,320,908
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,530,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,397,410
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,540,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,472,612
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,550,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,560,001
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,560,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,645,794
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,570,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,740,415
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,580,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,818,808
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,590,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,910,330
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,600,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:38,994,138
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,610,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,087,281
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,620,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,167,650
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,630,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,267,925
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,640,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,361,542
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,650,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,446,751
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,660,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,535,597
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,670,000 records.  Elapsed time: 00:00:11s.  Time for last 10,000:    0s.  Last read position: chr20:39,623,062
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,680,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:39,716,808
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,690,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:39,804,753
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,700,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:39,890,485
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,710,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:39,980,833
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,720,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,065,922
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,730,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,155,245
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,740,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,245,414
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,750,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,343,335
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,760,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,429,757
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,770,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,524,787
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,780,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,611,274
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,790,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,709,803
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,800,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,806,543
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,810,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,907,317
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,820,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:40,989,453
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,830,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,066,595
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,840,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,159,384
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,850,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,255,123
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,860,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,335,935
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,870,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,425,017
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,880,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,510,185
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,890,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,591,497
+INFO	2026-10-20 14:59:35	MergeVcfs	Processed     4,900,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,679,288
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,910,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,755,157
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,920,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,839,068
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,930,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:41,927,283
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,940,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,023,664
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,950,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,122,910
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,960,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,210,796
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,970,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,290,744
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,980,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,376,992
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     4,990,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,467,973
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,000,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,562,900
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,010,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,646,236
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,020,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,735,484
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,030,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,824,075
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,040,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:42,913,015
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,050,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,005,588
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,060,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,082,762
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,070,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,163,638
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,080,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,263,511
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,090,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,357,034
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,100,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,433,467
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,110,000 records.  Elapsed time: 00:00:12s.  Time for last 10,000:    0s.  Last read position: chr20:43,498,240
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,120,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,575,424
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,130,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,637,837
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,140,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,686,008
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,150,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,762,571
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,160,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,847,519
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,170,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:43,926,338
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,180,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,014,187
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,190,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,111,681
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,200,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,197,428
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,210,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,281,757
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,220,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,354,675
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,230,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,432,645
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,240,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,512,180
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,250,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,591,627
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,260,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,680,153
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,270,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,773,219
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,280,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,858,683
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,290,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:44,936,348
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,300,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,013,420
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,310,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,104,627
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,320,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,193,597
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,330,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,277,218
+INFO	2026-10-20 14:59:36	MergeVcfs	Processed     5,340,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,362,513
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,350,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,444,244
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,360,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,530,910
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,370,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,610,458
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,380,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,697,506
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,390,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,769,955
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,400,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,836,760
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,410,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,918,831
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,420,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:45,997,161
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,430,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,091,369
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,440,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,185,059
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,450,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,283,722
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,460,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,379,611
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,470,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,482,043
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,480,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,573,998
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,490,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,670,950
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,500,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,760,931
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,510,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,852,091
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,520,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:46,941,581
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,530,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:47,036,360
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,540,000 records.  Elapsed time: 00:00:13s.  Time for last 10,000:    0s.  Last read position: chr20:47,120,465
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,550,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,185,973
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,560,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,261,627
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,570,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,329,349
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,580,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,386,935
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,590,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,442,761
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,600,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,496,951
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,610,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,553,633
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,620,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,618,436
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,630,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,701,597
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,640,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,795,128
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,650,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,882,876
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,660,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:47,973,253
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,670,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,064,297
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,680,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,137,212
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,690,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,239,606
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,700,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,328,750
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,710,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,423,033
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,720,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,496,190
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,730,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,528,366
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,740,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,620,833
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,750,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,716,727
+INFO	2026-10-20 14:59:37	MergeVcfs	Processed     5,760,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,812,333
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,770,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,891,538
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,780,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:48,962,041
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,790,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,034,924
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,800,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,105,534
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,810,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,172,563
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,820,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,223,661
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,830,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,300,101
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,840,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,384,499
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,850,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,478,833
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,860,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,567,779
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,870,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,628,274
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,880,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,698,471
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,890,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,758,107
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,900,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,828,134
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,910,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,909,536
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,920,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:49,970,178
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,930,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:50,034,446
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,940,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:50,109,657
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,950,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:50,183,693
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,960,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:50,273,642
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,970,000 records.  Elapsed time: 00:00:14s.  Time for last 10,000:    0s.  Last read position: chr20:50,371,969
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,980,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,455,096
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     5,990,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,523,525
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,000,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,612,150
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,010,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,677,686
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,020,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,744,951
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,030,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,807,346
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,040,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,892,157
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,050,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:50,969,419
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,060,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,046,736
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,070,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,130,905
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,080,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,222,116
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,090,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,315,183
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,100,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,408,489
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,110,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,487,842
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,120,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,569,288
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,130,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,642,689
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,140,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,711,802
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,150,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,773,765
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,160,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,832,783
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,170,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,885,894
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,180,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,939,835
+INFO	2026-10-20 14:59:38	MergeVcfs	Processed     6,190,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:51,994,602
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,200,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,058,041
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,210,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,127,354
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,220,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,205,741
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,230,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,288,023
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,240,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,374,991
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,250,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,451,301
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,260,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,537,990
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,270,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,624,499
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,280,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,710,108
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,290,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,799,879
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,300,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,893,885
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,310,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:52,978,277
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,320,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,062,930
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,330,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,147,192
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,340,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,228,937
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,350,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,317,269
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,360,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,403,793
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,370,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,483,018
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,380,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,550,735
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,390,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,609,481
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,400,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,663,214
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,410,000 records.  Elapsed time: 00:00:15s.  Time for last 10,000:    0s.  Last read position: chr20:53,716,034
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,420,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:53,782,050
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,430,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:53,855,298
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,440,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:53,940,891
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,450,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,030,157
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,460,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,114,184
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,470,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,200,296
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,480,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,285,908
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,490,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,374,652
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,500,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,463,310
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,510,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,539,225
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,520,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,626,366
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,530,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,703,535
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,540,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,790,381
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,550,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,877,920
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,560,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:54,964,108
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,570,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,045,737
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,580,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,130,859
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,590,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,214,332
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,600,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,298,585
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,610,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,392,331
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,620,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,466,828
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,630,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,555,521
+INFO	2026-10-20 14:59:39	MergeVcfs	Processed     6,640,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,636,152
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,650,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,715,319
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,660,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,800,566
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,670,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,885,118
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,680,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:55,968,757
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,690,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,059,491
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,700,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,142,925
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,710,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,223,866
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,720,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,301,845
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,730,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,382,678
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,740,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,459,126
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,750,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,535,709
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,760,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,593,526
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,770,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,665,141
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,780,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,732,546
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,790,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,801,261
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,800,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,887,398
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,810,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:56,970,303
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,820,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:57,059,473
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,830,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:57,150,337
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,840,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:57,241,815
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,850,000 records.  Elapsed time: 00:00:16s.  Time for last 10,000:    0s.  Last read position: chr20:57,338,417
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,860,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,445,776
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,870,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,530,016
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,880,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,626,467
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,890,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,732,501
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,900,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,826,908
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,910,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:57,922,829
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,920,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,012,080
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,930,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,102,343
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,940,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,190,346
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,950,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,276,511
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,960,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,357,505
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,970,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,428,074
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,980,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,521,923
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     6,990,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,609,926
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,000,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,687,844
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,010,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,773,968
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,020,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,863,798
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,030,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:58,940,351
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,040,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,014,568
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,050,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,098,491
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,060,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,191,708
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,070,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,282,077
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,080,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,370,755
+INFO	2026-10-20 14:59:40	MergeVcfs	Processed     7,090,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,449,905
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,100,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,541,964
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,110,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,633,326
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,120,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,716,887
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,130,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,816,394
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,140,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,905,043
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,150,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:59,989,522
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,160,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,080,224
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,170,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,174,706
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,180,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,262,934
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,190,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,345,364
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,200,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,429,711
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,210,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,508,206
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,220,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,594,982
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,230,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,690,232
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,240,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,773,706
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,250,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,862,349
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,260,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:60,946,076
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,270,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:61,035,098
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,280,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:61,123,975
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,290,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:61,205,992
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,300,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:61,275,509
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,310,000 records.  Elapsed time: 00:00:17s.  Time for last 10,000:    0s.  Last read position: chr20:61,369,027
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,320,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,444,296
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,330,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,526,607
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,340,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,612,910
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,350,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,695,709
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,360,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,793,249
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,370,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,889,389
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,380,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:61,969,293
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,390,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,052,468
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,400,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,122,980
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,410,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,218,494
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,420,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,295,483
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,430,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,383,222
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,440,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,487,028
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,450,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,579,860
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,460,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,688,632
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,470,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,790,799
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,480,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,872,259
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,490,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:62,981,271
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,500,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,061,741
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,510,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,158,653
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,520,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,257,648
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,530,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,361,334
+INFO	2026-10-20 14:59:41	MergeVcfs	Processed     7,540,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,447,898
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,550,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,522,932
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,560,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,616,276
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,570,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,698,180
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,580,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,774,129
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,590,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,842,517
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,600,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,911,377
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,610,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:63,993,587
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,620,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:64,080,892
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,630,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:64,143,381
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,640,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:64,229,960
+INFO	2026-10-20 14:59:42	MergeVcfs	Processed     7,650,000 records.  Elapsed time: 00:00:18s.  Time for last 10,000:    0s.  Last read position: chr20:64,304,138
+14:59:42.239 WARN  IntelDeflaterFactory - Intel Deflater not supported, using Java.util.zip.Deflater
+[Tue Oct 20 14:59:42 UTC 2026] picard.vcf.MergeVcfs done. Elapsed time: 0.32 minutes.
+Runtime.totalMemory()=1088421888
+Tool returned:
+0
