@@ -1,0 +1,83 @@
+{
+  "task_id": "cookbook-phasing-real-phase",
+  "container": "quay.io/aarchbio/whatshap@sha256:2cfeba1f120ca6ef706d244cac8f4957a6952e78d859e497e6da64eac9a0fa4a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (phase\\.sh|lib\\.sh|check\\.py|chr20\\.fa|hifi\\.chr20\\.bam|hifi\\.chr20\\.bam\\.bai|ilmn\\.chr20\\.bam|ilmn\\.chr20\\.bam\\.bai|bench\\.chr20\\.vcf\\.gz|hifiasm\\.chr20\\.vcf\\.gz|sst\\.chr20\\.vcf\\.gz|chr20\\.fa\\.fai)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 12 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash phase.sh\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 30
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/phase.sh",
+      "destination": "/tmp/phase.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/lib.sh",
+      "destination": "/tmp/lib.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/bwa-samtools/chr20.fa",
+      "destination": "/tmp/chr20.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/hifi.chr20.bam",
+      "destination": "/tmp/hifi.chr20.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/hifi.chr20.bam.bai",
+      "destination": "/tmp/hifi.chr20.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/ilmn.chr20.bam",
+      "destination": "/tmp/ilmn.chr20.bam"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/ilmn.chr20.bam.bai",
+      "destination": "/tmp/ilmn.chr20.bam.bai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/bench.chr20.vcf.gz",
+      "destination": "/tmp/bench.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/hifiasm.chr20.vcf.gz",
+      "destination": "/tmp/hifiasm.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/sst.chr20.vcf.gz",
+      "destination": "/tmp/sst.chr20.vcf.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/prep/chr20.fa.fai",
+      "destination": "/tmp/chr20.fa.fai"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/phasing-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/phasing-real/phase/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "6h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

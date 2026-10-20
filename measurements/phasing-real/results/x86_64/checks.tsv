@@ -1,0 +1,47 @@
+whatshap core .so architecture == uname -m	x86_64	x86_64	ok
+unphase exit	0	0	ok
+hifi whatshap phase exit	0	0	ok
+hifi whatshap stats exit	0	0	ok
+hifi flip exit	0	0	ok
+ilmn whatshap phase exit	0	0	ok
+ilmn whatshap stats exit	0	0	ok
+ilmn flip exit	0	0	ok
+whatshap compare exit	0	0	ok
+whatshap compare (flipped) exit	0	0	ok
+unphased input: records == benchmark's, in order	0	0	ok
+unphased input: no genotype phased, no PS	0	0	ok
+hifiasm truth: records == benchmark's, in order	0	0	ok
+hifiasm truth: genotypes == benchmark's, ignoring phase	0	0	ok
+sst truth: records == benchmark's, in order	0	0	ok
+sst truth: genotypes == benchmark's, ignoring phase	0	0	ok
+hifi: records == input's, in order	0	0	ok
+hifi: genotypes unchanged, ignoring phase	0	0	ok
+hifi: no homozygous or missing call phased or given a PS	0	0	ok
+hifi: every phased het carries an integer PS	0	0	ok
+hifi: PS <= position of its block's first phased variant	0	0	ok
+hifi: PS is the position of an input het call	0	0	ok
+hifi: whatshap stats block list == PS sets in the VCF	214	214	ok
+hifi: phased hets == whatshap stats phased + singletons	53385	53385	ok
+ilmn: records == input's, in order	0	0	ok
+ilmn: genotypes unchanged, ignoring phase	0	0	ok
+ilmn: no homozygous or missing call phased or given a PS	0	0	ok
+ilmn: every phased het carries an integer PS	0	0	ok
+ilmn: PS <= position of its block's first phased variant	0	0	ok
+ilmn: PS is the position of an input het call	0	0	ok
+ilmn: whatshap stats block list == PS sets in the VCF	10338	10338	ok
+ilmn: phased hets == whatshap stats phased + singletons	42182	42182	ok
+read length sets reach: HiFi median block (bp, whatshap stats) > Illumina's	91234.0	409.0	ok
+every pairwise score is invariant under flipping every phased genotype	True	True	ok
+hifiasm_vs_hifi: different genotypes	0	0	ok
+hifiasm_vs_hifi: switch error rate <= 0.05	0.0010213152270535056	0.05	ok
+hifiasm_vs_hifi: pairs assessed > 0	52873	>0	ok
+hifiasm_vs_illumina: different genotypes	0	0	ok
+hifiasm_vs_illumina: switch error rate <= 0.05	0.004098102263413404	0.05	ok
+hifiasm_vs_illumina: pairs assessed > 0	31722	>0	ok
+trio_strandseq_vs_hifi: different genotypes	0	0	ok
+trio_strandseq_vs_hifi: switch error rate <= 0.05	0.0008510864650655602	0.05	ok
+trio_strandseq_vs_hifi: pairs assessed > 0	37599	>0	ok
+trio_strandseq_vs_illumina: different genotypes	0	0	ok
+trio_strandseq_vs_illumina: switch error rate <= 0.05	0.004341100743475874	0.05	ok
+trio_strandseq_vs_illumina: pairs assessed > 0	20041	>0	ok
+check.py exit	0	0	ok

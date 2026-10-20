@@ -1,0 +1,218 @@
+[W::bcf_hdr_check_sanity] PS should be declared as Type=Integer
+[E::idx_find_and_load] Could not retrieve index file for 'hifiasm.chr20.vcf.gz'
+[E::idx_find_and_load] Could not retrieve index file for 'sst.chr20.vcf.gz'
+[E::idx_find_and_load] Could not retrieve index file for '/tmp/out/hifi.vcf.gz'
+[E::idx_find_and_load] Could not retrieve index file for '/tmp/out/ilmn.vcf.gz'
+Reading phasing from 'hifiasm.chr20.vcf.gz'
+Reading phasing from 'sst.chr20.vcf.gz'
+Reading phasing from '/tmp/out/hifi.vcf.gz'
+Reading phasing from '/tmp/out/ilmn.vcf.gz'
+Chromosomes present in all VCFs: chr20
+Comparing phasings for samples: INTEGRATION, HG002, HG002, HG002  (--ignore-sample-names selected)
+FILENAMES
+         hifiasm = hifiasm.chr20.vcf.gz
+  trio_strandseq = sst.chr20.vcf.gz
+            hifi = /tmp/out/hifi.vcf.gz
+        illumina = /tmp/out/ilmn.vcf.gz
+---------------- Chromosome chr20 ----------------
+VARIANT COUNTS (heterozygous / all): 
+            hifiasm:     53448 /     84998
+     trio_strandseq:     53448 /     84998
+               hifi:     53448 /     84998
+           illumina:     53448 /     84998
+              UNION:     53448 /     84998
+       INTERSECTION:     53448 /     84998
+PAIRWISE COMPARISON: hifiasm <--> trio_strandseq:
+         common heterozygous variants:     53448
+         (restricting to these below)
+      non-singleton blocks in hifiasm:        17
+                 --> covered variants:     53152
+non-singleton blocks in trio_strandseq:         1
+                 --> covered variants:     37814
+    non-singleton intersection blocks:         1
+                 --> covered variants:     37691
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     37690
+                        switch errors:        32
+                    switch error rate:     0.08%
+            switch/flip decomposition:      2/15
+                     switch/flip rate:     0.05%
+          Block-wise Hamming distance:        18
+      Block-wise Hamming distance [%]:     0.05%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:     37690
+                        switch errors:        32
+                    switch error rate:     0.08%
+            switch/flip decomposition:      2/15
+                     switch/flip rate:     0.05%
+                     Hamming distance:        18
+                 Hamming distance [%]:     0.05%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+PAIRWISE COMPARISON: hifiasm <--> hifi:
+         common heterozygous variants:     53448
+         (restricting to these below)
+      non-singleton blocks in hifiasm:        17
+                 --> covered variants:     53152
+         non-singleton blocks in hifi:       214
+                 --> covered variants:     53385
+    non-singleton intersection blocks:       215
+                 --> covered variants:     53088
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     52873
+                        switch errors:        54
+                    switch error rate:     0.10%
+            switch/flip decomposition:     12/21
+                     switch/flip rate:     0.06%
+          Block-wise Hamming distance:        43
+      Block-wise Hamming distance [%]:     0.08%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:      2214
+                        switch errors:         2
+                    switch error rate:     0.09%
+            switch/flip decomposition:       0/1
+                     switch/flip rate:     0.05%
+                     Hamming distance:         1
+                 Hamming distance [%]:     0.05%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+PAIRWISE COMPARISON: hifiasm <--> illumina:
+         common heterozygous variants:     53448
+         (restricting to these below)
+      non-singleton blocks in hifiasm:        17
+                 --> covered variants:     53152
+     non-singleton blocks in illumina:     10329
+                 --> covered variants:     42173
+    non-singleton intersection blocks:     10317
+                 --> covered variants:     42039
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     31722
+                        switch errors:       130
+                    switch error rate:     0.41%
+            switch/flip decomposition:    108/11
+                     switch/flip rate:     0.38%
+          Block-wise Hamming distance:       195
+      Block-wise Hamming distance [%]:     0.46%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:       111
+                        switch errors:         0
+                    switch error rate:     0.00%
+            switch/flip decomposition:       0/0
+                     switch/flip rate:     0.00%
+                     Hamming distance:         0
+                 Hamming distance [%]:     0.00%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+PAIRWISE COMPARISON: trio_strandseq <--> hifi:
+         common heterozygous variants:     53448
+         (restricting to these below)
+non-singleton blocks in trio_strandseq:         1
+                 --> covered variants:     37814
+         non-singleton blocks in hifi:       214
+                 --> covered variants:     53385
+    non-singleton intersection blocks:       199
+                 --> covered variants:     37798
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     37599
+                        switch errors:        32
+                    switch error rate:     0.09%
+            switch/flip decomposition:      0/16
+                     switch/flip rate:     0.04%
+          Block-wise Hamming distance:        16
+      Block-wise Hamming distance [%]:     0.04%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:      1435
+                        switch errors:         2
+                    switch error rate:     0.14%
+            switch/flip decomposition:       0/1
+                     switch/flip rate:     0.07%
+                     Hamming distance:         1
+                 Hamming distance [%]:     0.07%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+PAIRWISE COMPARISON: trio_strandseq <--> illumina:
+         common heterozygous variants:     53448
+         (restricting to these below)
+non-singleton blocks in trio_strandseq:         1
+                 --> covered variants:     37814
+     non-singleton blocks in illumina:     10329
+                 --> covered variants:     42173
+    non-singleton intersection blocks:      7601
+                 --> covered variants:     27642
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     20041
+                        switch errors:        87
+                    switch error rate:     0.43%
+            switch/flip decomposition:     55/16
+                     switch/flip rate:     0.35%
+          Block-wise Hamming distance:       105
+      Block-wise Hamming distance [%]:     0.38%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:        87
+                        switch errors:         0
+                    switch error rate:     0.00%
+            switch/flip decomposition:       0/0
+                     switch/flip rate:     0.00%
+                     Hamming distance:         0
+                 Hamming distance [%]:     0.00%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+PAIRWISE COMPARISON: hifi <--> illumina:
+         common heterozygous variants:     53448
+         (restricting to these below)
+         non-singleton blocks in hifi:       214
+                 --> covered variants:     53385
+     non-singleton blocks in illumina:     10329
+                 --> covered variants:     42173
+    non-singleton intersection blocks:     10333
+                 --> covered variants:     42153
+              ALL INTERSECTION BLOCKS: ---------
+    phased pairs of variants assessed:     31820
+                        switch errors:       159
+                    switch error rate:     0.50%
+            switch/flip decomposition:    111/24
+                     switch/flip rate:     0.42%
+          Block-wise Hamming distance:       206
+      Block-wise Hamming distance [%]:     0.49%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+           LARGEST INTERSECTION BLOCK: ---------
+    phased pairs of variants assessed:       111
+                        switch errors:         0
+                    switch error rate:     0.00%
+            switch/flip decomposition:       0/0
+                     switch/flip rate:     0.00%
+                     Hamming distance:         0
+                 Hamming distance [%]:     0.00%
+                  Different genotypes:         0
+              Different genotypes [%]:     0.00%
+MULTIWAY COMPARISON OF ALL PHASINGS:
+         common heterozygous variants:     53448
+         (restricting to these below)
+      non-singleton blocks in hifiasm:        17
+                 --> covered variants:     53152
+non-singleton blocks in trio_strandseq:         1
+                 --> covered variants:     37814
+         non-singleton blocks in hifi:       214
+                 --> covered variants:     53385
+     non-singleton blocks in illumina:     10329
+                 --> covered variants:     42173
+    non-singleton intersection blocks:      7598
+                 --> covered variants:     27609
+           Compared pairs of variants:     20011
+ALL AGREE
+{hifiasm,trio_strandseq,hifi,illumina} vs. {}:     19922    99.56%
+DISAGREEMENT
+{hifiasm,trio_strandseq,hifi} vs. {illumina}:        63     0.31%
+{hifiasm,trio_strandseq,illumina} vs. {hifi}:         4     0.02%
+{hifiasm,hifi,illumina} vs. {trio_strandseq}:        22     0.11%

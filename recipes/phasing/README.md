@@ -18,7 +18,7 @@ last_verified: 2026-09-22
 
 whatshap assigns heterozygous variants to haplotypes on Graviton4, scored against two haplotypes that existed before any read did. The catalog's first phasing recipe, for anyone who needs `1|0` rather than `0/1`.
 
-> **What this covers.** A 10 kb contig, two haplotypes differing at exactly 6 sites spaced 40 bp apart, 40× reads split between them. Read-backed phasing of one sample and scoring it with `whatshap compare`. Not pedigree phasing, population/reference-panel phasing, long reads, or haplotagging a BAM.
+> **What this covers.** A 10 kb contig, two haplotypes differing at exactly 6 sites spaced 40 bp apart, 40× reads split between them. Read-backed phasing of one sample and scoring it with `whatshap compare`. Not pedigree phasing, population/reference-panel phasing, or haplotagging a BAM; long reads at chromosome scale are in the [measured run](../../measurements/phasing-real/README.md).
 
 ## Run it
 
@@ -26,7 +26,6 @@ whatshap assigns heterozygous variants to haplotypes on Graviton4, scored agains
 for s in $(make -s spec RECIPE=phasing); do spawn task run --spec "$s" --wait; done
 bwa mem -R '@RG\tID:s1\tSM:sample1' ref.fa reads.fq > aln.sam   # SM must match the VCF sample
 samtools sort -o sample.bam aln.sam && samtools index sample.bam && samtools faidx ref.fa
-
 whatshap phase -o phased.vcf --reference ref.fa variants.vcf sample.bam
 whatshap compare --names truth,whatshap truth.vcf phased.vcf     # score it, don't diff it
 ```
@@ -38,7 +37,7 @@ Three tasks: bwa builds the fixture and aligns, samtools sorts and indexes, what
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | 6 het sites 40 bp apart | your VCF + BAM | **spacing is the whole game**: whatshap can only link variants that a single read (or pair) covers together. Sites further apart than your read length produce many small blocks, or none. |
-| 100 bp single-end reads | paired-end, or long reads | pairs extend linkage across the insert; PacBio/ONT is what makes chromosome-scale blocks possible. Same command. |
+| 100 bp single-end reads | paired-end, or long reads | pairs extend linkage across the insert; PacBio/ONT is what makes long blocks possible. Same command. [Measured](../../measurements/phasing-real/README.md) on HG002 chr20: HiFi median block 91 kb, switch error 0.10%; Illumina 2×250 409 bp, 0.41%. |
 | `whatshap phase` | `whatshap phase --ped` | with a trio, pedigree phasing links variants no read spans — a different and much longer reach. |
 | homozygous sites absent | your real VCF | whatshap only phases het calls; hom sites are passed through unchanged and are not "failures to phase". |
 
@@ -46,7 +45,13 @@ Three tasks: bwa builds the fixture and aligns, samtools sorts and indexes, what
 
 ## Shape, size, cost
 
-Three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m / 12m / 12m, caps $0.05 each. whatshap reports `Maximum memory usage: 0.053 GB` and sub-second phasing at this size; the windows are almost entirely image pull. **These timings are not compute cost.**
+Fixture: three tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m / 12m / 12m, caps $0.05 each; whatshap reports `Maximum memory usage: 0.053 GB` and phases in under a second, so the windows are image pull. **These timings are not compute cost.** Which box, [measured](../../measurements/phasing-real/README.md) on all 54,401 chr20 hets of HG002 (HiFi 49× and Illumina 69×, two single-threaded runs side by side on an `xlarge`, byte-identical output on every chip):
+
+| chip | instance | HiFi / Illumina phase | peak RSS | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `m8g.xlarge` | 190 / 325 s | 3.1 GB | 0.0214 |
+| Intel | `m8i.xlarge` | 179 / 298 s | 3.3 GB | 0.0226 |
+| **AMD** | `m8a.xlarge` | **134 / 217 s** | 3.3 GB | **0.0197** |
 
 <details>
 <summary>As shipped: zero switch errors, why the flipped phasing is also correct, the linkage requirement, pins</summary>
