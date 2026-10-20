@@ -263,7 +263,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
 | [laspy](../recipes/laspy/README.md) | Decodes the same 10.6M-point cloud PDAL already decoded on Graviton4 and checks the two agree, then holds LAS's integer quantisation to the spec. For anyone reading LiDAR on ARM. | pointcloud | stage | 2026-10-19 | 2026-10-12 | 2026-10-17 | 2026-10-18 |
-| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-19 | 2026-10-03 | 2026-10-17 | 2026-10-18 |
+| [pointcloud](../recipes/pointcloud/README.md) | `pdal` reads and decodes a real LiDAR point cloud — the ingest step of any point-cloud pipeline. | pointcloud | stage | 2026-10-20 | 2026-10-03 | 2026-10-17 | 2026-10-18 |
 
 ## popgen
 
