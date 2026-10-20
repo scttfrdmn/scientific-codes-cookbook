@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-gsw-real-compare",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"a9910edb1fa76136e66ae1f3406829e7eaeceaa9b13d5a4a1b1fb4752e44ac21  compare.py\" | sha256sum -c --quiet || { echo \"FAIL: compare.py does not match its pin\"; exit 1; }\nfor c in arm64 intel amd; do mkdir -p s/$c && tar -C s/$c -xf $c.tar && ls s/$c/sample | wc -l; done\npython3 -u compare.py s/arm64/sample s/intel/sample s/amd/sample > compare.txt 2>&1\nRC=$?\ncat compare.txt\ntest \"$RC\" = 0 || { echo \"FAIL: compare\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/sample.tar",
+      "destination": "/tmp/arm64.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/gsw-real/r1/sample.tar",
+      "destination": "/tmp/intel.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/gsw-real/r1/sample.tar",
+      "destination": "/tmp/amd.tar"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/compare.py",
+      "destination": "/tmp/compare.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/compare.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/compare/compare.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

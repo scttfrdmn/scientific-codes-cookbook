@@ -40,6 +40,16 @@ python3 -c "import gsw; print(gsw.rho(34.4682364305, 27.9964364121, 0.0))"
 
 One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. The arithmetic is milliseconds on a 45×3 cast; the recorded window is dominated by boot and the `climate` image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
+## Which box — [measured](../../measurements/gsw-real/README.md) (the whole Argo archive: 30,229 daily files, 1.196 billion levels, 64 processes)
+
+| chip | instance | convert wall | billed | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `r8g.16xlarge` | 46.1 s | 1370 s | **1.43** |
+| Xeon 6975P-C | `r8i.16xlarge` | 61.2 s | 1667 s | 2.06 |
+| EPYC 9R45 | `r8a.16xlarge` | **35.8 s** | 1303 s | 1.85 |
+
+**The conversion is 3–4% of the bill. Staging 215 GB is the rest**, and because staging is tmpfs (½ RAM), it is the staging that picks the 512 GiB box. Every round trip holds to within 4e-14 on all three chips. Intel and AMD give byte-identical output. Graviton4 differs from them by at most 2e-14 °C in CT, which is round-off: nothing accumulates.
+
 <details>
 <summary>As shipped: 822 published arrays, 9 functions at their own tolerances, two involutions, and a pinning mistake worth reading</summary>
 

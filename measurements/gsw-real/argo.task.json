@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-gsw-real",
+  "container": "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No PATH export: the aarchsci env's python is already first (see recipes/gsw).\nexport TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\nexport ARGO_DIR=/tmp/argo ARGO_PROCS=64\ncd /tmp\necho \"== staged bytes must match their pins ==\"\nT0=$(date +%s)\nsplit -n l/64 -d -a 3 pins.sha256 /tmp/pinpart.\nls /tmp/pinpart.* | xargs -P 64 -n 1 sha256sum -c --quiet || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"sha256 in $(( $(date +%s) - T0 ))s\"\n{ lscpu | grep -iE 'model name|^cpu\\(s\\)|thread\\(s\\) per core|numa node\\(s\\)'; grep MemTotal /proc/meminfo; df -h /tmp; } > cpu.txt 2>&1; cat cpu.txt\nT0=$(date +%s)\n# a backstop far inside the TTL: a stuck pool must not ride a 512 GiB box to its cost cap\ntimeout 40m python3 -u argo.py > gsw-argo.log 2>&1\nRC=$?\necho \"argo.py exit $RC in $(( $(date +%s) - T0 ))s\"\ncat gsw-argo.log\ndf -h /tmp\ntar -C /tmp -cf /tmp/sample.tar sample\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'GSW ARGO OK' gsw-argo.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 512,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/argo/",
+      "destination": "/tmp/argo/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/argo.py",
+      "destination": "/tmp/argo.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/gsw-argo.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/gsw-argo.log"
+    },
+    {
+      "source": "/tmp/gsw-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/gsw-results.tsv"
+    },
+    {
+      "source": "/tmp/gsw-years.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/gsw-years.tsv"
+    },
+    {
+      "source": "/tmp/gsw-perfile.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/gsw-perfile.tsv"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/cpu.txt"
+    },
+    {
+      "source": "/tmp/sample.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gsw-real/r1/sample.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}
