@@ -61,6 +61,7 @@ The real-workload batches found three more builds where the arm64 deficit comes 
 |---|---|---|---|
 | any pure-Python tool ([mageck](../measurements/mageck-real/README.md)) | conda-forge CPython cross-compiled from x86, so built **without PGO** | gzip line reading 2.56 M/s on Graviton4 vs 3.85 Intel, 5.02 AMD | [python-feedstock#955](https://github.com/conda-forge/python-feedstock/issues/955) |
 | [IQ-TREE](../measurements/iqtree-real/README.md) | the 128-bit `SSE2` likelihood kernel (x86 gets `AVX+FMA`) | AMD 2.8× Graviton4 per iteration | |
+| [RAxML-NG](../measurements/raxml-ng-real/README.md) | the `SSE3` likelihood kernel (x86 gets `AVX2`) | AMD 3.3× Graviton4 on the same search, same trees | |
 | [MrBayes](../measurements/mrbayes-real/README.md) | the non-SSE likelihood kernel (x86 gets the SSE one) | AMD 3.7× Graviton4 on the same 560,000 generations | |
 | R's `stats::cor`/`cov`, `sum`, `mean` ([why](r-long-double-on-arm64.md)) | `long double` is software 128-bit quad on aarch64 Linux | 9–55× slower; a `double` BLAS reduction is as fast as x86 | |
 
