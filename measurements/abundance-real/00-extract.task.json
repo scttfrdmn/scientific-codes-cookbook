@@ -1,0 +1,35 @@
+{
+  "task_id": "cookbook-abundance-real-extract",
+  "container": "quay.io/aarchbio/bracken@sha256:f2cf8671bef1b9892efeadfa4ee0a9c9b7c961704e0b2991ea1fb2258c838abd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; set +e so a failure reaches the line that reports it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out db\necho \"e592faea3e307f01b40d92e402a1707cefbfdd3f2b8acae886dd487eea5c73de  k2_standard_08gb_20250402.tar.gz\" > idx.sha256\nsha256sum -c idx.sha256 || { echo \"FAIL: the index tarball does not match its pin\"; exit 1; }\nT0=$(date +%s)\n# One gunzip pass; only the read-length distributions leave the archive. The 8 GB hash is never written.\ntar -xvzf k2_standard_08gb_20250402.tar.gz -C db --wildcards '*.kmer_distrib' > out/extracted.txt 2>&1\nrc=$?\ncat out/extracted.txt\necho \"tar_rc $rc extract_s $(( $(date +%s) - T0 ))\" | tee out/extract-time.txt\n[ \"$rc\" = 0 ] || { echo \"FAIL: tar exit $rc\"; exit 1; }\nfind db -name '*.kmer_distrib' -exec mv {} out/ \\;\nfor L in 100 150; do test -s out/database${L}mers.kmer_distrib || { echo \"FAIL: no database${L}mers.kmer_distrib\"; exit 1; }; done\ncd out && sha256sum *.kmer_distrib > kmer_distrib.sha256 && ls -l *.kmer_distrib > sizes.txt && wc -l *.kmer_distrib > lines.txt\ncat kmer_distrib.sha256 sizes.txt lines.txt\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 16,
+    "disk_gib": 20,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2/k2_standard_08gb_20250402.tar.gz",
+      "destination": "/tmp/k2_standard_08gb_20250402.tar.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/k2_standard_08gb_20250402/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

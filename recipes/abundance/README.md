@@ -27,8 +27,6 @@ kraken2 --db db --output mix.kraken --report mix.report mix.fasta
 bracken -d dbmin -i mix.report -o mix.bracken -r 100 -l S -t 1
 ```
 
-Two tasks: kraken2 builds the mixture and classifies it, Bracken re-estimates abundance from the report and both are checked against the planted proportions.
-
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -42,7 +40,17 @@ Two tasks: kraken2 builds the mixture and classifies it, Bracken re-estimates ab
 
 ## Shape, size, cost
 
-Two tasks: kraken2 on `c8g.large` with **8 GiB** (the index is 633 MiB on disk and loads into RAM, and [staging space is tmpfs at half of RAM](../../practices/container-path.md)), Bracken on `c8g.large` with 4 GiB. TTL 12m / 10m, caps $0.05 / $0.03. **These timings are not compute cost.**
+Two tasks, kraken2 classifying the mixture and Bracken re-estimating from its report, both checked against the planted proportions: kraken2 on `c8g.large` with **8 GiB** (the index is 633 MiB on disk and loads into RAM, and [staging space is tmpfs at half of RAM](../../practices/container-path.md)), Bracken on `c8g.large` with 4 GiB. TTL 12m / 10m, caps $0.05 / $0.03. **These timings are not compute cost.**
+
+## Which box — [measured](../../measurements/abundance-real/README.md) (two whole ZymoBIOMICS runs, 8.8M and 47.8M pairs)
+
+| chip | instance | Bracken wall, 4 calls | billed | peak RSS | **billed $/sample** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.large` | 0.73 s | 69 s | 32 MiB | 0.00076 |
+| Xeon 6975P-C | `c8i.large` | 0.71 s | 77 s | 32 MiB | 0.00100 |
+| **EPYC 9R45** | `c8a.large` | **0.49 s** | **48 s** | 32 MiB | **0.00072** |
+
+**Any box will do. Bracken is free; the boot is the bill.** Outputs are byte-identical on all three chips. At whole-run scale Bracken lifts *L. monocytogenes* from kraken2's 3.0% to **87.0%** against a published 89.1%, and conserves every read. It also inflates one absent genus 17×, to 1.66% of the even mock, which fails the closed-list check. Run it where the kraken2 reports already are.
 
 <details>
 <summary>As shipped: zero-to-1000 on the dominant species, a conservation identity, the misassignment Bracken cannot fix, pins</summary>

@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-abundance-real-bracken",
+  "container": "quay.io/aarchbio/bracken@sha256:f2cf8671bef1b9892efeadfa4ee0a9c9b7c961704e0b2991ea1fb2258c838abd",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; set +e so a failure reaches the line that reports it (spawn#707).\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\npython3 -u run.py 10 ERR2984773:8785731:150:even ERR2935805:47832553:100:log\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/ERR2984773.report.txt",
+      "destination": "/tmp/ERR2984773.report.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/ERR2935805.report.txt",
+      "destination": "/tmp/ERR2935805.report.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/k2_standard_08gb_20250402/database100mers.kmer_distrib",
+      "destination": "/tmp/database100mers.kmer_distrib"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/k2_standard_08gb_20250402/database150mers.kmer_distrib",
+      "destination": "/tmp/database150mers.kmer_distrib"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/kraken2-real/zymo.tsv",
+      "destination": "/tmp/zymo.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/run.py",
+      "destination": "/tmp/run.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/score.py",
+      "destination": "/tmp/score.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/abundance-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/abundance-real/zymo/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "20m",
+    "on_complete": "terminate",
+    "cost_limit": 0.03
+  }
+}
