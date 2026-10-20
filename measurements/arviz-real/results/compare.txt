@@ -1,0 +1,27 @@
+== Graviton4 vs x86_64
+reference draws: 390 scalars x 6 ArviZ statistics; bit-identical in 332 of 390 scalars; worst rel 2.115e-15 (mcycle_gp-accel_gp zgp_1[27] az_ess_bulk)
+fresh fits: draws byte-identical in 24 of 57 posteriors
+  on those: 3155 scalars, ArviZ and stansummary values bit-identical in 2494; worst rel 4.439e-15 (dogs-dogs p[6,24] az_ess_tail_default)
+  posteriors whose draws differ: 459 scalars; ArviZ R-hat differs by up to 3.464e-01 rel (bball_drive_event_0-hmm_drive_0 log_p_z_star) -- a path, reported
+partF_flagged_rhat_gt_1.01_arviz: arma-arma11,bball_drive_event_0-hmm_drive_0 | arma-arma11
+partF_flagged_rhat_gt_1.01_stansummary: bball_drive_event_0-hmm_drive_0 | none
+partR differs: partR_max_rel_ess_bulk_vs_R: 5.385e-15 | 5.384e-15
+partR differs: partR_max_rel_ess_tail95_vs_R: 6.145e-15 | 4.728e-15
+OK
+== Graviton4 vs amd
+reference draws: 390 scalars x 6 ArviZ statistics; bit-identical in 332 of 390 scalars; worst rel 2.115e-15 (mcycle_gp-accel_gp zgp_1[27] az_ess_bulk)
+fresh fits: draws byte-identical in 24 of 57 posteriors
+  on those: 3155 scalars, ArviZ and stansummary values bit-identical in 2494; worst rel 4.439e-15 (dogs-dogs p[6,24] az_ess_tail_default)
+  posteriors whose draws differ: 459 scalars; ArviZ R-hat differs by up to 3.464e-01 rel (bball_drive_event_0-hmm_drive_0 log_p_z_star) -- a path, reported
+partF_flagged_rhat_gt_1.01_arviz: arma-arma11,bball_drive_event_0-hmm_drive_0 | arma-arma11
+partF_flagged_rhat_gt_1.01_stansummary: bball_drive_event_0-hmm_drive_0 | none
+partR differs: partR_max_rel_ess_bulk_vs_R: 5.385e-15 | 5.384e-15
+partR differs: partR_max_rel_ess_tail95_vs_R: 6.145e-15 | 4.728e-15
+OK
+== Intel vs AMD (the same x86 env twin)
+reference draws: 390 scalars x 6 ArviZ statistics; bit-identical in 390 of 390 scalars; worst rel 0.000e+00 (Rate_1_data-Rate_1_model theta az_ess_bulk)
+fresh fits: draws byte-identical in 57 of 57 posteriors
+  on those: 4545 scalars, ArviZ and stansummary values bit-identical in 4545; worst rel 0.000e+00 (Rate_1_data-Rate_1_model theta az_mean)
+partF_flagged_rhat_gt_1.01_arviz: arma-arma11 | arma-arma11
+partF_flagged_rhat_gt_1.01_stansummary: none | none
+OK

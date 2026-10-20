@@ -9,7 +9,7 @@ last_verified_amd: 2026-10-18
 spawn_version: 0.126.1
 last_verified: 2026-10-11
 ---
-# ArviZ — R̂ bit-identical under a cube, and ESS against a closed form
+# ArviZ — bulk R̂ bit-identical under a cube, and ESS against a closed form
 
 Checks the MCMC diagnostics themselves on Graviton4, using chains with known autocorrelation so the right answers are derivable. For anyone doing Bayesian workflow on ARM.
 
@@ -19,12 +19,21 @@ Checks the MCMC diagnostics themselves on Graviton4, using chains with known aut
 make stage RECIPE=arviz     # once: the checks only — the draws are synthesised
 spawn task run --spec "$(make -s spec RECIPE=arviz)" --wait
 make ls RECIPE=arviz
-
 d = az.convert_to_dataset({"theta": draws})     # (chain, draw); NOT az.from_dict
 az.rhat(d)["theta"]        # 1.00039004683446020 — and identical for exp(θ) and θ³
 az.ess(d)["theta"]         # ESS/N → (1−ρ)/(1+ρ) for an AR(1) chain
 az.mcse(d)["theta"]        # == sd/√ess, to 7.6e-05
 ```
+
+## Which box — [measured](../../measurements/arviz-real/README.md) (all 57 posteriordb reference posteriors, 4 vCPU)
+
+| chip | instance | ArviZ | whole task (CmdStan + ArviZ) | billed $/result |
+|---|---|---|---|---|
+| Graviton4 | `m8g.xlarge` | 41.8 s | 1,128 s | 0.0600 |
+| Xeon 6975P-C | `m8i.xlarge` | 38.9 s | 1,261 s | 0.0773 |
+| **EPYC 9R45** | `m8a.xlarge` | **26.8 s** | **704 s** | **0.0502** |
+
+**ArviZ is 3–4% of the task, so pick the box for the sampler.** On real draws ArviZ's ESS and R̂ match `stansummary` and R's `posterior` to ~1e-14 on every chip, except for three definitions. `az.summary`'s `ess_tail` uses the 11%/89% quantiles, up to 40% off Stan's; call `az.ess(d, method="tail", prob=0.95)` to match. `az.mcse` uses split chains, up to 4% off Stan's MCSE. On a chain that never moves, `stansummary` gives R̂ = NaN and ArviZ gives 1.52.
 
 ## Make it yours
 
@@ -34,9 +43,8 @@ az.mcse(d)["theta"]        # == sd/√ess, to 7.6e-05
 | synthetic AR(1) draws | a real sampler's draws | you lose the closed form. The point of AR(1) is that `(1−ρ)/(1+ρ)` says what ESS *should* be, so the estimator is the thing under test. |
 | the ρ = −0.5 rung | positive ρ only | **keep it.** It is the rung that shows **ESS > N** is legitimate — 2.774 against a closed form of 3.0. |
 | the badly-mixed control | the invariance alone | without it, "R̂ is invariant" would also hold for an estimator that returns a constant. |
-| these diagnostics | posterior values | [cmdstan](../cmdstan/README.md) already checks a posterior against conjugate arithmetic; this page is about the estimators, not the model. |
 
-**Leave the fixtures.** Nothing is fetched and no sampler runs: the chains are built with a chosen autocorrelation so every reference is an exact invariance or a closed form. **Scale it** by pointing the same checks at your own `InferenceData` — the invariance travels, the closed form doesn't.
+**Leave the fixtures.** Nothing is fetched and no sampler runs: the chains are built with a chosen autocorrelation so every reference is an exact invariance or a closed form. **Scale it** by pointing the same checks at your own `InferenceData` — the closed form doesn't travel. On 1,356 real scalars ESS and the bulk half of R̂ stay bit-identical under a cube. The reported R̂ does not: its folded half moved it in 1,000 of them.
 
 ## Shape, size, cost
 
@@ -65,10 +73,13 @@ One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_l
 them, so there is no path here to diverge. The twin differs from arm64 only in fonttools, libglib
 and libsqlite ([lock](../../envs-x86_64/bayes-f84fca06ee06.linux-64.lock)).
 
-### The exact one: R̂ cannot move under a monotone map
+### The exact one: bulk R̂ cannot move under a monotone map
 
-Rank-normalised split-R̂ is computed from the **ranks** of the draws, so only their ordering can
-affect it. Measured on the same chains transformed three ways:
+The bulk half of rank-normalised split-R̂ is computed from the **ranks** of the draws, so only their
+ordering can affect it. The reported R̂ is the max of that and a **folded** half, which ranks
+|θ − median| and so *can* move under a nonlinear map; on these chains the bulk half dominates, which
+is why the reported value below is unmoved. On 1,356 real scalars the folded half moved the reported
+R̂ in 1,000 under a cube, by up to 4.3e-3 ([arviz-real](../../measurements/arviz-real/README.md)). Measured on the same chains transformed three ways:
 
 ```text
 R̂(θ)                   1.00039004683446020
@@ -77,7 +88,7 @@ R̂(exp θ)               1.00039004683446020     diff 0.000e+00
 R̂(θ³)                  1.00039004683446020     diff 0.000e+00
 ```
 
-Bit-identical to seventeen digits, including under a **cube** — a nonlinear monotone map. An
+Bit-identical to seventeen digits on this fixture, including under a **cube** — a nonlinear monotone map. An
 implementation that normalised wrongly, or that fell back to a non-rank variance ratio, could not
 satisfy this however plausible its output looked. Same shape as Moran's I affine invariance in
 [geo-ml](../geo-ml/README.md), one field over.

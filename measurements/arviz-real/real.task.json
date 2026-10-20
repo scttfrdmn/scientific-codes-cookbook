@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-arviz-real-pdb",
+  "container": "quay.io/aarchsci/bayes@sha256:583447048ee2ed011ec822aa15a68c5248842c5b22959bdf98da5d3e9302b46d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c --quiet pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\necho \"pins: $(grep -c . pins.sha256) files verified\"\nbash real.sh /tmp/pdb 4\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cmdstan-real/pdb/",
+      "destination": "/tmp/pdb/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/arviz-real/arviz_real.py",
+      "destination": "/tmp/arviz_real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/arviz-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/arviz-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/arviz-real/pdb/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
