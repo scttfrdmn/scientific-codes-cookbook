@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-zarr-dask-real",
+  "container": "quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df293666277497bccb297d966797fc5a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash run.sh zarr 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/tas.zarr/",
+      "destination": "/tmp/tas.zarr/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/areacella.zarr/",
+      "destination": "/tmp/areacella.zarr/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/zarr-dask-real/ncref/",
+      "destination": "/tmp/ncref/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/ncref.py",
+      "destination": "/tmp/ncref.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/tas.md5",
+      "destination": "/tmp/tas.md5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/zarr-dask-real/areacella.md5",
+      "destination": "/tmp/areacella.md5"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/zarr-dask-real/zarr/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}

@@ -19,12 +19,19 @@ Writes one array at four chunk shapes on Graviton4 and checks all four read back
 make stage RECIPE=zarr-dask     # once: the checks only — the arrays are synthesised
 spawn task run --spec "$(make -s spec RECIPE=zarr-dask)" --wait
 make ls RECIPE=zarr-dask
-
 z = zarr.create_array(store="s.zarr", shape=a.shape, chunks=(17, 13), dtype=a.dtype)
 z[:] = a ; np.array_equal(z[...], a)                  # True at every chunk shape
 da.from_array(a, chunks=(64, 64)).sum().compute()     # NOT numpy's sum — 1 ULP out
 zarr.create_array(..., chunks=(64, 64), shards=(256, 256))   # 65 objects -> 5
 ```
+
+## Which box — [measured](../../measurements/zarr-dask-real/README.md): AMD, then Graviton4 at 10% more (165 years of daily CMIP6 `tas`, 12.49 GB, seven rewrites bit-identical, every float result identical across chips)
+
+| chip | instance | tool wall | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| Graviton4 | `r8g.4xlarge` | 263 s | 0.9426 | 0.104 |
+| Xeon 6975P-C | `r8i.4xlarge` | 319 s | 1.1114 | 0.131 |
+| **EPYC 9R45** | `r8a.4xlarge` | **182 s** | 1.2781 | **0.094** |
 
 ## Make it yours
 
@@ -237,8 +244,9 @@ writers to one store, so zarr's write-locking semantics are untouched. **Dimensi
 coordinates and `xarray`**, which is how most zarr data is actually consumed —
 [climate](../climate/README.md) and [cdo-nco](../cdo-nco/README.md) cover the netCDF side of
 that. **Consolidated metadata** and the open/listing cost of a many-array group.
-**Resizing and appending** (`z.resize`, `da.concatenate` into a store), the common path for
-time-series growth. **Real slide pyramids**: three levels of a synthetic 512×512, not the
+**Resizing** (`z.resize`, `da.concatenate` into a store). Appending, the common path for
+time-series growth, is covered only by the [real workload](../../measurements/zarr-dask-real/README.md),
+which grows a store one ESGF file at a time with `z.append`. **Real slide pyramids**: three levels of a synthetic 512×512, not the
 multi-gigabyte pyramidal TIFFs [pathology](../pathology/README.md) stages, where level-0
 chunking actually decides whether a viewer is usable.
 

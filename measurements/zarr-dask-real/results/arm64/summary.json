@@ -1,0 +1,613 @@
+{
+ "checks": [
+  [
+   "store metadata",
+   true,
+   "(60225, 180, 288) chunks (838, 180, 288) float32 v2"
+  ],
+  [
+   "72 chunk objects, the last one ragged (60225 = 71 x 838 + 727)",
+   true,
+   "72 objects, last 727 days"
+  ],
+  [
+   "decoded array is C-contiguous little-endian float32",
+   true,
+   ""
+  ],
+  [
+   "Zarr store == ESGF netCDF, sha256 of all 12.49 GB",
+   true,
+   "c69468cd709f9583"
+  ],
+  [
+   "every value an integer at 2**24, so integer sums are exact",
+   true,
+   "min 185.9653 K max 321.0153 K"
+  ],
+  [
+   "every (day, lat-row) exact sum == netCDF's, 10.8M of them",
+   true,
+   ""
+  ],
+  [
+   "exact total == netCDF's",
+   true,
+   "14496831323174129664 / 2**24"
+  ],
+  [
+   "rows and cells agree on the exact total",
+   true,
+   ""
+  ],
+  [
+   "time: zarr int days since 12:00 == netCDF days since 00:00 minus 0.5, all 60225",
+   true,
+   "0 .. 60224"
+  ],
+  [
+   "noleap: 165 years x 365 days",
+   true,
+   ""
+  ],
+  [
+   "time_bnds == netCDF's",
+   true,
+   ""
+  ],
+  [
+   "lat == netCDF's",
+   true,
+   ""
+  ],
+  [
+   "lat_bnds == netCDF's",
+   true,
+   ""
+  ],
+  [
+   "lon == netCDF's",
+   true,
+   ""
+  ],
+  [
+   "lon_bnds == netCDF's",
+   true,
+   ""
+  ],
+  [
+   "lat bounds contiguous, pole to pole",
+   true,
+   ""
+  ],
+  [
+   "lon bounds contiguous, 0..360, uniform 1.25 deg to 1e-12",
+   true,
+   "max |width - 1.25| 5.7e-14 deg"
+  ],
+  [
+   "cell weights telescope to sin(90) - sin(-90) = 2",
+   true,
+   "0.000e+00"
+  ],
+  [
+   "areacella == spherical cell area (R = 6371 km) rounded to float32, all 51,840 cells",
+   true,
+   "max rel 5.326e-08 <= 2**-24 = 5.960e-08"
+  ],
+  [
+   "dask annual coarsen == numpy, all 165 x 51,840 cells, exact",
+   true,
+   ""
+  ],
+  [
+   "annual totals conserve every cell's 165-year total, exact",
+   true,
+   ""
+  ],
+  [
+   "v2-native: 72 chunks on disk",
+   true,
+   "72 data objects, 7.71 GB"
+  ],
+  [
+   "v2-native: bit-identical to the published store",
+   true,
+   "72 regions"
+  ],
+  [
+   "v2-native: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v2-native: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v2-native: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v2-native: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v2-native: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v2-native: control -- float32 accumulation misses that bound",
+   true,
+   "5.45e-08, global mean off by 1.51e-05 K"
+  ],
+  [
+   "v2-native: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v2-native: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.54e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-native: 72 chunks on disk",
+   true,
+   "72 data objects, 7.71 GB"
+  ],
+  [
+   "v3-native: bit-identical to the published store",
+   true,
+   "72 regions"
+  ],
+  [
+   "v3-native: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-native: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-native: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-native: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-native: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-native: control -- float32 accumulation misses that bound",
+   true,
+   "5.45e-08, global mean off by 1.51e-05 K"
+  ],
+  [
+   "v3-native: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-native: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.54e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-zstd: 72 chunks on disk",
+   true,
+   "72 data objects, 10.08 GB"
+  ],
+  [
+   "v3-zstd: bit-identical to the published store",
+   true,
+   "72 regions"
+  ],
+  [
+   "v3-zstd: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-zstd: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-zstd: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-zstd: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-zstd: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-zstd: control -- float32 accumulation misses that bound",
+   true,
+   "5.45e-08, global mean off by 1.51e-05 K"
+  ],
+  [
+   "v3-zstd: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-zstd: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.54e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-timeseries: 90 chunks on disk",
+   true,
+   "90 data objects, 7.66 GB"
+  ],
+  [
+   "v3-timeseries: bit-identical to the published store",
+   true,
+   "90 regions"
+  ],
+  [
+   "v3-timeseries: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-timeseries: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-timeseries: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-timeseries: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-timeseries: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-timeseries: control -- float32 accumulation misses that bound",
+   true,
+   "9.72e-08, global mean off by 2.69e-05 K"
+  ],
+  [
+   "v3-timeseries: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-timeseries: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.56e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-ragged: 2440 chunks on disk",
+   true,
+   "2440 data objects, 7.77 GB"
+  ],
+  [
+   "v3-ragged: bit-identical to the published store",
+   true,
+   "2440 regions"
+  ],
+  [
+   "v3-ragged: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-ragged: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-ragged: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-ragged: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-ragged: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-ragged: control -- float32 accumulation misses that bound",
+   true,
+   "2.13e-08, global mean off by 5.90e-06 K"
+  ],
+  [
+   "v3-ragged: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-ragged: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.56e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-sharded: 17 shards on disk",
+   true,
+   "17 data objects, 7.67 GB"
+  ],
+  [
+   "v3-sharded: bit-identical to the published store",
+   true,
+   "17 regions"
+  ],
+  [
+   "v3-sharded: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-sharded: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-sharded: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-sharded: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-sharded: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-sharded: control -- float32 accumulation misses that bound",
+   true,
+   "2.13e-08, global mean off by 5.90e-06 K"
+  ],
+  [
+   "v3-sharded: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-sharded: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.56e-16 <= 7.40e-15"
+  ],
+  [
+   "v3-append: 72 chunks on disk",
+   true,
+   "72 data objects, 7.71 GB"
+  ],
+  [
+   "v3-append: bit-identical to the published store",
+   true,
+   "72 regions"
+  ],
+  [
+   "v3-append: point time series and day maps == numpy",
+   true,
+   ""
+  ],
+  [
+   "v3-append: exact (day, row) integer sums == reference, all 10.8M",
+   true,
+   ""
+  ],
+  [
+   "v3-append: min/max bit-exact",
+   true,
+   ""
+  ],
+  [
+   "v3-append: argmax of the unique maximum == numpy",
+   true,
+   "2867408966"
+  ],
+  [
+   "v3-append: float64 total within 2*log2(n)*eps of exact",
+   true,
+   "0.00e+00 <= 1.40e-14, 0 ulp from correctly rounded"
+  ],
+  [
+   "v3-append: control -- float32 accumulation misses that bound",
+   true,
+   "5.45e-08, global mean off by 1.51e-05 K"
+  ],
+  [
+   "v3-append: every daily float64 sum EXACT (no rounding is possible)",
+   true,
+   "max rel err 0.0e+00"
+  ],
+  [
+   "v3-append: every daily area-weighted sum within (2*log2(51840)+2)*eps",
+   true,
+   "max 3.54e-16 <= 7.40e-15"
+  ],
+  [
+   "determinism: the same dask reduction twice is bit-identical",
+   true,
+   ""
+  ]
+ ],
+ "layouts": {
+  "v2-native": {
+   "write_s": 3.9,
+   "files": 74,
+   "bytes": 7709636469,
+   "verify_s": 16.6,
+   "chunk_objects_byte_identical_to_published": 0,
+   "point_series_s": 2.182,
+   "day_map_s": 0.202,
+   "reduce_s": 3.8,
+   "dask_tasks_per_input": 72,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e300000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "94ed51eaaf4800cb",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "5.454e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 26.55
+  },
+  "v3-native": {
+   "write_s": 3.9,
+   "files": 73,
+   "bytes": 7709636877,
+   "verify_s": 16.5,
+   "chunk_objects_byte_identical_to_v2_rewrite": 72,
+   "point_series_s": 2.185,
+   "day_map_s": 0.206,
+   "reduce_s": 4.0,
+   "dask_tasks_per_input": 72,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e300000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "94ed51eaaf4800cb",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "5.454e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 26.55
+  },
+  "v3-zstd": {
+   "write_s": 5.6,
+   "files": 73,
+   "bytes": 10083669848,
+   "verify_s": 18.3,
+   "point_series_s": 2.528,
+   "day_map_s": 0.23,
+   "reduce_s": 4.0,
+   "dask_tasks_per_input": 72,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e300000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "94ed51eaaf4800cb",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "5.454e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 26.55
+  },
+  "v3-timeseries": {
+   "write_s": 4.3,
+   "files": 91,
+   "bytes": 7657588462,
+   "verify_s": 18.3,
+   "point_series_s": 0.162,
+   "day_map_s": 2.188,
+   "reduce_s": 4.1,
+   "dask_tasks_per_input": 90,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e2c0000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "4d511370c0bf1e0c",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "9.715e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 30.68
+  },
+  "v3-ragged": {
+   "write_s": 6.0,
+   "files": 2441,
+   "bytes": 7774868891,
+   "verify_s": 15.7,
+   "point_series_s": 0.041,
+   "day_map_s": 0.025,
+   "reduce_s": 5.9,
+   "dask_tasks_per_input": 2440,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e2e0000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "bce745979291496f",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "2.131e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 30.68
+  },
+  "v3-sharded": {
+   "write_s": 6.0,
+   "files": 18,
+   "bytes": 7666296546,
+   "verify_s": 7.3,
+   "point_series_s": 0.07,
+   "day_map_s": 0.012,
+   "reduce_s": 7.0,
+   "dask_tasks_per_input": 2640,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e2e0000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "7267e7e61e4063f1",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "2.131e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 46.91
+  },
+  "v3-append": {
+   "appends": 9,
+   "write_s": 3.4,
+   "files": 73,
+   "bytes": 7709636877,
+   "verify_s": 16.6,
+   "point_series_s": 2.096,
+   "day_map_s": 0.207,
+   "reduce_s": 4.0,
+   "dask_tasks_per_input": 72,
+   "tot64": "0x1.925e2e8fd519ap+39",
+   "tot32": "0x1.925e300000000p+39",
+   "day64": "0e0a03442b1ced68",
+   "wsum": "94ed51eaaf4800cb",
+   "tot64_be": "0.000e+00",
+   "tot32_be": "5.454e-08",
+   "day64_max_be": "0.000e+00",
+   "rss_gib": 46.91
+  }
+ },
+ "obs": {
+  "decode_whole_store_s": 3.1,
+  "daily_float64_sums_exact_by_construction": true,
+  "global_max_ties": 1,
+  "areacella_sum_over_4piR2_minus_1(R=6371km)": "5.131e-10",
+  "global_mean_tas_1850_1900_K": 285.917,
+  "global_mean_tas_1995_2014_K": 286.6355,
+  "warming_1995_2014_minus_1850_1900_K": 0.7185,
+  "phase1_s": 21.4,
+  "rss_after_phase1_gib": 14.79,
+  "distinct_tot64_across_7_layouts": 1,
+  "distinct_tot32_across_7_layouts": 3,
+  "distinct_day64_across_7_layouts": 1,
+  "distinct_wsum_across_7_layouts": 4
+ },
+ "wall_s": 263.2,
+ "ru_maxrss_gib": 46.91,
+ "ok": true
+}
