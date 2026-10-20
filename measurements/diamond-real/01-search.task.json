@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-diamond-real-search",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 2f76a49bf044098e3e4b4c6e915b2f5aa1bb51b59c6897b954edb10c97b5388c search.sh; printf '%s  %s\\n' eccd183211432073516ad221d5e621ce5cccb59cfaf30188d5f40906d1018710 pins.sha256; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/search.sh 16\n"
+  ],
+  "container": "quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "disk_gib": 120,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/search.sh",
+      "destination": "/tmp/search.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/uniprot-2026_03/uniref50.fasta.gz",
+      "destination": "/tmp/uniref50.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/uniprot-2026_03/uniprot_sprot.fasta.gz",
+      "destination": "/tmp/uniprot_sprot.fasta.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/uniprot-2026_03/HUMAN_9606_idmapping_selected.tab.gz",
+      "destination": "/tmp/HUMAN_9606_idmapping_selected.tab.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/search/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8h",
+    "on_complete": "terminate",
+    "cost_limit": 3.5
+  }
+}

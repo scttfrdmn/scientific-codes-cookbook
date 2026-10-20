@@ -1,0 +1,32 @@
+makedb_s            121
+search_s            5371   (16 threads)
+db_sequences        38840027   want == release note 38840027 == FASTA headers (EXACT)
+fasta_headers       38840027
+duplicate_db_ids    0   want 0
+db_letters          12182780325   want == residues counted from the FASTA (EXACT)
+fasta_residues      12182780325
+dmnd_sha256         df878d24f0b98a37c0c9d0921095533dabcdbe453bbef0e18c20dd1af3920c1b
+queries             20431   want == UniProt's 20431 reviewed human entries (EXACT)
+duplicate_queries   0   want 0
+query_letters       11418237
+queries_mapped      20423   want == queries - short_queries
+short_queries       8   (< 11 residues: UniRef leaves these out)
+unmapped_long       0   want 0 (every query of >= 11 residues has a UniRef50 cluster)
+mapped_cluster_absent 0   want 0 (every cluster named by idmapping is in the FASTA)
+representative_queries 17293
+rep_cluster_mismatch 0   want 0 (a representative's cluster is named after it)
+queries_aligned_log 20383   want == queries_with_hit (EXACT)
+queries_with_hit    20383
+hit_rows            8107585
+qlen_mismatch_rows  0   want 0 (every row's qlen == its query's length)
+reps_with_hit       17271
+self_rows           17271
+self_reps           17271   want == reps_with_hit (EXACT: a representative that hits anything hits itself)
+self_100pct         17271   want == self_rows (EXACT)
+full_length_self    16654   OBSERVATION
+own_cluster_hit     20336   OBSERVATION (queries whose hits include UniProt's own cluster for them)
+hits_sha256         3a839206504e3b35460afc656ac9116fcf8d22ca981c7f139e64e2276ba1fa58
+pairs               8107585
+pairs_sha256        1218c8794083234ea186ced08201966afcf2618fc8b864cb8ad438faa8c6a7dd
+self_set_sha256     2b266fe538ccf8a92d686834afc10d32517368e7787cad293de75df0e3a5620c
+CHECKS PASSED

@@ -1,0 +1,67 @@
+{
+  "task_id": "cookbook-diamond-real-compare",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 40c487bdd23c23190d6296a549acd3a57b27971027c2736f2d06903bcf4e0f62 compare.sh; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/compare.sh\n"
+  ],
+  "container": "quay.io/aarchbio/diamond@sha256:6356f5b243c35bf7fd8a9b8f3962f96c2693d8d593cba90de21fa508c6ce79f5",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/compare.sh",
+      "destination": "/tmp/compare.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/search/hits.tsv.gz",
+      "destination": "/tmp/arm64.hits.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/search/self.txt",
+      "destination": "/tmp/arm64.self.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/search-run1/hits.tsv.gz",
+      "destination": "/tmp/arm64run1.hits.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/search-run1/self.txt",
+      "destination": "/tmp/arm64run1.self.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/diamond-real/search/hits.tsv.gz",
+      "destination": "/tmp/x86_64.hits.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/diamond-real/search/self.txt",
+      "destination": "/tmp/x86_64.self.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/diamond-real/search/hits.tsv.gz",
+      "destination": "/tmp/amd.hits.tsv.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/diamond-real/search/self.txt",
+      "destination": "/tmp/amd.self.txt"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/diamond-real/compare/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

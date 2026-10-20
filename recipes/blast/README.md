@@ -13,7 +13,7 @@ last_verified: 2026-10-01
 
 Searches 1000 query proteins against all 382,428 Ensembl 116 peptides in 156 s. For anyone sizing a homology search, or choosing between BLAST+ and DIAMOND.
 
-> **[DIAMOND does the same search in 19 s](../diamond/README.md)** — 8.2× faster for 0.43% of the self-hits. This page is the reference the fast tool is measured against.
+> **[DIAMOND does the same search in 5 s](../diamond/README.md)** — 31× faster for 0.43% of the self-hits. This page is the reference the fast tool is measured against.
 
 ## Run it
 
@@ -56,7 +56,7 @@ DIAMOND comparison both transfer. **Scale it** by query count, which is the axis
 | | search | $/search | hit rows |
 |---|---|---|---|
 | **BLAST+**, 16 threads | **156 s** | **0.0277** | 320,305 |
-| [DIAMOND](../diamond/README.md) `--very-sensitive` | 19 s | 0.0034 | — |
+| [DIAMOND](../diamond/README.md) `--very-sensitive`, 16 threads | 5 s | 0.0009 | 131,047 |
 
 ### The checks
 

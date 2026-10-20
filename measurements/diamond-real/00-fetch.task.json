@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-diamond-real-fetch",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\nexport PATH=/usr/local/bin:/opt/conda/bin:$PATH HOME=/tmp TMPDIR=/tmp\ncd /tmp\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 08bbeb45c2aea944c8c9a491b56c097479fc33af0e5ed7ff4b14b99a0dfd6bbf fetch.py; } > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\npython3 -u fetch.py 2>&1 | tee /tmp/out/fetch.log\ntest \"${PIPESTATUS[0]}\" = 0 && grep -q 'FETCH OK' /tmp/out/fetch.log || { echo 'FAIL: fetch'; exit 1; }\n"
+  ],
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/diamond-real/uniprot-2026_03/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}
