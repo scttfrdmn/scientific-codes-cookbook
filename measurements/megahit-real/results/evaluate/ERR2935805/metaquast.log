@@ -1,0 +1,232 @@
+/opt/conda/bin/metaquast.py ERR2935805.arm64.final.contigs.fa ERR2935805.arm64-repeat.final.contigs.fa ERR2935805.x86_64.final.contigs.fa ERR2935805.amd.final.contigs.fa -r refs/Bacillus_subtilis.fasta,refs/Cryptococcus_neoformans.fasta,refs/Enterococcus_faecalis.fasta,refs/Escherichia_coli.fasta,refs/Lactobacillus_fermentum.fasta,refs/Listeria_monocytogenes.fasta,refs/Pseudomonas_aeruginosa.fasta,refs/Saccharomyces_cerevisiae.fasta,refs/Salmonella_enterica.fasta,refs/Staphylococcus_aureus.fasta -t 8 -o mq-ERR2935805 --labels arm64,arm64-repeat,x86_64,amd --no-icarus --no-plots
+
+Version: 5.3.0
+
+System information:
+  OS: Linux-6.18.54-121.166.amzn2023.aarch64-aarch64-with-glibc2.36 (linux_64)
+  Python version: 3.13.14
+  CPUs number: 8
+
+Started: 2026-10-20 03:50:53
+
+Logging to /tmp/mq-ERR2935805/metaquast.log
+
+Reference(s):
+  refs/Bacillus_subtilis.fasta ==> Bacillus_subtilis
+  refs/Cryptococcus_neoformans.fasta ==> Cryptococcus_neoformans
+  refs/Enterococcus_faecalis.fasta ==> Enterococcus_faecalis
+  refs/Escherichia_coli.fasta ==> Escherichia_coli
+  refs/Lactobacillus_fermentum.fasta ==> Lactobacillus_fermentum
+  refs/Listeria_monocytogenes.fasta ==> Listeria_monocytogenes
+  refs/Pseudomonas_aeruginosa.fasta ==> Pseudomonas_aeruginosa
+  refs/Saccharomyces_cerevisiae.fasta ==> Saccharomyces_cerevisiae
+  refs/Salmonella_enterica.fasta ==> Salmonella_enterica
+  refs/Staphylococcus_aureus.fasta ==> Staphylococcus_aureus
+  All references were combined in combined_reference.fasta
+
+Contigs:
+  Pre-processing...
+  1  ERR2935805.arm64.final.contigs.fa ==> arm64
+  2  ERR2935805.arm64-repeat.final.contigs.fa ==> arm64-repeat
+  3  ERR2935805.x86_64.final.contigs.fa ==> x86_64
+  4  ERR2935805.amd.final.contigs.fa ==> amd
+
+Starting quast.py for the combined reference...
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --combined-ref --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A --ls solid,solid,solid,solid --ambiguity-usage all ERR2935805.arm64.final.contigs.fa ERR2935805.arm64-repeat.final.contigs.fa ERR2935805.x86_64.final.contigs.fa ERR2935805.amd.final.contigs.fa -R /tmp/mq-ERR2935805/quast_corrected_input/combined_reference.fasta -o /tmp/mq-ERR2935805/combined_reference --labels "arm64, arm64-repeat, x86_64, amd"
+
+Started: 2026-10-20 03:50:55
+
+Logging to /tmp/mq-ERR2935805/combined_reference/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: all, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2935805/quast_corrected_input/combined_reference.fasta ==> combined_reference
+
+Contigs:
+  Pre-processing...
+  1  ERR2935805.arm64.final.contigs.fa ==> arm64
+  2  ERR2935805.arm64-repeat.final.contigs.fa ==> arm64-repeat
+  3  ERR2935805.x86_64.final.contigs.fa ==> x86_64
+  4  ERR2935805.amd.final.contigs.fa ==> amd
+
+2026-10-20 03:50:55
+Running Basic statistics processor...
+  Reference genome:
+    combined_reference.fasta, length = 73015790, num fragments = 7218, GC % = 47.01
+WARNING:   Reference genome is fragmented. You may consider rerunning QUAST using --fragmented option. QUAST will try to detect misassemblies caused by the fragmentation and mark them fake (will be excluded from # misassemblies).
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+  Calculating N50 and L50...
+    1  arm64, N50 = 93972, L50 = 45, auN = 172624.1, Total length = 22047122, GC % = 47.94, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 93972, L50 = 45, auN = 172624.1, Total length = 22047122, GC % = 47.94, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 93972, L50 = 45, auN = 172565.3, Total length = 22054802, GC % = 47.94, # N's per 100 kbp =  0.00
+    4  amd, N50 = 93972, L50 = 45, auN = 172565.3, Total length = 22054802, GC % = 47.94, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:58
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  1  Logging to files /tmp/mq-ERR2935805/combined_reference/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  1  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  arm64-repeat
+  2  Logging to files /tmp/mq-ERR2935805/combined_reference/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  2  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  3  x86_64
+  3  Logging to files /tmp/mq-ERR2935805/combined_reference/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  4  amd
+  4  Logging to files /tmp/mq-ERR2935805/combined_reference/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  Analysis is finished.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  4  Analysis is finished.
+  Information about interspecies translocations by references for arm64 is saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/interspecies_translocations_by_refs_arm64.info
+  Information about interspecies translocations by references for arm64-repeat is saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/interspecies_translocations_by_refs_arm64-repeat.info
+  Information about interspecies translocations by references for x86_64 is saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/interspecies_translocations_by_refs_x86_64.info
+  Information about interspecies translocations by references for amd is saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/interspecies_translocations_by_refs_amd.info
+  Creating total report...
+    saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2935805/combined_reference/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:51:12
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 768341, NA50 = 90242, LA50 = 46
+  2  arm64-repeat, Largest alignment = 768341, NA50 = 90242, LA50 = 46
+  3  x86_64, Largest alignment = 768341, NA50 = 90242, LA50 = 46
+  4  amd, Largest alignment = 768341, NA50 = 90242, LA50 = 46
+Done.
+
+2026-10-20 03:51:12
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  2  Analysis is finished.
+  1  Analysis is finished.
+  4  Analysis is finished.
+  3  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:51:21
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2935805/combined_reference/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2935805/combined_reference/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2935805/combined_reference/report.html
+
+Partitioning contigs into bins aligned to each reference..
+  processing arm64
+  processing arm64-repeat
+  processing x86_64
+  processing amd
+
+Run QUAST on different references in parallel..
+
+Starting quast.py for the contigs aligned to Bacillus_subtilis... (logging to /tmp/mq-ERR2935805/runs_per_reference/Bacillus_subtilis/quast.log)
+
+No contigs were aligned to the reference Cryptococcus_neoformans, skipping..
+
+Starting quast.py for the contigs aligned to Enterococcus_faecalis... (logging to /tmp/mq-ERR2935805/runs_per_reference/Enterococcus_faecalis/quast.log)
+
+Starting quast.py for the contigs aligned to Escherichia_coli... (logging to /tmp/mq-ERR2935805/runs_per_reference/Escherichia_coli/quast.log)
+
+Starting quast.py for the contigs aligned to Lactobacillus_fermentum... (logging to /tmp/mq-ERR2935805/runs_per_reference/Lactobacillus_fermentum/quast.log)
+
+Starting quast.py for the contigs aligned to Listeria_monocytogenes... (logging to /tmp/mq-ERR2935805/runs_per_reference/Listeria_monocytogenes/quast.log)
+
+Starting quast.py for the contigs aligned to Pseudomonas_aeruginosa... (logging to /tmp/mq-ERR2935805/runs_per_reference/Pseudomonas_aeruginosa/quast.log)
+
+Starting quast.py for the contigs aligned to Saccharomyces_cerevisiae... (logging to /tmp/mq-ERR2935805/runs_per_reference/Saccharomyces_cerevisiae/quast.log)
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+
+Starting quast.py for the contigs aligned to Salmonella_enterica... (logging to /tmp/mq-ERR2935805/runs_per_reference/Salmonella_enterica/quast.log)
+  WARNING: Python locale settings can't be changed
+  WARNING: Python locale settings can't be changed
+
+Starting quast.py for the contigs aligned to Staphylococcus_aureus... (logging to /tmp/mq-ERR2935805/runs_per_reference/Staphylococcus_aureus/quast.log)
+  WARNING: Python locale settings can't be changed
+
+Starting quast.py for the contigs not aligned anywhere... (logging to /tmp/mq-ERR2935805/not_aligned/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A --ls solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 -t 8 /tmp/mq-ERR2935805/quast_corrected_input/arm64_not_aligned_anywhere.fasta /tmp/mq-ERR2935805/quast_corrected_input/arm64-repeat_not_aligned_anywhere.fasta /tmp/mq-ERR2935805/quast_corrected_input/x86_64_not_aligned_anywhere.fasta /tmp/mq-ERR2935805/quast_corrected_input/amd_not_aligned_anywhere.fasta -o /tmp/mq-ERR2935805/not_aligned --labels "arm64, arm64-repeat, x86_64, amd"
+
+Started: 2026-10-20 03:51:57
+
+Logging to /tmp/mq-ERR2935805/not_aligned/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2935805/quast_corrected_input/arm64_not_aligned_anywhere.fasta ==> arm64
+  2  /tmp/mq-ERR2935805/quast_corrected_input/arm64-repeat_not_aligned_anywhere.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2935805/quast_corrected_input/x86_64_not_aligned_anywhere.fasta ==> x86_64
+  4  /tmp/mq-ERR2935805/quast_corrected_input/amd_not_aligned_anywhere.fasta ==> amd
+
+2026-10-20 03:51:57
+Running Basic statistics processor...
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+  Calculating N50 and L50...
+    1  arm64, N50 = 1697, L50 = 3, auN = 2515.1, Total length = 17902, GC % = 39.65, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 1697, L50 = 3, auN = 2515.1, Total length = 17902, GC % = 39.65, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 1697, L50 = 3, auN = 2515.1, Total length = 17902, GC % = 39.65, # N's per 100 kbp =  0.00
+    4  amd, N50 = 1697, L50 = 3, auN = 2515.1, Total length = 17902, GC % = 39.65, # N's per 100 kbp =  0.00
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:51:57
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2935805/not_aligned/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2935805/not_aligned/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2935805/not_aligned/report.html
+
+2026-10-20 03:51:57
+Summarizing results...
+
+  Text versions of reports and plots for each metric (for all references and assemblies) are saved to /tmp/mq-ERR2935805/summary/
+  Extended version of HTML-report (for all references and assemblies) is saved to /tmp/mq-ERR2935805/report.html
+
+MetaQUAST finished.
+  Log is saved to /tmp/mq-ERR2935805/metaquast.log
+
+Finished: 2026-10-20 03:51:57
+Elapsed time: 0:01:03.796549
+Total NOTICEs: 13; WARNINGs: 58; non-fatal ERRORs: 0
+
+Thank you for using QUAST!

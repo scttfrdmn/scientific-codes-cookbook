@@ -1,0 +1,147 @@
+{
+  "task_id": "cookbook-megahit-real-evaluate",
+  "container": "quay.io/aarchbio/quast@sha256:54122e645394aa741656c54ecdde8737b2ad8cc0ef6ead72392c1be8248ae692",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\ngrep -E ' (evaluate\\.sh|canon\\.py|compare\\.py|ZymoBIOMICS\\.STD\\.refseq\\.v2\\.zip)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -ge 4 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nF=0\nbash evaluate.sh ZymoBIOMICS.STD.refseq.v2.zip ERR2984773 8 Bacillus_subtilis,Enterococcus_faecalis,Escherichia_coli,Lactobacillus_fermentum,Listeria_monocytogenes,Pseudomonas_aeruginosa,Salmonella_enterica,Staphylococcus_aureus arm64 arm64-repeat x86_64 amd arm64-t1 x86_64-t1 amd-t1 amd-nohw-t1 || F=1\nbash evaluate.sh ZymoBIOMICS.STD.refseq.v2.zip ERR2935805 8 Listeria_monocytogenes,Pseudomonas_aeruginosa,Bacillus_subtilis arm64 arm64-repeat x86_64 amd || F=1\nexit $F\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/megahit-real/ZymoBIOMICS.STD.refseq.v2.zip",
+      "destination": "/tmp/ZymoBIOMICS.STD.refseq.v2.zip"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/megahit-real/evaluate.sh",
+      "destination": "/tmp/evaluate.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/megahit-real/canon.py",
+      "destination": "/tmp/canon.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/megahit-real/compare.py",
+      "destination": "/tmp/compare.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/megahit-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.arm64.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.arm64.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-repeat/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.arm64-repeat.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-repeat/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.arm64-repeat.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.x86_64.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.x86_64.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.amd.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.amd.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-t1/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.arm64-t1.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-t1/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.arm64-t1.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real-t1/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.x86_64-t1.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real-t1/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.x86_64-t1.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real-t1/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.amd-t1.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real-t1/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.amd-t1.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real-nohw/ERR2984773/final.contigs.fa",
+      "destination": "/tmp/ERR2984773.amd-nohw-t1.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real-nohw/ERR2984773/megahit.log",
+      "destination": "/tmp/ERR2984773.amd-nohw-t1.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real/ERR2935805/final.contigs.fa",
+      "destination": "/tmp/ERR2935805.arm64.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real/ERR2935805/megahit.log",
+      "destination": "/tmp/ERR2935805.arm64.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-repeat/ERR2935805/final.contigs.fa",
+      "destination": "/tmp/ERR2935805.arm64-repeat.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/megahit-real-repeat/ERR2935805/megahit.log",
+      "destination": "/tmp/ERR2935805.arm64-repeat.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real/ERR2935805/final.contigs.fa",
+      "destination": "/tmp/ERR2935805.x86_64.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/megahit-real/ERR2935805/megahit.log",
+      "destination": "/tmp/ERR2935805.x86_64.megahit.log"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real/ERR2935805/final.contigs.fa",
+      "destination": "/tmp/ERR2935805.amd.final.contigs.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/megahit-real/ERR2935805/megahit.log",
+      "destination": "/tmp/ERR2935805.amd.megahit.log"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/megahit-real/evaluate/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

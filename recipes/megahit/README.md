@@ -37,6 +37,16 @@ One task, ~10 s assembly. `c8g.xlarge`, ~$0.02, **~58s** wall — boot and image
 
 **The scale-it, measured.** MEGAHIT is the lean end of this pair: on ~100× *E. coli* it holds just **~0.4 GiB** — **~11× less than SPAdes on the same reads** — while averaging 6.4 cores, so it's the compute-leaning, memory-light choice where SPAdes is the reverse (the comparison and both box picks live on [SPAdes](../spades/README.md)). A small `c8g` covers the memory; give it the cores. Neither needs an `r` box at this scale. Measured across five instance families for $/result: [which family's cores are cheapest](../../patterns/cost-per-result.md).
 
+## Which box — [measured](../../measurements/megahit-real/README.md) (whole ZymoBIOMICS mock metagenomes, `-t 16`)
+
+| chip | instance | even run (2.65 Gbp) | log run (9.66 Gbp) | $/hr | **compute $/result** (even / log) |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.4xlarge` | 343 s | 641 s | 0.6381 | **0.0608 / 0.1137** |
+| Xeon 6975P-C | `c8i.4xlarge` | 394 s | 810 s | 0.7497 | 0.0821 / 0.1686 |
+| EPYC 9R45 | `c8a.4xlarge` | 266 s | 520 s | 0.8622 | 0.0638 / 0.1245 |
+
+**Graviton4 is cheapest per assembly; AMD is 1.23–1.29× faster and 5–10% dearer.** Every chip recovers all eight bacteria at 95–99% of Zymo's references, and peak RSS is 2.1 / 7.7 GiB on all three. **Thread count moves a handful of contigs, never their lengths:** two `-t 16` runs differ in 2 of 20,597. **The arm64 and x86 builds differ in about 2% of bases, even at `-t 1`**, while Intel and AMD give the same bytes. So the exact-integer fixture check below is a claim about the fixture.
+
 <details>
 <summary>As shipped: the deterministic identity, pins, smoke check</summary>
 
@@ -60,8 +70,10 @@ cosign-signed, so the digest is the pin). Same staged reads, same `-t 1 --min-co
 | contigs / total bp | 1 / 400429 | 1 / 400429 |
 | `contigs.fa` sha256 | `e11123f8…` | `e11123f8…` — **byte-identical** |
 
-The single-thread determinism that makes the exact assertion safe holds across architectures too:
-the same assembly, bit for bit.
+The single-thread determinism that makes the exact assertion safe holds across architectures on
+this fixture: the same assembly, bit for bit. On a whole metagenome it does not. At `-t 1` the two
+builds differ in about 2% of assembled bases, while Intel and AMD agree byte for byte
+([megahit-real](../../measurements/megahit-real/README.md)).
 
 **Run + verify.**
 ```sh

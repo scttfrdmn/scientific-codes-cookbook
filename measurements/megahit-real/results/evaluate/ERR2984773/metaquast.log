@@ -1,0 +1,1721 @@
+/opt/conda/bin/metaquast.py ERR2984773.arm64.final.contigs.fa ERR2984773.arm64-repeat.final.contigs.fa ERR2984773.x86_64.final.contigs.fa ERR2984773.amd.final.contigs.fa ERR2984773.arm64-t1.final.contigs.fa ERR2984773.x86_64-t1.final.contigs.fa ERR2984773.amd-t1.final.contigs.fa ERR2984773.amd-nohw-t1.final.contigs.fa -r refs/Bacillus_subtilis.fasta,refs/Cryptococcus_neoformans.fasta,refs/Enterococcus_faecalis.fasta,refs/Escherichia_coli.fasta,refs/Lactobacillus_fermentum.fasta,refs/Listeria_monocytogenes.fasta,refs/Pseudomonas_aeruginosa.fasta,refs/Saccharomyces_cerevisiae.fasta,refs/Salmonella_enterica.fasta,refs/Staphylococcus_aureus.fasta -t 8 -o mq-ERR2984773 --labels arm64,arm64-repeat,x86_64,amd,arm64-t1,x86_64-t1,amd-t1,amd-nohw-t1 --no-icarus --no-plots
+
+Version: 5.3.0
+
+System information:
+  OS: Linux-6.18.54-121.166.amzn2023.aarch64-aarch64-with-glibc2.36 (linux_64)
+  Python version: 3.13.14
+  CPUs number: 8
+
+Started: 2026-10-20 03:48:32
+
+Logging to /tmp/mq-ERR2984773/metaquast.log
+
+Reference(s):
+  refs/Bacillus_subtilis.fasta ==> Bacillus_subtilis
+  refs/Cryptococcus_neoformans.fasta ==> Cryptococcus_neoformans
+  refs/Enterococcus_faecalis.fasta ==> Enterococcus_faecalis
+  refs/Escherichia_coli.fasta ==> Escherichia_coli
+  refs/Lactobacillus_fermentum.fasta ==> Lactobacillus_fermentum
+  refs/Listeria_monocytogenes.fasta ==> Listeria_monocytogenes
+  refs/Pseudomonas_aeruginosa.fasta ==> Pseudomonas_aeruginosa
+  refs/Saccharomyces_cerevisiae.fasta ==> Saccharomyces_cerevisiae
+  refs/Salmonella_enterica.fasta ==> Salmonella_enterica
+  refs/Staphylococcus_aureus.fasta ==> Staphylococcus_aureus
+  All references were combined in combined_reference.fasta
+
+Contigs:
+  Pre-processing...
+  1  ERR2984773.arm64.final.contigs.fa ==> arm64
+  2  ERR2984773.arm64-repeat.final.contigs.fa ==> arm64-repeat
+  3  ERR2984773.x86_64.final.contigs.fa ==> x86_64
+  4  ERR2984773.amd.final.contigs.fa ==> amd
+  5  ERR2984773.arm64-t1.final.contigs.fa ==> arm64-t1
+  6  ERR2984773.x86_64-t1.final.contigs.fa ==> x86_64-t1
+  7  ERR2984773.amd-t1.final.contigs.fa ==> amd-t1
+  8  ERR2984773.amd-nohw-t1.final.contigs.fa ==> amd-nohw-t1
+
+Starting quast.py for the combined reference...
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --combined-ref --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --ambiguity-usage all ERR2984773.arm64.final.contigs.fa ERR2984773.arm64-repeat.final.contigs.fa ERR2984773.x86_64.final.contigs.fa ERR2984773.amd.final.contigs.fa ERR2984773.arm64-t1.final.contigs.fa ERR2984773.x86_64-t1.final.contigs.fa ERR2984773.amd-t1.final.contigs.fa ERR2984773.amd-nohw-t1.final.contigs.fa -R /tmp/mq-ERR2984773/quast_corrected_input/combined_reference.fasta -o /tmp/mq-ERR2984773/combined_reference --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:48:34
+
+Logging to /tmp/mq-ERR2984773/combined_reference/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: all, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/combined_reference.fasta ==> combined_reference
+
+Contigs:
+  Pre-processing...
+  1  ERR2984773.arm64.final.contigs.fa ==> arm64
+  2  ERR2984773.arm64-repeat.final.contigs.fa ==> arm64-repeat
+  3  ERR2984773.x86_64.final.contigs.fa ==> x86_64
+  4  ERR2984773.amd.final.contigs.fa ==> amd
+  5  ERR2984773.arm64-t1.final.contigs.fa ==> arm64-t1
+  6  ERR2984773.x86_64-t1.final.contigs.fa ==> x86_64-t1
+  7  ERR2984773.amd-t1.final.contigs.fa ==> amd-t1
+  8  ERR2984773.amd-nohw-t1.final.contigs.fa ==> amd-nohw-t1
+
+2026-10-20 03:48:34
+Running Basic statistics processor...
+  Reference genome:
+    combined_reference.fasta, length = 73015790, num fragments = 7218, GC % = 47.01
+WARNING:   Reference genome is fragmented. You may consider rerunning QUAST using --fragmented option. QUAST will try to detect misassemblies caused by the fragmentation and mark them fake (will be excluded from # misassemblies).
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 117449, L50 = 72, auN = 204494.9, Total length = 36261637, GC % = 48.18, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 117449, L50 = 72, auN = 204494.9, Total length = 36261637, GC % = 48.18, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 117577, L50 = 72, auN = 204630.6, Total length = 36285725, GC % = 48.18, # N's per 100 kbp =  0.00
+    4  amd, N50 = 117577, L50 = 72, auN = 204630.6, Total length = 36285725, GC % = 48.18, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 117449, L50 = 72, auN = 204494.9, Total length = 36261637, GC % = 48.18, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 117577, L50 = 72, auN = 204630.6, Total length = 36285725, GC % = 48.18, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 117577, L50 = 72, auN = 204630.6, Total length = 36285725, GC % = 48.18, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 117577, L50 = 72, auN = 204630.6, Total length = 36285725, GC % = 48.18, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:48:41
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  1  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  1  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  arm64-repeat
+  2  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  2  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  3  x86_64
+  3  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  4  amd
+  4  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  5  arm64-t1
+  5  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  5  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  6  x86_64-t1
+  6  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  6  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  amd-t1
+  7  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  amd-nohw-t1
+  8  Logging to files /tmp/mq-ERR2984773/combined_reference/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  Analysis is finished.
+  2  Analysis is finished.
+  5  Analysis is finished.
+  4  Analysis is finished.
+  3  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  8  Analysis is finished.
+  Information about interspecies translocations by references for arm64 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_arm64.info
+  Information about interspecies translocations by references for arm64-repeat is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_arm64-repeat.info
+  Information about interspecies translocations by references for x86_64 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_x86_64.info
+  Information about interspecies translocations by references for amd is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_amd.info
+  Information about interspecies translocations by references for arm64-t1 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_arm64-t1.info
+  Information about interspecies translocations by references for x86_64-t1 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_x86_64-t1.info
+  Information about interspecies translocations by references for amd-t1 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_amd-t1.info
+  Information about interspecies translocations by references for amd-nohw-t1 is saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/interspecies_translocations_by_refs_amd-nohw-t1.info
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/combined_reference/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:49:16
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  2  arm64-repeat, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  3  x86_64, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  4  amd, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  5  arm64-t1, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  6  x86_64-t1, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  7  amd-t1, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+  8  amd-nohw-t1, Largest alignment = 1205242, NA50 = 112741, LA50 = 75
+Done.
+
+2026-10-20 03:49:17
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  2  Analysis is finished.
+  1  Analysis is finished.
+  6  Analysis is finished.
+  4  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  8  Analysis is finished.
+  7  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:49:26
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/combined_reference/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/combined_reference/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/combined_reference/report.html
+
+Partitioning contigs into bins aligned to each reference..
+  processing arm64
+  processing arm64-repeat
+  processing x86_64
+  processing amd
+  processing arm64-t1
+  processing x86_64-t1
+  processing amd-t1
+  processing amd-nohw-t1
+
+Starting quast.py for the contigs aligned to Bacillus_subtilis... (logging to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Bacillus_subtilis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Bacillus_subtilis.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Bacillus_subtilis.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:49:28
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Bacillus_subtilis.fasta ==> Bacillus_subtilis
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Bacillus_subtilis.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Bacillus_subtilis.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Bacillus_subtilis.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Bacillus_subtilis.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Bacillus_subtilis.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Bacillus_subtilis.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Bacillus_subtilis.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Bacillus_subtilis.fasta ==> amd-nohw-t1
+
+2026-10-20 03:49:28
+Running Basic statistics processor...
+  Reference genome:
+    Bacillus_subtilis.fasta, length = 4045677, num fragments = 1, GC % = 43.94
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 294549, L50 = 6, auN = 274609.7, Total length = 4054246, GC % = 43.68, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 294549, L50 = 6, auN = 274609.7, Total length = 4054246, GC % = 43.68, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 294549, L50 = 6, auN = 277066.7, Total length = 4054156, GC % = 43.68, # N's per 100 kbp =  0.00
+    4  amd, N50 = 294549, L50 = 6, auN = 277066.7, Total length = 4054156, GC % = 43.68, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 294549, L50 = 6, auN = 274609.7, Total length = 4054246, GC % = 43.68, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 294549, L50 = 6, auN = 277066.7, Total length = 4054156, GC % = 43.68, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 294549, L50 = 6, auN = 277066.7, Total length = 4054156, GC % = 43.68, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 294549, L50 = 6, auN = 277066.7, Total length = 4054156, GC % = 43.68, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:49:29
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  1  Aligning contigs to the reference
+  2  Aligning contigs to the reference
+  3  x86_64
+  4  amd
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+  5  arm64-t1
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  amd-t1
+  6  Aligning contigs to the reference
+  8  amd-nohw-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  Analysis is finished.
+  1  Analysis is finished.
+  4  Analysis is finished.
+  8  Analysis is finished.
+  3  Analysis is finished.
+  6  Analysis is finished.
+  7  Analysis is finished.
+  5  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:49:34
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  2  arm64-repeat, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  3  x86_64, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  4  amd, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  5  arm64-t1, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  6  x86_64-t1, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  7  amd-t1, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+  8  amd-nohw-t1, Largest alignment = 416768, NA50 = 263471, NGA50 = 263471, LA50 = 6, LGA50 = 6
+Done.
+
+2026-10-20 03:49:35
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  2  Analysis is finished.
+  1  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  8  Analysis is finished.
+  6  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:49:35
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Bacillus_subtilis/report.html
+
+Starting quast.py for the contigs aligned to Cryptococcus_neoformans... (logging to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Cryptococcus_neoformans.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Cryptococcus_neoformans.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Cryptococcus_neoformans.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:49:35
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Cryptococcus_neoformans.fasta ==> Cryptococcus_neoformans
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Cryptococcus_neoformans.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Cryptococcus_neoformans.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Cryptococcus_neoformans.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Cryptococcus_neoformans.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Cryptococcus_neoformans.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Cryptococcus_neoformans.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Cryptococcus_neoformans.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Cryptococcus_neoformans.fasta ==> amd-nohw-t1
+
+2026-10-20 03:49:35
+Running Basic statistics processor...
+  Reference genome:
+    Cryptococcus_neoformans.fasta, length = 29176277, num fragments = 7154, GC % = 48.27
+WARNING:   Reference genome is fragmented. You may consider rerunning QUAST using --fragmented option. QUAST will try to detect misassemblies caused by the fragmentation and mark them fake (will be excluded from # misassemblies).
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 650, L50 = 817, auN = 1738.9, Total length = 1552854, GC % = 48.42, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 650, L50 = 817, auN = 1738.9, Total length = 1552854, GC % = 48.42, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 649, L50 = 825, auN = 1731.7, Total length = 1565750, GC % = 48.44, # N's per 100 kbp =  0.00
+    4  amd, N50 = 649, L50 = 825, auN = 1731.7, Total length = 1565750, GC % = 48.44, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 650, L50 = 817, auN = 1738.9, Total length = 1552854, GC % = 48.42, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 649, L50 = 825, auN = 1731.7, Total length = 1565750, GC % = 48.44, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 649, L50 = 825, auN = 1731.7, Total length = 1565750, GC % = 48.44, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 649, L50 = 825, auN = 1731.7, Total length = 1565750, GC % = 48.44, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:49:36
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  1  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  arm64-repeat
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  2  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  3  x86_64
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  4  amd
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  5  arm64-t1
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  5  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  6  x86_64-t1
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  6  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  amd-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  amd-nohw-t1
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  4  Analysis is finished.
+  5  Analysis is finished.
+  1  Analysis is finished.
+  2  Analysis is finished.
+  8  Analysis is finished.
+  3  Analysis is finished.
+  6  Analysis is finished.
+  7  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:49:43
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 4081, NA50 = 594, LA50 = 1000
+  2  arm64-repeat, Largest alignment = 4081, NA50 = 594, LA50 = 1000
+  3  x86_64, Largest alignment = 4081, NA50 = 593, LA50 = 1011
+  4  amd, Largest alignment = 4081, NA50 = 593, LA50 = 1011
+  5  arm64-t1, Largest alignment = 4081, NA50 = 594, LA50 = 1000
+  6  x86_64-t1, Largest alignment = 4081, NA50 = 593, LA50 = 1011
+  7  amd-t1, Largest alignment = 4081, NA50 = 593, LA50 = 1011
+  8  amd-nohw-t1, Largest alignment = 4081, NA50 = 593, LA50 = 1011
+Done.
+
+2026-10-20 03:49:43
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  1  Analysis is finished.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  4  Analysis is finished.
+  5  Analysis is finished.
+  6  Analysis is finished.
+  8  Analysis is finished.
+  7  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:49:47
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Cryptococcus_neoformans/report.html
+
+Starting quast.py for the contigs aligned to Enterococcus_faecalis... (logging to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Enterococcus_faecalis.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Enterococcus_faecalis.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Enterococcus_faecalis.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:49:47
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Enterococcus_faecalis.fasta ==> Enterococcus_faecalis
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Enterococcus_faecalis.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Enterococcus_faecalis.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Enterococcus_faecalis.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Enterococcus_faecalis.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Enterococcus_faecalis.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Enterococcus_faecalis.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Enterococcus_faecalis.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Enterococcus_faecalis.fasta ==> amd-nohw-t1
+
+2026-10-20 03:49:47
+Running Basic statistics processor...
+  Reference genome:
+    Enterococcus_faecalis.fasta, length = 2845392, num fragments = 1, GC % = 37.52
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 238771, L50 = 4, auN = 312761.7, Total length = 3282279, GC % = 38.41, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 238771, L50 = 4, auN = 312761.7, Total length = 3282279, GC % = 38.41, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 238771, L50 = 4, auN = 314887.3, Total length = 3258258, GC % = 38.37, # N's per 100 kbp =  0.00
+    4  amd, N50 = 238771, L50 = 4, auN = 314887.3, Total length = 3258258, GC % = 38.37, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 238771, L50 = 4, auN = 312761.7, Total length = 3282279, GC % = 38.41, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 238771, L50 = 4, auN = 314887.3, Total length = 3258258, GC % = 38.37, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 238771, L50 = 4, auN = 314887.3, Total length = 3258258, GC % = 38.37, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 238771, L50 = 4, auN = 314887.3, Total length = 3258258, GC % = 38.37, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:49:48
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  arm64-repeat
+  1  arm64
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  3  x86_64
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Aligning contigs to the reference
+  1  Aligning contigs to the reference
+  4  amd
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+  5  arm64-t1
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  5  Aligning contigs to the reference
+  6  x86_64-t1
+  7  amd-t1
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  6  Aligning contigs to the reference
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  8  amd-nohw-t1
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  Analysis is finished.
+  4  Analysis is finished.
+  1  Analysis is finished.
+  8  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:49:53
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 753855, NA50 = 128537, NGA50 = 235381, LA50 = 6, LGA50 = 4
+  2  arm64-repeat, Largest alignment = 753855, NA50 = 128537, NGA50 = 235381, LA50 = 6, LGA50 = 4
+  3  x86_64, Largest alignment = 753855, NA50 = 162207, NGA50 = 235381, LA50 = 5, LGA50 = 4
+  4  amd, Largest alignment = 753855, NA50 = 162207, NGA50 = 235381, LA50 = 5, LGA50 = 4
+  5  arm64-t1, Largest alignment = 753855, NA50 = 128537, NGA50 = 235381, LA50 = 6, LGA50 = 4
+  6  x86_64-t1, Largest alignment = 753855, NA50 = 162207, NGA50 = 235381, LA50 = 5, LGA50 = 4
+  7  amd-t1, Largest alignment = 753855, NA50 = 162207, NGA50 = 235381, LA50 = 5, LGA50 = 4
+  8  amd-nohw-t1, Largest alignment = 753855, NA50 = 162207, NGA50 = 235381, LA50 = 5, LGA50 = 4
+Done.
+
+2026-10-20 03:49:53
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  5  Analysis is finished.
+  3  Analysis is finished.
+  2  Analysis is finished.
+  8  Analysis is finished.
+  6  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+  1  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:49:53
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Enterococcus_faecalis/report.html
+
+Starting quast.py for the contigs aligned to Escherichia_coli... (logging to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Escherichia_coli.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Escherichia_coli.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Escherichia_coli.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:49:53
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Escherichia_coli.fasta ==> Escherichia_coli
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Escherichia_coli.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Escherichia_coli.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Escherichia_coli.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Escherichia_coli.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Escherichia_coli.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Escherichia_coli.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Escherichia_coli.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Escherichia_coli.fasta ==> amd-nohw-t1
+
+2026-10-20 03:49:53
+Running Basic statistics processor...
+  Reference genome:
+    Escherichia_coli.fasta, length = 4875441, num fragments = 2, GC % = 50.49
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 72063, L50 = 19, auN = 95867.4, Total length = 4928628, GC % = 50.40, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 72063, L50 = 19, auN = 95867.4, Total length = 4928628, GC % = 50.40, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 72063, L50 = 19, auN = 95829.7, Total length = 4929555, GC % = 50.40, # N's per 100 kbp =  0.00
+    4  amd, N50 = 72063, L50 = 19, auN = 95829.7, Total length = 4929555, GC % = 50.40, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 72063, L50 = 19, auN = 95867.4, Total length = 4928628, GC % = 50.40, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 72063, L50 = 19, auN = 95829.7, Total length = 4929555, GC % = 50.40, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 72063, L50 = 19, auN = 95829.7, Total length = 4929555, GC % = 50.40, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 72063, L50 = 19, auN = 95829.7, Total length = 4929555, GC % = 50.40, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:49:54
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  2  Aligning contigs to the reference
+  1  Aligning contigs to the reference
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+  4  amd
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  5  arm64-t1
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  6  Aligning contigs to the reference
+  7  amd-t1
+  8  amd-nohw-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  Aligning contigs to the reference
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  5  Analysis is finished.
+  8  Analysis is finished.
+  1  Analysis is finished.
+  4  Analysis is finished.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:00
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  2  arm64-repeat, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  3  x86_64, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  4  amd, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  5  arm64-t1, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  6  x86_64-t1, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  7  amd-t1, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+  8  amd-nohw-t1, Largest alignment = 220444, NA50 = 71565, NGA50 = 71565, LA50 = 21, LGA50 = 21
+Done.
+
+2026-10-20 03:50:00
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  8  amd-nohw-t1
+  7  amd-t1
+  1  Analysis is finished.
+  2  Analysis is finished.
+  5  Analysis is finished.
+  6  Analysis is finished.
+  3  Analysis is finished.
+  7  Analysis is finished.
+  4  Analysis is finished.
+  8  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:01
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Escherichia_coli/report.html
+
+Starting quast.py for the contigs aligned to Lactobacillus_fermentum... (logging to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Lactobacillus_fermentum.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Lactobacillus_fermentum.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Lactobacillus_fermentum.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:01
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Lactobacillus_fermentum.fasta ==> Lactobacillus_fermentum
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Lactobacillus_fermentum.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Lactobacillus_fermentum.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Lactobacillus_fermentum.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Lactobacillus_fermentum.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Lactobacillus_fermentum.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Lactobacillus_fermentum.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Lactobacillus_fermentum.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Lactobacillus_fermentum.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:01
+Running Basic statistics processor...
+  Reference genome:
+    Lactobacillus_fermentum.fasta, length = 1905333, num fragments = 1, GC % = 52.30
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 40505, L50 = 16, auN = 44191.0, Total length = 1837367, GC % = 52.60, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 40505, L50 = 16, auN = 44191.0, Total length = 1837367, GC % = 52.60, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 40505, L50 = 16, auN = 44199.6, Total length = 1836929, GC % = 52.60, # N's per 100 kbp =  0.00
+    4  amd, N50 = 40505, L50 = 16, auN = 44199.6, Total length = 1836929, GC % = 52.60, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 40505, L50 = 16, auN = 44191.0, Total length = 1837367, GC % = 52.60, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 40505, L50 = 16, auN = 44199.6, Total length = 1836929, GC % = 52.60, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 40505, L50 = 16, auN = 44199.6, Total length = 1836929, GC % = 52.60, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 40505, L50 = 16, auN = 44199.6, Total length = 1836929, GC % = 52.60, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:01
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  3  x86_64
+  1  Aligning contigs to the reference
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  2  Aligning contigs to the reference
+  4  amd
+  3  Aligning contigs to the reference
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  5  arm64-t1
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  7  amd-t1
+  6  Aligning contigs to the reference
+  8  amd-nohw-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  6  Analysis is finished.
+  5  Analysis is finished.
+  1  Analysis is finished.
+  3  Analysis is finished.
+  7  Analysis is finished.
+  8  Analysis is finished.
+  2  Analysis is finished.
+  4  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:06
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  2  arm64-repeat, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  3  x86_64, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  4  amd, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  5  arm64-t1, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  6  x86_64-t1, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  7  amd-t1, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+  8  amd-nohw-t1, Largest alignment = 115699, NA50 = 40505, NGA50 = 38354, LA50 = 16, LGA50 = 17
+Done.
+
+2026-10-20 03:50:06
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  2  arm64-repeat
+  1  arm64
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  1  Analysis is finished.
+  2  Analysis is finished.
+  4  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  6  Analysis is finished.
+  7  Analysis is finished.
+  8  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:06
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Lactobacillus_fermentum/report.html
+
+Starting quast.py for the contigs aligned to Listeria_monocytogenes... (logging to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Listeria_monocytogenes.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Listeria_monocytogenes.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Listeria_monocytogenes.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:06
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Listeria_monocytogenes.fasta ==> Listeria_monocytogenes
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Listeria_monocytogenes.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Listeria_monocytogenes.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Listeria_monocytogenes.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Listeria_monocytogenes.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Listeria_monocytogenes.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Listeria_monocytogenes.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Listeria_monocytogenes.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Listeria_monocytogenes.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:07
+Running Basic statistics processor...
+  Reference genome:
+    Listeria_monocytogenes.fasta, length = 2992342, num fragments = 1, GC % = 37.96
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 542872, L50 = 2, auN = 616933.8, Total length = 3466992, GC % = 38.79, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 542872, L50 = 2, auN = 616933.8, Total length = 3466992, GC % = 38.79, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 542872, L50 = 2, auN = 621101.2, Total length = 3442786, GC % = 38.76, # N's per 100 kbp =  0.00
+    4  amd, N50 = 542872, L50 = 2, auN = 621101.2, Total length = 3442786, GC % = 38.76, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 542872, L50 = 2, auN = 616933.8, Total length = 3466992, GC % = 38.79, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 542872, L50 = 2, auN = 621101.2, Total length = 3442786, GC % = 38.76, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 542872, L50 = 2, auN = 621101.2, Total length = 3442786, GC % = 38.76, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 542872, L50 = 2, auN = 621101.2, Total length = 3442786, GC % = 38.76, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:07
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  1  Aligning contigs to the reference
+  3  x86_64
+  2  Aligning contigs to the reference
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  4  amd
+  3  Aligning contigs to the reference
+  5  arm64-t1
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  6  Aligning contigs to the reference
+  7  amd-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  amd-nohw-t1
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  3  Analysis is finished.
+  2  Analysis is finished.
+  4  Analysis is finished.
+  5  Analysis is finished.
+  1  Analysis is finished.
+  8  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:12
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  2  arm64-repeat, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  3  x86_64, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  4  amd, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  5  arm64-t1, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  6  x86_64-t1, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  7  amd-t1, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+  8  amd-nohw-t1, Largest alignment = 1205242, NA50 = 538092, NGA50 = 538092, LA50 = 2, LGA50 = 2
+Done.
+
+2026-10-20 03:50:12
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  1  Analysis is finished.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  8  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:13
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Listeria_monocytogenes/report.html
+
+Starting quast.py for the contigs aligned to Pseudomonas_aeruginosa... (logging to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Pseudomonas_aeruginosa.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Pseudomonas_aeruginosa.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Pseudomonas_aeruginosa.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:13
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Pseudomonas_aeruginosa.fasta ==> Pseudomonas_aeruginosa
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Pseudomonas_aeruginosa.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Pseudomonas_aeruginosa.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Pseudomonas_aeruginosa.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Pseudomonas_aeruginosa.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Pseudomonas_aeruginosa.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Pseudomonas_aeruginosa.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Pseudomonas_aeruginosa.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Pseudomonas_aeruginosa.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:13
+Running Basic statistics processor...
+  Reference genome:
+    Pseudomonas_aeruginosa.fasta, length = 6792330, num fragments = 1, GC % = 66.17
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 259985, L50 = 9, auN = 264208.5, Total length = 6762945, GC % = 66.17, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 259985, L50 = 9, auN = 264208.5, Total length = 6762945, GC % = 66.17, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 259985, L50 = 9, auN = 264177.0, Total length = 6763754, GC % = 66.16, # N's per 100 kbp =  0.00
+    4  amd, N50 = 259985, L50 = 9, auN = 264177.0, Total length = 6763754, GC % = 66.16, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 259985, L50 = 9, auN = 264208.5, Total length = 6762945, GC % = 66.17, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 259985, L50 = 9, auN = 264177.0, Total length = 6763754, GC % = 66.16, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 259985, L50 = 9, auN = 264177.0, Total length = 6763754, GC % = 66.16, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 259985, L50 = 9, auN = 264177.0, Total length = 6763754, GC % = 66.16, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:14
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  arm64-repeat
+  1  arm64
+  3  x86_64
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Aligning contigs to the reference
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  1  Aligning contigs to the reference
+  3  Aligning contigs to the reference
+  4  amd
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  5  arm64-t1
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  7  amd-t1
+  6  Aligning contigs to the reference
+  8  amd-nohw-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  8  Analysis is finished.
+  2  Analysis is finished.
+  1  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:21
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  2  arm64-repeat, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  3  x86_64, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  4  amd, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  5  arm64-t1, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  6  x86_64-t1, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  7  amd-t1, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+  8  amd-nohw-t1, Largest alignment = 468650, NA50 = 235073, NGA50 = 235073, LA50 = 10, LGA50 = 10
+Done.
+
+2026-10-20 03:50:21
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  3  Analysis is finished.
+  7  Analysis is finished.
+  5  Analysis is finished.
+  4  Analysis is finished.
+  6  Analysis is finished.
+  8  Analysis is finished.
+  2  Analysis is finished.
+  1  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:22
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Pseudomonas_aeruginosa/report.html
+
+Starting quast.py for the contigs aligned to Saccharomyces_cerevisiae... (logging to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Saccharomyces_cerevisiae.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Saccharomyces_cerevisiae.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Saccharomyces_cerevisiae.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:22
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Saccharomyces_cerevisiae.fasta ==> Saccharomyces_cerevisiae
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Saccharomyces_cerevisiae.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Saccharomyces_cerevisiae.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Saccharomyces_cerevisiae.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Saccharomyces_cerevisiae.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Saccharomyces_cerevisiae.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Saccharomyces_cerevisiae.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Saccharomyces_cerevisiae.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Saccharomyces_cerevisiae.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:22
+Running Basic statistics processor...
+  Reference genome:
+    Saccharomyces_cerevisiae.fasta, length = 12843354, num fragments = 51, GC % = 38.15
+WARNING:   Reference genome is fragmented. You may consider rerunning QUAST using --fragmented option. QUAST will try to detect misassemblies caused by the fragmentation and mark them fake (will be excluded from # misassemblies).
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 766, L50 = 1825, auN = 985.5, Total length = 3976413, GC % = 37.97, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 766, L50 = 1825, auN = 985.5, Total length = 3976413, GC % = 37.97, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 766, L50 = 1831, auN = 984.7, Total length = 3987092, GC % = 37.97, # N's per 100 kbp =  0.00
+    4  amd, N50 = 766, L50 = 1831, auN = 984.7, Total length = 3987092, GC % = 37.97, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 766, L50 = 1825, auN = 985.5, Total length = 3976413, GC % = 37.97, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 766, L50 = 1831, auN = 984.7, Total length = 3987092, GC % = 37.97, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 766, L50 = 1831, auN = 984.7, Total length = 3987092, GC % = 37.97, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 766, L50 = 1831, auN = 984.7, Total length = 3987092, GC % = 37.97, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:23
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  2  Aligning contigs to the reference
+  1  Aligning contigs to the reference
+  3  x86_64
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+  4  amd
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  4  Aligning contigs to the reference
+  5  arm64-t1
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  5  Aligning contigs to the reference
+  6  x86_64-t1
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  7  amd-t1
+  6  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  amd-nohw-t1
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  4  Analysis is finished.
+  5  Analysis is finished.
+  7  Analysis is finished.
+  3  Analysis is finished.
+  1  Analysis is finished.
+  2  Analysis is finished.
+  8  Analysis is finished.
+  6  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:29
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 11270, NA50 = 745, LA50 = 1887
+  2  arm64-repeat, Largest alignment = 11270, NA50 = 745, LA50 = 1887
+  3  x86_64, Largest alignment = 11270, NA50 = 744, LA50 = 1894
+  4  amd, Largest alignment = 11270, NA50 = 744, LA50 = 1894
+  5  arm64-t1, Largest alignment = 11270, NA50 = 745, LA50 = 1887
+  6  x86_64-t1, Largest alignment = 11270, NA50 = 744, LA50 = 1894
+  7  amd-t1, Largest alignment = 11270, NA50 = 744, LA50 = 1894
+  8  amd-nohw-t1, Largest alignment = 11270, NA50 = 744, LA50 = 1894
+Done.
+
+2026-10-20 03:50:30
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  2  Analysis is finished.
+  5  Analysis is finished.
+  1  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+  8  Analysis is finished.
+  3  Analysis is finished.
+  6  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:31
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Saccharomyces_cerevisiae/report.html
+
+Starting quast.py for the contigs aligned to Salmonella_enterica... (logging to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Salmonella_enterica.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Salmonella_enterica.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Salmonella_enterica.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:31
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Salmonella_enterica.fasta ==> Salmonella_enterica
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Salmonella_enterica.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Salmonella_enterica.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Salmonella_enterica.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Salmonella_enterica.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Salmonella_enterica.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Salmonella_enterica.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Salmonella_enterica.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Salmonella_enterica.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:31
+Running Basic statistics processor...
+  Reference genome:
+    Salmonella_enterica.fasta, length = 4809318, num fragments = 2, GC % = 52.19
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 94251, L50 = 14, auN = 149609.6, Total length = 4939224, GC % = 52.06, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 94251, L50 = 14, auN = 149609.6, Total length = 4939224, GC % = 52.06, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 94251, L50 = 14, auN = 149590.7, Total length = 4939827, GC % = 52.06, # N's per 100 kbp =  0.00
+    4  amd, N50 = 94251, L50 = 14, auN = 149590.7, Total length = 4939827, GC % = 52.06, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 94251, L50 = 14, auN = 149609.6, Total length = 4939224, GC % = 52.06, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 94251, L50 = 14, auN = 149590.7, Total length = 4939827, GC % = 52.06, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 94251, L50 = 14, auN = 149590.7, Total length = 4939827, GC % = 52.06, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 94251, L50 = 14, auN = 149590.7, Total length = 4939827, GC % = 52.06, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:32
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  1  Aligning contigs to the reference
+  2  Aligning contigs to the reference
+  3  x86_64
+  4  amd
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  3  Aligning contigs to the reference
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  5  arm64-t1
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  6  x86_64-t1
+  5  Aligning contigs to the reference
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  7  amd-t1
+  6  Aligning contigs to the reference
+  8  amd-nohw-t1
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  8  Analysis is finished.
+  4  Analysis is finished.
+  2  Analysis is finished.
+  5  Analysis is finished.
+  1  Analysis is finished.
+  6  Analysis is finished.
+  7  Analysis is finished.
+  3  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:38
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  2  arm64-repeat, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  3  x86_64, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  4  amd, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  5  arm64-t1, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  6  x86_64-t1, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  7  amd-t1, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+  8  amd-nohw-t1, Largest alignment = 530108, NA50 = 89627, NGA50 = 94251, LA50 = 14, LGA50 = 13
+Done.
+
+2026-10-20 03:50:38
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  2  arm64-repeat
+  1  arm64
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  2  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+  3  Analysis is finished.
+  4  Analysis is finished.
+  8  Analysis is finished.
+  1  Analysis is finished.
+  5  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:39
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Salmonella_enterica/report.html
+
+Starting quast.py for the contigs aligned to Staphylococcus_aureus... (logging to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Staphylococcus_aureus.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Staphylococcus_aureus.fasta -R /tmp/mq-ERR2984773/quast_corrected_input/Staphylococcus_aureus.fasta -o /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:39
+
+Logging to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Reference:
+  /tmp/mq-ERR2984773/quast_corrected_input/Staphylococcus_aureus.fasta ==> Staphylococcus_aureus
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_to_Staphylococcus_aureus.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_to_Staphylococcus_aureus.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_to_Staphylococcus_aureus.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_to_Staphylococcus_aureus.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_to_Staphylococcus_aureus.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_to_Staphylococcus_aureus.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_to_Staphylococcus_aureus.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_to_Staphylococcus_aureus.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:39
+Running Basic statistics processor...
+  Reference genome:
+    Staphylococcus_aureus.fasta, length = 2730326, num fragments = 4, GC % = 32.85
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 112741, L50 = 7, auN = 185068.5, Total length = 3238052, GC % = 34.61, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 112741, L50 = 7, auN = 185068.5, Total length = 3238052, GC % = 34.61, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 112741, L50 = 7, auN = 186280.1, Total length = 3213846, GC % = 34.55, # N's per 100 kbp =  0.00
+    4  amd, N50 = 112741, L50 = 7, auN = 186280.1, Total length = 3213846, GC % = 34.55, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 112741, L50 = 7, auN = 185068.5, Total length = 3238052, GC % = 34.61, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 112741, L50 = 7, auN = 186280.1, Total length = 3213846, GC % = 34.55, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 112741, L50 = 7, auN = 186280.1, Total length = 3213846, GC % = 34.55, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 112741, L50 = 7, auN = 186280.1, Total length = 3213846, GC % = 34.55, # N's per 100 kbp =  0.00
+Done.
+
+2026-10-20 03:50:40
+Running Contig analyzer...
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  1  arm64
+  2  arm64-repeat
+  1  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_arm64.stdout and contigs_report_arm64.stderr...
+  2  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_arm64-repeat.stdout and contigs_report_arm64-repeat.stderr...
+  3  x86_64
+  1  Aligning contigs to the reference
+  2  Aligning contigs to the reference
+  3  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_x86_64.stdout and contigs_report_x86_64.stderr...
+  4  amd
+  3  Aligning contigs to the reference
+  4  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_amd.stdout and contigs_report_amd.stderr...
+  5  arm64-t1
+  4  Aligning contigs to the reference
+  5  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_arm64-t1.stdout and contigs_report_arm64-t1.stderr...
+  5  Aligning contigs to the reference
+  6  x86_64-t1
+  7  amd-t1
+  6  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_x86_64-t1.stdout and contigs_report_x86_64-t1.stderr...
+  8  amd-nohw-t1
+  6  Aligning contigs to the reference
+  7  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_amd-t1.stdout and contigs_report_amd-t1.stderr...
+  7  Aligning contigs to the reference
+  8  Logging to files /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/contigs_report_amd-nohw-t1.stdout and contigs_report_amd-nohw-t1.stderr...
+  8  Aligning contigs to the reference
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+WARNING: Version of installed minimap2 differs from its version in the QUAST package (2.28). Please make sure that you use an actual version of software.
+  2  Analysis is finished.
+  3  Analysis is finished.
+  8  Analysis is finished.
+  6  Analysis is finished.
+  1  Analysis is finished.
+  4  Analysis is finished.
+  7  Analysis is finished.
+  5  Analysis is finished.
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/misassemblies_report.txt, misassemblies_report.tsv, and misassemblies_report.tex
+  Transposed version of total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/transposed_report_misassemblies.txt, transposed_report_misassemblies.tsv, and transposed_report_misassemblies.tex
+  Creating total report...
+    saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/contigs_reports/unaligned_report.txt, unaligned_report.tsv, and unaligned_report.tex
+Done.
+
+2026-10-20 03:50:45
+Running NA-NGA calculation...
+  1  arm64, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  2  arm64-repeat, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  3  x86_64, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  4  amd, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  5  arm64-t1, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  6  x86_64-t1, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  7  amd-t1, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+  8  amd-nohw-t1, Largest alignment = 415479, NA50 = 96415, NGA50 = 112541, LA50 = 10, LGA50 = 7
+Done.
+
+2026-10-20 03:50:45
+Running Genome analyzer...
+  NOTICE: No file with genomic features were provided. Use the --features option if you want to specify it.
+
+  NOTICE: No file with operons were provided. Use the -O option if you want to specify it.
+  1  arm64
+  2  arm64-repeat
+  3  x86_64
+  4  amd
+  5  arm64-t1
+  6  x86_64-t1
+  7  amd-t1
+  8  amd-nohw-t1
+  4  Analysis is finished.
+  2  Analysis is finished.
+  1  Analysis is finished.
+  8  Analysis is finished.
+  3  Analysis is finished.
+  5  Analysis is finished.
+  7  Analysis is finished.
+  6  Analysis is finished.
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:45
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/runs_per_reference/Staphylococcus_aureus/report.html
+
+Starting quast.py for the contigs not aligned anywhere... (logging to /tmp/mq-ERR2984773/not_aligned/quast.log)
+  WARNING: Python locale settings can't be changed
+/opt/conda/bin/quast.py -t 8 --no-icarus --no-plots --min-identity 90.0 --colors #E31A1C,#1F78B4,#33A02C,#6A3D9A,#FF7F00,#800000,#A6CEE3,#B2DF8A --ls solid,solid,solid,solid,solid,solid,solid,solid --no-check-meta --contig-thresholds 1000,5000,10000,25000,50000 -t 8 /tmp/mq-ERR2984773/quast_corrected_input/arm64_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_not_aligned_anywhere.fasta /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_not_aligned_anywhere.fasta -o /tmp/mq-ERR2984773/not_aligned --labels "arm64, arm64-repeat, x86_64, amd, arm64-t1, x86_64-t1, amd-t1, amd-nohw-t1"
+
+Started: 2026-10-20 03:50:45
+
+Logging to /tmp/mq-ERR2984773/not_aligned/quast.log
+
+CWD: /tmp
+Main parameters: 
+  MODE: meta, threads: 8, min contig length: 500, min alignment length: 65, min alignment IDY: 90.0, \
+  ambiguity: one, min local misassembly length: 200, min extensive misassembly length: 1000
+
+Contigs:
+  Pre-processing...
+  1  /tmp/mq-ERR2984773/quast_corrected_input/arm64_not_aligned_anywhere.fasta ==> arm64
+  2  /tmp/mq-ERR2984773/quast_corrected_input/arm64-repeat_not_aligned_anywhere.fasta ==> arm64-repeat
+  3  /tmp/mq-ERR2984773/quast_corrected_input/x86_64_not_aligned_anywhere.fasta ==> x86_64
+  4  /tmp/mq-ERR2984773/quast_corrected_input/amd_not_aligned_anywhere.fasta ==> amd
+  5  /tmp/mq-ERR2984773/quast_corrected_input/arm64-t1_not_aligned_anywhere.fasta ==> arm64-t1
+  6  /tmp/mq-ERR2984773/quast_corrected_input/x86_64-t1_not_aligned_anywhere.fasta ==> x86_64-t1
+  7  /tmp/mq-ERR2984773/quast_corrected_input/amd-t1_not_aligned_anywhere.fasta ==> amd-t1
+  8  /tmp/mq-ERR2984773/quast_corrected_input/amd-nohw-t1_not_aligned_anywhere.fasta ==> amd-nohw-t1
+
+2026-10-20 03:50:45
+Running Basic statistics processor...
+  Contig files: 
+    1  arm64
+    2  arm64-repeat
+    3  x86_64
+    4  amd
+    5  arm64-t1
+    6  x86_64-t1
+    7  amd-t1
+    8  amd-nohw-t1
+  Calculating N50 and L50...
+    1  arm64, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    2  arm64-repeat, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    3  x86_64, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    4  amd, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    5  arm64-t1, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    6  x86_64-t1, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    7  amd-t1, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+    8  amd-nohw-t1, N50 = 571, L50 = 5, auN = 651.4, Total length = 6790, GC % = 40.68, # N's per 100 kbp =  0.00
+Done.
+
+NOTICE: Genes are not predicted by default. Use --gene-finding or --glimmer option to enable it.
+
+2026-10-20 03:50:45
+RESULTS:
+  Text versions of total report are saved to /tmp/mq-ERR2984773/not_aligned/report.txt, report.tsv, and report.tex
+  Text versions of transposed total report are saved to /tmp/mq-ERR2984773/not_aligned/transposed_report.txt, transposed_report.tsv, and transposed_report.tex
+  HTML version (interactive tables and plots) is saved to /tmp/mq-ERR2984773/not_aligned/report.html
+
+2026-10-20 03:50:45
+Summarizing results...
+
+  Text versions of reports and plots for each metric (for all references and assemblies) are saved to /tmp/mq-ERR2984773/summary/
+  Extended version of HTML-report (for all references and assemblies) is saved to /tmp/mq-ERR2984773/report.html
+
+MetaQUAST finished.
+  Log is saved to /tmp/mq-ERR2984773/metaquast.log
+
+Finished: 2026-10-20 03:50:45
+Elapsed time: 0:02:13.723682
+Total NOTICEs: 14; WARNINGs: 24; non-fatal ERRORs: 0
+
+Thank you for using QUAST!
