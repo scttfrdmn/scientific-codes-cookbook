@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-mesalib-real",
+  "container": "quay.io/aarchsci/viz@sha256:dda63dc2dcbd830258017f93df6cafe37ff3afbfc0a843fd7690bd5e6be166a7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\n: > pins.sel\nfor f in skadi/*.hgt.gz real.sh terrain.py; do\n  awk -v f=\"$f\" '$2==f' pins.sha256 | grep . >> pins.sel || { echo \"FAIL: $f has no pin\"; exit 1; }\ndone\nsha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 8 8 /tmp/skadi/*.hgt.gz\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib-real/skadi/",
+      "destination": "/tmp/skadi/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib-real/terrain.py",
+      "destination": "/tmp/terrain.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mesalib-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/mesalib-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}

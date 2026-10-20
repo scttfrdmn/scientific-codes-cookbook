@@ -41,7 +41,13 @@ print(rw.ReportCapabilities())"       # -> Mesa / llvmpipe (LLVM 23.1.2, 128 bit
 
 ## Shape, size, cost
 
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All rendering is **33 s** of a 1m43s window (3 s of that is waiting for Xvfb); 39 s is installing Docker and 30 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)). No GPU is involved at any point.
+One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All rendering is **33 s** of a 1m43s window (3 s of that is waiting for Xvfb); 39 s is installing Docker and 30 s pulling the image ([layout](../../patterns/layout-and-effective-cost.md)). No GPU is involved at any point. **Which box, [measured](../../measurements/mesalib-real/README.md)** on a 103.7M-triangle Alps DEM, where all 344M pixels were exact and every frame was byte-identical across chips. A shaded 4K frame costs this much. AMD is cheapest. Graviton4 needs ≥4 llvmpipe threads, and x86 gains nothing from them:
+
+| chip (`*.2xlarge`) | s/frame, 1 thread | 8 threads | $ / 1,000 frames |
+|---|---|---|---|
+| Graviton4 `m8g` | 56.9 | 13.9 | 1.38 |
+| Intel `m8i` | 10.4 | 11.0 | 1.30 |
+| **AMD `m8a`** | **8.6** | **8.8** | **1.19** |
 
 <details>
 <summary>As shipped: exact pixel counts, the renderer asserted, a depth test with an inverting control, and why the headless probe is a separate process</summary>
@@ -172,9 +178,8 @@ stack; its image check is a heuristic, and deliberately so.
 
 **Shader compilation**, beyond whatever VTK's default mappers emit. **Anti-aliasing**, switched off
 by construction here — its edge-pixel behaviour is untested. **The EGL and OSMesa paths**, absent
-from this image, so nothing here says whether they would be exact if present. **Performance**: no
-pixel-throughput or scaling measurement, and llvmpipe's thread count is left at its default.
-**Large framebuffers** — the biggest viewport is 256², so nothing speaks to memory limits or tiling
-at render sizes anyone would actually publish.
+from this image, so nothing here says whether they would be exact if present. Performance, thread
+scaling and large framebuffers (up to 16200², 21.8 GiB peak) are in the
+[real-workload measurement](../../measurements/mesalib-real/README.md), not this fixture.
 
 </details>
