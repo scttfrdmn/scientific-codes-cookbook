@@ -313,5 +313,5 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
+| [mesalib](../recipes/mesalib/README.md) | Renders flat-shaded geometry with software OpenGL on Graviton4 and asserts exact pixel counts, not image similarity. For anyone doing offscreen rendering on a box with no GPU and no display. | viz | stage | 2026-10-20 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 | [paraview](../recipes/paraview/README.md) | Builds an isosurface on four grids from 65³ to 513³, integrates its area and volume, and renders headlessly on CPU. For anyone doing batch `pvbatch` post-processing. | viz | stage | 2026-10-19 | 2026-10-17 | 2026-10-17 | 2026-10-18 |
