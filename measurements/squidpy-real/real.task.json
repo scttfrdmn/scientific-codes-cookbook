@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-squidpy-real",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nbash real.sh 16\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/slideseq.h5ad", "destination": "/tmp/slideseq.h5ad"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/visium.h5ad", "destination": "/tmp/visium.h5ad"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/real.py", "destination": "/tmp/real.py"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/real.sh", "destination": "/tmp/real.sh"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/pins.sha256", "destination": "/tmp/pins.sha256"}
+  ],
+  "outputs": [
+    {"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/squidpy-real/real/"}
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.2
+  }
+}

@@ -1,0 +1,71 @@
+== Graviton4 vs x86_64
+-- slideseq
+  knn_edges: identical
+  rad_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  co-occurrence: max |diff| 2.220e-16
+  moran.tsv I: 19246 of 19428 bit-identical, max |diff| 3.001e-16; gene ranking identical
+  geary.tsv C: 18169 of 19428 bit-identical, max |diff| 8.882e-16; gene ranking identical
+  moran_perm.tsv I: 1978 of 2000 bit-identical, max |diff| 1.110e-16; pval_sim identical on 1986 of 2000; var_sim max rel 1.5e-03; gene ranking identical
+  score.tsv: 32 of 33 rows print identically; differing:
+    Moran's I == closed form, all 19428 genes: max |diff| 4.920e-15; max |diff| / per-gene summation bound 0.0038 (bounds 6.5e-15 to 1.1e-11)  |  max |diff| 0.000e+00; max |diff| / per-gene summation bound 0.0000 (bounds 6.5e-15 to 1.1e-11)
+-- visium
+  grid1_edges: identical
+  grid2_edges: identical
+  grid3_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  moran.tsv I: 14277 of 14828 bit-identical, max |diff| 1.898e-15; gene ranking identical
+  geary.tsv C: 11787 of 14828 bit-identical, max |diff| 1.632e-14; gene ranking identical
+  moran_perm.tsv I: 1930 of 2000 bit-identical, max |diff| 9.992e-16; pval_sim identical on 1984 of 2000; var_sim max rel 5.3e-14; gene ranking identical
+  score.tsv: 34 of 36 rows print identically; differing:
+    Geary's C == closed form, all 14828 genes: max |diff| 3.578e-12; max |diff| / per-gene summation bound 0.0667 (bounds 1.8e-12 to 1.7e-09)  |  max |diff| 3.578e-12; max |diff| / per-gene summation bound 0.0666 (bounds 1.8e-12 to 1.7e-09)
+    Moran's I == closed form, all 14828 genes: max |diff| 1.104e-15; max |diff| / per-gene summation bound 0.0120 (bounds 6.7e-15 to 8.5e-13)  |  max |diff| 0.000e+00; max |diff| / per-gene summation bound 0.0000 (bounds 6.7e-15 to 8.5e-13)
+
+== Graviton4 vs amd
+-- slideseq
+  knn_edges: identical
+  rad_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  co-occurrence: max |diff| 2.220e-16
+  moran.tsv I: 19246 of 19428 bit-identical, max |diff| 3.001e-16; gene ranking identical
+  geary.tsv C: 18169 of 19428 bit-identical, max |diff| 8.882e-16; gene ranking identical
+  moran_perm.tsv I: 1978 of 2000 bit-identical, max |diff| 1.110e-16; pval_sim identical on 1986 of 2000; var_sim max rel 1.5e-03; gene ranking identical
+  score.tsv: 32 of 33 rows print identically; differing:
+    Moran's I == closed form, all 19428 genes: max |diff| 4.920e-15; max |diff| / per-gene summation bound 0.0038 (bounds 6.5e-15 to 1.1e-11)  |  max |diff| 0.000e+00; max |diff| / per-gene summation bound 0.0000 (bounds 6.5e-15 to 1.1e-11)
+-- visium
+  grid1_edges: identical
+  grid2_edges: identical
+  grid3_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  moran.tsv I: 14277 of 14828 bit-identical, max |diff| 1.898e-15; gene ranking identical
+  geary.tsv C: 11787 of 14828 bit-identical, max |diff| 1.632e-14; gene ranking identical
+  moran_perm.tsv I: 1930 of 2000 bit-identical, max |diff| 9.992e-16; pval_sim identical on 1984 of 2000; var_sim max rel 5.3e-14; gene ranking identical
+  score.tsv: 34 of 36 rows print identically; differing:
+    Geary's C == closed form, all 14828 genes: max |diff| 3.578e-12; max |diff| / per-gene summation bound 0.0667 (bounds 1.8e-12 to 1.7e-09)  |  max |diff| 3.578e-12; max |diff| / per-gene summation bound 0.0666 (bounds 1.8e-12 to 1.7e-09)
+    Moran's I == closed form, all 14828 genes: max |diff| 1.104e-15; max |diff| / per-gene summation bound 0.0120 (bounds 6.7e-15 to 8.5e-13)  |  max |diff| 0.000e+00; max |diff| / per-gene summation bound 0.0000 (bounds 6.7e-15 to 8.5e-13)
+
+== Intel vs AMD (the same x86 env twin)
+-- slideseq
+  knn_edges: identical
+  rad_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  co-occurrence: identical
+  moran.tsv I: 19428 of 19428 bit-identical, max |diff| 0.000e+00; gene ranking identical
+  geary.tsv C: 19428 of 19428 bit-identical, max |diff| 0.000e+00; gene ranking identical
+  moran_perm.tsv I: 2000 of 2000 bit-identical, max |diff| 0.000e+00; pval_sim identical on 2000 of 2000; var_sim max rel 0.0e+00; gene ranking identical
+  score.tsv: 33 of 33 rows print identically; differing:
+-- visium
+  grid1_edges: identical
+  grid2_edges: identical
+  grid3_edges: identical
+  enrichment counts: identical
+  enrichment z (seeded, 1000 perms): identical
+  moran.tsv I: 14828 of 14828 bit-identical, max |diff| 0.000e+00; gene ranking identical
+  geary.tsv C: 14828 of 14828 bit-identical, max |diff| 0.000e+00; gene ranking identical
+  moran_perm.tsv I: 2000 of 2000 bit-identical, max |diff| 0.000e+00; pval_sim identical on 2000 of 2000; var_sim max rel 0.0e+00; gene ranking identical
+  score.tsv: 36 of 36 rows print identically; differing:

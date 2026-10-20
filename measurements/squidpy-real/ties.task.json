@@ -1,0 +1,29 @@
+{
+  "task_id": "cookbook-squidpy-real-ties",
+  "container": "quay.io/aarchsci/single-cell@sha256:14d4af5bbd86625e3c98eb7b2078e3da6206aa9cb1ea3a3d631e96c7bebb901a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl NUMBA_CACHE_DIR=/tmp/numba\ncd /tmp\nprintf '03c0a267424d4e7dbfca162ca4b6d35d9f06fa37164e30aac25a4ab85dd4e9aa  slideseq.h5ad\\n600d54f849ca3d1e85f3d6816cb2ff2d7e52ece113d1ff33868154574fb5d70b  ties.py\\n' > ties.sha256\nsha256sum -c ties.sha256 || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nmkdir -p out\nuname -m > out/ties.txt\npython3 -u ties.py >> out/ties.txt 2>&1; RC=$?\ncat out/ties.txt\ntest \"$RC\" = 0 && grep -q '^TIES OK$' out/ties.txt || { echo FAIL; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/slideseq.h5ad", "destination": "/tmp/slideseq.h5ad"},
+    {"source": "s3://${COOKBOOK_BUCKET}/inputs/squidpy-real/ties.py", "destination": "/tmp/ties.py"}
+  ],
+  "outputs": [
+    {"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/squidpy-real/ties/"}
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

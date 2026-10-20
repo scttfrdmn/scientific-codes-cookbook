@@ -19,11 +19,20 @@ Builds kNN, radius and Visium-style hex graphs, scores neighbourhood enrichment 
 make stage RECIPE=squidpy     # once: the checks only — every cell, label and gene is synthesised
 spawn task run --spec "$(make -s spec RECIPE=squidpy)" --wait
 make ls RECIPE=squidpy
-
 sq.gr.spatial_neighbors_knn(adata, n_neighs=6)                       # == brute-force kNN, exactly
 sq.gr.nhood_enrichment(adata, cluster_key="ct", connectivity_key="rad", seed=0)
 sq.gr.spatial_autocorr(adata, mode="moran")                          # == closed form to 2e-15
 ```
+
+## Which box — [measured](../../measurements/squidpy-real/README.md) on a whole Slide-seqV2 puck (44,588 beads) and a whole Visium slide
+
+| chip | `4xlarge` | one pass, both sections | **billed $/result** |
+|---|---|---|---|
+| Graviton4 | `c8g` | 712 s | 0.145 |
+| Xeon 6975P-C | `c8i` | 744 s | 0.168 |
+| **EPYC 9R45** | `c8a` | **539 s** | **0.140** |
+
+**Take AMD for speed; Graviton4 is cheapest in compute, and the gap is small.** At 44,588 beads every identity holds, and every graph, enrichment count and seeded z-score is identical on all three chips. **Two squidpy traps:** any in-process permutation call (`nhood_enrichment` at the default `n_jobs=1`) leaves numba on one thread for the session, which made `co_occurrence` 5.2× slower, so call `numba.set_num_threads(n)` after it. And `nhood_enrichment(n_jobs>1)` raises `TypeError` on any graph over 262,144 edges.
 
 ## Make it yours
 
@@ -31,11 +40,11 @@ sq.gr.spatial_autocorr(adata, mode="moran")                          # == closed
 |---|---|---|
 | `spatial_neighbors_knn` / `_radius` / `_grid` | `spatial_neighbors(coord_type=...)` | the one-call form is **deprecated in 1.7 and removed in 1.9**; the mode-specific functions are the ones that keep working. |
 | `spatial_neighbors_grid(n_neighs=6, n_rings=k)` | your Visium slide | interior spots get exactly **3k(k+1)** neighbours (6, 18, 36); edge spots fewer, so ring count changes who counts as "neighbour". |
-| `nhood_enrichment(..., seed=0)` | no seed | the z-score is against a permutation null, so without a seed it moves run to run. It is in units of that null's sd, which is what makes 5 a 5-sigma call. |
+| `nhood_enrichment(..., seed=0)` | no seed | the z-score is against a permutation null, so without a seed it moves run to run, and **the seed pins it only at a fixed `n_jobs`** (each worker's chunk is seeded by position). It is in units of that null's sd, which is what makes 5 a 5-sigma call. |
 | `spatial_autocorr(mode="geary")` | — | **Geary's analytic variance was wrong before 1.8.2** (Moran's was reused). Here it matches Cliff & Ord; an older squidpy gives different `pval_norm`. |
 | 2,000 uniform cells, two-domain layout | your `obsm["spatial"]` and labels | nothing is fetched; positions are continuous so the kNN graph has one right answer. |
 
-**Leave the fixture.** Every check is an identity or a planted layout, so 2,000 cells is enough to make the planted signal 36–68 sigma and the brute-force graph cheap. **Scale it** to a real slide: the graph and closed-form identities hold at any size; only the brute-force reference becomes O(n²).
+**Leave the fixture.** Every check is an identity or a planted layout, so 2,000 cells is enough to make the planted signal 36–68 sigma and the brute-force graph cheap. **Scale it** to a real slide: the identities hold at a whole puck and a whole Visium slide ([measured](../../measurements/squidpy-real/README.md)); only the brute-force reference becomes O(n²).
 
 ## Shape, size, cost
 
@@ -113,8 +122,9 @@ does not hold — or a NaN anywhere a bound is applied. Check the bucket regardl
 
 ### Not covered
 
-**Real slides**: nothing reads Visium, Xenium or MERFISH output, so SpatialData I/O, image
-features (`sq.im`) and segmentation are untouched. **Ligand–receptor analysis** (`sq.gr.ligrec`),
+**Real slides** are in [the measurement](../../measurements/squidpy-real/README.md) (Slide-seqV2 and
+Visium from CELLxGENE); nothing reads Xenium or MERFISH output, and SpatialData I/O, image features
+(`sq.im`) and segmentation are untouched. **Ligand–receptor analysis** (`sq.gr.ligrec`),
 co-occurrence, Ripley's statistics and centrality scores. **Delaunay graphs**, which squidpy builds
 with scipy and so have no reference independent of it here. **Plotting.**
 

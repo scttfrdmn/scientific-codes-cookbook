@@ -1,0 +1,37 @@
+check	value	bound	status
+counts are non-negative integers	4992 x 36406, nnz 6240420, max 2442	all data == round(data) >= 0	ok
+obs names unique	1	1	ok
+Visium spots in tissue	3420 of 4992	reported	report
+coordinates finite	(3420, 2)	all finite	ok
+cell types (authors' annotation)	9: neuronal receptor cell=5; mast cell=3; cardiac muscle myoblast=2801; smooth muscle myoblast=45; lymphoid lineage restricted progenitor cell=1; immature innate lymphoid cell=21; fibroblast of cardiac tissue=223; cardiac endothelial cell=292; unknown=29	reported	report
+genes tested (detected in >= 10 observations)	14828 of 36406	reported	report
+Visium array indices on the hex lattice	array_row + array_col even on every spot	all even	ok
+one spot per array position	3420 positions, 3420 spots	equal	ok
+grid graph, 1 ring(s): pixel-space graph == array-index hex lattice, edge for edge	0 differing of 19946; ring labels == hops; 3135 spots with full 6-neighbour rings	0 differing	ok
+grid 1 ring(s): degree of every spot whose ring is complete	[6]	== 6	ok
+grid graph, 2 ring(s): pixel-space graph == array-index hex lattice, edge for edge	0 differing of 58898; ring labels == hops; 2860 spots with full 18-neighbour rings	0 differing	ok
+grid 2 ring(s): degree of every spot whose ring is complete	[18]	== 18	ok
+grid graph, 3 ring(s): pixel-space graph == array-index hex lattice, edge for edge	0 differing of 115898; ring labels == hops; 2603 spots with full 36-neighbour rings	0 differing	ok
+grid 3 ring(s): degree of every spot whose ring is complete	[36]	== 36	ok
+authors' cell types: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 19946 vs 19946	== 0 exactly	ok
+authors' cell types: self-enrichment z per type	neuronal receptor cell=27.4; mast cell=-0.1; cardiac muscle myoblast=10.2; smooth muscle myoblast=9.3; lymphoid lineage restricted progenitor cell=nan; immature innate lymphoid cell=1.1; fibroblast of cardiac tissue=13.0; cardiac endothelial cell=6.4; unknown=34.1	reported	report
+planted halves: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 19946 vs 19946	== 0 exactly	ok
+planted halves: left-left / right-right z, left-right z	95.5 / 95.4, -101.5	> +5, > +5, < -5	ok
+shuffled labels: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 19946 vs 19946	== 0 exactly	ok
+shuffled labels: max |z| over pairs with expected count >= 50	2.10 over 15 pairs (rare pairs, reported: 1.85)	< 5	ok
+n_jobs=16, loky: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 19946 vs 19946	== 0 exactly	ok
+nhood_enrichment n_jobs=16 (loky), 19946 edges	runs	reported	report
+n_jobs=16, threading: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 19946 vs 19946	== 0 exactly	ok
+same seed, n_jobs=1 vs n_jobs=16 (threading): z-scores	max |dz| 0.910; identical: False	reported	report
+weights	float32, 19946 entries, 1 isolated observations, max |row sum - 1| elsewhere 0.0e+00	reported	report
+numba threads squidpy left after each permutation call (restored to 16 after each)	nhood_enrichment[authors' cell types]: 1; nhood_enrichment[planted halves]: 1; nhood_enrichment[shuffled labels]: 1; nhood_enrichment[n_jobs=16, loky]: 16; nhood_enrichment[n_jobs=16, threading]: 16	reported	report
+Moran's I == closed form, all 14828 genes	max |diff| 1.104e-15; max |diff| / per-gene summation bound 0.0120 (bounds 6.7e-15 to 8.5e-13)	<= 1 on every gene	ok
+Geary's C == closed form, all 14828 genes	max |diff| 3.578e-12; max |diff| / per-gene summation bound 0.0667 (bounds 1.8e-12 to 1.7e-09)	<= 1 on every gene	ok
+analytic var, Moran / Geary vs Cliff & Ord	rel 3.5e-07 / 1.6e-06; Geary/Moran 1.012	rel < 1e-5 each; Geary != Moran	ok
+numba threads after spatial_autocorr(n_perms=100, n_jobs=16)	16	reported	report
+a gene's I does not depend on which other genes are tested	max |diff| 0.000e+00 over 2000 HVGs	< 1e-12	ok
+permutation p-values in [1/(n_perms+1), 1]	min 0.00990 max 0.50495	>= 1/101	ok
+spatially variable genes, BH-FDR < 0.05	849 of 14828 (pval_norm); 0 of 2000 HVGs (pval_sim); top I: MT-ND3=0.532, MT-CO2=0.455, MYL7=0.447, MT-ND4=0.438, MT-ATP6=0.433, IGLC2=0.416, MT-CYB=0.412, MT-ND2=0.407, IGLC3=0.402, MT-CO1=0.397	reported	report
+I(y) vs I(-y), all 14828 genes	max |diff| 0.000e+00	== 0 exactly	ok
+I(y) vs I(3.7y + 112.5), all 14828 genes	max |diff| 4.730e-14; max |diff| / per-gene rounding bound 0.114 (bounds 2.5e-14 to 9.2e-13)	<= 1 on every gene	ok
+planted wave / noise-only gene, z	+29.9 / -0.82	> 5 / |z| < 5	ok

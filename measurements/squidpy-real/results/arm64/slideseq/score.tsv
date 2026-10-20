@@ -1,0 +1,34 @@
+check	value	bound	status
+counts are non-negative integers	44588 x 27007, nnz 15253538, max 620	all data == round(data) >= 0	ok
+obs names unique	1	1	ok
+coordinates finite	(44588, 2)	all finite	ok
+cell types (authors' annotation)	15: endothelial cell=9282; mesangial cell=356; podocyte=317; pericyte=9; leukocyte=589; blood vessel smooth muscle cell=503; kidney interstitial fibroblast=2911; kidney connecting tubule epithelial cell=2; kidney proximal convoluted tubule epithelial cell=3090; kidney distal convoluted tubule epithelial cell=89; kidney loop of Henle thick ascending limb epithelial cell=4488; kidney loop of Henle thin descending limb epithelial cell=7732; kidney collecting duct principal cell=4112; kidney collecting duct intercalated cell=616; unknown=10492	reported	report
+genes tested (detected in >= 10 observations)	19428 of 27007	reported	report
+kNN graph: every bead has exactly k neighbours	min 6 max 6	== 6	ok
+kNN distances == brute force, every bead	max rel 0.000e+00	< 1e-12	ok
+kNN neighbour sets == brute force where the k-th neighbour is unique	0 differ of 44588; 10 beads tie at k	0 differ	ok
+radius graph (r=30) == brute force	0 differing of 268136; 32 pairs within 1e-9 r of r; asymmetric 0	0 differing, symmetric	ok
+authors' cell types: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 267528 vs 267528	== 0 exactly	ok
+authors' cell types: self-enrichment z per type	endothelial cell=45.9; mesangial cell=62.4; podocyte=142.5; pericyte=-0.1; leukocyte=167.5; blood vessel smooth muscle cell=96.9; kidney interstitial fibroblast=69.2; kidney connecting tubule epithelial cell=nan; kidney proximal convoluted tubule epithelial cell=116.0; kidney distal convoluted tubule epithelial cell=113.3; kidney loop of Henle thick ascending limb epithelial cell=49.3; kidney loop of Henle thin descending limb epithelial cell=77.2; kidney collecting duct principal cell=165.2; kidney collecting duct intercalated cell=12.5; unknown=37.1	reported	report
+planted halves: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 267528 vs 267528	== 0 exactly	ok
+planted halves: left-left / right-right z, left-right z	326.0 / 337.7, -326.0	> +5, > +5, < -5	ok
+shuffled labels: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 267528 vs 267528	== 0 exactly	ok
+shuffled labels: max |z| over pairs with expected count >= 50	2.22 over 128 pairs (rare pairs, reported: 2.59)	< 5	ok
+nhood_enrichment n_jobs=16 (loky), 267528 edges	raises TypeError: No matching definition for argument type(s) readonly array(uint32, 1d, C), array(uint32, 1d, C), array(uint32,	reported	report
+n_jobs=16, threading: enrichment counts == M'AM, sum == edges	max |diff| 0; sum 267528 vs 267528	== 0 exactly	ok
+same seed, n_jobs=1 vs n_jobs=16 (threading): z-scores	max |dz| 8.083; identical: False	reported	report
+reference pair distances on the 1/8 lattice	7245199 pairs within 210; 64 d^2 integral: True	integral	ok
+co-occurrence, 39 radii 10-200 units: == KD-tree pair counts	max |diff| 2.842e-14	< 1e-9	ok
+co-occurrence past the section's diameter == n/(n-1) off-diagonal, n(n_i-1)/((n-1)n_i) on it	max |diff| 2.220e-16	< 1e-9	ok
+weights	float32, 267528 entries, 0 isolated observations, max |row sum - 1| elsewhere 0.0e+00	reported	report
+numba threads squidpy left after each permutation call (restored to 16 after each)	nhood_enrichment[authors' cell types]: 1; nhood_enrichment[planted halves]: 1; nhood_enrichment[shuffled labels]: 1; nhood_enrichment[loky, raised]: 16; nhood_enrichment[n_jobs=16, threading]: 16	reported	report
+Moran's I == closed form, all 19428 genes	max |diff| 4.920e-15; max |diff| / per-gene summation bound 0.0038 (bounds 6.5e-15 to 1.1e-11)	<= 1 on every gene	ok
+Geary's C == closed form, all 19428 genes	max |diff| 2.409e-12; max |diff| / per-gene summation bound 0.0542 (bounds 2.2e-11 to 1.3e-10)	<= 1 on every gene	ok
+analytic var, Moran / Geary vs Cliff & Ord	rel 1.9e-08 / 7.0e-08; Geary/Moran 1.085	rel < 1e-5 each; Geary != Moran	ok
+numba threads after spatial_autocorr(n_perms=100, n_jobs=16)	16	reported	report
+a gene's I does not depend on which other genes are tested	max |diff| 0.000e+00 over 2000 HVGs	< 1e-12	ok
+permutation p-values in [1/(n_perms+1), 1]	min 0.00990 max 0.50495	>= 1/101	ok
+spatially variable genes, BH-FDR < 0.05	7486 of 19428 (pval_norm); 670 of 2000 HVGs (pval_sim); top I: IGHM=0.464, MT-CYB=0.459, IGLC3=0.432, HBB=0.429, UMOD=0.410, MT-ND4=0.389, MT-ND1=0.373, AQP2=0.368, MT-CO1=0.366, MT-ATP6=0.365	reported	report
+I(y) vs I(-y), all 19428 genes	max |diff| 0.000e+00	== 0 exactly	ok
+I(y) vs I(3.7y + 112.5), all 19428 genes	max |diff| 5.849e-13; max |diff| / per-gene rounding bound 0.233 (bounds 1.4e-14 to 1.1e-11)	<= 1 on every gene	ok
+planted wave / noise-only gene, z	+126.0 / -0.01	> 5 / |z| < 5	ok
