@@ -1,0 +1,70 @@
+{
+  "task_id": "cookbook-fastjet-real-cluster",
+  "container": "quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=$PATH:/opt/conda/bin\ncd /tmp\ngrep -E ' (lhco-counts\\.i32|lhco-pep\\.f8|lhco-label\\.i8|lhco-features\\.f8|lhco-features\\.columns|lhco-meta\\.json|real\\.sh|cluster\\.py|brute\\.py)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 9 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-pep.f8",
+      "destination": "/tmp/lhco-pep.f8"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-counts.i32",
+      "destination": "/tmp/lhco-counts.i32"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-label.i8",
+      "destination": "/tmp/lhco-label.i8"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-features.f8",
+      "destination": "/tmp/lhco-features.f8"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-features.columns",
+      "destination": "/tmp/lhco-features.columns"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/lhco-meta.json",
+      "destination": "/tmp/lhco-meta.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/cluster.py",
+      "destination": "/tmp/cluster.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/brute.py",
+      "destination": "/tmp/brute.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/fastjet-real/cluster/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

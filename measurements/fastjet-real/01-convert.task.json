@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-fastjet-real-convert",
+  "container": "quay.io/aarchsci/md@sha256:285377124854316a3604756eecde350dfb45b26b24b9f0e4f247d3b0a0dff58f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# The md env, not hep: hep has no HDF5 reader for Python, md has pytables.\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p /tmp/conv\ngrep -E ' (convert\\.py|events_anomalydetection_v2\\.h5|events_anomalydetection_v2\\.features\\.h5)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 3 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\npython3 -u convert.py /tmp/events_anomalydetection_v2.h5 /tmp/events_anomalydetection_v2.features.h5 /tmp/conv > /tmp/conv/convert.log 2>&1\nRC=$?\ncat /tmp/conv/convert.log\ntest \"$RC\" = 0 && grep -q 'CONVERT OK' /tmp/conv/convert.log || { echo \"FAIL: convert\"; exit 1; }\n(cd /tmp/conv && sha256sum lhco-* > converted.sha256 && cat converted.sha256)\ndf -h /tmp\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/zenodo/events_anomalydetection_v2.h5",
+      "destination": "/tmp/events_anomalydetection_v2.h5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/zenodo/events_anomalydetection_v2.features.h5",
+      "destination": "/tmp/events_anomalydetection_v2.features.h5"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/convert.py",
+      "destination": "/tmp/convert.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/conv/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/fastjet-real/data/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

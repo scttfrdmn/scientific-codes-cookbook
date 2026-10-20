@@ -1,0 +1,53 @@
+arm64   pass  150.0 s  window  378 s  $/hr 0.3590  compute $ 0.01496  billed $ 0.03770  rss worker 2.15 GiB  completed
+x86_64  pass  199.3 s  window  335 s  $/hr 0.4234  compute $ 0.02344  billed $ 0.03940  rss worker 2.15 GiB  completed
+amd     pass  107.4 s  window  219 s  $/hr 0.4869  compute $ 0.01453  billed $ 0.02962  rss worker 2.15 GiB  completed
+== x86_64 vs arm64: 37 values identical; differ: ['split_recluster_cpu_s_sum', 'nsubjettiness_cpu_s_sum', 'brute_cpu_s_sum', 'fingerprint_lead', 'fingerprint_taus', 'fingerprint_input_vectors', 'fingerprint_jets', 'features_mj1']
+    split_recluster_cpu_s_sum
+      arm64 189.3
+      x86_64 259.3
+    nsubjettiness_cpu_s_sum
+      arm64 492.5
+      x86_64 610.3
+    brute_cpu_s_sum
+      arm64 239.0
+      x86_64 346.8
+    fingerprint_lead
+      arm64 4314908512814724410
+      x86_64 4314906863310588706
+    fingerprint_taus
+      arm64 5737697541208801626
+      x86_64 5737700403118575009
+    fingerprint_input_vectors
+      arm64 14117644916486202652
+      x86_64 14117638690044685092
+    fingerprint_jets
+      arm64 13792942948018768100
+      x86_64 13792942884364010620
+    features_mj1
+      arm64 max|d| 4.946e-03 GeV, worst 0.088 of the bound, 6-sig-fig float32 of ours == published 1087395 of 1100000
+      x86_64 max|d| 4.946e-03 GeV, worst 0.088 of the bound, 6-sig-fig float32 of ours == published 1087394 of 1100000
+== amd vs arm64: 37 values identical; differ: ['split_recluster_cpu_s_sum', 'nsubjettiness_cpu_s_sum', 'brute_cpu_s_sum', 'fingerprint_lead', 'fingerprint_taus', 'fingerprint_input_vectors', 'fingerprint_jets', 'features_mj1']
+    split_recluster_cpu_s_sum
+      arm64 189.3
+      amd   158.5
+    nsubjettiness_cpu_s_sum
+      arm64 492.5
+      amd   340.5
+    brute_cpu_s_sum
+      arm64 239.0
+      amd   129.9
+    fingerprint_lead
+      arm64 4314908512814724410
+      amd   4314906863310588706
+    fingerprint_taus
+      arm64 5737697541208801626
+      amd   5737700403118575009
+    fingerprint_input_vectors
+      arm64 14117644916486202652
+      amd   14117638690044685092
+    fingerprint_jets
+      arm64 13792942948018768100
+      amd   13792942884364010620
+    features_mj1
+      arm64 max|d| 4.946e-03 GeV, worst 0.088 of the bound, 6-sig-fig float32 of ours == published 1087395 of 1100000
+      amd   max|d| 4.946e-03 GeV, worst 0.088 of the bound, 6-sig-fig float32 of ours == published 1087394 of 1100000

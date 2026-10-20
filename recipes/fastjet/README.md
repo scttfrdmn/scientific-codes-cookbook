@@ -33,13 +33,22 @@ cs.inclusive_jets(min_pt=5.0)       # sums to the input 4-momentum, exactly
 | asserting **change/ε = 1** | a bound like `< 1e-3` | a bound passes an implementation whose error happens to be small. The ratio says the change **is** the soft momentum: measured 1.0000 at ε = 1e-3, 1e-6 and 1e-9. |
 | the graded Δφ control | the collinear result alone | exact-zero at perfect collinearity would also hold if splitting were ignored. At Δφ = 0.05/0.20/1.00 the change grows 1.6e-02 → 2.5e-01 → a different jet count. |
 | the 4-particle fixture | your own event | separations are checked in **rapidity–φ**, not Cartesian momenta — staging asserts the closest pair is 1.5051 apart against `R = 0.4`, so one jet per particle holds. |
-| `antikt_algorithm` | `cambridge`, `kt` | all three agree **exactly** on well-separated input. They differ on substructure, which this page does not test. |
 
-**Leave the fixture.** Nothing is staged: four hand-written particles plus a 13 TeV Pythia event generated in-run from a fixed seed, so every reference is a property of the algorithm. **Scale it** by raising `pTHatMin` or clustering a full event sample — the invariances are independent of multiplicity, and hold on 613 particles here.
+**Leave the fixture.** Nothing is staged: four hand-written particles plus a 13 TeV Pythia event generated in-run from a fixed seed, so every reference is a property of the algorithm. **Scale it** by raising `pTHatMin` or clustering a full event sample — the invariances are independent of multiplicity; collinear safety and the partition hold on all 1.1 M events measured below.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All the physics is **10 s** of a 3m20s window — and **2m24s of that is pulling the image**, because `hep` carries ROOT, Geant4 and Pythia8. 45 s is installing Docker ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/fastjet-real/README.md) (all 1.1 M LHC Olympics 2020 R&D events, 195.9 M hadrons, anti-k_t R = 1.0, 8 workers)
+
+| chip | instance | FastJet pass (cpu-s ÷ 8) | whole task | task window | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 23.7 s | 150 s | 378 s | 0.3590 | 0.0150 | 0.0377 |
+| Xeon 6975P-C | `m8i.2xlarge` | 33.1 s | 199 s | 335 s | 0.4234 | 0.0234 | 0.0394 |
+| EPYC 9R45 | `m8a.2xlarge` | **19.9 s** | **107 s** | 219 s | 0.4869 | **0.0145** | **0.0296** |
+
+**AMD is fastest and cheapest billed.** Every clustering decision is identical on all three chips. An independent anti-k_t finds bit-identical jets on 11,000 events, and the organisers' published leading jets are reproduced on all 1.1 M rows. The box is sized by memory: 2.15 GiB per worker.
 
 <details>
 <summary>As shipped: an exact collinear invariance, infrared safety as a scaling law, graded controls for both, and a 613-particle Pythia event</summary>
