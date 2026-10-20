@@ -1,0 +1,31 @@
+# GRI-Mech 3.0's laminar-flame-speed and shock-tube-ignition targets, transcribed from the target
+# pages pinned in sources.sha256 (combustion.berkeley.edu/gri-mech/version30/targets30/<page>.html).
+# real.py re-reads every staged page and fails if a number here differs from the page.
+# mixture: mole fractions (%), or fuel|oxidizer for set_equivalence_ratio. exp and gri30 in cm/s
+# (flame) or microseconds (ignition). gri30 is blank where the page's table has one value too few to
+# say which column it belongs to (the propane pages: Experimental, N/A, and one value).
+id	page	kind	mixture	phi	P_atm	T_K	exp	gri30
+F1	f1	flame	CH4|O2:1,N2:3.76	0.98	1	300	35.55	37.92
+F2	f2	flame	CH4|O2:1,N2:3.76	1.43	1	300	12.4	12.46
+F3	f3	flame	CH4|O2:1,N2:3.76	0.67	1	300	13.5	16.94
+F4	f4	flame	CH4|O2:1,N2:3.76	1.0	3	300	22.7	25.46
+F5	f5	flame	CH4|O2:1,N2:3.76	1.0	4.9	400	39.7	32.86
+F6	f6	flame	CH4|O2:1,N2:3.76	1.0	19.7	400	20.4	17.18
+SF7	sf7	flame	CO:20.8,H2:20.8,O2:12.264,N2:46.136	1.69	1	300	180	181.6
+StF8	stf8	flame	C2H6|O2:1,N2:3.76	1.0	1	300	40.21	42.57
+IG.1a	ig.1a	ignition	CH4:9.1,O2:18.2,AR:72.7	1.0	1.8	1500	800	666
+IG.1b	ig.1b	ignition	CH4:9.1,O2:18.2,AR:72.7	1.0	2.04	1700	105	110
+IG.2	ig.2	ignition	CH4:33.3,O2:13.3,AR:53.4	5.01	3.8	1600	335	314
+IG.6a	ig.6a	ignition	C2H6:0.5,O2:1.8,AR:97.7	0.764	0.25	1600	436	477
+IG.6b	ig.6b	ignition	C2H6:0.5,O2:5.0,AR:94.5	0.275	0.25	1600	222	224
+IG.T1	ig.t1	ignition	CH4:9.5,C3H8:1.9,O2:19,AR:69.6	1.5	2.5	1410	275	223
+IG.T2	ig.t2	ignition	CH4:3.4,C3H8:0.1,O2:7,AR:89.5	1.043	7.095	1640	63.2	68.5
+IG.St1a	ig.st1a	ignition	CH4:3.29,C2H6:0.21,O2:7,AR:89.5	1.045	6.1	1356	1000	1240
+IG.St1b	ig.st1b	ignition	CH4:3.29,C2H6:0.21,O2:7,AR:89.5	1.045	7.6	1688	39	45
+IG.St3a	ig.st3a	ignition	CH4:4.8,O2:19.1,AR:76.1	0.5	1.6	1530	500	453
+IG.St3b	ig.st3b	ignition	CH4:4.8,O2:19.1,AR:76.1	0.5	1.9	1845	43	45
+IG.St4a	ig.st4a	ignition	CH4:3.4,O2:6.7,AR:89.9	1.0	34.6	1408	534	475
+IG.St4b	ig.st4b	ignition	CH4:0.28,O2:0.56,AR:99.16	1.0	83.9	1706	160	172
+IG.C3H8a	ig.c3h8a	ignition	C3H8:7.75,O2:19.4,N2:72.85	2	2.83	1333	350
+IG.C3H8b	ig.c3h8b	ignition	C3H8:0.8,O2:20.8,N2:78.4	0.19	3.47	1250	190
+IG.C3H8c	ig.c3h8c	ignition	C3H8:4,O2:20.1,N2:75.9	1	1.58	1333	220

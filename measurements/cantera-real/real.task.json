@@ -1,0 +1,74 @@
+{
+  "task_id": "cookbook-cantera-real-r2",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nprintf '0159414991aa53b3b964bd24f334fe33eb25a00f503bcbf0a8f718e449946991  run.sh\\n77f7becea7840fa9cfbed0bb13002c2896475ac86f8288634644799d3d22918d  real.py\\n56340ea5ee42ef71923cebd64debb2a84e5beb5e627ba01460ee23245aedc305  targets.tsv\\n6eb9c59bc8683bb4b82978b4473a04b094495bb3789ef3ce57ec0e121c236798  sources.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cantera-real/gri/",
+      "destination": "/tmp/gri/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cantera-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cantera-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cantera-real/targets.tsv",
+      "destination": "/tmp/targets.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/cantera-real/sources.sha256",
+      "destination": "/tmp/sources.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/check.txt"
+    },
+    {
+      "source": "/tmp/out/real.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/real.log"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/results.jsonl",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/results.jsonl"
+    },
+    {
+      "source": "/tmp/out/phases.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/phases.txt"
+    },
+    {
+      "source": "/tmp/out/sources.check",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/cantera-real/r2/sources.check"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

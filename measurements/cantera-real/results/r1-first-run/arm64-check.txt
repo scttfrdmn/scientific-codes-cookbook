@@ -1,0 +1,96 @@
+jobs 498, ok 498, failed 0
+PASS  every job ran to completion (498)
+PASS  targets.tsv matches its 24 pinned target pages (all)
+mechanism: shipped gri30.yaml vs ck2yaml of the official GRI-Mech 3.0 files, 84 states
+    kf             max rel diff 0.000e+00
+    kr             max rel diff 0.000e+00
+    h_RT           max rel diff 0.000e+00
+    s_R            max rel diff 0.000e+00
+    cp_R           max rel diff 0.000e+00
+    viscosity      max rel diff 0.000e+00
+    conductivity   max rel diff 0.000e+00
+    mix_diff       max rel diff 0.000e+00
+    binary_diff    max rel diff 0.000e+00
+    thermal_diff   max rel diff 0.000e+00
+PASS  53 species / 325 reactions, same order, same equations and duplicate flags
+PASS  shipped gri30.yaml == the published GRI-Mech 3.0 files, bit for bit, in every rate constant, thermo and transport property
+flames: 224, 56087 grid points total, 3826 s of solve
+PASS  every flame mixture has the stated phi (worst 1.6960 vs 1.690, SF7)
+PASS  continuity: rho*u uniform through every flame, worst spread 2.41e-05 (the steady solver's rtol is 1e-4)
+PASS  sum Y = 1 at every grid point within the solver's tolerance (1.00e-04), worst 2.17e-09
+PASS  every flame speed finite and > 0
+PASS  unity Lewis number: element mass fractions equal the inlet's at EVERY grid point of 29 flames, worst 3.05e-07
+PASS  control: differential diffusion moves the element fractions in every mixture-averaged / multicomponent flame, least 2.76e-03 (so the unity-Lewis identity is not vacuous)
+    enthalpy vs inlet, worst over all flames and points: 207.47 K-equivalent (mixture-averaged)
+    outlet T minus HP-equilibrium T: worst -13.18 K (unity-Lewis-number phi 1.69 P 1.0)
+    CH4-air   1.0 atm 300 K: Su peak 38.744 cm/s at phi 1.05; phi 0.6 11.519, phi 1.6 8.162
+    CH4-air   1.0 atm 400 K: Su peak 61.937 cm/s at phi 1.05; phi 0.6 22.149, phi 1.6 14.708
+    CH4-air   3.0 atm 300 K: Su peak 24.851 cm/s at phi 1.05; phi 0.6 5.950, phi 1.6 5.928
+    CH4-air   4.9 atm 400 K: Su peak 32.720 cm/s at phi 1.05; phi 0.6 8.808, phi 1.6 9.327
+    CH4-air  10.0 atm 400 K: Su peak 23.185 cm/s at phi 1.05; phi 0.6 5.763, phi 1.6 8.358
+    CH4-air  19.7 atm 400 K: Su peak 17.346 cm/s at phi 1.05; phi 0.6 4.188, phi 1.6 8.065
+    flame-speed targets (cm/s): mix-avg at slope 0.1/0.05/0.025/0.0125, multicomponent+Soret 0.05/0.025, unity Le 0.05 | GRI-Mech 3.0 published | experiment
+    F1     37.961  37.487  37.183  36.991  37.080  36.812  28.866 |   37.92 |   35.55
+    F2     12.626  12.475  12.395  12.355  12.532  12.396   9.559 |   12.46 |   12.40
+    F3     17.192  17.014  16.915  16.860  16.962  16.903  16.920 |   16.94 |   13.50
+    F4     24.611  24.367  24.217  24.115  24.227  24.091  19.809 |   25.46 |   22.70
+    F5     32.525  32.185  31.951  31.825  32.038  31.817  26.376 |   32.86 |   39.70
+    F6     17.268  17.014  16.901  16.823  17.076  16.961  14.829 |   17.18 |   20.40
+    SF7   194.849 194.700 194.613 194.533 179.592 179.782 121.029 |  181.60 |  180.00
+    StF8   42.826  42.208  41.833  41.644  41.865  41.478  31.184 |   42.57 |   40.21
+ignition: 252 reactors, 789004 steps, 64 s
+PASS  every reactor ignited (T rose by over half its equilibrium rise)
+    phi stated on the page vs phi of the page's own mole fractions, where they differ: IG.6a x0.7858, IG.6b x0.7857
+PASS  every ignition mixture's mole fractions give its page's phi, except IG.6a/IG.6b, which are both off by the same factor 2.75/3.5 = 0.7857 (a stoichiometry slip on the page, not a transcription)
+PASS  constant-volume: internal energy conserved through 195 trajectories, worst 6.23e-09 relative
+PASS  constant-volume: density constant, worst 0.00e+00
+PASS  constant-pressure: enthalpy conserved through 57 trajectories, worst 4.71e-10 relative
+PASS  constant-pressure: pressure constant, worst 2.87e-16
+PASS  elements conserved through every trajectory, worst 6.91e-13
+PASS  the integrator's end state IS the equilibrium solver's (UV / HP): worst |T_end - T_eq| 1.32e-04 K
+PASS    ... and its composition, worst max|X_end - X_eq| 1.92e-07
+    IG.1a     tau(max dT/dt)    664.74 us  tau(OH peak)    694.28 us | GRI-Mech 3.0 666 | experiment 800
+    IG.1b     tau(max dT/dt)    110.29 us  tau(OH peak)    132.92 us | GRI-Mech 3.0 110 | experiment 105
+    IG.2      tau(max dT/dt)    307.38 us  tau(OH peak)    312.52 us | GRI-Mech 3.0 314 | experiment 335
+    IG.6a     tau(max dT/dt)    467.98 us  tau(OH peak)   2756.93 us | GRI-Mech 3.0 477 | experiment 436
+    IG.6b     tau(max dT/dt)    225.70 us  tau(OH peak)   1726.22 us | GRI-Mech 3.0 224 | experiment 222
+    IG.C3H8a  tau(max dT/dt)    330.10 us  tau(OH peak)    330.82 us | GRI-Mech 3.0 - | experiment 350
+    IG.C3H8b  tau(max dT/dt)    935.08 us  tau(OH peak)    970.64 us | GRI-Mech 3.0 - | experiment 190
+    IG.C3H8c  tau(max dT/dt)    429.82 us  tau(OH peak)    436.62 us | GRI-Mech 3.0 - | experiment 220
+    IG.St1a   tau(max dT/dt)   1233.85 us  tau(OH peak)   1237.18 us | GRI-Mech 3.0 1240 | experiment 1000
+    IG.St1b   tau(max dT/dt)     44.67 us  tau(OH peak)     46.84 us | GRI-Mech 3.0 45 | experiment 39
+    IG.St3a   tau(max dT/dt)    455.35 us  tau(OH peak)    468.19 us | GRI-Mech 3.0 453 | experiment 500
+    IG.St3b   tau(max dT/dt)     46.36 us  tau(OH peak)     57.75 us | GRI-Mech 3.0 45 | experiment 43
+    IG.St4a   tau(max dT/dt)    434.67 us  tau(OH peak)    435.08 us | GRI-Mech 3.0 475 | experiment 534
+    IG.St4b   tau(max dT/dt)    174.86 us  tau(OH peak)    184.05 us | GRI-Mech 3.0 172 | experiment 160
+    IG.T1     tau(max dT/dt)    213.37 us  tau(OH peak)    214.33 us | GRI-Mech 3.0 223 | experiment 275
+    IG.T2     tau(max dT/dt)     69.52 us  tau(OH peak)     71.96 us | GRI-Mech 3.0 68.5 | experiment 63.2
+    map UV P    1 atm phi 0.5: tau 1.395e+05 us at 1100 K -> 37.49 us at 2000 K, monotone in T: True
+    map UV P    1 atm phi 1.0: tau 1.979e+05 us at 1100 K -> 36.23 us at 2000 K, monotone in T: True
+    map UV P    1 atm phi 2.0: tau 2.85e+05 us at 1100 K -> 37.88 us at 2000 K, monotone in T: True
+    map UV P   10 atm phi 0.5: tau 1.311e+04 us at 1100 K -> 4.618 us at 2000 K, monotone in T: True
+    map UV P   10 atm phi 1.0: tau 1.673e+04 us at 1100 K -> 4.561 us at 2000 K, monotone in T: True
+    map UV P   10 atm phi 2.0: tau 2.388e+04 us at 1100 K -> 4.962 us at 2000 K, monotone in T: True
+    map UV P   40 atm phi 0.5: tau 3403 us at 1100 K -> 1.518 us at 2000 K, monotone in T: True
+    map UV P   40 atm phi 1.0: tau 3678 us at 1100 K -> 1.487 us at 2000 K, monotone in T: True
+    map UV P   40 atm phi 2.0: tau 4645 us at 1100 K -> 1.627 us at 2000 K, monotone in T: True
+equilibrium: 2420 states x 3 solvers
+    vcs               converged 2420 of 2420; worst KKT residual 6.70e-07; worst element drift 7.77e-16
+    gibbs             converged 2401 of 2420; worst KKT residual 7.89e-10; worst element drift 4.31e-11
+      fails at CH4 phi 1.00 T 1600 P 100: CanteraError thrown by MultiPhaseEquil::equilibrate: / no convergence in 1000 iterations. Error = 5.891182063616732
+      fails at CH4 phi 1.00 T 1800 P 100: CanteraError thrown by MultiPhaseEquil::equilibrate: / no convergence in 1000 iterations. Error = 10.223135264389525
+      fails at C2H6 phi 2.00 T 2600 P 0.1: CanteraError thrown by MultiPhaseEquil::equilibrate: / no convergence in 1000 iterations. Error = 16.486875947937218
+      fails at C2H6 phi 4.00 T 2600 P 0.1: CanteraError thrown by MultiPhaseEquil::equilibrate: / no convergence in 1000 iterations. Error = 10.793927580925606
+      fails at C2H6 phi 2.00 T 3000 P 1: CanteraError thrown by MultiPhaseEquil::equilibrate: / no convergence in 1000 iterations. Error = 17.031842340613718
+    element_potential converged 2416 of 2420; worst KKT residual 3.80e-13; worst element drift 2.38e-10
+      fails at CH4 phi 1.00 T 1000 P 100: CanteraError thrown by ChemEquil::equilibrate: / no convergence in 1000 iterations.
+      fails at C2H6 phi 1.00 T 1000 P 100: CanteraError thrown by ChemEquil::equilibrate: / no convergence in 1000 iterations.
+      fails at C3H8 phi 1.00 T 1000 P 100: CanteraError thrown by ChemEquil::equilibrate: / no convergence in 1000 iterations.
+      fails at syngas phi 1.00 T 1000 P 100: CanteraError thrown by ChemEquil::equilibrate: / no convergence in 1000 iterations.
+PASS  vcs converges on all 2420 states
+PASS  Gibbs-minimum certificate: mu_k/RT = sum_j a_kj lambda_j for every species above 1e-12, every solver, every state; worst residual 6.70e-07
+PASS  elements conserved by every solver, worst 2.38e-10
+PASS  gibbs == vcs where both converge (2401 states): worst max|dX| 5.60e-10, worst |dg|/RT 1.00e-09
+PASS  element_potential == vcs where both converge (2416 states): worst max|dX| 5.21e-10, worst |dg|/RT 1.03e-08
+PASS  determinism: a flame and a reactor repeated in one process are bit-identical
+ALL CHECKS PASSED

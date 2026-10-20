@@ -35,9 +35,13 @@ gas.cp_mole - gas.cv_mole                    # == R exactly, for an ideal gas
 | `gri30.yaml` | your mechanism | it ships **inside** the package, so it is version-matched to cantera and needs no staging. 33 mechanism files are installed; `ct.Solution("…")` finds them by name. |
 | `equilibrate("TP")` | `"HP"`, `"UV"` | `HP` holds enthalpy fixed and gives the adiabatic flame temperature — **2225.52 K** here, against the ~2225 K textbook value for this mixture. |
 | asserting `cp − cv = R` | a measured band | `R = N_A·k_B` is **exact by SI definition**, so staging derives it rather than quoting it. This is a constant, not a fit. |
-| equilibrium only | a reactor network or 1-D flame | this page checks thermo and equilibrium. Transport, ignition delay and flame speeds are untouched — see below. |
+| equilibrium only | a reactor network or 1-D flame | this page checks thermo and equilibrium; flames, ignition and transport are [measured at scale](../../measurements/cantera-real/README.md). |
 
 **Leave the fixture.** Nothing is fetched: stoichiometric methane-air (`CH4:1, O2:2, N2:7.52`, the `2 × 3.76` air ratio staging verifies) with a mechanism from the installed package. **Scale it** to your own mechanism — every identity here is independent of the chemistry.
+
+## Which box — [measured](../../measurements/cantera-real/README.md) on GRI-Mech 3.0's own validation set
+
+**Billed $/study: AMD `c8a.2xlarge` $0.041 (294 s), Graviton4 `c8g.2xlarge` $0.051 (496 s), Intel `c8i.2xlarge` $0.068 (602 s).** The study is 224 flames, 252 ignition reactors and 2,420 equilibria × 3 solvers, with every identity holding on all three chips. Ignition delays match GRI-Mech's published predictions to a median 1.5%. **AMD wins outright.** Flames are 97% of the CPU and run one per core, and Intel's 8 vCPUs are 4 SMT cores. Converge the flame grid before you compare: GRI-Mech's published flame speeds sit at Cantera's coarsest refinement, and converged values are 0.5–5% lower.
 
 ## Shape, size, cost
 
@@ -183,13 +187,10 @@ regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 
 ### Not covered
 
-**Time-dependent chemistry.** No reactor networks, no ignition-delay calculation, no `IdealGasReactor`
-integration — equilibrium and instantaneous rates only, so nothing here exercises the ODE
-integrator that most kinetics work depends on.
-
-**Flames.** `FreeFlame`, burner-stabilised and counterflow solvers are all untouched, and they are
-the headline capability this env gained. **Transport properties** — viscosity, conductivity and
-diffusion coefficients are computed by a separate model that is never evaluated. **Surface
+**Time-dependent chemistry and flames, on this page.** The recipe itself checks equilibrium and
+instantaneous rates only. Ignition reactors, `FreeFlame` in three transport models, and the
+transport data are covered by [the GRI-Mech 3.0 measurement](../../measurements/cantera-real/README.md).
+Burner-stabilised and counterflow flames are not covered anywhere. **Surface
 chemistry** (`Interface`), despite `SiF4_NH3_mec.yaml` and the ammonia-Ru mechanisms shipping in the
 package. **Mechanism variety**: only GRI-Mech 3.0, so nothing says how the identities behave on a
 mechanism with different thermo parameterisations. **Cross-validation against a second
