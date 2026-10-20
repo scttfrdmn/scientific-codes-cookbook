@@ -1,0 +1,66 @@
+gmtkn55-v1.tar.gz: OK
+.
+..
+PBEh-3c
+coord
+struc.xyz
+release sha256 62a8d18778286e815292ee53d76ce447daf460a4dea3782c0f25cbac7019b5df
+   * xtb version 6.7.1 (edcfbbe) compiled by 'albert@albert-system' on 2024-07-22
+Model name:                              Intel(R) Xeon(R) 6975P-C
+== input: ACONF/B_G/coord (Bohr)
+$coord
+        1.11597390400000        2.71688740200000       -0.96758587014287      C
+       -0.65081596199999        3.77445932499999       -1.05036531714286      H
+        1.32969813400000        1.71116389200001       -2.74902867214286      H
+        2.65655034100000        4.07413963100000       -0.83322824214286      H
+        1.11597390400000        0.91376944400000        1.27837803585713      C
+        2.87383481500000       -0.16962558400001        1.29665735485714      H
+        1.08755620499999        2.00941934500000        3.02517271085713      H
+       -1.11597390400000       -0.91376944400000        1.27837803585713      C
+       -2.87383481500000        0.16962558400001        1.29665735485714      H
+       -1.08755620499999       -2.00941934500000        3.02517271085713      H
+       -1.11597390400000       -2.71688740200000       -0.96758587014287      C
+        0.65081596199999       -3.77445932499999       -1.05036531714286      H
+       -2.65655034100000       -4.07413963100000       -0.83322824214286      H
+       -1.32969813400000       -1.71116389200001       -2.74902867214286      H
+$end
+
+################ native
++ cd /tmp/tmp.vwlmwEOvz0 && xtb coord --gfn 2 --grad --norestart --acc 1.0   
+rc 0
+          | TOTAL ENERGY              -13.663944867848 Eh   |
+          | GRADIENT NORM               0.012607232629 Eh/α |
+charges coord coord.engrad energy gradient out.txt wbo xtbtopo.mol 
+torque  4.627375e-16 1.110223e-16 2.755137e-02
+sum_g   -2.331035e-18 -9.963818e-17 3.924812e-17
++ cd /tmp/tmp.KyoVdkx6UN && xtb coord --gfn 2 --grad --norestart --acc 0.0001   
+rc 0
+          | TOTAL ENERGY              -13.663944867853 Eh   |
+          | GRADIENT NORM               0.012607029759 Eh/α |
+charges coord coord.engrad energy gradient out.txt wbo xtbtopo.mol 
+torque  -3.773024e-17 8.500145e-17 2.755141e-02
+sum_g   -4.304283e-17 1.302127e-16 2.393918e-16
+atom 1 axis 1  E(+h) -13.663942939794  E(-h) -13.663946278720  FD 1.669463000e-03  analytic -5.970420734e-03  diff -7.640e-03
+atom 1 axis 2  E(+h) -13.663946586594  E(-h) -13.663942654864  FD -1.965865000e-03  analytic -1.965877208e-03  diff -1.221e-08
+atom 1 axis 3  E(+h) -13.663942263001  E(-h) -13.663946983776  FD 2.360387501e-03  analytic 2.360446373e-03  diff 5.887e-08
+
+################ tblite
++ cd /tmp/tmp.f7qQVBlnqD && xtb coord --gfn 2 --grad --norestart --acc 1.0   --tblite
+rc 0
+          | TOTAL ENERGY              -13.663944874909 Eh   |
+          | GRADIENT NORM               0.008903023671 Eh/α |
+coord coord.engrad energy gradient out.txt 
+torque  -3.599551e-17 -9.150666e-17 -5.632209e-09
+sum_g   -3.480289e-17 -9.974660e-18 -2.970714e-17
++ cd /tmp/tmp.Y7dFhLQshx && xtb coord --gfn 2 --grad --norestart --acc 0.0001   --tblite
+rc 0
+          | TOTAL ENERGY              -13.663944874992 Eh   |
+          | GRADIENT NORM               0.008903413047 Eh/α |
+coord coord.engrad energy gradient out.txt 
+torque  1.660998e-16 1.908196e-16 -1.138971e-11
+sum_g   1.588356e-17 -1.084202e-19 -7.003946e-17
+atom 1 axis 1  E(+h) -13.663942946933  E(-h) -13.663946285859  FD 1.669463000e-03  analytic 1.669514216e-03  diff 5.122e-08
+atom 1 axis 2  E(+h) -13.663946593733  E(-h) -13.663942662003  FD -1.965865000e-03  analytic -1.965877257e-03  diff -1.226e-08
+atom 1 axis 3  E(+h) -13.663942270139  E(-h) -13.663946990915  FD 2.360388001e-03  analytic 2.360446918e-03  diff 5.892e-08
+== exact displaced-coord check: first atom line of a +h x-displaced file
+1.11697390400000 2.71688740200000 -0.96758587014287 C

@@ -34,7 +34,7 @@ python3 measurements/xtb-real/collect.py <dir holding arm64/ x86_64/ amd/, each 
 
 `xtb_run.py` runs one xtb process per worker with one thread each, then runs every check below. A check
 that fails fails the task, **so all three runs exit 1, on the gradient.** That is the result, not a
-bug in the harness. `diag.sh` (in `diag-*.task.json`) is the follow-up that sorts out which builds are wrong.
+bug in the harness. `diag.sh` (in `diag-*.task.json`) is the follow-up that sorts out which builds are wrong; `repro.sh` (`repro-x86_64.task.json`) is the clean-room reproduction with upstream's binary.
 
 ## Results
 
@@ -123,6 +123,13 @@ So there are **two separate faults**:
    That is why the recipe passed on x86. Butane is: `ACONF/B_G` has a directional derivative of
    −0.00351 analytic against −0.00164 by FD, and a torque of 0.028 Eh. tblite's reimplementation of
    GFN2 differs from xtb's by ~7e-9 Eh and gets every one of the nine right, on both chips.
+
+**Clean-room, with upstream's binary** (`repro.sh`, `results/diag/repro-upstream-x86_64.txt`). Every
+call ran `xtb coord --gfn 2 [--grad] --norestart` in its own fresh `mktemp -d` holding only `coord`, and
+no `xtbrestart` was written. On `ACONF/B_G`, C1's dE/dx is −5.970e-3 analytic against **+1.669e-3** by
+central difference (h = 1e-3 Bohr). Its y and z components agree to ≤ 6e-8, and the torque is
+(0, 0, 2.755e-2) Eh. With `--tblite` the same binary gives +1.6695e-3 and a torque of 1e-11. Working-dir
+state (xtb#1378) is ruled out.
 
 **`tblite` 0.6.0's CLI segfaults in this env on every structure, on both architectures**
 (`GOMP_parallel`, `results/*/tblite-probe.txt`). tblite 0.4.0 runs, so the cross-code check it would have

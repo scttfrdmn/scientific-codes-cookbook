@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-xtb-real-repro1-x8664",
+  "container": "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '8b16c046f395982702234dd248904c652cd66a934bdac5104667b33f20d00f1d  /tmp/repro.sh' | sha256sum -c || { echo 'FAIL: repro.sh does not match its pin'; exit 1; }\nbash /tmp/repro.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "x86_64",
+    "families": [
+      "c8i"
+    ],
+    "disk_gib": 20
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/gmtkn55/gmtkn55-v1.tar.gz",
+      "destination": "/tmp/in/gmtkn55-v1.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/gmtkn55/gmtkn55-v1.sha256",
+      "destination": "/tmp/in/gmtkn55-v1.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/xtb-real/repro.sh",
+      "destination": "/tmp/repro.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/xtb-real/repro1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "40m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
