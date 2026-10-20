@@ -1,0 +1,55 @@
+ok   metadata matches its sha256 pins             ept.json, ept-sources/manifest.json and 1585 hierarchy files
+ok   sum(hierarchy counts) == ept.json points     4642900288 == 4642900288
+ok   sum(ept-sources manifest points) == ept.json points 128 tiles, 4642900288 == 4642900288
+ok   one ept-data object per non-empty hierarchy node 107501 objects, 107501 nodes
+grid 17 x 10 of 2000 m from (-13530340.005, 4932953.995); 130 tiles touch a source, 40 skipped; 16 workers
+  10 / 130 tiles, 85 s
+  20 / 130 tiles, 108 s
+  30 / 130 tiles, 141 s
+  40 / 130 tiles, 185 s
+  50 / 130 tiles, 230 s
+  60 / 130 tiles, 253 s
+  70 / 130 tiles, 314 s
+  80 / 130 tiles, 353 s
+  90 / 130 tiles, 387 s
+  100 / 130 tiles, 434 s
+  110 / 130 tiles, 461 s
+  120 / 130 tiles, 484 s
+  130 / 130 tiles, 486 s
+ok   every PDAL pipeline exited 0                 130 tiles, 0 errors
+ok   sum over tiles of PDAL points == ept.json points 125 tiles with points, 4642900288 == 4642900288
+ok   PDAL class histogram sums to its point count 6 classes
+ok   round trip: B count == A count, every dim    125 / 125 tiles
+ok   round trip: class + return histograms conserved 125 / 125 tiles
+ok   round trip: min/max X Y Z identical          125 / 125 tiles
+ok   round trip: mean X Y Z within 1e-12 relative worst 0.00e+00; bit-identical on 125 / 125 tiles
+ok   header (PDAL): count + bounds == decoded     125 / 125 tiles
+ok   header (laspy): count + bounds == decoded    125 / 125 tiles
+ok   header points-by-return == decoded ReturnNumber 125 / 125 tiles
+ok   header: LAS 1.4, PDRF 6, the EPT's scale + offset 125 / 125 tiles
+ok   DTM: sum(count band) == class-2 points, per tile 125 / 125 tiles; 1835934506 == 1835934506
+ok   DTM: min finite exactly where count > 0      125 tiles
+ok   DTM: min <= mean in every cell               85319845 cells
+laspy read 107501 nodes, 26685568391 bytes, 4642900288 points in 604.5 s
+ok   every EPT node matches its sha256 pin        107501 nodes, 0 mismatches []
+ok   laspy: node header count == decoded == hierarchy 107501 nodes, 0 mismatches []
+ok   laspy: every node on the EPT's 0.01 grid (scale, offset) 0 mismatches
+ok   laspy: sum of points == ept.json points      4642900288 == 4642900288
+ok   PDAL (laz-perf) class histogram == laspy (lazrs) 6 classes
+ok   PDAL (laz-perf) return histogram == laspy (lazrs) 8 returns
+ok   PDAL min/max X Y Z == laspy, same quantum    Z 1107.77..2710.99 vs 1107.77..2710.99
+ok   data inside ept.json boundsConforming        Z 1107.77..2710.99 in 1107.0..2711.0
+ok   PDAL mean Z == laspy's exact mean, within summation error 2054.000074674 vs 2054.000074686, |d| 1.21e-08 <= 1.19e-05
+time wall_s_pdal 485.5
+time avg_cores_pdal 15.59
+time sum_s_pdal_A 5485.8
+time peak_rss_mib_pdal_A 1265
+time sum_s_pdal_B 1840.9
+time peak_rss_mib_pdal_B 1265
+time wall_s_mosaic 8.9
+time wall_s_laspy 604.5
+time avg_cores_laspy 2.36
+time sum_s_laspy_fetch 8285.7
+time sum_s_laspy_decode 1359.9
+time wall_s_total 1100.4
+POINTCLOUD REAL OK

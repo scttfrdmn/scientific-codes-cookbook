@@ -1,0 +1,51 @@
+{
+  "task_id": "cookbook-pointcloud-real-compare",
+  "container": "quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH\ncd /tmp\nsha256sum -c compare.sha256 || { echo \"FAIL: compare.py does not match its pin\"; exit 1; }\nmkdir -p /tmp/out\nexport HOME=/tmp OMP_NUM_THREADS=1\npython3 -u /tmp/compare.py /tmp/dtm -13524340.005,-13522340.005,4944953.995,4946953.995 2>&1 | tee /tmp/out/compare.txt\ngrep -q '^COMPARE OK' /tmp/out/compare.txt || { echo \"FAIL: compare\"; exit 1; }\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/compare.py",
+      "destination": "/tmp/compare.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/compare.sha256",
+      "destination": "/tmp/compare.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/pointcloud-real/r1/dtm-2m-mean.tif",
+      "destination": "/tmp/dtm/dtm-arm64.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/pointcloud-real/r1/dtm-2m-mean.tif",
+      "destination": "/tmp/dtm/dtm-x86_64.tif"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs-amd/pointcloud-real/r1/dtm-2m-mean.tif",
+      "destination": "/tmp/dtm/dtm-amd.tif"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/compare.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/pointcloud-real/compare.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

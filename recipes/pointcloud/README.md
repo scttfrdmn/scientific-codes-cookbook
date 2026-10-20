@@ -25,6 +25,16 @@ pdal info --stats --dimensions Z autzen.laz  # mean Z 434.1025 over all points
 
 One task. The cloud is staged from PDAL's own data repo and pinned.
 
+## Which box — [measured](../../measurements/pointcloud-real/README.md) (a whole 3DEP project, 4.64 G points)
+
+| chip | instance | PDAL wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 647 s | 0.6381 | **0.115** | **0.230** |
+| Xeon 6975P-C | `c8i.4xlarge` | 820 s | 0.7497 | 0.171 | 0.287 |
+| EPYC 9R45 | `c8a.4xlarge` | **486 s** | 0.8622 | 0.116 | 0.274 |
+
+USGS's `CA_LassenNP_2020`, read in place from RODA's EPT, is cut into 2 km tiles; each tile is exported to LAZ and gridded to a 2 m ground DTM, 16 `pdal pipeline --stream` jobs at a time. **PDAL keeps all 16 vCPU busy** (15.5 cores), so cores are the dial, not the data path. AMD is fastest, Graviton4 cheapest. Point counts, class histograms (PDAL against laspy), the LAS round trip and the DTM's ground-point conservation hold exactly on all three chips. The written LAZ bytes vary from run to run, because `readers.ept`'s point order does.
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
@@ -32,13 +42,13 @@ One task. The cloud is staged from PDAL's own data repo and pinned.
 | `autzen.laz` — PDAL's canonical 10.6M-point cloud | your own LAZ/LAS | autzen's documented count (**10,653,336**) is both a header value *and* a citable reference identity, so a swap loses that free published-number check. |
 | `pdal info --stats` | a real `pdal pipeline` (filters, DEM, tiling) | this reads and summarizes; a production run stages a pipeline JSON and its outputs through S3. |
 
-Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** 10.6M real points already exercise the full LAZ decode, and the mean-Z identity is exact; a bigger cloud is a longer run, not a more legible one. Leave-it.
+Deterministic — **nothing is determinism scaffolding**. **Leave the fixture:** 10.6M real points already exercise the full LAZ decode, and the mean-Z identity is exact; a bigger cloud is a longer run, not a more legible one. Leave-it. A whole project at scale is [measured](../../measurements/pointcloud-real/README.md).
 
 ## Shape, size, cost
 
 One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. Measured phase split: stage-in of the 54 MB cloud **1 s**, Docker install **38 s**, image pull **76 s**, decoding 10.6M points and computing stats **7 s**. Provisioning is 94% of the 123 s window ([why](../../practices/what-this-does-not-cover.md)), so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)). The cloud stages into `/tmp` — [tmpfs at ½ the instance RAM](../../patterns/data-movement.md), not the root disk — which is trivial at this size but is what sizes the box at real scale.
 
-**Sizing:** decode is compute-light; large clouds and tiled/streaming workflows are I/O- and staging-bound (tmpfs ≈ ½ RAM) — size on [data movement](../../patterns/data-movement.md), not cores.
+**Sizing:** a tiled, streamed pipeline over a whole project is compute-bound (15.5 of 16 vCPU, 1.4 GiB per job, [measured](../../measurements/pointcloud-real/README.md)). Size on cores, read the EPT in place, and keep tile outputs on the root disk, not the tmpfs ([data movement](../../patterns/data-movement.md)).
 
 <details>
 <summary>As shipped: the header-vs-decode identity, pins, smoke check, run + verify</summary>

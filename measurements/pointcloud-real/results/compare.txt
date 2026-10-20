@@ -1,0 +1,19 @@
+arm64   pdal  646.9 s  laspy  544.7 s  real.py 1206.4 s  window  1300 s  $/hr 0.6381  compute $ 0.1147  billed $ 0.2304  rss A/B 1435/1435 MiB  completed
+x86_64  pdal  820.4 s  laspy  494.1 s  real.py 1327.5 s  window  1380 s  $/hr 0.7497  compute $ 0.1708  billed $ 0.2874  rss A/B 1053/1304 MiB  completed
+amd     pdal  485.5 s  laspy  604.5 s  real.py 1100.4 s  window  1146 s  $/hr 0.8622  compute $ 0.1163  billed $ 0.2745  rss A/B 1265/1265 MiB  completed
+== x86_64 vs arm64: 17 of 19 values identical; differ: ['tiles_digest(laz bytes + dtm arrays)', 'laz_bytes_total']
+    tiles_digest(laz bytes + dtm arrays)
+      arm64 9fa1f10fde2ccdd767c32d06adc92e0e3728fd9bf545d66659c3c270ec3d14b9
+      x86_64 2916f6cb11ac4286b6a9112822fa097962a36eb44b4c9820ad00c84071192091
+    laz_bytes_total
+      arm64 26775144802
+      x86_64 26776060375
+   tiles.tsv: 125 of 130 tile rows differ (counts, LAZ sha256, DTM sha256)
+== amd vs arm64: 17 of 19 values identical; differ: ['tiles_digest(laz bytes + dtm arrays)', 'laz_bytes_total']
+    tiles_digest(laz bytes + dtm arrays)
+      arm64 9fa1f10fde2ccdd767c32d06adc92e0e3728fd9bf545d66659c3c270ec3d14b9
+      amd   b7bc000001f8ef9f06a9feacce79007ef93d28bc96cbd2b7de42de7b5c038c5d
+    laz_bytes_total
+      arm64 26775144802
+      amd   26773615985
+   tiles.tsv: 125 of 130 tile rows differ (counts, LAZ sha256, DTM sha256)

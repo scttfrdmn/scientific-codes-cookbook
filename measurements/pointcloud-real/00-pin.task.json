@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-pointcloud-real-pin",
+  "container": "quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH\ncd /tmp\ngrep -E '  pin\\.py$' pins.sha256 | sha256sum -c || { echo \"FAIL: pin.py does not match its pin\"; exit 1; }\nmkdir -p /tmp/out\npython3 -u /tmp/pin.py CA_LassenNP_2020 /tmp/out 64 2>&1 | tee /tmp/out/pin.log\ngrep -q '^PIN OK' /tmp/out/pin.log || { echo \"FAIL: pin\"; exit 1; }\n( cd /tmp/out && sha256sum pins.tsv > pins.tsv.sha256 && cat pins.tsv.sha256 )\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/pin.py",
+      "destination": "/tmp/pin.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/pins.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/pins.tsv"
+    },
+    {
+      "source": "/tmp/out/pins.tsv.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/pins.tsv.sha256"
+    },
+    {
+      "source": "/tmp/out/pin.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/pointcloud-real/pin.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

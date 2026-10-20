@@ -1,0 +1,12 @@
+/tmp/compare.py:26: DeprecationWarning: Setting the shape on a NumPy array has been deprecated in NumPy 2.5.
+As an alternative, you can create a new view using np.reshape (with copy=False if needed).
+  arrs[c] = r.read(1)
+arm64   DTM (10001, 17001), 85319845 cells with ground, sha256 e53c825c10b0b146
+x86_64  DTM (10001, 17001), 85319845 cells with ground, sha256 e53c825c10b0b146
+amd     DTM (10001, 17001), 85319845 cells with ground, sha256 e53c825c10b0b146
+x86_64  vs arm64: same shape True, same ground mask True, 0 cells differ, max |d| 0 m
+amd     vs arm64: same shape True, same ground mask True, 0 cells differ, max |d| 0 m
+run 0: 15758493 points, LAZ sha256 4a7f5308d549b974, points-in-order afa073286bbb6e22, sorted point set c6e0757678963a25
+run 1: 15758493 points, LAZ sha256 0972654c745ffb20, points-in-order b2d3f37a0194ce39, sorted point set c6e0757678963a25
+same LAZ bytes: False; same order: False; same point set: True
+COMPARE OK
