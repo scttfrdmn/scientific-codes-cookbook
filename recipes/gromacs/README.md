@@ -33,8 +33,10 @@ mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 | Graviton3 | `c7g.4xlarge` | 23.052 | 78 s | 0.5800 | 0.6039 |
 | Graviton4 | `c8g.4xlarge` | 25.983 | 69 s | 0.6381 | 0.5894 |
 | **Graviton5** | `c9g.4xlarge` | **35.741** | **50 s** | 0.6955 | **0.4670** |
+| Intel (same gen) | `c8i.4xlarge` | 28.981 | 63 s | 0.7497 | 0.6209 |
+| **AMD (same gen)** | `c8a.4xlarge` | **58.432** | **34 s** | 0.8622 | **0.3541** |
 
-The ladder was measured on the previous `md` digest (`1ee941664add…`); the repinned image re-ran Graviton4 only, at 26.099 ns/day.
+The ladder was measured on the previous `md` digest (`1ee941664add…`); the repinned image re-ran Graviton4 only, at 26.099 ns/day. The x86 rows are the 16×1 rung of the decomposition leg, on the current env's linux-64 twin. **AMD is 2.29× Graviton4 per day and the cheapest nanosecond here.**
 
 **Take the newest generation** — every step is faster *and* cheaper per nanosecond, and the ladder is uneven: Graviton3→4 buys 12.7%, **Graviton4→5 buys 37.6%**. For contrast the integer-heavy genomics recipes gain 1.84–2.0× across these same chips against MD's 2.43×: one data point that FP-heavy codes benefit more, not yet a rule.
 
@@ -43,7 +45,7 @@ The ladder was measured on the previous `md` digest (`1ee941664add…`); the rep
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | benchMEM (82k atoms) | your own `.tpr` | a `.tpr` is self-contained, so nothing else needs staging; GROMACS 2026.3 still reads benchMEM's 2015-era file. |
-| `-n 16 -ntomp 1` | any rank×thread split | **barely matters here** — five splits of 16 cores spanned 9.6%. Don't tune it before you measure it. |
+| `-n 16 -ntomp 1` | any rank×thread split | **depends on the chip** — five splits of 16 cores spanned 9.6% on Graviton4 and 10.7% on Intel, but **41% on AMD**, where 16×1 wins ([measured](../../measurements/gromacs-real/README.md)). Measure before you tune. |
 | 16 cores | more cores, or `benchRIB` (2M atoms) | 82k atoms is small enough that PME limits scaling; a bigger system is how you use a bigger box. |
 
 **Leave the workload** — benchMEM as shipped is what makes ns/day comparable to published numbers. **Scale it** by moving to a larger benchmark before adding cores.
@@ -92,10 +94,10 @@ the comparison:
 | 4 × 4 | 24.168 |
 | 2 × 8 | 23.292 |
 
-**9.6% from best to worst, and all five work.** Pure MPI and pure OpenMP land within 0.4% of each
-other. So on a single node at this size, decomposition is not the lever it is often assumed to be —
+**9.6% from best to worst, and all five work** (10.7% on Intel; **41% on AMD**, where it is a lever: [measured](../../measurements/gromacs-real/README.md)). Pure MPI and pure OpenMP land within 0.4% of each
+other. So on a single Graviton4 or Intel node at this size, decomposition is not the lever it is often assumed to be —
 which is worth knowing before spending an afternoon on `-npme` and pinning. That conclusion is
-scoped to one node and 82k atoms; a system big enough to need several nodes, where PME and
+scoped to one node, 82k atoms and those two chips; a system big enough to need several nodes, where PME and
 communication start to dominate, is a different question this recipe does not answer.
 
 ### Pins

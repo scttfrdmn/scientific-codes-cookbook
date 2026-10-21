@@ -8,7 +8,8 @@
 
 GPAW 25.7.0 (aarchsci `dft` env), Pt(111) 3×3×4 slab, PW 400 eV, 4×4×1 k-points, PBE, 36 atoms.
 **Every run below converges in 27 SCF iterations to −219.541414 eV with a Fermi level of 2.050224
-eV** — nine runs, four chips, three rank counts, three instance sizes, one answer. That invariance
+eV** — nine runs, four chips, three rank counts, three instance sizes, one answer — and six more
+on Intel and AMD ([below](#the-same-box-sweep-on-intel-and-amd)) land on the same energy. That invariance
 is what makes the timings comparable at all.
 
 ## The four generations, at 16 ranks
@@ -66,6 +67,42 @@ second one, and until now only the first was written down.
 The general trap: **a scaling study that resizes the instance at each rung is not measuring
 scaling.** It measures scaling plus whatever else changed. Hold the box fixed, or report both.
 
+## The same-box sweep on Intel and AMD
+
+Same `knee.sh`, the env's linux-64 twin (`envs-x86_64/dft-5cb0d94e928d`, GPAW 25.7.0
+`mpi_openmpi`), one 16-vCPU box per chip. The two architectures run the same versions but different
+builds (OpenBLAS picks `Cooperlake` on both x86 chips, `neoversev2` on Graviton4).
+
+| ranks | Graviton4 `c8g.4xlarge` | Intel `c8i.4xlarge` | AMD `c8a.4xlarge` |
+|---|---|---|---|
+| 4 | 1227.0 s | 459.5 s | 364.8 s |
+| 8 | 726.2 s | 282.8 s | 226.5 s |
+| 16 | 452.2 s | 285.9 s | **150.8 s** |
+| 4 → 16 | 2.71× (67.8%) | **1.61× (40%)** | 2.42× (60.5%) |
+| threads per core | 1 | **2** (8 cores) | 1 |
+| $/SCF at 16 ranks, compute | 0.0802 ($0.6381/hr) | 0.0595 ($0.7497/hr) | **0.0361** ($0.8622/hr) |
+
+- **The identity holds on both.** All six x86 runs converge in 27 iterations to **−219.541414 eV**.
+  That is the Graviton number to every printed decimal, with a rank-sweep spread of 0.000000 eV, and
+  `world.size` matched the launch at every rung. A converged SCF is a fixed point, and it does not
+  move across chips, builds or decompositions.
+- **On Intel, ranks 9–16 buy nothing**: 282.8 s at 8 ranks, 285.9 s at 16. The box is 8 cores × 2
+  hyperthreads, so ranks past 8 share a core, and this bandwidth-bound SCF gets nothing from the
+  second thread. A 16-vCPU Intel box is an 8-rank box for this code. Size by cores, not vCPUs.
+- **AMD's 16 vCPUs are 16 cores**, and it scales nearly as well as Graviton4 (60.5% vs 67.8%) from a
+  much faster start. At 16 ranks it is **3.0× Graviton4 and 1.9× Intel**, and the cheapest SCF of
+  any box measured here. The two x86 boxes run the same build, so the Intel/AMD gap belongs to the
+  chips. The ARM/x86 gap also includes the build (kernels, compiler), so it is not a pure chip
+  comparison.
+- The recipe's own x86 verifying run (a different `c8i.4xlarge`, 2026-10-17) took 319.4 s at 16
+  ranks against 285.9 s here. That is 10% box-to-box variation, larger than Graviton4's 2.2%
+  control above.
+
+Spend for the two sweeps: $0.415 (Intel 1,087 s window, $0.226; AMD 788 s, $0.189). Peak RSS is not
+recorded by this spec. Not re-run on x86: the generation ladder (Graviton by definition) and the
+right-sized 4- and 8-rank boxes (`xlarge`, `2xlarge`). Raw: `results/knee-samebox-{x86_64,amd}.txt`,
+`results/host-{x86_64,amd}.txt`.
+
 ## Why under-filling helps here, and did not for NWChem
 
 The same experiment on [NWChem](../nwchem-real/README.md) found the opposite: packing sixteen
@@ -100,6 +137,11 @@ a naive "parallel agrees with serial" check passes vacuously
 
 ## Specs and raw output
 
+`knee.task.json` stages its script as `knee.sh` (sha256 in `pins.sha256`, with `host.sh`, a
+diagnostic-only host record): spawn 0.139.1's own wrapper leaves under 1 KB of EC2's 16 KiB user data
+(spawn#1246), so an inline script no longer fits. `knee.sh` is the inline script byte for byte, and the
+Graviton4 sweep ran it inline. The x86 legs are
+`python3 scripts/spec_arch.py gpaw {x86_64,amd} <bucket> <nonce> measurements/gpaw-real/knee.task.json`.
 `knee.task.json`; raw per-rung output in `results/` — `c{6,7,8,9}g-smoke-check.txt` (generations),
 `rightsized-r{4,8}.txt` (box sized to ranks), `knee-samebox.txt` (all three rank counts on one
 box). Cost per rung is on the recipe page, which prices each configuration on the box it actually

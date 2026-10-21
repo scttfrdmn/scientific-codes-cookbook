@@ -39,7 +39,7 @@ One task, seconds of compute on ~2.2M chr20 reads. `c8g.large`, ~$0.02, **~80s**
 
 **Sizing:** no family question — MACS2's pileup model is memory-modest even genome-wide; a whole-genome ChIP is a longer run on the same `c`-family box. Any 8g box fits.
 
-**Generation is the only axis that moves this, and it moves it a lot.** Genome-wide on a full ENCODE CTCF experiment, single-threaded MACS2 gains **2.40× from Graviton2 to Graviton5** (741 s → 309 s), with every generation also cheaper per result and the narrowPeak output **byte-identical on all four chips**. That is a Python/Cython peak caller essentially tying GROMACS — so don't assume the generation axis only pays for vectorised FP code ([measurement](../../measurements/macs2-real/README.md)).
+**Generation is the only axis that moves this, and it moves it a lot.** Genome-wide on a full ENCODE CTCF experiment, single-threaded MACS2 gains **2.40× from Graviton2 to Graviton5** (741 s → 309 s), with every generation also cheaper per result and the narrowPeak output **byte-identical on all four generations**. That is a Python/Cython peak caller essentially tying GROMACS — so don't assume the generation axis only pays for vectorised FP code ([measurement](../../measurements/macs2-real/README.md)). Same-generation x86 is faster still on this one core: Graviton4 389 s, Intel `r8i.xlarge` 296 s, **AMD `r8a.xlarge` 225 s, the cheapest run measured ($0.0264 billed)**. The narrowPeak is byte-identical on all six chips.
 
 <details>
 <summary>As shipped: the exact peak count (and why it's exact not a band), pins, smoke check</summary>

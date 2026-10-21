@@ -3,7 +3,7 @@
   "command": [
     "bash",
     "-c",
-    "set -eo pipefail\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\necho \"== 16 cores, five rank x thread splits, all on ONE box ==\"\n# One task so instance-to-instance variance cannot contaminate a decomposition comparison.\n# A split that GROMACS refuses is recorded rather than killing the task: \"this split does not\n# work\" is a result a reader needs, not a failure to hide.\n: > decomp.tsv\nprintf \"ranks\\tomp\\tns_per_day\\twall_s\\tranks_used\\ttemp_K\\tstatus\\n\" >> decomp.tsv\nfor split in \"16 1\" \"8 2\" \"4 4\" \"2 8\" \"1 16\"; do\n  set -- $split; R=$1; O=$2\n  echo \"--- ${R} ranks x ${O} threads ---\"\n  T0=$(date +%s)\n  if mpiexec -n \"$R\" --allow-run-as-root --oversubscribe \\\n       gmx_mpi mdrun -s benchMEM.tpr -deffnm d_${R}x${O} -ntomp \"$O\" -nb cpu -pin off \\\n       > out_${R}x${O}.txt 2>&1; then\n    T1=$(date +%s)\n    NS=$(awk '/^Performance:/{print $2; exit}' d_${R}x${O}.log)\n    RU=$(awk '/Using .* MPI process/{print $2; exit}' d_${R}x${O}.log)\n    TM=$(awk '/Conserved En\\./ && /Temperature/{getline; print $4; exit}' d_${R}x${O}.log)\n    printf \"%s\\t%s\\t%s\\t%s\\t%s\\t%s\\tok\\n\" \"$R\" \"$O\" \"$NS\" \"$(( T1 - T0 ))\" \"$RU\" \"$TM\" >> decomp.tsv\n  else\n    T1=$(date +%s)\n    WHY=$(grep -iE \"Fatal error\" -A2 out_${R}x${O}.txt | tr '\\n' ' ' | cut -c1-120)\n    printf \"%s\\t%s\\t-\\t%s\\t-\\t-\\tFAILED: %s\\n\" \"$R\" \"$O\" \"$(( T1 - T0 ))\" \"$WHY\" >> decomp.tsv\n  fi\ndone\ncolumn -t decomp.tsv > decomp.txt 2>/dev/null || cp decomp.tsv decomp.txt\ncat decomp.txt\nOK=$(awk 'NR>1 && $7==\"ok\"' decomp.tsv | wc -l | tr -d ' ')\nBEST=$(awk 'NR>1 && $3!=\"-\"{if($3+0>m){m=$3+0; b=$1\"x\"$2}} END{print b, m}' decomp.tsv)\necho \"working_splits $OK\" >> decomp.txt\necho \"best $BEST\" >> decomp.txt\ntail -2 decomp.txt\ntest \"$OK\" -ge 3\necho 'DECOMP SWEEP DONE'\n"
+    "set +e\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash host.sh\nbash decomp.sh\n"
   ],
   "container": "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9",
   "resources": {
@@ -18,6 +18,18 @@
     {
       "source": "s3://${COOKBOOK_BUCKET}/inputs/gromacs/benchMEM.tpr",
       "destination": "/tmp/benchMEM.tpr"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gromacs-real/host.sh",
+      "destination": "/tmp/host.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gromacs-real/decomp.sh",
+      "destination": "/tmp/decomp.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gromacs-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
     }
   ],
   "outputs": [

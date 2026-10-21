@@ -9,16 +9,40 @@ MACS2 2.2.9.1 calling peaks genome-wide on a full ENCODE CTCF ChIP-seq experimen
 `ENCFF933NSJ` (1.92 GiB) against its matched input control `ENCFF768XTH` (3.13 GiB), HCT116, GRCh38 —
 `-f BAM -g hs -q 0.05`, 4 vCPU and 32 GiB on every rung, same image digest, same input objects.
 
-| generation | instance | CPU part | macs2 | billed | $/hr | **$/run** | compute-only $ |
+| chip | instance | CPU part / SMT | macs2 | billed | $/hr | **$/run** | compute-only $ |
 |---|---|---|---|---|---|---|---|
 | Graviton2 | `r6g.xlarge` | `0xd0c` | 741 s | 865 s | 0.2016 | **0.0484** | 0.0415 |
 | Graviton3 | `r7g.xlarge` | `0xd40` | 514 s | 626 s | 0.2142 | **0.0372** | 0.0306 |
 | Graviton4 | `r8g.xlarge` | `0xd4f` | 389 s | 487 s | 0.2357 | **0.0319** | 0.0255 |
 | **Graviton5** | `r9g.xlarge` | `0xd84` | **309 s** | 395 s | 0.2569 | **0.0282** | **0.0221** |
+| Intel Xeon 6975P-C | `r8i.xlarge` | 2 threads/core | 296 s | 386 s | 0.2778 | 0.0298 | 0.0228 |
+| **AMD EPYC 9R45** | `r8a.xlarge` | 1 thread/core | **225 s** | 298 s | 0.3195 | **0.0264** | **0.0200** |
 
 Per-step speedup **1.44×, 1.32×, 1.26×** — decelerating but never flat. Cost falls monotonically on both
 the billed window and the compute-only basis, so the conclusion does not depend on how boot is
 attributed. **Gv2 to Gv5: 2.40× faster and 41.8% cheaper per result.**
+
+## Intel and AMD, same generation as Graviton4
+
+Same spec, same two input objects, the bioconda x86 build of the same MACS2 2.2.9.1
+(`quay.io/biocontainers/macs2@sha256:e8275df9…`), 4 vCPU / 32 GiB: `r8i.xlarge` and `r8a.xlarge`.
+
+- **Byte-identical on all six chips.** Both x86 runs wrote the same `real_peaks.narrowPeak` as the
+  four Graviton generations — sha256 `687b97a9…`, 50,276 peaks, 50,276 summits, zero below the
+  cutoff — and `tmpfs_peak_mib` was 11,409 again. The peak set is a fixed point; nothing here is a
+  path. Their OpenBLAS (0.3.27, a different build from arm64's) picks `Cooperlake` on both x86 chips, and it
+  makes no difference, for the reason given below: MACS2 never calls the large GEMM where kernel
+  choice shows.
+- **AMD is the fastest and cheapest box measured for this tool**: 225 s, $0.0264 billed — ahead
+  of Graviton5 (309 s, $0.0282). Intel is 1.31× Graviton4's speed and lands between Graviton4 and
+  Graviton5 on cost. This is a single-threaded tool (`avg_cores` 1.00 on both), so the column is
+  per-core speed: Intel's SMT sibling and AMD's full core make no difference to a one-thread job.
+- Graviton4 → Intel → AMD is 389 → 296 → 225 s on one core of the same generation. n = 1 per chip,
+  which the byte-identical output makes defensible for the same reason it does for the ladder.
+
+Peak RSS 7,609 / 7,595 MiB (cgroup `memory.current` high-water at 1 Hz). Spend for the two legs: $0.056.
+Raw: `results/host-{x86_64,amd}.txt` (host, BLAS core, result lines and window from `command.log`),
+`results/rung-{x86_64,amd}.tsv`.
 
 ## Why this measurement is worth more than one more row
 
@@ -99,6 +123,14 @@ for f in r6g r7g r8g r9g; do
   spawn task run --spec /tmp/g.json --region us-west-2 --wait
 done
 ```
+
+The Intel and AMD legs are, from the repo root,
+`python3 scripts/spec_arch.py macs2 {x86_64,amd} "$COOKBOOK_BUCKET" <nonce> measurements/macs2-real/gen-r8g.task.json`.
+Every `gen-*.task.json` stages the same script as `gen.sh` (sha256 in `pins.sha256`, with `host.sh`, a
+diagnostic-only host record): spawn 0.139.1's own wrapper leaves under 1 KB of EC2's 16 KiB user data
+(spawn#1246), so an inline script no longer fits. `gen.sh` is the inline script byte for byte; how the
+code reaches the box changed, not what it asserts (the Graviton rungs above ran it inline). Upload those three files to
+`inputs/macs2-real/` first.
 
 Launch the rungs **serially**. truffle's static price table has no Graviton coverage
 ([truffle#175](https://github.com/spore-host/truffle/issues/175)), so concurrent launches carrying a

@@ -32,23 +32,24 @@ hmmsearch --cpu 8 --cut_ga --noali --tblout hits.tbl -o hmmer.out Pfam-A.hmm pep
 | `--cut_ga` | `-E 1e-5` | the GA thresholds *are* Pfam's family assignments; an E-value cut is a number of your own choosing. |
 | `--noali` | drop it | the per-domain alignments are gigabytes at this scale. The `[ok]` trailer and the tblout survive either way. |
 
-**Leave the workload** — all of Pfam against a real proteome is the job, and the timings transfer.
-**Scale it** by proteome size; runtime is models × residues, so it is linear and predictable.
+**Leave the workload** — all of Pfam against a real proteome is the job, and the timings transfer. **Scale it** by proteome size; runtime is models × residues, so it is linear and predictable.
 
 ## Which box — [measured](../../measurements/hmmer-real/README.md), same inputs, 8 vCPU throughout
 
-| generation | instance | `hmmsearch` | **compute $** | billed $ |
+| chip | instance | `hmmsearch` | **compute $** | billed $ |
 |---|---|---|---|---|
 | Graviton2 | `c6g.2xlarge` | 2514 s | 0.1900 | 0.2085 |
 | Graviton3 | `c7g.2xlarge` | 1763 s | **0.1420** | **0.1539** |
 | Graviton4 | `c8g.2xlarge` | 1669 s | 0.1479 | 0.1635 |
 | **Graviton5** | `c9g.2xlarge` | **1322 s** | **0.1277** | 0.1373 |
+| Intel (same gen) | `c8i.2xlarge` | 1352 s | 0.1408 | 0.1470 |
+| **AMD (same gen)** | `c8a.2xlarge` | **922 s** | **0.1104** | **0.1162** |
 
 **1.90× over four generations — but Graviton4 is the wrong buy.** It is only 1.06× faster than
 Graviton3 for 10% more per hour, so it costs **4% more per result on compute and 6% more billed**.
 This is the clearest instance of that reversal in the catalog: the job is long enough that boot is a
 tenth of the bill, so compute and billed agree on the direction
-([the weak rung](../../patterns/cost-per-result.md)). On Graviton3, skip to Graviton5.
+([the weak rung](../../patterns/cost-per-result.md)). On Graviton3, skip to Graviton5. **AMD `c8a` beats every Graviton generation**: 1.81× Graviton4 at the lowest cost per proteome. The hit set is identical on all six chips; scores differ in the last digits between ARM and x86.
 
 <details>
 <summary>As shipped: a completion sentinel, exact counts confirmed four times, pins</summary>

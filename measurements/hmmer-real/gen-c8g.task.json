@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-hmmer-gen-c8g",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash host.sh\nbash search.sh\n"
+  ],
+  "container": "quay.io/aarchbio/hmmer@sha256:ecae1325123858761f0d744aacae948a89368440fd6d91f69c178402294fc792",
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 14,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer/pfam38.2_A.hmm.gz",
+      "destination": "/tmp/pfam38.2_A.hmm.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer/ensembl116_pep_one_per_gene.fa.gz",
+      "destination": "/tmp/ensembl116_pep_one_per_gene.fa.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer-real/host.sh",
+      "destination": "/tmp/host.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer-real/search.sh",
+      "destination": "/tmp/search.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/hmmer-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/hits.tbl.gz",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/gen/c8g/hits.tbl.gz"
+    },
+    {
+      "source": "/tmp/smoke-check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/hmmer/gen/c8g/smoke-check.txt"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "55m",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

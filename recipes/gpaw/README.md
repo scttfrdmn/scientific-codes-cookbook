@@ -37,7 +37,7 @@ mpiexec -n 16 python3 slab.py   # ASE builds Pt(111) 3×3×4; PAW datasets ship 
 
 Graviton2→5 is **2.33× faster and 45% cheaper per SCF** — but **Graviton3 and Graviton4 are tied on cost** (1.4% apart, indistinguishable at n = 1), because Graviton4 is 8% faster for 10% more per hour. The only place in this catalog where "newest is always cheaper" fails; Graviton5 still clearly wins.
 
-On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — better than DFT's reputation. That 82% is the *purchasing* number, since each rung ran on the box you would rent; on one fixed box the rank sweep is **2.71×, 67.8%** ([both measured](../../measurements/gpaw-real/README.md)). 4 ranks is cheapest per SCF; 16 is the better buy if wall-clock matters. Each rank row ran on the box you would actually rent for it, which turns out to matter by 18% (below).
+On cores, **16 ranks is 3.27× faster than 4 for 22% more money** — better than DFT's reputation. That 82% is the *purchasing* number, since each rung ran on the box you would rent; on one fixed box the rank sweep is **2.71×, 67.8%** ([both measured](../../measurements/gpaw-real/README.md)). 4 ranks is cheapest per SCF; 16 is the better buy if wall-clock matters. Each rank row ran on the box you would actually rent for it, which turns out to matter by 18% (below). On x86 the same sweep ([measured](../../measurements/gpaw-real/README.md#the-same-box-sweep-on-intel-and-amd)) gives the same −219.541414 eV. **AMD `c8a.4xlarge` runs 16 ranks in 150.8 s ($0.0361/SCF), 3.0× Graviton4.** Intel `c8i.4xlarge` is 8 cores × 2 threads, so its 16 ranks are no faster than 8 (285.9 vs 282.8 s): size Intel by cores, not vCPUs.
 
 ## Make it yours
 

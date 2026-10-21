@@ -7,14 +7,41 @@
 HMMER 3.4, all 30,134 Pfam-A 38.2 families against 23,879 human proteins (one per gene) at `--cut_ga`,
 8 vCPU on every rung, same image digest, same input objects.
 
-| generation | instance | `hmmsearch` | billed | $/hr | **compute $** | billed $ |
+| chip | instance | `hmmsearch` | billed | $/hr | **compute $** | billed $ |
 |---|---|---|---|---|---|---|
 | Graviton2 | `c6g.2xlarge` | 2514 s | 2760 s | 0.2720 | 0.1900 | 0.2085 |
 | Graviton3 | `c7g.2xlarge` | 1763 s | 1911 s | 0.2900 | **0.1420** | **0.1539** |
 | Graviton4 | `c8g.2xlarge` | 1669 s | 1845 s | 0.3190 | 0.1479 | 0.1635 |
 | **Graviton5** | `c9g.2xlarge` | **1322 s** | 1421 s | 0.3478 | **0.1277** | 0.1373 |
+| Intel Xeon 6975P-C (2 threads/core) | `c8i.2xlarge` | 1352 s | 1412 s | 0.3748 | 0.1408 | 0.1470 |
+| **AMD EPYC 9R45** (1 thread/core) | `c8a.2xlarge` | **922 s** | 970 s | 0.4311 | **0.1104** | **0.1162** |
 
 Per-step speedup: **1.43×, 1.06×, 1.26×.** Over the full ladder, 1.90×.
+
+## Intel and AMD, same generation as Graviton4
+
+Same script (`search.sh`, the recipe's own), same two input objects, bioconda's x86 build of HMMER 3.4
+(`quay.io/biocontainers/hmmer@sha256:8ca0dc3b…`), 8 vCPU, `--cpu 8`.
+
+- **Every assertion holds on both**: 30,134 models, 23,879 targets, `[ok]`, 65,607 hits, 9,473
+  families, 22,740 proteins, exact.
+- **The hit set is a fixed point; the scores are a path.** Both x86 chips return the same 65,607
+  (protein, family) pairs as Graviton4, which is what the GA thresholds decide. Below that the
+  tblout differs: 54 hits print a different E-value in the last digit, 16 a full-sequence score up
+  to 0.2 bits apart, 2 a different domain-envelope count (a 45-domain Ig-like protein), and tied rows
+  come out in a different order. The SIMD filters are NEON on one side and SSE/AVX on the other, so
+  this is expected arithmetic, not a bug. **Intel and AMD agree byte for byte**
+  (`results/cross-chip.txt`).
+- **AMD is the fastest and cheapest box measured here**: 1.81× Graviton4 and 1.43× Graviton5, and
+  $0.1104 per proteome on compute against Graviton5's $0.1277. Intel is 1.23× Graviton4 and costs
+  5% less per result on compute. On `c8a` each of the 8 vCPUs is a full core; on `c8i` they are 4
+  cores × 2 threads. That accounts for part of the AMD/Intel gap, not all of it. Nothing was
+  measured that would split the rest.
+- **The wall time repeats.** The recipe's own x86 verifying runs (same spec, earlier boxes) took
+  1364 s (Intel) and 936 s (AMD), within 1.5% of these.
+
+Spend for the two legs: $0.263. Raw: `results/smoke-check-{x86_64,amd}-2xl.txt`,
+`results/host-{x86_64,amd}.txt`, `results/cross-chip.txt`.
 
 ## Why this reversal is more than n=1 noise
 
@@ -68,6 +95,13 @@ spawn task run --spec measurements/hmmer-real/gen-c6g.task.json --wait
 spawn task run --spec measurements/hmmer-real/gen-c7g.task.json --wait
 spawn task run --spec measurements/hmmer-real/gen-c9g.task.json --wait
 ```
+
+The Graviton4 rung is `gen-c8g.task.json` (the recipe's spec with its own output prefix); the Intel and AMD
+legs are `python3 scripts/spec_arch.py hmmer {x86_64,amd} "$COOKBOOK_BUCKET" <nonce> measurements/hmmer-real/gen-c8g.task.json`.
+Every `gen-*.task.json` stages its script as `search.sh` (sha256 in `pins.sha256`, with `host.sh`, a
+diagnostic-only host record): spawn 0.139.1's own wrapper leaves under 1 KB of EC2's 16 KiB user data
+(spawn#1246), so an inline script no longer fits. `search.sh` is the inline script byte for byte,
+and the Graviton rungs ran it inline. Upload those three files to `inputs/hmmer-real/` first.
 
 Launch these **serially**. Eight concurrent `spawn task run` calls throttled the AWS Price List API
 earlier in this batch, and spawn correctly refuses to launch rather than drop an unenforceable cost
