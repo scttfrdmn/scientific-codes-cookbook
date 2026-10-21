@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-imagecodecs-real-probe2",
+  "container": "quay.io/aarchsci/pathology@sha256:9c7f7713f34ef818acc7aa07ee9084e8df293666277497bccb297d966797fc5a",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707)\ncd /tmp\nexport TMPDIR=/tmp HOME=/tmp OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1\nprintf '%s  probe2.py\\n%s  real.py\\n' 8fe3c539cf4eb07d705cdaac28e81589019c79d3615edbe521f30c1bb8e1b56c 8f51a812b815c5d64b34276ffb7331c6e7d2f0098ea0fbf8997204cfdb93438e | sha256sum -c || exit 1\npython3 -u probe2.py test_065 0 > probe.log 2>&1\npython3 -u probe2.py test_013 10 >> probe.log 2>&1\necho \"rc $?\" >> probe.log\ncat probe.log\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imagecodecs-real/probe2.py",
+      "destination": "/tmp/probe2.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/imagecodecs-real/real.py",
+      "destination": "/tmp/real.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/probe.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/imagecodecs-real/probe2/probe.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

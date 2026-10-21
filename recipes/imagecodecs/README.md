@@ -36,11 +36,19 @@ tifffile.imwrite("t.tif", a, tile=(256, 256), compression="jpegxl")         # 1.
 | the synthetic image | your own tile | staging checks it is a *fair* test — 168 grey levels, entropy 6.58 bits/px, neighbour difference 6.9/255. A flat image round-trips through anything; pure noise cannot compress at all. |
 | `lz4`, `snappy`, `packbits` | deflate/zstd | they are **~1.00×** on this data and packbits is **0.99×** — it expands. Speed-first codecs, not size-first; the recipe records that rather than asserting compression. |
 
-**Leave the fixture.** Nothing is fetched: byte identity needs no reference value, so the image is synthesised from a pinned seed. **Scale it** to a real slide tile — the identities hold at any size, and [pathology](../pathology/README.md) stages CAMELYON16 if you want genuine tissue.
+**Leave the fixture.** Nothing is fetched: byte identity needs no reference value, so the image is synthesised from a pinned seed. The identities hold at any size; the [real workload](../../measurements/imagecodecs-real/README.md) runs them on every tile of 160 CAMELYON16 slides.
 
 ## Shape, size, cost
 
-One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All 25 round-trips plus 9 TIFF writes are **5 s** of a 1m04s window ([layout](../../patterns/layout-and-effective-cost.md)).
+One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All 25 round-trips plus 9 TIFF writes are **5 s** of a 1m04s window ([layout](../../patterns/layout-and-effective-cost.md)). Which box at scale, [measured](../../measurements/imagecodecs-real/README.md) on 160 CAMELYON16 slides (321 GB, 64 workers):
+
+| chip | instance | wall | $/hr | **billed $/result** |
+|---|---|---|---|---|
+| **Graviton4** | `c8g.16xlarge` | 2,429 s | 2.5523 | **1.767** |
+| Xeon 6975P-C | `c8i.16xlarge` | 3,187 s | 2.9987 | 2.696 |
+| EPYC 9R45 | `c8a.16xlarge` | **1,940 s** | 3.4487 | 1.896 |
+
+**Transcode a JPEG slide archive, don't re-encode its pixels:** `jpegxl_encode_jpeg` shrinks all 14.35 M tiles 1.35× and `jpegxl_decode_jpeg` rebuilds each byte for byte on all three chips, while the best lossless pixel codec is 4.8× the JPEG it came from. libjxl refuses a TIFF tile spliced with all of `JPEGTables`; splice only the tables the tile uses. Graviton4 is cheapest per result; AMD is fastest.
 
 <details>
 <summary>As shipped: 25 byte-identical round-trips, four controls including three codecs that flip on one argument, and two honest non-results</summary>
@@ -177,15 +185,10 @@ regardless ([exit 0 isn't proof](../../practices/container-path.md)).
 
 ### Not covered
 
-**Real slide data.** The image is synthetic; [pathology](../pathology/README.md) stages CAMELYON16
-TIFFs and reads them with OpenSlide, but no recipe yet re-encodes genuine tissue through these
-codecs at slide scale, where the ratios would be very different.
-
 **Chunked, lazy access to a pyramidal store** — the half of whole-slide I/O this does not
 touch — is covered separately by [zarr-dask](../zarr-dask/README.md).
-**Pyramidal/multi-resolution TIFF**: one level,
-one tile size, no `subifds`. **Throughput**: every codec here is correctness-only, with no
-encode/decode timing, so nothing says which is affordable at terabyte scale. **16-bit and
+**Writing pyramidal TIFF**: one level, one tile size,
+no `subifds` (the real workload reads pyramids; nothing writes one). **16-bit and
 multichannel** beyond RGB — fluorescence imagery is commonly 16-bit, where `lerc` and `zfp` matter
 most. **Lossy fidelity metrics**: the controls assert only that lossy modes differ, not that their
 error is acceptable for diagnosis, which is a clinical question rather than a numerical one.
