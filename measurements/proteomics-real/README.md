@@ -1,7 +1,7 @@
-# OpenMS + Percolator on a real workload — a six-run HeLa experiment, Graviton4 vs x86
+# OpenMS + Percolator on a real workload — a six-run HeLa experiment, Graviton4, Intel and AMD
 
-> **The whole experiment costs $0.062 on Graviton4 and $0.074 on x86, and both chips accept the same
-> 147,880 PSMs at 1% FDR.** On the spectra where both this pipeline and the submitters' own
+> **The whole experiment costs $0.062 on Graviton4, $0.074 on Intel and $0.074 on AMD, and all three
+> chips accept the same 147,880 PSMs at 1% FDR.** On the spectra where both this pipeline and the submitters' own
 > Proteome Discoverer search are confident, they name the same peptide **99.35%** of the time.
 
 Workload: **every run of [PXD083239](https://www.ebi.ac.uk/pride/archive/projects/PXD083239)**
@@ -17,7 +17,7 @@ MS2 spectra from a current Orbitrap.
 ```sh
 export AWS_PROFILE=aws
 bash measurements/proteomics-real/stage-inputs.sh "$COOKBOOK_BUCKET"   # a spawn task fetches PRIDE -> bucket
-for t in search rescore; do for a in arm64 x86_64; do
+for t in search rescore; do for a in arm64 x86_64 amd; do
   spawn task run --wait --spec "$(python3 scripts/spec_arch.py proteomics $a "$COOKBOOK_BUCKET" "$(date +%s)" \
     measurements/proteomics-real/$t.task.json)"
 done; done
@@ -27,12 +27,15 @@ Two tasks, one tool each, S3 between them. `search` (openms image) builds the de
 six runs, runs the target-decoy FDR, and writes one Percolator input per run with OpenMS's own
 writer; `rescore` (percolator image) reads those PINs back from the bucket. The recipe's own pins,
 `quay.io/aarchbio/openms@sha256:8e9f3d4b…` / `percolator@sha256:4cc39404…` and their bioconda
-x86 twins.
+x86 twins. Each spec's command is a staged task body (`search-task.sh`, `rescore-task.sh`) checked
+against the sha256 in the spec, because spawn's user data is capped at 16 KiB; the bodies are the
+commands the first two chips ran inline, plus a topology print (and, for the search, the inputs
+staged as one directory and linked into `/tmp`).
 
 ## Results
 
-8 threads for the search, Percolator at its defaults for the rescoring, same box size on both chips,
-same staged bytes. A result is the whole six-run experiment, searched and rescored.
+8 threads for the search, Percolator at its defaults for the rescoring, same box size on all three
+chips, same staged bytes. A result is the whole six-run experiment, searched and rescored.
 
 | chip | task | instance | tool wall | task script | billed | $/hr | compute $ | billed $ | peak RSS |
 |---|---|---|---|---|---|---|---|---|---|
@@ -40,17 +43,29 @@ same staged bytes. A result is the whole six-run experiment, searched and rescor
 | Graviton4 | rescore | `c8g.large` | 52 s | 115 s | 227 s | 0.0798 | 0.0012 | 0.0050 | 0.25 GiB |
 | Xeon 6975P-C | search | `c8i.2xlarge` | 338 s | 504 s | 651 s | 0.3748 | 0.0352 | 0.0678 | 2.40 GiB |
 | Xeon 6975P-C | rescore | `c8i.large` | 61 s | 138 s | 230 s | 0.0937 | 0.0016 | 0.0060 | 0.27 GiB |
+| EPYC 9R45 | search | `c8a.2xlarge` | 276 s | 411 s | 581 s | 0.4311 | 0.0331 | 0.0696 | 2.35 GiB |
+| EPYC 9R45 | rescore | `c8a.large` | 31 s | 73 s | 160 s | 0.1078 | 0.0009 | 0.0048 | 0.31 GiB |
 
-**Per experiment: Graviton4 $0.0346 compute / $0.0624 billed ($0.0104 per run); x86 $0.0368 /
-$0.0738 ($0.0123 per run).** Tool wall is `SimpleSearchEngine` summed over six runs, or six seed-1
-Percolator trainings; task script adds every check below; billed is launch to terminate.
+**Per experiment: Graviton4 $0.0346 compute / $0.0624 billed ($0.0104 per run); Intel $0.0368 /
+$0.0738 ($0.0123 per run); AMD $0.0340 / $0.0744 ($0.0124 per run).** Tool wall is
+`SimpleSearchEngine` summed over six runs, or six seed-1 Percolator trainings; task script adds every
+check below; billed is launch to terminate.
 
-- **x86 searches 1.12× faster, Graviton4 rescores 1.17× faster, and Graviton4 is cheaper per
-  result either way** — 6% on compute and 15% billed, which is the hourly price.
-- **Everything around the search is slower on x86.** Decoy generation, indexing, FDR, PIN writing
-  and the awk checks over 538,544 PSMs take 96 s of the Graviton4 search task and 166 s of the x86
-  one, which is why the x86 task is slower overall despite the faster search. Which step carries the
-  gap is not separated here; the x86 image's userland is BusyBox.
+- **AMD is the fastest at both tools**: it searches 1.37× faster than Graviton4 and 1.22× faster
+  than Intel, and rescores 1.68× faster than Graviton4. It is also the cheapest on compute, by 2%
+  against Graviton4. Billed, Graviton4 is still the cheapest by 16%, because AMD's hour costs 35% more
+  and the fixed overhead is billed at that rate too.
+- **The 8a vCPUs are whole cores and the 8i vCPUs are SMT threads** (`/proc/cpuinfo` on the AMD box:
+  `siblings` == `cpu cores`, so 1 thread per core; an Intel 8i box shows 2). So the `large` rescoring box
+  is 2 cores on AMD and 1 core with SMT on Intel. That may explain Percolator's 31 vs 61 s. It is an
+  observation about these boxes, not a per-core rate.
+- **Intel searches 1.12× faster than Graviton4, Graviton4 rescores 1.17× faster than Intel, and
+  Graviton4 is cheaper than Intel per result either way**: 6% on compute and 15% billed, which is the
+  hourly price.
+- **Everything around the search is slower in the x86 image.** Decoy generation, indexing, FDR, PIN
+  writing and the awk checks over 538,544 PSMs take 96 s of the Graviton4 search task, 166 s on
+  Intel and 135 s on AMD. That is why the Intel task is slower overall despite its faster search.
+  Which step carries the gap is not separated here; the x86 image's userland is BusyBox.
 - **Half the bill is not the tools**: 430 s of tool time inside 874 s billed on Graviton4. Boot,
   Docker install and a 3.2 GB stage-in are fixed per task, so a lab with more runs should put them
   in one task, not one task per run.
@@ -58,25 +73,29 @@ Percolator trainings; task script adds every check below; billed is launch to te
   **4.9 GiB** (six mzML plus outputs) against the 8 GiB a 16 GiB box gives it — which is what the
   [staging budget](../../patterns/data-movement.md) predicts and why the search is not on a
   `large`. A 16-thread probe on `c8g.4xlarge` searched one run in 37 s against 59 s at 8: 1.6× for
-  2× the price, so 8 is the cost choice.
-- n = 1 per cell. Every count below is identical on both chips, so a repeat would re-measure only
-  the timing noise.
+  2× the price, so 8 is the cost choice. The AMD leg has no tmpfs figure. Its spec stages one
+  directory, so spawn bind-mounts `/tmp/in` and `/tmp/out` and not `/tmp` itself, and the in-task
+  `df /tmp` read the container's root disk (5.2 GiB used). The staged mzML still sat in the
+  host's tmpfs under `/tmp/in`.
+- n = 1 per cell. Every count below is identical on all three chips, so a repeat would re-measure
+  only the timing noise.
+- Spend for the AMD leg: $0.074 (both tasks, billed).
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
-| claim | why it must hold | Graviton4 | x86 |
-|---|---|---|---|
-| staged bytes == the sha256 of what PRIDE served (`source.sha256`) | provenance; PRIDE publishes none for this project | 15 files | same |
-| decoys 1:1 with targets, same length and amino-acid composition | a mass-matched decoy space is the FDR's premise | 26,836 / 26,836, 0 mismatched | same |
-| every PSM survives FDR, rows aligned; targets + decoys = total | accounting | 538,544 = 343,121 + 195,423 | same |
-| q single-valued and non-increasing in the score | definition of a q-value | 0 violations, all 6 runs | same |
-| **every q recomputed from the decoy counts** (running min of D/T) | a q-value is a function of the ranking | **343,121 of 343,121, max diff 5.551e-16** | same |
-| decoys above the 1% threshold ≤ 1% of the targets it accepts | follows from the recomputation | 660 over 66,370 | same |
-| PIN labels == the indexer's target/decoy classes | the writer accounts for every PSM | 6 of 6 runs | same |
-| Percolator: in == out, per class; 0 rows in the wrong class | conservation and partition | 538,544, 0 misfiled | same |
-| Percolator q non-increasing across score groups | definition | 0 violations | same |
-| **same seed twice, byte-identical** | the SVM's CV splits are seeded | **6 of 6 runs** | **6 of 6** |
-| **same peptide as the submitters' search, where both accept at 1%** | cross-engine; floor 0.98 from the two FDR budgets | **131,190 / 132,054 = 0.9935** (worst run 0.9914) | same |
+| claim | why it must hold | Graviton4 | Intel | AMD |
+|---|---|---|---|---|
+| staged bytes == the sha256 of what PRIDE served (`source.sha256`) | provenance; PRIDE publishes none for this project | 15 files | same | same |
+| decoys 1:1 with targets, same length and amino-acid composition | a mass-matched decoy space is the FDR's premise | 26,836 / 26,836, 0 mismatched | same | same |
+| every PSM survives FDR, rows aligned; targets + decoys = total | accounting | 538,544 = 343,121 + 195,423 | same | same |
+| q single-valued and non-increasing in the score | definition of a q-value | 0 violations, all 6 runs | same | same |
+| **every q recomputed from the decoy counts** (running min of D/T) | a q-value is a function of the ranking | **343,121 of 343,121, max diff 5.551e-16** | same | same |
+| decoys above the 1% threshold ≤ 1% of the targets it accepts | follows from the recomputation | 660 over 66,370 | same | same |
+| PIN labels == the indexer's target/decoy classes | the writer accounts for every PSM | 6 of 6 runs | same | same |
+| Percolator: in == out, per class; 0 rows in the wrong class | conservation and partition | 538,544, 0 misfiled | same | same |
+| Percolator q non-increasing across score groups | definition | 0 violations | same | same |
+| **same seed twice, byte-identical** | the SVM's CV splits are seeded | **6 of 6 runs** | **6 of 6** | **6 of 6** |
+| **same peptide as the submitters' search, where both accept at 1%** | cross-engine; floor 0.98 from the two FDR budgets | **131,190 / 132,054 = 0.9935** (worst run 0.9914) | same | same |
 
 The cross-engine row is the strong one. The submitters' answer is Proteome Discoverer 2.5 —
 SEQUEST plus *its* Percolator — read out of their own `.pdResult` files, so on each spectrum two
@@ -102,6 +121,13 @@ seed-1 bytes, so the box size does not enter.
   **1.1e-2 absolute** — a fitted smooth over the score distribution, and the same column the recipe
   found differing on percolator's own fixture, where the input bytes were identical. Reported, not
   asserted: nothing here thresholds on PEP. Details in `results/cross-chip.txt`.
+- **AMD reproduces Intel byte for byte, and so differs from Graviton4 exactly as Intel does.**
+  Every PSM table, every PIN column (hyperscores included) and every Percolator column (PEP
+  included) is identical between the two x86 chips on all six runs. Against Graviton4, AMD shows the
+  same 21,966 last-bit hyperscores and the same 20,027–36,692 PEP rows per run, to the same maxima.
+  So both differences are ARM-versus-x86 paths through the two builds, not a property of either x86
+  vendor ([`cross-chip.py`](cross-chip.py), output in
+  [`results/cross-chip-amd.txt`](results/cross-chip-amd.txt)).
 
 ## Pins and provenance
 

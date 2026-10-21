@@ -44,7 +44,8 @@ b4023dc6ee2d62ee89c8d4d347db4d348e65518d66d346574cdae7a4bbd76858  integrated_cal
 PINS
 shasum -a 256 real.sh >> pins.sha256
 shasum -a 256 -c <(grep -E 'panel|noise|real.sh' pins.sha256)
-for f in noise.txt real.sh pins.sha256; do
+cp "$SCRIPT_DIR/genome-task.sh" .   # the task body; its sha256 is in genome.task.json
+for f in noise.txt real.sh pins.sha256 genome-task.sh; do
   aws s3 cp --region "$REGION" --only-show-errors "$f" "$PREFIX/$f"
 done
 cat pins.sha256

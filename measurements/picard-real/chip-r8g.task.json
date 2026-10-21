@@ -1,0 +1,46 @@
+{
+ "task_id": "cookbook-picard-chip-r8g",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\n# The task body is a staged file, pinned here by sha256: spawn's user data is capped at 16 KiB (spawn#1063).\ncd /tmp\necho \"bbe98a3a721b99505a0454201d950dbb5b04d11fd996104552af026b07546b77  chip.sh\" | sha256sum -c > /dev/null || { echo \"FAIL: chip.sh does not match its pin\"; exit 1; }\nbash /tmp/chip.sh\n"
+ ],
+ "container": "quay.io/aarchbio/picard@sha256:c6a742e8277b9010df9aa3b9a6bb40651792ff319627cc1c2bf8a70ac633e6bd",
+ "resources": {
+  "cpu": 8,
+  "memory_gib": 60,
+  "architecture": "arm64",
+  "families": [
+   "r8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam",
+   "destination": "/tmp/aln.sorted.bam"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/aln.sorted.bam.bai",
+   "destination": "/tmp/aln.sorted.bam.bai"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/picard-real/chip.sh",
+   "destination": "/tmp/chip.sh"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/smoke-check.txt",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/picard/chip/r8g/smoke-check.txt"
+  },
+  {
+   "source": "/tmp/dup_metrics.txt",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/picard/chip/r8g/dup_metrics.txt"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "45m",
+  "on_complete": "terminate",
+  "cost_limit": 0.3
+ }
+}

@@ -1,0 +1,41 @@
+plink_version	v1.9.0-b.8
+host	x86_64 16 cpus
+assert:native_elf	ok
+wall_chrom_phase_s	1838
+assert:every_chromosome_reported	ok
+snps_imported	77818345
+snps_acgt_biallelic_in_vcf_text	77818345
+assert:same_records	ok
+assert:alt_count_eq_INFO_AC	ok
+assert:allele_number_eq_INFO_AN	ok
+superpop_rows	389091725
+assert:superpop_count_eq_INFO_AF	ok
+assert:superpops_sum_to_AC	ok
+assert:zero_missingness	ok
+snps_maf01	12057350
+assert:maf_filter_same_snps	ok
+hwe_fail_pooled_2504	2659909
+hwe_fail_within_EUR_503	69471
+snps_ld_pruned	465311
+wall_pca_s	12
+pca_max_abs_cos	6.949e-08
+pca_vector_norms	1.000000..1.000000
+assert:pca_orthogonal	ok
+pca_eigenvalues	239.43 91.8312 27.2301 20.2702 4.20961 4.07915 3.61091 3.0337 2.52308 2.20267 
+assert:eigenvalues_descending	ok
+pc12_centroids	EAS:-0.0153,-0.0336 AMR:-0.0090,0.0081 EUR:-0.0110,0.0259 AFR:0.0329,-0.0028 SAS:-0.0109,0.0061 
+assert:phenotype_built	ok
+wall_assoc_s	272
+repeated_records	4
+snps_tested_with_stat	12057342
+snps_stat_NA	8 (2:91795325:A:G 2:91799812:T:C 2:91799813:G:A 2:91800347:G:A 2:91802585:A:G 2:91802817:G:A 2:91802820:C:G 2:91819253:C:T )
+assert:every_qc_snp_has_a_row	ok
+lambda_gc_pc_adjusted	1.0003
+lambda_gc_unadjusted	75.6884
+planted	22:49552130:A:G
+adj_top_hit_t2_p	22:49552130:A:G 583.222 6.327e-116
+adj_best_other_t2_p	22:49552224:C:T 70.0569 9.492e-17
+unadj_top_hit_t2_p	1:159174683:T:C 826.562 2.385e-157
+unadj_rank_of_planted	62679
+assert:planted_snp_unbeaten_adjusted	ok
+failures	0

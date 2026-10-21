@@ -1,174 +1,46 @@
 {
-  "task_id": "plink2real-p19",
-  "container": "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7",
-  "command": [
-    "bash",
-    "-c",
-    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\n# No --quiet on sha256sum: bioconda's x86 images have BusyBox's, which lacks it.\ncd /tmp\necho \"d372d22b57836c79069971f419e56fc83b79c2ea84b2a6880d8e9203102c7bb3  p19.sh\" | sha256sum -c > /dev/null || { echo \"FAIL: p19.sh does not match its pin\"; exit 1; }\nbash /tmp/p19.sh 8\n"
-  ],
-  "resources": {
-    "cpu": 16,
-    "memory_gib": 128,
-    "architecture": "arm64",
-    "families": [
-      "r8g"
-    ]
+ "task_id": "plink2real-p19",
+ "container": "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\n# The task body is a staged file, pinned here by sha256: spawn's user data is capped at 16 KiB (spawn#1063).\ncd /tmp\necho \"d72be802d13b5067483fb030abd838d24992af287595d0dd4599d0481f51aaf7  p19-task.sh\" | sha256sum -c > /dev/null || { echo \"FAIL: p19-task.sh does not match its pin\"; exit 1; }\nbash /tmp/p19-task.sh\n"
+ ],
+ "resources": {
+  "cpu": 16,
+  "memory_gib": 128,
+  "architecture": "arm64",
+  "families": [
+   "r8g"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/",
+   "destination": "/tmp/in/"
   },
-  "inputs": [
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr1.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr2.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr2.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr3.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr4.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr4.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr5.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr5.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr6.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr6.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr7.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr7.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr8.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr8.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr9.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr9.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr10.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr10.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr11.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr11.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr12.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr12.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr13.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr13.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr14.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr14.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr15.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr15.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr16.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr16.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr17.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr17.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr18.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr18.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr19.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr19.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr21.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink-real/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz",
-      "destination": "/tmp/ALL.chr22.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2-real/vcf.sha256",
-      "destination": "/tmp/vcf.sha256"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2-real/panel",
-      "destination": "/tmp/panel"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2-real/p19.sh",
-      "destination": "/tmp/p19.sh"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/p2.counts.tsv.gz",
-      "destination": "/tmp/p2.counts.tsv.gz"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/dup.txt",
-      "destination": "/tmp/dup.txt"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/prune.prune.in",
-      "destination": "/tmp/prune.prune.in"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/causal.txt",
-      "destination": "/tmp/causal.txt"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/pheno.txt",
-      "destination": "/tmp/pheno.txt"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/covar.txt",
-      "destination": "/tmp/covar.txt"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/pcax.eigenval",
-      "destination": "/tmp/pcax.eigenval"
-    },
-    {
-      "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/glm.causal.tsv",
-      "destination": "/tmp/glm.causal.tsv"
-    }
-  ],
-  "outputs": [
-    {
-      "source": "/tmp/score.tsv",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p19/score.tsv"
-    },
-    {
-      "source": "/tmp/logs19.tar",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p19/logs19.tar"
-    },
-    {
-      "source": "/tmp/pca19.eigenval",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p19/pca19.eigenval"
-    },
-    {
-      "source": "/tmp/lin.assoc.linear",
-      "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p19/lin.assoc.linear"
-    }
-  ],
-  "lifecycle": {
-    "ttl": "90m",
-    "on_complete": "terminate",
-    "cost_limit": 1.2
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2-real/",
+   "destination": "/tmp/in2/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p2/",
+   "destination": "/tmp/p2/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/plink2-real/p19-task.sh",
+   "destination": "/tmp/p19-task.sh"
   }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs/plink2-real/p19/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "90m",
+  "on_complete": "terminate",
+  "cost_limit": 1.2
+ }
 }

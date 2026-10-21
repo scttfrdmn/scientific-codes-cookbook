@@ -59,6 +59,6 @@ want=$(awk '$2=="panel"{print $1}' "$tmp/vcf.sha256")
 [ "$have" = "$want" ] || { echo "  panel sha256 $have, pinned $want" >&2; exit 1; }
 aws s3 cp "$tmp/panel" "$DST/panel" --region "$REGION" --only-show-errors
 aws s3 cp "$tmp/vcf.sha256" "$DST/vcf.sha256" --region "$REGION" --only-show-errors
-for s in p2.sh p19.sh; do aws s3 cp "$DIR/$s" "$DST/$s" --region "$REGION" --only-show-errors; done
+for s in p2.sh p19.sh p2-task.sh p19-task.sh; do aws s3 cp "$DIR/$s" "$DST/$s" --region "$REGION" --only-show-errors; done
 echo "done."
-echo "  $DST/  (panel, vcf.sha256, p2.sh, p19.sh); the VCF sha256s are checked on the box"
+echo "  $DST/  (panel, vcf.sha256, p2.sh, p19.sh and their task bodies); the VCF sha256s are checked on the box"

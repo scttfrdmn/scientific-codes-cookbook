@@ -29,6 +29,10 @@
   {
    "source": "s3://${COOKBOOK_BUCKET}/runs/proteomics-real/r1/search/",
    "destination": "/tmp/pin/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/proteomics-real/rescore-task.sh",
+   "destination": "/tmp/rescore-task.sh"
   }
  ],
  "outputs": [
@@ -45,6 +49,6 @@
  "command": [
   "bash",
   "-c",
-  "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; set -uo pipefail does not clear it (spawn#707).\nexport PATH=/opt/conda/bin:$PATH\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\nmkdir -p out\necho \"== staged bytes must match their pins ==\"\n# Only the pinned files this task staged are checked (BusyBox sha256sum in the x86 image has no\n# --ignore-missing), and every input the run list needs must be among them, or the filter passed\n# vacuously.\nwhile read -r h f; do test -e \"$f\" && printf '%s  %s\\n' \"$h\" \"$f\"; done < pins.sha256 > pins.staged\nsha256sum -c pins.staged || { echo \"FAIL: a staged file does not match its pin\"; exit 1; }\nfor f in rescore.sh $(for r in $(cat runs.txt); do printf 'ref/ref_%s.tsv ' \"$r\"; done); do grep -q \"  $f\\$\" pins.staged || { echo \"FAIL: $f was not verified\"; exit 1; }; done\necho \"pinned_files_verified\t$(wc -l < pins.staged | tr -d ' ')\"\ngrep -m1 -iE 'model name|CPU part' /proc/cpuinfo | sed 's/^/cpu\\t/'; nproc | sed 's/^/nproc\\t/'\nT0=$(date +%s)\nbash rescore.sh > rescore-run.log 2>&1\nRC=$?\necho \"rescore.sh exit $RC in $(( $(date +%s) - T0 ))s\"\ncp rescore-run.log out/\ngrep -v '^  ' rescore-run.log\ntest \"$RC\" = 0 || { echo \"FAIL: the rescoring task failed\"; exit 1; }\ngrep -q 'RESCORE OK' out/score-percolator.tsv || { echo \"FAIL: no completion sentinel\"; exit 1; }\nuname -m | awk '{print \"arch\\t\"$1}'\necho DONE\n"
+  "set +e\n# The task body is a staged file, pinned here by sha256: spawn's user data is capped at 16 KiB (spawn#1063).\ncd /tmp\necho \"a618320c12db08e37942bfd3cb56ce2cde1a6b6dfa72fc54b116e29b47091c16  rescore-task.sh\" | sha256sum -c > /dev/null || { echo \"FAIL: rescore-task.sh does not match its pin\"; exit 1; }\nbash /tmp/rescore-task.sh\n"
  ]
 }

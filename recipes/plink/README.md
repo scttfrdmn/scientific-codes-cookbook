@@ -46,8 +46,9 @@ One task, `c8g.large` (2 vCPU / 4 GiB — PLINK is I/O-bound here, not compute-b
 |---|---|---|---|---|
 | Graviton4 | `m8g.4xlarge` | 1746 / 15 / 515 s | 0.7181 | **0.51** |
 | Xeon 6975P-C | `m8i.4xlarge` | 1871 / 17 / 429 s | 0.8467 | 0.60 |
+| EPYC 9R45 | `m8a.4xlarge` | 1838 / 12 / 272 s | 0.9738 | 0.63 |
 
-**Take Graviton4: 15% cheaper, byte-identical output.** Three-quarters of the run is disk-bound (40–48% iowait), so storage, not the chip, is the dial. x86 scans 1.2× faster. Running one PLINK per chromosome? Set `OPENBLAS_NUM_THREADS=1`, or the scan runs ~50× slower.
+**Take Graviton4: 15–18% cheaper, byte-identical output on all three.** Three-quarters of the run is disk-bound (42–53% iowait), so storage, not the chip, is the dial. The scan is 1.2× faster on Intel and 1.9× on AMD. Running one PLINK per chromosome? Set `OPENBLAS_NUM_THREADS=1`, or the scan runs ~50× slower.
 
 <details>
 <summary>As shipped: an exact integer identity, planted-signal recovery, the SIGPIPE trap, pins, smoke check</summary>

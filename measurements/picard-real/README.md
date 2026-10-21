@@ -42,6 +42,39 @@ exact assertion rather than a tolerance — the same move [GPAW](../../recipes/g
 across rank counts. It also makes each generation run a check on the other three for free, and it
 shows the memory footprint is set by the data, not the box.
 
+## Same generation, three chips
+
+The Graviton4 rung against same-generation Intel and AMD: the same command (`chip.sh`, with
+`chip-r8g.task.json` resolved by `spec_arch.py`), the same `-Xmx24g`, 8 vCPU and 64 GiB. The x86
+legs run bioconda's x86 build of the same Picard 3.5.0 on their own chip's bwa-samtools BAM. All
+three BAMs are 4,568,357,482 bytes. Intel's has arm64's S3 ETag; AMD's was uploaded in different
+parts, so its ETag cannot show byte identity.
+
+| chip | instance | MarkDuplicates | billed | $/hr | **$/run** | compute-only $ |
+|---|---|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | 591 s | 826 s | 0.4713 | **0.1081** | **0.0774** |
+| Xeon 6975P-C | `r8i.2xlarge` | 533 s | 707 s | 0.5557 | 0.1091 | 0.0823 |
+| **EPYC 9R45** | `r8a.2xlarge` | **459 s** | 581 s | 0.6390 | **0.1031** | 0.0815 |
+
+- **AMD is 1.29× faster than Graviton4 and Intel 1.11×.** The recipe's own verifying runs of the
+  same command, a week apart, gave 536 s (Intel) and 457 s (AMD), so these are repeatable to <1%.
+- **The cost order depends on the basis.** Billed per run, AMD is cheapest (5% under Graviton4) and
+  Intel dearest. On MarkDuplicates' own time, Graviton4 is cheapest, 5% under AMD. The gap between
+  those two bases is the boot, staging and image pull: 235 s on Graviton4 and 122 s on AMD in these
+  runs. So the billed ranking is partly about launch overhead and not only the chip.
+- **The 8a vCPUs are 8 whole cores; the 8i vCPUs are 4 cores with SMT** (`/proc/cpuinfo`: `siblings`
+  8, `cpu cores` 8 on `r8a` and 4 on `r8i`). So the Intel row is fewer physical cores, not a slower
+  core.
+- **The answer is a fixed point on all three chips.** `dup_metrics.txt` is identical line for line
+  on Graviton4, Intel and AMD, apart from the `# Started on:` timestamp. All five in-task assertions
+  pass on each chip: partition total 48,817,006, examined == flagstat, supplementary == flagstat,
+  the `PERCENT_DUPLICATION` recomputation, and the BAM magic. The tmpfs high-water mark was 8,834 MB
+  on Intel and 8,815 MB on AMD. AMD's recipe run read 8,831 MB, so the 19 MB is the 2-second
+  sampler, not the chip.
+- MarkDuplicates is a JVM and links no OpenBLAS, so there is no BLAS kernel to record. n = 1 per
+  chip, made defensible by the identical result and the repeat above. Spend for the two new legs:
+  $0.21 billed.
+
 ## Run it
 
 ```sh
@@ -51,6 +84,12 @@ make run RECIPE=picard                      # the Graviton4 rung, as shipped
 spawn task run --spec measurements/picard-real/gen-r6g.task.json --wait
 spawn task run --spec measurements/picard-real/gen-r7g.task.json --wait
 spawn task run --spec measurements/picard-real/gen-r9g.task.json --wait
+# Intel and AMD at the Graviton4 rung: the task body is staged, its sha256 in the spec
+bash measurements/picard-real/stage-inputs.sh "$COOKBOOK_BUCKET"
+for a in x86_64 amd; do
+  spawn task run --wait --spec "$(python3 scripts/spec_arch.py picard $a "$COOKBOOK_BUCKET" "$(date +%s)" \
+    measurements/picard-real/chip-r8g.task.json)"
+done
 ```
 
 `make run` substitutes `${COOKBOOK_BUCKET}`; `spawn task run` does **not** — pass a spec with the

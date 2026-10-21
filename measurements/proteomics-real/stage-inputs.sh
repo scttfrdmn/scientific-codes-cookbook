@@ -30,10 +30,10 @@ aws s3 cp --region "$REGION" --only-show-errors "$DST/derived.sha256" .
 diff "$HERE/source.sha256" source.sha256 || { echo "PRIDE's files differ from the pinned ones" >&2; exit 1; }
 diff "$HERE/derived.sha256" derived.sha256 || { echo "the staged inputs differ from the pinned ones" >&2; exit 1; }
 
-cp "$HERE/search.sh" "$HERE/rescore.sh" .
+cp "$HERE/search.sh" "$HERE/rescore.sh" "$HERE/search-task.sh" "$HERE/rescore-task.sh" .   # task bodies: sha256 in their specs
 { cat derived.sha256; shasum -a 256 search.sh rescore.sh; } > pins.sha256
 echo "$RUNS" | tr ' ' '\n' > runs.txt
 echo "GFP_C001_1" > runs-probe.txt
-for f in search.sh rescore.sh pins.sha256 runs.txt runs-probe.txt; do up "$f" "$f"; done
+for f in search.sh rescore.sh search-task.sh rescore-task.sh pins.sha256 runs.txt runs-probe.txt; do up "$f" "$f"; done
 cat pins.sha256
 echo "staged to $DST/"
