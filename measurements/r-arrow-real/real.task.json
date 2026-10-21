@@ -1,0 +1,94 @@
+{
+  "task_id": "cookbook-r-arrow-real-r1",
+  "container": "quay.io/aarchsci/r@sha256:136bf063a0d04967e2e2dac8622259edf344d5aa74cdd5869502007cf6c5a56c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '6f9b61ad2a9220b13c4bba46aded5b71fb834915a95ca0cf009fe7bf3522b9d2  run.sh\\n5e6d29c83dbddea98ab05c429c7a1b6065600f97df8be33ab1e9a4cc461635ad  analysis.R\\nba7208be9ce337bfa88b61342e698d8c5c0535e06872653bb7dee9f84b9cad0f  pins.sha256\\n25fe2e879b110da8847bd46528f0b8f12785504e372dca5926c3af1325188750  ref.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nEXPECT_FILES=36 NT=16 bash /tmp/run.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/tlc/",
+      "destination": "/tmp/tlc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-real/tlc/",
+      "destination": "/tmp/tlc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/analysis.R",
+      "destination": "/tmp/analysis.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/ref.sha256",
+      "destination": "/tmp/ref.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/reference/ref/",
+      "destination": "/tmp/ref/"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/check.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/check.txt"
+    },
+    {
+      "source": "/tmp/out/analysis.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/analysis.log"
+    },
+    {
+      "source": "/tmp/out/results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/results.tsv"
+    },
+    {
+      "source": "/tmp/out/host.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/host.txt"
+    },
+    {
+      "source": "/tmp/out/footprint.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/footprint.txt"
+    },
+    {
+      "source": "/tmp/out/staged.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/staged.sha256"
+    },
+    {
+      "source": "/tmp/out/files.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/files.csv"
+    },
+    {
+      "source": "/tmp/out/pay.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/pay.csv"
+    },
+    {
+      "source": "/tmp/out/hour.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/hour.csv"
+    },
+    {
+      "source": "/tmp/out/dist.csv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-arrow-real/r1/dist.csv"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

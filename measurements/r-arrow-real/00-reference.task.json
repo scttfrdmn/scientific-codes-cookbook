@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-r-arrow-real-reference",
+  "container": "quay.io/aarchsci/neuroimaging@sha256:f57c5cc3637cfcf20dfdf8a1627f3a57b56b397dde9f99805d35fa4b4a7a657c",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nprintf '45a407e60714919901e14298f0e99426d81923a9a5b0b75bd0f7aaa91043dd3b  ref.sh\\n91eb2d7b056ca929a2b73c1603a18be3041660d074cfa9a8992c6346f25560c2  reference.py\\nba7208be9ce337bfa88b61342e698d8c5c0535e06872653bb7dee9f84b9cad0f  pins.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/ref.sh\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 60,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/datashader-real/tlc/",
+      "destination": "/tmp/tlc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-real/tlc/",
+      "destination": "/tmp/tlc/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/ref.sh",
+      "destination": "/tmp/ref.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/reference.py",
+      "destination": "/tmp/reference.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/r-arrow-real/reference/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "60m",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

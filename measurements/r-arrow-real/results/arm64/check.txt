@@ -1,0 +1,55 @@
+arrow	25.0.0
+libarrow	25.0.0
+dplyr	1.2.1
+data.table	1.18.6.1
+R	R version 4.5.3 (2026-03-11)
+cpu_count	16
+io_thread_count	8
+longdouble.digits	113
+PASS  36 Parquet files staged (expected 36)
+PASS  all staged paths have one length
+rows_footer_total	378207443
+TOOL_WALL_S	93.05
+time_footers_s	0.05
+time_raw_queries_s	14.08
+time_write_dataset_s	74.33
+time_rewrite_queries_s	4.54
+time_pruned_count_s	0.04
+== rows ==
+PASS  rows per file == Parquet footer, 36 files
+rows_read_total	378207443
+rewrite_files	36
+rewrite_bytes	2384133940
+PASS  rewrite's footers sum to the input's (378207443)
+PASS  pruned count year=2023/month=12 == that file's footer (3376567)
+PASS  the pruned partition exists as a directory
+== rewrite == raw (write/read round trip) ==
+PASS  per-month totals: rewrite == raw, every line
+PASS  pay table: rewrite == raw, 23 lines
+PASS  hour table: rewrite == raw, 72 lines
+PASS  dist table: rewrite == raw, 252 lines
+== conservation ==
+PASS  pay: group counts add to the rows
+PASS  pay: group tot_c adds to the per-file total
+PASS  hour: group counts add to the rows
+PASS  hour: group fare_c adds to the per-file total
+PASS  distance histogram counts no more than the rows
+== Acero == data.table, file by file on the same decoded columns ==
+time_datatable_check_s	454.07
+PASS  files table: Acero == data.table, 36 lines
+PASS  pay table: Acero == data.table, 23 lines
+PASS  hour table: Acero == data.table, 72 lines
+PASS  dist table: Acero == data.table, 252 lines
+== Acero == polars (independent reader and engine) ==
+PASS  files table: Acero == polars, 36 lines
+PASS  pay table: Acero == polars, 23 lines
+PASS  hour table: Acero == polars, 72 lines
+PASS  dist table: Acero == polars, 252 lines
+sha256_files	dadec3f14a0afeeef04998211f302ceb25afdd408df1d0dcf1f82b2f8b99d615
+sha256_pay	ee7612e4e2c9645860e8137464ac1a93580b49dbc2d289a2e8d281c64bd1bd02
+sha256_hour	af83f548bc270cc9246b826472ef508675286c7922bffd8152f547c9cf294537
+sha256_dist	fc46d71b6ad58924c8c84a76e34ab88d2e2967123b3c0b53c96aba3fa870bc9a
+hour_unparsed_rows	0
+cents_total	487662901880
+VmHWM	6305688 kB
+R-ARROW REAL OK

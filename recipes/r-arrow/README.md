@@ -42,6 +42,14 @@ arrow::write_parquet(t, "rt.parquet", compression = "zstd")              # 2.15x
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. The inputs total 515 KB, so the box is ample. The analysis is **6 s** of a 1m29s window — 38 s installing Docker and 38 s pulling R, the catalog's largest image ([layout](../../patterns/layout-and-effective-cost.md)).
 
+**Which box — [measured](../../measurements/r-arrow-real/README.md)** on 378 M NYC taxi trips (36 files, 12 GB): `open_dataset()` + dplyr, a `write_dataset()` rewrite, the same queries again. All four tables equal polars and are identical on every chip. The writes take 76–80% of the time, and the tmpfs (12 GB staged plus the rewrite) picked the 64 GiB box, not Arrow's 6 GiB. Don't pass `unify_schemas = TRUE` across the TLC's 2023 files: it fails on an int32/int64 mismatch, and the default schema works.
+
+| chip | instance | Arrow wall | billed | compute $ | billed $/result |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 93.1 s | 668 s | 0.0186 | 0.1332 |
+| Intel | `m8i.4xlarge` | 88.7 s | 582 s | 0.0209 | 0.1369 |
+| **AMD** | `m8a.4xlarge` | **62.3 s** | **438 s** | **0.0168** | **0.1185** |
+
 <details>
 <summary>As shipped: a cross-implementation reference, one characterised exception, a constructed negative control, and an upstream gap that cost a check</summary>
 
@@ -186,14 +194,14 @@ produces a suspiciously identical file size — but check the bucket regardless
 ### Not covered
 
 **Page-CRC verification**, which r-arrow cannot do (filed upstream). **Arrow IPC/Feather, Flight and
-Substrait**, all compiled into this build and unexercised. **Datasets and Acero** — multi-file
-partitioned scans and the compute engine are what most Arrow users actually reach for, and this
-recipe only does single-file read/write. **Encryption**, which parquet-testing covers extensively.
+Substrait**, all compiled into this build and unexercised. **Datasets and Acero** are not in this
+recipe, which only does single-file read/write; they are measured at scale in
+[r-arrow-real](../../measurements/r-arrow-real/README.md). **Encryption**, which parquet-testing covers extensively.
 **The 96 other parquet-testing files**, including `float16`, `byte_stream_split`, bloom filters,
 page indexes and the legacy list structures — they exercise real decoder paths but ship no
 committed expected values, so asserting against them needs a reference from elsewhere.
 
-Also: no performance or scaling claim. 515 KB on one box says nothing about throughput, and
-`r-arrow`'s real purpose — larger-than-memory datasets — is untouched.
+Also: this fixture makes no performance claim. Throughput on a multi-file dataset is in
+[r-arrow-real](../../measurements/r-arrow-real/README.md).
 
 </details>
