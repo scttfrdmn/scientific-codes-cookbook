@@ -1,0 +1,47 @@
+{
+  "task_id": "cookbook-r-jsonlite-real-r1",
+  "container": "quay.io/aarchsci/r@sha256:db2fcb3c8d707afe6cccb5796f78964dc79ff4c648d9eb75a5e1c09608a9a54f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C.UTF-8\ncd /tmp\nmkdir -p /tmp/out /var/tmp/work\necho \"== staged bytes must match their pins ==\"\n( cd /tmp/inst && sha256sum -c /tmp/institutions.sha256 ) > /tmp/out/pins.check 2>&1 || { cat /tmp/out/pins.check; echo \"FAIL: a part does not match its pin\"; exit 1; }\necho \"0ad8eda028ae76a62308cf692d3fc8953fa37d0bfc408ef9e9c568ccef7941de  /tmp/real.R\" | sha256sum -c - || { echo \"FAIL: real.R does not match its pin\"; exit 1; }\necho \"$(wc -l < /tmp/institutions.sha256) parts + real.R match their pins\"\nuname -m | tee /tmp/out/arch.txt\nlscpu | grep -E '^(Model name|Thread\\(s\\) per core|Core\\(s\\) per socket|Socket\\(s\\)|CPU\\(s\\)):' | tee /tmp/out/lscpu.txt\nT0=$(date +%s)\nRscript real.R /tmp/inst /tmp/manifest.json /var/tmp/work /tmp/out  2>&1 | tee /tmp/out/real.log\nRC=\"${PIPESTATUS[0]}\"\necho \"real.R exit $RC in $(( $(date +%s) - T0 ))s\" | tee /tmp/out/wall.txt\necho \"memory.peak_gib $(awk '{printf \"%.2f\", $1/1073741824}' /sys/fs/cgroup/memory.peak 2>/dev/null)\" | tee /tmp/out/footprint.txt\ntest \"$RC\" = 0 || { echo \"FAIL: the workload failed\"; exit 1; }\ngrep -q 'JSONLITE REAL OK' /tmp/out/real.log || { echo \"FAIL: no completion sentinel\"; exit 1; }\ntest -s /tmp/out/score.tsv || { echo \"FAIL: no score.tsv\"; exit 1; }\n( cd /var/tmp/work && sha256sum lossless.json ) | tee /tmp/out/lossless.sha256\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "r8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/institutions/",
+      "destination": "/tmp/inst/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/manifest.json",
+      "destination": "/tmp/manifest.json"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/institutions.sha256",
+      "destination": "/tmp/institutions.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/real.R",
+      "destination": "/tmp/real.R"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/r-jsonlite-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

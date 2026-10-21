@@ -1,0 +1,49 @@
+jsonlite	2.0.0
+arrow	25.0.0
+R	R version 4.5.3 (2026-03-11)
+arch	aarch64
+workers (detectCores)	8
+PASS manifest: 83 parts, record_count 143455	83 143455
+time_s readLines (gz parts)	18.96
+PASS lines per part == manifest record_count, every part	83 of 83 parts; 143455 lines
+uncompressed JSON bytes	2277561725
+chunks	72 of 2000 records
+time_s per-record work (mclapply)	1061.80
+PASS every chunk worker completed	72 of 72
+worker-seconds: parse_json, 4 round trips, per-record re-emit	54.7,6442.8,1680.6
+PASS records parsed == source	143455
+round trip default (digits 4): records not identical	143455 of 143455 first https://openalex.org/I4210086374
+round trip digits = NA: records not identical	142550 of 143455 first https://openalex.org/I4210086374
+round trip digits = I(17): records not identical	136342 of 143455 first https://openalex.org/I4210086374
+round trip I(17) + always_decimal: records not identical	0 of 143455 first NA
+PASS lossless round trip: I(17) + always_decimal, every record	0 not identical
+PASS control: the default is lossy at scale	143455 records changed
+round trip digits = NA + always_decimal: records not identical	119904 of 143455
+re-serialized byte-identical to the source line (recorded)	5871 of 143455
+PASS ids in source order	parse_json ids == each line's leading "id"
+time_s arrow read_json_arrow, every part	15.75
+PASS arrow rows == source	143455
+PASS arrow == jsonlite, bit for bit: id	0 differ
+PASS arrow == jsonlite, bit for bit: name	0 differ
+PASS arrow == jsonlite, bit for bit: works	0 differ
+PASS arrow == jsonlite, bit for bit: cites	0 differ
+PASS arrow == jsonlite, bit for bit: lat	0 differ
+PASS arrow == jsonlite, bit for bit: lon	0 differ
+PASS arrow == jsonlite, bit for bit: alts	0 differ
+PASS arrow == jsonlite, bit for bit: cby	0 differ
+records with coordinates	143454
+sum works_count	302220203
+sum cited_by_count	18155478720
+non-ASCII display names	15489
+duplicated ids (recorded)	0
+time_s stream_in -> data.frame	281.29
+stream_in MB/s	8.10
+PASS stream_in rows == source	143455
+PASS stream_in ids == source order	
+data.frame columns	28
+time_s stream_out data.frame	260.86
+time_s stream_in again	279.05
+data.frame round trip: identical()	FALSE
+data.frame round trip: columns not identical	2 of 28 geo;associated_institutions
+  associated_institutions differs (recorded)	list -> list 859 rows first id https://openalex.org/I4402554131
+parent peak RSS (VmHWM)	19959556 kB

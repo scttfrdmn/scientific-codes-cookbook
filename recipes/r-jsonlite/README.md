@@ -9,7 +9,7 @@ last_verified: 2026-10-11
 last_verified_x86_64: 2026-10-17
 last_verified_amd: 2026-10-18
 ---
-# jsonlite — a lossless JSON round-trip needs `digits = I(17)`
+# jsonlite — a lossless JSON round-trip needs `digits = I(17)` and `always_decimal = TRUE`
 
 Round-trips doubles through JSON on Graviton4 and checks the result with `identical()`, cross-read by Arrow's C++ parser. For anyone serializing R numerics and expecting them back.
 
@@ -26,14 +26,22 @@ identical(x, fromJSON(toJSON(x, digits = NA)))    # FALSE — "full precision" k
 identical(x, fromJSON(toJSON(x, digits = I(17)))) # TRUE
 ```
 
+## Which box — [measured](../../measurements/r-jsonlite-real/README.md) (all 143,455 OpenAlex institutions, 2.28 GB of JSON Lines, 8 workers)
+
+| chip | instance | R wall | billed | peak RSS | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `r8g.2xlarge` | 1,944 s | 2,088 s | 19.0 GiB | 0.2734 |
+| Intel | `r8i.2xlarge` | 2,204 s | 2,326 s | 19.1 GiB | 0.3590 |
+| **AMD** | `r8a.2xlarge` | **1,350 s** | **1,484 s** | 19.2 GiB | **0.2634** |
+
 ## Make it yours
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
 | `digits = I(17)` | the default | **the default is `digits = 4`** and silently truncates: π becomes `3.1416`, a relative error of **1e-4**. Nothing warns you. |
-| `digits = I(17)` | `digits = NA` | **`NA` is the usual advice and is still lossy** — 15 significant digits, `4.885e-15` off. The `I()` wrapper is what passes the number through literally. |
+| `digits = I(17)` | `digits = NA` | **`NA` is the usual advice and is still lossy** — 15 significant digits, `4.885e-15` off, and on real data it changed **84%** of records. The `I()` wrapper is what passes the number through literally. |
 | `dataframe = "rows"` | `"columns"` / `"values"` | only `rows` round-trips to an identical `data.frame`; the other two come back **not a data.frame at all**. |
-| expecting a double back | — | a **whole-valued** double vector returns as `integer`: `c(1, 3)` → `[1,3]` → `integer`. No NA needed. Add `.0`-forcing or re-coerce on read. |
+| expecting a double back | — | a **whole-valued** double vector returns as `integer`: `c(1, 3)` → `[1,3]` → `integer`. No NA needed. **`always_decimal = TRUE`** fixes it: with `I(17)` it round-trips every one of 143,455 real records, without it 95% fail. |
 | Arrow as the referee | Python's `json` | **this env ships no Python** — the first in the catalog where that is true. `r-arrow`'s C++ reader is the independent parser available. |
 
 **Leave the fixture.** Nothing is fetched: six doubles chosen so that four of them cannot be represented in 15 significant digits, which is what makes the finding visible. **Scale it** by round-tripping your own data — `identical()` is the right check at any size, and [r-arrow](../r-arrow/README.md) covers the binary path when JSON is the wrong format.
@@ -176,12 +184,13 @@ non-byte-identical output from two identical calls — but check the bucket rega
 edge cases — the JSONTestSuite-style conformance corpus would be the right reference and is not
 staged here.
 
-**`stream_in`/`stream_out`** and the newline-delimited path at any real size; only a six-element
-reshape is done, to feed Arrow. **Nested and ragged structures** — lists of unequal-length vectors,
-where `simplifyVector`/`simplifyDataFrame`/`simplifyMatrix` decide the shape and are exactly where
-round-trip surprises live. **`auto_unbox`**, which changes whether a length-1 vector becomes a
-scalar. **Dates, factors and POSIXct**, none of which have a JSON representation and all of which
-are common in R data frames. **Large payloads**: nothing here speaks to throughput or memory, and
-`toJSON` on a multi-GB frame is a different question.
+**`stream_in`/`stream_out`** and nested, ragged structures are not exercised by this fixture. The
+[measurement](../../measurements/r-jsonlite-real/README.md) covers both on 2.28 GB of real records, and
+the data.frame path is where its round trip stops being exact (2 of 28 columns). It also measures
+throughput and memory at that size.
+
+**`auto_unbox`** on R-built data, which changes whether a length-1 vector becomes a scalar. **Dates,
+factors and POSIXct**, none of which have a JSON representation and all of which are common in R
+data frames.
 
 </details>

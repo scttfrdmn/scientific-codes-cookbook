@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-r-jsonlite-real-hash",
+  "container": "quay.io/aarchsci/r@sha256:db2fcb3c8d707afe6cccb5796f78964dc79ff4c648d9eb75a5e1c09608a9a54f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH TMPDIR=/tmp HOME=/tmp LC_ALL=C\ncd /tmp/inst || { echo \"FAIL: nothing staged\"; exit 1; }\n# Pin the OpenAlex institutions parts as copied into the bucket: sha256 of every part, on AWS.\nfind . -name 'part_*.gz' | sed 's|^\\./||' | sort > /tmp/parts.txt\necho \"parts $(wc -l < /tmp/parts.txt)\"\nxargs sha256sum < /tmp/parts.txt > /tmp/institutions.sha256\n# the source's own manifest: every part it lists is here, at its stated size\nRscript -e '\nm <- jsonlite::fromJSON(\"/tmp/manifest.json\")\nf <- m$files; rel <- sub(\"^s3://openalex/data/jsonl/institutions/\", \"\", f$url)\ngot <- readLines(\"/tmp/parts.txt\")\nstopifnot(setequal(rel, got), length(rel) == 83, m$record_count == 143455)\nsz <- file.size(file.path(\"/tmp/inst\", rel))\nstopifnot(all(sz == f$meta$content_length), sum(sz) == m$content_length)\ncat(\"manifest: 83 parts, sizes match, record_count\", m$record_count, \"\\n\")\n' || { echo \"FAIL: the staged parts are not the manifest's\"; exit 1; }\ncat /tmp/institutions.sha256\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/institutions/",
+      "destination": "/tmp/inst/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/manifest.json",
+      "destination": "/tmp/manifest.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/institutions.sha256",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/r-jsonlite-real/institutions.fetched.sha256"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}
