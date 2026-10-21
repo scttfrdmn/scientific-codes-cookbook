@@ -15,8 +15,7 @@ last_verified_amd: 2026-10-18
 ## Run it
 
 ```bash
-make stage RECIPE=climate
-spawn task run --spec "$(make -s spec RECIPE=climate)" --wait
+make stage RECIPE=climate && spawn task run --spec "$(make -s spec RECIPE=climate)" --wait
 ```
 
 ```python
@@ -45,10 +44,11 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02 — retightened from t
 
 | chip | instance | era5.py wall | peak RSS | **billed $/result** |
 |---|---|---|---|---|
-| Graviton4 | `r8g.2xlarge` | 884 s | 30.9 GiB | **0.1398** |
-| x86 | `r8i.2xlarge` | 1001 s | 32.7 GiB | 0.1743 |
+| Graviton4 | `r8g.2xlarge` | 884 s | 30.9 GiB | 0.1398 |
+| Intel | `r8i.2xlarge` | 1001 s | 32.7 GiB | 0.1743 |
+| AMD | `r8a.2xlarge` | **663 s** | 33.1 GiB | **0.1271** |
 
-**Graviton4: 1.13× faster, 20% cheaper billed**, and every non-timing output byte-identical across chips; the 2023 global mean (14.9829 °C), July (16.953 °C) and the 6 July daily record (17.0797 °C) each land within 0.003 °C of Copernicus's published values. **Memory picks the family:** staging is tmpfs (½ RAM), so the year's 13.35 GB needs `r8g` before any compute ([data movement](../../patterns/data-movement.md)).
+**AMD: 1.33× faster than Graviton4 and 9% cheaper billed. Graviton4: 1.13× faster than Intel and 20% cheaper.** Every non-timing output is byte-identical across all three chips; the 2023 global mean (14.9829 °C), July (16.953 °C) and the 6 July daily record (17.0797 °C) each land within 0.003 °C of Copernicus's published values. **Memory picks the family:** staging is tmpfs (½ RAM), so the year's 13.35 GB needs `r8g` before any compute ([data movement](../../patterns/data-movement.md)).
 
 <details>
 <summary>As shipped: three kinds of check, pins, smoke check, run + verify</summary>

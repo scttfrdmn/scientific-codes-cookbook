@@ -3,6 +3,8 @@
 > **`bamCoverage --binSize 1 --normalizeUsing None` reproduces samtools' aligned-base count exactly
 > — 2,998,490,520 on both sides, zero difference, no tolerance.** Getting there required two
 > accounting corrections, and each near-miss had an exact cause rather than a tolerance to widen.
+>
+> The identity and every output byte hold on Graviton4, Intel and AMD alike.
 
 deepTools 4.0.0 `bamCoverage` over the full ENCODE CTCF ChIP-seq alignment `ENCFF933NSJ` (1.92 GiB,
 39,455,565 mapped reads, 76 bp), checked against `samtools stats` on the same BAM.
@@ -90,6 +92,41 @@ recipe uses, at full scale. ENCODE publishes no `.bai`, so it must be built.
 
 The integral is read from the bigWig `totalSummary.sumData`, which is the sum of value × width over
 covered bases — the integral directly, O(1), and bin-width agnostic.
+
+## On three chips: the identity holds byte for byte
+
+Tasks `01` and `03` ran on same-generation Intel and AMD with bioconda's x86 builds of the same
+versions: deeptools `4.0.0` (`quay.io/biocontainers/deeptools@sha256:59b35677…`) and samtools
+`1.24` (`…/samtools@sha256:a1304475…`). Each chip ran the whole chain: its own `.bai`, its own
+`samtools stats` and its own coverage tracks.
+
+| chip | instances | threads/core | bamCoverage W=1 / W=50 | windows (01 + 03) | $/hr (01, 03) | compute $/result | **billed $/result** |
+|---|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.xlarge` + `m8g.4xlarge` | 1 | 27 / 18 s | 114 + 134 s | 0.1795, 0.7181 | 0.0090 | 0.0324 |
+| Xeon 6975P-C | `m8i.xlarge` + `m8i.4xlarge` | 2 | 22 / 16 s | 104 + 116 s | 0.2117, 0.8467 | 0.0089 | 0.0334 |
+| EPYC 9R45 | `m8a.xlarge` + `m8a.4xlarge` | 1 | **20 / 12 s** | 87 + 87 s | 0.2434, 0.9738 | 0.0087 | **0.0294** |
+
+Compute $/result is the two `bamCoverage` runs at the `03` rate.
+
+- **Every assertion passed on every chip, and every output is byte-identical:** the `.bai`,
+  `basis.tsv`, the 30,869-byte `samstats.txt` and `identity.tsv`. That gives integral 2,998,490,520
+  == M bases on all three, difference 0, and W=50 within 0.0093% of `(L-1+W)/L` on all three.
+  Both sides are integer counts, so this is a fixed point. It holds across two samtools builds
+  (aarch.bio and bioconda) as well as three chips.
+- **The chip is not a lever here either.** Compute is 32–45 s inside a 174–248 s bill, so billed
+  $/result spans only 0.0294–0.0334. Compute cost is flat at $0.009, so the difference between
+  AMD's shorter windows and the others lies outside the tool. As above, this window is too short to rank chips by.
+- Spend for the two new legs: $0.06.
+
+The two task scripts are now staged and pinned by sha256 (`index-and-stats.sh`,
+`coverage-identity.sh`), because spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB
+user data (spawn#1246). Stage them before a run:
+`aws s3 cp measurements/deeptools-real/<name>.sh s3://$COOKBOOK_BUCKET/inputs/deeptools-real/`.
+Each script prints `threads_per_core` and `cpu_model`, which only report and cannot fail the run.
+On x86, pass both specs in one call,
+`python3 scripts/spec_arch.py deeptools amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/deeptools-real/0{1,3}*.task.json`.
+That way task 01's outputs move to `inputs-amd/` and `measurements-amd/`, and task 03 follows them
+there. Raw `identity.tsv` per chip is in `results/`.
 
 ## Pins
 

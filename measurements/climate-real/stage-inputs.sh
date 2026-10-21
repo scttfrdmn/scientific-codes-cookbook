@@ -27,7 +27,11 @@ done < "$SCRIPT_DIR/era5-2023.sha256"
 
 cp "$SCRIPT_DIR/era5-2023.sha256" "$tmp/pins.sha256"
 ( cd "$SCRIPT_DIR" && shasum -a 256 era5.py ) >> "$tmp/pins.sha256"
-aws s3 cp --region "$REGION" --only-show-errors "$SCRIPT_DIR/era5.py" "$PREFIX/era5.py"
-aws s3 cp --region "$REGION" --only-show-errors "$tmp/pins.sha256" "$PREFIX/pins.sha256"
+# The task stages code/ as one directory (EC2 user data is 16 KiB, spawn#1246); the spec pins
+# era5-2023.sh by sha256, and that script checks era5.py against pins.sha256.
+for f in era5.py era5-2023.sh; do
+  aws s3 cp --region "$REGION" --only-show-errors "$SCRIPT_DIR/$f" "$PREFIX/code/$f"
+done
+aws s3 cp --region "$REGION" --only-show-errors "$tmp/pins.sha256" "$PREFIX/code/pins.sha256"
 cat "$tmp/pins.sha256"
 echo "staged to $PREFIX/"

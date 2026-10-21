@@ -22,15 +22,13 @@ Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Gr
 make stage RECIPE=bwa-samtools   # once — caches the RODA index + reads into your bucket
 for s in $(make -s spec RECIPE=bwa-samtools); do spawn task run --spec "$s" --wait; done   # align (~13 min) then sort+index (~1 min), self-terminating
 make ls    RECIPE=bwa-samtools   # aln.sam.gz, aln.sorted.bam + .bai, smoke checks
-```
-
-```bash
+# the alignment itself:
 bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
   GRCh38_full_analysis_set_plus_decoy_hla.fa \
   SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz | gzip -1 > aln.sam.gz
 ```
 
-## Which box — measured (same image, same bytes, 16 threads, pre-`.alt` so all rows are comparable; ALT-aware adds ~4.6%)
+## Which box — measured (same bytes, 16 threads, pre-`.alt` so all rows are comparable; ALT-aware adds ~4.6%)
 
 | generation | instance | wall | reads/s | $/hr | **billed $/result** |
 |---|---|---|---|---|---|
@@ -38,8 +36,10 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | Graviton3 | `c7g.4xlarge` | 890 s | 54,373 | 0.5800 | 0.1621 |
 | Graviton4 | `c8g.4xlarge` | 757 s | 63,926 | 0.6381 | 0.1508 |
 | **Graviton5** | `c9g.4xlarge` | **590 s** | **82,021** | 0.6955 | **0.1320** |
+| Intel Xeon 6975P-C | `c8i.4xlarge` | 1014 s | 47,724 | 0.7497 | 0.2284 |
+| AMD EPYC 9R45 | `c8a.4xlarge` | 646 s | 74,910 | 0.8622 | 0.1712 |
 
-**Take the newest generation, and 16 cores.** Graviton2→5: rate card +28%, wall −46%, result **28% cheaper**; peak RSS is 8.7 GiB on all four, so 32 GiB is right. More cores scale almost perfectly (3.8× on 4×) and compute-only cost barely moves (+5.7%) — but **billed cost rises 40%**, because ~95 s of boot-and-staging is charged whatever the box costs. 64 cores buys wall-clock, not savings.
+**Take the newest generation, and 16 cores.** Graviton2→5: rate card +28%, wall −46%, result **28% cheaper**; peak RSS is 8.7 GiB on all four, so 32 GiB is right. More cores scale almost perfectly (3.8× on 4×) and compute-only cost barely moves (+5.7%) — but **billed cost rises 40%**, because ~95 s of boot-and-staging is charged whatever the box costs. 64 cores buys wall-clock, not savings. Same generation on x86, using bioconda's x86 build of the same version: AMD is 1.17× faster than Graviton4 but 14% dearer per result, and Intel is 1.34× slower, on 8 SMT cores. The SAM record counts are identical on all three ([measured](../../measurements/bwa-real/README.md)).
 
 ## Make it yours
 

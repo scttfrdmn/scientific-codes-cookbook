@@ -57,7 +57,7 @@ Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 12m each, caps $0.05 each. The co
 
 **The conservation identity is the load-bearing one.** Coverage is a redistribution of aligned bases: every base a read covers must appear exactly once in the track, so the integral has to equal reads × read-length. That single number catches off-by-one interval boundaries, dropped reads, double counting, and accidental normalisation — none of which a spot check on one interval would notice. It is exact because coverage here is integer, which is also why `--normalizeUsing None` is not an incidental flag but the thing that makes the check possible.
 
-Measured on the full ENCODE CTCF alignment `ENCFF933NSJ` (1.92 GiB, 39,455,565 mapped reads, 76 bp), the two sides agree with **no tolerance at all**:
+Measured on the full ENCODE CTCF alignment `ENCFF933NSJ` (1.92 GiB, 39,455,565 mapped reads, 76 bp), the two sides agree with **no tolerance at all**, byte for byte on Graviton4, Intel and AMD ([three chips](../../measurements/deeptools-real/README.md#on-three-chips-the-identity-holds-byte-for-byte)):
 
 ```text
 samtools 'bases mapped (cigar)'      2,998,622,940

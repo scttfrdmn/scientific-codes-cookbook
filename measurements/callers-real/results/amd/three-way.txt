@@ -1,0 +1,18 @@
+== three callers vs GIAB HG001 v4.2.1, chr20, high-confidence regions ==
+
+QUAL is NOT calibrated across callers, so a shared numeric threshold cannot rank them.
+q0 = the tool's full output (like-with-like by construction); q30 = QUAL>=30 on each.
+
+tag                          TP      FP      FN  precision     recall         F1
+gatk_snps_q0              68895     696     315    0.99000    0.99545    0.99272
+gatk_snps_q30             68895     696     315    0.99000    0.99545    0.99272
+gatk_indels_q0            10438      61      66    0.99419    0.99372    0.99395
+gatk_indels_q30           10438      61      66    0.99419    0.99372    0.99395
+bcftools_snps_q0          68858     580     352    0.99165    0.99491    0.99328
+bcftools_snps_q30         68701     328     509    0.99525    0.99265    0.99395
+bcftools_indels_q0        10290      86     214    0.99171    0.97963    0.98563
+bcftools_indels_q30       10197      60     307    0.99415    0.97077    0.98232
+fb_snps_q0                66409  146290    2801    0.31222    0.95953    0.47114
+fb_snps_q30               66119     202    3091    0.99695    0.95534    0.97570
+fb_indels_q0               9934     349     570    0.96606    0.94573    0.95579
+fb_indels_q30              9679      69     825    0.99292    0.92146    0.95586

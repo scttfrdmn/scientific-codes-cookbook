@@ -50,6 +50,8 @@ T1=$(date +%s)
 WALL=$(( T1 - T0 ))
 read -r NREC NMAP < counts.tsv
 kill $SP 2>/dev/null || true
+TPC=$(awk -F, '{n=0; for(i=1;i<=NF;i++){k=split($i,r,"-"); n+=(k==2?r[2]-r[1]+1:1)} print n}' /sys/devices/system/cpu/cpu0/topology/thread_siblings_list 2>/dev/null || echo unknown)
+CPUM=$(awk -F': *' '/^model name/{print $2; exit} /^CPU part/{print "CPU part "$2; exit}' /proc/cpuinfo 2>/dev/null || echo unknown)
 
 PEAK=$(awk -F'\t' '{if($2+0>m)m=$2+0} END{printf "%.2f", m/1073741824}' /tmp/samp.tsv)
 ANON=$(awk -F'\t' '{if($3+0>m)m=$3+0} END{printf "%.2f", m/1073741824}' /tmp/samp.tsv)
@@ -57,6 +59,8 @@ CORES=$(awk -F'\t' 'NR==1{u0=$4;t0=$1} END{printf "%.2f", ($4-u0)/1e6/($1-t0)}' 
 {
 printf 'label\t%s\n' "$LBL"
 printf 'threads\t%s\n' "$THREADS"
+printf 'threads_per_core\t%s\n' "$TPC"
+printf 'cpu_model\t%s\n' "$CPUM"
 printf 'nproc\t%s\n' "$(nproc)"
 printf 'bwa_version\t%s\n' "$BWAVER"
 printf 'bwa_wall_s\t%s\n' "$WALL"

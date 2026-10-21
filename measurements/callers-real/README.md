@@ -2,11 +2,13 @@
 
 > **bcftools matches GATK on SNVs in 1/35th of the time; GATK earns its cost on indels; freebayes
 > needs filtering or its precision is 0.31.** Same BAM, same reference, same GIAB benchmark, same
-> scoring code — so for once the three numbers are comparable.
+> scoring code — so for once the three numbers are comparable. The accuracy tables are
+> byte-identical on Graviton4, Intel and AMD, and on x86 GATK runs 6–9× faster.
 
 NA12878 (GIAB **HG001**) at 36× across the whole of GRCh38 chr20, from the published NYGC 30×
 CRAM. Scored against **GIAB HG001 v4.2.1** inside its 56,000,154 high-confidence chr20 bases.
-Every caller ran on `c8g.xlarge`, 4 vCPU / 8 GiB.
+Every caller ran on `c8g.xlarge`, 4 vCPU / 8 GiB, and again on `c8i.xlarge` and `c8a.xlarge`
+([below](#on-intel-and-amd-the-same-accuracy-table-byte-for-byte)).
 
 ## Speed and cost
 
@@ -16,7 +18,7 @@ Every caller ran on `c8g.xlarge`, 4 vCPU / 8 GiB.
 | freebayes | haplotype | 644 s | 385,371 | ~700 s | 0.0310 |
 | GATK4 HaplotypeCaller | local re-assembly | **7,929 s** | 131,730 | 7,982 s | **0.3537** |
 
-**GATK is 34.8× slower and 28× more expensive per result than bcftools on identical bytes.**
+**On Graviton4, GATK is 34.8× slower and 28× more expensive per result than bcftools on identical bytes.**
 Note also that GATK is the only one of the three whose cores do nothing — its AVX PairHMM is
 x86-64 only, so it runs single-threaded on Graviton
 ([measured](../gatk4-real/README.md)).
@@ -44,6 +46,40 @@ Indels:
 | bcftools | q30 | 0.99415 | 0.97077 | 0.98232 |
 | freebayes | q0 | 0.96606 | 0.94573 | 0.95579 |
 | freebayes | q30 | 0.99292 | 0.92146 | 0.95586 |
+
+### On Intel and AMD: the same accuracy table, byte for byte
+
+Each caller's own recipe task ran on same-generation `c8i.xlarge` and `c8a.xlarge`, 4 vCPU each,
+using bioconda's x86 builds of the same versions. That gave gatk4 `4.6.2.0`, bcftools `1.24` and
+freebayes `1.3.10`, on the same BAM, reference and truth. The three-way scorer then ran on each
+chip over that chip's own VCFs. **`three-way.txt` is byte-identical on all three chips**, so every
+row of both tables above holds on Intel and AMD, and both assertions passed on each. The VCFs are
+not byte-identical: the x86 GKL changes 51 GATK annotations, the htslib builds differ for
+bcftools (127,617 calls against 127,616), and freebayes' QUAL differs in its last digits. Each
+recipe page has the details. None of those differences reaches a scored count, so accuracy is a
+fixed point here and the per-record annotations are a path.
+
+| caller | Graviton4 wall / billed | **$/result** | Intel wall / billed | **$/result** | AMD wall / billed | **$/result** |
+|---|---|---|---|---|---|---|
+| bcftools | 228 / 285 s | 0.0126 | 223 / 288 s | 0.0150 | **174 / 216 s** | 0.0129 |
+| freebayes | 644 / 704 s | 0.0310 | 474 / 539 s | 0.0281 | **358 / 414 s** | **0.0248** |
+| GATK4 | 7,929 / 7,982 s | 0.3537 | 1,228 / 1,324 s | 0.0689 | **849 / 944 s** | **0.0565** |
+
+$/hr: `c8g.xlarge` 0.1595, `c8i.xlarge` 0.1874, `c8a.xlarge` 0.2155. Billed is spawn's command
+window. Wall is the caller alone, as each task reports it.
+
+- **GATK is the chip-sensitive one: 9.3× faster on AMD than on Graviton4, and 6.3× cheaper.**
+  On x86 the Intel GKL loads native AVX-512 PairHMM and SmithWaterman. On arm64 it falls back to
+  single-threaded Java. This is a property of the build, not an ARM rate, and
+  [gatk4-real](../gatk4-real/README.md) measures it. On x86 the "28× bcftools" cost ratio
+  shrinks to 4.6× on Intel and 4.4× on AMD.
+- **bcftools costs about the same everywhere** (0.0126–0.0150). A pileup is not where the
+  silicon matters. **freebayes** is 1.80× faster on AMD than on Graviton4.
+- AMD is the fastest chip for all three callers. Graviton4 is cheapest only for bcftools.
+- n = 1 per cell. The x86 caller runs are the recipes' own verifying runs (2026-10-12 Intel,
+  2026-10-18/19 AMD), reused here because the scorer reads exactly those outputs. The callers'
+  hosts did not record `lscpu`. 8i vCPUs are SMT threads and 8a vCPUs are full cores. New
+  spend for this measurement: the two scorer runs, $0.008.
 
 ### Four things in that table worth acting on
 
@@ -88,7 +124,10 @@ make stage RECIPE=gatk4                              # reference, GIAB truth, th
 make run   RECIPE=bcftools                            # call + score, ~5 min
 make run   RECIPE=freebayes                           # call then score
 make run   RECIPE=gatk4                               # ~2h 12m, single-threaded on Graviton
+aws s3 cp measurements/callers-real/three-way.sh s3://$COOKBOOK_BUCKET/inputs/callers-real/   # staged, sha256-pinned in the spec
 spawn task run --spec measurements/callers-real/three-way.task.json --wait
+# x86: scores that chip's runs-{x86_64,amd}/ VCFs
+spawn task run --spec "$(python3 scripts/spec_arch.py bcftools amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/callers-real/three-way.task.json)" --wait
 ```
 
 The two canaries clock each caller on `chr20:1,000,000-3,000,000` — 6 s and 14 s against

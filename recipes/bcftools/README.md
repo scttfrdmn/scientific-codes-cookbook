@@ -34,7 +34,7 @@ bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
 | freebayes | 644 s | 0.0310 | 0.97570 | 0.92146 |
 | [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99272 | **0.99372** |
 
-**SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)).
+**SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)). On Intel and AMD the scores are byte-identical. GATK's native x86 PairHMM brings its cost down to 4.4–4.6× bcftools there, and AMD is the fastest box for all three callers ([three chips](../../measurements/callers-real/README.md#on-intel-and-amd-the-same-accuracy-table-byte-for-byte)).
 
 ## Make it yours
 

@@ -1,8 +1,10 @@
-# bwa mem on a real workload — Graviton generations and the knee
+# bwa mem on a real workload — Graviton generations, the knee, and three chips
 
 > **Every Graviton generation is faster *and* cheaper per result than the one before it — and
 > the cost knee is at 16 cores, not 64, once you pay for the instance rather than the CPU
-> seconds.** Measured on a full 1000 Genomes sequencing run against the whole of GRCh38.
+> seconds.** Measured on a full 1000 Genomes sequencing run against the whole of GRCh38. AMD
+> aligns it 1.17× faster than Graviton4 and Intel 1.34× slower, with identical record counts on
+> all three. Graviton4 gives the cheapest result.
 
 The workload is deliberately not a toy: **24,148,993 read pairs** (4.83 Gbp, 100 bp) aligned
 to the complete `GRCh38_full_analysis_set_plus_decoy_hla` index. 99.91% of records map, every
@@ -41,7 +43,11 @@ for e in amb ann bwt pac sa fai; do aws s3 cp "$SRC/$REF.$e" "$DST/$(basename $R
 for r in 1 2; do
   aws s3 cp "$SRC/phase3/data/HG00096/sequence_read/SRR062634_${r}.filt.fastq.gz" "$DST/"
 done
+aws s3 cp measurements/bwa-real/align.sh "$DST/align.sh"   # gen-c8g stages it, pinned by sha256
 ```
+
+On x86, `spawn task run --spec "$(python3 scripts/spec_arch.py bwa-samtools amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/bwa-real/gen-c8g.task.json)" --wait`.
+Use `x86_64` in place of `amd` for Intel.
 
 `bwa mem` reads `<prefix>.amb/.ann/.bwt/.pac/.sa` only — **the 3.0 GiB `.fa` is not needed**,
 which cuts staging from 12 GiB to **8.9 GiB**. No index build: RODA publishes one.
@@ -113,13 +119,47 @@ question stops being about the chip and becomes about the data path, which is wh
 [copy, mount, or share?](../../patterns/data-movement.md) is the page that matters next: the
 94 seconds of staging is the entire reason 64 cores loses.
 
+## 4. Across chips — Graviton4, Intel and AMD at 16 threads
+
+The `gen-c8g` task again, unchanged, on the same-generation x86 boxes. It uses bioconda's own x86
+build of the same `0.7.19-r1273` (`quay.io/biocontainers/bwa@sha256:99a35e5e…`), the same staged
+bytes and the same `-t 16`, and goes through `scripts/spec_arch.py bwa-samtools {x86_64,amd} …`:
+
+| chip | instance | threads/core | wall | reads/s | avg cores | peak RSS | $/hr | compute $/result | **billed** | **billed $/result** |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 1 | 757 s | 63,926 | 15.21 | 8.70 GiB | 0.6381 | 0.1342 | 851 s | **0.1508** |
+| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1014 s | 47,724 | 15.33 | 8.70 GiB | 0.7497 | 0.2112 | 1097 s | 0.2284 |
+| EPYC 9R45 | `c8a.4xlarge` | 1 | **646 s** | **74,910** | 15.16 | 8.70 GiB | 0.8622 | 0.1547 | 715 s | 0.1712 |
+
+- **The alignment is the same on all three:** 48,392,167 SAM records and 48,349,411 mapped,
+  identical counts. With `-t 16` fixed, bwa's batching is fixed too, so the counts are a fixed
+  point, and they agree across chips. (This is the pre-`.alt` input, so it is the 48,392,167 of
+  the tables above, not the recipe's ALT-aware 48,817,006.)
+- **AMD is fastest, 1.17× ahead of Graviton4, and Graviton4 is still the cheapest result.**
+  AMD's hour costs 35% more, so its result costs 14% more billed. Intel is 1.34× slower than
+  Graviton4 and 51% dearer per result. Its 16 vCPUs are 8 cores × 2 SMT threads, and bwa keeps
+  all 16 busy (15.33 avg cores), so this is a vCPU-for-vCPU comparison at the same price tier,
+  not a core-for-core one.
+- Peak RSS is 8.70 GiB on every chip. Memory belongs to the index, not the silicon.
+- Only the 16-thread rung was re-run on x86. The generation and knee sweeps are Graviton-only.
+
+The task script is now staged and pinned by sha256 (`align.sh`, `inputs/bwa-real/align.sh`)
+instead of inline. spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB user data for the
+inline form (spawn#1246). `align.sh` also prints `threads_per_core` and `cpu_model`, which only
+report and cannot fail the run. Neither change touches the alignment or the checks.
+Spend for the two x86 legs: $0.40 billed.
+
 ## Caveats
 
 n = 1 per cell. Generation rows share one image digest, one input, one thread count, so they
 are comparable to each other; the knee rows share one generation and family. `avg_cores` is
-cgroup `cpu.stat usage_usec` over wall, and no family here has SMT, so it is
-physical-core-equivalent throughout. Rates are us-west-2 on-demand at time of measurement.
-The 16-core row is reused in both tables — it is the same run.
+cgroup `cpu.stat usage_usec` over wall. It is physical-core-equivalent everywhere except `c8i`,
+whose 16 vCPUs are 8 SMT cores. Rates are us-west-2 on-demand at time of measurement. The
+Graviton4 16-core row is reused in all three tables, because it is the same run. The x86 rows
+come from a different image (bioconda's x86 build of the same version), so they compare chips
+running the same version, not one binary on two chips. Their output file keeps the spec's
+`c8g-16t` label and lands under `measurements-{x86_64,amd}/`. The copies here are renamed
+`size-c8i-16t.txt` and `size-c8a-16t.txt`.
 
 A first attempt died twice with **exit 141** before producing anything: `awk … exit` and
 `| head` both stop reading early, SIGPIPE the writer, and under `set -o pipefail` kill the
