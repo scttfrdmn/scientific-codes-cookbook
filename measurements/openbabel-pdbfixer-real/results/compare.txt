@@ -1,0 +1,23 @@
+== Open Babel, whole ChEMBL 37: metrics (wall and memory excluded)
+-- Graviton4 vs x86_64: mol_canonical 2897717/2897715; first100k_mol_canonical 99948/99945; mol_canonical_differ 102/104
+-- Graviton4 vs amd: mol_canonical 2897717/2897706; first100k_mol_canonical 99948/99945; mol_canonical_differ 102/113
+arm64   output_sha256 a27bb4712e912c64a40db8dcf5071937c1b63e3ebd1709c798c84d92e6d4eccc
+x86_64  output_sha256 a27bb4712e912c64a40db8dcf5071937c1b63e3ebd1709c798c84d92e6d4eccc
+amd     output_sha256 a27bb4712e912c64a40db8dcf5071937c1b63e3ebd1709c798c84d92e6d4eccc
+== mismatch lists (sha256)
+mismatch_can_idempotent.tsv              identical 2eef2360bb9212b0
+mismatch_mol_canonical.tsv               {'arm64': '56e0cb017ec165ba', 'x86_64': '090c9333703325f1', 'amd': '4dfc38f85e7ee854'}
+mismatch_mol_hydrogens.tsv               identical e3b0c44298fc1c14
+mismatch_mol_inchi_nostereo.tsv          identical e3b0c44298fc1c14
+mismatch_mol_lossless.tsv                identical e3b0c44298fc1c14
+mismatch_rdkit_formula_match.tsv         identical e3b0c44298fc1c14
+mismatch_rdkit_skeleton_match.tsv        identical 50a19bd0dfdac3fa
+
+== PDBFixer, hash directory ab: per-entry columns (timings and memory excluded)
+-- Graviton4 vs x86_64: 30 of 31 columns identical on all 247 entries
+   out_sha256         differs on 237 entries  e.g. 1ab0: 1fbff3ae892ef06b0d6d12bb / cbb76ca0cf0bc2e6ad1ec1a2
+-- Graviton4 vs amd: 30 of 31 columns identical on all 247 entries
+   out_sha256         differs on 237 entries  e.g. 1ab0: 1fbff3ae892ef06b0d6d12bb / 67498e0381044ddcab4b3fd8
+arm64   failed_forcefield=10 prepared=230 skipped_atoms=1 skipped_gaps=6
+x86_64  failed_forcefield=10 prepared=230 skipped_atoms=1 skipped_gaps=6
+amd     failed_forcefield=10 prepared=230 skipped_atoms=1 skipped_gaps=6

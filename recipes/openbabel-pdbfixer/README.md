@@ -23,8 +23,7 @@ for s in $(make -s spec RECIPE=openbabel-pdbfixer); do spawn task run --spec "$s
 make run RECIPE=openbabel-pdbfixer   # 22 s + the structure-prep task
 make ls  RECIPE=openbabel-pdbfixer
 
-python3 -c "from openbabel import pybel; \
-  print(pybel.readstring('smi','CC(=O)Oc1ccccc1C(=O)O').write('inchikey').strip())"
+python3 -c "from openbabel import pybel; print(pybel.readstring('smi','CC(=O)Oc1ccccc1C(=O)O').write('inchikey').strip())"
 ```
 
 ## Make it yours
@@ -33,6 +32,7 @@ python3 -c "from openbabel import pybel; \
 |---|---|---|
 | `pybel` per molecule | the `obabel` CLI | **don't.** One bad record truncates the run silently, exit 0. |
 | ChEMBL 37's first 100k | your library | reused byte-for-byte from [rdkit](../rdkit/README.md); the comparison needs identical bytes. |
+| SMILES → `-osdf` | `-osdf --gen2D` | without it the molfile has zero coordinates under a `2D` header, and its InChI loses stereo for 37% of ChEMBL; `--gen2D` is slow on macrocycles ([measured](../../measurements/openbabel-pdbfixer-real/README.md)). |
 | InChIKey | canonical SMILES | SMILES canonicalisation is algorithm-specific, so two engines legitimately differ — there is nothing to assert. |
 
 **Leave the library** — 100k compounds with a published key is what makes a two-engine comparison
@@ -40,8 +40,15 @@ checkable. **Scale it** freely: 0.22 ms per molecule.
 
 ## Shape, size, cost
 
-`c8g.xlarge` (4 vCPU): **22 s, ~$0.01**, plus a sub-second structure-prep task. No generation table —
-at 22 s a ladder would measure boot ([same call as mash](../mash/README.md)).
+`c8g.xlarge`: **22 s, ~$0.01**. At archive scale ([measured](../../measurements/openbabel-pdbfixer-real/README.md): 2.9M compounds, 247 PDB entries):
+
+| chip | Open Babel, `c8*.2xlarge` | billed $/result | PDBFixer, `m8*.4xlarge` | billed $/result |
+|---|---|---|---|---|
+| Graviton4 | 900 s | 0.0876 | **1569 s** | **0.331** |
+| Xeon | 1135 s | 0.1255 | 3630 s | 0.866 |
+| EPYC | **672 s** | **0.0874** | 1826 s | 0.506 |
+
+Every count is identical across chips. PDBFixer never moves a deposited atom; Amber14 refuses 10 of 240.
 
 <details>
 <summary>As shipped: the CLI trap measured, and why the published-reference rate is not neutral</summary>

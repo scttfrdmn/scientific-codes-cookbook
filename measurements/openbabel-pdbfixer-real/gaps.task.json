@@ -1,0 +1,55 @@
+{
+  "task_id": "cookbook-pdbfixer-real-gaps",
+  "container": "quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\ncd /tmp\nsha256sum -c scripts.sha256 || { echo \"FAIL: a script does not match its pin\"; exit 1; }\nsha256sum -c --status cohort.sha256 || { echo \"FAIL: a staged entry does not match cohort.sha256\"; exit 1; }\necho \"cohort: $(grep -c . cohort.sha256) entries match cohort.sha256\"\nGAP_MAX=100000000 MISSING_MAX=-1 bash real.sh fix /tmp/pdb 16 \n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ],
+    "disk_gib": 40
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/ob_real.py",
+      "destination": "/tmp/ob_real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/fix_real.py",
+      "destination": "/tmp/fix_real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/scripts.sha256",
+      "destination": "/tmp/scripts.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/pdb-20260101/ab/",
+      "destination": "/tmp/pdb/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/openbabel-pdbfixer-real/cohort.sha256",
+      "destination": "/tmp/cohort.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/openbabel-pdbfixer-real/gaps/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.4
+  }
+}
