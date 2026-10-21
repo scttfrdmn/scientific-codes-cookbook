@@ -1,0 +1,71 @@
+arm64   fill pass   47.9 s + refs 136.3 s  window  390 s  $/hr 0.3590  compute $ 0.01837  billed $ 0.03890  rss worker 1.29/3.41 GiB  completed
+x86_64  fill pass   91.0 s + refs 226.0 s  window  857 s  $/hr 0.4234  compute $ 0.03728  billed $ 0.10078  rss worker 1.30/3.41 GiB  completed
+amd     fill pass   59.7 s + refs 161.3 s  window  351 s  $/hr 0.4869  compute $ 0.02989  billed $ 0.04747  rss worker 1.30/3.47 GiB  completed
+== x86_64 vs arm64: 93 values identical; differ: ['pt_mass_sumWXY_vs_numpy', 'fp_bin_fields_mass', 'fp_edges_mass', 'fp_bin_fields_pt_mass', 'fp_edges_pt_mass', 'fp_edges_eta_phi', 'mass_edges_ne_numpy_linspace', 'eta_phi_x_edge_at_zero', 'merge_reverse_order', 'text_roundtrip_edges_changed_mass', 'text_roundtrip_edges_changed_eta_phi']
+    pt_mass_sumWXY_vs_numpy
+      arm64 bit-equal 240 of 302 bins, worst 1.011e-03 of the bound
+      x86_64 bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+    fp_bin_fields_mass
+      arm64 74df1b392015463e
+      x86_64 1985637c4c6b3311
+    fp_edges_mass
+      arm64 a83e6cf81ee7f0b0
+      x86_64 ec9fb7a4dfdb3fed
+    fp_bin_fields_pt_mass
+      arm64 c8cb745daf68aed9
+      x86_64 b91e3dcdb0106f57
+    fp_edges_pt_mass
+      arm64 e2cf1306af005e04
+      x86_64 3202b84d75fb8759
+    fp_edges_eta_phi
+      arm64 db25de1dea155186
+      x86_64 9efeaa6d6634ea46
+    mass_edges_ne_numpy_linspace
+      arm64 68 of 30001
+      x86_64 0 of 30001
+    eta_phi_x_edge_at_zero
+      arm64 -1.1102230246251565e-16
+      x86_64 0.0
+    merge_reverse_order
+      arm64 counts identical; 140375 of 180166 bin fields bit-identical
+      x86_64 counts identical; 140256 of 180166 bin fields bit-identical
+    text_roundtrip_edges_changed_mass
+      arm64 27824 of 30001
+      x86_64 27830 of 30001
+    text_roundtrip_edges_changed_eta_phi
+      arm64 95 of 114
+      x86_64 90 of 114
+== amd vs arm64: 93 values identical; differ: ['pt_mass_sumWXY_vs_numpy', 'fp_bin_fields_mass', 'fp_edges_mass', 'fp_bin_fields_pt_mass', 'fp_edges_pt_mass', 'fp_edges_eta_phi', 'mass_edges_ne_numpy_linspace', 'eta_phi_x_edge_at_zero', 'merge_reverse_order', 'text_roundtrip_edges_changed_mass', 'text_roundtrip_edges_changed_eta_phi']
+    pt_mass_sumWXY_vs_numpy
+      arm64 bit-equal 240 of 302 bins, worst 1.011e-03 of the bound
+      amd   bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+    fp_bin_fields_mass
+      arm64 74df1b392015463e
+      amd   1985637c4c6b3311
+    fp_edges_mass
+      arm64 a83e6cf81ee7f0b0
+      amd   ec9fb7a4dfdb3fed
+    fp_bin_fields_pt_mass
+      arm64 c8cb745daf68aed9
+      amd   b91e3dcdb0106f57
+    fp_edges_pt_mass
+      arm64 e2cf1306af005e04
+      amd   3202b84d75fb8759
+    fp_edges_eta_phi
+      arm64 db25de1dea155186
+      amd   9efeaa6d6634ea46
+    mass_edges_ne_numpy_linspace
+      arm64 68 of 30001
+      amd   0 of 30001
+    eta_phi_x_edge_at_zero
+      arm64 -1.1102230246251565e-16
+      amd   0.0
+    merge_reverse_order
+      arm64 counts identical; 140375 of 180166 bin fields bit-identical
+      amd   counts identical; 140256 of 180166 bin fields bit-identical
+    text_roundtrip_edges_changed_mass
+      arm64 27824 of 30001
+      amd   27830 of 30001
+    text_roundtrip_edges_changed_eta_phi
+      arm64 95 of 114
+      amd   90 of 114

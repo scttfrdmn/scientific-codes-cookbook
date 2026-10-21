@@ -1,0 +1,66 @@
+{
+  "task_id": "cookbook-yoda-real-real",
+  "container": "quay.io/aarchsci/hep@sha256:6754001a09ae036ba3dd862af0b8cef9d377fc3fba2b7da1cad94740214ee0f7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=$PATH:/opt/conda/bin\ncd /tmp\ngrep -E ' (Run2012BC_DoubleMuParked_Muons\\.root|hist-mass\\.txt|hist-nmuon\\.txt|rivet-4\\.1\\.4-analyses\\.tar\\.gz|refs\\.manifest|real\\.sh|fill\\.py|refs\\.py)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 8 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh 8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/root-real/data/Run2012BC_DoubleMuParked_Muons.root",
+      "destination": "/tmp/Run2012BC_DoubleMuParked_Muons.root"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/root/hist-mass.txt",
+      "destination": "/tmp/hist-mass.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/root/hist-nmuon.txt",
+      "destination": "/tmp/hist-nmuon.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/rivet/rivet-4.1.4-analyses.tar.gz",
+      "destination": "/tmp/rivet-4.1.4-analyses.tar.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/rivet/refs.manifest",
+      "destination": "/tmp/refs.manifest"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/fill.py",
+      "destination": "/tmp/fill.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/refs.py",
+      "destination": "/tmp/refs.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/yoda-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/yoda-real/real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.15
+  }
+}

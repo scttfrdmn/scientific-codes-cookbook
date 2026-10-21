@@ -23,7 +23,6 @@ make ls RECIPE=yoda
 h = yoda.Histo1D(10, 0.0, 10.0, "/h")
 for x in data: h.fill(x)
 sum(b.numEntries() for b in h.bins())   # == IN-RANGE fills, not h.numEntries()
-h.clone()                               # copy.deepcopy raises on these objects
 ```
 
 ## Make it yours
@@ -34,13 +33,22 @@ h.clone()                               # copy.deepcopy raises on these objects
 | `xStdDev` vs numpy `ddof=1` | `ddof=0` | **yoda reports the SAMPLE sd.** Against `ddof=1` it agrees to **2.2e-16**; against `ddof=0` it looks **1.0e-04** wrong. Same trap as [root](../root/README.md)'s `GetStdDev`. |
 | `clone()` | `copy.deepcopy` | deepcopy raises `self._ptr cannot be converted to a Python object for pickling` — a message that points at pickling, not at the fix. |
 | a fixture that straddles the axis | data that fits inside | 29% of fills land outside on purpose. A fixture that fitted would make the in-range identity vacuous. |
-| `Histo1D` | `Profile1D`, `Counter`, 2-D/3-D | yoda 2.x renamed the classes (`BinnedHisto1D` under the hood); only 1-D histograms are exercised here. |
 
 **Leave the fixture.** Nothing is staged: 5000 values from `default_rng(20261011)`, so every reference is an exact count or numpy's binning of the same array. **Scale it** by raising the fill count — the identities are exact at any size.
 
 ## Shape, size, cost
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 30m as a **backstop** with `cost_limit` $0.12 as the real guard. All the checks are **9 s** of a 2m11s window — **1m22s of that is pulling the image**, because `hep` carries ROOT, Geant4 and Pythia8 for the other recipes in it ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/yoda-real/README.md) (all 61.5 M events of CMS record 12341 filled into five objects by 8 workers, then all 1,955 Rivet 4.1.4 reference files read)
+
+| chip | instance | fill pass (YODA fills) | task window | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | **47.9 s** (25.5 cpu-s) | 390 s | 0.3590 | **0.0048** | **0.0389** |
+| Xeon 6975P-C | `m8i.2xlarge` | 91.0 s (34.2 cpu-s) | 857 s | 0.4234 | 0.0107 | 0.1008 |
+| EPYC 9R45 | `m8a.2xlarge` | 59.7 s (**16.4 cpu-s**) | 351 s | 0.4869 | 0.0081 | 0.0475 |
+
+**Graviton4 is cheapest; AMD fills fastest.** Every bin count is identical on all three chips and equal to ROOT's TH1D of the same bytes; Rivet's references read back bit for bit. A written `.yoda` keeps 7 significant digits whatever `precision=` says, so merge in memory. `yodamerge` took 404 s on Intel against 12–31 s elsewhere. Flow bins are `h.bins(includeOverflows=True)`; `Profile1D` and `Histo2D` are exercised there too (yoda 2.x names them `BinnedProfile1D`, `BinnedHisto2D`).
 
 <details>
 <summary>As shipped: exact conservation through four transformations, a numpy cross-check with a control, and three quantities that are not what they look like</summary>

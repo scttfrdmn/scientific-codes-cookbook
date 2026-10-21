@@ -1,0 +1,62 @@
+usage: yodamerge [-o outfile] <yodafile1>[:<scale1>] <yodafile2>[:<scale1>] ...
+  e.g. yodamerge run1.yoda run2.yoda run3.yoda  (unweighted merging of three runs)
+
+Merge analysis objects from multiple YODA files, combining the statistics of
+objects whose names are found in multiple files. May be used either to merge
+disjoint collections of data objects, or to combine multiple statistically
+independent runs of the same data objects into one high-statistics run.
+
+By default the output is written to stdout since we can't guess what would be
+a good automatic filename choice! Use the -o option to provide an output filename.
+
+IMPORTANT!
+  This script is not meant to handle all run merging situations or data objects:
+  there are limitations to what can be inferred from data objects alone. If you
+  need to do something more complex than the common cases handled by this script,
+  please write your own script / program to load and process the data objects.
+
+SCATTERS (E.G. HISTOGRAM RATIOS) CAN'T BE MERGED
+
+  Note that 'scatter' data objects, as opposed to histograms, cannot be merged
+  by this tool since they do not preserve sufficient statistical
+  information. The canonical example of this is a ratio plot: there are
+  infinitely many combinations of numerator and denominator which could give the
+  same ratio, and the result does not indicate anything about which of those
+  infinite inputs is right (or the effects of correlations in the division).
+
+  If you need to merge Scatter2D objects, you can write your own Python script
+  or C++ program using the YODA interface, and apply whatever case-specific
+  treatment is appropriate. By default the first such copy encountered will be
+  returned as the 'merged' output, with no actual merging having been done.
+
+NORMALIZED, UNNORMALIZED, OR A MIX?
+
+  An important detail in histogram merging is whether a statistical treatment
+  for normalized or unnormalized histograms should be used: in the former case
+  the normalization scaling must be undone *before* the histograms are added
+  together, and then re-applied afterwards. This script examines the ScaledBy
+  attribute each histograms to determine if it has been normalized. We make the
+  assumption that if ScaledBy exists (i.e. h.scaleW has been called) then the
+  histogram is normalized and we normalize the resulting merged histogram to the
+  weighted average of input norms; if there is no ScaledBy, we assume that the
+  histogram is not normalised.
+
+  This is not an infallible approach, but we believe is more robust than heuristics
+  to determine whether norms are sufficiently close to be considered equal.
+  In complicated situations you will again be better off writing your own
+  script or program to do the merging: the merging machinery of this script is
+  available directly in the yoda Python module.
+
+See the source of this script (e.g. use 'less `which yodamerge`) for more discussion.
+
+positional arguments:
+  INFILES             datafile1 datafile2 [...]
+
+options:
+  -h, --help          show this help message and exit
+  -o, --output PATH   write output to specified path
+  -m, --match PATT    only write out histograms whose path matches this regex
+  -M, --unmatch PATT  exclude histograms whose path matches this regex
+  -j, --jobs JOBS     number of parallelized jobs to run
+  -v, --verbose       print extra merging details
+  -q, --quiet         only print fatal errors

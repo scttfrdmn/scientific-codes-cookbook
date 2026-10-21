@@ -1,0 +1,89 @@
+observable	value
+yoda	2.1.4
+uproot	5.7.7
+awkward	2.14.0
+numpy	2.5.4
+workers	8
+events	61540413
+chunks	247
+wall_s_pass	91.0
+cpu_s_sum_read	93.5
+cpu_s_sum_prep	19.8
+cpu_s_sum_numpy_ref	30.1
+cpu_s_sum_workers	595.0
+cpu_s_sum_fill_nmuon	3.4
+cpu_s_sum_fill_mass	2.0
+cpu_s_sum_fill_pt_mass	2.2
+cpu_s_sum_fill_mu_pt	9.0
+cpu_s_sum_fill_eta_phi	17.6
+cpu_s_sum_fill_all	34.2
+peak_rss_gib_worker	1.30
+fills_nmuon	61540413
+fills_mass	24067843
+fills_pt_mass	24067843
+fills_mu_pt	149322456
+fills_eta_phi	149322456
+fills_total	408321011
+fill_rate_mfills_per_cpu_s	11.95
+identity_transfer	serializeContent -> deserializeContent lossless for 1235 objects (bin API fingerprint checked on the first and last chunk)
+determinism_first_chunk	identical
+wall_s_merge	0.1
+nmuon_in_range_flows	61540413 in range, 0 in flows, of 61540413
+nmuon_sumWX_vs_numpy	bit-equal 66 of 66 bins, worst 0.000e+00 of the bound
+nmuon_sumWX2_vs_numpy	bit-equal 66 of 66 bins, worst 0.000e+00 of the bound
+mass_in_range_flows	23947405 in range, 120438 in flows, of 24067843
+mass_sumWX_vs_numpy	bit-equal 30002 of 30002 bins, worst 0.000e+00 of the bound
+mass_sumWX2_vs_numpy	bit-equal 30002 of 30002 bins, worst 0.000e+00 of the bound
+pt_mass_in_range_flows	23947405 in range, 120438 in flows, of 24067843
+pt_mass_sumWX_vs_numpy	bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+pt_mass_sumWX2_vs_numpy	bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+pt_mass_sumWY_vs_numpy	bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+pt_mass_sumWY2_vs_numpy	bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+pt_mass_sumWXY_vs_numpy	bit-equal 302 of 302 bins, worst 0.000e+00 of the bound
+mu_pt_in_range_flows	149282253 in range, 40203 in flows, of 149322456
+mu_pt_sumWX_vs_numpy	bit-equal 202 of 202 bins, worst 0.000e+00 of the bound
+mu_pt_sumWX2_vs_numpy	bit-equal 202 of 202 bins, worst 0.000e+00 of the bound
+eta_phi_in_range_flows	148124900 in range, 1197556 in flows, of 149322456
+eta_phi_sumWX_vs_numpy	bit-equal 3300 of 3300 bins, worst 0.000e+00 of the bound
+eta_phi_sumWY_vs_numpy	bit-equal 3300 of 3300 bins, worst 0.000e+00 of the bound
+eta_phi_sumWXY_vs_numpy	bit-equal 3300 of 3300 bins, worst 0.000e+00 of the bound
+identity_fill_conservation	all 5 objects: bins + flows == fills; every bin == numpy on the object's edges
+fp_counts_nmuon	d187d2ac2ffc9398
+fp_bin_fields_nmuon	bb2f624d5e85f2de
+fp_edges_nmuon	a2c297b161f5e61a
+fp_counts_mass	6b91810589a4ba6d
+fp_bin_fields_mass	1985637c4c6b3311
+fp_edges_mass	ec9fb7a4dfdb3fed
+fp_counts_pt_mass	7e45950d88a55b5e
+fp_bin_fields_pt_mass	b91e3dcdb0106f57
+fp_edges_pt_mass	3202b84d75fb8759
+fp_counts_mu_pt	524b4fe8e2cb6be4
+fp_bin_fields_mu_pt	2048a481e82a7112
+fp_edges_mu_pt	6b59d5f0c38611b7
+fp_counts_eta_phi	5c5b56320e4ae63c
+fp_bin_fields_eta_phi	da9b85fff341350c
+fp_edges_eta_phi	9efeaa6d6634ea46
+mass_edges_ne_numpy_linspace	0 of 30001
+eta_phi_x_edge_at_zero	0.0
+mass_bins_differ_from_root	0
+nmuon_bins_differ_from_root	0
+identity_vs_root	mass: all 30002 bins incl. under 112529 / over 7909 equal ROOT's; nMuon: all 66
+merge_reverse_order	counts identical; 140256 of 180166 bin fields bit-identical
+rebinXBy100	30000 -> 300 bins, each == the sum of its 100, flows unchanged
+scaleW_sumW2	== sumW2 (k k) in 202, == (sumW2 k) k in 151, of 202 bins
+scaleW	sumW == fl(sumW k) and sumW2 == fl(sumW2 fl(k k)) bitwise in all bins; numEntries unchanged
+normalize_doc	BinnedHisto1D.normalize(self, normto=1.0, includeOverflows=True)
+normalize_integral_with_flows	1.0000000000001155: 520.0 ULP of 1, 0.017 of the 2 n u bound (n = 30002)
+normalize_integral_in_range	0.9949958955608436
+wall_s_write_gz	0.12
+writer_precision_17_bytes_equal_default	True
+wall_s_read	1.64
+text_roundtrip_edges_changed_nmuon	0 of 65
+text_roundtrip_edges_changed_mass	27830 of 30001
+text_roundtrip_edges_changed_pt_mass	299 of 301
+text_roundtrip_edges_changed_mu_pt	199 of 201
+text_roundtrip_edges_changed_eta_phi	90 of 114
+text_roundtrip	72606 of 180166 bin fields changed; worst relative 4.94e-07; counts >= 1e7 changed 2
+wall_s_yodamerge_default	404.4
+yodamerge_default_vs_in_memory	2 count bins differ, 72606 bin fields differ
+wall_s_fill_py	527.1
