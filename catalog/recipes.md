@@ -171,7 +171,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [gw](../recipes/gw/README.md) | A binary-black-hole signal is planted in simulated LIGO noise; PyCBC's matched filter finds it at the planted sample and Bilby's sampler brackets the planted chirp mass, with LALSuite underneath both. For anyone running CBC searches or parameter estimation on ARM. | gw | stage | 2026-10-20 | 2026-10-16 | 2026-10-17 | 2026-10-18 |
+| [gw](../recipes/gw/README.md) | A binary-black-hole signal is planted in simulated LIGO noise; PyCBC's matched filter finds it at the planted sample and Bilby's sampler brackets the planted chirp mass, with LALSuite underneath both. For anyone running CBC searches or parameter estimation on ARM. | gw | stage | 2026-10-21 | 2026-10-16 | 2026-10-17 | 2026-10-18 |
 
 ## hep
 
