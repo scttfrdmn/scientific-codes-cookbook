@@ -23,6 +23,35 @@ compute-only has them 5% apart the other way. That is the regime
 [cost-per-result](../../patterns/cost-per-result.md) calls boot-dominated; read compute, or amortise
 boot over more samples per box.
 
+## The Graviton4 rung on Intel and AMD
+
+Same spec (`gen-c8g.task.json`, the recipe's genomecov task as a rung), resolved with
+`scripts/spec_arch.py bedtools x86_64|amd`: the recipe's pinned biocontainers bedtools 2.31.1,
+8 vCPU, and **the same BAM object** the Graviton rungs read (`runs/bwa-samtools/r1/`, not the x86
+re-alignment), so the input bytes are identical on all three chips.
+
+| chip | instance | threads/core | `genomecov` | billed | $/hr | **compute $** | billed $ |
+|---|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 1 | 146 s | 284 s | 0.3190 | **0.0129** | 0.0252 |
+| Xeon 6975P-C | `c8i.2xlarge` | 2 | 130 s | 226 s | 0.3748 | **0.0135** | 0.0235 |
+| **EPYC 9R45** | `c8a.2xlarge` | 1 | **101 s** | 221 s | 0.4311 | **0.0121** | 0.0265 |
+
+- **AMD is the fastest chip measured here, Graviton5 included** (101 s against c9g's 123 s), and
+  the cheapest on compute: 6% below Graviton4, 10% below Intel. Intel is 11% faster than Graviton4
+  and 5% dearer on compute.
+- **Billed ranks them the other way round**, for the boot-dominated reason above: 2–3 minutes of
+  each bill is boot and image pull, charged at each chip's hourly rate.
+- **`genomecov-wgs.txt` is byte-identical on all three chips** (sha256 `4b4c4c45…`), and so is
+  every number in the table below. Interval counting is integer work, so this is a fixed point, as
+  expected; there is no path to report. The BusyBox awk in the x86 image computed the same sums.
+- n = 1 per chip, as for the generations. `wall_s` is `genomecov` alone; billed is EC2 launch to
+  termination.
+
+These two ran under spawn 0.139.1, whose wrapper takes ~14.7 KB of EC2's 16 KiB user data
+(spawn#1246), so each resolved spec's `command` was staged unchanged as a sha256-checked file and
+run with `bash`. One guarded line wrote `/proc/cpuinfo`'s model, siblings and cores to
+`results/hwprobe-*.txt`. Neither changes what is computed or asserted.
+
 ## Two conservation identities, one of them cross-tool
 
 | observable | assertion | observed |
@@ -39,7 +68,7 @@ the `genome` rows — the same identity the recipe's hand-checked 400 bp fixture
 lengths in `GRCh38…fa.fai`, **a file bedtools never reads**, so an independent authority confirms the
 aggregate rather than bedtools confirming itself. Cost: staging a 160 KB index.
 
-All five numbers were identical on all four generations, to the digit, including the tmpfs
+All five numbers were identical on all four generations and on Intel and AMD, to the digit, including the tmpfs
 high-water mark (4,359–4,360 MB). Interval arithmetic is deterministic, so that is an exact
 assertion, and it is what makes n = 1 per rung defensible.
 
@@ -65,6 +94,11 @@ make run   RECIPE=bedtools                   # the Graviton4 rung, as shipped
 spawn task run --spec measurements/bedtools-real/gen-c6g.task.json --wait
 spawn task run --spec measurements/bedtools-real/gen-c7g.task.json --wait
 spawn task run --spec measurements/bedtools-real/gen-c9g.task.json --wait
+# Intel and AMD. spec_arch moves the BAM input to runs-<arch>/bwa-samtools/; these legs edited it
+# back to runs/bwa-samtools/ so all three chips read one object.
+for a in x86_64 amd; do
+  spawn task run --spec "$(python3 scripts/spec_arch.py bedtools $a "$COOKBOOK_BUCKET" "$(date +%s)" measurements/bedtools-real/gen-c8g.task.json)" --wait
+done
 ```
 
 `make run` substitutes `${COOKBOOK_BUCKET}`; `spawn task run` does **not** — resolve it first or

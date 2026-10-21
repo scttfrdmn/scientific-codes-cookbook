@@ -1,8 +1,9 @@
-# bcftools on a real cohort — 1000 Genomes Phase 3, Graviton4 vs x86
+# bcftools on a real cohort — 1000 Genomes Phase 3, Graviton4 vs Intel vs AMD
 
-> **Every one of 94 identities held on both chips, and every output agreed across them byte for
-> byte as text** — 4,044,736 normalised records × 2,504 genotypes. x86 finished 5% sooner and
-> Graviton4 cost 9% less per result. bcftools streams: peak RSS was **16–18 MiB** for the whole run.
+> **Every one of 94 identities held on all three chips, and every output agreed across them byte for
+> byte as text** — 4,044,736 normalised records × 2,504 genotypes. AMD finished 20% sooner than
+> Graviton4, Intel 5%; Graviton4 cost least per result (AMD +8%, Intel +10%). bcftools streams:
+> peak RSS was **16–19 MiB** for the whole run.
 
 Workload: chromosomes **20, 21 and 22 of the 1000 Genomes Phase 3 release, all 2,504 samples**
 (4,021,926 input records, 775 MB of bgzipped VCF), the size of a per-chromosome job in any cohort
@@ -18,19 +19,27 @@ export AWS_PROFILE=aws
 bash measurements/bcftools-real/stage-inputs.sh "$COOKBOOK_BUCKET"
 spawn task run --spec "$(python3 scripts/spec_arch.py bcftools arm64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/bcftools-real/cohort.task.json)" --wait
 spawn task run --spec "$(python3 scripts/spec_arch.py bcftools x86_64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/bcftools-real/cohort.task.json)" --wait
+spawn task run --spec "$(python3 scripts/spec_arch.py bcftools amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/bcftools-real/cohort.task.json)" --wait
 ```
 
 The task runs `run.sh` (pinned by sha256) against the staged bytes. The VCFs are the ones
 `measurements/plink-real` already staged under `inputs/plink-real/`, so there is one copy.
 
+The AMD leg ran under spawn 0.139.1, whose wrapper takes ~14.7 KB of EC2's 16 KiB user data
+(spawn#1246), so the resolved spec no longer fit. Its `command` was staged unchanged as a
+sha256-checked file and run with `bash`, and the twelve output files were hard-linked into one
+directory and staged out as that directory, to the same `runs-amd/bcftools-real/r1/` names. That
+changes how the script reaches the box and how its outputs leave it, not what it computes or asserts.
+
 ## Results
 
-4 bcftools threads, one `2xlarge` per chip, same input bytes, the recipe's two pinned images:
+4 bcftools threads, one `2xlarge` per chip, same input bytes, the recipe's two pinned images (the x86 one on both Intel and AMD):
 
 | chip | instance | task compute | billed | $/hr | compute $/result | **billed $/result** | peak RSS |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `c8g.2xlarge` | 3,750 s | 3,887 s | 0.3190 | 0.3323 | **0.3444** | 16.2 MiB |
 | Xeon 6975P-C | `c8i.2xlarge` | 3,553 s | 3,646 s | 0.3748 | 0.3699 | **0.3796** | 18.3 MiB |
+| EPYC 9R45 | `c8a.2xlarge` | 2,997 s | 3,101 s | 0.4311 | 0.3589 | **0.3713** | 18.5 MiB |
 
 A result is the whole verified run: three chromosomes normalised, annotated, filtered,
 concatenated and merged, with every check. Per operation, summed over the three chromosomes:
@@ -38,25 +47,30 @@ concatenated and merged, with every check. Per operation, summed over the three 
 | seconds | norm | fill-tags | stats ×2 | filter | annotate | concat | concat round trip | split + merge | merge check | text census |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Graviton4 | 256 | 795 | 53 | 145 | 608 | 253 | 637 | 222 | 265 | 265 |
-| x86 | 228 | 841 | 43 | 135 | 549 | 224 | 581 | 196 | 237 | 275 |
+| Intel | 228 | 841 | 43 | 135 | 549 | 224 | 581 | 196 | 237 | 275 |
+| AMD | 185 | 758 | 23 | 105 | 443 | 210 | 502 | 179 | 182 | 230 |
 
 - **x86 is ~10% faster on the compression-bound steps** (norm, annotate, concat, merge all write
   bgzipped 2,504-sample VCF); **Graviton4 is 5% faster on `+fill-tags`**, which spends its time
   counting genotypes. The hourly price difference (17%) outweighs both, so Graviton4 is cheaper
-  per result. The two images link different htslib builds (1.23.1 arm64, 1.24 x86), so a step
+  per result. **AMD is fastest on every step** (1.25× Graviton4 overall, 1.19× Intel), but its
+  hourly price is 35% above Graviton4's, so it lands 8% dearer per result than Graviton4 and 2%
+  cheaper than Intel. `c8a` vCPUs are full cores (`siblings` = `cpu cores` = 8); `c8i`'s are
+  SMT threads. The two images link different htslib builds (1.23.1 arm64, 1.24 x86), so a step
   timing is chip *and* htslib, not chip alone; the census column also runs GNU vs BusyBox `awk`.
+  Intel vs AMD is the same image, so that comparison is the chip alone.
 - **Boot and staging are 2–4% of the bill** (137 s and 93 s): 775 MB stages in 6–7 s in-region.
   This is a compute job, and most of the compute is reading and writing genotype columns, not
   the operation's own logic — `stats` reads the same file in under a twentieth of the time `annotate` takes.
 - **Memory is not the constraint; staging is.** bcftools never held more than 18 MiB. The box
   is sized by the tmpfs high-water mark (inputs plus the normalised, concatenated and merged
   copies — ~3.8 GB at most by file size, not measured — of the 8 GiB `/tmp` a 16 GiB instance gives).
-- n = 1 per cell. The processing is deterministic integer and text work, and the cross-chip
+- n = 1 per cell (AMD billed is EC2 launch to termination). The processing is deterministic integer and text work, and the cross-chip
   outputs are identical (below), so a repeat would only re-measure timing noise.
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
-Every claim is an exact identity; `results/<arch>/checks.tsv` has all 94 with both sides.
+Every claim is an exact identity; `results/<arch>/checks.tsv` (`arm64`, `x86_64` = Intel, `amd`) has all 94 with both sides.
 
 | claim | why it must hold | chr20 / chr21 / chr22 |
 |---|---|---|
@@ -87,6 +101,10 @@ genotype matrix — is **identical across chips**. The `stats` files differ only
 line (`1.24+htslib-1.23.1` vs `1.24+htslib-1.24`); the bgzipped outputs differ in size by 2 bytes, the
 length difference of that version string in their header (the compressed files were not
 compared further; their record text was, above).
+
+**Intel and AMD are identical file for file:** `checks.tsv` and all three `stats` files byte for
+byte, and `results.tsv` in every row except `peak_rss_kib` (18,696 vs 18,944). AMD's
+`checks.tsv` is also byte-identical to Graviton4's.
 
 ## Pins
 

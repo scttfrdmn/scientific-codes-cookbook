@@ -37,17 +37,19 @@ bedtools genomecov -ibam aln.sorted.bam      # 48,817,006 records, 3,366 contigs
 
 ## Which box — [measured](../../measurements/bedtools-real/README.md), same BAM, 8 vCPU throughout
 
-| generation | instance | `genomecov` | compute $ | billed $ |
+| chip | instance | `genomecov` | compute $ | billed $ |
 |---|---|---|---|---|
 | Graviton2 | `c6g.2xlarge` | 286 s | 0.0216 | 0.0317 |
 | Graviton3 | `c7g.2xlarge` | 169 s | 0.0136 | 0.0234 |
 | Graviton4 | `c8g.2xlarge` | 146 s | 0.0129 | 0.0252 |
-| **Graviton5** | `c9g.2xlarge` | **123 s** | **0.0119** | **0.0221** |
+| **Graviton5** | `c9g.2xlarge` | 123 s | 0.0119 | **0.0221** |
+| Intel | `c8i.2xlarge` | 130 s | 0.0135 | 0.0235 |
+| **AMD** | `c8a.2xlarge` | **101 s** | **0.0121** | 0.0265 |
 
 **2.33× over four generations** — as much as plane-wave DFT gets, for interval arithmetic over a compressed
 BAM, and most of it arrives at Graviton3 (1.69× in one step, then 1.16× and 1.19×). **Read the compute
 column, not the billed one:** at ~2 minutes of work this is boot-dominated, so billed ranks Graviton3 ahead
-of Graviton4 on noise ([which comparison applies](../../patterns/cost-per-result.md)).
+of Graviton4 on noise ([which comparison applies](../../patterns/cost-per-result.md)). Same-generation AMD is the fastest of all; the output is byte-identical on every chip.
 
 <details>
 <summary>As shipped: the hand-derived answers, two conservation identities, pins</summary>

@@ -20,8 +20,7 @@ spawn task run --spec "$(make -s spec RECIPE=astropy)" --wait
 ```
 
 ```python
-from astropy.wcs import WCS
-w = WCS(naxis=2)
+from astropy.wcs import WCS; w = WCS(naxis=2)
 w.wcs.ctype = ["RA---TAN", "DEC--TAN"]; w.wcs.crval = [150.0, 2.0]; w.wcs.crpix = [256.5, 256.5]; w.wcs.cdelt = [-0.000277778, 0.000277778]
 world = w.wcs_pix2world(pixels, 0)   # pixel → sky
 back  = w.wcs_world2pix(world, 0)    # sky → pixel — returns the input, exactly
@@ -45,10 +44,11 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 4m, cap $0.03. The compute is **~1 s
 
 | chip | instance | cross-match / WCS / total | **billed $/result** |
 |---|---|---|---|
-| Graviton4 | `r8g.xlarge` | 65 / 767 / 866 s | **0.0706** |
-| x86 | `r8i.xlarge` | 52 / 728 / 811 s | 0.0734 |
+| Graviton4 | `r8g.xlarge` | 65 / 767 / 866 s | 0.0706 |
+| Intel | `r8i.xlarge` | 52 / 728 / 811 s | 0.0734 |
+| **AMD** | `r8a.xlarge` | 49 / 575 / 651 s | **0.0675** |
 
-**r8g: memory, not cores, sizes it** (7.4 GiB staged in tmpfs + 8.5 GiB peak RSS). The 3.74 M-row merged catalogue is identical across chips. Gaia pm is per TCB year and ERFA propagates in TDB, so `apply_space_motion` falls short by L_B = 1.55e-8. astropy 8.0.1's parquet reader raises `KeyError('_healpix_29')` on Gaia's HATS files, so read them with pyarrow.
+**Memory, not cores, sizes it** (7.4 GiB staged in tmpfs + 8.5 GiB peak RSS). The 3.74 M-row merged catalogue is identical across chips (Intel and AMD bit for bit). Gaia pm is per TCB year and ERFA propagates in TDB, so `apply_space_motion` falls short by L_B = 1.55e-8. astropy 8.0.1's parquet reader raises `KeyError('_healpix_29')` on Gaia's HATS files, so read them with pyarrow.
 
 <details>
 <summary>As shipped: the five identities, pins, smoke check, run + verify</summary>

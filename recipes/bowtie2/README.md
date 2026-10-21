@@ -38,7 +38,7 @@ One task; `bowtie2-build` 35 s + `--local` align 35 s. `c8g.xlarge`, ~$0.02, **~
 
 **Sizing:** compute-bound `c8g`, but Bowtie 2 loads the FM-index into RAM — ~3.5 GiB for a human genome, so size RAM to your reference (chr20 here is tiny).
 
-**Don't go looking for a core knee — it was measured and there isn't one.** On a full 1000 Genomes run against the whole GRCh38 index, bowtie2 went **4.00× faster on 4× the cores at 100.1% parallel efficiency**, and because `c8g`'s per-core price is flat the compute-only cost of the result is *invariant*: **$0.1730–$0.1737 at 16, 32, 48 and 64 cores**. Pick cores for wall-clock, not for cost. Across generations, **Gv2 → Gv5 is 1536 s → 746 s** and every rung is cheaper per result ([measurement](../../measurements/bowtie2-real/README.md)).
+**Don't go looking for a core knee — it was measured and there isn't one.** On a full 1000 Genomes run against the whole GRCh38 index, bowtie2 went **4.00× faster on 4× the cores at 100.1% parallel efficiency**, and because `c8g`'s per-core price is flat the compute-only cost of the result is *invariant*: **$0.1730–$0.1737 at 16, 32, 48 and 64 cores**. Pick cores for wall-clock, not for cost. Across generations, **Gv2 → Gv5 is 1536 s → 746 s** and every rung is cheaper per result. At 16 vCPU, **AMD `c8a` is fastest (666 s, $0.1823)**, Graviton4 977 s ($0.1884), Intel `c8i` 1097 s ($0.2595, 8 cores with SMT), with identical counts on all three ([measurement](../../measurements/bowtie2-real/README.md)).
 
 <details>
 <summary>As shipped: the like-with-like cross-check, pins, smoke check</summary>

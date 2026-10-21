@@ -1,10 +1,10 @@
-# astropy on a real survey field: Gaia DR3 × Pan-STARRS1, Graviton4 vs x86
+# astropy on a real survey field: Gaia DR3 × Pan-STARRS1, Graviton4 vs Intel vs AMD
 
 > **One whole HEALPix order-4 pixel (13.4 deg², Sagitta/Vulpecula, b = −5°): 4.1 M Gaia DR3 sources
 > cross-matched to 7.5 M Pan-STARRS1 objects, and 3.9 billion pixels round-tripped through 100 real
 > PS1 stack WCS headers.** Every coordinate claim is checked against the surveys' own catalogued
 > values, and every bound comes from the mechanism, not from the observed value. Same result
-> on both chips, and Graviton4 is 4% cheaper per result.
+> on all three chips; AMD is the fastest and the cheapest per result, Graviton4 4% cheaper than Intel.
 
 Field: order-4 pixel 808 (centre RA 298.1, Dec +17.0), which is the four order-5 HATS partitions
 3232–3235 of both catalogues, plus all 100 r-band stack catalogues (`.cmf`) of PS1 projection
@@ -18,24 +18,35 @@ export AWS_PROFILE=aws
 bash measurements/astropy-real/stage-inputs.sh "$COOKBOOK_BUCKET"
 spawn task run --spec "$(python3 scripts/spec_arch.py astropy arm64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/astropy-real/field808.task.json)" --wait
 spawn task run --spec "$(python3 scripts/spec_arch.py astropy x86_64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/astropy-real/field808.task.json)" --wait
+spawn task run --spec "$(python3 scripts/spec_arch.py astropy amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/astropy-real/field808.task.json)" --wait
 ```
 
 `stage-inputs.sh` copies 108 objects (7.4 GiB) server-side from STScI's RODA bucket
 `s3://stpubdata`. Each copy is pinned by its S3 `versionId` **and** its sha256 (`inputs.tsv`), and a
-mismatch aborts. The task re-checks every staged byte against `pins.sha256` before `real.py` runs. The x86 leg is the recipe's `astro-903b8d412bd4` env twin: the same versions, as linux-64 builds.
+mismatch aborts. The task re-checks every staged byte against `pins.sha256` before `real.py` runs. The x86 legs (Intel and AMD) are the recipe's `astro-903b8d412bd4` env twin: the same versions, as linux-64 builds.
+
+The AMD leg ran under spawn 0.139.1, whose own wrapper takes ~14.7 KB of EC2's 16 KiB user data
+(spawn#1246), so the resolved spec no longer fit. Its `command` text was staged unchanged as a
+sha256-checked file and run with `bash`, and one guarded line recorded `lscpu` threads-per-core
+and `openblas_get_corename()` to `hwprobe.txt`. That changes how the script reaches the box, not
+what it computes or asserts.
 
 ## Results
 
-One `r8g.xlarge` / `r8i.xlarge` (4 vCPU, 32 GiB), same input bytes, same script:
+One `r8g.xlarge` / `r8i.xlarge` / `r8a.xlarge` (4 vCPU, 32 GiB), same input bytes, same script:
 
 | chip | instance | cross-match / WCS / total | $/hr | task compute | billed | **billed $/result** | peak RSS |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `r8g.xlarge` | 65.3 / 767.3 / 866.3 s | 0.2356 | $0.0567 | 1,079 s | **0.0706** | 8.52 GiB |
 | Xeon 6975P-C | `r8i.xlarge` | 52.0 / 728.4 / 811.2 s | 0.2778 | $0.0626 | 951 s | **0.0734** | 8.46 GiB |
+| EPYC 9R45 | `r8a.xlarge` | 48.7 / 575.2 / 651.0 s | 0.3195 | $0.0578 | 761 s | **0.0675** | 8.50 GiB |
 
-- **Graviton4 is 4% cheaper per result and 7% slower.** The 15% lower hourly price outweighs the
-  slower compute. n = 1 per chip; every asserted result is identical across chips (below), so a repeat would only measure
-  timing noise.
+- **AMD is the fastest and the cheapest per result: 25% faster than Graviton4, 4% cheaper.** Its
+  WCS sweep (single-threaded wcslib) is 25% faster than Graviton4's and 21% faster than Intel's,
+  which outweighs an hourly price 36% above Graviton4's. **Graviton4 is 4% cheaper than Intel and
+  7% slower.** n = 1 per chip; every asserted result is identical across chips (below), so a repeat
+  would only measure timing noise. `r8i` vCPUs are SMT threads (2 per core); `r8a` vCPUs are full
+  cores (`lscpu`: 1 thread per core), so the AMD box has 4 cores against Intel's 2.
 - **The WCS sweep is 89% of the compute.** Each of the 100 skycells is 6274 × 6258 pixels, and every
   pixel goes pix→world→pix (the reproject workload). That runs single-threaded in wcslib, which is
   why 4 vCPUs is enough. The cross-match itself (`search_around_sky` both ways,
@@ -43,15 +54,15 @@ One `r8g.xlarge` / `r8i.xlarge` (4 vCPU, 32 GiB), same input bytes, same script:
 - **The box is sized by memory, not cores.** The 7.4 GiB of staged inputs sit in tmpfs, which is
   half the instance RAM, and Python peaks at 8.5 GiB. That is ~16 of 32 GiB. A 16 GiB box would have
   an 8 GiB tmpfs and would not survive.
-- **Boot, staging and termination are 140–213 s of each bill.** These timings are not compute cost.
+- **Boot, staging and termination are 110–213 s of each bill.** These timings are not compute cost.
 
-## What held, on both chips
+## What held, on all three chips
 
-| claim | why it must hold | Graviton4 | x86 |
+| claim | why it must hold | Graviton4 | x86 (Intel and AMD) |
 |---|---|---|---|
 | Gaia's catalogued `l, b` == ICRS → Hipparcos Galactic frame (ESA 1997 §1.5.3), built on astropy's transform graph | Gaia's published convention | **4.8e-4 µas** max | same |
 | Gaia's `ecl_lon, ecl_lat` == ICRS → Chapront et al. 2002 ecliptic (ε = 84381.4110″, φ = −55.42 mas) | Gaia's published convention | **7.7e-4 µas** | same |
-| astropy's built-in `Galactic` / `BarycentricMeanEcliptic` + the rotation between the two frame definitions == Gaia's catalogue | the 23–36 mas offset is a convention difference, nothing else | 6.3e-4 / 8.8e-4 µas | 6.5e-4 / 9.0e-4 µas |
+| astropy's built-in `Galactic` / `BarycentricMeanEcliptic` + the rotation between the two frame definitions == Gaia's catalogue | the 23–36 mas offset is a convention difference, nothing else | 6.3e-4 / 8.8e-4 µas | 6.5e-4 / 9.0e-4 µas (both) |
 | ICRS → Galactic, FK5, Supergalactic, ecliptic, **FK4 B1950** → ICRS, 4.1 M sources | rotations are exact inverses, and FK4's E-term iteration contracts by ~1e-6 per step | all < 9e-4 µas | same |
 | `apply_space_motion` 2016 → 2000 → 2016, 2,539,463 sources with v_t < 0.01c (21,377 parallax-noise sources above it are reported) | ERFA `starpm` is its own inverse | 3.4e-4 µas | same |
 | 16 yr of motion vs 16 × catalogued pm, 187,576 stars with \|pm\| > 10 mas/yr, each within its own bound | θ² + β² + θβ_t + 2\|β_r\| + 2\|v_r dt/d\| + L_B + 1 nas/(16\|pm\|) | 187,576 of 187,576 | same |
@@ -68,7 +79,14 @@ One `r8g.xlarge` / `r8i.xlarge` (4 vCPU, 32 GiB), same input bytes, same script:
 **Across chips:** the merged catalogue's `source_id` ↔ `objID` pairing is identical on all 3,740,227
 rows. The only column that differs is `sep_arcsec`, in 399,106 rows, by at most 2 ulp
 (2.2e-16 arcsec), which is libm trig rounding. Every µas-scale residual above sits at the float64
-floor on both chips.
+floor on every chip.
+
+**Intel and AMD are bit-identical.** Every value in `real-results.tsv` other than the timings is
+the same on both, including all the µas residuals and the 0.96 µas fitted-rotation figure, and
+`matches.fits` has the same full-object sha256 (`6b0e163d…`, computed by S3 server-side) on both.
+Same linux-64 env and same libm. OpenBLAS selects `Cooperlake` on the EPYC 9R45 (0.3.34 has no
+Zen 5 target; the Intel leg did not record its kernel), and the workload does no large blocked
+GEMM, so the ARM-vs-x86 differences above are libm, and there is no Intel-vs-AMD difference.
 
 ## What the run found
 

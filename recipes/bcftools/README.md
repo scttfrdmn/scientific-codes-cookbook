@@ -34,7 +34,7 @@ bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
 | freebayes | 644 s | 0.0310 | 0.97570 | 0.92146 |
 | [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99272 | **0.99372** |
 
-**SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)). On Intel and AMD the scores are byte-identical. GATK's native x86 PairHMM brings its cost down to 4.4–4.6× bcftools there, and AMD is the fastest box for all three callers ([three chips](../../measurements/callers-real/README.md#on-intel-and-amd-the-same-accuracy-table-byte-for-byte)).
+**SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)).
 
 ## Make it yours
 
@@ -49,7 +49,7 @@ bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
 ## Shape, size, cost
 
 One task on `c8g.xlarge`: **228 s of calling inside a 285 s billed window** — 80% compute, **$0.0126**. Cheap enough that the data path, not the chip, is what you would optimise next.
-**Processing a cohort VCF, [measured](../../measurements/bcftools-real/README.md):** 1000 Genomes chr20–22, all 2,504 samples, through `norm -m -any -f`, `+fill-tags`, `stats`, `view -i`, `annotate -a`, `concat` and `merge` — **3,750 s, $0.3444 on `c8g.2xlarge`** against 3,553 s, $0.3796 on `c8i.2xlarge`, with identical outputs. Peak RSS is 16–18 MiB, so size the box by `/tmp` staging, not RAM.
+**Processing a cohort VCF, [measured](../../measurements/bcftools-real/README.md):** 1000 Genomes chr20–22, all 2,504 samples, through `norm -m -any -f`, `+fill-tags`, `stats`, `view -i`, `annotate -a`, `concat` and `merge` — **3,750 s, $0.3444 on `c8g.2xlarge`** against 3,553 s, $0.3796 on `c8i.2xlarge` and 2,997 s, $0.3713 on `c8a.2xlarge`, with identical outputs. Peak RSS is 16–18 MiB, so size the box by `/tmp` staging, not RAM.
 
 <details>
 <summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>

@@ -28,6 +28,36 @@ a string-matching aligner too** — the same shape the DFT codes show in
 likelihood/matrix codes; it now has a third, very different data point. Still an observation, not an
 explanation.
 
+## The Graviton4 rung on Intel and AMD — 16 threads, same bytes
+
+`gen-c8g.task.json` resolved with `scripts/spec_arch.py bowtie2 x86_64|amd`: the recipe's pinned
+biocontainers bowtie2 2.5.5, the same index tar (sha256-checked in task) and the same FASTQ objects.
+
+| chip | instance | threads/core | bowtie2 | billed | $/hr | **$/run** | compute-only $ | avg_cores |
+|---|---|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.4xlarge` | 1 | 977 s | 1063 s | 0.6381 | 0.1884 | 0.1732 | 15.95 |
+| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1097 s | 1246 s | 0.7497 | 0.2595 | 0.2285 | 15.97 |
+| **EPYC 9R45** | `c8a.4xlarge` | 1 | **666 s** | 761 s | 0.8622 | **0.1823** | **0.1595** | 15.96 |
+
+- **AMD is 1.47× faster than Graviton4 and 3% cheaper per run** (8% cheaper on compute). Only
+  Graviton5 (746 s) comes near it. **Intel is the slowest and dearest of the three**: 12% slower
+  than Graviton4 and 38% dearer per run.
+- **The likely reason is cores, not instruction set.** 16 vCPU on `c8i` is 8 physical cores with
+  SMT; on `c8a` and `c8g` it is 16. bowtie2 scales linearly with cores (the knee sweep below), so
+  Intel runs 16 threads on half the cores. Not separated by a measurement here.
+- **The x86 legs ran bowtie2's default build, not its AVX2 one.** Both logs print `[WARNING] Failed
+  to launch x86-64-v3 version, staying with default`, on CPUs that support x86-64-v3. So the x86 timings are for the baseline binary the pinned image
+  falls back to; why the v3 variant does not launch in that image was not investigated.
+- **Every count is identical on all three chips** (below), so this is a fixed point. Peak RSS
+  7,960–7,962 MiB and tmpfs peak 11,924 MiB on all three, too. n = 1 per chip.
+
+These two legs ran under spawn 0.139.1, whose wrapper takes ~14.7 KB of EC2's 16 KiB user data
+(spawn#1246): each resolved spec's `command` was staged unchanged as a sha256-checked file and run
+with `bash`, plus one guarded line recording `/proc/cpuinfo`'s model, siblings and cores
+(`hwprobe.txt`). Neither changes what is computed or asserted. Outputs are under
+`measurements-x86_64/` and `measurements-amd/bowtie2-real/gen-c8g/`. The knee rungs were not re-run
+on x86.
+
 ## Knee sweep — Graviton4, more cores. There is no knee.
 
 | cores | instance | bowtie2 | billed | $/hr | $/run | avg_cores | speedup | parallel efficiency |
@@ -74,8 +104,8 @@ overhead, not of the aligner running out of parallelism.
 
 ## The identity across chips and thread counts
 
-**All eight runs — the clock plus four generations plus three core counts — produced identical
-output statistics:**
+**All ten runs — the clock, four generations, three core counts, and Intel and AMD — produced
+identical output statistics:**
 
 | | |
 |---|---|
@@ -91,8 +121,8 @@ would wave through.
 
 The mapped and MAPQ≥30 counts were deliberately **reported rather than asserted**, because
 bowtie2's thread-count independence (it re-seeds its RNG per read) was a documented claim that no
-run here had yet confirmed. All eight agree to the read, across four CPU generations *and* four
-thread counts, so the claim now has evidence — and `n = 1` per rung is defensible on that basis
+run here had yet confirmed. All ten agree to the read, across four Graviton generations, two x86
+vendors *and* four thread counts, so the claim now has evidence — and `n = 1` per rung is defensible on that basis
 rather than on hope.
 
 ## Sizing, measured
@@ -121,6 +151,9 @@ spawn task run --spec /tmp/b.json --region us-west-2 --wait
 for r in gen-c6g gen-c7g gen-c8g gen-c9g knee-32 knee-48 knee-64; do
   sed "s|\${COOKBOOK_BUCKET}|$COOKBOOK_BUCKET|g" $r.task.json > /tmp/r.json
   spawn task run --spec /tmp/r.json --region us-west-2 --wait
+done
+for a in x86_64 amd; do   # the Graviton4 rung on Intel and AMD
+  spawn task run --spec "$(python3 ../../scripts/spec_arch.py bowtie2 $a "$COOKBOOK_BUCKET" "$(date +%s)" gen-c8g.task.json)" --wait
 done
 ```
 
