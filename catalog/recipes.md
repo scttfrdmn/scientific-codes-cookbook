@@ -307,7 +307,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
+| [tomography](../recipes/tomography/README.md) | Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM. | tomography | stage | 2026-10-20 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 
 ## viz
 
