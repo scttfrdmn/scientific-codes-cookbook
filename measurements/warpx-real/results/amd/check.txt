@@ -1,0 +1,21 @@
+rf_periods	1280
+expected_steps	512000
+turner_nodes	129
+upstream_tolerance	0.065
+PASS upstream tolerance read from the pinned script	0.065, 129 nodes
+wall_s t1	1030.90
+maxrss_mib t1	135.5
+cgroup_memory_peak_mib t1	1963.9
+avg_cores t1	1.00
+cpu_user_s t1	1029.1
+PASS t1 exit 0	0
+PASS t1 WarpX reports the threads launched	reported 1, launched 1
+grids t1	1
+PASS t1 final-step diagnostic written	diag1512000
+PASS t1 ion density is a finite positive 129-node profile	shape (129,), min 1.7920e+13
+t1 max_density	1.415352e+14
+t1 max_rel_err_interior	0.1361
+t1 symmetry_rms_rel n(z) vs n(L-z)	0.0085
+PASS t1 RMS error vs Turner et al. 2013 < upstream's 0.065	0.0182
+PASS t1 upstream analysis_1d.py passes	0
+fails	0

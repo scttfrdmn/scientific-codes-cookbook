@@ -1,0 +1,78 @@
+{
+  "task_id": "cookbook-warpx-real-probe2",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp\necho '== the staged scripts must match their pins =='\nprintf '488f8ceaa73b19db0ea3fbd85de6c7a3f2340034f0ac13264e64373406792061  run.sh\\n71af9b1ec57c74484bb19512faaa81cf7e69238eed2b9b5461ec2508bfc66c0e  check.py\\n89128189be1a8fa9df0413fe0f2162d998d86cbbcf06250c866fc571e5ad2c97  inputs.sha256\\n' > scripts.sha256\nsha256sum -c scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/run.sh 64 1,4,8 '' 'amr.max_grid_size=16'\n"
+  ],
+  "container": "quay.io/aarchsci/pic@sha256:e02db0b494ce602c6948104fe4a9085b6fc004611f501c48c27eed1874100b95",
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/inputs_base_1d_picmi.py",
+      "destination": "/tmp/inputs_base_1d_picmi.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/analysis_1d.py",
+      "destination": "/tmp/analysis_1d.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/electron_scattering.dat",
+      "destination": "/tmp/electron_scattering.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/excitation_1.dat",
+      "destination": "/tmp/excitation_1.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/excitation_2.dat",
+      "destination": "/tmp/excitation_2.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/ionization.dat",
+      "destination": "/tmp/ionization.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/ion_scattering.dat",
+      "destination": "/tmp/ion_scattering.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/ion_back_scatter.dat",
+      "destination": "/tmp/ion_back_scatter.dat"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/run.sh",
+      "destination": "/tmp/run.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/check.py",
+      "destination": "/tmp/check.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/warpx-real/inputs.sha256",
+      "destination": "/tmp/inputs.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/warpx-real/probe2/out/"
+    },
+    {
+      "source": "/tmp/warpx-real-out.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/warpx-real/probe2/warpx-real-out.tar"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

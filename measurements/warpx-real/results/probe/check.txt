@@ -1,0 +1,99 @@
+rf_periods	64
+expected_steps	25600
+turner_nodes	129
+upstream_tolerance	0.065
+PASS upstream tolerance read from the pinned script	0.065, 129 nodes
+wall_s t1	141.47
+maxrss_mib t1	130.2
+cgroup_memory_peak_mib t1	111.5
+avg_cores t1	1.00
+cpu_user_s t1	141.2
+PASS t1 exit 0	0
+PASS t1 WarpX reports the threads launched	reported 1, launched 1
+PASS t1 final-step diagnostic written	diag1025600
+PASS t1 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+t1 max_density	3.082551e+14
+t1 max_rel_err_interior	1.4410
+t1 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+t1 rms_rel_err_vs_turner (probe, reported)	0.8912
+wall_s t2	143.58
+maxrss_mib t2	137.9
+cgroup_memory_peak_mib t2	112.2
+avg_cores t2	1.23
+cpu_user_s t2	175.0
+PASS t2 exit 0	0
+PASS t2 WarpX reports the threads launched	reported 2, launched 2
+PASS t2 final-step diagnostic written	diag1025600
+PASS t2 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+t2 max_density	3.082551e+14
+t2 max_rel_err_interior	1.4410
+t2 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+t2 rms_rel_err_vs_turner (probe, reported)	0.8912
+wall_s t4	143.96
+maxrss_mib t4	154.1
+cgroup_memory_peak_mib t4	131.1
+avg_cores t4	1.69
+cpu_user_s t4	241.7
+PASS t4 exit 0	0
+PASS t4 WarpX reports the threads launched	reported 4, launched 4
+PASS t4 final-step diagnostic written	diag1025600
+PASS t4 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+t4 max_density	3.082551e+14
+t4 max_rel_err_interior	1.4410
+t4 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+t4 rms_rel_err_vs_turner (probe, reported)	0.8912
+wall_s t8	145.69
+maxrss_mib t8	186.0
+cgroup_memory_peak_mib t8	166.5
+avg_cores t8	2.67
+cpu_user_s t8	384.8
+PASS t8 exit 0	0
+PASS t8 WarpX reports the threads launched	reported 8, launched 8
+PASS t8 final-step diagnostic written	diag1025600
+PASS t8 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+t8 max_density	3.082551e+14
+t8 max_rel_err_interior	1.4410
+t8 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+t8 rms_rel_err_vs_turner (probe, reported)	0.8912
+wall_s t16	152.32
+maxrss_mib t16	250.0
+cgroup_memory_peak_mib t16	233.5
+avg_cores t16	4.91
+cpu_user_s t16	739.2
+PASS t16 exit 0	0
+PASS t16 WarpX reports the threads launched	reported 16, launched 16
+PASS t16 final-step diagnostic written	diag1025600
+PASS t16 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+t16 max_density	3.082551e+14
+t16 max_rel_err_interior	1.4410
+t16 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+t16 rms_rel_err_vs_turner (probe, reported)	0.8912
+wall_s tr4	142.90
+maxrss_mib tr4	154.0
+cgroup_memory_peak_mib tr4	233.5
+avg_cores tr4	1.69
+cpu_user_s tr4	240.3
+PASS tr4 exit 0	0
+PASS tr4 WarpX reports the threads launched	reported 4, launched 4
+PASS tr4 final-step diagnostic written	diag1025600
+PASS tr4 ion density is a finite positive 129-node profile	shape (129,), min 2.3541e+13
+tr4 max_density	3.082551e+14
+tr4 max_rel_err_interior	1.4410
+tr4 symmetry_rms_rel n(z) vs n(L-z)	0.0088
+tr4 rms_rel_err_vs_turner (probe, reported)	0.8912
+profile t1 vs t2	byte-identical
+profile t1 vs t4	byte-identical
+profile t1 vs t8	byte-identical
+profile t1 vs t16	byte-identical
+profile t1 vs tr4	byte-identical
+profile t2 vs t4	byte-identical
+profile t2 vs t8	byte-identical
+profile t2 vs t16	byte-identical
+profile t2 vs tr4	byte-identical
+profile t4 vs t8	byte-identical
+profile t4 vs t16	byte-identical
+profile t4 vs tr4	byte-identical
+profile t8 vs t16	byte-identical
+profile t8 vs tr4	byte-identical
+profile t16 vs tr4	byte-identical
+fails	0

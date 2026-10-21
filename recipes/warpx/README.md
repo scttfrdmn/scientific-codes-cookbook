@@ -18,13 +18,21 @@ Runs WarpX's own langmuir deck on Graviton4, checks the whole field against the 
 ```bash
 make stage RECIPE=warpx     # once: the checks only — the deck ships inside the image
 spawn task run --spec "$(make -s spec RECIPE=warpx)" --wait
-make ls RECIPE=warpx
 
 D="$(python3 -c 'import sys; print(sys.prefix)')/etc/conda/test-files/warpx/1/Examples/Tests/langmuir"
 printf 'FILE = %s\nalgo.current_deposition = esirkepov\n' "$D/inputs_base_2d" > inputs
 OMP_NUM_THREADS=16 warpx.2d inputs        # 128², 80 steps, 0.26 s
 yt.load("diags/diag1000080")              # mesh plotfile; species have their own Headers
 ```
+
+## Which box — [measured](../../measurements/warpx-real/README.md) (Turner et al. 2013 case 1, 512,000 steps, 1 thread)
+| chip | instance | tool wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.large` | 1,228 s | 0.0798 | **0.0272** | **0.0292** |
+| Intel | `c8i.large` | 1,259 s | 0.0937 | 0.0328 | 0.0348 |
+| AMD | `c8a.large` | **1,031 s** | 0.1078 | 0.0309 | 0.0330 |
+
+**Graviton4 is cheapest, AMD fastest (1.19×, 13% dearer).** All three reproduce Turner's published ion density to **1.82% RMS** (upstream allows 6.5%), byte-identically. That deck is a single 128-cell grid, so threads buy nothing (141 s at 1, 152 s at 16): **rent the smallest box**.
 
 ## Make it yours
 

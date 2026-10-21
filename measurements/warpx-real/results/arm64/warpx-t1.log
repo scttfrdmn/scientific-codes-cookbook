@@ -1,0 +1,241 @@
+Initializing AMReX (26.10)...
+OMP initialized with 1 OMP threads
+AMReX (26.10) initialized
+PICSAR (26.10)
+WarpX (Unknown)
+
+                                   ___
+    __        __             ___  /  /
+    \ \      / /_ _ _ __ _ __\  \/  /
+     \ \ /\ / / _` | '__| '_ \\    /
+      \ V  V / (_| | |  | |_) /    \
+       \_/\_/ \__,_|_|  | .__/__/\  \
+                        |_|       \__\
+
+Level 0: dt = 1.843657817e-10 ; dz = 0.0005234375
+
+Grids Summary:
+  Level 0   1 grids  128 cells  100 % of domain
+
+-------------------------------------------------------------------------------
+--------------------------- MAIN EM PIC PARAMETERS ----------------------------
+-------------------------------------------------------------------------------
+Precision:            | DOUBLE
+Particle precision:   | DOUBLE
+Geometry:             | 1D (Z)
+Operation mode:       | Electrostatic
+                      | - laboratory frame
+                      | - vacuum
+Poisson solver:       | multigrid
+-------------------------------------------------------------------------------
+Current Deposition:   | direct 
+Guard cells           | - ng_alloc_J  = (2)
+ (allocated for J)    | 
+Guard cells           | - ng_alloc_EB = (2)
+ (allocated for E/B)  | 
+Particle Pusher:      | Boris 
+Charge Deposition:    | standard 
+Field Gathering:      | energy-conserving 
+Particle Shape Factor:| 1
+-------------------------------------------------------------------------------
+                      | - staggered grid 
+Guard cells           | - ng_alloc_EB = (2)
+ (allocated for E/B)  | 
+-------------------------------------------------------------------------------
+For full input parameters, see the file: warpx_used_inputs
+
+--- INFO    : Setting up Monte-Carlo collisions for electrons with:
+             total non-ionization collision probability: 0.015829
+             total ionization collision probability: 0.012591
+--- INFO    : Setting up Monte-Carlo collisions for he_ions with:
+             total non-ionization collision probability: 0.008109
+             total ionization collision probability: 0.000000
+
+
+**** WARNINGS ******************************************************************
+* GLOBAL warning list  after  [ FIRST STEP ]
+*
+* No recorded warnings.
+********************************************************************************
+
+
+**** WARNINGS ******************************************************************
+* GLOBAL warning list  after  [ THE END ]
+*
+* No recorded warnings.
+********************************************************************************
+
+
+
+**** WARNINGS ******************************************************************
+* GLOBAL warning list  after  [ FIRST STEP ]
+*
+* No recorded warnings.
+********************************************************************************
+
+
+**** WARNINGS ******************************************************************
+* GLOBAL warning list  after  [ THE END ]
+*
+* No recorded warnings.
+********************************************************************************
+
+
+
+TinyProfiler total time across processes [min...avg...max]: 1228 ... 1228 ... 1228
+
+----------------------------------------------------------------------------------------------------------------------
+Name                                                                   NCalls  Excl. Min  Excl. Avg  Excl. Max   Max %
+----------------------------------------------------------------------------------------------------------------------
+PhysicalParticleContainer::Evolve::GatherAndPush                      1024000      696.7      696.7      696.7  56.75%
+BackgroundMCCCollision::doCollisions()                                1024000      208.5      208.5      208.5  16.98%
+Redistribute_partition                                                1024002      141.8      141.8      141.8  11.55%
+BackgroundMCCCollision::doBackgroundIonization()                       512000      84.06      84.06      84.06   6.85%
+ablastr::particles::deposit_charge::ChargeDeposition                  1036804      32.09      32.09      32.09   2.61%
+WarpXParticleContainer::DepositCharge                                 1024002       15.4       15.4       15.4   1.25%
+WarpXParticleContainer::ApplyBoundaryConditions()                     1024000      15.25      15.25      15.25   1.24%
+WarpX::ComputeSpaceChargeField                                         512001      5.572      5.572      5.572   0.45%
+WarpX::Evolve::step                                                    512000      3.413      3.413      3.413   0.28%
+PhysicalParticleContainer::Evolve()                                   1024000       2.52       2.52       2.52   0.21%
+FabArray::setVal()                                                    4121625      2.307      2.307      2.307   0.19%
+ParticleContainer::Redistribute_impl()                                1024002      2.189      2.189      2.189   0.18%
+warpx_py_afterstep                                                      12800      2.004      2.004      2.004   0.16%
+WarpX::UpdateAuxiliaryData()                                           512003      1.324      1.324      1.324   0.11%
+ParticleCopyPlan::build                                               1024002      1.012      1.012      1.012   0.08%
+WarpX::SyncRho()                                                       524801     0.9529     0.9529     0.9529   0.08%
+FabArray::ParallelCopy()                                              2060806     0.4982     0.4982     0.4982   0.04%
+FillBoundary_nowait(Vector)                                           1024006     0.4005     0.4005     0.4005   0.03%
+WarpX::OneStep()                                                       512000     0.3001     0.3001     0.3001   0.02%
+MultiParticleContainer::doCollisions()                                 512000     0.2404     0.2404     0.2404   0.02%
+MultiParticleContainer::RedistributeLocal                              512000     0.2006     0.2006     0.2006   0.02%
+WarpX::Evolve()                                                             2    0.05712    0.05712    0.05712   0.00%
+REG::WarpX::Evolve()                                                        2  1.099e-06  1.099e-06  1.099e-06   0.00%
+Other                                                                35366563      10.93      10.93      10.93   0.89%
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+Name                                                                   NCalls  Incl. Min  Incl. Avg  Incl. Max   Max %
+----------------------------------------------------------------------------------------------------------------------
+REG::WarpX::Evolve()                                                        2       1228       1228       1228  99.99%
+WarpX::Evolve()                                                             2       1228       1228       1228  99.99%
+WarpX::Evolve::step                                                    512000       1228       1228       1228  99.98%
+WarpX::OneStep()                                                       512000      992.4      992.4      992.4  80.82%
+PhysicalParticleContainer::Evolve()                                   1024000      699.2      699.2      699.2  56.95%
+PhysicalParticleContainer::Evolve::GatherAndPush                      1024000      696.7      696.7      696.7  56.75%
+MultiParticleContainer::doCollisions()                                 512000      292.8      292.8      292.8  23.85%
+BackgroundMCCCollision::doCollisions()                                1024000      292.5      292.5      292.5  23.82%
+MultiParticleContainer::RedistributeLocal                              512000      148.9      148.9      148.9  12.13%
+ParticleContainer::Redistribute_impl()                                1024002      148.7      148.7      148.7  12.11%
+Redistribute_partition                                                1024002      141.8      141.8      141.8  11.55%
+BackgroundMCCCollision::doBackgroundIonization()                       512000      84.06      84.06      84.06   6.85%
+WarpX::ComputeSpaceChargeField                                         512001      59.93      59.93      59.93   4.88%
+WarpXParticleContainer::DepositCharge                                 1024002      48.37      48.37      48.37   3.94%
+ablastr::particles::deposit_charge::ChargeDeposition                  1036804      32.09      32.09      32.09   2.61%
+WarpXParticleContainer::ApplyBoundaryConditions()                     1024000      15.25      15.25      15.25   1.24%
+warpx_py_afterstep                                                      12800      2.504      2.504      2.504   0.20%
+WarpX::SyncRho()                                                       524801      2.373      2.373      2.373   0.19%
+FabArray::setVal()                                                    4121625      2.307      2.307      2.307   0.19%
+ParticleCopyPlan::build                                               1024002      2.281      2.281      2.281   0.19%
+WarpX::UpdateAuxiliaryData()                                           512003      2.231      2.231      2.231   0.18%
+FabArray::ParallelCopy()                                              2060806      1.599      1.599      1.599   0.13%
+FillBoundary_nowait(Vector)                                           1024006      1.385      1.385      1.385   0.11%
+Other                                                                35366563      11.92      11.92      11.92   0.97%
+----------------------------------------------------------------------------------------------------------------------
+
+
+
+BEGIN REGION WarpX::Evolve()
+
+----------------------------------------------------------------------------------------------------------------------
+Name                                                                   NCalls  Excl. Min  Excl. Avg  Excl. Max   Max %
+----------------------------------------------------------------------------------------------------------------------
+PhysicalParticleContainer::Evolve::GatherAndPush                      1024000      696.7      696.7      696.7  56.75%
+BackgroundMCCCollision::doCollisions()                                1024000      208.5      208.5      208.5  16.98%
+Redistribute_partition                                                1024000      141.8      141.8      141.8  11.55%
+BackgroundMCCCollision::doBackgroundIonization()                       512000      84.06      84.06      84.06   6.85%
+ablastr::particles::deposit_charge::ChargeDeposition                  1036802      32.09      32.09      32.09   2.61%
+WarpXParticleContainer::DepositCharge                                 1024000       15.4       15.4       15.4   1.25%
+WarpXParticleContainer::ApplyBoundaryConditions()                     1024000      15.25      15.25      15.25   1.24%
+WarpX::ComputeSpaceChargeField                                         512000      5.572      5.572      5.572   0.45%
+WarpX::Evolve::step                                                    512000      3.413      3.413      3.413   0.28%
+PhysicalParticleContainer::Evolve()                                   1024000       2.52       2.52       2.52   0.21%
+FabArray::setVal()                                                    4121606      2.307      2.307      2.307   0.19%
+ParticleContainer::Redistribute_impl()                                1024000      2.189      2.189      2.189   0.18%
+warpx_py_afterstep                                                      12800      2.004      2.004      2.004   0.16%
+WarpX::UpdateAuxiliaryData()                                           512003      1.324      1.324      1.324   0.11%
+ParticleCopyPlan::build                                               1024000      1.012      1.012      1.012   0.08%
+WarpX::SyncRho()                                                       524800     0.9529     0.9529     0.9529   0.08%
+FabArray::ParallelCopy()                                              2060802     0.4982     0.4982     0.4982   0.04%
+FillBoundary_nowait(Vector)                                           1024006     0.4005     0.4005     0.4005   0.03%
+WarpX::OneStep()                                                       512000     0.3001     0.3001     0.3001   0.02%
+MultiParticleContainer::doCollisions()                                 512000     0.2404     0.2404     0.2404   0.02%
+MultiParticleContainer::RedistributeLocal                              512000     0.2006     0.2006     0.2006   0.02%
+WarpX::Evolve()                                                             2    0.05712    0.05712    0.05712   0.00%
+REG::WarpX::Evolve()                                                        2  1.099e-06  1.099e-06  1.099e-06   0.00%
+Other                                                                35366521      10.92      10.92      10.92   0.89%
+----------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------
+Name                                                                   NCalls  Incl. Min  Incl. Avg  Incl. Max   Max %
+----------------------------------------------------------------------------------------------------------------------
+REG::WarpX::Evolve()                                                        2       1228       1228       1228  99.99%
+WarpX::Evolve()                                                             2       1228       1228       1228  99.99%
+WarpX::Evolve::step                                                    512000       1228       1228       1228  99.98%
+WarpX::OneStep()                                                       512000      992.4      992.4      992.4  80.82%
+PhysicalParticleContainer::Evolve()                                   1024000      699.2      699.2      699.2  56.95%
+PhysicalParticleContainer::Evolve::GatherAndPush                      1024000      696.7      696.7      696.7  56.75%
+MultiParticleContainer::doCollisions()                                 512000      292.8      292.8      292.8  23.85%
+BackgroundMCCCollision::doCollisions()                                1024000      292.5      292.5      292.5  23.82%
+MultiParticleContainer::RedistributeLocal                              512000      148.9      148.9      148.9  12.13%
+ParticleContainer::Redistribute_impl()                                1024000      148.7      148.7      148.7  12.11%
+Redistribute_partition                                                1024000      141.8      141.8      141.8  11.55%
+BackgroundMCCCollision::doBackgroundIonization()                       512000      84.06      84.06      84.06   6.85%
+WarpX::ComputeSpaceChargeField                                         512000      59.93      59.93      59.93   4.88%
+WarpXParticleContainer::DepositCharge                                 1024000      48.37      48.37      48.37   3.94%
+ablastr::particles::deposit_charge::ChargeDeposition                  1036802      32.09      32.09      32.09   2.61%
+WarpXParticleContainer::ApplyBoundaryConditions()                     1024000      15.25      15.25      15.25   1.24%
+warpx_py_afterstep                                                      12800      2.504      2.504      2.504   0.20%
+WarpX::SyncRho()                                                       524800      2.373      2.373      2.373   0.19%
+FabArray::setVal()                                                    4121606      2.307      2.307      2.307   0.19%
+ParticleCopyPlan::build                                               1024000      2.281      2.281      2.281   0.19%
+WarpX::UpdateAuxiliaryData()                                           512003      2.231      2.231      2.231   0.18%
+FabArray::ParallelCopy()                                              2060802      1.599      1.599      1.599   0.13%
+FillBoundary_nowait(Vector)                                           1024006      1.385      1.385      1.385   0.11%
+Other                                                                35366521      11.87      11.87      11.87   0.97%
+----------------------------------------------------------------------------------------------------------------------
+
+END REGION WarpX::Evolve()
+Pinned Memory Usage:
+------------------------------------------------------------
+Name                              Nalloc    AvgMem    MaxMem
+------------------------------------------------------------
+The_Pinned_Arena::Initialize()         1     0   B  8192 KiB
+ParticleContainer::addParticles       12     1   B   916 KiB
+WriteBinaryParticleData()              2     0   B    76 KiB
+Unprofiled                            76  7423   B  7424   B
+WarpX::ComputeSpaceChargeField   1536003     9   B  3840   B
+WarpX::InitData()                      1     0   B   256   B
+------------------------------------------------------------
+
+Cpu Memory Usage:
+----------------------------------------------------------------------------
+Name                                              Nalloc    AvgMem    MaxMem
+----------------------------------------------------------------------------
+PhysicalParticleContainer::AddPlasma()                12  3109 KiB  6216 KiB
+BackgroundMCCCollision::doBackgroundIonization()      12  3178 KiB  3705 KiB
+WarpX::InitData()                                     12    15 KiB    15 KiB
+ParticleContainer::BuildRedistributeMask               2  5631   B  5632   B
+Diagnostics::FilterComputePackFlush()                  4     0   B  2560   B
+WarpXParticleContainer::DepositCharge                  2  2559   B  2560   B
+Filter::ApplyStencil(MultiFab)                    524803     0   B  1280   B
+WarpX::SyncRho()                                  524801     1   B  1280   B
+----------------------------------------------------------------------------
+
+AMReX (26.10) finalized
+rc	0
+wall_s	1228.06
+maxrss_mib	129.3
+cpu_user_s	1225.5
+avg_cores	1.00
+cgroup_memory_peak_mib	108.7
+omp_num_threads	1
