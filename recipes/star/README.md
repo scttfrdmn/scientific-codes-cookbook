@@ -120,7 +120,10 @@ loading this index took **9 s from tmpfs, 28 s from S3, 57 s from EFS, 174 s fro
 first makes the read *slower*, not faster, and `aws s3 cp` to EBS is the worst of five paths on a
 first read. Copying pays off only when one box aligns ~3+ samples, and then only into tmpfs. All
 five, with the crossover and the per-route costs:
-[measurements/star-real](../../measurements/star-real/README.md).
+[measurements/star-real](../../measurements/star-real/README.md). Mount, tmpfs and EBS re-ran on
+Intel (`m8i`) and AMD (`m8a`) with the same ranking and the same load times (EBS 230 s on all
+three — it is the volume, not the chip) and identical `Log.final.out` counts; the mount's first
+read is 89 s / 83 s / 79 s on Graviton4 / Intel / AMD, and Graviton4 is cheapest per alignment.
 
 ### Pins
 

@@ -1,0 +1,28 @@
+version	Seurat 5.5.1
+version	R 4.5.3
+raw	33538 genes x 11769 cells
+subset	20244 genes x 11043 cells
+libsize_identity	0 of 11043 cells differ from Scanpy (total 88691854)
+norm_identity	max |sum-1e4|/1e4 = 7.749e-14 over 11043 cells
+hvg_overlap_vst_vs_scanpy	803 of 2000
+seurat_clusters	26
+wall_seurat_cluster_s	15.4
+For a (much!) faster implementation of the Wilcoxon Rank Sum Test,
+(default method for FindMarkers) please install the presto package
+--------------------------------------------
+install.packages('devtools')
+devtools::install_github('immunogenomics/presto')
+--------------------------------------------
+After installation of presto, Seurat will automatically use the more 
+efficient implementation (no further action necessary).
+This message will be shown once per session
+wall_findallmarkers_s	3578.4
+markers	77196 positive markers, 41246 at p_adj<0.05, 26 of 26 clusters have one
+marker_peak	CD3D peaks in cluster 10; significant marker there: TRUE
+marker_peak	LYZ peaks in cluster 0; significant marker there: TRUE
+marker_peak	MS4A1 peaks in cluster 4; significant marker there: TRUE
+marker_peak	NKG7 peaks in cluster 6; significant marker there: TRUE
+biology	T, monocyte, B and NK markers each mark their own cluster
+wall_seurat_s	3594.4
+peak_rss_seurat	 6021036 kB
+SEURAT OK

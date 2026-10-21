@@ -15,9 +15,17 @@ IDX_S3="s3://$B/inputs/star-index-GRCh38-116"
 W=/root/dp; mkdir -p "$W"; cd "$W"
 R=$W/four-data-paths.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }
-push(){ aws s3 cp "$R" "s3://$B/measurements/star-real/four-data-paths.txt" --only-show-errors 2>/dev/null || true; }
-STAR_IMG=quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
-LITHSHA=ca145a1cc40823fa3b5304351f91e7397bde2f28c12052e035db6af509d9b706
+push(){ aws s3 cp "$R" "s3://$B/$MP/four-data-paths.txt" --only-show-errors 2>/dev/null || true; }
+# The same script on every chip: the x86 leg uses bioconda's own x86 build of the same STAR
+# (the recipe's images_x86_64 pin) and lith's amd64 release binary; results go under a per-chip
+# prefix (STAR_REAL_TAG, e.g. x86_64 or amd) so a second chip cannot overwrite the first.
+case "$(uname -m)" in
+  x86_64) STAR_IMG=quay.io/biocontainers/star@sha256:c43295cdbc28a7be7d88296775a29cc65b30296c996d8242ef90c031c8b9739b
+          LITHARCH=amd64; LITHSHA=ed1e3fffd0612e110eee77cca89b7c80703c59b8fef36f1a34126477f8456898 ;;
+  *)      STAR_IMG=quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
+          LITHARCH=arm64; LITHSHA=ca145a1cc40823fa3b5304351f91e7397bde2f28c12052e035db6af509d9b706 ;;
+esac
+MP="measurements/star-real${STAR_REAL_TAG:+/$STAR_REAL_TAG}"
 
 # The container runs as mambauser (57439); a host dir it must write needs to be world-writable.
 OUT=$W/out; mkdir -p "$OUT"; chmod 777 "$OUT"
@@ -32,7 +40,7 @@ push
 dnf install -y -q docker fuse fuse3 amazon-efs-utils lustre-client >/dev/null 2>&1
 systemctl enable --now docker >/dev/null 2>&1
 sed -i 's/^#\s*user_allow_other/user_allow_other/' /etc/fuse.conf
-curl -fsSL -o "$W/lith" https://github.com/scttfrdmn/lith/releases/download/v1.1.3/lith_linux_arm64
+curl -fsSL -o "$W/lith" https://github.com/scttfrdmn/lith/releases/download/v1.1.3/lith_linux_$LITHARCH
 echo "$LITHSHA  $W/lith" | sha256sum -c - >/dev/null 2>&1 && say "lith_sha	verified" || say "lith_sha	MISMATCH"
 chmod +x "$W/lith"; LITH=$W/lith
 docker pull -q "$STAR_IMG" >/dev/null 2>&1 && say "star_image	pulled" || say "star_image	PULL-FAILED"
@@ -145,5 +153,5 @@ say "local_copy_gib	$(du -sBG "$A_D" 2>/dev/null | cut -f1)"
 df -h /data /efs /fsx /mnt/lithidx 2>/dev/null | tee -a "$R"
 say FOUR_PATHS_DONE; push
 for f in "$OUT"/*Log.final.out; do
-  aws s3 cp "$f" "s3://$B/measurements/star-real/logs/$(basename "$f")" --only-show-errors 2>/dev/null || true
+  aws s3 cp "$f" "s3://$B/$MP/logs/$(basename "$f")" --only-show-errors 2>/dev/null || true
 done

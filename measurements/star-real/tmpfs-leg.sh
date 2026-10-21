@@ -10,8 +10,17 @@ IDX_S3="s3://$B/inputs/star-index-GRCh38-116"
 W=/root/dp; cd "$W"
 R=$W/tmpfs-leg.txt; : > "$R"
 say(){ printf '%s\n' "$*" | tee -a "$R"; }
-push(){ aws s3 cp "$R" "s3://$B/measurements/star-real/tmpfs-leg.txt" --only-show-errors 2>/dev/null || true; }
-STAR_IMG=quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
+push(){ aws s3 cp "$R" "s3://$B/$MP/tmpfs-leg.txt" --only-show-errors 2>/dev/null || true; }
+# The same script on every chip: the x86 leg uses bioconda's own x86 build of the same STAR
+# (the recipe's images_x86_64 pin) and lith's amd64 release binary; results go under a per-chip
+# prefix (STAR_REAL_TAG, e.g. x86_64 or amd) so a second chip cannot overwrite the first.
+case "$(uname -m)" in
+  x86_64) STAR_IMG=quay.io/biocontainers/star@sha256:c43295cdbc28a7be7d88296775a29cc65b30296c996d8242ef90c031c8b9739b
+          LITHARCH=amd64; LITHSHA=ed1e3fffd0612e110eee77cca89b7c80703c59b8fef36f1a34126477f8456898 ;;
+  *)      STAR_IMG=quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae
+          LITHARCH=arm64; LITHSHA=ca145a1cc40823fa3b5304351f91e7397bde2f28c12052e035db6af509d9b706 ;;
+esac
+MP="measurements/star-real${STAR_REAL_TAG:+/$STAR_REAL_TAG}"
 OUT=$W/out
 
 say "== ROUTE A2: copy the index into tmpfs (RAM) =="

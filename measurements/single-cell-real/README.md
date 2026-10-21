@@ -22,7 +22,9 @@ done
 ```
 
 There is no x86 run at the current pins: `quay.io/biocontainers` has no alevin-fry 0.18.3 image
-yet, so the recipe records `gap_x86_64` and `spec_arch.py` refuses to resolve one.
+yet, so the recipe records `gap_x86_64` and `spec_arch.py` refuses to resolve one. **AMD inherits
+the gap** — it runs the same x86 pins — so there is no AMD row either (re-checked 2026-10-20: the
+newest biocontainers tag is still `0.18.2--hd612981_0`). Both legs un-defer when 0.18.3 lands there.
 
 Task 1 (piscem) verifies every staged byte against `pins-map.sha256`, indexes the cDNA and runs
 `map-sc -g "1{b[16]u[10]x:}2{r:}"`. Task 2 (alevin-fry) builds three matrices from that RAD

@@ -128,6 +128,39 @@ means ~124 GiB of instance. Size for both or don't take the shortcut.
 Same conclusion as [bwa at 8.9 GiB](../lith-vs-copy/README.md), where copy and mount tied on
 wall time. At 28.6 GiB they do not tie, and the first-read gap runs opposite to the reflex.
 
+## On Intel and AMD — the same ranking, the same answer
+
+The three routes a single box can take (mount, copy → tmpfs, copy → EBS) re-ran on same-generation
+x86 (2026-10-21): `m8i.8xlarge` (Xeon 6975P-C, 16 cores × 2 threads) and `m8a.8xlarge` (EPYC
+9R45, 32 cores × 1), 32 STAR threads, 124 GiB, the same published index and reads, bioconda's x86
+STAR 2.7.11b (the recipe's `images_x86_64` pin) and lith 1.1.3's amd64 binary. Same
+`four-data-paths.sh` and `tmpfs-leg.sh`, now choosing image and lith binary by `uname -m`
+([`cross-chip-driver.sh`](cross-chip-driver.sh)). First read, setup + align, from each chip's logs:
+
+| route | Graviton4 `m8g` | Intel `m8i` | AMD `m8a` | genome load (G4 / Intel / AMD) |
+|---|---|---|---|---|
+| **lith mount** | 89 s · $0.036 | 83 s · $0.039 | **79 s** · $0.043 | 28 / 23 / 25 s |
+| copy → tmpfs | 58 + 68 s · $0.050 | 62 + 73 s · $0.064 | 54 + 62 s · $0.063 | 9 / 11 / 8 s |
+| copy → local EBS | 118 + 291 s · $0.163 | 117 + 291 s · $0.192 | 117 + 285 s · $0.217 | 231 / 230 / 230 s |
+
+Compute $ at $1.4362 / $1.6934 / $1.9475 per hour. Each x86 box billed one launch → terminate
+window for all five aligns: **1,327 s ($0.624) on Intel, 1,265 s ($0.684) on AMD**.
+
+- **The ranking is chip-independent, and so is the data path.** EBS loads in 230–231 s and the
+  copy runs at 248–250 MiB/s on all three: that is the gp3 volume, not the CPU. The mount's
+  23–28 s load is S3. Only the mapping phase moves with the chip: 52–53 s on AMD, 56–58 s on
+  Graviton4, 58–60 s on Intel.
+- **Graviton4 is the cheapest per alignment on every route**, because AMD's 4–6 s faster map
+  does not cover a 36% dearer hour. The mount is the cheapest route on every chip.
+- **Fixed point:** every one of the nine `Log.final.out` files (Graviton4's mount align, and
+  mount ×2 + EBS ×2 on each x86 chip) is identical once its timestamps and speed line are
+  removed — 15,800,127 reads, 92.47% unique, every count. tmpfs held 29 of 62 GiB with
+  `oom_events 0` on both. **Path:** the BAM's bytes (2,864,048,823–2,864,097,807 on x86) follow
+  thread completion order under `--outSAMtype BAM Unsorted`, as on Graviton4.
+- **Not re-run on x86:** EFS and FSx (network filesystems whose rate is the throughput tier you
+  buy; the FSx association had to be made by hand) and `warm-leg.sh`'s steady-state pass.
+  n = 1 per cell.
+
 ## Run it
 
 ```sh
@@ -148,7 +181,13 @@ spawn launch dpaths --region us-west-2 --instance-type m8g.8xlarge --volume-size
 ```
 
 Then `warm-leg.sh` (the same aligns with no `drop_caches`) and `tmpfs-leg.sh` (the RAM copy).
-`build-publish.sh` publishes the index itself, once.
+`build-publish.sh` publishes the index itself, once. The x86 legs stage `four-data-paths.sh`,
+`tmpfs-leg.sh` and their `pins.sha256` under `s3://$B/scripts/star-real/` and run
+`cross-chip-driver.sh "$B" amd` (or `x86_64`) as the `--command` of a `spawn launch` on
+`m8a.8xlarge` (or `m8i.8xlarge`) with `--volume-size 160 --iam-policy s3:ReadOnly,s3:WriteOnly
+--ttl 90m --cost-limit 3.00 --on-complete terminate`; outputs land under
+`measurements/star-real/<tag>/` and in [`results/amd/`](results/amd/) and
+[`results/x86_64/`](results/x86_64/).
 
 **Clean up, and verify it.** EFS and FSx both bill until deleted, and `--fsx-lifecycle ephemeral`
 has been seen not to reap ([spawn#613](https://github.com/spore-host/spawn/issues/613)):

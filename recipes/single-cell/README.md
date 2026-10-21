@@ -45,7 +45,7 @@ Two tasks: piscem builds the fixture, indexes it and maps to a RAD file, then al
 |---|---|---|---|---|---|
 | **Graviton4** | `m8g.4xlarge` | **115 s** | 452 s | 3.8 GiB | **0.090** |
 
-Every per-cell, raw→filtered and unmapped-read identity holds at 1,814 cells. Three-quarters of the bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (the RAD plus its collation), not for the tools. There is no x86 row at these pins: bioconda has no x86 image of alevin-fry 0.18.3 yet (below). Pinned to 0.9.0 before 2026-10-17, this recipe's featureDump `CorrectedReads` and `MappingRate` were garbage ([why](../../measurements/single-cell-real/README.md#correctedreads--mappingrate-wrong-under-alevin-fry-090-checked-now)).
+Every per-cell, raw→filtered and unmapped-read identity holds at 1,814 cells. Three-quarters of the bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (the RAD plus its collation), not for the tools. There is no x86 row, Intel or AMD, at these pins: bioconda has no x86 image of alevin-fry 0.18.3 yet (below). Pinned to 0.9.0 before 2026-10-17, this recipe's featureDump `CorrectedReads` and `MappingRate` were garbage ([why](../../measurements/single-cell-real/README.md#correctedreads--mappingrate-wrong-under-alevin-fry-090-checked-now)).
 
 <details>
 <summary>As shipped: exact matrix recovery, a conservation identity, the silent cell-drop, why piscem and not salmon, pins</summary>
