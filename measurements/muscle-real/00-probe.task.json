@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-muscle-real-probe",
+  "container": "quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\n[ \"$(wc -l < pins.sha256)\" -eq 4 ] && sha256sum -c pins.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh pf01255.25_unaligned.fa pf01255.25_ref.fa mafft_linsi.fa s5t8:super5:8 s5t8-rep:super5:8 s5t1:super5:1 s5t1-rep:super5:1 align:align:8\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-real/pf01255.25_unaligned.fa",
+      "destination": "/tmp/pf01255.25_unaligned.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-real/pf01255.25_ref.fa",
+      "destination": "/tmp/pf01255.25_ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mafft-real/pf01255/linsi.fa",
+      "destination": "/tmp/mafft_linsi.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/muscle-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/muscle-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/muscle-real/probe/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "10h",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}

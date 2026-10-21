@@ -1,0 +1,14 @@
+== sha256 (first 16) per alignment, per chip
+label          arm64              x86_64             amd
+s5t8           49568dd4cca8f77b   49568dd4cca8f77b   49568dd4cca8f77b
+s5t8-rep       49568dd4cca8f77b   49568dd4cca8f77b   49568dd4cca8f77b
+s5t1           c57df6f122562a4f   c57df6f122562a4f   0e2de0f5042acda1
+s5t1-rep       c57df6f122562a4f   c57df6f122562a4f   0e2de0f5042acda1
+align          76a75678874721bb   76a75678874721bb   1222d874aaedf303
+align-rep      76a75678874721bb   76a75678874721bb   1222d874aaedf303
+== s5t1: amd scored against Graviton4's s5t1 (SP/TC of one alignment against the other)
+sp 0.999990
+tc 0.862330
+== align: amd scored against Graviton4's align (SP/TC of one alignment against the other)
+sp 0.999990
+tc 0.998700

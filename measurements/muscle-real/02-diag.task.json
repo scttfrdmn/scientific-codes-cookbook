@@ -1,0 +1,50 @@
+{
+  "task_id": "cookbook-muscle-real-diag",
+  "container": "quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# Is AMD's different -super5 -threads 1 alignment the chip's ISA dispatch, or the box? A fresh box, then the\n# same run with glibc's x86 ISA dispatch narrowed (AVX-512 off; then AVX2/FMA off too). sha256 per run.\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH\ncd /tmp\nsha256sum -c pins.sha256 || exit 1\nmkdir -p out\nuname -m > out/host.txt; grep -m1 'model name' /proc/cpuinfo >> out/host.txt\nrun() { lab=$1; t0=$(date +%s); env GLIBC_TUNABLES=\"$2\" muscle -super5 pf01255.25_unaligned.fa -output out/$lab.fa -threads 1 2> out/$lab.log; rc=$?; echo \"$lab rc=$rc $(( $(date +%s) - t0 )) s tunables='$2' $(sha256sum out/$lab.fa | cut -c1-16)\" | tee -a out/diag.txt; }\nrun plain ''\nrun no512 'glibc.cpu.hwcaps=-AVX512F,-AVX512VL,-AVX512BW,-AVX512DQ,-AVX512CD'\nrun noavx2fma 'glibc.cpu.hwcaps=-AVX512F,-AVX512VL,-AVX512BW,-AVX512DQ,-AVX512CD,-AVX2,-FMA,-FMA4'\ncat out/diag.txt\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-real/pf01255.25_unaligned.fa",
+      "destination": "/tmp/pf01255.25_unaligned.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-real/pf01255.25_ref.fa",
+      "destination": "/tmp/pf01255.25_ref.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mafft-real/pf01255/linsi.fa",
+      "destination": "/tmp/mafft_linsi.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/muscle-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/muscle-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/muscle-real/diag/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

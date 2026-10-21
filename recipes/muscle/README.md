@@ -29,22 +29,26 @@ muscle -super5 gpcr906.fa -output aln.fa -threads 8
 
 | In the recipe | Swap for | What to know |
 |---|---|---|
-| `-super5` | `-align` | only below a few hundred sequences. At 906 it exceeded a 90-minute budget here, despite muscle5's docs suggesting `-align` up to ~1000. |
+| `-super5` | `-align` | cost grows with length as well as count: 906 GPCRs (~344 aa) exceeded 90 minutes, 919 Pfam sequences (~226 aa) took 26 ([measured](../../measurements/muscle-real/README.md)). |
 | the 906 GPCRs | your family | comes from mafft's extraction, which comes from hmmer's search — swap it there, not here. |
 | `-threads 8` | anything | pin it, but know it is **not** sufficient for reproducibility — see below. |
 
-**Leave the family** — 906 real sequences is where the `-align`/`-super5` choice actually bites.
-**Scale it** and that choice bites harder, not softer.
+**Leave the family** — 906 real sequences is where the `-align`/`-super5` choice actually bites. **Scale it** and that choice bites harder, not softer.
 
 ## Shape, size, cost
 
-`c8g.2xlarge`: **278 s of muscle inside a ~6 min billed window, ~$0.03.**
+`c8g.2xlarge`: **278 s of muscle inside a ~6 min billed window, ~$0.03.** `-align` on the GPCRs died
+at a 90-minute TTL ([spawn#632](https://github.com/spore-host/spawn/issues/632)). Which box at real
+scale, [measured](../../measurements/muscle-real/README.md) (919 Pfam sequences, 8 threads):
 
-**`-align` cost a TTL death before this number existed.** A 90-minute budget expired with the command
-still running, which under this project's rules is a failure and was ~$0.48 of stranded spend. It
-also produced no log and no record to size the retry from — filed as
-[spawn#632](https://github.com/spore-host/spawn/issues/632). **No generation table:** at ~5 minutes
-the ladder would be mostly boot, and the 92× gap against mafft is the comparison that matters here.
+| chip | instance | `-align` | `-super5` | billed $/result |
+|---|---|---|---|---|
+| Graviton4 | `c8g.2xlarge` | 1,549 s | 70 s | **0.142** / **0.011** |
+| Xeon 6975P-C | `c8i.2xlarge` | 1,765 s | 74 s | 0.190 / 0.014 |
+| EPYC 9R45 | `c8a.2xlarge` | **1,421 s** | **66 s** | 0.176 / 0.014 |
+
+**Graviton4 is cheapest per result; 5.2 GiB peak fits the 16 GiB box.** At fixed threads each mode
+repeats byte for byte; Graviton4 and Intel give the same bytes, AMD a different alignment of equal score.
 
 <details>
 <summary>As shipped: a cross-tool identity, why the column count is not asserted, pins</summary>
