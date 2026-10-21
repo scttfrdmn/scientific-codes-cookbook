@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-methylation-array-real-tls-probe-arm64",
+  "container": "quay.io/aarchbio/bioconductor-sesame@sha256:624254ed82a905cef9814b27a1e4ec417072d8bd002899498c080301dca3295b",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nprintf '%s  %s\\n' c3bf201e9ade47abe7b86748a554a15590dba6fd78c445436bb75a244a5fb72a /tmp/tls-probe.R 14068fbdffb615ff4406d405945990b24d9a07e92a7a16014cb3d7f2d97d88d1 /tmp/tls-probe.sh > /tmp/want.sha256\nsha256sum -c /tmp/want.sha256 || { echo 'probe scripts do not match their pins'; exit 1; }\nbash /tmp/tls-probe.sh\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/tls-probe.R",
+      "destination": "/tmp/tls-probe.R"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/methylation-array-real/tls-probe.sh",
+      "destination": "/tmp/tls-probe.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/methylation-array-real/tls-probe/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "30m",
+    "on_complete": "terminate",
+    "cost_limit": 0.05
+  }
+}

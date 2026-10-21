@@ -1,0 +1,30 @@
+aarch64
+CPU part	: 0xd4f
+131072
+glibc 2.36
+PT_TLS        8 bytes  align    8  /opt/conda/lib/libgcc_s.so.1
+PT_TLS       32 bytes  align    8  /opt/conda/lib/libstdc++.so.6.0.36
+PT_TLS        8 bytes  align    8  /opt/conda/lib/libgfortran.so.5.0.0
+PT_TLS      136 bytes  align    8  /opt/conda/lib/libgomp.so.1.0.0
+PT_TLS    61440 bytes  align   16  /opt/conda/lib/libopenblasp-r0.3.34.so
+PT_TLS      144 bytes  align   16  /usr/lib/aarch64-linux-gnu/libc.so.6
+PT_TLS total over mapped ELFs: 61768 bytes
+blas/lapack mapped: libopenblasp-r0.3.34.so 
+R 4.5.3  preprocessCore 1.72.0 
+libc: /usr/lib/aarch64-linux-gnu/libc.so.6 
+tls-probe exit 0
+== variant: default
+normalize.quantiles ok 100000 4 
+exit 0
+== variant: R_THREADS=1
+normalize.quantiles ok 100000 4 
+exit 0
+== variant: R_THREADS=4
+normalize.quantiles ok 100000 4 
+exit 0
+== variant: GLIBC_TUNABLES=glibc.rtld.nns=1:glibc.rtld.optional_static_tls=0
+normalize.quantiles ok 100000 4 
+exit 0
+== variant: OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+normalize.quantiles ok 100000 4 
+exit 0

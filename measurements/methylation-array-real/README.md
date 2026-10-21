@@ -112,7 +112,31 @@ To use this on your own cohort, take 20,000 probes, which gave the widest minimu
   controls. Liu et al. adjust for it. The count shows the scan ran at full scale. It is not a
   biological result.
 
-## Intel and AMD: a recorded gap, re-checked 2026-10-18
+## Intel and AMD: a recorded gap, cause measured 2026-10-21
+
+**The cause is a thread stack smaller than OpenBLAS's TLS, and no environment variable changes
+it.** preprocessCore 1.72.0 creates its quantile-normalisation threads with a fixed stack of
+`PTHREAD_STACK_MIN + sysconf(_SC_PAGE_SIZE)` (`src/qnorm.c:530`, the same in every threaded
+routine). The `__pthread_get_minstack` route that would add TLS is commented out (`qnorm.c:121`).
+The only environment variable the source reads is `R_THREADS`, a thread count. glibc refuses with
+`EINVAL` (22) any stack that cannot hold the process's static TLS. [tls-probe.R](tls-probe.R) reads
+each mapped library's `PT_TLS` segment from its ELF headers, on both images:
+
+| | `PTHREAD_STACK_MIN` | thread stack | OpenBLAS static TLS | `normalize.quantiles` |
+|---|---|---|---|---|
+| x86_64, `c8i.large`, biocontainers image | 16,384 | 20,480 | 143,360 (`libopenblasp-r0.3.30`) | `pthread_create() is 22` |
+| arm64, `c8g.large`, aarchbio image | 131,072 | ≥ 135,168 | 61,440 (`libopenblasp-r0.3.34`) | ok |
+
+On x86 every variant still fails: `R_THREADS=1`, `R_THREADS=4`, `OPENBLAS_NUM_THREADS=1
+OMP_NUM_THREADS=1`, and `GLIBC_TUNABLES=glibc.rtld.nns=1:glibc.rtld.optional_static_tls=0`, which
+shrinks glibc's TLS surplus by about 1 KB against a 123 KB shortfall. All other libraries together
+carry 328 bytes of TLS. The fix is a build: bioconda's `build.sh` runs `R CMD INSTALL --build .`
+with no `--configure-args="--disable-threading"`, which is the workaround in
+[bioconda/bioconda-recipes#31420](https://github.com/bioconda/bioconda-recipes/issues/31420).
+Probe specs: [tls-probe-x86_64.task.json](tls-probe-x86_64.task.json),
+[tls-probe-arm64.task.json](tls-probe-arm64.task.json); output in
+[results/x86_64/tls-probe.txt](results/x86_64/tls-probe.txt) and
+[results/arm64/tls-probe.txt](results/arm64/tls-probe.txt).
 
 The recipe's `gap_x86_64` still holds. bioconda's only x86 build of
 `bioconductor-preprocesscore` 1.72.0 (`r45h01b2380_0`, in `quay.io/biocontainers/bioconductor-sesame:1.28.1--r45hdfd78af_0`,
