@@ -22,15 +22,11 @@ pip install "git+https://github.com/spore-host/snakemake-executor-plugin-spawn@a
 make stage RECIPE=snakemake      # once: 4 genomes as separate objects + NCBI's lengths
 B=$(make -s print-bucket)
 mkdir -p /tmp/smwork && cp recipes/snakemake/Snakefile /tmp/smwork/ && cd /tmp/smwork
-
-snakemake -s Snakefile --config bucket="$B" \
-  --executor spawn --shared-fs-usage none \
+snakemake -s Snakefile --config bucket="$B" --executor spawn --shared-fs-usage none \
   --spawn-region us-west-2 --spawn-ttl 30m --spawn-cost-limit 0.05 --spawn-instance-type c8g.large \
   --default-storage-provider s3 --default-storage-prefix "s3://$B/runs/snakemake/r1" \
   --jobs 2
 ```
-
-Five remote jobs: `stats` × 4 (one per genome, from the wildcard) then `aggregate` × 1.
 
 ## Make it yours
 
@@ -38,15 +34,21 @@ Five remote jobs: `stats` × 4 (one per genome, from the wildcard) then `aggrega
 |---|---|---|
 | 4 genomes | your samples, any number | the job count is **discovered from the wildcard**, not written in the Snakefile — that's the difference from [nf-spawn](../nf-spawn/README.md)'s fixed DAG. |
 | `--shared-fs-usage none` | **keep it** | **load-bearing.** Without it the node receives a Snakefile path relative to *your* machine and dies before any work ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)). |
-| `--jobs 2` | more, with care | `--jobs N` on one rule shares a single completion record ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)) — and wide concurrent launches carrying a cost limit stall silently on AWS pricing before they launch ([truffle#175](https://github.com/spore-host/truffle/issues/175)). |
+| `--jobs 2` | more, with care | every job of one rule shares one completion record ([#19](https://github.com/spore-host/snakemake-executor-plugin-spawn/issues/19)): at `--jobs 4` on 11 files the outputs were right, but completions were seen up to 12 min late, and a short job launched after a long one can report the long one done. The plugin submits one job at a time regardless, each waiting minutes on AWS pricing first ([truffle#175](https://github.com/spore-host/truffle/issues/175)). |
 | `--spawn-instance-type c8g.large` | `c8i.large` for x86 | **this one flag picks the chip** — it becomes the TaskSpec's family. Leave it out and truffle picks the cheapest family, which put the first run on Graviton2 `t4g`. |
 | `docker run <digest>` in the shell | your tool's image | the executor emits no `container` field, so **the rule names the digest** — one per architecture, picked by `uname -m` — see below. |
 
 **Leave the fixture.** Four complete bacterial genomes, each a single contig, is the smallest thing that makes the fan-out *checkable*: NCBI publishes each assembly's length, so every shard has an independent answer and their sum is a conservation identity. **Scale it** by adding samples — the DAG widens on its own.
 
-## Shape, size, cost
+## Shape, size, cost — [measured](../../measurements/snakemake-real/README.md) on 11 whole FASTQs (446M reads), 12 jobs
 
-Shape F costs **per job**, not one flat instance. Five instances, sized within the pinned family from each rule's `threads`/`mem_mb` (`c8g.large` per `stats` job, `c8g.medium` for the join); the first run measured **112 s** for a `stats` job and **64 s** for the join, and the workflow takes **~15 min** wall at `--jobs 2` on either architecture. Caps were `--spawn-cost-limit 0.05` per job, so **$0.25 worst case** and about **$0.01 actual**. Nearly all of each job is boot, `dnf install docker`, and image pull — **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+| chip | jobs on | workflow wall | seqkit (Σ) | billed (Σ 12 instances) | **billed $/result** |
+|---|---|---|---|---|---|
+| **Graviton4** | `c8g.large` | 5,881 s | 326 s | 2,134 s | **0.0460** |
+| Xeon 6975P-C | `c8i.large` | 3,828 s | 362 s | 2,216 s | 0.0577 |
+| EPYC 9R45 | `c8a.large` | 5,009 s | **239 s** | **1,654 s** | 0.0478 |
+
+Shape F costs **per job**: this fixture's five jobs take ~15 min at `--jobs 2` for about $0.01, and at cohort scale every count still matched its published number, every output matched the same commands run without Snakemake on all three chips, and each re-run ran exactly the jobs its change implied. But a job is ~2.5 min of boot, venv, `pip install snakemake`, Docker and the wait to terminate, around 10–55 s of seqkit, so one box looping over the same files was 3.1–3.6× cheaper; and the wall is dispatch — the plugin submits one job at a time and each waited minutes in spawn's pricing before launch. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
 <details>
 <summary>As shipped: four NCBI checks plus a sum identity, and why the rule runs docker itself</summary>

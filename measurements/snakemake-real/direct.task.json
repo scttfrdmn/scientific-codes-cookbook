@@ -1,0 +1,54 @@
+{
+  "task_id": "cookbook-snakemake-real-direct",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport HOME=/tmp TMPDIR=/tmp\ncd /tmp/in\nmkdir -p /tmp/out\n{ printf '%s  %s\\n' 78af335aedb364b8ea11847ec7994a9eaea8b30e00dfcae14d5a315b45791745 direct.sh; printf '%s  %s\\n' 83ea9f91e6a787cc39917cc3cb57a5291834fcfc969a10645fb19f7c0ceb761d cohort.py; } > /tmp/scripts.sha256\nsha256sum -c /tmp/scripts.sha256 || { echo 'FAIL: a staged script does not match its pin'; exit 1; }\nbash /tmp/in/direct.sh ${COOKBOOK_BUCKET} 2>&1 | tee /tmp/out/direct.log; exit ${PIPESTATUS[0]}\n"
+  ],
+  "resources": {
+    "cpu": 2,
+    "memory_gib": 4,
+    "disk_gib": 20,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/snakemake-real/direct.sh",
+      "destination": "/tmp/in/direct.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/snakemake-real/cohort.py",
+      "destination": "/tmp/in/cohort.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/snakemake-real/cohort-truth.tsv",
+      "destination": "/tmp/in/cohort-truth.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/snakemake-real/keys.tsv",
+      "destination": "/tmp/in/keys.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/snakemake-real/r1/stats/",
+      "destination": "/tmp/in/smk/stats/"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/snakemake-real/r1/cohort.tsv",
+      "destination": "/tmp/in/smk/cohort.tsv"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/snakemake-real/direct/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.1
+  }
+}

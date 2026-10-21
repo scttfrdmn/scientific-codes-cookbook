@@ -1,0 +1,61 @@
+
+SNAKEMAKE
+=========
+  Date: 2026-10-20 10:42:15
+  Workflow ID: a77af774-2392-4f4c-8339-7bc5d064f811
+  Platform: macOS-27.0.1-arm64-arm-64bit-Mach-O
+  Host: terror
+  User: scttfrdmn
+  Snakemake version: 9.27.0
+  Python version: 3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]
+  Command: /opt/homebrew/bin/snakemake -s Snakefile --config bucket=cookbook-942542972736-us-west-2 only=ERR2935805_2.fastq.gz --executor spawn --shared-fs-usage none --spawn-region us-west-2 --spawn-ttl 60m --spawn-cost-limit 0.05 --spawn-instance-type c8g.large --default-storage-provider s3 --default-storage-prefix s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe --jobs 1
+  Snakefile: /Volumes/External HD/tmp/snakemake-real/wd-arm64-probe/Snakefile
+  Base directory: /Volumes/External HD/tmp/snakemake-real/wd-arm64-probe
+  Run directory: /Volumes/External HD/tmp/snakemake-real/wd-arm64-probe
+  Working directory: /Volumes/External HD/tmp/snakemake-real/wd-arm64-probe
+  Config file(s): []
+  Config MD5: 1442637948486f87d3b91a7958e8927c
+
+Building DAG of jobs...
+Unable to retrieve additional files from git. This is not a git repository.
+Uploading source archive to storage provider...
+Using shell: /opt/homebrew/bin/bash
+Provided remote nodes: 1
+Job stats:
+job      count
+-----  -------
+stats        1
+all          1
+total        2
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 10:42:16 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR2935805_2.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe/stats/ERR2935805_2.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe/logs/stats/ERR2935805_2.fastq.gz.log (send to storage)
+    jobid: 1
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe/stats/ERR2935805_2.fastq.gz.tsv (in storage)
+    wildcards: f=ERR2935805_2.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 1
+[Tue Oct 20 10:54:42 2026]
+Finished jobid: 1 (Rule: stats)
+1 of 2 steps (50%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 10:54:42 2026]
+localrule all:
+    input: s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe/stats/ERR2935805_2.fastq.gz.tsv (retrieve from storage)
+    jobid: 0
+    reason: Input files updated by another job: s3://cookbook-942542972736-us-west-2/runs/snakemake-real/probe/stats/ERR2935805_2.fastq.gz.tsv (in storage)
+    resources: tmpdir=/tmp
+[Tue Oct 20 10:54:42 2026]
+Finished jobid: 0 (Rule: all)
+2 of 2 steps (100%) done
+Complete log(s): /Volumes/External HD/tmp/snakemake-real/wd-arm64-probe/.snakemake/log/2026-10-20T104215.583204.snakemake.log
+Elapsed time: 0:12:35.938385

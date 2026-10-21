@@ -1,0 +1,38 @@
+{
+  "task_id": "cookbook-nf-spawn-real-probe",
+  "container": "quay.io/aarchbio/muscle@sha256:ecfe0f7405a5e3e1237b93202c35bd984aab96e1a3466ef64a6fd0a3b7d5c2e4",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\necho 'bf393f177f57230d884547f875594cb4f758a0416257e800c0074cd46d926d9f  pf01255.25_unaligned.fa' | sha256sum -c || { echo 'FAIL: input does not match its pin'; exit 1; }\nbash probe.sh pf01255.25_unaligned.fa\n"
+  ],
+  "resources": {
+    "cpu": 32,
+    "memory_gib": 64,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/mafft-real/pf01255.25_unaligned.fa",
+      "destination": "/tmp/pf01255.25_unaligned.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nf-spawn-real/probe.sh",
+      "destination": "/tmp/probe.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/probe/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "75m",
+    "on_complete": "terminate",
+    "cost_limit": 1.6
+  }
+}

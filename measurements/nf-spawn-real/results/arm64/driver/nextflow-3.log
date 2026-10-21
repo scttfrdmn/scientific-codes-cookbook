@@ -1,0 +1,113 @@
+Oct-20 15:44:35.720 [main] DEBUG nextflow.cli.Launcher - $> nextflow -log nextflow-3.log run /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/../../recipes/nf-spawn/main.nf -c /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config -profile arm64 --seqs 's3://cookbook-942542972736-us-west-2/inputs/mafft-real/pf01255.25_unaligned.fa' --expect_seqs 919 --expect_residues 207712 -with-trace trace-3.txt -resume
+Oct-20 15:44:35.765 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/Users/scttfrdmn/.nextflow/plugins; core-plugins: nf-agent-pi@0.6.0,nf-agent@0.2.0,nf-amazon@3.12.1,nf-azure@1.24.2,nf-cloudcache@0.6.2,nf-codecommit@0.6.1,nf-console@1.3.1,nf-google@1.29.1,nf-k8s@1.6.1,nf-seqera@0.26.0,nf-tower@1.32.1,nf-wave@1.22.3
+Oct-20 15:44:35.775 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Oct-20 15:44:35.775 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Oct-20 15:44:35.776 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.14.1 in 'deployment' mode
+Oct-20 15:44:35.782 [main] DEBUG nextflow.util.RetryConfig - Missing nextflow session - using default retry config
+Oct-20 15:44:35.836 [main] DEBUG nextflow.plugin.PluginUpdater - Using plugin repository: HttpPluginRepository [registry]; url=https://registry.nextflow.io/api
+Oct-20 15:44:35.838 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Oct-20 15:44:35.847 [main] DEBUG nextflow.config.ConfigCmdAdapter - Found config base: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/nextflow.config
+Oct-20 15:44:35.848 [main] DEBUG nextflow.config.ConfigCmdAdapter - User config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config
+Oct-20 15:44:35.849 [main] DEBUG nextflow.config.ConfigCmdAdapter - Parsing config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/nextflow.config
+Oct-20 15:44:35.849 [main] DEBUG nextflow.config.ConfigCmdAdapter - Parsing config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config
+Oct-20 15:44:35.850 [main] DEBUG nextflow.config.ConfigParserFactory - Using config parser v2
+Oct-20 15:44:35.853 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `arm64`
+Oct-20 15:44:36.029 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `arm64`
+Oct-20 15:44:36.068 [main] DEBUG nextflow.config.ConfigBuilder - Available config profiles: [x86_64, arm64, x86]
+Oct-20 15:44:36.085 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins declared=[nf-spawn@0.11.0]
+Oct-20 15:44:36.085 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[nf-amazon@3.12.1]
+Oct-20 15:44:36.086 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[nf-spawn@0.11.0, nf-amazon@3.12.1]
+Oct-20 15:44:36.087 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-spawn version: 0.11.0
+Oct-20 15:44:36.092 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-spawn@0.11.0' resolved
+Oct-20 15:44:36.092 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-spawn@0.11.0'
+Oct-20 15:44:36.095 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-spawn@0.11.0
+Oct-20 15:44:36.095 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-amazon version: 3.12.1
+Oct-20 15:44:36.101 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-amazon@3.12.1' resolved
+Oct-20 15:44:36.101 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-amazon@3.12.1'
+Oct-20 15:44:36.114 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-amazon@3.12.1
+Oct-20 15:44:36.121 [main] DEBUG nextflow.file.FileHelper - > Added 'S3FileSystemProvider' to list of installed providers [s3]
+Oct-20 15:44:36.131 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /Users/scttfrdmn/.nextflow/secrets/store.json
+Oct-20 15:44:36.133 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@2440022a] - activable => nextflow.secret.LocalSecretsProvider@2440022a
+Oct-20 15:44:36.184 [main] DEBUG nextflow.Session - Session UUID: b745548f-7c31-4111-9f92-0d96daf86bbc
+Oct-20 15:44:36.184 [main] DEBUG nextflow.Session - Run name: jovial_kowalevski
+Oct-20 15:44:36.184 [main] DEBUG nextflow.Session - Executor pool size: 12
+Oct-20 15:44:36.204 [main] DEBUG nextflow.file.FileHelper - Creating a file system instance for provider: S3FileSystemProvider; config=[:]
+Oct-20 15:44:36.229 [main] DEBUG nextflow.cloud.aws.config.AwsConfig - AWS S3 config properties: {max_error_retry=5}
+Oct-20 15:44:36.262 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:36.270 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:36.274 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:36.934 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Oct-20 15:44:36.938 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 15:44:36.949 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 26.10.2 build 0
+  Created: 15-10-2026 17:45 UTC (10:45 PDT)
+  System: Mac OS X 27.0.1
+  Runtime: Groovy 4.0.33 on OpenJDK 64-Bit Server VM 17.0.20.1+0
+  Encoding: UTF-8 (UTF-8)
+  Process: 68940@terror [100.125.172.116]
+  CPUs: 12 - Mem: 48 GB (132.7 MB) - Swap: 16 GB (1.7 GB)
+Oct-20 15:44:36.956 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Oct-20 15:44:36.959 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 13; maxThreads: 1000
+Oct-20 15:44:37.165 [main] DEBUG nextflow.Session - Work-dir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-arm64-r1 [Mac OS X]
+Oct-20 15:44:37.165 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/bin
+Oct-20 15:44:37.178 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[K8sExecutor, AwsBatchExecutor, SpawnExecutor]
+Oct-20 15:44:37.183 [main] DEBUG nextflow.Session - Observer factory (v2): LinObserverFactory
+Oct-20 15:44:37.183 [main] DEBUG nextflow.Session - Observer factory (v2): DefaultObserverFactory
+Oct-20 15:44:37.187 [main] DEBUG nextflow.Session - Observer factory (v2): SpawnPoolObserverFactory
+Oct-20 15:44:37.197 [main] DEBUG nextflow.Session - Session start
+Oct-20 15:44:37.200 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow started -- trace file: trace-3.txt
+Oct-20 15:44:37.201 [main] DEBUG nextflow.script.ScriptLoaderFactory - Using script parser v2
+Oct-20 15:44:37.360 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Oct-20 15:44:37.415 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:MAFFT` matches process MAFFT
+Oct-20 15:44:37.418 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 15:44:37.418 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 15:44:37.419 [main] DEBUG nextflow.executor.Executor - [warm up] executor > spawn
+Oct-20 15:44:37.422 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'spawn' > capacity: 100; pollInterval: 5s; dumpInterval: 5m; resources: unlimited
+Oct-20 15:44:37.423 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: spawn)
+Oct-20 15:44:37.435 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'MAFFT': maxForks=0; fair=false; array=0
+Oct-20 15:44:37.451 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:MUSCLE` matches process MUSCLE
+Oct-20 15:44:37.452 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 15:44:37.452 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 15:44:37.452 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'MUSCLE': maxForks=0; fair=false; array=0
+Oct-20 15:44:37.461 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:TREE` matches process TREE
+Oct-20 15:44:37.462 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 15:44:37.462 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 15:44:37.462 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'TREE': maxForks=0; fair=false; array=0
+Oct-20 15:44:37.467 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:OBSERVE_RF` matches process OBSERVE_RF
+Oct-20 15:44:37.468 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 15:44:37.468 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 15:44:37.468 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'OBSERVE_RF': maxForks=0; fair=false; array=0
+Oct-20 15:44:37.470 [main] DEBUG nextflow.Session - Process names: MUSCLE, TREE, MAFFT, OBSERVE_RF
+Oct-20 15:44:37.472 [main] DEBUG nextflow.Session - Igniting dataflow network (5)
+Oct-20 15:44:37.475 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAFFT
+Oct-20 15:44:37.475 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MUSCLE
+Oct-20 15:44:37.475 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > TREE
+Oct-20 15:44:37.475 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > OBSERVE_RF
+Oct-20 15:44:37.475 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Main: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/main.nf
+Oct-20 15:44:37.475 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Oct-20 15:44:37.475 [main] DEBUG nextflow.Session - Session await
+Oct-20 15:44:37.851 [Actor Thread 10] INFO  nextflow.processor.TaskProcessor - [6c/90dc54] Cached process > MUSCLE (1)
+Oct-20 15:44:37.881 [Actor Thread 9] INFO  nextflow.processor.TaskProcessor - [26/67bbda] Cached process > MAFFT (1)
+Oct-20 15:44:37.942 [Actor Thread 10] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 15:44:38.075 [PublishDir-2] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'S3TransferManager' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 15:44:38.078 [PublishDir-2] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:38.173 [Actor Thread 6] INFO  nextflow.processor.TaskProcessor - [99/272c2e] Cached process > TREE (muscle)
+Oct-20 15:44:38.180 [Actor Thread 4] INFO  nextflow.processor.TaskProcessor - [10/d2a45d] Cached process > TREE (mafft)
+Oct-20 15:44:38.200 [PublishDir-2] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:38.201 [PublishDir-2] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 15:44:38.409 [Actor Thread 13] INFO  nextflow.processor.TaskProcessor - [1f/e8c933] Cached process > OBSERVE_RF (1)
+Oct-20 15:44:38.487 [main] DEBUG nextflow.Session - Session await > all processes finished
+Oct-20 15:44:42.435 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: spawn) - terminating tasks monitor poll loop
+Oct-20 15:44:42.435 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Oct-20 15:44:42.437 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'PublishDir' shutdown completed (hard=false)
+Oct-20 15:44:42.442 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=0; failedCount=0; ignoredCount=0; cachedCount=5; pendingCount=0; submittedCount=0; runningCount=0; retriesCount=0; abortedCount=0; succeedDuration=0ms; failedDuration=0ms; cachedDuration=7h 41m 40s;loadCpus=0; loadMemory=0; peakRunning=0; peakCpus=0; peakMemory=0; ]
+Oct-20 15:44:42.442 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow completed -- saving trace file
+Oct-20 15:44:42.445 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Oct-20 15:44:42.449 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-amazon@3.12.1'
+Oct-20 15:44:42.449 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-amazon
+Oct-20 15:44:42.449 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-spawn@0.11.0'
+Oct-20 15:44:42.449 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-spawn
+Oct-20 15:44:42.449 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Oct-20 15:44:42.449 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'S3TransferManager' shutdown completed (hard=false)
+Oct-20 15:44:42.449 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

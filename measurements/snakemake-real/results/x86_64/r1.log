@@ -1,0 +1,247 @@
+
+SNAKEMAKE
+=========
+  Date: 2026-10-20 13:30:08
+  Workflow ID: 3c5368f2-52ca-4546-b429-d927b6dc5922
+  Platform: macOS-27.0.1-arm64-arm-64bit-Mach-O
+  Host: terror
+  User: scttfrdmn
+  Snakemake version: 9.27.0
+  Python version: 3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]
+  Command: /opt/homebrew/bin/snakemake -s Snakefile --config bucket=cookbook-942542972736-us-west-2 --executor spawn --shared-fs-usage none --spawn-region us-west-2 --spawn-ttl 60m --spawn-cost-limit 0.05 --spawn-instance-type c8i.large --default-storage-provider s3 --default-storage-prefix s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1 --jobs 1
+  Snakefile: /Volumes/External HD/tmp/snakemake-real/wd-x86_64/Snakefile
+  Base directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Run directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Working directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Config file(s): []
+  Config MD5: 624a8aa3f2937616b23fb5d05e948c40
+
+Building DAG of jobs...
+Unable to retrieve additional files from git. This is not a git repository.
+Uploading source archive to storage provider...
+Using shell: /opt/homebrew/bin/bash
+Provided remote nodes: 1
+Job stats:
+job       count
+------  -------
+stats        11
+cohort        1
+all           1
+total        13
+
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 13:30:14 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/mageck-real/data/plasmid.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/SRR8297998.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8297998.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/SRR8297998.fastq.gz.log (send to storage)
+    jobid: 12
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8297998.fastq.gz.tsv (in storage)
+    wildcards: f=SRR8297998.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 12
+Select jobs to execute...
+[Tue Oct 20 13:34:57 2026]
+Finished jobid: 12 (Rule: stats)
+1 of 13 steps (8%) done
+Execute 1 jobs...
+
+[Tue Oct 20 13:34:59 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_1.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR2935805_1.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_1.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR2935805_1.fastq.gz.log (send to storage)
+    jobid: 4
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_1.fastq.gz.tsv (in storage)
+    wildcards: f=ERR2935805_1.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 4
+Select jobs to execute...
+[Tue Oct 20 13:40:20 2026]
+Finished jobid: 4 (Rule: stats)
+2 of 13 steps (15%) done
+Execute 1 jobs...
+
+[Tue Oct 20 13:40:21 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR2984773_2.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_2.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR2984773_2.fastq.gz.log (send to storage)
+    jobid: 7
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_2.fastq.gz.tsv (in storage)
+    wildcards: f=ERR2984773_2.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 7
+Select jobs to execute...
+[Tue Oct 20 13:44:53 2026]
+Finished jobid: 7 (Rule: stats)
+3 of 13 steps (23%) done
+Execute 1 jobs...
+
+[Tue Oct 20 13:44:54 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/mageck-real/data/repA.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/SRR8279891.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8279891.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/SRR8279891.fastq.gz.log (send to storage)
+    jobid: 10
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8279891.fastq.gz.tsv (in storage)
+    wildcards: f=SRR8279891.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 10
+Select jobs to execute...
+[Tue Oct 20 13:50:27 2026]
+Finished jobid: 10 (Rule: stats)
+4 of 13 steps (31%) done
+Execute 1 jobs...
+
+[Tue Oct 20 13:50:28 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/salmon-real/ERR188026_2.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR188026_2.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_2.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR188026_2.fastq.gz.log (send to storage)
+    jobid: 3
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_2.fastq.gz.tsv (in storage)
+    wildcards: f=ERR188026_2.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 3
+Select jobs to execute...
+[Tue Oct 20 13:54:51 2026]
+Finished jobid: 3 (Rule: stats)
+5 of 13 steps (38%) done
+Execute 1 jobs...
+
+[Tue Oct 20 13:54:52 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/bwa-real/SRR062634_2.filt.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/SRR062634_2.filt.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_2.filt.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/SRR062634_2.filt.fastq.gz.log (send to storage)
+    jobid: 9
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_2.filt.fastq.gz.tsv (in storage)
+    wildcards: f=SRR062634_2.filt.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 9
+Select jobs to execute...
+[Tue Oct 20 14:01:05 2026]
+Finished jobid: 9 (Rule: stats)
+6 of 13 steps (46%) done
+Execute 1 jobs...
+
+[Tue Oct 20 14:01:05 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR2984773_1.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_1.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR2984773_1.fastq.gz.log (send to storage)
+    jobid: 6
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_1.fastq.gz.tsv (in storage)
+    wildcards: f=ERR2984773_1.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 6
+Select jobs to execute...
+[Tue Oct 20 14:06:17 2026]
+Finished jobid: 6 (Rule: stats)
+7 of 13 steps (54%) done
+Execute 1 jobs...
+
+[Tue Oct 20 14:06:18 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/mageck-real/data/repB.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/SRR8281054.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8281054.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/SRR8281054.fastq.gz.log (send to storage)
+    jobid: 11
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8281054.fastq.gz.tsv (in storage)
+    wildcards: f=SRR8281054.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 11
+Select jobs to execute...
+[Tue Oct 20 14:12:01 2026]
+Finished jobid: 11 (Rule: stats)
+8 of 13 steps (62%) done
+Execute 1 jobs...
+
+[Tue Oct 20 14:12:02 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/bwa-real/SRR062634_1.filt.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/SRR062634_1.filt.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_1.filt.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/SRR062634_1.filt.fastq.gz.log (send to storage)
+    jobid: 8
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_1.filt.fastq.gz.tsv (in storage)
+    wildcards: f=SRR062634_1.filt.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 8
+Select jobs to execute...
+[Tue Oct 20 14:16:35 2026]
+Finished jobid: 8 (Rule: stats)
+9 of 13 steps (69%) done
+Execute 1 jobs...
+
+[Tue Oct 20 14:16:35 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/salmon-real/ERR188026_1.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR188026_1.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_1.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR188026_1.fastq.gz.log (send to storage)
+    jobid: 2
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_1.fastq.gz.tsv (in storage)
+    wildcards: f=ERR188026_1.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 2
+Select jobs to execute...
+[Tue Oct 20 14:21:18 2026]
+Finished jobid: 2 (Rule: stats)
+10 of 13 steps (77%) done
+Execute 1 jobs...
+
+[Tue Oct 20 14:21:18 2026]
+rule stats:
+    input: s3://cookbook-942542972736-us-west-2/inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/truth/ERR2935805_2.fastq.gz.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_2.fastq.gz.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/stats/ERR2935805_2.fastq.gz.log (send to storage)
+    jobid: 5
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_2.fastq.gz.tsv (in storage)
+    wildcards: f=ERR2935805_2.fastq.gz
+    threads: 2
+    resources: tmpdir=<TBD>, mem_mb=3000, mem=3 GB, mem_mib=2862
+spawn: dispatching smk-stats-1 via `spawn task run` for job 5
+[Tue Oct 20 14:28:02 2026]
+Finished jobid: 5 (Rule: stats)
+11 of 13 steps (85%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 14:28:04 2026]
+rule cohort:
+    input: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_1.filt.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_2.filt.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8279891.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8281054.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8297998.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/cohort-truth.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/cohort.log (send to storage)
+    jobid: 1
+    reason: Missing output files: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (in storage); Input files updated by another job: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_2.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_2.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_1.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8279891.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_1.filt.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_1.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_2.filt.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8297998.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_1.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8281054.fastq.gz.tsv (in storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_2.fastq.gz.tsv (in storage)
+    resources: tmpdir=<TBD>, mem_mb=2000, mem=2 GB, mem_mib=1908
+spawn: dispatching smk-cohort-1 via `spawn task run` for job 1
+[Tue Oct 20 14:33:44 2026]
+Finished jobid: 1 (Rule: cohort)
+12 of 13 steps (92%) done
+Select jobs to execute...
+Execute 1 jobs...
+
+[Tue Oct 20 14:33:45 2026]
+localrule all:
+    input: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (retrieve from storage)
+    jobid: 0
+    reason: Input files updated by another job: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (in storage)
+    resources: tmpdir=/tmp
+[Tue Oct 20 14:33:45 2026]
+Finished jobid: 0 (Rule: all)
+13 of 13 steps (100%) done
+Complete log(s): /Volumes/External HD/tmp/snakemake-real/wd-x86_64/.snakemake/log/2026-10-20T133008.284180.snakemake.log
+Elapsed time: 1:03:46.866821

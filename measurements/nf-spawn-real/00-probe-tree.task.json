@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-nf-spawn-real-probe-tree",
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH\nmkdir -p /tmp/out && cd /tmp/out\ns=$(date +%s)\niqtree3 -s /tmp/auto.fa -m LG+G4 -T 4 -seed 12345 --prefix probe -quiet\nrc=$?; e=$(date +%s)\necho \"rc=$rc wall_s=$((e-s)) memory_peak_kib=$(( $(cat /sys/fs/cgroup/memory.peak) / 1024 )) vcpus=$(grep -c ^processor /proc/cpuinfo)\" | tee probe.txt\ngrep -E 'Log-likelihood of the tree|Total CPU time|Total wall-clock' probe.iqtree | tee -a probe.txt\ngrep -E 'Iteration|BEST SCORE' probe.log | tail -n 3 | tee -a probe.txt\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/mafft-real/pf01255/auto.fa",
+      "destination": "/tmp/auto.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/probe-tree/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 0.85
+  }
+}

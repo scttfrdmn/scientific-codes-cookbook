@@ -1,0 +1,55 @@
+
+SNAKEMAKE
+=========
+  Date: 2026-10-20 14:50:25
+  Workflow ID: 56f247b0-3fa8-4488-98ee-caebef545d0a
+  Platform: macOS-27.0.1-arm64-arm-64bit-Mach-O
+  Host: terror
+  User: scttfrdmn
+  Snakemake version: 9.27.0
+  Python version: 3.14.8 (main, Sep 30 2026, 17:55:09) [Clang 21.0.0 (clang-2100.3.34.2)]
+  Command: /opt/homebrew/bin/snakemake -s Snakefile --config bucket=cookbook-942542972736-us-west-2 --executor spawn --shared-fs-usage none --spawn-region us-west-2 --spawn-ttl 60m --spawn-cost-limit 0.05 --spawn-instance-type c8i.large --default-storage-provider s3 --default-storage-prefix s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1 --jobs 1 -n
+  Snakefile: /Volumes/External HD/tmp/snakemake-real/wd-x86_64/Snakefile
+  Base directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Run directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Working directory: /Volumes/External HD/tmp/snakemake-real/wd-x86_64
+  Config file(s): []
+  Config MD5: 624a8aa3f2937616b23fb5d05e948c40
+
+Building DAG of jobs...
+Job stats:
+job       count
+------  -------
+cohort        1
+all           1
+total         2
+
+
+[Tue Oct 20 14:50:29 2026]
+rule cohort:
+    input: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR188026_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2935805_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_1.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/ERR2984773_2.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_1.filt.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR062634_2.filt.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8279891.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8281054.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/stats/SRR8297998.fastq.gz.tsv (retrieve from storage), s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/cohort-truth.tsv (retrieve from storage)
+    output: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (send to storage)
+    log: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/logs/cohort.log (send to storage)
+    jobid: 1
+    reason: Updated input files: s3://cookbook-942542972736-us-west-2/inputs/snakemake-real/cohort-truth.tsv (in storage)
+    resources: tmpdir=/tmp, mem_mb=2000, mem=2 GB, mem_mib=1908
+[Tue Oct 20 14:50:29 2026]
+rule all:
+    input: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (retrieve from storage)
+    jobid: 0
+    reason: Input files updated by another job: s3://cookbook-942542972736-us-west-2/runs-x86_64/snakemake-real/r1/cohort.tsv (in storage)
+    resources: tmpdir=/tmp
+Job stats:
+job       count
+------  -------
+cohort        1
+all           1
+total         2
+
+Reasons:
+    (check individual jobs above for details)
+    input files updated by another job:
+        all
+    updated input files:
+        cohort
+This was a dry-run (flag -n). The order of jobs does not reflect the order of execution.

@@ -1,0 +1,77 @@
+# measurements/snakemake-real: recipes/snakemake's workflow at cohort scale.
+#
+# The recipe's shape, unchanged -- one wildcard job per input file, each checked inside the job
+# against a published number, then one join that checks the fan-out against its own sum -- over
+# eleven whole FASTQ files (446.0M reads, 22.9 GB) instead of four genomes. The files are the
+# cohort measurements/qc-aggregate-real assembled from four other real workloads; they are read
+# where those measurements staged them, not copied.
+#
+# The rule scripts run the recipe's pinned seqkit by digest through docker, one digest per
+# architecture, picked by `uname -m` (see recipes/snakemake for why a rule cannot use container:).
+#
+#   snakemake -s Snakefile --config bucket=<bucket> --executor spawn ... (see README.md)
+
+B = config["bucket"]
+IN = f"s3://{B}/inputs/snakemake-real"
+
+# file -> where its owning measurement staged it (measurements/qc-aggregate-real/cohort.tsv)
+FILES = {
+    "SRR062634_1.filt.fastq.gz": "inputs/bwa-real/SRR062634_1.filt.fastq.gz",
+    "SRR062634_2.filt.fastq.gz": "inputs/bwa-real/SRR062634_2.filt.fastq.gz",
+    "ERR188026_1.fastq.gz": "inputs/salmon-real/ERR188026_1.fastq.gz",
+    "ERR188026_2.fastq.gz": "inputs/salmon-real/ERR188026_2.fastq.gz",
+    "ERR2984773_1.fastq.gz": "inputs/metaphlan-real/prep/ERR2984773/ERR2984773_1.fastq.gz",
+    "ERR2984773_2.fastq.gz": "inputs/metaphlan-real/prep/ERR2984773/ERR2984773_2.fastq.gz",
+    "ERR2935805_1.fastq.gz": "inputs/metaphlan-real/prep/ERR2935805/ERR2935805_1.fastq.gz",
+    "ERR2935805_2.fastq.gz": "inputs/metaphlan-real/prep/ERR2935805/ERR2935805_2.fastq.gz",
+    "SRR8297998.fastq.gz": "inputs/mageck-real/data/plasmid.fastq.gz",
+    "SRR8279891.fastq.gz": "inputs/mageck-real/data/repA.fastq.gz",
+    "SRR8281054.fastq.gz": "inputs/mageck-real/data/repB.fastq.gz",
+}
+ONLY = config.get("only")   # a sizing probe: one file, same rules
+TARGETS = [ONLY] if ONLY else sorted(FILES)
+
+SEQKIT_ARM64 = "quay.io/aarchbio/seqkit@sha256:5478aaad4dd7bf7d7f02eee168ee3ad90d17b6729ab5e889a9385b4458cde7c5"
+SEQKIT_X86_64 = "quay.io/biocontainers/seqkit@sha256:0e14f53b486c6b6e199e525f3f1e7494b59b580f835f7835e497b46f99267b6a"
+
+
+rule all:
+    input:
+        "cohort.tsv" if not ONLY else f"stats/{ONLY}.tsv",
+
+
+rule stats:
+    """One job per file: seqkit stats, then the job checks its file's sha256, reads and bases
+    against the published values in truth/<file>.tsv and fails if any differs."""
+    input:
+        fq=lambda w: storage.s3(f"s3://{B}/{FILES[w.f]}"),
+        truth=storage.s3(IN + "/truth/{f}.tsv"),
+    output:
+        "stats/{f}.tsv",
+    log:
+        "logs/stats/{f}.log",
+    params:
+        arm64=SEQKIT_ARM64,
+        x86_64=SEQKIT_X86_64,
+    threads: 2
+    resources:
+        mem_mb=3000,
+    script:
+        "stats.sh"
+
+
+rule cohort:
+    """The join: every file against its published count, every pair's mates equal, and the
+    fan-out's total against the published total."""
+    input:
+        stats=expand("stats/{f}.tsv", f=TARGETS),
+        truth=storage.s3(IN + "/cohort-truth.tsv"),
+    output:
+        "cohort.tsv",
+    log:
+        "logs/cohort.log",
+    threads: 1
+    resources:
+        mem_mb=2000,
+    script:
+        "cohort.py"

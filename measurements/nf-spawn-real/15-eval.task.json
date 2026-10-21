@@ -1,0 +1,42 @@
+{
+  "task_id": "cookbook-nf-spawn-real-eval",
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# Both TREE (muscle) results -- the engine's and the direct run's -- re-optimised under LG+G4 on their own\n# topology, twice: each is a fixed point if the printed logL does not move.\nexport PATH=/opt/conda/bin:/usr/local/bin:$PATH\nmkdir -p /tmp/out/eval && cd /tmp/out/eval\nfor t in engine direct; do\n  cp /tmp/$t.treefile $t.p0.treefile\n  for p in 1 2; do\n    iqtree3 -s /tmp/muscle_aln.fa -m LG+G4 -te $t.p$((p-1)).treefile -T 4 -seed 12345 --prefix $t.p$p -quiet\n    echo \"$t pass$p $(awk -F': ' '/Log-likelihood of the tree/{print $2}' $t.p$p.iqtree | awk '{print $1}')\" | tee -a eval.txt\n  done\ndone\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/direct/muscle/muscle_aln.fa",
+      "destination": "/tmp/muscle_aln.fa"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/engine-run1/tree/muscle.treefile",
+      "destination": "/tmp/engine.treefile"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/direct/tree-muscle/muscle.treefile",
+      "destination": "/tmp/direct.treefile"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/direct/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 0.3
+  }
+}

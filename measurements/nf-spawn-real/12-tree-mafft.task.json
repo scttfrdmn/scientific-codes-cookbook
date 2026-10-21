@@ -1,0 +1,46 @@
+{
+  "task_id": "cookbook-nf-spawn-real-tree-mafft",
+  "container": "quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e (spawn#707)\ncd /tmp\ngrep -E ' (direct\\.sh|tree-mafft\\.sh)$' pins.sha256 > p.sha256\n[ \"$(wc -l < p.sha256)\" -eq 2 ] && sha256sum -c p.sha256 || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash direct.sh tree-mafft tree-mafft.sh mafft_aln.fa\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 8,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nf-spawn-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nf-spawn-real/direct.sh",
+      "destination": "/tmp/direct.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/nf-spawn-real/tree-mafft.sh",
+      "destination": "/tmp/tree-mafft.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/direct/mafft/mafft_aln.fa",
+      "destination": "/tmp/mafft_aln.fa"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/nf-spawn-real/r1/direct/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "8h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

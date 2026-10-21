@@ -1,0 +1,1083 @@
+IQ-TREE version 3.1.3 for Linux ARM 64-bit built Jul 26 2026
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    41383bbd780a (SSE4.2, 7 GB RAM)
+Command: iqtree3 -s muscle_aln.fa -m LG+G4 -T 4 -seed 12345 --prefix muscle -quiet
+Seed:    12345 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Tue Oct 20 18:07:22 2026
+Kernel:  SSE2 - 4 threads (4 CPU cores detected)
+
+Reading alignment file muscle_aln.fa ... Fasta format detected
+Reading fasta file: done in 0.009372 secs using 99.99% CPU
+Alignment most likely contains protein sequences
+Constructing alignment: done in 0.00824189 secs using 252.2% CPU
+Alignment has 919 sequences with 1079 columns, 883 distinct patterns
+479 parsimony-informative, 219 singleton sites, 381 constant sites
+                          Gap/Ambiguity  Composition  p-value
+Analyzing sequences: done in 0.000475883 secs using 302% CPU
+   1  L0K9N5_HALHC_10_212        81.19%    passed     36.92%
+   2  D9QS55_ACEAZ_10_213        81.09%    passed     16.36%
+   3  D7EAS8_METEZ_10_215        80.91%    failed      1.45%
+   4  R4KLK9_9FIRM_16_223        80.72%    passed     48.89%
+   5  A6TMM6_ALKMQ_11_216        80.91%    passed     49.94%
+   6  D5XDE7_THEPJ_16_220        81.00%    passed     53.25%
+   7  D2UY59_NAEGR_10_241        78.50%    failed      0.00%
+   8  A0A125YSS6_TOXGV_32_339    71.46%    failed      0.03%
+   9  B6AHU7_CRYMR_24_279        76.27%    failed      0.02%
+  10  G3J5B5_CORMM_44_267        79.24%    passed     28.43%
+  11  A5K5I7_PLAVS_1_273         74.70%    failed      0.00%
+  12  A0A384KJV6_PLAKH_26_299    74.61%    failed      0.00%
+  13  W1Q0C4_AMBTC_60_293        78.31%    passed     60.04%
+  14  B9S6U3_RICCO_40_345        71.64%    passed     35.05%
+  15  K7MGS6_SOYBN_40_350        71.18%    passed     55.02%
+  16  B9T1V4_RICCO_40_359        70.34%    passed     52.42%
+  17  U5D721_AMBTC_70_303        78.31%    passed     58.42%
+  18  B9T1V5_RICCO_32_353        70.16%    passed     84.71%
+  19  J3MBM2_ORYBR_55_284        78.68%    passed     32.36%
+  20  M0WZ66_HORVV_54_288        78.22%    passed     90.40%
+  21  K3Z8L1_SETIT_36_268        78.41%    passed     35.11%
+  22  F2SXE7_TRIRC_47_390        68.12%    failed      0.07%
+  23  D4B1K1_ARTBC_47_395        67.66%    failed      0.05%
+  24  F6HDE3_VITVI_35_298        75.53%    passed     35.88%
+  25  M3BZT1_SPHMS_47_352        71.64%    passed     13.94%
+  26  M3B6F7_PSEFD_46_351        71.64%    passed     13.41%
+  27  B9T1V2_RICCO_33_322        73.12%    passed     55.29%
+  28  E4V197_ARTGP_47_377        69.32%    failed      1.70%
+  29  G2XA84_VERDV_46_349        71.83%    passed     11.15%
+  30  H6CAN8_EXODN_46_376        69.32%    failed      0.62%
+  31  K2RKC8_MACPH_47_349        71.92%    passed     47.42%
+  32  R1GP90_BOTPV_47_349        71.92%    passed     72.45%
+  33  N1J7M3_BLUG1_46_332        73.40%    passed     59.65%
+  34  A7ELA5_SCLS1_46_336        73.03%    passed      8.16%
+  35  M1VWG4_CLAP2_46_362        70.62%    passed      8.55%
+  36  U5GH64_POPTR_40_365        69.79%    failed      2.37%
+  37  A0A0C4E7M8_MAGP6_47_352    71.64%    passed     21.09%
+  38  N1PP49_DOTSN_46_361        70.71%    failed      1.24%
+  39  M1BAJ2_SOLTU_40_276        78.04%    passed     64.13%
+  40  F6HZI4_VITVI_40_280        77.66%    passed     76.98%
+  41  Q7RWJ5_NEUCR_46_345        72.20%    passed     15.51%
+  42  M4E6V3_BRACM_36_254        79.70%    passed     77.10%
+  43  R0J4V6_EXST2_46_344        72.29%    passed     10.19%
+  44  E4ZSJ3_LEPMJ_46_344        72.29%    passed     19.35%
+  45  M2T0C0_COCSN_46_346        72.10%    passed      7.45%
+  46  C5FUG1_ARTOC_47_381        68.95%    failed      0.82%
+  47  A0A179UUH6_BLAGS_48_369    70.16%    passed     64.96%
+  48  A6QW17_AJECN_43_364        70.16%    passed     19.87%
+  49  C0NJU4_AJECG_48_369        70.16%    passed      6.01%
+  50  R7YYI1_CONA1_47_352        71.64%    passed     15.72%
+  51  S3D153_GLAL2_45_330        73.49%    passed     21.56%
+  52  K1XY70_MARBU_46_332        73.40%    failed      2.38%
+  53  L8G9W7_PSED2_46_342        72.47%    passed      5.33%
+  54  V5G0Q7_BYSSN_47_364        70.53%    failed      3.27%
+  55  A2QIZ3_ASPNC_47_267        79.52%    passed     61.07%
+  56  J3KJG1_COCIM_47_357        71.18%    passed      8.18%
+  57  Q8IB97_PLAF7_26_302        74.33%    failed      0.00%
+  58  G9NS82_HYPAI_46_348        71.92%    passed     30.09%
+  59  G3JEK6_CORMM_46_346        72.10%    failed      1.39%
+  60  J5K2B9_BEAB2_46_345        72.20%    failed      0.28%
+  61  G4NH37_PYRO7_47_338        72.94%    passed     44.36%
+  62  G0RYH9_CHATD_47_351        71.73%    failed      0.88%
+  63  U7PX34_SPOS1_46_346        72.10%    failed      1.70%
+  64  S3BTK3_OPHP1_46_344        72.29%    passed     20.87%
+  65  F0XD43_GROCL_47_341        72.66%    passed      5.32%
+  66  G2RH00_THETT_47_343        72.47%    passed      7.37%
+  67  G2QP92_THET4_47_344        72.38%    passed     17.86%
+  68  C7YHV1_FUSV7_47_349        71.92%    passed     29.01%
+  69  N4VZA8_COLOR_51_346        72.57%    passed      8.01%
+  70  A0A4T0VWM6_9PEZI_47_341    72.66%    passed     16.78%
+  71  M7SIJ0_EUTLA_47_341        72.66%    passed      5.65%
+  72  A0D6J4_PARTE_24_236        80.26%    failed      0.02%
+  73  A2EKJ5_TRIV3_24_236        80.26%    passed      7.77%
+  74  M9LWB3_PSEA3_67_311        77.29%    passed     50.87%
+  75  C1EHP3_MICCC_10_231        79.43%    failed      1.85%
+  76  B8LVZ9_TALSN_47_350        71.83%    passed     19.99%
+  77  B6QQG7_TALMQ_47_351        71.73%    passed     16.72%
+  78  Q4MZT9_THEPA_26_248        79.33%    failed      0.00%
+  79  A8Q1P2_MALGO_73_288        79.98%    passed      9.50%
+  80  E5QZU9_ARTGP_36_254        79.70%    passed     90.92%
+  81  Q2U367_ASPOR_39_262        79.24%    passed     90.34%
+  82  S8ALF4_DACHA_49_340        72.94%    passed     22.11%
+  83  V2XQU5_MONRO_56_276        79.52%    passed     83.85%
+  84  D8PV91_SCHCM_37_258        79.43%    passed     63.85%
+  85  K5W3H2_PHACS_41_260        79.61%    passed     81.13%
+  86  M2PNM6_CERS8_41_259        79.70%    passed     92.79%
+  87  B0DI13_LACBS_39_257        79.70%    passed     41.92%
+  88  A8NVJ8_COPC7_33_251        79.70%    passed     85.75%
+  89  S8DMH3_FOMSC_41_265        79.15%    passed     58.84%
+  90  F8Q022_SERL3_36_258        79.33%    passed     77.45%
+  91  K5XGB9_AGABU_38_260        79.33%    passed     95.97%
+  92  Q6C8R7_YARLI_39_275        78.04%    passed     55.25%
+  93  U5HF55_USTV1_102_315       80.17%    passed     15.34%
+  94  R4X7J4_TAPDE_41_264        79.24%    passed     82.89%
+  95  G4TVH3_SERID_1_222         79.43%    passed     55.26%
+  96  G8BNP2_TETPH_47_265        79.70%    passed     62.83%
+  97  H2AWV1_KAZAF_38_257        79.61%    passed     25.54%
+  98  G8YAW2_PICSO_38_259        79.43%    passed     49.79%
+  99  A3LQN4_PICST_38_257        79.61%    passed     27.47%
+ 100  G3ASU3_SPAPN_38_257        79.61%    passed     61.67%
+ 101  A5DB58_PICGU_38_255        79.80%    passed     82.86%
+ 102  C4Y1R4_CLAL4_37_257        79.52%    passed     19.15%
+ 103  Q6BRU3_DEBHA_38_258        79.52%    failed      3.82%
+ 104  G3B4M7_CANTC_38_258        79.52%    passed     79.90%
+ 105  G0VFE2_NAUCA_41_262        79.43%    passed     88.01%
+ 106  L0PFS1_PNEJI_41_261        79.52%    passed     16.61%
+ 107  S9XHL5_SCHCR_41_263        79.33%    passed     35.47%
+ 108  F4NZT9_BATDJ_43_264        79.43%    passed     17.26%
+ 109  B6K1Q2_SCHJY_41_262        79.43%    passed     74.19%
+ 110  YE54_SCHPO_41_262          79.43%    passed     63.70%
+ 111  Q6CBH1_YARLI_35_256        79.43%    passed     99.17%
+ 112  K0KUQ2_WICCF_38_256        79.70%    failed      0.54%
+ 113  A7TEJ0_VANPO_38_254        79.89%    passed     39.86%
+ 114  J7RQU8_HUIN7_41_257        79.89%    passed     53.91%
+ 115  I2H5E7_HENB6_38_254        79.89%    failed      3.22%
+ 116  RER2_YEAST_38_255          79.80%    passed     65.60%
+ 117  G8ZTQ9_TORDE_39_256        79.80%    passed     94.30%
+ 118  W1QCF7_OGAPD_37_254        79.80%    passed     96.98%
+ 119  I6NDB9_ERECY_38_260        79.33%    passed     99.31%
+ 120  Q757K9_EREGS_38_256        79.70%    passed     96.42%
+ 121  G0WDS0_NAUDC_41_262        79.43%    passed     26.29%
+ 122  Q6CMW4_KLULA_38_259        79.43%    passed     58.29%
+ 123  C5DNE9_LACTC_38_259        79.43%    passed     89.67%
+ 124  C4R914_KOMPG_38_261        79.24%    passed     64.99%
+ 125  Q6FWN2_CANGA_34_251        79.80%    passed     77.93%
+ 126  A5E3B3_LODEL_38_257        79.61%    passed     88.11%
+ 127  Q5AJZ3_CANAL_38_258        79.52%    passed     46.75%
+ 128  E1ZE31_CHLVA_28_250        79.33%    failed      0.20%
+ 129  D8RVJ8_SELML_33_270        77.94%    passed     36.27%
+ 130  M4CE46_BRACM_24_248        79.15%    passed     84.20%
+ 131  DDPS8_ARATH_42_265         79.24%    passed     75.84%
+ 132  G7DVE3_MIXOS_41_269        78.78%    passed     45.07%
+ 133  I1CR62_RHIO9_32_253        79.43%    passed     19.78%
+ 134  F4RP71_MELLP_30_261        78.50%    passed     82.31%
+ 135  D8THW1_VOLCA_32_253        79.43%    passed     33.83%
+ 136  T1GP08_MEGSC_9_218         80.54%    failed      0.19%
+ 137  G0QK91_ICHMU_1_212         80.35%    failed      0.00%
+ 138  Q5FC21_CAEEL_43_266        79.24%    passed     52.68%
+ 139  I4YAG8_WALMC_1_207         80.82%    passed     27.84%
+ 140  R9AKK1_WALI9_51_259        80.63%    passed      8.61%
+ 141  A0A8R2A2A7_ACYPI_57_273    79.89%    passed     31.97%
+ 142  B1L3H6_KORCO_39_261        79.33%    passed     34.58%
+ 143  S2JM00_MUCC1_32_252        79.52%    passed     28.57%
+ 144  Q54EN3_DICDI_130_351       79.43%    failed      0.47%
+ 145  C4QX29_KOMPG_43_264        79.43%    passed     23.72%
+ 146  G4VSC2_SCHMA_33_253        79.52%    passed     10.42%
+ 147  A0A212EKK9_DANPL_1_215     80.07%    passed     94.74%
+ 148  B3MRI1_DROAN_33_251        79.70%    passed     83.29%
+ 149  F4Q307_CACFS_118_339       79.43%    passed     39.64%
+ 150  A0A0D2WR81_CAPO3_170_390   79.52%    passed     75.07%
+ 151  E2B135_CAMFO_20_228        80.63%    passed     59.53%
+ 152  Q246A4_TETTS_61_277        79.89%    failed      0.00%
+ 153  T1KC21_TETUR_1_222         79.43%    passed     64.80%
+ 154  B3RYD6_TRIAD_48_270        79.33%    passed     76.75%
+ 155  R4FLJ6_RHOPR_32_249        79.80%    passed     20.41%
+ 156  W5K2M4_ASTMX_32_255        79.24%    passed     33.01%
+ 157  H3D3H9_TETNG_32_255        79.24%    passed      5.75%
+ 158  F2UJB5_SALR5_25_245        79.52%    passed     91.84%
+ 159  T1FX17_HELRO_36_256        79.52%    passed     45.08%
+ 160  M3WHN3_FELCA_32_252        79.52%    passed     31.41%
+ 161  F5HM82_ANOGA_59_278        79.61%    passed     90.27%
+ 162  E0VJZ5_PEDHC_32_250        79.70%    failed      4.95%
+ 163  E9H940_DAPPU_32_250        79.70%    passed     41.52%
+ 164  Q177S1_AEDAE_40_258        79.70%    passed     98.94%
+ 165  E2B3T5_HARSA_32_250        79.70%    passed     11.52%
+ 166  A0A7M7H9U4_NASVI_32_250    79.70%    passed     83.24%
+ 167  A0A158NGB6_ATTCE_32_250    79.70%    passed     43.39%
+ 168  H9GFV7_ANOCA_32_253        79.43%    passed     63.82%
+ 169  C4WUL0_ACYPI_32_253        79.43%    passed     45.77%
+ 170  D6WVK3_TRICA_32_253        79.43%    passed     50.21%
+ 171  A4H710_LEIBR_152_391       77.76%    passed     18.01%
+ 172  A4HVD8_LEIIN_148_390       77.48%    passed      6.84%
+ 173  C5C3T5_BEUC1_40_260        79.52%    failed      0.00%
+ 174  ISPT2_TROWT_37_257         79.52%    passed     68.13%
+ 175  C1N5E3_MICPC_15_222        80.72%    failed      0.00%
+ 176  Q8EUH1_MALP2_10_223        80.17%    failed      0.74%
+ 177  J9Z2W0_9PROT_11_221        80.44%    failed      0.00%
+ 178  Q5CQA1_CRYPI_28_247        79.61%    failed      0.00%
+ 179  D8QY11_SELML_38_267        78.68%    passed     81.26%
+ 180  D8T789_SELML_29_250        79.43%    passed     98.26%
+ 181  G1XM35_ARTOA_107_336       78.68%    passed     65.96%
+ 182  S8CBL4_DACHA_336_567       78.50%    passed     60.96%
+ 183  D5SL65_STRCL_83_299        79.89%    failed      0.00%
+ 184  R4TJE2_9PSEU_39_258        79.61%    passed     13.41%
+ 185  W5WG83_9PSEU_31_252        79.43%    failed      0.69%
+ 186  D2PZK1_KRIFD_37_259        79.33%    passed     11.25%
+ 187  Q2JAV9_FRACC_32_258        78.96%    passed      9.01%
+ 188  E4NJG6_KITSK_42_268        78.96%    failed      0.00%
+ 189  A5G249_ACICJ_55_282        78.87%    failed      0.00%
+ 190  C5C9A1_MICLC_32_256        79.15%    failed      1.19%
+ 191  D7CVQ8_TRURR_83_309        78.96%    passed      9.99%
+ 192  ISPT_THET8_36_262          78.96%    passed      7.79%
+ 193  F0RM11_DEIPM_59_285        78.96%    passed     20.71%
+ 194  L0A112_DEIPD_74_300        78.96%    passed     11.91%
+ 195  F5XSY4_MICPN_36_259        79.24%    passed     86.19%
+ 196  D7GFA1_PROFC_45_268        79.24%    passed     27.86%
+ 197  D6ZK67_MOBCV_37_257        79.52%    passed     21.71%
+ 198  H6MSL2_GORPV_36_268        78.41%    passed      6.29%
+ 199  C4LHN3_CORK4_69_325        76.18%    failed      2.60%
+ 200  S5T1F1_9CORY_32_254        79.33%    failed      0.35%
+ 201  D3Q7T9_STANL_32_255        79.24%    passed     29.86%
+ 202  I0HI18_ACTM4_33_256        79.24%    passed     33.27%
+ 203  ISPT2_STRCO_34_257         79.24%    passed     74.67%
+ 204  C7MEU7_BRAFD_31_251        79.52%    passed     15.45%
+ 205  D1A8G6_THECD_49_270        79.43%    passed     53.83%
+ 206  D2B2E1_STRRD_33_254        79.43%    passed      8.88%
+ 207  X5DKN4_9CORY_28_250        79.33%    passed     16.07%
+ 208  B1VFM3_CORU7_48_270        79.33%    passed     90.82%
+ 209  F8E086_CORRG_55_277        79.33%    passed     71.03%
+ 210  I4EST9_9ACTN_35_258        79.24%    failed      0.74%
+ 211  K4RGM2_STRDJ_35_257        79.33%    failed      2.16%
+ 212  D6Z900_SEGRD_41_263        79.33%    passed      6.25%
+ 213  U3GU32_9CORY_30_252        79.33%    passed     27.31%
+ 214  ISPT1_CORGL_2_224          79.33%    passed     67.17%
+ 215  C8XKP3_NAKMY_32_254        79.33%    passed     40.56%
+ 216  B1MKK5_MYCA9_37_259        79.33%    passed     32.25%
+ 217  Q5YQ71_NOCFA_39_261        79.33%    passed      8.10%
+ 218  C3PFC0_CORA7_33_255        79.33%    passed     37.24%
+ 219  D9Q9I0_CORP2_42_264        79.33%    passed     42.82%
+ 220  M1NKU0_9CORY_33_255        79.33%    passed      5.94%
+ 221  W5XZJ7_9CORY_41_263        79.33%    passed     45.02%
+ 222  D5UV04_TSUPD_58_280        79.33%    passed     12.13%
+ 223  F4CIY1_PSEUX_32_254        79.33%    failed      0.56%
+ 224  R4T1L5_9PSEU_25_247        79.33%    passed     19.56%
+ 225  A4F878_SACEN_35_257        79.33%    passed     22.45%
+ 226  B2GLN8_KOCRD_32_252        79.52%    passed     15.33%
+ 227  D2NP85_ROTMD_69_289        79.52%    passed     48.42%
+ 228  A9WU96_RENSM_33_254        79.43%    passed     93.09%
+ 229  A0JU47_ARTS2_32_252        79.52%    passed     77.44%
+ 230  A6W705_KINRD_31_252        79.43%    failed      0.27%
+ 231  A1SFI9_NOCSJ_37_257        79.52%    failed      0.81%
+ 232  E6SCW6_INTC7_32_252        79.52%    failed      0.34%
+ 233  E4NGB7_KITSK_42_263        79.43%    passed     23.53%
+ 234  C7Q0P0_CATAD_35_256        79.43%    passed     43.29%
+ 235  F8A7D2_CELGA_31_252        79.43%    failed      0.19%
+ 236  D2PNC6_KRIFD_37_258        79.43%    passed      5.04%
+ 237  F6FSK8_ISOV2_31_252        79.43%    failed      0.70%
+ 238  E2SBH7_9ACTN_31_252        79.43%    failed      1.58%
+ 239  C7QZX2_JONDD_37_258        79.43%    passed     17.39%
+ 240  D7BKM4_ARCHD_30_251        79.43%    passed     14.91%
+ 241  A0LW43_ACIC1_57_278        79.43%    failed      0.57%
+ 242  D5UKN6_CELFN_31_252        79.43%    failed      0.75%
+ 243  C5C0U0_BEUC1_35_256        79.43%    failed      2.98%
+ 244  F4H8Q5_CELFA_31_252        79.43%    failed      1.07%
+ 245  A0A255UKV1_9BACT_17_241    79.15%    passed     77.86%
+ 246  A9NHB9_ACHLI_13_220        80.72%    passed     89.70%
+ 247  S5MCH2_9MOLU_1_221         79.52%    failed      0.00%
+ 248  V5RKD3_SPIAP_10_231        79.43%    failed      0.01%
+ 249  W6A7G8_9MOLU_10_231        79.43%    failed      0.01%
+ 250  F7XWJ2_MIDMI_4_221         79.80%    passed     29.01%
+ 251  M1D4Y6_SOLTU_87_311        79.15%    passed     95.99%
+ 252  M1CZP2_SOLTU_58_282        79.15%    passed     66.97%
+ 253  M0ZV76_SOLTU_79_299        79.52%    passed     85.10%
+ 254  F2I512_AERUA_20_243        79.24%    passed     70.13%
+ 255  Q04F84_OENOB_26_249        79.24%    passed     16.30%
+ 256  G9WH63_9LACO_23_246        79.24%    passed     26.61%
+ 257  K8E4L4_CARML_1_223         79.33%    passed     17.03%
+ 258  G8PDC2_PEDCP_20_243        79.24%    passed     42.94%
+ 259  Q1G9P0_LACDA_13_236        79.24%    passed     28.21%
+ 260  A5VJD1_LIMRD_42_265        79.24%    passed     91.46%
+ 261  Q03QS5_LEVBA_31_254        79.24%    passed     17.13%
+ 262  J9W387_LENBU_27_250        79.24%    passed     19.43%
+ 263  ISPT_LACAC_14_237          79.24%    passed     48.30%
+ 264  Q38W69_LATSS_25_248        79.24%    passed     58.73%
+ 265  Q1WUG3_LIGS1_30_253        79.24%    passed     52.92%
+ 266  UPPS_LACPL_30_253          79.24%    passed     13.48%
+ 267  G2SNH8_LIGR2_31_254        79.24%    passed     75.67%
+ 268  D8QY59_SELML_8_231         79.24%    passed     94.37%
+ 269  K3ZVN0_SETIT_71_294        79.24%    failed      2.17%
+ 270  A9T0L2_PHYPA_30_253        79.24%    passed     85.00%
+ 271  C1N5N1_MICPC_1_225         79.15%    failed      0.10%
+ 272  K4A3E3_SETIT_79_304        79.05%    failed      1.11%
+ 273  C1EIH5_MICCC_128_352       79.15%    failed      0.16%
+ 274  E1Z339_CHLVA_1_224         79.24%    failed      0.36%
+ 275  Q94DE7_ORYSJ_67_291        79.15%    failed      3.92%
+ 276  M1BR22_SOLTU_65_287        79.33%    passed     22.80%
+ 277  B9SI16_RICCO_85_307        79.33%    passed     80.50%
+ 278  D7SJY4_VITVI_8_230         79.33%    passed     27.65%
+ 279  I1MBA4_SOYBN_90_312        79.33%    passed     84.35%
+ 280  M1ARS2_SOLTU_83_305        79.33%    passed     81.55%
+ 281  I1MBA3_SOYBN_96_318        79.33%    passed     89.90%
+ 282  A0A078H219_BRANA_80_302    79.33%    passed     45.71%
+ 283  DDPS5_ARATH_77_299         79.33%    passed     71.50%
+ 284  M4EWE7_BRACM_8_230         79.33%    passed     66.52%
+ 285  M4DV10_BRACM_64_286        79.33%    passed     25.65%
+ 286  D7LFB0_ARALL_67_289        79.33%    passed     70.21%
+ 287  ISPT_CHLTR_28_252          79.15%    passed     24.49%
+ 288  C9YYX6_STRSW_391_609       79.70%    failed      0.02%
+ 289  F9D2S7_PREDD_16_234        79.70%    passed     84.61%
+ 290  D5EVN5_XYLR2_17_235        79.70%    passed     95.35%
+ 291  D3IBC1_9BACT_18_236        79.70%    passed     87.44%
+ 292  R9I4A0_BACUN_19_237        79.70%    passed     99.85%
+ 293  F3ZS10_9BACE_19_237        79.70%    passed     75.15%
+ 294  M1C8D3_SOLTU_56_271        79.98%    passed     23.08%
+ 295  E4THG0_CALNY_15_234        79.61%    passed     19.03%
+ 296  F8E6T0_FLESM_11_230        79.61%    passed     44.49%
+ 297  A0A417CQS5_9FIRM_11_228    79.80%    passed     80.11%
+ 298  A0A3E2B1K3_9FIRM_28_250    79.33%    passed     21.27%
+ 299  R4K337_CLOPA_23_236        80.17%    failed      0.01%
+ 300  W6AJS7_9MOLU_11_232        79.43%    passed      5.49%
+ 301  C7N1S8_SLAHD_33_256        79.24%    passed     98.18%
+ 302  G8NRF9_GRAMM_27_246        79.61%    failed      0.07%
+ 303  D0L0Q9_HALNC_29_251        79.33%    passed     25.21%
+ 304  Q1IRT1_KORVE_32_254        79.33%    passed     87.87%
+ 305  G2KSQ7_MICAA_11_232        79.43%    passed     72.66%
+ 306  F2NE99_DESAR_21_240        79.61%    passed     13.23%
+ 307  ISPT_CLOAB_31_254          79.24%    failed      0.33%
+ 308  R4K6X6_CLOPA_36_259        79.24%    failed      0.06%
+ 309  C5CCC1_MICLC_34_262        78.78%    failed      0.37%
+ 310  K4KGZ4_SIMAS_12_231        79.61%    passed      5.26%
+ 311  B3PBQ2_CELJU_12_231        79.61%    passed     49.53%
+ 312  C5BQG0_TERTT_18_237        79.61%    passed      9.11%
+ 313  Q21HH6_SACD2_17_236        79.61%    passed     19.00%
+ 314  A4S5A2_OSTLU_40_270        78.59%    passed     18.50%
+ 315  ISPT_HELPY_11_230          79.61%    failed      2.03%
+ 316  C1F773_ACIC5_19_240        79.43%    passed     25.16%
+ 317  CRIT_STRCO_327_546         79.61%    failed      0.33%
+ 318  G0AB42_COLFT_29_250        79.43%    passed     35.34%
+ 319  E1R285_SEDSS_14_235        79.43%    passed      5.94%
+ 320  F2JGN7_CELLD_13_235        79.33%    passed     41.18%
+ 321  F4KLF7_PORAD_13_234        79.43%    passed     13.90%
+ 322  D4MMS5_9FIRM_1_219         79.70%    passed      7.23%
+ 323  F9Z9E2_ODOSD_20_241        79.43%    passed     90.54%
+ 324  A0A373H1U0_9FIRM_14_240    78.96%    passed     66.70%
+ 325  C7Q599_CATAD_47_268        79.43%    passed     26.64%
+ 326  C6W214_DYAFD_17_238        79.43%    passed     82.34%
+ 327  ISPT_LEPIN_15_236          79.43%    passed     14.60%
+ 328  B0SM62_LEPBP_13_234        79.43%    passed     28.65%
+ 329  D9QKZ0_BRESC_21_240        79.61%    failed      0.15%
+ 330  D6ZGQ6_MOBCV_1_220         79.61%    failed      1.19%
+ 331  ISPT1_TROWT_28_248         79.52%    passed     14.71%
+ 332  B1VGH9_CORU7_29_249        79.52%    passed     54.85%
+ 333  D3Q0K0_STANL_34_253        79.61%    passed     73.77%
+ 334  A0A3N4D1T8_9ACTN_30_250    79.52%    failed      3.20%
+ 335  F5XMF2_MICPN_41_261        79.52%    failed      2.86%
+ 336  D7GD09_PROFC_37_257        79.52%    passed     21.62%
+ 337  D7BP44_ARCHD_36_256        79.52%    passed     78.47%
+ 338  E3IXT7_PSEI1_38_258        79.52%    failed      1.10%
+ 339  C7MD77_BRAFD_36_256        79.52%    failed      3.44%
+ 340  D6Z8K1_SEGRD_35_255        79.52%    passed      8.84%
+ 341  W5Y1X4_9CORY_27_247        79.52%    passed     91.66%
+ 342  U3GVL4_9CORY_20_240        79.52%    passed     87.53%
+ 343  B2GHT5_KOCRD_31_251        79.52%    passed      9.82%
+ 344  D2NTB6_ROTMD_33_253        79.52%    passed     67.26%
+ 345  ISPT2_CORGL_21_241         79.52%    passed     37.38%
+ 346  C4LJQ6_CORK4_28_248        79.52%    passed     93.74%
+ 347  E9T6V8_RHOHA_42_262        79.52%    passed     17.40%
+ 348  A0LT09_ACIC1_32_252        79.52%    failed      0.34%
+ 349  A0JX34_ARTS2_44_264        79.52%    passed     37.46%
+ 350  R4L6H0_ACTS9_29_249        79.52%    passed     98.08%
+ 351  R4T0Y5_9PSEU_42_262        79.52%    passed     88.89%
+ 352  R7XYH9_9ACTN_32_252        79.52%    passed      5.94%
+ 353  D5UG56_CELFN_32_252        79.52%    failed      0.11%
+ 354  DPDS_MYCTU_74_294          79.52%    passed     50.79%
+ 355  D2PW71_KRIFD_45_265        79.52%    passed     34.35%
+ 356  W5WA44_9PSEU_41_261        79.52%    passed     23.02%
+ 357  E6SDI3_INTC7_28_248        79.52%    failed      1.79%
+ 358  Q6AED6_LEIXX_39_259        79.52%    passed     38.97%
+ 359  D1BUV5_XYLCX_32_252        79.52%    passed     65.75%
+ 360  A0A6N4SVZ4_CYTH3_28_249    79.43%    passed     26.92%
+ 361  ISPT_BORPE_22_242          79.52%    failed      2.16%
+ 362  W8X996_CASD6_24_244        79.52%    failed      0.57%
+ 363  W0PEQ9_ADVMD_22_242        79.52%    passed     96.72%
+ 364  D6YU78_WADCW_36_256        79.52%    passed     27.37%
+ 365  B8CW58_HALOH_10_229        79.61%    passed     15.16%
+ 366  UPPS_FRATT_32_251          79.61%    passed     84.61%
+ 367  A5EV25_DICNV_13_233        79.52%    passed     80.44%
+ 368  A9GGS7_SORC5_16_232        79.89%    failed      0.03%
+ 369  UPPS_COXBU_9_229           79.52%    passed     84.40%
+ 370  K0CCG8_ALCDB_27_247        79.52%    failed      0.69%
+ 371  E6WRM3_PSEUU_1_220         79.61%    failed      0.01%
+ 372  D9QRH3_ACEAZ_13_233        79.52%    passed     29.49%
+ 373  UPPS_BUCBP_27_247          79.52%    failed      0.02%
+ 374  M4U6H1_9GAMM_17_237        79.52%    passed     23.36%
+ 375  Q0A7I4_ALKEH_24_244        79.52%    failed      1.04%
+ 376  K6Z2J8_9ALTE_19_239        79.52%    passed     49.70%
+ 377  UPPS_WIGBR_18_238          79.52%    failed      0.00%
+ 378  Q1LSV2_BAUCH_23_243        79.52%    passed     13.52%
+ 379  A1SYV9_PSYIN_32_252        79.52%    passed     24.75%
+ 380  B8GQ54_THISH_30_250        79.52%    passed     22.02%
+ 381  G7UPH7_PSEUP_15_235        79.52%    failed      0.02%
+ 382  D2U8V9_XANAP_17_237        79.52%    failed      0.01%
+ 383  Q60BA6_METCA_31_251        79.52%    failed      4.04%
+ 384  A0KHG7_AERHH_22_242        79.52%    passed      8.37%
+ 385  E0SCD4_DICD3_23_243        79.52%    passed     86.24%
+ 386  UPPS_BUCAI_24_244          79.52%    failed      2.15%
+ 387  M1RI29_MORMO_20_240        79.52%    passed     14.99%
+ 388  UPPS_ECOLI_24_244          79.52%    passed     57.71%
+ 389  W0DXH6_MARPU_1_220         79.61%    failed      0.94%
+ 390  A0A7G9FJV0_9FIRM_19_239    79.52%    passed     77.74%
+ 391  L0GUR1_9GAMM_32_252        79.52%    failed      0.07%
+ 392  V4LC63_9GAMM_21_241        79.52%    passed      5.73%
+ 393  Q0VQF3_ALCBS_27_247        79.52%    failed      0.58%
+ 394  I3YCE9_THIV6_24_244        79.52%    failed      1.21%
+ 395  W0BDF7_9GAMM_17_237        79.52%    passed     74.69%
+ 396  UPPS_LEGPH_12_232          79.52%    passed     95.65%
+ 397  D5BVW5_NITHN_20_240        79.52%    passed     78.67%
+ 398  G0A1J6_METMM_22_242        79.52%    passed     45.36%
+ 399  Q3JCX1_NITOC_20_240        79.52%    passed     17.86%
+ 400  H8GHH7_METAL_22_242        79.52%    passed     93.27%
+ 401  G4T1V0_META2_21_241        79.52%    passed     76.61%
+ 402  E1VNL5_9GAMM_25_245        79.52%    failed      1.40%
+ 403  S6AI20_METRE_19_239        79.52%    passed      8.91%
+ 404  Q2SBQ1_HAHCH_20_240        79.52%    passed     72.63%
+ 405  E1SU18_FERBD_20_240        79.52%    passed     36.26%
+ 406  G4QI17_GLANF_24_244        79.52%    passed     69.59%
+ 407  Q5QXS4_IDILO_18_238        79.52%    passed     50.38%
+ 408  Q12NY3_SHEDO_39_259        79.52%    failed      4.80%
+ 409  B8F6A4_GLAP5_1_220         79.61%    passed     19.06%
+ 410  M5DTI8_9GAMM_22_242        79.52%    passed     27.21%
+ 411  F2JU02_MARM1_20_240        79.52%    passed     76.55%
+ 412  S6BBD1_9GAMM_24_244        79.52%    passed     33.59%
+ 413  UPPS_HAEDU_19_239          79.52%    passed     60.08%
+ 414  UPPS_PASMU_16_236          79.52%    failed      0.87%
+ 415  UPPS_PHOLL_23_243          79.52%    passed     16.95%
+ 416  UPPS_HAEIN_16_236          79.52%    passed     35.06%
+ 417  C4L860_TOLAT_22_242        79.52%    passed     33.24%
+ 418  UPPS_PHOPR_22_242          79.52%    passed     82.11%
+ 419  A1WX17_HALHL_26_246        79.52%    failed      0.12%
+ 420  H2FXL5_OCESG_19_239        79.52%    passed     17.43%
+ 421  Q3IIX8_PSET1_26_246        79.52%    passed     76.21%
+ 422  UPPS_VIBCH_18_238          79.52%    passed     94.40%
+ 423  UPPS_ALIF1_22_242          79.52%    passed     93.33%
+ 424  A3DE54_ACET2_30_250        79.52%    passed     27.80%
+ 425  G8LZU7_ACECE_32_252        79.52%    passed     26.51%
+ 426  D7B2Q6_NOCDD_336_556       79.52%    failed      1.32%
+ 427  D4Z3R4_SPHIU_24_244        79.52%    failed      0.09%
+ 428  E6U8S1_ETHHY_24_243        79.61%    passed     86.49%
+ 429  B7J9P5_ACIF2_8_228         79.52%    failed      0.54%
+ 430  W8S489_9RHOB_12_232        79.52%    passed     17.80%
+ 431  D5ATT3_RHOCB_26_246        79.52%    failed      1.38%
+ 432  Q3J2X3_CERS4_22_242        79.52%    failed      1.34%
+ 433  Q5LSV1_RUEPO_19_239        79.52%    passed     14.45%
+ 434  Q166F4_ROSDO_34_254        79.52%    passed     28.68%
+ 435  A9HKW3_GLUDA_29_249        79.52%    failed      0.00%
+ 436  A5G1L4_ACICJ_19_239        79.52%    failed      0.00%
+ 437  Q0BTL8_GRABC_63_283        79.52%    failed      0.15%
+ 438  V5SEA0_9HYPH_24_244        79.52%    passed     50.93%
+ 439  B9JX29_ALLAM_16_236        79.52%    passed     16.70%
+ 440  G4R8U5_PELHB_25_245        79.52%    passed     18.54%
+ 441  Q2YRP8_BRUA2_10_230        79.52%    failed      0.56%
+ 442  E3I1E3_RHOVT_21_241        79.52%    passed     50.27%
+ 443  A7INR2_XANP2_27_247        79.52%    passed     11.60%
+ 444  B8INK2_METNO_30_250        79.52%    failed      0.05%
+ 445  ISPT_RHIME_16_236          79.52%    failed      1.65%
+ 446  F2IY19_POLGS_4_224         79.52%    failed      1.70%
+ 447  A8I472_AZOC5_36_256        79.52%    failed      0.15%
+ 448  ISPT_AGRFC_16_236          79.52%    passed     25.24%
+ 449  L0ESX9_LIBCB_16_236        79.52%    passed     35.29%
+ 450  I3TLH9_TISMK_15_235        79.52%    failed      4.74%
+ 451  C9LTW6_SELS3_33_253        79.52%    passed     93.85%
+ 452  B4RBZ0_PHEZH_27_247        79.52%    failed      0.01%
+ 453  ISPT_CAUVC_28_248          79.52%    passed      9.84%
+ 454  W0ADF3_9SPHN_28_248        79.52%    failed      0.07%
+ 455  D5BR61_PUNMI_11_231        79.52%    passed     66.33%
+ 456  G2IS62_SPHSK_34_254        79.52%    failed      0.55%
+ 457  ISPT_ZYMMO_26_246          79.52%    passed     76.01%
+ 458  M4RYG9_9SPHN_25_245        79.52%    failed      0.00%
+ 459  D7CM34_SYNLT_21_241        79.52%    passed     87.36%
+ 460  B6JH70_AFIC5_24_244        79.52%    passed      6.82%
+ 461  C6XJV6_HIRBI_29_249        79.52%    passed     71.88%
+ 462  B6ISU7_RHOCS_19_239        79.52%    passed     44.04%
+ 463  Q2RU05_RHORT_22_242        79.52%    failed      0.93%
+ 464  V6F1Q1_MAGGM_20_240        79.52%    passed      8.89%
+ 465  E0TCI3_PARBH_34_254        79.52%    passed     63.49%
+ 466  A7HY15_PARL1_23_243        79.52%    passed     41.21%
+ 467  A8LK38_DINSH_20_240        79.52%    passed     13.17%
+ 468  Q0APW1_MARMM_18_238        79.52%    passed     10.45%
+ 469  B2ID96_BEII9_29_249        79.52%    passed      9.94%
+ 470  B8EMN6_METSB_27_247        79.52%    failed      3.48%
+ 471  ISPT_STRT2_23_247          79.15%    passed     96.93%
+ 472  ISPT_STRMU_23_247          79.15%    passed     70.92%
+ 473  B9DTC8_STRU0_23_247        79.15%    passed     82.74%
+ 474  ISPT_STRR6_26_250          79.15%    passed     56.36%
+ 475  F3YAZ0_MELPT_33_257        79.15%    passed     40.65%
+ 476  A0A2H6DVV3_TETHA_33_257    79.15%    passed     89.03%
+ 477  F9ZM12_ACICS_17_237        79.52%    failed      0.19%
+ 478  ISPT_LISMO_30_250          79.52%    passed     94.34%
+ 479  B8E2X8_DICTD_18_238        79.52%    passed     15.07%
+ 480  A0LJ67_SYNFM_16_236        79.52%    passed     45.11%
+ 481  A0A1E9VVW1_9GAMM_19_239    79.52%    passed     70.16%
+ 482  W0RKU1_9BACT_27_247        79.52%    failed      0.94%
+ 483  Q2G1Z7_STAA8_31_251        79.52%    failed      2.62%
+ 484  K0IYQ9_AMPXN_32_252        79.52%    passed     40.62%
+ 485  A1AQN6_PELPD_16_236        79.52%    passed     90.01%
+ 486  B3E7A8_TRIL1_16_236        79.52%    passed     25.73%
+ 487  Q39W84_GEOMG_16_236        79.52%    passed     98.88%
+ 488  B5EHV7_CITBB_16_236        79.52%    passed     77.99%
+ 489  B9M5C2_GEODF_16_236        79.52%    passed     86.34%
+ 490  A5G7W4_GEOUR_16_236        79.52%    passed     89.22%
+ 491  F2F2T7_SOLSS_36_256        79.52%    passed     96.29%
+ 492  ISPT_OCEIH_30_250          79.52%    passed     73.92%
+ 493  B9EBE0_MACCJ_27_247        79.52%    passed     76.07%
+ 494  N0ASU1_9BACI_36_256        79.52%    passed     79.96%
+ 495  ISPT_HALH5_34_254          79.52%    passed     72.03%
+ 496  E4RKU6_HALHG_10_230        79.52%    failed      0.00%
+ 497  H9UKJ6_SPIAZ_13_233        79.52%    passed     55.21%
+ 498  D0LK92_HALO1_20_240        79.52%    failed      1.27%
+ 499  F8ADC4_THEID_17_237        79.52%    passed     37.73%
+ 500  K0NFA4_DESTT_23_243        79.52%    passed     70.85%
+ 501  I4CAM7_DESTA_18_238        79.52%    passed     97.60%
+ 502  ISPT_RHOBA_18_238          79.52%    passed     21.49%
+ 503  D5SNW1_PLAL2_83_303        79.52%    passed     19.11%
+ 504  Q3A399_SYNC1_19_239        79.52%    passed     30.21%
+ 505  D2R0C6_PIRSD_27_247        79.52%    passed     62.60%
+ 506  L0DNE2_SINAD_31_251        79.52%    passed     40.35%
+ 507  E8R3J1_ISOPI_27_247        79.52%    failed      0.62%
+ 508  K0B0X2_GOTA9_32_251        79.61%    failed      0.84%
+ 509  F2LTT8_HIPMA_12_232        79.52%    failed      1.01%
+ 510  I1YG47_METFJ_15_235        79.52%    passed     57.15%
+ 511  E6TST1_EVAC2_34_254        79.52%    passed     47.09%
+ 512  A9G6M2_SORC5_13_233        79.52%    passed     13.86%
+ 513  A8ZTM4_DESOH_25_245        79.52%    passed     75.17%
+ 514  B8FGE2_DESAL_25_245        79.52%    passed     28.13%
+ 515  J9QYB0_RIEAN_36_256        79.52%    passed     67.58%
+ 516  B3U4U2_9BACT_33_253        79.52%    passed     16.01%
+ 517  A0L8Q9_MAGMM_20_240        79.52%    passed     70.15%
+ 518  I0IQS5_LEPFC_30_250        79.52%    passed     53.36%
+ 519  M1NG38_DESSD_19_239        79.52%    passed     85.82%
+ 520  K4LH15_THEPS_43_263        79.52%    passed     56.91%
+ 521  I5B533_9BACT_20_240        79.52%    passed     89.87%
+ 522  F0SF87_RUBBR_36_256        79.52%    passed     41.46%
+ 523  Q2LTR1_SYNAS_28_248        79.52%    passed     95.24%
+ 524  Q6MGY4_BDEBA_10_230        79.52%    passed     75.97%
+ 525  D2RKY5_ACIFV_38_258        79.52%    passed     98.71%
+ 526  G2KUC4_FRUST_18_238        79.52%    passed     26.31%
+ 527  A6TRL8_ALKMQ_26_246        79.52%    passed     82.11%
+ 528  ISPT_CALS4_25_245          79.52%    passed     68.82%
+ 529  C8WWH8_ALIAD_31_251        79.52%    passed     42.37%
+ 530  Q0AYK0_SYNWW_25_245        79.52%    passed     97.81%
+ 531  W0EDB5_9FIRM_30_250        79.52%    passed     15.42%
+ 532  Q24UG1_DESHY_31_251        79.52%    passed     65.08%
+ 533  F4LU74_TEPAE_25_245        79.52%    passed      8.50%
+ 534  H1XU46_CALAY_23_243        79.52%    passed     99.72%
+ 535  A1BDI0_CHLPD_46_266        79.52%    passed     99.06%
+ 536  ISPT_CHLTE_33_253          79.52%    passed     79.79%
+ 537  L0F882_DESDL_31_251        79.52%    passed     96.66%
+ 538  R4KL75_9FIRM_61_281        79.52%    passed     90.13%
+ 539  A5D2U0_PELTS_41_261        79.52%    passed     54.59%
+ 540  C8W4R3_DESAS_41_261        79.52%    passed     61.48%
+ 541  A6LI76_PARD8_19_239        79.52%    passed     95.94%
+ 542  A4J5Y8_DESRM_38_258        79.52%    passed     96.77%
+ 543  F6DU61_DESRL_37_257        79.52%    passed     94.62%
+ 544  F6B6I9_DESCC_37_257        79.52%    passed     99.44%
+ 545  D5XEZ8_THEPJ_37_257        79.52%    passed     91.34%
+ 546  F4A1N6_MAHA5_23_244        79.43%    passed     23.89%
+ 547  D5EHX5_CORAD_17_237        79.52%    passed     25.98%
+ 548  H8MZ99_CORCM_28_248        79.52%    failed      0.29%
+ 549  E1R046_OLSUV_36_256        79.52%    passed      8.27%
+ 550  D6GRA5_FILAD_17_237        79.52%    passed     30.73%
+ 551  E3PSG6_ACESD_19_239        79.52%    passed     10.05%
+ 552  E3DRX7_HALPG_10_230        79.52%    failed      0.01%
+ 553  C8WAK0_LANP1_36_256        79.52%    passed     21.47%
+ 554  D4ING3_9BACT_14_234        79.52%    passed     11.22%
+ 555  I0IAH1_PHYMF_40_260        79.52%    failed      0.00%
+ 556  ISPT_PORGI_21_241          79.52%    passed     52.38%
+ 557  G0IX57_CYCMS_17_237        79.52%    passed     80.38%
+ 558  E2RUC0_9BACT_17_237        79.52%    passed     73.56%
+ 559  I3Z4B6_BELBD_17_237        79.52%    passed     86.04%
+ 560  B6YQK8_AZOPC_22_242        79.52%    passed     20.76%
+ 561  B2URD3_AKKM8_16_236        79.52%    passed     79.01%
+ 562  S0EVA6_CHTCT_26_246        79.52%    passed     84.30%
+ 563  Q67PB2_SYMTH_34_254        79.52%    passed     21.57%
+ 564  F9YUG9_CAPCC_17_237        79.52%    passed     47.31%
+ 565  F4KXJ4_HALH1_19_239        79.52%    passed     56.08%
+ 566  C7M5U3_CAPOD_13_233        79.52%    passed      6.23%
+ 567  F2IAH7_FLUTR_19_239        79.52%    passed     83.99%
+ 568  C0QB21_DESAH_23_243        79.52%    passed     15.96%
+ 569  A2TZ81_9FLAO_19_239        79.52%    passed      9.37%
+ 570  D9SKM6_CLOC7_28_248        79.52%    passed     34.47%
+ 571  W8U6X5_PEPAC_21_241        79.52%    passed     65.53%
+ 572  B3QYQ8_CHLT3_51_271        79.52%    passed     93.06%
+ 573  F0SUA2_SYNGF_44_264        79.52%    passed     36.55%
+ 574  I3ZYU0_ORNRL_21_241        79.52%    passed     78.20%
+ 575  E4T4E5_PALPW_20_240        79.52%    passed     32.95%
+ 576  B0THE2_HELMI_36_256        79.52%    passed     54.84%
+ 577  W0F508_9BACT_20_240        79.52%    passed     40.94%
+ 578  L0FUF1_ECHVK_17_237        79.52%    passed     46.18%
+ 579  E6SJQ8_THEM7_61_281        79.52%    failed      0.01%
+ 580  I7A1L9_MELRP_29_249        79.52%    passed     63.39%
+ 581  H6L570_SAPGL_28_248        79.52%    passed     21.66%
+ 582  B4SCS5_PELPB_46_266        79.52%    passed     96.33%
+ 583  H8KP54_SOLCM_19_239        79.52%    passed     84.12%
+ 584  G0L5Y8_ZOBGA_19_239        79.52%    passed     19.99%
+ 585  A3U6T6_CROAH_31_251        79.52%    passed     10.07%
+ 586  A4CPU1_ROBBH_19_239        79.52%    passed     49.00%
+ 587  F6GIW6_LACS5_18_238        79.52%    failed      0.59%
+ 588  A0A378U3X9_MYROD_19_239    79.52%    passed     12.73%
+ 589  G8X7L9_FLACA_19_239        79.52%    failed      0.64%
+ 590  G2PKE5_ALLRU_31_251        79.52%    passed     51.17%
+ 591  F0RD66_CELLC_19_239        79.52%    failed      2.42%
+ 592  E4RV93_LEAB4_16_236        79.52%    passed     82.54%
+ 593  G8R070_OWEHD_19_239        79.52%    passed     52.60%
+ 594  C6Y2Z4_PEDHD_19_239        79.52%    passed     76.56%
+ 595  F0S9V1_PSESL_19_239        79.52%    passed     48.74%
+ 596  F0P2H8_WEEVC_34_254        79.52%    passed     17.35%
+ 597  G2Z042_FLABF_19_239        79.52%    failed      3.09%
+ 598  H8XQ80_FLAIG_19_239        79.52%    passed      6.52%
+ 599  A0A373I801_9FIRM_23_243    79.52%    passed     48.43%
+ 600  F8C5X2_THEGP_24_244        79.52%    failed      0.00%
+ 601  B3ESF7_AMOA5_63_282        79.61%    passed     75.30%
+ 602  B1ZY07_OPITP_1_220         79.61%    failed      0.99%
+ 603  E4TRP2_MARTH_17_237        79.52%    passed     56.66%
+ 604  C9RBV4_AMMDK_39_259        79.52%    failed      0.34%
+ 605  Q6AP37_DESPS_31_251        79.52%    passed     75.75%
+ 606  W8F2D4_9BACT_1_220         79.61%    passed     19.66%
+ 607  Q3AB83_CARHZ_30_250        79.52%    passed     65.13%
+ 608  ISPT_CLOPE_30_250          79.52%    passed     43.82%
+ 609  A0A7G1HWY2_9BACT_19_239    79.52%    passed     31.22%
+ 610  W0J8C7_9BACT_20_240        79.52%    failed      0.01%
+ 611  D9S3N2_THEOJ_24_244        79.52%    passed     83.78%
+ 612  I4AJ36_BERLS_42_262        79.52%    passed     79.60%
+ 613  G8UL06_TANFA_17_237        79.52%    passed     55.28%
+ 614  Q2S1H2_SALRD_74_294        79.52%    passed     28.91%
+ 615  I0AGV1_IGNAJ_29_249        79.52%    passed     65.56%
+ 616  A0A5C0ZQJ1_9SPHI_19_239    79.52%    passed     88.53%
+ 617  H1Y9D9_9SPHI_19_239        79.52%    passed     97.90%
+ 618  I0KEP2_9BACT_17_237        79.52%    passed     81.25%
+ 619  B2A386_NATTJ_23_243        79.52%    passed     18.98%
+ 620  B8I6D7_RUMCH_27_247        79.52%    passed     13.99%
+ 621  H8KZ88_FRAAD_17_237        79.52%    passed     16.83%
+ 622  B1I2K4_DESAP_28_248        79.52%    passed      7.46%
+ 623  R4KIB2_9FIRM_35_255        79.52%    passed     80.82%
+ 624  E1QEY0_DESB2_26_246        79.52%    failed      0.10%
+ 625  A5N832_CLOK5_32_252        79.52%    failed      1.32%
+ 626  H6NPD5_9BACL_33_253        79.52%    passed     85.77%
+ 627  A8MHH3_ALKOO_29_249        79.52%    passed     93.77%
+ 628  ISPT_BACSU_38_258          79.52%    passed     88.10%
+ 629  L0EEX7_THECK_31_251        79.52%    passed     21.15%
+ 630  C0ZF62_BREBN_14_234        79.52%    passed     90.69%
+ 631  I0JMP5_HALH3_33_253        79.52%    passed     92.71%
+ 632  ISPT_SHOC1_35_255          79.52%    passed     59.91%
+ 633  D3FSD3_ALKPO_35_255        79.52%    passed     34.74%
+ 634  A5I4K8_CLOBH_29_249        79.52%    failed      0.99%
+ 635  A0Q0R6_CLONN_29_249        79.52%    failed      2.21%
+ 636  G4Q319_ACIIR_36_256        79.52%    passed     80.01%
+ 637  ISPT_CLOTE_33_253          79.52%    failed      0.47%
+ 638  D3MSZ9_9FIRM_20_240        79.52%    passed     61.51%
+ 639  W6S3H2_9CLOT_31_251        79.52%    passed      7.20%
+ 640  Q185S4_CLOD6_21_241        79.52%    passed     19.42%
+ 641  A7HN61_FERNB_16_236        79.52%    passed      5.57%
+ 642  L7VNR3_THES1_22_242        79.52%    passed     54.20%
+ 643  R4K7K2_CLOPA_14_233        79.61%    failed      1.63%
+ 644  I5AR39_EUBC6_17_237        79.52%    passed      6.61%
+ 645  F7V6D9_CLOSS_16_236        79.52%    passed     27.29%
+ 646  A9KMX4_LACP7_17_237        79.52%    passed     78.42%
+ 647  A0A373NER9_9FIRM_10_230    79.52%    passed     20.36%
+ 648  A0A396K8K1_9CLOT_16_236    79.52%    passed     59.34%
+ 649  E0S1M2_BUTPB_14_234        79.52%    passed     59.51%
+ 650  A0A416WAX5_9FIRM_19_239    79.52%    failed      1.25%
+ 651  A0A416SW11_9FIRM_19_239    79.52%    passed     24.41%
+ 652  A0A828SWR9_9FIRM_10_230    79.52%    passed     69.97%
+ 653  G2T3H9_ROSHA_14_234        79.52%    passed     89.58%
+ 654  Q6MEF4_PARUW_36_256        79.52%    passed     76.93%
+ 655  F8L1R4_PARAV_42_262        79.52%    passed     57.97%
+ 656  F8L423_SIMNZ_34_254        79.52%    passed     45.58%
+ 657  G0VRY0_MEGEL_32_252        79.52%    passed     95.40%
+ 658  D4H3Y4_DENA2_13_233        79.52%    passed     89.20%
+ 659  A0A8D4UUC7_9FIRM_14_234    79.52%    passed     94.04%
+ 660  D6Z299_DESAT_15_235        79.52%    failed      4.93%
+ 661  Q46K31_PROMT_34_254        79.52%    passed     74.22%
+ 662  ISPT_PROMA_34_254          79.52%    passed     85.39%
+ 663  B1WQE1_CROS5_24_244        79.52%    passed     37.07%
+ 664  A5GS36_SYNR3_33_253        79.52%    failed      0.86%
+ 665  K9TZ02_CHRTP_24_244        79.52%    passed     63.30%
+ 666  K9UA69_CHAP6_25_245        79.52%    passed     93.63%
+ 667  K9PLB5_9CYAN_20_240        79.52%    passed     99.37%
+ 668  ISPT_GLOVI_27_247          79.52%    passed     70.12%
+ 669  Q2JL17_SYNJB_27_247        79.52%    failed      0.33%
+ 670  K9SUQ9_9SYNE_25_245        79.52%    passed     85.20%
+ 671  K9WNV5_9CYAN_27_247        79.52%    passed     75.74%
+ 672  ISPT_SYNY3_27_247          79.52%    passed     98.90%
+ 673  Q31RM3_SYNE7_28_248        79.52%    passed     44.23%
+ 674  K9YI62_CYASC_26_246        79.52%    passed     96.83%
+ 675  K9TNZ3_9CYAN_27_247        79.52%    passed     67.33%
+ 676  K9V8M2_9CYAN_27_247        79.52%    passed     99.31%
+ 677  K9Y8J0_HALP7_27_247        79.52%    passed     28.81%
+ 678  K9VUM3_9CYAN_27_247        79.52%    passed     73.70%
+ 679  K9SFF9_9CYAN_66_286        79.52%    passed     82.34%
+ 680  K9XXC4_STAC7_25_245        79.52%    passed     96.11%
+ 681  K9SI63_9CYAN_25_245        79.52%    passed     47.99%
+ 682  K9UN88_CHAP6_27_247        79.52%    passed     91.48%
+ 683  K9QF52_9NOSO_19_239        79.52%    passed     65.85%
+ 684  U5QQA2_GLOK1_27_247        79.52%    passed     51.83%
+ 685  B0C0N1_ACAM1_25_245        79.52%    passed     75.93%
+ 686  D3ENK6_ATETH_28_248        79.52%    passed     85.71%
+ 687  K9R5H9_9CYAN_21_241        79.52%    passed     98.65%
+ 688  K9RRI3_SYNP3_27_247        79.52%    passed     50.06%
+ 689  K9Z1G6_CYAAP_26_246        79.52%    passed     98.94%
+ 690  ISPT1_NOSS1_27_247         79.52%    passed     36.30%
+ 691  K9S479_9CYAN_27_247        79.52%    passed     18.54%
+ 692  B7KH91_GLOC7_27_247        79.52%    passed     78.79%
+ 693  G8P1B5_GRAMM_42_281        77.76%    passed     95.15%
+ 694  E8V545_TERSS_35_269        78.22%    passed     83.09%
+ 695  I3ZDD4_TERRK_35_270        78.13%    passed     22.98%
+ 696  B7G146_PHATC_28_255        78.87%    passed     23.21%
+ 697  H3HD49_PHYRM_30_251        79.43%    passed     83.05%
+ 698  H3GUB2_PHYRM_122_343       79.43%    passed     94.57%
+ 699  B7FV22_PHATC_19_246        78.87%    passed     75.89%
+ 700  B5YMT4_THAPS_17_239        79.33%    passed     80.75%
+ 701  D3F071_CONWI_16_226        80.44%    failed      3.38%
+ 702  B2HS05_MYCMM_14_222        80.63%    failed      2.88%
+ 703  A2BLR9_HYPBU_26_243        79.80%    failed      0.03%
+ 704  H1XWU3_CALAY_23_240        79.80%    passed     64.49%
+ 705  B9KHM2_ANAMF_19_235        79.89%    passed     57.96%
+ 706  ISPT_TREPA_7_225           79.70%    passed     89.86%
+ 707  A1B967_PARDP_24_242        79.70%    failed      3.91%
+ 708  ISPT_THEMA_10_228          79.70%    failed      4.38%
+ 709  I4B1G6_TURPD_11_229        79.70%    passed     16.01%
+ 710  Q1LNF4_CUPMC_23_241        79.70%    passed     20.22%
+ 711  I4BVU9_ACEMN_23_241        79.70%    passed     73.91%
+ 712  Q21V12_ALBFT_19_237        79.70%    passed     93.58%
+ 713  A1VS63_POLNA_18_236        79.70%    failed      1.24%
+ 714  C1D9F2_LARHH_21_239        79.70%    passed     48.44%
+ 715  G7VA84_THELD_23_240        79.80%    passed     62.13%
+ 716  A0A3E2TKG8_9FIRM_26_243    79.80%    passed     52.09%
+ 717  K0C5S0_CYCSP_20_237        79.80%    passed     68.22%
+ 718  V5WGH6_9SPIO_1_217         79.89%    passed     94.40%
+ 719  C6WVX1_METML_24_241        79.80%    passed     99.23%
+ 720  D9SH03_GALCS_24_241        79.80%    passed     85.74%
+ 721  C6XDM7_METGS_24_241        79.80%    passed     96.49%
+ 722  D5CSE4_SIDLE_25_242        79.80%    passed     57.52%
+ 723  Q5NZH1_AROAE_26_243        79.80%    passed     48.05%
+ 724  Q1H143_METFK_24_241        79.80%    passed     93.87%
+ 725  S6B4A6_SULDS_24_241        79.80%    passed     99.33%
+ 726  Q2YBA3_NITMU_24_241        79.80%    passed     93.54%
+ 727  ISPT_NITEU_24_241          79.80%    passed     83.22%
+ 728  A1K6R7_AZOSB_26_243        79.80%    passed     21.99%
+ 729  C4ZPR8_THASP_26_243        79.80%    passed     21.08%
+ 730  C7LZN9_ACIFD_20_237        79.80%    failed      0.28%
+ 731  F3YVE4_DESAF_10_227        79.80%    passed     47.10%
+ 732  B2JIC2_PARP8_23_242        79.61%    passed     27.94%
+ 733  F9VG63_LACGL_22_242        79.52%    passed     75.56%
+ 734  B5Y9J3_COPPD_10_226        79.89%    passed     41.48%
+ 735  D3R241_MAGIU_34_250        79.89%    passed     83.66%
+ 736  ISPT_BORBU_13_229          79.89%    failed      0.00%
+ 737  D3UJB1_HELM1_10_226        79.89%    passed     13.65%
+ 738  D8IU19_HERSS_23_239        79.89%    passed     48.75%
+ 739  A4G4S5_HERAR_23_239        79.89%    passed     86.42%
+ 740  A2SH94_METPP_26_242        79.89%    passed     16.11%
+ 741  B1XXJ1_LEPCP_22_238        79.89%    passed      7.11%
+ 742  H5WRD3_9BURK_14_230        79.89%    passed     28.70%
+ 743  I0HST7_RUBGI_28_244        79.89%    passed     14.15%
+ 744  A5CCD7_ORITB_9_225         79.89%    passed     21.69%
+ 745  T2GFN7_MEGG1_17_233        79.89%    passed     14.56%
+ 746  Q1MRD6_LAWIP_16_232        79.89%    passed     20.28%
+ 747  C6C1S7_MARSD_21_237        79.89%    passed     90.39%
+ 748  C8X4K6_DESRD_12_228        79.89%    passed     22.55%
+ 749  Q72DR0_NITV2_23_239        79.89%    passed     26.54%
+ 750  Q313G9_OLEA2_19_235        79.89%    passed     29.21%
+ 751  C7LR53_DESBD_10_226        79.89%    passed     32.72%
+ 752  M1WJ43_PSEP2_13_229        79.89%    passed     74.49%
+ 753  F2NY92_TRES6_17_233        79.89%    passed     17.88%
+ 754  V5WLG2_9SPIO_15_231        79.89%    passed     49.07%
+ 755  F8F3I7_GRAC1_13_229        79.89%    passed     95.56%
+ 756  F5YR62_TREPZ_19_235        79.89%    passed     39.44%
+ 757  B5YI11_THEYD_11_227        79.89%    passed      7.96%
+ 758  E8N049_ANATU_20_236        79.89%    passed     62.09%
+ 759  Q1AW64_RUBXD_4_220         79.89%    failed      0.39%
+ 760  H6LE73_ACEWD_17_233        79.89%    passed     10.07%
+ 761  D1CCA7_THET1_12_228        79.89%    passed     65.10%
+ 762  A0A068NUB0_FIMGI_47_263    79.89%    passed     68.21%
+ 763  D1C4K5_SPHTD_8_224         79.89%    failed      4.80%
+ 764  A9WAG3_CHLAA_19_235        79.89%    passed     11.76%
+ 765  I0IA66_CALAS_28_244        79.89%    passed     16.19%
+ 766  ISPT_HELHP_12_234          79.33%    passed     42.66%
+ 767  C1ACZ2_GEMAT_29_238        80.54%    passed      5.36%
+ 768  Q2NBU0_ERYLH_12_223        80.35%    passed     48.08%
+ 769  R4UDE2_9MOLU_12_227        79.98%    passed     49.83%
+ 770  Q30RV6_SULDN_10_222        80.26%    passed     53.60%
+ 771  E0UTG8_SULAO_10_222        80.26%    passed     23.45%
+ 772  E6X2S8_NITSE_11_224        80.17%    passed     52.40%
+ 773  A6Q405_NITSB_10_223        80.17%    passed     22.82%
+ 774  Q1ILW3_KORVE_23_236        80.17%    failed      0.05%
+ 775  ISPT_FUSNN_12_225          80.17%    failed      0.81%
+ 776  E3H8Z1_ILYPC_15_228        80.17%    failed      0.10%
+ 777  F8KQZ9_HELBC_10_224        80.07%    passed     33.62%
+ 778  B2KCL4_ELUMP_12_226        80.07%    passed     15.88%
+ 779  ISPT_TREDE_11_225          80.07%    passed     28.57%
+ 780  S5ZPT5_9SPIR_1_214         80.17%    passed     34.57%
+ 781  D3SPW9_THEAH_13_227        80.07%    passed     58.64%
+ 782  A7HGN9_ANADF_31_245        80.07%    failed      0.07%
+ 783  Q2IFJ1_ANADE_25_239        80.07%    failed      0.00%
+ 784  D1AJN3_SEBTE_12_226        80.07%    passed      9.15%
+ 785  ISPT_NEIG1_21_235          80.07%    passed     78.65%
+ 786  ISPT_CHRVO_22_236          80.07%    passed     77.29%
+ 787  G2J5N5_PSEUL_22_236        80.07%    passed     78.47%
+ 788  C0QU03_PERMH_15_229        80.07%    passed     16.00%
+ 789  D1BA64_THEAS_20_234        80.07%    failed      3.09%
+ 790  ISPT_AQUAE_12_226          80.07%    passed     60.75%
+ 791  D3DK88_HYDTT_13_227        80.07%    passed     43.98%
+ 792  H0UK72_9BACT_13_227        80.07%    passed     84.06%
+ 793  F0S3V8_DESTD_10_224        80.07%    passed     14.36%
+ 794  I2F7D1_9BACT_10_224        80.07%    passed     75.43%
+ 795  C5CF33_KOSOT_10_224        80.07%    passed     11.83%
+ 796  F7YVZ4_9THEM_9_223         80.07%    passed     14.29%
+ 797  H2J2T7_MARPK_14_228        80.07%    passed      9.53%
+ 798  A8F864_PSELT_8_222         80.07%    passed     65.33%
+ 799  ISPT_CAMJE_10_221          80.35%    passed      6.16%
+ 800  E1X2W9_HALMS_12_227        79.98%    passed     15.43%
+ 801  F0RVP8_SPHGB_14_229        79.98%    passed     99.29%
+ 802  G8QXY3_SPHPG_14_229        79.98%    passed     99.15%
+ 803  F5YB09_LEAAZ_12_227        79.98%    passed     74.92%
+ 804  F4LN82_TREBD_17_232        79.98%    passed     57.75%
+ 805  G0GBP5_SPITZ_14_229        79.98%    passed     18.42%
+ 806  D3PAL0_DEFDS_13_228        79.98%    failed      1.08%
+ 807  E3D057_9BACT_19_234        79.98%    passed     11.32%
+ 808  L0K5V6_HALHC_36_251        79.98%    failed      2.18%
+ 809  D5EEM4_AMICL_9_224         79.98%    passed     36.80%
+ 810  C5ZVV7_9HELI_8_222         80.07%    passed     14.95%
+ 811  ISPT1_BRADU_17_230         80.17%    failed      0.05%
+ 812  Q2G8K6_NOVAD_22_234        80.26%    failed      0.40%
+ 813  Q1GRQ4_SPHAL_14_226        80.26%    failed      1.82%
+ 814  F6ILL1_9SPHN_15_227        80.26%    failed      3.73%
+ 815  F2I0Z6_PELSM_1_213         80.26%    failed      0.00%
+ 816  F2NQJ7_MARHT_10_223        80.17%    failed      0.71%
+ 817  Q4FM66_PELUB_10_223        80.17%    failed      0.00%
+ 818  ISPT_WOLSU_13_226          80.17%    passed     69.44%
+ 819  D1AZL4_SULD5_10_223        80.17%    passed     83.69%
+ 820  A7I1Z0_CAMHC_11_224        80.17%    failed      0.24%
+ 821  D5V7E2_ARCNC_11_224        80.17%    passed     23.27%
+ 822  A8EWU3_ALIB4_19_232        80.17%    passed     17.88%
+ 823  D1AXP3_STRM9_27_240        80.17%    failed      0.05%
+ 824  B0S1A5_FINM2_18_231        80.17%    failed      0.15%
+ 825  E4U7V0_OCEP5_10_223        80.17%    failed      0.20%
+ 826  Q3SKN5_THIDA_22_235        80.17%    passed     19.57%
+ 827  U5N794_9BURK_14_227        80.17%    passed     10.40%
+ 828  F5XVS4_RAMTT_11_224        80.17%    failed      4.25%
+ 829  A9BMM8_DELAS_16_229        80.17%    failed      4.58%
+ 830  A1VN44_POLNA_15_228        80.17%    passed     25.37%
+ 831  Q12A35_POLSJ_15_228        80.17%    passed     35.35%
+ 832  J7RZ87_HUIN7_73_295        79.33%    failed      1.15%
+ 833  I2H009_HENB6_75_297        79.33%    failed      0.00%
+ 834  G8BW58_TETPH_73_298        79.05%    failed      0.25%
+ 835  SRT1_YEAST_73_292          79.61%    passed     19.16%
+ 836  G0WF45_NAUDC_72_290        79.70%    failed      1.15%
+ 837  Q6CVD6_KLULA_87_307        79.52%    passed     94.14%
+ 838  Q6FN24_CANGA_71_292        79.43%    passed     20.81%
+ 839  G8ZLR6_TORDE_75_296        79.43%    passed     21.05%
+ 840  C5DGF5_LACTC_89_310        79.43%    passed     55.69%
+ 841  G0VGK7_NAUCA_72_293        79.43%    passed     16.73%
+ 842  Q75DN9_EREGS_131_352       79.43%    passed     35.09%
+ 843  H2AM99_KAZAF_73_294        79.43%    failed      1.31%
+ 844  L0A9P7_CALLD_13_216        81.09%    failed      0.09%
+ 845  W1QAK3_OGAPD_1_220         79.61%    passed     48.07%
+ 846  A5DHK6_PICGU_65_288        79.24%    passed     43.61%
+ 847  G3B2N5_CANTC_58_279        79.43%    passed     58.29%
+ 848  G8YL12_PICSO_52_274        79.33%    passed     29.77%
+ 849  G3ANJ9_SPAPN_51_274        79.24%    passed     34.42%
+ 850  M3HPS5_CANMX_256_479       79.24%    passed     17.57%
+ 851  A3GHZ7_PICST_54_277        79.24%    passed     40.79%
+ 852  Q6BIJ8_DEBHA_42_265        79.24%    failed      4.97%
+ 853  A8MCW5_CALMQ_15_234        79.61%    passed     40.93%
+ 854  A4S8N4_OSTLU_44_271        78.87%    failed      0.57%
+ 855  Q00TX6_OSTTA_37_257        79.52%    failed      0.11%
+ 856  K0KVN3_WICCF_43_266        79.24%    failed      0.00%
+ 857  G4RP22_THETK_12_233        79.43%    failed      0.49%
+ 858  UPPS_PYRAE_16_237          79.43%    passed      5.34%
+ 859  Q0W0E9_METAR_37_262        79.05%    passed     39.95%
+ 860  Q2FQ40_METHJ_28_253        79.05%    passed     99.42%
+ 861  B8GIE9_METPE_29_254        79.05%    passed     90.16%
+ 862  A2SPN9_METLZ_29_249        79.52%    passed     79.43%
+ 863  E1RIJ7_METP4_30_250        79.52%    passed     48.91%
+ 864  L0HAT3_METFS_29_249        79.52%    passed     90.40%
+ 865  H1YWB6_9EURY_30_250        79.52%    passed     77.93%
+ 866  A7IA16_METB6_29_249        79.52%    passed     65.92%
+ 867  C7P3J1_HALMD_31_252        79.43%    failed      0.10%
+ 868  E4NNH5_HALBP_31_254        79.24%    passed      6.43%
+ 869  R4VXG4_9EURY_34_256        79.33%    failed      0.08%
+ 870  L0IFQ0_HALRX_34_256        79.33%    failed      0.20%
+ 871  Q18F32_HALWD_33_255        79.33%    passed      5.97%
+ 872  UPPS_HALMA_31_253          79.33%    passed      5.64%
+ 873  M1XQW1_NATM8_31_253        79.33%    failed      0.00%
+ 874  L0K0G9_9EURY_31_253        79.33%    failed      0.08%
+ 875  A0B6Q6_METTP_35_256        79.43%    passed     95.10%
+ 876  G7WQR7_METH6_37_259        79.33%    passed     51.62%
+ 877  F4BVA7_METSG_33_255        79.33%    passed     97.76%
+ 878  UPPS_METAC_33_260          78.87%    passed     96.35%
+ 879  F7XMM6_METZD_44_268        79.15%    passed      9.16%
+ 880  D7EBW6_METEZ_33_258        79.05%    passed     86.91%
+ 881  L0L1J8_METHD_35_260        79.05%    passed     86.54%
+ 882  D5EC41_METMS_33_258        79.05%    passed     19.95%
+ 883  A4YD46_METS5_33_254        79.43%    passed     17.68%
+ 884  G0EDK9_PYRF1_29_249        79.52%    failed      1.96%
+ 885  E0SP48_IGNAA_56_281        79.05%    passed     13.26%
+ 886  E1QPN2_VULDI_12_237        79.05%    failed      0.33%
+ 887  A1RY84_THEPD_42_267        79.05%    passed      9.33%
+ 888  D7DRP9_METV3_39_263        79.15%    failed      0.04%
+ 889  UPPS_METJA_55_279          79.15%    failed      0.98%
+ 890  Q6LXK5_METMP_39_263        79.15%    passed     14.70%
+ 891  K0IP41_NITGG_48_272        79.15%    passed     28.38%
+ 892  A9A3Q0_NITMS_38_262        79.15%    passed     17.52%
+ 893  A0RXM5_CENSY_37_261        79.15%    passed      5.99%
+ 894  E3GYL2_METFV_31_254        79.24%    failed      0.00%
+ 895  R9SKE0_9EURY_30_253        79.24%    failed      2.45%
+ 896  U6EAA7_9EURY_31_254        79.24%    passed     47.94%
+ 897  Q2NF40_METST_31_254        79.24%    passed     18.45%
+ 898  UPPS_METTH_31_254          79.24%    passed     59.57%
+ 899  M4YJJ9_THEXX_36_259        79.24%    passed     49.49%
+ 900  M9SAZ0_METAX_36_259        79.24%    passed     22.02%
+ 901  UPPS_THEAC_35_257          79.33%    passed     20.73%
+ 902  A0A8G2FWU4_PICTO_32_254    79.33%    failed      0.34%
+ 903  UPPS_THEKO_41_263          79.33%    failed      3.11%
+ 904  UPPS_METKA_48_270          79.33%    failed      1.64%
+ 905  R9T8C0_METII_37_259        79.33%    passed     74.53%
+ 906  B5IAC9_ACIB4_35_257        79.33%    failed      0.68%
+ 907  UPPS_SULAC_38_261          79.24%    failed      1.92%
+ 908  UPPS_SACS2_38_261          79.24%    failed      0.38%
+ 909  UPPS_SULTO_38_261          79.24%    failed      0.01%
+ 910  A8AA16_IGNH4_46_269        79.24%    passed     11.75%
+ 911  I0A2K5_FERFK_43_266        79.24%    failed      2.26%
+ 912  D5TZX5_THEAM_47_270        79.24%    passed     17.21%
+ 913  I3TCK1_THEC1_52_275        79.24%    passed      6.71%
+ 914  A3DNX7_STAMF_45_268        79.24%    passed     10.04%
+ 915  D3S059_FERPA_26_244        79.70%    failed      1.49%
+ 916  F2KN65_ARCVS_29_250        79.43%    passed     52.06%
+ 917  N0BAB8_9EURY_32_252        79.52%    passed     12.12%
+ 918  D2RGY2_ARCPA_28_246        79.70%    passed     35.70%
+ 919  UPPS_ARCFU_27_246          79.61%    failed      1.08%
+WARNING: 919 sequences contain more than 50% gaps/ambiguity
+****  TOTAL                      79.05%  216 sequences failed composition chi2 test (p-value<5%; df=19)
+Checking for duplicate sequences: done in 0.00250411 secs using 308.1% CPU
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 1.028 seconds
+
+NOTE: 513 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.100)
+1. Initial log-likelihood: -299155.935
+2. Current log-likelihood: -263352.326
+3. Current log-likelihood: -263062.754
+4. Current log-likelihood: -263051.793
+5. Current log-likelihood: -262948.752
+6. Current log-likelihood: -262889.837
+7. Current log-likelihood: -262887.408
+8. Current log-likelihood: -262884.675
+9. Current log-likelihood: -262883.309
+Optimal log-likelihood: -262883.278
+Gamma shape alpha: 0.949
+Parameters optimization took 9 rounds (52.964 sec)
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 57.3233 secs using 399.5% CPU
+Computing ML distances took 57.326218 sec (of wall-clock time) 229.020850 sec (of CPU time)
+Setting up auxiliary I and S matrices: done in 0.0054462 secs using 297.1% CPU
+Constructing RapidNJ tree: done in 0.058547 secs using 248.6% CPU
+Computing RapidNJ tree took 0.064044 sec (of wall-clock time) 0.161901 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -263392.774
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Generating 98 parsimony trees... 108.834 second
+Computing log-likelihood of 98 initial trees ... 150.732 seconds
+Current best score: -262883.278
+
+Do NNI search on 20 best initial trees
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 1: -261637.061
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 2: -261257.046
+Iteration 10 / LogL: -261501.099 / Time: 0h:14m:13s
+Iteration 20 / LogL: -261363.685 / Time: 0h:21m:8s
+Finish initializing candidate tree set (20)
+Current best tree score: -261257.046 / CPU time: 1145.655
+Number of iterations: 20
+--------------------------------------------------------------------
+|               OPTIMIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 21: -261168.535
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 22: -261081.494
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 26: -260982.970
+Iteration 30 / LogL: -260995.796 / Time: 0h:27m:29s (1h:30m:57s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 31: -260891.041
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 33: -260880.795
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 36: -260824.056
+Iteration 40 / LogL: -260831.790 / Time: 0h:33m:31s (1h:22m:29s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 49: -260811.901
+Iteration 50 / LogL: -260840.633 / Time: 0h:39m:2s (1h:18m:50s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 51: -260759.937
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 52: -260728.999
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 56: -260726.110
+Iteration 60 / LogL: -260728.956 / Time: 0h:44m:46s (1h:12m:49s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 62: -260701.726
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 64: -260700.442
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 68: -260685.305
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 69: -260655.745
+Iteration 70 / LogL: -260710.677 / Time: 0h:50m:22s (1h:12m:15s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 75: -260655.162
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 78: -260632.274
+Iteration 80 / LogL: -260633.430 / Time: 0h:56m:7s (1h:9m:35s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 82: -260628.637
+Iteration 90 / LogL: -260635.300 / Time: 1h:1m:40s (1h:3m:44s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 95: -260621.142
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 97: -260618.926
+Iteration 100 / LogL: -260630.550 / Time: 1h:7m:28s (1h:6m:5s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 102: -260613.665
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 108: -260610.763
+Iteration 110 / LogL: -260639.417 / Time: 1h:12m:52s (1h:5m:30s left)
+Iteration 120 / LogL: -260617.729 / Time: 1h:18m:8s (0h:57m:46s left)
+Iteration 130 / LogL: -260689.155 / Time: 1h:23m:26s (0h:50m:26s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 131: -260608.120
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 137: -260599.167
+Iteration 140 / LogL: -260676.466 / Time: 1h:29m:0s (1h:2m:6s left)
+Estimate model parameters (epsilon = 0.100)
+BETTER TREE FOUND at iteration 142: -260580.591
+Iteration 150 / LogL: -260626.887 / Time: 1h:34m:19s (0h:58m:13s left)
+Iteration 160 / LogL: -260689.254 / Time: 1h:39m:44s (0h:51m:25s left)
+Iteration 170 / LogL: -260696.437 / Time: 1h:45m:0s (0h:44m:43s left)
+Iteration 180 / LogL: -260657.204 / Time: 1h:50m:22s (0h:38m:13s left)
+Iteration 190 / LogL: -260598.046 / Time: 1h:55m:28s (0h:31m:45s left)
+Iteration 200 / LogL: -260623.473 / Time: 2h:0m:43s (0h:25m:28s left)
+Iteration 210 / LogL: -260641.046 / Time: 2h:6m:15s (0h:19m:19s left)
+Iteration 220 / LogL: -260611.553 / Time: 2h:11m:42s (0h:13m:13s left)
+Iteration 230 / LogL: -260686.669 / Time: 2h:17m:6s (0h:7m:11s left)
+Iteration 240 / LogL: -260627.328 / Time: 2h:22m:22s (0h:1m:11s left)
+TREE SEARCH COMPLETED AFTER 243 ITERATIONS / Time: 2h:23m:54s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.010)
+1. Initial log-likelihood: -260580.591
+Optimal log-likelihood: -260580.590
+Gamma shape alpha: 0.889
+Parameters optimization took 1 rounds (3.889 sec)
+BEST SCORE FOUND : -260580.590
+Total tree length: 495.879
+
+Total number of iterations: 243
+CPU time used for tree search: 33420.992 sec (9h:17m:0s)
+Wall-clock time used for tree search: 8512.052 sec (2h:21m:52s)
+Total CPU time used: 33920.939 sec (9h:25m:20s)
+Total wall-clock time used: 8638.720 sec (2h:23m:58s)
+
+Analysis results written to: 
+  IQ-TREE report:                muscle.iqtree
+  Maximum-likelihood tree:       muscle.treefile
+  Likelihood distances:          muscle.mldist
+  Screen log file:               muscle.log
+
+Date and Time: Tue Oct 20 20:31:21 2026

@@ -1,0 +1,100 @@
+spawn: [2026-10-20T18:00:24Z] wrapper start
+spawn: [2026-10-20T18:00:24Z] stage-in start
+spawn: [2026-10-20T18:00:24Z] stage-in done rc=0
+spawn: [2026-10-20T18:00:24Z] command start
+nf-spawn: installing Docker...
+Amazon Linux 2023 repository                     69 MB/s |  83 MB     00:01    
+Amazon Linux 2023 Kernel Livepatch repository   930 kB/s |  87 kB     00:00    
+Dependencies resolved.
+================================================================================
+ Package                 Arch     Version                    Repository    Size
+================================================================================
+Installing:
+ docker                  aarch64  25.0.16-1.amzn2023.0.5     amazonlinux   36 M
+Installing dependencies:
+ container-selinux       noarch   4:2.245.0-1.amzn2023       amazonlinux   58 k
+ containerd              aarch64  2.3.5-1.amzn2023.0.1       amazonlinux   21 M
+ iptables-libs           aarch64  1.8.8-3.amzn2023.0.2       amazonlinux  424 k
+ iptables-nft            aarch64  1.8.8-3.amzn2023.0.2       amazonlinux  185 k
+ libcgroup               aarch64  3.0-1.amzn2023.0.1         amazonlinux   77 k
+ libnetfilter_conntrack  aarch64  1.0.8-2.amzn2023.0.2       amazonlinux   58 k
+ libnfnetlink            aarch64  1.0.1-19.amzn2023.0.2      amazonlinux   30 k
+ libnftnl                aarch64  1.2.2-2.amzn2023.0.2       amazonlinux   83 k
+ pigz                    aarch64  2.5-1.amzn2023.0.4         amazonlinux   78 k
+ runc                    aarch64  1.4.3-1.amzn2023.0.1       amazonlinux  3.3 M
+
+Transaction Summary
+================================================================================
+Install  11 Packages
+
+Total download size: 62 M
+Installed size: 269 M
+Downloading Packages:
+(1/11): container-selinux-2.245.0-1.amzn2023.no 1.9 MB/s |  58 kB     00:00    
+(2/11): iptables-libs-1.8.8-3.amzn2023.0.2.aarc  15 MB/s | 424 kB     00:00    
+(3/11): iptables-nft-1.8.8-3.amzn2023.0.2.aarch 6.3 MB/s | 185 kB     00:00    
+(4/11): libcgroup-3.0-1.amzn2023.0.1.aarch64.rp 1.2 MB/s |  77 kB     00:00    
+(5/11): libnetfilter_conntrack-1.0.8-2.amzn2023 2.2 MB/s |  58 kB     00:00    
+(6/11): libnfnetlink-1.0.1-19.amzn2023.0.2.aarc 1.1 MB/s |  30 kB     00:00    
+(7/11): libnftnl-1.2.2-2.amzn2023.0.2.aarch64.r 2.8 MB/s |  83 kB     00:00    
+(8/11): pigz-2.5-1.amzn2023.0.4.aarch64.rpm     2.2 MB/s |  78 kB     00:00    
+(9/11): runc-1.4.3-1.amzn2023.0.1.aarch64.rpm    66 MB/s | 3.3 MB     00:00    
+(10/11): docker-25.0.16-1.amzn2023.0.5.aarch64.  75 MB/s |  36 MB     00:00    
+(11/11): containerd-2.3.5-1.amzn2023.0.1.aarch6  23 MB/s |  21 MB     00:00    
+--------------------------------------------------------------------------------
+Total                                            64 MB/s |  62 MB     00:00     
+Running transaction check
+Waiting for process with pid 4427 to finish.
+Transaction check succeeded.
+Running transaction test
+Transaction test succeeded.
+Running transaction
+  Preparing        :                                                        1/1 
+  Installing       : runc-1.4.3-1.amzn2023.0.1.aarch64                     1/11 
+  Installing       : containerd-2.3.5-1.amzn2023.0.1.aarch64               2/11 
+  Running scriptlet: containerd-2.3.5-1.amzn2023.0.1.aarch64               2/11 
+  Installing       : pigz-2.5-1.amzn2023.0.4.aarch64                       3/11 
+  Installing       : libnftnl-1.2.2-2.amzn2023.0.2.aarch64                 4/11 
+  Installing       : libnfnetlink-1.0.1-19.amzn2023.0.2.aarch64            5/11 
+  Installing       : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.aarch6    6/11 
+  Installing       : iptables-libs-1.8.8-3.amzn2023.0.2.aarch64            7/11 
+  Installing       : iptables-nft-1.8.8-3.amzn2023.0.2.aarch64             8/11 
+  Running scriptlet: iptables-nft-1.8.8-3.amzn2023.0.2.aarch64             8/11 
+  Installing       : libcgroup-3.0-1.amzn2023.0.1.aarch64                  9/11 
+  Running scriptlet: container-selinux-4:2.245.0-1.amzn2023.noarch        10/11 
+  Installing       : container-selinux-4:2.245.0-1.amzn2023.noarch        10/11 
+  Running scriptlet: container-selinux-4:2.245.0-1.amzn2023.noarch        10/11 
+  Running scriptlet: docker-25.0.16-1.amzn2023.0.5.aarch64                11/11 
+  Installing       : docker-25.0.16-1.amzn2023.0.5.aarch64                11/11 
+  Running scriptlet: docker-25.0.16-1.amzn2023.0.5.aarch64                11/11 
+Created symlink /etc/systemd/system/sockets.target.wants/docker.socket → /usr/lib/systemd/system/docker.socket.
+
+  Running scriptlet: container-selinux-4:2.245.0-1.amzn2023.noarch        11/11 
+  Running scriptlet: docker-25.0.16-1.amzn2023.0.5.aarch64                11/11 
+  Verifying        : container-selinux-4:2.245.0-1.amzn2023.noarch         1/11 
+  Verifying        : containerd-2.3.5-1.amzn2023.0.1.aarch64               2/11 
+  Verifying        : docker-25.0.16-1.amzn2023.0.5.aarch64                 3/11 
+  Verifying        : iptables-libs-1.8.8-3.amzn2023.0.2.aarch64            4/11 
+  Verifying        : iptables-nft-1.8.8-3.amzn2023.0.2.aarch64             5/11 
+  Verifying        : libcgroup-3.0-1.amzn2023.0.1.aarch64                  6/11 
+  Verifying        : libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.aarch6    7/11 
+  Verifying        : libnfnetlink-1.0.1-19.amzn2023.0.2.aarch64            8/11 
+  Verifying        : libnftnl-1.2.2-2.amzn2023.0.2.aarch64                 9/11 
+  Verifying        : pigz-2.5-1.amzn2023.0.4.aarch64                      10/11 
+  Verifying        : runc-1.4.3-1.amzn2023.0.1.aarch64                    11/11 
+
+Installed:
+  container-selinux-4:2.245.0-1.amzn2023.noarch                                 
+  containerd-2.3.5-1.amzn2023.0.1.aarch64                                       
+  docker-25.0.16-1.amzn2023.0.5.aarch64                                         
+  iptables-libs-1.8.8-3.amzn2023.0.2.aarch64                                    
+  iptables-nft-1.8.8-3.amzn2023.0.2.aarch64                                     
+  libcgroup-3.0-1.amzn2023.0.1.aarch64                                          
+  libnetfilter_conntrack-1.0.8-2.amzn2023.0.2.aarch64                           
+  libnfnetlink-1.0.1-19.amzn2023.0.2.aarch64                                    
+  libnftnl-1.2.2-2.amzn2023.0.2.aarch64                                         
+  pigz-2.5-1.amzn2023.0.4.aarch64                                               
+  runc-1.4.3-1.amzn2023.0.1.aarch64                                             
+
+Complete!
+spawn: [2026-10-20T20:26:47Z] command exit rc=0

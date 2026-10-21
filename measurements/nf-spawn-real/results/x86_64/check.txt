@@ -1,0 +1,38 @@
+ok    run 1: 5 processes COMPLETED, exit 0 (Nextflow's trace)        MAFFT (1), MUSCLE (1), OBSERVE_RF (1), TREE (mafft), TREE (muscle)
+ok    run 1: every work dir's .exitcode object is 0 (the bucket)     0 0 0 0 0
+ok    mafft: == mafft-real's `--auto` (FFT-NS-2) output on the same input db0911ee5c7a
+ok    input == pinned PF01255.25 (sha256)                            bf393f177f57
+ok    mafft: engine .command.sh == the direct run's script           428 bytes
+ok    muscle: engine .command.sh == the direct run's script          329 bytes
+ok    tree-mafft: engine .command.sh == the direct run's script      539 bytes
+ok    tree-muscle: engine .command.sh == the direct run's script     544 bytes
+ok    rf: engine .command.sh == the direct run's script              646 bytes
+ok    mafft: engine .command.out == direct (its identity line)       mafft seqs=919 residues=207712
+ok    muscle: engine .command.out == direct (its identity line)      muscle seqs=919 residues=207712
+ok    mafft: every row == its input row, gaps removed (names, residues) 919 rows, 207712 residues, input order
+ok    mafft: every row the same width                                693 columns
+ok    mafft: engine alignment == direct (bytes)                      db0911ee5c7a
+ok    muscle: every row == its input row, gaps removed (names, residues) 919 rows, 207712 residues, reordered
+ok    muscle: every row the same width                               1079 columns
+ok    muscle: engine alignment == direct (bytes)                     76a756788747
+ok    tree-mafft (engine): the input's 919 names, unrooted binary (n-3 splits) 919 tips, 916 splits
+ok    tree-mafft (direct): the input's 919 names, unrooted binary (n-3 splits) 919 tips, 916 splits
+path  tree-mafft: engine vs direct (same image, bytes, seed, -T 4)   -253070.2935 / -253070.2935; same newick, branch lengths differ by <= 1e-10
+ok    tree-muscle (engine): the input's 919 names, unrooted binary (n-3 splits) 919 tips, 916 splits
+ok    tree-muscle (direct): the input's 919 names, unrooted binary (n-3 splits) 919 tips, 916 splits
+path  tree-muscle: engine vs direct (same image, bytes, seed, -T 4)  -260442.2447 / -260543.0218; DIFFERENT trees, RF 674
+ok    tree-muscle (engine): logL a fixed point (re-optimised twice)  -260442.2447 -> -260442.2450 -> -260442.2450
+ok    tree-muscle (direct): logL a fixed point (re-optimised twice)  -260543.0218 -> -260543.0217 -> -260543.0217
+path  tree-muscle: a second direct run                               logL -260526.2050
+ok    rf (engine): iqtree -rf == independent split count |A xor B|   694 / 694
+ok    rf (direct): iqtree -rf == independent split count |A xor B|   792 / 792
+path  rf: engine vs direct                                           694 / 792
+ok    run 2 (-resume, unchanged): 5 of 5 CACHED, 0 instances launched 5 cached, 0 submits
+ok    run 2: published rf-observation.txt == run 1's                 
+ok    run 3 (OBSERVE_RF image renamed): 5 of 5 CACHED -- the image is not in the key 5 cached, 0 submits
+ok    run 4 (OBSERVE_RF cache off): only OBSERVE_RF re-runs, 4 CACHED ran ['rf']
+ok    run 4: OBSERVE_RF ran in a new work dir, on the renamed image (docker's pull line) quay.io/biocontainers/iqtree:nf-spawn-real-edit@sha256:3a7
+ok    run 4: re-run rf-observation.txt == run 1's (bytes), from run 1's cached trees 
+obs   run 1 workflow wall (driver)                                   13303 s
+obs   run 2 workflow wall (driver)                                   9 s
+obs   run 3 workflow wall (driver)                                   8 s

@@ -1,0 +1,202 @@
+Oct-20 11:02:13.459 [main] DEBUG nextflow.cli.Launcher - $> nextflow -log nextflow-1.log run /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/../../recipes/nf-spawn/main.nf -c /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config -profile x86 --seqs 's3://cookbook-942542972736-us-west-2/inputs/mafft-real/pf01255.25_unaligned.fa' --expect_seqs 919 --expect_residues 207712 -with-trace trace-1.txt
+Oct-20 11:02:13.498 [main] DEBUG nextflow.plugin.PluginsFacade - Setting up plugin manager > mode=prod; embedded=false; plugins-dir=/Users/scttfrdmn/.nextflow/plugins; core-plugins: nf-agent-pi@0.6.0,nf-agent@0.2.0,nf-amazon@3.12.1,nf-azure@1.24.2,nf-cloudcache@0.6.2,nf-codecommit@0.6.1,nf-console@1.3.1,nf-google@1.29.1,nf-k8s@1.6.1,nf-seqera@0.26.0,nf-tower@1.32.1,nf-wave@1.22.3
+Oct-20 11:02:13.509 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Enabled plugins: []
+Oct-20 11:02:13.509 [main] INFO  o.pf4j.DefaultPluginStatusProvider - Disabled plugins: []
+Oct-20 11:02:13.510 [main] INFO  org.pf4j.DefaultPluginManager - PF4J version 3.14.1 in 'deployment' mode
+Oct-20 11:02:13.516 [main] DEBUG nextflow.util.RetryConfig - Missing nextflow session - using default retry config
+Oct-20 11:02:13.573 [main] DEBUG nextflow.plugin.PluginUpdater - Using plugin repository: HttpPluginRepository [registry]; url=https://registry.nextflow.io/api
+Oct-20 11:02:13.576 [main] INFO  org.pf4j.AbstractPluginManager - No plugins
+Oct-20 11:02:13.585 [main] DEBUG nextflow.config.ConfigCmdAdapter - Found config base: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/nextflow.config
+Oct-20 11:02:13.587 [main] DEBUG nextflow.config.ConfigCmdAdapter - User config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config
+Oct-20 11:02:13.588 [main] DEBUG nextflow.config.ConfigCmdAdapter - Parsing config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/nextflow.config
+Oct-20 11:02:13.588 [main] DEBUG nextflow.config.ConfigCmdAdapter - Parsing config file: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/measurements/nf-spawn-real/real.config
+Oct-20 11:02:13.589 [main] DEBUG nextflow.config.ConfigParserFactory - Using config parser v2
+Oct-20 11:02:13.593 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `x86`
+Oct-20 11:02:13.764 [main] DEBUG nextflow.config.ConfigBuilder - Applying config profile: `x86`
+Oct-20 11:02:13.797 [main] DEBUG nextflow.config.ConfigBuilder - Available config profiles: [x86_64, arm64, x86]
+Oct-20 11:02:13.811 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins declared=[nf-spawn@0.11.0]
+Oct-20 11:02:13.811 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins default=[nf-amazon@3.12.1]
+Oct-20 11:02:13.811 [main] DEBUG nextflow.plugin.PluginsFacade - Plugins resolved requirement=[nf-spawn@0.11.0, nf-amazon@3.12.1]
+Oct-20 11:02:13.812 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-spawn version: 0.11.0
+Oct-20 11:02:13.816 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-spawn@0.11.0' resolved
+Oct-20 11:02:13.816 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-spawn@0.11.0'
+Oct-20 11:02:13.818 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-spawn@0.11.0
+Oct-20 11:02:13.818 [main] DEBUG nextflow.plugin.PluginUpdater - Installing plugin nf-amazon version: 3.12.1
+Oct-20 11:02:13.822 [main] INFO  org.pf4j.AbstractPluginManager - Plugin 'nf-amazon@3.12.1' resolved
+Oct-20 11:02:13.823 [main] INFO  org.pf4j.AbstractPluginManager - Start plugin 'nf-amazon@3.12.1'
+Oct-20 11:02:13.833 [main] DEBUG nextflow.plugin.BasePlugin - Plugin started nf-amazon@3.12.1
+Oct-20 11:02:13.840 [main] DEBUG nextflow.file.FileHelper - > Added 'S3FileSystemProvider' to list of installed providers [s3]
+Oct-20 11:02:13.848 [main] DEBUG n.secret.LocalSecretsProvider - Secrets store: /Users/scttfrdmn/.nextflow/secrets/store.json
+Oct-20 11:02:13.849 [main] DEBUG nextflow.secret.SecretsLoader - Discovered secrets providers: [nextflow.secret.LocalSecretsProvider@4a37191a] - activable => nextflow.secret.LocalSecretsProvider@4a37191a
+Oct-20 11:02:13.901 [main] DEBUG nextflow.Session - Session UUID: 8f1bb32e-0331-4bd9-b94d-3875fc19d119
+Oct-20 11:02:13.901 [main] DEBUG nextflow.Session - Run name: goofy_visvesvaraya
+Oct-20 11:02:13.902 [main] DEBUG nextflow.Session - Executor pool size: 12
+Oct-20 11:02:13.907 [main] DEBUG nextflow.file.FileHelper - Creating a file system instance for provider: S3FileSystemProvider; config=[:]
+Oct-20 11:02:13.915 [main] DEBUG nextflow.cloud.aws.config.AwsConfig - AWS S3 config properties: {max_error_retry=5}
+Oct-20 11:02:13.946 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:02:13.953 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:02:13.957 [main] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:02:14.602 [main] DEBUG nextflow.file.FilePorter - File porter settings maxRetries=3; maxTransfers=50; pollTimeout=null
+Oct-20 11:02:14.604 [main] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'FileTransfer' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 11:02:14.616 [main] DEBUG nextflow.cli.CmdRun - 
+  Version: 26.10.2 build 0
+  Created: 15-10-2026 17:45 UTC (10:45 PDT)
+  System: Mac OS X 27.0.1
+  Runtime: Groovy 4.0.33 on OpenJDK 64-Bit Server VM 17.0.20.1+0
+  Encoding: UTF-8 (UTF-8)
+  Process: 18649@terror [100.125.172.116]
+  CPUs: 12 - Mem: 48 GB (88.3 MB) - Swap: 16 GB (1.1 GB)
+Oct-20 11:02:14.623 [main] DEBUG nextflow.cache.CacheFactory - Using Nextflow cache factory: nextflow.cache.DefaultCacheFactory
+Oct-20 11:02:14.627 [main] DEBUG nextflow.util.CustomThreadPool - Creating default thread pool > poolSize: 13; maxThreads: 1000
+Oct-20 11:02:14.806 [main] DEBUG nextflow.Session - Work-dir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1 [Mac OS X]
+Oct-20 11:02:14.807 [main] DEBUG nextflow.Session - Script base path does not exist or is not a directory: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/bin
+Oct-20 11:02:14.816 [main] DEBUG nextflow.executor.ExecutorFactory - Extension executors providers=[K8sExecutor, AwsBatchExecutor, SpawnExecutor]
+Oct-20 11:02:14.820 [main] DEBUG nextflow.Session - Observer factory (v2): LinObserverFactory
+Oct-20 11:02:14.821 [main] DEBUG nextflow.Session - Observer factory (v2): DefaultObserverFactory
+Oct-20 11:02:14.824 [main] DEBUG nextflow.Session - Observer factory (v2): SpawnPoolObserverFactory
+Oct-20 11:02:14.834 [main] DEBUG nextflow.Session - Session start
+Oct-20 11:02:14.837 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow started -- trace file: trace-1.txt
+Oct-20 11:02:14.838 [main] DEBUG nextflow.script.ScriptLoaderFactory - Using script parser v2
+Oct-20 11:02:14.948 [main] DEBUG nextflow.script.ScriptRunner - > Launching execution
+Oct-20 11:02:15.004 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:MAFFT` matches process MAFFT
+Oct-20 11:02:15.008 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 11:02:15.008 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 11:02:15.009 [main] DEBUG nextflow.executor.Executor - [warm up] executor > spawn
+Oct-20 11:02:15.012 [main] DEBUG n.processor.TaskPollingMonitor - Creating task monitor for executor 'spawn' > capacity: 100; pollInterval: 5s; dumpInterval: 5m; resources: unlimited
+Oct-20 11:02:15.013 [main] DEBUG n.processor.TaskPollingMonitor - >>> barrier register (monitor: spawn)
+Oct-20 11:02:15.026 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'MAFFT': maxForks=0; fair=false; array=0
+Oct-20 11:02:15.042 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:MUSCLE` matches process MUSCLE
+Oct-20 11:02:15.043 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 11:02:15.043 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 11:02:15.043 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'MUSCLE': maxForks=0; fair=false; array=0
+Oct-20 11:02:15.051 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:TREE` matches process TREE
+Oct-20 11:02:15.051 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 11:02:15.051 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 11:02:15.052 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'TREE': maxForks=0; fair=false; array=0
+Oct-20 11:02:15.056 [main] DEBUG n.script.dsl.ProcessConfigBuilder - Config settings `withName:OBSERVE_RF` matches process OBSERVE_RF
+Oct-20 11:02:15.057 [main] DEBUG nextflow.executor.ExecutorFactory - << taskConfig executor: spawn
+Oct-20 11:02:15.057 [main] DEBUG nextflow.executor.ExecutorFactory - >> processorType: 'spawn'
+Oct-20 11:02:15.057 [main] DEBUG nextflow.processor.TaskProcessor - Creating process 'OBSERVE_RF': maxForks=0; fair=false; array=0
+Oct-20 11:02:15.059 [main] DEBUG nextflow.Session - Process names: MUSCLE, TREE, MAFFT, OBSERVE_RF
+Oct-20 11:02:15.061 [main] DEBUG nextflow.Session - Igniting dataflow network (5)
+Oct-20 11:02:15.062 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MAFFT
+Oct-20 11:02:15.063 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > MUSCLE
+Oct-20 11:02:15.063 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > TREE
+Oct-20 11:02:15.063 [main] DEBUG nextflow.processor.TaskProcessor - Starting process > OBSERVE_RF
+Oct-20 11:02:15.063 [main] DEBUG nextflow.script.ScriptRunner - Parsed script files:
+  Main: /Users/scttfrdmn/src/scientific-codes-cookbook/.claude/worktrees/agent-a75c9e35f75165f77/recipes/nf-spawn/main.nf
+Oct-20 11:02:15.063 [main] DEBUG nextflow.script.ScriptRunner - > Awaiting termination 
+Oct-20 11:02:15.063 [main] DEBUG nextflow.Session - Session await
+Oct-20 11:02:15.407 [Task submitter] INFO  io.nextflow.spawn.SpawnTaskHandler - Submitting task 'MUSCLE (1)' via `spawn task run` 'nf-407b20f9ddfb' (c8a.4xlarge in us-west-2)
+Oct-20 11:02:15.463 [Task submitter] INFO  nextflow.Session - [40/7b20f9] Submitted process > MUSCLE (1)
+Oct-20 11:02:15.467 [Task submitter] INFO  io.nextflow.spawn.SpawnTaskHandler - Submitting task 'MAFFT (1)' via `spawn task run` 'nf-f057ad9348a9' (c8a.large in us-west-2)
+Oct-20 11:02:15.509 [Task submitter] INFO  nextflow.Session - [f0/57ad93] Submitted process > MAFFT (1)
+Oct-20 11:03:10.987 [Task monitor] INFO  io.nextflow.spawn.SpawnTaskHandler - Task 'MAFFT (1)' completed (exit 0) on instance 'nf-f057ad9348a9'
+Oct-20 11:03:10.988 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 2; name: MAFFT (1); status: COMPLETED; exit: 0; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/f0/57ad9348a941dd595fcacc84e83e59]
+Oct-20 11:03:10.988 [Task monitor] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'TaskFinalizer' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 11:03:11.218 [TaskFinalizer-1] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'PublishDir' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 11:03:11.364 [PublishDir-1] DEBUG nextflow.util.ThreadPoolBuilder - Creating thread pool 'S3TransferManager' minSize=10; maxSize=36; workQueue=LinkedBlockingQueue[-1]; allowCoreThreadTimeout=false
+Oct-20 11:03:11.368 [PublishDir-1] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:03:11.431 [Task submitter] INFO  io.nextflow.spawn.SpawnTaskHandler - Submitting task 'TREE (mafft)' via `spawn task run` 'nf-fc7f13ab7c30' (c8a.xlarge in us-west-2)
+Oct-20 11:03:11.479 [Task submitter] INFO  nextflow.Session - [fc/7f13ab] Submitted process > TREE (mafft)
+Oct-20 11:03:11.594 [PublishDir-1] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:03:11.595 [PublishDir-1] WARN  s.a.a.p.internal.ProfileFileReader - Ignoring profile 'aws' on line 48 because it did not start with 'profile ' and it was not 'default'.
+Oct-20 11:07:20.378 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 1; name: MUSCLE (1); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/40/7b20f9ddfb0cbd4c8c17dd30a0b35f]
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+Oct-20 11:12:20.774 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 1; name: MUSCLE (1); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/40/7b20f9ddfb0cbd4c8c17dd30a0b35f]
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+Oct-20 11:17:01.541 [Task monitor] INFO  io.nextflow.spawn.SpawnTaskHandler - Task 'MUSCLE (1)' completed (exit 0) on instance 'nf-407b20f9ddfb'
+Oct-20 11:17:01.543 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 1; name: MUSCLE (1); status: COMPLETED; exit: 0; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/40/7b20f9ddfb0cbd4c8c17dd30a0b35f]
+Oct-20 11:17:01.929 [Task submitter] INFO  io.nextflow.spawn.SpawnTaskHandler - Submitting task 'TREE (muscle)' via `spawn task run` 'nf-686426cbec23' (c8a.xlarge in us-west-2)
+Oct-20 11:17:01.974 [Task submitter] INFO  nextflow.Session - [68/6426cb] Submitted process > TREE (muscle)
+Oct-20 11:17:21.109 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:22:21.417 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:27:21.733 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:32:23.806 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:37:24.224 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:42:24.518 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:47:24.928 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:52:25.311 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 11:57:25.639 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:02:25.956 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:07:26.695 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:12:27.130 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:17:27.543 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:22:27.997 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:27:28.415 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:32:28.783 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:37:29.142 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:42:29.463 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 2 -- submitted tasks are shown below
+~> TaskHandler[id: 3; name: TREE (mafft); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:42:44.921 [Task monitor] INFO  io.nextflow.spawn.SpawnTaskHandler - Task 'TREE (mafft)' completed (exit 0) on instance 'nf-fc7f13ab7c30'
+Oct-20 12:42:44.921 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 3; name: TREE (mafft); status: COMPLETED; exit: 0; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/fc/7f13ab7c307d58fc90a3519230cd1f]
+Oct-20 12:47:30.784 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:52:30.963 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 12:57:31.166 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 13:02:31.366 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 13:07:31.569 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 13:12:31.774 [Task monitor] DEBUG n.processor.TaskPollingMonitor - !! executor spawn > tasks to be completed: 1 -- submitted tasks are shown below
+~> TaskHandler[id: 4; name: TREE (muscle); status: RUNNING; exit: -; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 13:13:57.609 [Task monitor] INFO  io.nextflow.spawn.SpawnTaskHandler - Task 'TREE (muscle)' completed (exit 0) on instance 'nf-686426cbec23'
+Oct-20 13:13:57.610 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 4; name: TREE (muscle); status: COMPLETED; exit: 0; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/68/6426cbec23d37f2b4d0b65094212e5]
+Oct-20 13:13:58.152 [Task submitter] INFO  io.nextflow.spawn.SpawnTaskHandler - Submitting task 'OBSERVE_RF (1)' via `spawn task run` 'nf-b697bda4b11e' (c8a.large in us-west-2)
+Oct-20 13:13:58.285 [Task submitter] INFO  nextflow.Session - [b6/97bda4] Submitted process > OBSERVE_RF (1)
+Oct-20 13:14:51.023 [Task monitor] INFO  io.nextflow.spawn.SpawnTaskHandler - Task 'OBSERVE_RF (1)' completed (exit 0) on instance 'nf-b697bda4b11e'
+Oct-20 13:14:51.025 [Task monitor] DEBUG n.processor.TaskPollingMonitor - Task completed > TaskHandler[id: 5; name: OBSERVE_RF (1); status: COMPLETED; exit: 0; error: -; workDir: s3://cookbook-942542972736-us-west-2/nextflow-work/nf-spawn-real-amd-r1/b6/97bda4b11ea27bb9d551c60d1ffc71]
+Oct-20 13:14:51.243 [main] DEBUG nextflow.Session - Session await > all processes finished
+Oct-20 13:14:55.232 [Task monitor] DEBUG n.processor.TaskPollingMonitor - <<< barrier arrives (monitor: spawn) - terminating tasks monitor poll loop
+Oct-20 13:14:55.232 [main] DEBUG nextflow.Session - Session await > all barriers passed
+Oct-20 13:14:55.238 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'TaskFinalizer' shutdown completed (hard=false)
+Oct-20 13:14:55.238 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'PublishDir' shutdown completed (hard=false)
+Oct-20 13:14:55.250 [main] DEBUG n.trace.WorkflowStatsObserver - Workflow completed > WorkflowStats[succeededCount=5; failedCount=0; ignoredCount=0; cachedCount=0; pendingCount=0; submittedCount=-2774; runningCount=2774; retriesCount=0; abortedCount=0; succeedDuration=3h 52m 3s; failedDuration=0ms; cachedDuration=0ms;loadCpus=2774; loadMemory=0; peakRunning=2775; peakCpus=2775; peakMemory=0; ]
+Oct-20 13:14:55.250 [main] DEBUG nextflow.trace.TraceFileObserver - Workflow completed -- saving trace file
+Oct-20 13:14:55.256 [main] DEBUG nextflow.cache.CacheDB - Closing CacheDB done
+Oct-20 13:14:55.268 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-amazon@3.12.1'
+Oct-20 13:14:55.268 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-amazon
+Oct-20 13:14:55.268 [main] INFO  org.pf4j.AbstractPluginManager - Stop plugin 'nf-spawn@0.11.0'
+Oct-20 13:14:55.268 [main] DEBUG nextflow.plugin.BasePlugin - Plugin stopped nf-spawn
+Oct-20 13:14:55.269 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'FileTransfer' shutdown completed (hard=false)
+Oct-20 13:14:55.269 [main] DEBUG nextflow.util.ThreadPoolManager - Thread pool 'S3TransferManager' shutdown completed (hard=false)
+Oct-20 13:14:55.269 [main] DEBUG nextflow.script.ScriptRunner - > Execution complete -- Goodbye

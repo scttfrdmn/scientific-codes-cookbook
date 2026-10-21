@@ -23,17 +23,8 @@ Hands a whole **Nextflow DAG** to the `nf-spawn` executor, which dispatches each
 
 ## Run it
 
-```text
-          pfam_unaligned.fa (S3)
-            /              \
-        MAFFT            MUSCLE          ← fan-out: 2 aligners, 2 instances
-          |                |
-        TREE(mafft)      TREE(muscle)    ← 2 iqtree instances
-            \              /
-             OBSERVE_RF                  ← join: 1 instance
-```
-
 ```bash
+# pfam_unaligned.fa -> MAFFT, MUSCLE (2 instances) -> TREE per alignment (2) -> OBSERVE_RF (1), data via S3
 export COOKBOOK_BUCKET=$(make print-bucket) AWS_REGION=$(aws configure get region)
 cd recipes/nf-spawn && JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow.config
 ```
@@ -50,6 +41,16 @@ cd recipes/nf-spawn && JAVA_HOME=/path/to/jdk17 nextflow run main.nf -c nextflow
 ## Shape, size, cost
 
 Shape F costs **per rule × job count**, not one flat instance: five instances here (3× `c8g.large`, 2× `c8g.xlarge` for the trees — each process keeps the instance type from its standalone recipe, [iqtree](../iqtree/README.md)'s `c8g.xlarge` sized for its `-T 4`), **~$0.12 worst case** — each pays boot + pull overhead separately. **These timings are not compute cost**; see [data movement](../../patterns/data-movement.md) for when per-rule boots and S3 handoffs beat one bigger box.
+
+Which box, [measured](../../measurements/nf-spawn-real/README.md) on 919 Pfam sequences with this DAG unchanged:
+
+| chip | workflow wall | billed $/result | resume, unchanged |
+|---|---|---|---|
+| Graviton4 `c8g` | 17,999 s | 1.346 | 9 s, 0 instances |
+| Xeon `c8i` | 13,303 s | 1.408 | 9 s, 0 instances |
+| **EPYC `c8a`** | **7,964 s** | **0.985** | 9 s, 0 instances |
+
+**Take AMD:** the two IQ-TREE searches are 93–96% of the bill, and AMD runs them 3× faster than Graviton4. Every engine process matched the same step run without nf-spawn. At this size, give MUSCLE a `4xlarge`: it peaks at 5.19 GiB, more than a `large` holds. **A changed image does not invalidate `-resume`**: nf-spawn leaves the image out of Nextflow's cache key, so use a new `workDir` after any repin.
 
 <details>
 <summary>As shipped: per-stage identities, the RF observation, the executor findings, install, run + verify</summary>
