@@ -1,0 +1,62 @@
+{
+  "task_id": "cookbook-eo-stac-real",
+  "container": "quay.io/aarchsci/earth-observation@sha256:e5e8125b307e66301efe15fc3e4340462a112968e299b30fe9421f873688b91f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nexport PATH=${CONDA_PREFIX:-/opt/conda}/bin:$PATH\ncd /tmp\ngrep -E '  (real\\.py|real\\.sh|eo-real/scenes\\.txt|eo-real/sizes\\.tsv|eo-real/pins\\.sha256|snapshot/items\\.jsonl\\.gz|snapshot/listing\\.tsv\\.gz)$' pins.sha256 > pins.sel\n[ \"$(wc -l < pins.sel)\" -eq 7 ] && sha256sum -c pins.sel || { echo \"FAIL: a staged input does not match its pin\"; exit 1; }\nbash real.sh check 32\n"
+  ],
+  "resources": {
+    "cpu": 8,
+    "memory_gib": 32,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/scenes.txt",
+      "destination": "/tmp/eo-real/scenes.txt"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/sizes.tsv",
+      "destination": "/tmp/eo-real/sizes.tsv"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/earth-observation-real/pins.sha256",
+      "destination": "/tmp/eo-real/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac-real/snapshot/items.jsonl.gz",
+      "destination": "/tmp/snapshot/items.jsonl.gz"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/eo-stac-real/snapshot/listing.tsv.gz",
+      "destination": "/tmp/snapshot/listing.tsv.gz"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/eo-stac-real/r1/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "1h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}

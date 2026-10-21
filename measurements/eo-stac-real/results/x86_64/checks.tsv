@@ -1,0 +1,26 @@
+check	result	detail
+API conforms to ITEM_SEARCH	PASS	
+API conforms to QUERY	PASS	
+API conforms to SORT	PASS	
+API conforms to FIELDS	PASS	
+matched() == items paginated	PASS	18346 vs 18346
+no id served twice	PASS	18346 served, 18346 distinct
+pystac renames proj:epsg on parse, on every item	PASS	{'raw_proj_epsg': 18346, 'parsed_proj_epsg_none': 18346, 'parsed_proj_code': 18346}
+every item: collection, year and bbox-intersection hold	PASS	0 violate
+page size invariance: limit 1000 (ids only) == limit 100, same sequence	PASS	18346 vs 18346 ids
+12 monthly searches are disjoint and their union is the year	PASS	sum 18346, distinct 18346, year 18346
+each monthly search returns only that month's items	PASS	0 misplaced
+cloud_cover < 20 and >= 20 partition the year	PASS	9886 + 8460 + 0 without cloud cover = 18346
+the query predicate holds on every returned item	PASS	0 violate
+aggregate total_count == items	PASS	18346
+aggregate grid_code_frequency == per-tile counts of the items	PASS	135 tiles; overflow 0
+every bucket item's id == its directory name	PASS	0 differ
+search == the query recomputed from the bucket's own items (nothing missed)	PASS	0 in the bucket, not returned: []
+search == the query recomputed from the bucket's own items (nothing invented)	PASS	0 returned, not in the bucket: []
+earthsearch:s3_path == the item's bucket directory	PASS	0 differ
+API item == bucket item, value for value, except links and created/updated	PASS	0 of 18346 differ: []
+11SKA in this search == earth-observation-real's 153 scenes + the one nodata item	PASS	154 returned
+those 153 bucket items still match earth-observation-real's sha256 pins	PASS	0 differ: []
+their 612 objects' listed sizes == earth-observation-real's pinned sizes	PASS	0 differ
+live item set == the pinned snapshot, every item byte-identical	PASS	0 gone, 0 new, 0 changed: []
+live listing of those scenes == the pinned (key, size, ETag) rows	PASS	384386 pinned rows, 384386 live; 0 differ

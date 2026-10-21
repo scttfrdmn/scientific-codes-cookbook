@@ -34,13 +34,21 @@ odc.stac.load([item], bands=["scl"], chunks={})     # 5490x5490 @ 20 m, always
 | `file:///tmp/...` hrefs | a bare path | a path without a scheme is resolved **against the item's base href** — `/tmp/SCL.tif` became `s3://sentinel-cogs/tmp/SCL.tif` and failed with `ObjectNotFound`. Clear `links` too. |
 | the pinned local scene | `s3://sentinel-cogs/...` | the hrefs point there already; rewriting them to the staged copies makes the test offline and sha256-verified, and exercises the same code path. |
 | `dtype`/`fill_value`/`rescale` | — | fiddly: `rescale=True` refuses an integer dtype, then `fill_value=0` is refused for `uint16`. See below. |
-| pystac-client | a live STAC API | **`/search` is not covered** — it needs a network dependency this recipe refuses. What *is* checked is that it traverses a static catalog and correctly refuses `search()`. |
+| pystac-client | a live STAC API | this recipe stays offline (a static catalog; `search()` must refuse). Live `/search` is [measured below](#which-box--measured): keep full-item pages at `limit=100`, and keep `properties.datetime` in any `fields` filter. |
 
 **Leave the fixture.** It is the same scene two other recipes verify against ESA's published numbers, so this one inherits an external anchor for free. **Scale it** to more items by passing a list — both libraries take one; nothing else changes.
 
 ## Shape, size, cost
-
 One task on `m8g.xlarge` (4 vCPU / 16 GiB), TTL 40m as a **backstop** with `cost_limit` $0.20 as the real guard. The analysis is **11 s** of a 1m11s window — 37 s installing Docker, 21 s pulling the image, 2 s staging 8.8 MB ([layout](../../patterns/layout-and-effective-cost.md)).
+
+## Which box — [measured](../../measurements/eo-stac-real/README.md) (live `/search`, California × 2024, 18,346 items)
+| chip | instance | wall | $/hr | compute $ | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 208 s | 0.3590 | **0.0208** | **0.0345** |
+| Xeon 6975P-C | `m8i.2xlarge` | 207 s | 0.4234 | 0.0243 | 0.0408 |
+| EPYC 9R45 | `m8a.2xlarge` | **188 s** | 0.4869 | 0.0254 | 0.0381 |
+
+**Any chip will do.** The run waits on the API and S3, so the chip moves wall time by at most 10%. Graviton4 is cheapest per result. The search equals the query recomputed from the bucket's own 53,706 item files, and every result is identical on all three chips. A `limit` above ~280 full items comes back as `Internal server error`, not as a size error.
 
 <details>
 <summary>As shipped: three readers byte-identical on 30.1 M pixels, a silent resample as the control, and three sharp edges where the error blames the wrong thing</summary>
@@ -181,10 +189,9 @@ teardown after a successful exit — `score.tsv` is complete and the exit code i
 
 ### Not covered
 
-**`/search` against a live STAC API**, with CQL2 filtering, paging and datetime queries — the
-reason most people install pystac-client. Covering it needs either a recorded API-response fixture
-or a runtime network dependency; the second is refused, and the first is worth doing only if the
-fixture can be pinned meaningfully.
+**CQL2 `filter`** — Earth Search v1 does not advertise it (it serves `query`, `sort`, `fields`).
+Live `/search` paging, datetime ranges and `query` are covered at state-year scale by
+[eo-stac-real](../../measurements/eo-stac-real/README.md), against a pinned snapshot.
 
 Also: **multi-item mosaicking and temporal stacks**, which is stackstac's and odc-stac's actual
 purpose — one item exercises the grid logic but not compositing, `groupby`, or cloud-masked medians.
