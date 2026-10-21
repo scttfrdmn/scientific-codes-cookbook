@@ -179,7 +179,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 |---|---|---|---|---|---|---|---|
 | [fastjet](../recipes/fastjet/README.md) | Clusters jets on Graviton4 and checks the property anti-k_t was designed to have: soft particles and collinear splittings must not change the hard jets. For anyone doing jet physics on ARM. | hep | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 | [root](../recipes/root/README.md) | Writes a TTree with ROOT and reads it with uproot, which shares no code with ROOT, then checks ROOT's statistics and math against independent references. For anyone doing HEP analysis on ARM. | hep | stage | 2026-10-18 | 2026-10-11 | 2026-10-17 | — |
-| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-19 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
+| [yoda](../recipes/yoda/README.md) | Fills, writes, rebins and rescales a histogram on Graviton4, checking every transformation conserves what it should and that the binning matches `numpy.histogram` exactly. For anyone handling Rivet analysis objects on ARM. | hep | stage | 2026-10-20 | 2026-10-11 | 2026-10-17 | 2026-10-18 |
 
 ## md
 
