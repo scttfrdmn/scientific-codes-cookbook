@@ -1,0 +1,73 @@
+ccx_binary	/var/tmp/env/bin/ccx
+ccx_version	2.23
+threads	16
+base_mesh	6x3x1
+mesh m=1 {"nt": 6, "nr": 3, "nz": 1, "nodes": 174, "elements": 18, "node_d": 102, "area3": 5.448646542814125, "area2": 5.448646542814126, "n_outmid": 7, "d_xyz": [2.0, 0.0, 0.3], "mesh_s": 0.0}
+run {"tag": "m1_spooles_t16", "rung": 1, "solver": "SPOOLES", "threads": 16, "rc": 0, "wall_s": 0.01, "maxrss_gib": 0.017, "equations": 419, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "spooles"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.769221e-05, 0.0, -0.000102219], "rf_z_outmid": 5.448647, "rf_x_total": 1.035283e-14, "rf_x_abs": 8.40046406, "rf_y_total": 5.551115e-16, "rf_y_abs": 9.44529595, "syy_D": -5.27941, "frd_nodes": 174}
+run {"tag": "m1_iter_t16", "rung": 1, "solver": "ITERATIVE CHOLESKY", "threads": 16, "rc": 0, "wall_s": 0.02, "maxrss_gib": 0.017, "equations": 419, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.768469e-05, 0.0, -0.0001022164], "rf_z_outmid": 5.448222, "rf_x_total": 6.047094e-05, "rf_x_abs": 8.400664548, "rf_y_total": -0.0005454978, "rf_y_abs": 9.445577771, "syy_D": -5.27536, "frd_nodes": 174}
+mesh m=2 {"nt": 12, "nr": 6, "nz": 2, "nodes": 941, "elements": 144, "node_d": 689, "area3": 5.448696427492664, "area2": 5.4486964274926635, "n_outmid": 25, "d_xyz": [2.0, 0.0, 0.3], "mesh_s": 0.0}
+run {"tag": "m2_spooles_t16", "rung": 2, "solver": "SPOOLES", "threads": 16, "rc": 0, "wall_s": 0.04, "maxrss_gib": 0.029, "equations": 2500, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "spooles"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.748639e-05, 0.0, -9.917364e-05], "rf_z_outmid": 5.448696, "rf_x_total": 6.826137e-15, "rf_x_abs": 14.6680503742, "rf_y_total": 1.158101e-14, "rf_y_abs": 17.4470194271, "syy_D": -5.49695, "frd_nodes": 941}
+run {"tag": "m2_iter_t16", "rung": 2, "solver": "ITERATIVE CHOLESKY", "threads": 16, "rc": 0, "wall_s": 0.15, "maxrss_gib": 0.018, "equations": 2500, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.74972e-05, 0.0, -9.921897e-05], "rf_z_outmid": 5.449644, "rf_x_total": -0.002041865, "rf_x_abs": 14.6679522791, "rf_y_total": 0.0002467538, "rf_y_abs": 17.4473862978, "syy_D": -5.49777, "frd_nodes": 941}
+mesh m=4 {"nt": 24, "nr": 12, "nz": 4, "nodes": 5985, "elements": 1152, "node_d": 5049, "area3": 5.448699550297831, "area2": 5.44869955029783, "n_outmid": 49, "d_xyz": [2.0, 0.0, 0.3], "mesh_s": 0.02}
+run {"tag": "m4_spooles_t16", "rung": 4, "solver": "SPOOLES", "threads": 16, "rc": 0, "wall_s": 0.46, "maxrss_gib": 0.23, "equations": 16880, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "spooles"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.749805e-05, 0.0, -0.0001009448], "rf_z_outmid": 5.4487, "rf_x_total": 1.234603e-14, "rf_x_abs": 18.2808844192, "rf_y_total": 3.330322e-14, "rf_y_abs": 21.61142805628, "syy_D": -5.44325, "frd_nodes": 5985}
+run {"tag": "m4_iter_t16", "rung": 4, "solver": "ITERATIVE CHOLESKY", "threads": 16, "rc": 0, "wall_s": 1.43, "maxrss_gib": 0.046, "equations": 16880, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.750714e-05, 0.0, -0.0001009354], "rf_z_outmid": 5.44839, "rf_x_total": -0.0009267092, "rf_x_abs": 18.27868714356, "rf_y_total": 0.001127787, "rf_y_abs": 21.61023680778, "syy_D": -5.43841, "frd_nodes": 5985}
+mesh m=8 {"nt": 48, "nr": 24, "nz": 8, "nodes": 42209, "elements": 9216, "node_d": 38609, "area3": 5.448699745551553, "area2": 5.448699745551555, "n_outmid": 97, "d_xyz": [2.0, 0.0, 0.3], "mesh_s": 0.11}
+run {"tag": "m8_spooles_t16", "rung": 8, "solver": "SPOOLES", "threads": 16, "rc": 0, "wall_s": 7.89, "maxrss_gib": 3.02, "equations": 122752, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "spooles"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.752146e-05, 0.0, -0.00010282], "rf_z_outmid": 5.4487, "rf_x_total": 7.387125e-14, "rf_x_abs": 19.835532968007, "rf_y_total": 4.989585e-14, "rf_y_abs": 23.432175382232, "syy_D": -5.39544, "frd_nodes": 42209}
+run {"tag": "m8_iter_t16", "rung": 8, "solver": "ITERATIVE CHOLESKY", "threads": 16, "rc": 0, "wall_s": 15.06, "maxrss_gib": 0.274, "equations": 122752, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.753752e-05, 0.0, -0.0001028265], "rf_z_outmid": 5.448732, "rf_x_total": -0.00155534, "rf_x_abs": 19.833463628614, "rf_y_total": 0.0005645767, "rf_y_abs": 23.431847683019, "syy_D": -5.38338, "frd_nodes": 42209}
+run {"tag": "m8_spooles_t1", "rung": 8, "solver": "SPOOLES", "threads": 1, "rc": 0, "wall_s": 25.58, "maxrss_gib": 1.434, "equations": 122752, "ccx_threads_reported": [["1", "setting up the structure of the matrix"], ["1", "spooles"], ["1", "the stress calculation"], ["1", "the symmetric stiffness/mass contributions"]], "uD": [-2.752146e-05, 0.0, -0.00010282], "rf_z_outmid": 5.4487, "rf_x_total": 7.055597e-14, "rf_x_abs": 19.835532968007, "rf_y_total": 4.606038e-14, "rf_y_abs": 23.432175382232, "syy_D": -5.39544, "frd_nodes": 42209}
+mesh m=16 {"nt": 96, "nr": 48, "nz": 16, "nodes": 315969, "elements": 73728, "node_d": 301857, "area3": 5.44869975775613, "area2": 5.448699757756131, "n_outmid": 193, "d_xyz": [2.0, 0.0, 0.3], "mesh_s": 0.84}
+run {"tag": "m16_spooles_t16", "rung": 16, "solver": "SPOOLES", "threads": 16, "rc": 0, "wall_s": 254.87, "maxrss_gib": 39.183, "equations": 933248, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "spooles"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.754526e-05, 0.0, -0.0001047139], "rf_z_outmid": 5.4487, "rf_x_total": -4.430408e-14, "rf_x_abs": 20.6933849145891, "rf_y_total": -2.381602e-14, "rf_y_abs": 24.43764970376072, "syy_D": -5.37221, "frd_nodes": 315969}
+run {"tag": "m16_iter_t16", "rung": 16, "solver": "ITERATIVE CHOLESKY", "threads": 16, "rc": 0, "wall_s": 148.58, "maxrss_gib": 2.106, "equations": 933248, "ccx_threads_reported": [["16", "setting up the structure of the matrix"], ["16", "the stress calculation"], ["16", "the symmetric stiffness/mass contributions"]], "uD": [-2.753895e-05, 0.0, -0.0001046634], "rf_z_outmid": 5.447944, "rf_x_total": 0.0008833376, "rf_x_abs": 20.692678858502, "rf_y_total": 0.0001501031, "rf_y_abs": 24.4368975255158, "syy_D": -5.37462, "frd_nodes": 315969}
+rung1_mesh	18 el, 174 nodes, 419 equations
+rung1_syy_D	-5.27941e+00
+rung1_uD	-2.769221e-05 0.000000e+00 -1.022190e-04
+rung1_wall_s	0.01
+rung1_maxrss_gib	0.017
+rung1_area_3x3_vs_2x2	5.448646542814 5.448646542814
+rung1_vertical_equilibrium	PASS RF_z 5.448647e+00 vs P*A 5.448646543e+00 rel 8.39e-08
+rung1_inplane_equilibrium	PASS x 1.23e-15 y 5.88e-17
+rung2_mesh	144 el, 941 nodes, 2500 equations
+rung2_syy_D	-5.49695e+00
+rung2_uD	-2.748639e-05 0.000000e+00 -9.917364e-05
+rung2_wall_s	0.04
+rung2_maxrss_gib	0.029
+rung2_area_3x3_vs_2x2	5.448696427493 5.448696427493
+rung2_vertical_equilibrium	PASS RF_z 5.448696e+00 vs P*A 5.448696427e+00 rel 7.85e-08
+rung2_inplane_equilibrium	PASS x 4.65e-16 y 6.64e-16
+rung4_mesh	1152 el, 5985 nodes, 16880 equations
+rung4_syy_D	-5.44325e+00
+rung4_uD	-2.749805e-05 0.000000e+00 -1.009448e-04
+rung4_wall_s	0.46
+rung4_maxrss_gib	0.23
+rung4_area_3x3_vs_2x2	5.448699550298 5.448699550298
+rung4_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699550e+00 rel 8.25e-08
+rung4_inplane_equilibrium	PASS x 6.75e-16 y 1.54e-15
+rung8_mesh	9216 el, 42209 nodes, 122752 equations
+rung8_syy_D	-5.39544e+00
+rung8_uD	-2.752146e-05 0.000000e+00 -1.028200e-04
+rung8_wall_s	7.89
+rung8_maxrss_gib	3.02
+rung8_area_3x3_vs_2x2	5.448699745552 5.448699745552
+rung8_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699746e+00 rel 4.67e-08
+rung8_inplane_equilibrium	PASS x 3.72e-15 y 2.13e-15
+rung16_mesh	73728 el, 315969 nodes, 933248 equations
+rung16_syy_D	-5.37221e+00
+rung16_uD	-2.754526e-05 0.000000e+00 -1.047139e-04
+rung16_wall_s	254.87
+rung16_maxrss_gib	39.183
+rung16_area_3x3_vs_2x2	5.448699757756 5.448699757756
+rung16_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699758e+00 rel 4.45e-08
+rung16_inplane_equilibrium	PASS x 2.14e-15 y 9.75e-16
+exact_upper_area	5.448699758570
+published_sigma_yy_D	PASS -5.37221e+00 vs -5.38 (0.145%)
+syy_D_changes	2.175e-01 5.370e-02 4.781e-02 2.323e-02
+syy_D_converges	PASS each refinement changes it less
+syy_D_observed_order	1.041
+syy_D_richardson	-5.35026e+00
+rung1_iterative_vs_spooles	syy_D -5.27536e+00 vs -5.27941e+00: diff 4.050e-03 = nan of the discretisation change; equilibrium residual 7.79e-05 (SPOOLES 8.39e-08); wall 0.0 s vs 0.0 s; rss 0.02 GiB vs 0.02 GiB
+rung2_iterative_vs_spooles	syy_D -5.49777e+00 vs -5.49695e+00: diff 8.200e-04 = 0.004 of the discretisation change; equilibrium residual 1.74e-04 (SPOOLES 7.85e-08); wall 0.1 s vs 0.0 s; rss 0.02 GiB vs 0.03 GiB
+rung4_iterative_vs_spooles	syy_D -5.43841e+00 vs -5.44325e+00: diff 4.840e-03 = 0.090 of the discretisation change; equilibrium residual 5.68e-05 (SPOOLES 8.25e-08); wall 1.4 s vs 0.5 s; rss 0.05 GiB vs 0.23 GiB
+rung8_iterative_vs_spooles	syy_D -5.38338e+00 vs -5.39544e+00: diff 1.206e-02 = 0.252 of the discretisation change; equilibrium residual 5.92e-06 (SPOOLES 4.67e-08); wall 15.1 s vs 7.9 s; rss 0.27 GiB vs 3.02 GiB
+rung8_thread_invariance	PASS 1 vs 16 threads: 11346 printed numbers, 4544 differ, worst 5.06e-14 of block max (wall 25.6 s vs 7.9 s)
+rung16_iterative_vs_spooles	syy_D -5.37462e+00 vs -5.37221e+00: diff 2.410e-03 = 0.104 of the discretisation change; equilibrium residual 1.39e-04 (SPOOLES 4.45e-08); wall 148.6 s vs 254.9 s; rss 2.11 GiB vs 39.18 GiB
+failed_checks	none

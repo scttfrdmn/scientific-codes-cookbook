@@ -1,0 +1,64 @@
+arm64   completed  tool  697 s (ccx  692 s)  window  788 s  $/hr 0.7181  compute $ 0.1390  billed $ 0.1572  cgroup 39.4 GiB  max ccx rss 39.1 GiB  tpc 1  blas neoversev2  failed=none
+    m1_spooles_t16                419 eq      0.0 s    0.02 GiB  syy_D -5.27941e+00
+    m1_iter_t16                   419 eq      0.0 s    0.02 GiB  syy_D -5.27536e+00
+    m2_spooles_t16               2500 eq      0.1 s    0.03 GiB  syy_D -5.49695e+00
+    m2_iter_t16                  2500 eq      0.2 s    0.02 GiB  syy_D -5.49777e+00
+    m4_spooles_t16              16880 eq      0.6 s    0.23 GiB  syy_D -5.44325e+00
+    m4_iter_t16                 16880 eq      2.4 s    0.04 GiB  syy_D -5.43841e+00
+    m8_spooles_t16             122752 eq     11.2 s    2.99 GiB  syy_D -5.39544e+00
+    m8_iter_t16                122752 eq     23.3 s    0.27 GiB  syy_D -5.40073e+00
+    m8_spooles_t1              122752 eq     41.4 s    1.43 GiB  syy_D -5.39544e+00
+    m16_spooles_t16            933248 eq    395.2 s   39.13 GiB  syy_D -5.37221e+00
+    m16_iter_t16               933248 eq    217.2 s    2.10 GiB  syy_D -5.38196e+00
+x86_64  completed  tool  710 s (ccx  704 s)  window  767 s  $/hr 0.8467  compute $ 0.1670  billed $ 0.1804  cgroup 42.1 GiB  max ccx rss 39.1 GiB  tpc 2  blas Cooperlake  failed=none
+    m1_spooles_t16                419 eq      0.0 s    0.02 GiB  syy_D -5.27941e+00
+    m1_iter_t16                   419 eq      0.0 s    0.02 GiB  syy_D -5.27536e+00
+    m2_spooles_t16               2500 eq      0.1 s    0.03 GiB  syy_D -5.49695e+00
+    m2_iter_t16                  2500 eq      0.2 s    0.02 GiB  syy_D -5.49777e+00
+    m4_spooles_t16              16880 eq      0.6 s    0.23 GiB  syy_D -5.44325e+00
+    m4_iter_t16                 16880 eq      1.9 s    0.05 GiB  syy_D -5.43841e+00
+    m8_spooles_t16             122752 eq     12.8 s    3.01 GiB  syy_D -5.39544e+00
+    m8_iter_t16                122752 eq     19.7 s    0.27 GiB  syy_D -5.38338e+00
+    m8_spooles_t1              122752 eq     36.0 s    1.43 GiB  syy_D -5.39544e+00
+    m16_spooles_t16            933248 eq    442.3 s   39.15 GiB  syy_D -5.37221e+00
+    m16_iter_t16               933248 eq    190.6 s    2.11 GiB  syy_D -5.37462e+00
+amd     completed  tool  458 s (ccx  454 s)  window  502 s  $/hr 0.9738  compute $ 0.1239  billed $ 0.1358  cgroup 42.1 GiB  max ccx rss 39.2 GiB  tpc 1  blas Cooperlake  failed=none
+    m1_spooles_t16                419 eq      0.0 s    0.02 GiB  syy_D -5.27941e+00
+    m1_iter_t16                   419 eq      0.0 s    0.02 GiB  syy_D -5.27536e+00
+    m2_spooles_t16               2500 eq      0.0 s    0.03 GiB  syy_D -5.49695e+00
+    m2_iter_t16                  2500 eq      0.1 s    0.02 GiB  syy_D -5.49777e+00
+    m4_spooles_t16              16880 eq      0.5 s    0.23 GiB  syy_D -5.44325e+00
+    m4_iter_t16                 16880 eq      1.4 s    0.05 GiB  syy_D -5.43841e+00
+    m8_spooles_t16             122752 eq      7.9 s    3.02 GiB  syy_D -5.39544e+00
+    m8_iter_t16                122752 eq     15.1 s    0.27 GiB  syy_D -5.38338e+00
+    m8_spooles_t1              122752 eq     25.6 s    1.43 GiB  syy_D -5.39544e+00
+    m16_spooles_t16            933248 eq    254.9 s   39.18 GiB  syy_D -5.37221e+00
+    m16_iter_t16               933248 eq    148.6 s    2.11 GiB  syy_D -5.37462e+00
+== x86_64 vs arm64
+  m1_spooles_t16           syy_D rel 0.00e+00  .dat:    300 numbers,    76 differ, worst 1.60e-14 of block max
+  m1_iter_t16              syy_D rel 0.00e+00  .dat:    300 numbers,     2 differ, worst 2.74e-16 of block max
+  m2_spooles_t16           syy_D rel 0.00e+00  .dat:    906 numbers,   271 differ, worst 2.02e-14 of block max
+  m2_iter_t16              syy_D rel 0.00e+00  .dat:    906 numbers,     2 differ, worst 2.55e-15 of block max
+  m4_spooles_t16           syy_D rel 0.00e+00  .dat:   3090 numbers,  1118 differ, worst 4.58e-14 of block max
+  m4_iter_t16              syy_D rel 0.00e+00  .dat:   3090 numbers,   180 differ, worst 3.50e-10 of block max
+  m8_spooles_t16           syy_D rel 0.00e+00  .dat:  11346 numbers,  4534 differ, worst 6.36e-14 of block max
+  m8_iter_t16              syy_D rel 3.21e-03  .dat:  11346 numbers, 11303 differ, worst 2.02e-04 of block max
+  m8_spooles_t1            syy_D rel 0.00e+00  .dat:  11346 numbers,  4542 differ, worst 6.03e-14 of block max
+  m16_spooles_t16          syy_D rel 0.00e+00  .dat:  43410 numbers, 18276 differ, worst 8.03e-14 of block max
+  m16_iter_t16             syy_D rel 1.36e-03  .dat:  43410 numbers, 43363 differ, worst 6.24e-05 of block max
+  CROSS_CHIP_SPOOLES_WORST 8.028e-14 (bound 1e-5) PASS
+  finest stress field: 315969 nodes, 2712 differ in any printed digit, max |diff| 1.000e-08 MPa (field max 4.252e+01)
+== amd vs arm64
+  m1_spooles_t16           syy_D rel 0.00e+00  .dat:    300 numbers,    75 differ, worst 1.22e-14 of block max
+  m1_iter_t16              syy_D rel 0.00e+00  .dat:    300 numbers,     2 differ, worst 2.74e-16 of block max
+  m2_spooles_t16           syy_D rel 0.00e+00  .dat:    906 numbers,   272 differ, worst 2.05e-14 of block max
+  m2_iter_t16              syy_D rel 0.00e+00  .dat:    906 numbers,     2 differ, worst 2.55e-15 of block max
+  m4_spooles_t16           syy_D rel 0.00e+00  .dat:   3090 numbers,  1118 differ, worst 4.14e-14 of block max
+  m4_iter_t16              syy_D rel 0.00e+00  .dat:   3090 numbers,   180 differ, worst 3.50e-10 of block max
+  m8_spooles_t16           syy_D rel 0.00e+00  .dat:  11346 numbers,  4537 differ, worst 4.74e-14 of block max
+  m8_iter_t16              syy_D rel 3.21e-03  .dat:  11346 numbers, 11303 differ, worst 2.02e-04 of block max
+  m8_spooles_t1            syy_D rel 0.00e+00  .dat:  11346 numbers,  4542 differ, worst 6.03e-14 of block max
+  m16_spooles_t16          syy_D rel 0.00e+00  .dat:  43410 numbers, 18281 differ, worst 7.40e-14 of block max
+  m16_iter_t16             syy_D rel 1.36e-03  .dat:  43410 numbers, 43363 differ, worst 6.24e-05 of block max
+  CROSS_CHIP_SPOOLES_WORST 7.399e-14 (bound 1e-5) PASS
+  finest stress field: 315969 nodes, 2717 differ in any printed digit, max |diff| 1.000e-08 MPa (field max 4.252e+01)

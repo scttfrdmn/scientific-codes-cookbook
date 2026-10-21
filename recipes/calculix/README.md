@@ -41,6 +41,14 @@ ccx achtel2                    # -> achtel2.dat
 
 One task on `c8g.xlarge` (4 vCPU / 16 GiB), TTL 60m as a **backstop** with `cost_limit` $0.25 as the real guard. The suite is **137 s** for 497 cases; the slowest single case is `thermomech` at 13 s. TTL was retightened from 240m after the first run measured it ([sizing](../../patterns/sizing.md)).
 
+**Which box — [measured](../../measurements/calculix-real/README.md)** on NAFEMS LE10 refined to 933,248 equations, 16 threads: σyy(D) = −5.372 MPa against the published −5.38, identical on all three chips. **Memory picks the box, not cores:** SPOOLES needs 39 GiB for a million equations. ITERATIVE CHOLESKY needs 2.1 GiB, but it stops with ~1e-4 of the load unbalanced, too loose for a mesh-convergence study.
+
+| chip | instance | ladder wall | finest SPOOLES solve | peak mem | **billed $/result** |
+|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 697 s | 395 s | 39.4 GiB | 0.157 |
+| Xeon 6975P-C | `m8i.4xlarge` | 710 s | 442 s | 42.1 GiB | 0.180 |
+| **EPYC 9R45** | `m8a.4xlarge` | **458 s** | **255 s** | 42.1 GiB | **0.136** |
+
 <details>
 <summary>As shipped: 225 static cases exact, 12 path-like deviations reported not asserted, and why 629 references are really 507</summary>
 

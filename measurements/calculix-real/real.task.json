@@ -1,0 +1,43 @@
+{
+  "task_id": "cookbook-calculix-real-real",
+  "container": "quay.io/aarchsci/fem-cfd@sha256:dd8638389359818beeeb4e626cda21107dee9dc87e180bb4e5ae9f95444cd14f",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\ncd /tmp\nsha256sum -c pins.sha256 || { echo \"FAIL: a staged script does not match its pin\"; exit 1; }\nbash real.sh 16 \"1 2 4 8 16\" \"1 2 4 8 16\" 8\n"
+  ],
+  "resources": {
+    "cpu": 16,
+    "memory_gib": 64,
+    "disk_gib": 40,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix-real/le10.py",
+      "destination": "/tmp/le10.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/calculix-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/calculix-real/real/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "2h",
+    "on_complete": "terminate",
+    "cost_limit": 1.0
+  }
+}

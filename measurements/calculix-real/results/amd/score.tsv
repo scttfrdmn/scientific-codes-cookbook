@@ -1,0 +1,58 @@
+observable	value
+ccx_binary	/var/tmp/env/bin/ccx
+ccx_version	2.23
+threads	16
+base_mesh	6x3x1
+rung1_mesh	18 el, 174 nodes, 419 equations
+rung1_syy_D	-5.27941e+00
+rung1_uD	-2.769221e-05 0.000000e+00 -1.022190e-04
+rung1_wall_s	0.01
+rung1_maxrss_gib	0.017
+rung1_area_3x3_vs_2x2	5.448646542814 5.448646542814
+rung1_vertical_equilibrium	PASS RF_z 5.448647e+00 vs P*A 5.448646543e+00 rel 8.39e-08
+rung1_inplane_equilibrium	PASS x 1.23e-15 y 5.88e-17
+rung2_mesh	144 el, 941 nodes, 2500 equations
+rung2_syy_D	-5.49695e+00
+rung2_uD	-2.748639e-05 0.000000e+00 -9.917364e-05
+rung2_wall_s	0.04
+rung2_maxrss_gib	0.029
+rung2_area_3x3_vs_2x2	5.448696427493 5.448696427493
+rung2_vertical_equilibrium	PASS RF_z 5.448696e+00 vs P*A 5.448696427e+00 rel 7.85e-08
+rung2_inplane_equilibrium	PASS x 4.65e-16 y 6.64e-16
+rung4_mesh	1152 el, 5985 nodes, 16880 equations
+rung4_syy_D	-5.44325e+00
+rung4_uD	-2.749805e-05 0.000000e+00 -1.009448e-04
+rung4_wall_s	0.46
+rung4_maxrss_gib	0.23
+rung4_area_3x3_vs_2x2	5.448699550298 5.448699550298
+rung4_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699550e+00 rel 8.25e-08
+rung4_inplane_equilibrium	PASS x 6.75e-16 y 1.54e-15
+rung8_mesh	9216 el, 42209 nodes, 122752 equations
+rung8_syy_D	-5.39544e+00
+rung8_uD	-2.752146e-05 0.000000e+00 -1.028200e-04
+rung8_wall_s	7.89
+rung8_maxrss_gib	3.02
+rung8_area_3x3_vs_2x2	5.448699745552 5.448699745552
+rung8_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699746e+00 rel 4.67e-08
+rung8_inplane_equilibrium	PASS x 3.72e-15 y 2.13e-15
+rung16_mesh	73728 el, 315969 nodes, 933248 equations
+rung16_syy_D	-5.37221e+00
+rung16_uD	-2.754526e-05 0.000000e+00 -1.047139e-04
+rung16_wall_s	254.87
+rung16_maxrss_gib	39.183
+rung16_area_3x3_vs_2x2	5.448699757756 5.448699757756
+rung16_vertical_equilibrium	PASS RF_z 5.448700e+00 vs P*A 5.448699758e+00 rel 4.45e-08
+rung16_inplane_equilibrium	PASS x 2.14e-15 y 9.75e-16
+exact_upper_area	5.448699758570
+published_sigma_yy_D	PASS -5.37221e+00 vs -5.38 (0.145%)
+syy_D_changes	2.175e-01 5.370e-02 4.781e-02 2.323e-02
+syy_D_converges	PASS each refinement changes it less
+syy_D_observed_order	1.041
+syy_D_richardson	-5.35026e+00
+rung1_iterative_vs_spooles	syy_D -5.27536e+00 vs -5.27941e+00: diff 4.050e-03 = nan of the discretisation change; equilibrium residual 7.79e-05 (SPOOLES 8.39e-08); wall 0.0 s vs 0.0 s; rss 0.02 GiB vs 0.02 GiB
+rung2_iterative_vs_spooles	syy_D -5.49777e+00 vs -5.49695e+00: diff 8.200e-04 = 0.004 of the discretisation change; equilibrium residual 1.74e-04 (SPOOLES 7.85e-08); wall 0.1 s vs 0.0 s; rss 0.02 GiB vs 0.03 GiB
+rung4_iterative_vs_spooles	syy_D -5.43841e+00 vs -5.44325e+00: diff 4.840e-03 = 0.090 of the discretisation change; equilibrium residual 5.68e-05 (SPOOLES 8.25e-08); wall 1.4 s vs 0.5 s; rss 0.05 GiB vs 0.23 GiB
+rung8_iterative_vs_spooles	syy_D -5.38338e+00 vs -5.39544e+00: diff 1.206e-02 = 0.252 of the discretisation change; equilibrium residual 5.92e-06 (SPOOLES 4.67e-08); wall 15.1 s vs 7.9 s; rss 0.27 GiB vs 3.02 GiB
+rung8_thread_invariance	PASS 1 vs 16 threads: 11346 printed numbers, 4544 differ, worst 5.06e-14 of block max (wall 25.6 s vs 7.9 s)
+rung16_iterative_vs_spooles	syy_D -5.37462e+00 vs -5.37221e+00: diff 2.410e-03 = 0.104 of the discretisation change; equilibrium residual 1.39e-04 (SPOOLES 4.45e-08); wall 148.6 s vs 254.9 s; rss 2.11 GiB vs 39.18 GiB
+failed_checks	none

@@ -1,0 +1,511 @@
+{
+ "infos": {
+  "1": {
+   "nt": 6,
+   "nr": 3,
+   "nz": 1,
+   "nodes": 174,
+   "elements": 18,
+   "node_d": 102,
+   "area3": 5.448646542814125,
+   "area2": 5.448646542814126,
+   "n_outmid": 7,
+   "d_xyz": [
+    2.0,
+    0.0,
+    0.3
+   ],
+   "mesh_s": 0.0
+  },
+  "2": {
+   "nt": 12,
+   "nr": 6,
+   "nz": 2,
+   "nodes": 941,
+   "elements": 144,
+   "node_d": 689,
+   "area3": 5.448696427492664,
+   "area2": 5.4486964274926635,
+   "n_outmid": 25,
+   "d_xyz": [
+    2.0,
+    0.0,
+    0.3
+   ],
+   "mesh_s": 0.01
+  },
+  "4": {
+   "nt": 24,
+   "nr": 12,
+   "nz": 4,
+   "nodes": 5985,
+   "elements": 1152,
+   "node_d": 5049,
+   "area3": 5.448699550297831,
+   "area2": 5.44869955029783,
+   "n_outmid": 49,
+   "d_xyz": [
+    2.0,
+    0.0,
+    0.3
+   ],
+   "mesh_s": 0.04
+  },
+  "8": {
+   "nt": 48,
+   "nr": 24,
+   "nz": 8,
+   "nodes": 42209,
+   "elements": 9216,
+   "node_d": 38609,
+   "area3": 5.448699745551553,
+   "area2": 5.448699745551555,
+   "n_outmid": 97,
+   "d_xyz": [
+    2.0,
+    0.0,
+    0.3
+   ],
+   "mesh_s": 0.21
+  },
+  "16": {
+   "nt": 96,
+   "nr": 48,
+   "nz": 16,
+   "nodes": 315969,
+   "elements": 73728,
+   "node_d": 301857,
+   "area3": 5.44869975775613,
+   "area2": 5.448699757756131,
+   "n_outmid": 193,
+   "d_xyz": [
+    2.0,
+    0.0,
+    0.3
+   ],
+   "mesh_s": 1.43
+  }
+ },
+ "runs": [
+  {
+   "tag": "m1_spooles_t16",
+   "rung": 1,
+   "solver": "SPOOLES",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 0.01,
+   "maxrss_gib": 0.016,
+   "equations": 419,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "spooles"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.769221e-05,
+    0.0,
+    -0.000102219
+   ],
+   "rf_z_outmid": 5.448647,
+   "rf_x_total": 1.161571e-14,
+   "rf_x_abs": 8.40046406,
+   "rf_y_total": -4.052314e-15,
+   "rf_y_abs": 9.44529595,
+   "syy_D": -5.27941,
+   "frd_nodes": 174
+  },
+  {
+   "tag": "m1_iter_t16",
+   "rung": 1,
+   "solver": "ITERATIVE CHOLESKY",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 0.03,
+   "maxrss_gib": 0.016,
+   "equations": 419,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.768469e-05,
+    0.0,
+    -0.0001022164
+   ],
+   "rf_z_outmid": 5.448222,
+   "rf_x_total": 6.047094e-05,
+   "rf_x_abs": 8.400664548,
+   "rf_y_total": -0.0005454978,
+   "rf_y_abs": 9.445577771,
+   "syy_D": -5.27536,
+   "frd_nodes": 174
+  },
+  {
+   "tag": "m2_spooles_t16",
+   "rung": 2,
+   "solver": "SPOOLES",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 0.05,
+   "maxrss_gib": 0.026,
+   "equations": 2500,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "spooles"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.748639e-05,
+    0.0,
+    -9.917364e-05
+   ],
+   "rf_z_outmid": 5.448696,
+   "rf_x_total": -1.594558e-14,
+   "rf_x_abs": 14.6680503742,
+   "rf_y_total": 4.371503e-15,
+   "rf_y_abs": 17.4470194271,
+   "syy_D": -5.49695,
+   "frd_nodes": 941
+  },
+  {
+   "tag": "m2_iter_t16",
+   "rung": 2,
+   "solver": "ITERATIVE CHOLESKY",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 0.24,
+   "maxrss_gib": 0.017,
+   "equations": 2500,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.74972e-05,
+    0.0,
+    -9.921897e-05
+   ],
+   "rf_z_outmid": 5.449644,
+   "rf_x_total": -0.002041865,
+   "rf_x_abs": 14.6679522791,
+   "rf_y_total": 0.0002467538,
+   "rf_y_abs": 17.4473862978,
+   "syy_D": -5.49777,
+   "frd_nodes": 941
+  },
+  {
+   "tag": "m4_spooles_t16",
+   "rung": 4,
+   "solver": "SPOOLES",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 0.59,
+   "maxrss_gib": 0.231,
+   "equations": 16880,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "spooles"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.749805e-05,
+    0.0,
+    -0.0001009448
+   ],
+   "rf_z_outmid": 5.4487,
+   "rf_x_total": 7.857213e-14,
+   "rf_x_abs": 18.2808844192,
+   "rf_y_total": 1.38882e-14,
+   "rf_y_abs": 21.61142805628,
+   "syy_D": -5.44325,
+   "frd_nodes": 5985
+  },
+  {
+   "tag": "m4_iter_t16",
+   "rung": 4,
+   "solver": "ITERATIVE CHOLESKY",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 2.42,
+   "maxrss_gib": 0.043,
+   "equations": 16880,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.750714e-05,
+    0.0,
+    -0.0001009354
+   ],
+   "rf_z_outmid": 5.44839,
+   "rf_x_total": -0.0009267092,
+   "rf_x_abs": 18.27868714356,
+   "rf_y_total": 0.001127786,
+   "rf_y_abs": 21.61023680778,
+   "syy_D": -5.43841,
+   "frd_nodes": 5985
+  },
+  {
+   "tag": "m8_spooles_t16",
+   "rung": 8,
+   "solver": "SPOOLES",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 11.22,
+   "maxrss_gib": 2.991,
+   "equations": 122752,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "spooles"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.752146e-05,
+    0.0,
+    -0.00010282
+   ],
+   "rf_z_outmid": 5.4487,
+   "rf_x_total": 9.656598e-14,
+   "rf_x_abs": 19.835532968007,
+   "rf_y_total": -1.958503e-15,
+   "rf_y_abs": 23.432175382232,
+   "syy_D": -5.39544,
+   "frd_nodes": 42209
+  },
+  {
+   "tag": "m8_iter_t16",
+   "rung": 8,
+   "solver": "ITERATIVE CHOLESKY",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 23.3,
+   "maxrss_gib": 0.271,
+   "equations": 122752,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.753794e-05,
+    0.0,
+    -0.0001028264
+   ],
+   "rf_z_outmid": 5.448739,
+   "rf_x_total": -0.001421553,
+   "rf_x_abs": 19.833575923613,
+   "rf_y_total": 0.0002547162,
+   "rf_y_abs": 23.432114563516,
+   "syy_D": -5.40073,
+   "frd_nodes": 42209
+  },
+  {
+   "tag": "m8_spooles_t1",
+   "rung": 8,
+   "solver": "SPOOLES",
+   "threads": 1,
+   "rc": 0,
+   "wall_s": 41.39,
+   "maxrss_gib": 1.433,
+   "equations": 122752,
+   "ccx_threads_reported": [
+    [
+     "1",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "1",
+     "spooles"
+    ],
+    [
+     "1",
+     "the stress calculation"
+    ],
+    [
+     "1",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.752146e-05,
+    0.0,
+    -0.00010282
+   ],
+   "rf_z_outmid": 5.4487,
+   "rf_x_total": 1.150943e-13,
+   "rf_x_abs": 19.835532968007,
+   "rf_y_total": 4.135581e-15,
+   "rf_y_abs": 23.432175382232,
+   "syy_D": -5.39544,
+   "frd_nodes": 42209
+  },
+  {
+   "tag": "m16_spooles_t16",
+   "rung": 16,
+   "solver": "SPOOLES",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 395.25,
+   "maxrss_gib": 39.129,
+   "equations": 933248,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "spooles"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.754526e-05,
+    0.0,
+    -0.0001047139
+   ],
+   "rf_z_outmid": 5.4487,
+   "rf_x_total": -1.895095e-13,
+   "rf_x_abs": 20.6933849145891,
+   "rf_y_total": -7.519159e-15,
+   "rf_y_abs": 24.43764970376072,
+   "syy_D": -5.37221,
+   "frd_nodes": 315969
+  },
+  {
+   "tag": "m16_iter_t16",
+   "rung": 16,
+   "solver": "ITERATIVE CHOLESKY",
+   "threads": 16,
+   "rc": 0,
+   "wall_s": 217.21,
+   "maxrss_gib": 2.103,
+   "equations": 933248,
+   "ccx_threads_reported": [
+    [
+     "16",
+     "setting up the structure of the matrix"
+    ],
+    [
+     "16",
+     "the stress calculation"
+    ],
+    [
+     "16",
+     "the symmetric stiffness/mass contributions"
+    ]
+   ],
+   "uD": [
+    -2.753939e-05,
+    0.0,
+    -0.0001046629
+   ],
+   "rf_z_outmid": 5.447909,
+   "rf_x_total": 0.0008972122,
+   "rf_x_abs": 20.6927779562845,
+   "rf_y_total": 0.0004880551,
+   "rf_y_abs": 24.4369023706188,
+   "syy_D": -5.38196,
+   "frd_nodes": 315969
+  }
+ ]
+}
