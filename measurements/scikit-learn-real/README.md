@@ -1,9 +1,10 @@
-# scikit-learn on a real workload — Covertype, Graviton4 vs x86
+# scikit-learn on a real workload — Covertype, Graviton4, Intel and AMD
 
-> **Same box size, same code, same bytes: Graviton4 fits all three model families for 15–34% less per fit,
-> and the linear model's optimum agrees across chips to 1.6e-12.** The gradient-boosted
+> **Same box size, same code, same bytes: Graviton4 fits all three model families for 15–34% less per fit than Intel,
+> and the linear model's optimum agrees across chips to 1.7e-12.** The gradient-boosted
 > ensemble is a path — its probabilities differ in the last bits across chips — and its accuracy
-> is still identical to six digits.
+> is still identical to six digits. AMD's `c8a` fits fastest and bills least per result; Graviton4
+> stays cheapest per tree-ensemble fit.
 
 Workload: **all 581,012 rows** of UCI Covertype (54 features, 7 classes) — the standard
 medium-size tabular benchmark, and the size a researcher actually fits, not a slice. An 80/20
@@ -18,10 +19,12 @@ export AWS_PROFILE=aws
 bash measurements/scikit-learn-real/stage-inputs.sh "$COOKBOOK_BUCKET"
 spawn task run --spec "$(python3 scripts/spec_arch.py scikit-learn arm64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/scikit-learn-real/covtype.task.json)" --wait
 spawn task run --spec "$(python3 scripts/spec_arch.py scikit-learn x86_64 "$COOKBOOK_BUCKET" "$(date +%s)" measurements/scikit-learn-real/covtype.task.json)" --wait
+spawn task run --spec "$(python3 scripts/spec_arch.py scikit-learn amd "$COOKBOOK_BUCKET" "$(date +%s)" measurements/scikit-learn-real/covtype.task.json)" --wait
 ```
 
 One task per chip runs `real.py` (pinned by sha256) against the staged data. The x86 leg is the
-recipe's `geo-ml` env twin: sklearn 1.9.1, numpy 2.5.4, same versions, linux-64 builds.
+recipe's `geo-ml` env twin: sklearn 1.9.1, numpy 2.5.4, same versions, linux-64 builds; the AMD
+leg is the same twin on `c8a`.
 
 ## Results
 
@@ -31,6 +34,7 @@ recipe's `geo-ml` env twin: sklearn 1.9.1, numpy 2.5.4, same versions, linux-64 
 |---|---|---|---|---|---|---|---|---|
 | Graviton4 | `c8g.2xlarge` | 49.0 / 85.6 / 10.6 s | 0.3190 | 0.0043 / 0.0076 / 0.0009 | 657 s | 826 s | **0.0732** | 4.68 GiB |
 | Xeon 6975P-C | `c8i.2xlarge` | 63.1 / 88.4 / 10.6 s | 0.3748 | 0.0066 / 0.0092 / 0.0011 | 693 s | 825 s | **0.0859** | 4.71 GiB |
+| EPYC 9R45 | `c8a.2xlarge` | **29.6 / 65.2 / 8.3 s** | 0.4311 | **0.0035** / 0.0078 / 0.0010 | 465 s | 580 s | **0.0695** | 4.74 GiB |
 
 `task compute` is the whole script: the three fits, a repeat of each tree ensemble (determinism),
 an affine-invariance refit of each, an lbfgs cross-solver fit (273 / 288 s, the largest
@@ -46,24 +50,30 @@ run, launch to terminate.
   to use; a task per model would pay the boot each time.
 - **Peak RSS 4.7 GiB on both** is the forests: 8.88 M nodes each, two held at once for the
   invariance comparison. A `c8g.2xlarge` has 3× that.
+- **AMD is the fastest on every fit** — 1.66× Graviton4 on the Newton logistic fit, 1.31× on
+  HGB, 1.28× on RF — and its 35% higher hourly price leaves it **18% cheaper per logistic fit**
+  but 3–6% dearer per tree-ensemble fit than Graviton4. The whole verified run bills 5% less than
+  Graviton4's (0.0695 vs 0.0732). Its 8 vCPUs are 8 full cores (`threads_per_core` 1, as on
+  Graviton4); Intel's are 4 cores × 2. The AMD leg ran under spawn 0.139.1, which overlaps the
+  Docker install with stage-in, so its 115 s of overhead is not comparable with the others' 130–170 s.
 - n = 1 per cell. Every fit is deterministic on its chip (asserted in-run, below), so a repeat
   would only re-measure the timing noise.
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
-| claim | why it must hold | Graviton4 | x86 |
-|---|---|---|---|
-| sha256 == scikit-learn 1.9.1's own `fetch_covtype` pin; UCI's archive is the same bytes | provenance | ok | ok |
-| class counts == UCI `covtype.info` (211840, 283301, 35754, 2747, 9493, 17367, 20510) | published | exact | exact |
-| every row has exactly one wilderness area and one soil type | documented encoding | 581,012 of 581,012 | same |
-| logistic stationarity `max|X'(P−Y) + W/C| / n` | definition of the optimum | **2.589e-11** | **2.589e-11** |
-| `Σ_i p_ik == n_k` per class (unpenalised intercept) | conservation at the optimum | **1.514e-12** · n | **1.514e-12** · n |
-| lbfgs reaches newton-cholesky's minimum, rel | unique minimum (strictly convex) | 7.6e-10 | 6.1e-10 |
-| HGB fit twice, fixed seed, 8 threads: predict_proba bytes | determinism | identical | identical |
-| RF fit twice: node arrays and predict_proba bytes | determinism | identical | identical |
-| HGB and RF refit on `4X + 1024`: predictions | trees see order, not scale; exact in float64 | bit-identical | bit-identical |
-| RF on `4X + 1024`: same trees, thresholds `4t + 1024` | as above | true | true |
-| accuracy: majority 0.4876 < logreg < both ensembles, ensembles ≥ 0.90 | what each model class achieves | ok | ok |
+| claim | why it must hold | Graviton4 | Intel | AMD |
+|---|---|---|---|---|
+| sha256 == scikit-learn 1.9.1's own `fetch_covtype` pin; UCI's archive is the same bytes | provenance | ok | ok | ok |
+| class counts == UCI `covtype.info` (211840, 283301, 35754, 2747, 9493, 17367, 20510) | published | exact | exact | exact |
+| every row has exactly one wilderness area and one soil type | documented encoding | 581,012 of 581,012 | same | same |
+| logistic stationarity `max|X'(P−Y) + W/C| / n` | definition of the optimum | **2.589e-11** | **2.589e-11** | **2.589e-11** |
+| `Σ_i p_ik == n_k` per class (unpenalised intercept) | conservation at the optimum | **1.514e-12** · n | **1.514e-12** · n | **1.513e-12** · n |
+| lbfgs reaches newton-cholesky's minimum, rel | unique minimum (strictly convex) | 7.6e-10 | 6.1e-10 | 2.3e-09 |
+| HGB fit twice, fixed seed, 8 threads: predict_proba bytes | determinism | identical | identical | identical |
+| RF fit twice: node arrays and predict_proba bytes | determinism | identical | identical | identical |
+| HGB and RF refit on `4X + 1024`: predictions | trees see order, not scale; exact in float64 | bit-identical | bit-identical | bit-identical |
+| RF on `4X + 1024`: same trees, thresholds `4t + 1024` | as above | true | true | true |
+| accuracy: majority 0.4876 < logreg < both ensembles, ensembles ≥ 0.90 | what each model class achieves | ok | ok | ok |
 
 The bounds are `1e-6` on stationarity (Newton at `tol=1e-10` converges quadratically, so a
 correct fit sits orders inside), `1e-6` relative on the lbfgs objective (a first-order method at
@@ -75,13 +85,18 @@ coefficients ill-conditioned), and exact equality everywhere else.
 - **The logistic optimum is a fixed point**, and it agrees: coefficients to **1.6e-12** absolute
   (max |W| 12.2), the objective `0.629010187599845` to all 15 printed digits, the stationarity
   residuals digit for digit — with OpenBLAS on `neoversev2` here and `Cooperlake` there.
-  Accuracy 0.725420 on both.
+  Accuracy 0.725420 on both. AMD (also `Cooperlake`: 0.3.34 has no Zen 5 kernel) lands 5.9e-13
+  from Intel and 1.7e-12 from Graviton4, with the same objective to all 15 digits.
 - **The random forest is identical across chips**: same node arrays hash, same probabilities hash,
-  accuracy 0.954468. On integer features with Gini counts there is no rounding for a chip to change.
+  accuracy 0.954468, on all three. On integer features with Gini counts there is no rounding for a chip to change.
 - **HistGradientBoosting is a path.** Its probability bytes differ across chips (it sums float
   gradients and hessians into histograms); its test accuracy is still **0.969760 on both**. Reported,
-  not asserted — on a different dataset the last bits could flip a prediction.
-- **lbfgs is a path too**: 3,963 vs 3,893 iterations to the same minimum.
+  not asserted — on a different dataset the last bits could flip a prediction. **Intel and AMD
+  produce the same probability bytes** (`c68ec63e…`), so the split is ARM vs x86, not vendor.
+- **lbfgs is a path too**: 3,963 / 3,893 / 3,684 iterations (Graviton4 / Intel / AMD) to the same
+  minimum, which separates even the two x86 chips.
+- **The unregularised-boosting diagnostic below is identical on all three** (trace, leaf maximum,
+  accuracy).
 
 ## The default `l2_regularization=0` diverges on this data
 
@@ -123,3 +138,7 @@ above 0.1, which was closed because LightGBM degraded there too.
 | data | `covtype.data.gz` sha256 `614360d0…5b15771` — figshare file 5976039, the URL and checksum in sklearn 1.9.1's `datasets/_covtype.py`; identical to the copy in UCI's archive, doi:10.24432/C50K5N (durable-id tier) |
 | script | `real.py`, sha256 `48b296bd…ebaf0343` (checked in-task against the staged `pins.sha256`) |
 | image | the recipe's `geo-ml@sha256:83ca6331…` (arm64) and its `geo-ml-ffc4dc5282aa` x86 twin |
+
+The AMD leg (spend $0.07) staged the resolved command as a sha256-checked `task.sh`, byte for byte
+what `spec_arch.py` emitted plus a non-failing CPU-topology print: spawn 0.139.1's wrapper leaves
+too little of EC2's 16 KiB user data for it inline (spawn#1246).

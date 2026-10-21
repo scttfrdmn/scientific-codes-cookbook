@@ -28,7 +28,7 @@ salmon index -t ensembl116_cdna.fa.gz -i sidx -p 16 --ramLimit 8
 salmon quant -i sidx -l A -1 ERR188026_1.fastq.gz -2 ERR188026_2.fastq.gz -o squant -p 16
 ```
 
-## Which box — [measured](../../measurements/salmon-real/README.md) (same image, same bytes, 16 threads)
+## Which box — [measured](../../measurements/salmon-real/README.md) (salmon 2.7.0, same bytes, 16 threads)
 
 | generation | instance | quant wall | $/hr | compute $ | **billed $/result** | overhead |
 |---|---|---|---|---|---|---|
@@ -36,8 +36,10 @@ salmon quant -i sidx -l A -1 ERR188026_1.fastq.gz -2 ERR188026_2.fastq.gz -o squ
 | Graviton3 | `c7g.4xlarge` | 83 s | 0.5800 | 0.0134 | 0.0259 | 78 s |
 | Graviton4 | `c8g.4xlarge` | 74 s | 0.6381 | 0.0131 | 0.0222 | 51 s |
 | **Graviton5** | `c9g.4xlarge` | **57 s** | 0.6955 | **0.0110** | **0.0193** | **43 s** |
+| Intel (same gen.) | `c8i.4xlarge` | 90 s | 0.7497 | 0.0187 | 0.0277 | 43 s |
+| AMD (same gen.) | `c8a.4xlarge` | 55 s | 0.8622 | 0.0132 | 0.0210 | 33 s |
 
-**Take the newest generation — it wins twice:** Graviton5 is **2.0× faster** than Graviton2, **33% cheaper per result billed**, and it *stages* faster too (overhead 74 s → 43 s, more network for the same 3.7 GB). But note **this job is overhead-dominated** — 43–78 s of boot and staging against 57–116 s of compute, so **40% of the bill is not salmon**, the opposite of [bwa](../bwa-samtools/README.md) at 89% compute. More cores buys nothing here; only a shorter data path does.
+**Take the newest generation — it wins twice:** Graviton5 is **2.0× faster** than Graviton2, **33% cheaper per result billed**, and it *stages* faster too (overhead 74 s → 43 s, more network for the same 3.7 GB). But note **this job is overhead-dominated** — 43–78 s of boot and staging against 57–116 s of compute, so **40% of the bill is not salmon**, the opposite of [bwa](../bwa-samtools/README.md) at 89% compute. More cores buys nothing here; only a shorter data path does. Same generation, AMD is the fastest and ties Graviton4 per result; Intel (8 cores × 2 SMT) is dearest, and `quant.sf` is byte-identical on all three chips.
 
 ## Make it yours
 

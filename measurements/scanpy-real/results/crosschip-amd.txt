@@ -1,0 +1,20 @@
+# arm64 vs amd
+same_libsize.csv	identical
+same_hvg.txt	identical
+same_markers_top25.csv	DIFFERS
+hvg_overlap	2000 of 2000
+pca.npy	differs, max | |a|-|b| | = 7.629e-06
+umap.npy	differs, max | |a|-|b| | = 1.152e+01
+cells	identical set (161764)
+leiden	27 vs 28 clusters, ARI across chips 0.9577
+louvain	27 vs 26 clusters, ARI across chips 0.8996
+# x86_64 (Intel) vs amd
+same_libsize.csv	identical
+same_hvg.txt	identical
+same_markers_top25.csv	DIFFERS
+hvg_overlap	2000 of 2000
+pca.npy	differs, max | |a|-|b| | = 1.192e-07
+umap.npy	differs, max | |a|-|b| | = 1.196e+01
+cells	identical set (161764)
+leiden	28 vs 28 clusters, ARI across chips 0.9611
+louvain	26 vs 26 clusters, ARI across chips 0.9243

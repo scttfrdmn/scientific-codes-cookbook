@@ -19,7 +19,6 @@ Runs the three projects' own test suites, each the way its own wheel build tests
 make stage RECIPE=scipy-stack    # once: 9 pinned wheels + scipy's companion test package, one build per chip
 spawn task run --spec "$(make -s spec RECIPE=scipy-stack)" --wait
 make ls RECIPE=scipy-stack
-
 numpy.test(label='full', extra_argv=['-n=auto'])                     # tools/wheels/cibw_test_command.sh
 scipy.test(parallel=N)                                               # scipy's wheel test, on N workers
 pd.test(extra_args=['-m not clipboard and not single_cpu and not slow and not network and not db',
@@ -41,10 +40,11 @@ pd.test(extra_args=['-m not clipboard and not single_cpu and not slow and not ne
 ## Which box — [measured](../../measurements/scipy-stack-real/README.md) on all of GHCN-Daily 2024 (38.5M rows, then a 1M-unknown sparse solve)
 | chip | instance | wall | peak RSS | compute $/result | billed $/result |
 |---|---|---|---|---|---|
-| Graviton4 | `m8g.2xlarge` | 72 s | 11.3 GiB | **0.0072** | 0.0225 |
+| Graviton4 | `m8g.2xlarge` | 72 s | 11.3 GiB | 0.0072 | 0.0225 |
 | Intel | `m8i.2xlarge` | 70 s | 11.2 GiB | 0.0082 | **0.0196** |
+| AMD | `m8a.2xlarge` | **46 s** | 11.2 GiB | **0.0062** | 0.0216 |
 
-Same wall, so Graviton4 is 12% cheaper in compute; the 3.1 GB image pull makes the *bill* 13% cheaper on x86 at this length. Every groupby, merge and resample conserves exactly and is byte-identical across chips; the solved grid differs by 2.9e-15 relative, inside its condition bound.
+AMD is 1.5× faster and cheapest in compute; Graviton4 beats Intel by 12% in compute, but the 3.1 GB image pull makes the *bill* cheapest on Intel at this length. Every groupby, merge and resample conserves exactly and is byte-identical across chips; the solved grid differs ARM vs x86 by 2.9e-15 relative, inside its condition bound, and is bit-identical on Intel and AMD.
 
 ## Shape, size, cost
 
