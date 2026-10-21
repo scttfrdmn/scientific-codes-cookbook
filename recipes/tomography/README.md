@@ -11,10 +11,7 @@ last_verified: 2026-10-11
 ---
 # astra-toolbox — CPU tomography against Radon identities
 
-> **The forward model cross-validates; the reconstructions do not.** astra and tomopy project
-> the same phantom to within **2.6e-07**. But astra's FBP recovers it at **0.070** relative L2
-> where tomopy's best manages **0.850** on the identical sinogram — reported, not asserted,
-> and not attributed to either tool. Details below.
+> **The forward model cross-validates; the reconstructions do not.** astra and tomopy project the same phantom to within **2.6e-07**. But astra's FBP recovers it at **0.070** relative L2 where tomopy's best manages **0.850** on the identical sinogram — reported, not asserted, and not attributed to either tool. Details below.
 
 Projects and reconstructs a synthetic phantom on Graviton4 with no GPU, checking mass conservation, linearity and recovery against exact ground truth. For anyone doing CT reconstruction on ARM.
 
@@ -25,12 +22,15 @@ make stage RECIPE=tomography     # once: the checks only — the phantom is anal
 spawn task run --spec "$(make -s spec RECIPE=tomography)" --wait
 spawn task run --spec "$(make -s spec RECIPE=tomography ARCH=x86_64)" --wait   # x86 twin, writes runs-x86_64/
 make ls RECIPE=tomography
-
 pid = astra.create_projector("linear", proj_geom, vol_geom)   # CPU; no _CUDA suffix
 sid, sino = astra.create_sino(disc, pid)
 sino.sum(axis=1)            # the Radon integral — same at every angle, equals the mass
 astra.astra_dict("FBP")     # CPU algorithm; FBP_CUDA is the GPU one
 ```
+
+## Which box — [measured](../../measurements/tomography-real/README.md) on a whole TOMCAT scan (2,160 slices of 2560², 1,501 projections)
+
+**Take Graviton4: as fast as AMD, cheapest per result.** On `r8*.4xlarge` with `ncore=16`, TomoPy's whole pipeline takes **279 s** on Graviton4 (`r8g`), 466 s on Xeon 6975P-C (`r8i`, 8 cores × 2) and 282 s on EPYC 9R45 (`r8a`): **$0.121**, $0.208 and $0.157 billed per volume. Every slice matches the depositors' own reconstruction (FRC above 1/7) on all three chips. **TOMCAT's logged centre is 1-based: subtract 1 for TomoPy.** RAM is picked by staging the zips in tmpfs, not by TomoPy (23 GiB peak).
 
 ## Make it yours
 
@@ -199,9 +199,9 @@ fails to reduce the error, or a non-deterministic repeat — but check the bucke
 
 ### Not covered
 
-**Real data.** No measured projections, so nothing here touches flat/dark-field correction,
-`minus_log`, ring artifacts, or centre-of-rotation finding — which is most of what a beamline
-pipeline does and where tomopy earns its place.
+**Real data**, in this recipe's own run: flat/dark correction, `minus_log` and centre finding on a
+measured scan are in [tomography-real](../../measurements/tomography-real/README.md). Ring
+artifacts and stripe removal are covered in neither.
 
 **Iterative reconstruction** — SIRT, SART and CGLS are all in astra's CPU set and only FBP is run.
 **3D and cone-beam geometry**: everything is a single 2D slice with parallel beam. **The GPU

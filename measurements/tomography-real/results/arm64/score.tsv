@@ -1,0 +1,152 @@
+version_tomopy	1.15.3
+version_astra	2.5.0
+version_numpy	2.5.4
+version_tifffile	2025.1.10
+version_pywavelets	1.8.0
+version_scipy	1.18.1
+astra_use_cuda	False
+ok_cpu_only	astra reports no CUDA; every timing is CPU
+ncore	16
+max_rows	0
+proj_tiffs	1731
+ok_count_tiffs	1731 TIFFs numbered 0001..1731 = 30 darks + 100 flats + 1501 projections + 100 flats
+detector	2560 x 2160
+ok_detector	2560 x 2160 detector, as the log's X-ROI/Y-ROI say
+ok_tiff_shape	every TIFF is 2160 x 2560 uint16
+raw_bytes_in_ram_gib	15.46
+dark_mean	110.11
+flat_pre_mean	40892.74
+flat_post_mean	40475.50
+flat_drift_pre_to_post	-0.0102
+flat_gt_dark_fraction	1.000000
+ok_flat_above_dark	flat exceeds dark on 100.0000% of pixels
+transmission_median	0.3116
+transmission_p001_p999	0.1032 0.6479
+phase_read_s	11.4
+angular_step_deg	0.120000
+ok_angular_step	1501 projections over 0..180 inclusive is the log's 0.120 deg step
+centre_mirror_0_180	1323.38
+mirror_residual_rel	0.1199
+centre_vo_rows	120:1322.75 360:1323.25 600:1323.00 840:1323.25 1080:1323.00 1320:1323.25 1560:1323.25 1800:1323.00 2040:1323.50
+centre_vo_median	1323.25
+centre_published	1324.11
+phase_centre_s	104.2
+published_slices	2160
+ok_count_published	2160 published slices numbered 0001..2160, one per detector row
+frame_search_row270	slice 271 rot270 corr 0.6190 (4x-binned 0.7777, best elsewhere 0.1011)
+frame_search_row1890	slice 1891 rot270 corr 0.6224 (4x-binned 0.7343, best elsewhere 0.1048)
+frame_map	published slice = 1 + row, orientation rot270
+ok_frame_consistent	both searched rows give one orientation (rot270, rot270) and a unit-slope map (1620 slices apart over 1620 rows)
+centre_sweep	1321.11:0.32793 1321.36:0.32685 1321.61:0.33665 1321.86:0.36746 1322.11:0.42248 1322.36:0.49472 1322.61:0.56842 1322.86:0.62395 1323.11:0.64543 1323.36:0.62667 1323.61:0.57376 1323.86:0.50241 1324.11:0.43203 1324.36:0.37819 1324.61:0.34776 1324.86:0.33758 1325.11:0.33765
+centre_best_vs_published_slices	1323.11
+phase_calibrate_s	37.4
+ok_centre_vo_vs_published	Vo 1323.25 vs TOMCAT 1323.11 (|d| 0.14 <= 1 px)
+ok_centre_mirror_vs_published	0/180 mirror 1323.38 vs TOMCAT 1323.11 (|d| 0.27 <= 1 px)
+ok_centre_reproduces_published	gridrec reproduces the published slices best at 1323.11; TOMCAT's 1-based 1324.11 is 1323.11
+rows_reconstructed	2160
+time_preprocess_s	12.8
+time_gridrec_s	150.7
+time_compare_s	262.9
+gridrec_s_per_slice	0.070
+nonfinite_voxels	0
+ok_finite	every voxel of every slice is finite
+rows_with_published_partner	2160 of 2160
+corr_published_min	0.4994
+corr_published_median	0.6176
+frc_min_to_half_nyquist_worst_slice	0.2720
+frc_min_to_half_nyquist_median	0.5228
+frc_slices_passing_1_7	2160 of 2160
+frc_rings_1_7_below_1_7_slices	1985 of 2160 (truncation regime, reported)
+frc_cross_1_7_from_ring8_min_median	1280 1280 of Nyquist 1280
+registration_peaks	2160 of 2160
+volume_slice_hash_digest	6c6b996414c8f5197378433db0ed54a9a6c3c5ab48f2a2373d767e2fb227c350
+ok_matched	every row whose mapped index exists has a published slice (2160 of 2160)
+ok_frc_published	every slice agrees with the depositors' slice above the 1/7 FRC criterion from ring 8 to half Nyquist (worst slice 0.272)
+ok_registration	every slice matches its own published slice better than either neighbour (2160 of 2160)
+phase_volume_s	426.5
+gridrec_ncore1_vs_ncoreN_identical	False
+gridrec_ncore1_vs_ncoreN_maxabs_rel	7.431e-07
+ok_ncore_invariance	gridrec on 16 rows at ncore=1 vs ncore=16 differs by 7.43e-07 of the peak (< 1e-5, float32 FFT round-off)
+gridrec_alone_vs_in_block_identical	False
+gridrec_alone_vs_in_block_maxabs_rel	6.600e-07
+ok_pairing_invariance	row 1080 reconstructed alone vs inside a 16-row block differs by 6.60e-07 of the peak (< 1e-5)
+phase_invariance_s	8.5
+astra_r270_pad_shift_px	-43.610
+astra_r270_measured_columns	5:2564
+astra_r270_time_fbp_s	22.3
+astra_r270_frame	0
+astra_r270_fbp_vs_gridrec_corr	0.7604800334943114
+astra_r270_fbp_vs_gridrec_runner_up_frame_corr	0.07383
+astra_r270_resid_astra_fbp	0.278249095147378
+astra_r270_scale_astra_fbp	0.586945988480051
+astra_r270_resid_gridrec	0.15785272168540276
+astra_r270_scale_gridrec	1.0137598055238077
+astra_r270_resid_wrong_centre	0.17734761198639648
+astra_r270_time_fp_s	66.4
+astra_r270_time_cgls_s	4678.4
+astra_r270_cgls_resid	0.22230 0.16809 0.15585 0.13665 0.12681 0.12372 0.11862 0.11498 0.11400 0.11192 0.11041 0.10980 0.10826 0.10740 0.10689 0.10634 0.10536 0.10511 0.10437 0.10386 0.10360 0.10336 0.10275 0.10259 0.10229 0.10191 0.10175 0.10151 0.10133 0.10105
+astra_r270_cgls_monotone	True
+astra_r270_time_total_s	4900.3
+astra_r270_fbp_vs_gridrec_frc	5:0.912 40:0.936 160:0.974 640:0.715 1000:0.390 1280:0.007
+astra_r270_fbp_vs_gridrec_frc_cross_1_7	1228
+astra_r270_fbp_vs_gridrec_frc_min_rings_1_7	0.647
+ok_astra_fbp_r270	astra FBP vs tomopy gridrec, same sinogram, same centre: FRC above 1/7 from ring 8 to half Nyquist (min 0.704)
+astra_r270_cgls_vs_gridrec_frc	5:0.936 40:0.938 160:0.974 640:0.694 1000:0.344 1280:-0.013
+astra_r270_cgls_first_iteration_below_gridrec_residual	3
+ok_consistency_r270	re-projecting gridrec's slice leaves 0.1579 of the sinogram, < 0.1773 for a slice 10 px off-centre
+ok_cgls_monotone_r270	CGLS residual falls at every one of 30 iterations (0.2223 -> 0.1011)
+astra_r270_cgls_vs_gridrec_corr	0.75494
+astra_r1080_pad_shift_px	-43.610
+astra_r1080_measured_columns	5:2564
+astra_r1080_time_fbp_s	22.4
+astra_r1080_frame	0
+astra_r1080_fbp_vs_gridrec_corr	0.7983914493837758
+astra_r1080_fbp_vs_gridrec_runner_up_frame_corr	0.10063
+astra_r1080_resid_astra_fbp	0.2766775077372506
+astra_r1080_scale_astra_fbp	0.6190318152799429
+astra_r1080_resid_gridrec	0.15862101457150501
+astra_r1080_scale_gridrec	1.0059401608913092
+astra_r1080_resid_wrong_centre	0.18188790721356318
+astra_r1080_time_fp_s	66.4
+astra_r1080_time_cgls_s	4669.8
+astra_r1080_cgls_resid	0.24039 0.18077 0.16617 0.14775 0.13560 0.12795 0.12583 0.12078 0.11884 0.11766 0.11591 0.11449 0.11297 0.11236 0.11093 0.10952 0.10882 0.10830 0.10773 0.10684 0.10633 0.10603 0.10520 0.10471 0.10439 0.10408 0.10353 0.10294 0.10255 0.10237
+astra_r1080_cgls_monotone	True
+astra_r1080_time_total_s	4891.8
+astra_r1080_fbp_vs_gridrec_frc	5:0.932 40:0.937 160:0.962 640:0.685 1000:0.328 1280:0.022
+astra_r1080_fbp_vs_gridrec_frc_cross_1_7	1162
+astra_r1080_fbp_vs_gridrec_frc_min_rings_1_7	0.835
+ok_astra_fbp_r1080	astra FBP vs tomopy gridrec, same sinogram, same centre: FRC above 1/7 from ring 8 to half Nyquist (min 0.685)
+astra_r1080_cgls_vs_gridrec_frc	5:0.955 40:0.948 160:0.961 640:0.652 1000:0.298 1280:0.017
+astra_r1080_cgls_first_iteration_below_gridrec_residual	4
+ok_consistency_r1080	re-projecting gridrec's slice leaves 0.1586 of the sinogram, < 0.1819 for a slice 10 px off-centre
+ok_cgls_monotone_r1080	CGLS residual falls at every one of 30 iterations (0.2404 -> 0.1024)
+astra_r1080_cgls_vs_gridrec_corr	0.80828
+astra_r1890_pad_shift_px	-43.610
+astra_r1890_measured_columns	5:2564
+astra_r1890_time_fbp_s	22.4
+astra_r1890_frame	0
+astra_r1890_fbp_vs_gridrec_corr	0.7618224771094246
+astra_r1890_fbp_vs_gridrec_runner_up_frame_corr	0.11418
+astra_r1890_resid_astra_fbp	0.30425897625151266
+astra_r1890_scale_astra_fbp	0.6488070419803678
+astra_r1890_resid_gridrec	0.19902654871038855
+astra_r1890_scale_gridrec	0.999643410080533
+astra_r1890_resid_wrong_centre	0.2161285393074195
+astra_r1890_time_fp_s	66.4
+astra_r1890_time_cgls_s	4677.0
+astra_r1890_cgls_resid	0.26062 0.20757 0.18986 0.18090 0.16949 0.16250 0.16111 0.15578 0.15219 0.15070 0.14852 0.14567 0.14360 0.14230 0.14003 0.13789 0.13728 0.13592 0.13494 0.13357 0.13304 0.13215 0.13106 0.13073 0.12972 0.12917 0.12823 0.12802 0.12728 0.12662
+astra_r1890_cgls_monotone	True
+astra_r1890_time_total_s	4899.1
+astra_r1890_fbp_vs_gridrec_frc	5:0.922 40:0.926 160:0.969 640:0.688 1000:0.278 1280:0.030
+astra_r1890_fbp_vs_gridrec_frc_cross_1_7	1132
+astra_r1890_fbp_vs_gridrec_frc_min_rings_1_7	0.847
+ok_astra_fbp_r1890	astra FBP vs tomopy gridrec, same sinogram, same centre: FRC above 1/7 from ring 8 to half Nyquist (min 0.686)
+astra_r1890_cgls_vs_gridrec_frc	5:0.938 40:0.934 160:0.968 640:0.645 1000:0.244 1280:0.025
+astra_r1890_cgls_first_iteration_below_gridrec_residual	3
+ok_consistency_r1890	re-projecting gridrec's slice leaves 0.1990 of the sinogram, < 0.2161 for a slice 10 px off-centre
+ok_cgls_monotone_r1890	CGLS residual falls at every one of 30 iterations (0.2606 -> 0.1266)
+astra_r1890_cgls_vs_gridrec_corr	0.73628
+ok_astra_frame	one astra-to-tomopy orientation for every row: [0]
+phase_astra_s	4906.3
+ru_maxrss_gib	22.72
+wall_s	5494.4

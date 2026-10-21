@@ -1,0 +1,112 @@
+== Graviton4 vs x86_64
+score.tsv: 67 values identical, 8 differ
+  frame_search_row1890                             slice 1891 rot270 corr 0.6224 (4x-binned 0.7343, best elsewhere 0.1048 | slice 1891 rot270 corr 0.6225 (4x-binned 0.7343, best elsewhere 0.1048
+  centre_sweep                                     1321.11:0.32793 1321.36:0.32685 1321.61:0.33665 1321.86:0.36746 1322.1 | 1321.11:0.32794 1321.36:0.32686 1321.61:0.33666 1321.86:0.36747 1322.1
+  gridrec_s_per_slice                              0.070 | 0.103
+  volume_slice_hash_digest                         6c6b996414c8f5197378433db0ed54a9a6c3c5ab48f2a2373d767e2fb227c350 | bc041f28c839e3f2fc9fd6998466450082e8fdc0d0d1d750811e5c98234d050a
+  gridrec_ncore1_vs_ncoreN_maxabs_rel              7.431e-07 | 6.684e-07
+  ok_ncore_invariance                              gridrec on 16 rows at ncore=1 vs ncore=16 differs by 7.43e-07 of the p | gridrec on 16 rows at ncore=1 vs ncore=16 differs by 6.68e-07 of the p
+  gridrec_alone_vs_in_block_maxabs_rel             6.600e-07 | 4.629e-07
+  ok_pairing_invariance                            row 1080 reconstructed alone vs inside a 16-row block differs by 6.60e | row 1080 reconstructed alone vs inside a 16-row block differs by 4.63e
+  astra_r1080_cgls_vs_gridrec_corr                 0.80828 | 0.80829
+  astra_r1080_cgls_vs_gridrec_frc                  5:0.955 40:0.948 160:0.961 640:0.652 1000:0.298 1280:0.017 | 5:0.954 40:0.948 160:0.961 640:0.652 1000:0.298 1280:0.017
+  astra_r1080_fbp_vs_gridrec_corr                  0.7983914493837758 | 0.7983984118164501
+  astra_r1080_resid_astra_fbp                      0.2766775077372506 | 0.27667754288520724
+  astra_r1080_resid_gridrec                        0.15862101457150501 | 0.15862094744011568
+  astra_r1080_resid_wrong_centre                   0.18188790721356318 | 0.18188775796819048
+  astra_r1080_scale_astra_fbp                      0.6190318152799429 | 0.6190317180259799
+  astra_r1080_scale_gridrec                        1.0059401608913092 | 1.0059400517834833
+  astra_r1890_cgls_resid                           0.26062 0.20757 0.18986 0.18090 0.16949 0.16250 0.16111 0.15578 0.1521 | 0.26062 0.20757 0.18986 0.18090 0.16949 0.16250 0.16111 0.15578 0.1521
+  astra_r1890_cgls_vs_gridrec_corr                 0.73628 | 0.73639
+  astra_r1890_fbp_vs_gridrec_corr                  0.7618224771094246 | 0.7618283234812584
+  astra_r1890_resid_astra_fbp                      0.30425897625151266 | 0.3042590052114332
+  astra_r1890_resid_gridrec                        0.19902654871038855 | 0.19902650554385423
+  astra_r1890_resid_wrong_centre                   0.2161285393074195 | 0.216128433601618
+  astra_r1890_scale_astra_fbp                      0.6488070419803678 | 0.648806954511047
+  astra_r1890_scale_gridrec                        0.999643410080533 | 0.9996435559510176
+  astra_r270_cgls_resid                            0.22230 0.16809 0.15585 0.13665 0.12681 0.12372 0.11862 0.11498 0.1140 | 0.22230 0.16809 0.15585 0.13665 0.12682 0.12372 0.11862 0.11498 0.1140
+  astra_r270_cgls_vs_gridrec_corr                  0.75494 | 0.75495
+  astra_r270_fbp_vs_gridrec_corr                   0.7604800334943114 | 0.7604856603057488
+  astra_r270_resid_astra_fbp                       0.278249095147378 | 0.2782491321697621
+  astra_r270_resid_gridrec                         0.15785272168540276 | 0.15785266651052712
+  astra_r270_resid_wrong_centre                    0.17734761198639648 | 0.1773475293857407
+  astra_r270_scale_astra_fbp                       0.586945988480051 | 0.5869459012018226
+  astra_r270_scale_gridrec                         1.0137598055238077 | 1.0137597365760613
+slices.tsv: 2160 rows A, 2160 rows B
+  slices byte-identical across the two: 0 of 2160
+  corr_published             identical 580 of 2160, max |diff| 4.000e-06
+  frc_min_to_half_nyquist    identical 252 of 2160, max |diff| 2.800e-05
+  frc_cross_1_7              identical 2160 of 2160, max |diff| 0.000e+00
+  mean                       identical 1405 of 2160, max |diff| 2.000e-10
+  std                        identical 0 of 2160, max |diff| 9.000e-09
+  cgls_0270.npy    identical False, max |diff| / max|x| 1.021e-04
+  cgls_1080.npy    identical False, max |diff| / max|x| 2.570e-04
+  cgls_1890.npy    identical False, max |diff| / max|x| 9.631e-04
+  slice_0270.npy   identical False, max |diff| / max|x| 7.338e-05
+  slice_1080.npy   identical False, max |diff| / max|x| 8.068e-05
+  slice_1890.npy   identical False, max |diff| / max|x| 8.860e-05
+
+== Graviton4 vs amd
+score.tsv: 67 values identical, 8 differ
+  frame_search_row1890                             slice 1891 rot270 corr 0.6224 (4x-binned 0.7343, best elsewhere 0.1048 | slice 1891 rot270 corr 0.6225 (4x-binned 0.7343, best elsewhere 0.1048
+  centre_sweep                                     1321.11:0.32793 1321.36:0.32685 1321.61:0.33665 1321.86:0.36746 1322.1 | 1321.11:0.32794 1321.36:0.32686 1321.61:0.33666 1321.86:0.36747 1322.1
+  gridrec_s_per_slice                              0.070 | 0.074
+  volume_slice_hash_digest                         6c6b996414c8f5197378433db0ed54a9a6c3c5ab48f2a2373d767e2fb227c350 | bc041f28c839e3f2fc9fd6998466450082e8fdc0d0d1d750811e5c98234d050a
+  gridrec_ncore1_vs_ncoreN_maxabs_rel              7.431e-07 | 6.684e-07
+  ok_ncore_invariance                              gridrec on 16 rows at ncore=1 vs ncore=16 differs by 7.43e-07 of the p | gridrec on 16 rows at ncore=1 vs ncore=16 differs by 6.68e-07 of the p
+  gridrec_alone_vs_in_block_maxabs_rel             6.600e-07 | 4.629e-07
+  ok_pairing_invariance                            row 1080 reconstructed alone vs inside a 16-row block differs by 6.60e | row 1080 reconstructed alone vs inside a 16-row block differs by 4.63e
+  astra_r1080_cgls_vs_gridrec_corr                 0.80828 | 0.80829
+  astra_r1080_cgls_vs_gridrec_frc                  5:0.955 40:0.948 160:0.961 640:0.652 1000:0.298 1280:0.017 | 5:0.954 40:0.948 160:0.961 640:0.652 1000:0.298 1280:0.017
+  astra_r1080_fbp_vs_gridrec_corr                  0.7983914493837758 | 0.7983984118164501
+  astra_r1080_resid_astra_fbp                      0.2766775077372506 | 0.27667754288520724
+  astra_r1080_resid_gridrec                        0.15862101457150501 | 0.15862094744011568
+  astra_r1080_resid_wrong_centre                   0.18188790721356318 | 0.18188775796819048
+  astra_r1080_scale_astra_fbp                      0.6190318152799429 | 0.6190317180259799
+  astra_r1080_scale_gridrec                        1.0059401608913092 | 1.0059400517834833
+  astra_r1890_cgls_resid                           0.26062 0.20757 0.18986 0.18090 0.16949 0.16250 0.16111 0.15578 0.1521 | 0.26062 0.20757 0.18986 0.18090 0.16949 0.16250 0.16111 0.15578 0.1521
+  astra_r1890_cgls_vs_gridrec_corr                 0.73628 | 0.73639
+  astra_r1890_fbp_vs_gridrec_corr                  0.7618224771094246 | 0.7618283234812584
+  astra_r1890_resid_astra_fbp                      0.30425897625151266 | 0.3042590052114332
+  astra_r1890_resid_gridrec                        0.19902654871038855 | 0.19902650554385423
+  astra_r1890_resid_wrong_centre                   0.2161285393074195 | 0.216128433601618
+  astra_r1890_scale_astra_fbp                      0.6488070419803678 | 0.648806954511047
+  astra_r1890_scale_gridrec                        0.999643410080533 | 0.9996435559510176
+  astra_r270_cgls_resid                            0.22230 0.16809 0.15585 0.13665 0.12681 0.12372 0.11862 0.11498 0.1140 | 0.22230 0.16809 0.15585 0.13665 0.12682 0.12372 0.11862 0.11498 0.1140
+  astra_r270_cgls_vs_gridrec_corr                  0.75494 | 0.75495
+  astra_r270_fbp_vs_gridrec_corr                   0.7604800334943114 | 0.7604856603057488
+  astra_r270_resid_astra_fbp                       0.278249095147378 | 0.2782491321697621
+  astra_r270_resid_gridrec                         0.15785272168540276 | 0.15785266651052712
+  astra_r270_resid_wrong_centre                    0.17734761198639648 | 0.1773475293857407
+  astra_r270_scale_astra_fbp                       0.586945988480051 | 0.5869459012018226
+  astra_r270_scale_gridrec                         1.0137598055238077 | 1.0137597365760613
+slices.tsv: 2160 rows A, 2160 rows B
+  slices byte-identical across the two: 0 of 2160
+  corr_published             identical 580 of 2160, max |diff| 4.000e-06
+  frc_min_to_half_nyquist    identical 252 of 2160, max |diff| 2.800e-05
+  frc_cross_1_7              identical 2160 of 2160, max |diff| 0.000e+00
+  mean                       identical 1405 of 2160, max |diff| 2.000e-10
+  std                        identical 0 of 2160, max |diff| 9.000e-09
+  cgls_0270.npy    identical False, max |diff| / max|x| 1.021e-04
+  cgls_1080.npy    identical False, max |diff| / max|x| 2.570e-04
+  cgls_1890.npy    identical False, max |diff| / max|x| 9.631e-04
+  slice_0270.npy   identical False, max |diff| / max|x| 7.338e-05
+  slice_1080.npy   identical False, max |diff| / max|x| 8.068e-05
+  slice_1890.npy   identical False, max |diff| / max|x| 8.860e-05
+
+== Intel vs AMD (the same x86 env twin)
+score.tsv: 74 values identical, 1 differ
+  gridrec_s_per_slice                              0.103 | 0.074
+slices.tsv: 2160 rows A, 2160 rows B
+  slices byte-identical across the two: 2160 of 2160
+  corr_published             identical 2160 of 2160, max |diff| 0.000e+00
+  frc_min_to_half_nyquist    identical 2160 of 2160, max |diff| 0.000e+00
+  frc_cross_1_7              identical 2160 of 2160, max |diff| 0.000e+00
+  mean                       identical 2160 of 2160, max |diff| 0.000e+00
+  std                        identical 2160 of 2160, max |diff| 0.000e+00
+  cgls_0270.npy    identical True, max |diff| / max|x| 0.000e+00
+  cgls_1080.npy    identical True, max |diff| / max|x| 0.000e+00
+  cgls_1890.npy    identical True, max |diff| / max|x| 0.000e+00
+  slice_0270.npy   identical True, max |diff| / max|x| 0.000e+00
+  slice_1080.npy   identical True, max |diff| / max|x| 0.000e+00
+  slice_1890.npy   identical True, max |diff| / max|x| 0.000e+00

@@ -1,0 +1,39 @@
+{
+  "task_id": "cookbook-tomography-real-fetch",
+  "container": "quay.io/aarchsci/tomography@sha256:ea7b4900500f3eb23d3060611f1737175f4a6421cb24b4f29a809765b2754026",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\n# spawn runs task commands under bash -e; `set -uo pipefail` does not clear it (spawn#707).\nset -uo pipefail\nexport TMPDIR=/tmp HOME=/tmp\ncd /tmp\n# 42.4 GB of zips: on the root disk (disk_gib), not the half-RAM /tmp tmpfs\nmkdir -p /work/out\npython3 -u fetch.py /work/out > /tmp/fetch.log 2>&1\nRC=$?\ncat /tmp/fetch.log\ndf -h /work | tail -n 1\n[ \"$RC\" = 0 ] || { echo \"FAIL: fetch\"; exit 1; }\necho DONE\n"
+  ],
+  "resources": {
+    "cpu": 4,
+    "memory_gib": 16,
+    "architecture": "arm64",
+    "families": [
+      "m8g"
+    ],
+    "disk_gib": 80
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/fetch.py",
+      "destination": "/tmp/fetch.py"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/work/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/data/"
+    },
+    {
+      "source": "/tmp/fetch.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/fetch.log"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "3h",
+    "on_complete": "terminate",
+    "cost_limit": 0.5
+  }
+}
