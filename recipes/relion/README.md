@@ -37,15 +37,15 @@ One task — post-processing is a single invocation, and the two half-maps *are*
 | the `half1` filename | your half1 (don't rename half2) | RELION derives the half2 name by substituting `half1`→`half2`, so the pair must keep those tokens. |
 
 Deterministic (FFTs, a shell-wise correlation, a straight-line fit — no sampling, no thread flag) — **nothing is determinism scaffolding**. **Leave the fixture:** it's a real 440³ reconstruction reproducing a published result exactly; there is no smaller or larger input that makes the check more legible. Leave-it.
-
 ## Which box — [measured](../../measurements/relion-real/README.md) (a whole `Refine3D`: 4,452 β-gal particles, box 256, D2, 9 ranks × 8 threads)
 
 | chip | instance | refine wall | $/hr | **billed $/refinement** |
 |---|---|---|---|---|
 | **Graviton4** | `c8g.16xlarge` | **444 s** | 2.5523 | **0.390** |
 | Intel | `c8i.16xlarge` | 648 s | 2.9987 | 0.611 |
+| AMD | `c8a.16xlarge` | 384 s | 3.4486 | 0.499 |
 
-**On CPU, take Graviton4: 1.46× faster, 36% cheaper billed**, and both reach the depositors' own 3.153 Å. Leave `--cpu` off: the x86 build's vectorised kernels were *slower* (751 s), and the arm64 build has none. It is a path: with a fixed `--random_seed`, x86 at 9 × 8 and Graviton4 at 3 ranks × 1 thread reproduce byte for byte (and match each other), but Graviton4 at 9 ranks did not — check two runs' `run_data.star` before relying on reproducibility.
+**On CPU, take Graviton4: 36% cheaper billed than Intel and 22% than AMD**, though AMD is 1.16× faster; all three reach the depositors' own 3.153 Å. Leave `--cpu` off: the x86 build's vectorised kernels were *slower* (751 s), and the arm64 build has none. It is a path: with a fixed `--random_seed`, Intel and AMD at 9 × 8 and Graviton4 at 3 ranks × 1 thread reproduce byte for byte (and match each other), but Graviton4 at 9 ranks did not — check two runs' `run_data.star` before relying on reproducibility.
 
 ## Shape, size, cost
 

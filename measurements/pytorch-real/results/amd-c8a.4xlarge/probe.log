@@ -1,0 +1,83 @@
+tag	p8
+arch	x86_64
+torch	2.14.1
+cpu_capability	AVX512
+openblas_corename	Cooperlake
+mkldnn	True
+nproc	16
+threads	8
+epochs	1
+load_s	4.5
+n_train	50000
+n_test	10000
+decoded_sha256	12412dd2888ac5a5b4a4d3d5aaf130e137047e8357b76e7ff78dfaa9fdbe1bd8
+LIMIT	2560 train images (sizing probe, not a measured run)
+channel_mean	0.485674 0.476590 0.441392
+channel_std	0.246804 0.243095 0.260787
+n_params	269722
+epoch  1  loss 2.7673  train 0.1422  test 0.1503  1.0s  2573 samples/s
+train_s	1.0
+train_samples_per_s	2572.5
+infer_s	2.59
+infer_samples_per_s	3860
+test_acc	0.1503
+per_class_acc	0.862 0.000 0.000 0.008 0.499 0.000 0.000 0.000 0.134 0.000
+softmax_rowsum_maxdev	6.66e-16
+eval_bs100_vs_bs1000_max_abs_logit_diff	9.16e-05
+eval_bs100_vs_bs1000_pred_flips	0
+loss_trace_sha256	2df7654a19cec8fe17bf38266445789cd855995c966365498680079eee8d5b09
+state_sha256	808a41546ffe6f326bb630bb4aa944453e18c99a399c2ea6f3523ac78ab005ad
+final_train_loss_hex	0x1.62374c199999ap+1
+peak_rss_mib	1293
+TRAIN p8 OK
+tag	p16
+arch	x86_64
+torch	2.14.1
+cpu_capability	AVX512
+openblas_corename	Cooperlake
+mkldnn	True
+nproc	16
+threads	16
+epochs	1
+load_s	4.5
+n_train	50000
+n_test	10000
+decoded_sha256	12412dd2888ac5a5b4a4d3d5aaf130e137047e8357b76e7ff78dfaa9fdbe1bd8
+LIMIT	2560 train images (sizing probe, not a measured run)
+channel_mean	0.485674 0.476590 0.441392
+channel_std	0.246804 0.243095 0.260787
+n_params	269722
+epoch  1  loss 2.7312  train 0.1371  test 0.1503  0.7s  3635 samples/s
+train_s	0.7
+train_samples_per_s	3635.2
+infer_s	1.90
+infer_samples_per_s	5255
+test_acc	0.1503
+per_class_acc	0.929 0.000 0.000 0.000 0.559 0.000 0.000 0.000 0.014 0.001
+softmax_rowsum_maxdev	5.55e-16
+eval_bs100_vs_bs1000_max_abs_logit_diff	1.91e-06
+eval_bs100_vs_bs1000_pred_flips	0
+loss_trace_sha256	ada64bad3aa5e47829929e1ff306875ed6bec610c07e015bc1731c3caabec03c
+state_sha256	46b0974f772bc672d02a57a7e8903712796d19411fbfaa4e73c65f495eb79116
+final_train_loss_hex	0x1.5d968d199999ap+1
+peak_rss_mib	1278
+TRAIN p16 OK
+onednn_verbose,v1,info,oneDNN v3.12.0 (commit N/A)
+onednn_verbose,v1,info,cpu,runtime:OpenMP,nthr:16
+onednn_verbose,v1,info,cpu,isa:Intel AVX-512 with Intel DL Boost and bfloat16 support
+onednn_verbose,v1,info,gpu,runtime:none
+onednn_verbose,v1,info,graph,backend,0:dnnl_backend
+onednn_verbose,v1,primitive,info,template:operation,engine,primitive,implementation,prop_kind,memory_descriptors,attributes,auxiliary,problem_desc,exec_time
+onednn_verbose,v1,graph,info,template:operation,engine,partition_id,partition_kind,op_names,data_formats,logical_tensors,fpmath_mode,implementation,backend,exec_time
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:aBcd16b::f0,attr-scratchpad:user,,128x16x32x32,0.858887
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:ABcd16b16a::f0,attr-scratchpad:user,,16x16x3x3,0.0209961
+onednn_verbose,v1,primitive,exec,cpu,convolution,jit:avx512_core,forward_training,src:f32:a:blocked:aBcd16b::f0 wei:f32:a:blocked:ABcd16b16a::f0 bia:undef::undef::: dst:f32:a:blocked:aBcd16b::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.846924
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:aBcd16b::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,128x16x32x32,0.308105
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:aBcd16b::f0,attr-scratchpad:user,,128x16x32x32,0.308105
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:ABcd16a16b::f0,attr-scratchpad:user,,16x16x3x3,0.0158691
+onednn_verbose,v1,primitive,exec,cpu,convolution,jit:avx512_core,backward_data,src:f32:a:blocked:aBcd16b::f0 wei:f32:a:blocked:ABcd16a16b::f0 bia:undef::undef::: dst:f32:a:blocked:aBcd16b::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,0.547852
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:aBcd16b::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,128x16x32x32,0.0769043
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:aBcd16b::f0,attr-scratchpad:user,,128x16x32x32,0.275146
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:blk,undef,src:f32::blocked:abcd::f0 dst:f32::blocked:aBcd16b::f0,attr-scratchpad:user,,128x16x32x32,0.300049
+onednn_verbose,v1,primitive,exec,cpu,convolution,jit:avx512_core,backward_weights,src:f32:a:blocked:aBcd16b::f0 wei:f32:a:blocked:ABcd16b16a::f0 bia:undef::undef::: dst:f32:a:blocked:aBcd16b::f0,attr-scratchpad:user,alg:convolution_direct,mb128_ic16oc16_ih32oh32kh3sh1dh0ph1_iw32ow32kw3sw1dw0pw1,2.54907
+onednn_verbose,v1,primitive,exec,cpu,reorder,jit:uni,undef,src:f32::blocked:ABcd16b16a::f0 dst:f32::blocked:abcd::f0,attr-scratchpad:user,,16x16x3x3,0.00610352

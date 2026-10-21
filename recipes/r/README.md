@@ -44,9 +44,10 @@ One task, `c8g.large` (2 vCPU / 4 GiB), TTL 5m, cap $0.02. The fit is ~1 s. Reco
 | chip | instance | R wall | billed | peak RSS | $/hr | compute $ | **billed $/result** |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `r8g.2xlarge` | **77.3 s** | 287 s | 31.7 GiB | 0.4713 | **0.0101** | 0.0376 |
-| Intel Xeon 6 | `r8i.2xlarge` | 84.4 s | 226 s | 31.5 GiB | 0.5557 | 0.0130 | **0.0349** |
+| Intel Xeon 6 | `r8i.2xlarge` | 84.4 s | 226 s | 31.5 GiB | 0.5557 | 0.0130 | 0.0349 |
+| AMD EPYC 9R45 | `r8a.2xlarge` | 65.2 s | 161 s | 31.5 GiB | 0.6390 | 0.0116 | **0.0286** |
 
-**Take `r8g`, sized by memory, not cores.** `lm()` on 34 M rows × 32 columns keeps the design matrix and its QR, about 32 GiB peak, so a `c8g` of the same cores would not hold it. Graviton4 does the R work 22% cheaper (`lm`'s QR is 1.8× faster, `crossprod` is 1.4× slower). x86 bills less only because its env installs from staged packages instead of pulling the 0.86 GB image. Counts, cent totals and every group table are bit-identical across chips and with DuckDB. The coefficients agree to 1e-10.
+**Take `r8g`, sized by memory, not cores.** `lm()` on 34 M rows × 32 columns keeps the design matrix and its QR, about 32 GiB peak, so a `c8g` of the same cores would not hold it. Graviton4 does the R work cheapest (`lm`'s QR is 1.8× faster than Intel, `crossprod` 1.4× slower); AMD is fastest but its hour is dearest. x86 bills less only because its env installs from staged packages instead of pulling the 0.86 GB image. Counts, cent totals and every group table are bit-identical across all three chips and with DuckDB. The coefficients agree to 1e-10, and Intel and AMD agree exactly.
 
 <details>
 <summary>As shipped: the reference identity, the internal cross-validation, pins, smoke check, run + verify</summary>

@@ -1,8 +1,9 @@
-# R on a year of NYC taxi trips — Graviton4 and x86
+# R on a year of NYC taxi trips — Graviton4, Intel and AMD
 
 > **A full year of yellow-cab trips — 38.3 M rows read, aggregated three ways, and a 34 M-row `lm()` —
-> takes 77–84 s of R and about $0.035 billed on either chip.** Every exact number agrees bit for bit
-> across chips and with DuckDB. The regression coefficients agree to 1e-10.
+> takes 65–84 s of R and $0.029–0.038 billed on any of three chips.** Every exact number agrees bit for
+> bit across chips and with DuckDB. The regression coefficients agree to 1e-10, and Intel and AMD agree
+> exactly.
 
 Workload: the **complete** 2023 NYC TLC yellow-taxi trip records (12 monthly Parquet files, 606 MiB,
 38,310,226 trips), not a sample month. It is the size an analyst loads into memory: it fills a 64 GiB
@@ -24,6 +25,7 @@ sed "s|\${COOKBOOK_BUCKET}|$COOKBOOK_BUCKET|g" measurements/r-real/tlc2023.task.
 spawn task run --spec /tmp/r.json --wait                                    # r8g.2xlarge
 spawn task run --spec "$(python3 scripts/spec_arch.py r x86_64 "$COOKBOOK_BUCKET" x1 \
   measurements/r-real/tlc2023.task.json)" --wait                            # r8i.2xlarge
+# AMD: the same line with amd in place of x86_64                            # r8a.2xlarge
 ```
 
 The analysis is [`analysis.R`](analysis.R): `arrow::read_parquet` → `data.table`, the same group sums
@@ -32,49 +34,54 @@ in data.table, dplyr and base `rowsum()`, then
 
 ## Results
 
-8 vCPU / 64 GiB on both, same R 4.5.3 versions, same input bytes, default threads (data.table 4,
+8 vCPU / 64 GiB on all three, same R 4.5.3 versions, same input bytes, default threads (data.table 4,
 arrow 8):
 
 | chip | instance | R wall | billed | peak RSS | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `r8g.2xlarge` | **77.3 s** | 287 s | 31.66 GiB | 0.4713 | **0.0101** | 0.0376 |
-| Intel Xeon 6 | `r8i.2xlarge` | 84.4 s | **226 s** | 31.49 GiB | 0.5557 | 0.0130 | **0.0349** |
+| Intel Xeon 6 | `r8i.2xlarge` | 84.4 s | 226 s | 31.49 GiB | 0.5557 | 0.0130 | 0.0349 |
+| AMD EPYC 9R45 | `r8a.2xlarge` | **65.2 s** | **161 s** | 31.53 GiB | 0.6390 | 0.0116 | **0.0286** |
 
 | phase | read 12 files | data.table agg | dplyr agg | base `rowsum` | `lm()` (QR) | `crossprod` + `solve` |
 |---|---|---|---|---|---|---|
 | Graviton4 | 4.8 s | 0.61 s | 2.30 s | 5.03 s | **15.3 s** | 17.5 s |
-| x86 | 6.3 s | 0.90 s | 2.61 s | 5.41 s | 28.0 s | **12.8 s** |
+| Intel | 6.3 s | 0.90 s | 2.61 s | 5.41 s | 28.0 s | 12.8 s |
+| AMD | **3.9 s** | **0.58 s** | **1.41 s** | **3.65 s** | 21.4 s | **8.1 s** |
 
-- **Graviton4 does the R work 1.09× faster and 22% cheaper.** `lm()`'s LINPACK Householder QR runs 1.8×
-  faster on it. The BLAS-3 normal equations (`crossprod`) run 1.4× faster on x86. Neither chip wins
-  every phase.
-- **The x86 run bills less, and that is packaging, not the chip.** The arm64 task pulls the 0.86 GB
+- **Graviton4 does the R work 1.09× faster than Intel and 22% cheaper.** `lm()`'s LINPACK Householder QR
+  runs 1.8× faster on it. The BLAS-3 normal equations (`crossprod`) run 1.4× faster on Intel.
+- **AMD is the fastest (1.19× Graviton4, 1.29× Intel) and wins every phase but the QR**, where
+  Graviton4 stays 1.4× ahead. Its hour is the dearest, so in compute it lands between the two: 15%
+  above Graviton4, 11% below Intel. 8 vCPU on `r8a` are 8 full cores (`lscpu`: 1 thread per core),
+  against 4 cores × 2 threads on `r8i`; OpenBLAS runs its `Cooperlake` kernel on this Zen 5.
+- **The x86 runs bill less, and that is packaging, not the chip.** The arm64 task pulls the 0.86 GB
   aarch.science `r` image (80 s). The x86 twin pulls a small micromamba image and installs the
   same versions offline from staged packages (2 s pull, 10 s stage-in, 4 s install). Swap the
   routes and the billed column would flip.
-- **Peak RSS 31.5–31.7 GiB on both.** `lm(x = TRUE)` keeps the 34 M × 32 design matrix *and* its QR
+- **Peak RSS 31.5–31.7 GiB on all three.** `lm(x = TRUE)` keeps the 34 M × 32 design matrix *and* its QR
   (8.8 GB each). That is why this is `r8g` and not `c8g`. The staged input is under 1 GiB of the
   32 GiB tmpfs.
 - n = 1 per cell. Every exact output is deterministic and identical across chips (below), so a second
   run would add a timing sample and nothing about correctness.
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
 All asserted inside the task by [`check.R`](check.R) against references computed from the same bytes
 by DuckDB 1.5.6 ([`duckdb-reference.py`](duckdb-reference.py)), an independent Parquet reader and
 engine:
 
-| identity | Graviton4 | x86 |
-|---|---|---|
-| rows decoded == Parquet footers == DuckDB | 38,310,226 | 38,310,226 |
-| total in integer cents == DuckDB | 109,038,341,189 | 109,038,341,189 |
-| group sums (62 month×payment, 263 zones) add back to N and to the total | exact | exact |
-| data.table == dplyr (tolerance 0) == base `rowsum()` | TRUE | TRUE |
-| both aggregate tables, sha256 == DuckDB's | match | match |
-| model rows under the filters == DuckDB | 34,184,942 | 34,184,942 |
-| `lm` rank | 32 of 32 | 32 of 32 |
-| normal equations, max cos(Xⱼ, r) < √N·ε (1.3e-12) | 6.5e-15 | 3.3e-16 |
-| QR vs `solve(XᵀX, Xᵀy)`, rel. < √N·κ²·ε (4.0e-7, κ = 553.8) | 3.0e-10 | 4.2e-13 |
+| identity | Graviton4 | Intel | AMD |
+|---|---|---|---|
+| rows decoded == Parquet footers == DuckDB | 38,310,226 | 38,310,226 | 38,310,226 |
+| total in integer cents == DuckDB | 109,038,341,189 | 109,038,341,189 | 109,038,341,189 |
+| group sums (62 month×payment, 263 zones) add back to N and to the total | exact | exact | exact |
+| data.table == dplyr (tolerance 0) == base `rowsum()` | TRUE | TRUE | TRUE |
+| both aggregate tables, sha256 == DuckDB's | match | match | match |
+| model rows under the filters == DuckDB | 34,184,942 | 34,184,942 | 34,184,942 |
+| `lm` rank | 32 of 32 | 32 of 32 | 32 of 32 |
+| normal equations, max cos(Xⱼ, r) < √N·ε (1.3e-12) | 6.5e-15 | 3.3e-16 | 3.3e-16 |
+| QR vs `solve(XᵀX, Xᵀy)`, rel. < √N·κ²·ε (4.0e-7, κ = 553.8) | 3.0e-10 | 4.2e-13 | 8.5e-13 |
 
 Money is summed as `round(total_amount*100)`, so every partial sum is an exact integer below 2^53
 whatever the order. That is what lets three R engines and DuckDB agree bit for bit, with no
@@ -84,17 +91,25 @@ it: arm64's 3.0e-10 is 4.4× past the bare κ²ε (6.8e-11).
 
 ## What differed across chips — path, not fixed point
 
-- **The integer outputs are identical.** Both aggregate CSVs have the same sha256 on both chips
+- **The integer outputs are identical.** Both aggregate CSVs have the same sha256 on all three chips
   (`results/agg-*.sha256`), as do the counts, totals and rank.
 - **The coefficients differ in the 10th–11th digit** (largest absolute difference 1.1e-10, intercept
   2.1904801166 vs …1167; [`results/coef-*`](results/)). A direct least-squares solve is not an
   iterated fixed point. `lm`'s QR calls OpenBLAS level-1 kernels (`ddot`, `dnrm2`), which are chosen
   per host, so the rounding path differs. It is reported, not asserted. The economics are the same
-  on both chips: $2.66/mile plus $0.485/minute against the TLC meter's $3.50/mile *or* $0.70/minute.
+  on every chip: $2.66/mile plus $0.485/minute against the TLC meter's $3.50/mile *or* $0.70/minute.
 - **arm64's own consistency checks are looser**: residual orthogonality is 20× larger and QR-vs-normal-
   equations is 700× larger. Both stay ≥ 200× inside their bounds. The OpenBLAS core name was not
-  captured, so which kernel is responsible is unmeasured.
+  captured on those two runs, so which kernel is responsible is unmeasured.
+- **AMD against Intel: the coefficients are byte-identical**, all 32 to 16 digits
+  (`results/coef-amd-r8a2xl.txt`), and so is the residual orthogonality (3.318e-16). So AMD against
+  Graviton4 is the same 1.1e-10 as Intel. The one number that moved is QR-vs-normal-equations,
+  8.5e-13 on AMD against 4.2e-13 on Intel: the QR side is shared, so the difference is in the BLAS-3
+  `crossprod`, which OpenBLAS dispatches per core (`Cooperlake` here). Both are ~5e5× inside the bound.
 
 ## Spend
 
-Two launches, one per chip, both first-attempt green: $0.0376 + $0.0349 ≈ **$0.07**.
+Three launches, one per chip, all first-attempt green: $0.0376 + $0.0349 + $0.0286 ≈ **$0.10**.
+The AMD leg ran the committed spec with spawn 0.131.1 built from its release tag (the installed
+0.139.1's wrapper leaves too little of EC2's 16 KiB user data, spawn#1246), plus one non-fatal line
+writing `results/host-amd-r8a2xl.txt` (`lscpu`, `OPENBLAS_VERBOSE=2`) before the task's script.

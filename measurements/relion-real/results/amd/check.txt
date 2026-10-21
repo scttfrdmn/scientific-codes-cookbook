@@ -1,0 +1,20 @@
+PASS  mpi_ranks                                9  want 9 (RELION's own count, from run.out)
+PASS  threads_per_rank                         8  want 8
+      precision                                double
+PASS  converged                                'Refinement has converged, stopping now' in run.out
+PASS  relion_job_exit_success                  RELION_JOB_EXIT_SUCCESS written by --pipeline_control
+      iterations                               16 (depositors' GPU run: 16)
+PASS  particles_conserved                      4452 out of 4452 in, same image names  want 4452 = 4452
+PASS  each_particle_in_one_half                half 1: 2220, half 2: 2232
+PASS  half_split_equals_depositors             4452 of 4452 particles in the same half as the depositors' (--random_seed 1697716706)
+PASS  control_fsc_table_vs_depositors          max|diff| = 0.000e+00 over 129 shells x 8 columns  want <= 1e-6
+PASS  control_FinalResolution                  3.153109  want 3.153109 (depositors' PostProcess/job021)
+PASS  control_BfactorUsedForSharpening         -31.39202  want -31.39202 (depositors' PostProcess/job021)
+PASS  our_fsc_shell0_is_unity                  FSC at zero frequency = 1 (self-correlation)
+PASS  our_resolution_coarser_than_nyquist      3.153109 A  want > 2.489 A
+PASS  our_resolution_gross_guard               3.153109 A  want <= 4.0 A (a refinement that failed to align sits far coarser)
+      masked_resolution_ours_vs_theirs         3.153109 A vs 3.153109 A
+      bfactor_ours_vs_theirs                   -34.71771 vs -31.39202
+      unmasked_resolution_ours_vs_theirs       3.793783 A vs 3.793783 A
+      cross_fsc_vs_depositors_map              129 shells; first below 0.5 at None A, below 0.143 at None A
+CHECK PASSED

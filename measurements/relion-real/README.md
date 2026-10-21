@@ -1,7 +1,8 @@
-# RELION on a real workload — a complete gold-standard 3D refinement, Graviton4 and x86
+# RELION on a real workload — a complete gold-standard 3D refinement, Graviton4, Intel and AMD
 
 > **Graviton4 runs the whole refinement 1.46× faster and 42% cheaper in compute than
-> same-generation Intel, and both reach the depositors' own 3.15 Å in the same Fourier shell.**
+> same-generation Intel; AMD is fastest (1.16× Graviton4) but 17% dearer in compute. All three
+> reach the depositors' own 3.15 Å in the same Fourier shell.**
 > GPU is the normal platform for RELION's refinement: this is the CPU round, and the depositors'
 > own run of the same job was on four GPUs.
 
@@ -19,6 +20,7 @@ B=$(make -s print-bucket)
 measurements/relion-real/stage-inputs.sh "$B"     # streams + filters the 11.3 GB archive ON AWS
 spawn task run --spec "$(python3 scripts/spec_arch.py relion arm64 $B r1 measurements/relion-real/refine3d.task.json)" --wait
 spawn task run --spec "$(python3 scripts/spec_arch.py relion x86_64 $B r1 measurements/relion-real/refine3d.task.json)" --wait
+spawn task run --spec "$(python3 scripts/spec_arch.py relion amd $B r1 measurements/relion-real/refine3d.task.json)" --wait
 ```
 
 Inside the task this is the depositors' `note.txt` command, minus `--gpu`:
@@ -35,20 +37,25 @@ mpirun --bind-to none -np 9 relion_refine_mpi --o Refine3D/job100/run --auto_ref
 ## Results
 
 64 vCPU, 9 MPI ranks × 8 threads (the leader rank idles, so 8 × 8 fill the box), same RELION 5.1.0
-on both chips (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
+on every chip (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
 
 | chip | instance | refine wall | billed | peak RSS | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|
-| **Graviton4** | `c8g.16xlarge` | **444 s** | 550 s | 20.3 GiB | 2.5523 | **0.315** | **0.390** |
+| **Graviton4** | `c8g.16xlarge` | 444 s | 550 s | 20.3 GiB | 2.5523 | **0.315** | **0.390** |
 | Intel (Xeon 6) | `c8i.16xlarge` | 648 s | 734 s | 22.9 GiB | 2.9987 | 0.540 | 0.611 |
+| AMD (EPYC 9R45) | `c8a.16xlarge` | **384 s** | **521 s** | 24.2 GiB | 3.4486 | 0.368 | 0.499 |
 | Intel, `--cpu` kernels | `c8i.16xlarge` | 751 s | 854 s | 21.2 GiB | 2.9987 | 0.626 | 0.711 |
 
 - **1.46× faster and 42% cheaper in compute (36% billed) on Graviton4**, on the same code path.
   Per vCPU, which is what is rented: 64 cores on `c8g`, 32 cores × 2 hyperthreads on `c8i`.
   `avg_cores` 47.3 and 51.5 of 64: the idle leader and the serial Maximization between
   Expectation passes are the gap.
-- **n = 3 on Graviton4 (444, 444, 451 s) and n = 2 on x86 (648, 651 s)**, so the chip difference
-  is 30× the run-to-run spread. The rows show the first run of each.
+- **AMD is 1.16× faster than Graviton4 and 1.69× faster than Intel**, on the same code path, with
+  64 full cores on `c8a` (`avg_cores` 48.2 of 64). Its hour is 35% dearer than Graviton4's, so it
+  costs 17% more in compute and 28% more billed; against Intel it is 32% cheaper in compute.
+- **n = 3 on Graviton4 (444, 444, 451 s), n = 2 on Intel (648, 651 s) and n = 1 on AMD**, so the
+  Graviton4–Intel difference is 30× the run-to-run spread. The rows show the first run of each. On
+  AMD only the 9 × 8 default path was run; the `--cpu`, 9 × 1 and 3 × 1 rungs were not.
 - **The x86 build's vectorised CPU kernels (`--cpu`) were slower here, not faster** (751 s vs
   648 s), and the arm64 build has none — its `--help` lists no `--cpu`. So the like-for-like
   comparison is the default path on both, which is also what the depositors' command asks for
@@ -58,7 +65,7 @@ on both chips (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
   (~$0.41): 64 vCPU is 5.5× the speed of 8 for 8× the cores.
 - **Compute-dominated:** 86–106 s of boot, Docker install, image pull and staging around 7–11 min
   of RELION. The 0.88 GB of particles and references stage in seconds.
-- Peak RSS is the container cgroup, 20–23 GiB of 128: 8 followers each pre-read the 0.58 GB
+- Peak RSS is the container cgroup, 20–24 GiB of 128: 8 followers each pre-read the 0.58 GB
   particle stack (`--preread_images`).
 - Prices are on-demand us-west-2 from the AWS Price List API; spawn printed none on these
   launches.
@@ -80,16 +87,16 @@ tutorial's 24 movies, where a deposited structure typically refines 10⁵ or mor
 grows roughly with particle count, so read the timings as per-4,452-particle, and do not
 extrapolate the iteration count — larger datasets converge differently.
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
-| assertion | bound | Graviton4 | x86 |
-|---|---|---|---|
-| MPI layout, from RELION's own `run.out` | exactly the ranks × threads launched | 9 × 8 (and 3 × 1) | 9 × 8 |
-| converged, and RELION marked the job successful | `Refinement has converged, stopping now` + `RELION_JOB_EXIT_SUCCESS` | every run | every run |
-| every particle in, every particle out | 4,452 = 4,452, same image names | 4,452 | 4,452 |
-| **half-set split equals the depositors', particle for particle** | 4,452 of 4,452, seeded with their recorded `--random_seed 1697716706` | 4,452 (2,220 / 2,232) | 4,452 |
-| **control: their half-maps through `relion_postprocess` reproduce their PostProcess** | 129 shells × 8 columns, max\|diff\| ≤ 1e-6; resolution and B-factor equal | **0.000e+00**, 3.153109 Å, −31.39202 | **0.000e+00** |
-| our map, post-processed the same way | > Nyquist (2.489 Å) and ≤ 4.0 Å | 3.153109 Å | 3.153109 Å |
+| assertion | bound | Graviton4 | Intel | AMD |
+|---|---|---|---|---|
+| MPI layout, from RELION's own `run.out` | exactly the ranks × threads launched | 9 × 8 (and 3 × 1) | 9 × 8 | 9 × 8 |
+| converged, and RELION marked the job successful | `Refinement has converged, stopping now` + `RELION_JOB_EXIT_SUCCESS` | every run | every run | yes |
+| every particle in, every particle out | 4,452 = 4,452, same image names | 4,452 | 4,452 | 4,452 |
+| **half-set split equals the depositors', particle for particle** | 4,452 of 4,452, seeded with their recorded `--random_seed 1697716706` | 4,452 (2,220 / 2,232) | 4,452 | 4,452 |
+| **control: their half-maps through `relion_postprocess` reproduce their PostProcess** | 129 shells × 8 columns, max\|diff\| ≤ 1e-6; resolution and B-factor equal | **0.000e+00**, 3.153109 Å, −31.39202 | **0.000e+00** | **0.000e+00** |
+| our map, post-processed the same way | > Nyquist (2.489 Å) and ≤ 4.0 Å | 3.153109 Å | 3.153109 Å | 3.153109 Å |
 
 The half-set identity holds because RELION draws the split from the seed before any floating
 point happens; the control holds because post-processing is deterministic arithmetic over fixed
@@ -105,6 +112,7 @@ last-bit difference anywhere is carried forward. Which layouts reproduce, measur
 | run | layout | `run_data.star` | iterations | auto B-factor | final resolution |
 |---|---|---|---|---|---|
 | x86, run 1 and run 2 | 9 × 8 | **byte-identical** (`b8d0cd0c…`) | 16 | −34.71771 | 3.153109 Å |
+| AMD, run 1 | 9 × 8 | **byte-identical to Intel's** | 16 | −34.71771 | 3.153109 Å |
 | Graviton4, run 1 and run 2 | 3 × 1 | **byte-identical, and identical to x86's** | 16 | −34.71771 | 3.153109 Å |
 | Graviton4, runs 1–3 | 9 × 8 | all three differ | 16, 16, 16 | −34.93, −37.26, −36.12 | 3.153109 Å |
 | Graviton4, 9 × 1, runs 1–2 | 9 × 1 | both differ | 15, 16 | −30.20, −36.26 | 3.153109, **3.184640** Å |
@@ -118,9 +126,15 @@ last-bit difference anywhere is carried forward. Which layouts reproduce, measur
   two runs agreed, which points at how work is split across followers rather than at threads or at
   the chip's arithmetic. Why x86's 9 × 8 reproduces and Graviton4's does not is not established
   here.
-- **Resolution moves too, but rarely:** 10 of 11 refinements, including the depositors'
+- **AMD lands on Intel's refinement exactly.** `run_data.star`, `run_model.star` and
+  `run_optimiser.star` are byte-identical to the Intel 9 × 8 run's, and so is the whole in-task check
+  output. The maps differ only in the last bits: one value of the 1,032 in our post-processed FSC
+  table differs, in its 6th digit (shell 108, −4.83426e-04 against −4.83427e-04), and the map-to-map
+  FSC against the depositors' map is the same file. So AMD against Graviton4 is the Intel-against-Graviton4
+  comparison above, at every layout measured.
+- **Resolution moves too, but rarely:** 11 of 12 refinements, including the depositors'
   single-precision GPU run, land on 3.153109 Å; one Graviton4 9 × 1 run stopped one Fourier shell
-  coarser, at 3.184640 Å. Unmasked resolution was 3.793783 Å in all eleven. So the resolution is
+  coarser, at 3.184640 Å. Unmasked resolution was 3.793783 Å in all twelve. So the resolution is
   reported, not asserted, and the only resolution bound above is a gross-failure guard.
 - **The maps agree where they should:** against the depositors' final map, the map-to-map FSC of
   every default-path run stays ≥ 0.665 to Nyquist (the `--cpu` run: ≥ 0.413), and their corrected
@@ -147,3 +161,10 @@ uses (`cryoem-spa-workflow-records-public`) holds project *metadata and maps* bu
 stacks, so it cannot feed a refinement. The RELION authors' tutorial release is versioned by its
 filename and has not changed since 2023-10-26; `fetch.sh` streams it on an `m8g.large` (446 s, the
 11.3 GB never written to disk) and keeps 0.88 GB.
+
+**AMD leg:** one launch, first-attempt green, $0.499 billed; its check output and digests are in
+[`results/amd/`](results/amd/). It ran the committed spec with spawn
+0.131.1 built from its release tag, because the installed 0.139.1's own wrapper leaves too little of
+EC2's 16 KiB user data (spawn#1246), and with `cost_limit` lowered from the resolved $6.40 to $3.00.
+The x86 image's BusyBox has no `lscpu`; 8a vCPUs are full cores (the `c8a`/`r8a` boxes of the other
+AMD legs report 1 thread per core).

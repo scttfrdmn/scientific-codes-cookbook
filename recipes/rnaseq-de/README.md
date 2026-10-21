@@ -23,7 +23,6 @@ DESeq2, edgeR and limma-voom each test the same count matrix for differential ex
 ```bash
 for s in $(make -s spec RECIPE=rnaseq-de); do spawn task run --spec "$s" --wait; done
 ```
-
 ```r
 dds <- DESeqDataSetFromMatrix(counts, coldata, ~ grp)   # DESeq2
 res <- results(DESeq(dds))
@@ -49,8 +48,9 @@ lt <- topTable(eBayes(lmFit(v, design)), coef=2, number=Inf)
 |---|---|---|---|---|
 | Graviton4 | `c8g.large` | 20.0 s | 332 s | **0.0074** |
 | Intel | `c8i.large` | 18.6 s | 332 s | 0.0086 |
+| AMD | `c8a.large` | 15.5 s | 321 s | 0.0096 |
 
-**Take the smallest Graviton box.** Both chips reproduce Bioconductor's published DESeq2 workflow to every printed digit, and Graviton4 is 15% cheaper billed. Peak RSS is 1 GB, and 94% of the bill is boot and image pull, which more cores cannot shorten. The two tasks of this recipe (DESeq2 builds the matrix and tests it, then edgeR and limma-voom test the same matrix) recorded **1m19s** and **2m38s** on `c8g.xlarge`; **these timings are not compute cost.**
+**Take the smallest Graviton box.** All three chips reproduce Bioconductor's published DESeq2 workflow to every printed digit, and Graviton4 is 15% cheaper billed than Intel, 23% than AMD. Peak RSS is 1 GB, and 94% of the bill is boot and image pull, which more cores cannot shorten. The two tasks of this recipe (DESeq2 builds the matrix and tests it, then edgeR and limma-voom test the same matrix) recorded **1m19s** and **2m38s** on `c8g.xlarge`; **these timings are not compute cost.**
 
 <details>
 <summary>As shipped: two exact checks, two justified bands, why limma runs in the edgeR image, pins, smoke check</summary>

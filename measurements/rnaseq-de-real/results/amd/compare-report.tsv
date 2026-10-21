@@ -1,0 +1,29 @@
+version	edgeR	4.8.2	limma	3.66.0 
+version	R	R version 4.5.3 (2026-03-11) 
+arch	x86_64 
+blas	/usr/local/lib/libopenblasp-r0.3.33.so 
+matrix	16139	8 
+time_s	limma_voom	0.59 
+time_s	edger_ql	1.75 
+sig_0.05	deseq2	4077	limma	5056	edger	4990 
+CHECK	deseq2_limma_direction	PASS	4047 of 4047 genes significant in both agree on direction 
+CHECK	deseq2_top100_called_by_limma	PASS	100 of DESeq2's top 100 called by limma-voom 
+CHECK	limma_top100_called_by_deseq2	PASS	100 of limma-voom's top 100 called by DESeq2 
+top100_overlap	deseq2_limma	84 
+top100_overlap	deseq2_edger	77 
+spearman_lfc	de_li=0.9968,de_ed=0.9971,ed_li=0.9994 
+spearman_p_rank	de_li=0.9893 
+CHECK	three_way_direction	PASS	4019 of 4019 genes significant in all three agree on direction 
+himes	DUSP1	ENSG00000120129	de_lfc=2.944 de_padj=1.25e-124 li_lfc=2.939 li_padj=2.04e-06 ed_padj=5.33e-06 
+himes	KLF15	ENSG00000163884	de_lfc=4.455 de_padj=7.65e-78 li_lfc=4.504 li_padj=4.51e-06 ed_padj=9.6e-06 
+himes	PER1	ENSG00000179094	de_lfc=3.188 de_padj=1.83e-81 li_lfc=3.167 li_padj=3.43e-06 ed_padj=8.83e-06 
+himes	TSC22D3	ENSG00000157514	de_lfc=3.186 de_padj=3.18e-19 li_lfc=3.221 li_padj=1.4e-05 ed_padj=5.81e-05 
+himes	C7	ENSG00000112936	de_lfc=3.200 de_padj=1.78e-12 li_lfc=3.231 li_padj=6.04e-05 ed_padj=0.000163 
+himes	CCDC69	ENSG00000198624	de_lfc=2.914 de_padj=4.24e-69 li_lfc=2.909 li_padj=5.31e-06 ed_padj=1.8e-05 
+himes	CRISPLD2	ENSG00000103196	de_lfc=2.627 de_padj=1.56e-45 li_lfc=2.625 li_padj=1.52e-05 ed_padj=5.32e-05 
+CHECK	himes_genes_de	PASS	7 of 7 named genes DE in all three 
+CHECK	himes_crispld2_up	PASS	CRISPLD2 log2FC deseq2=2.627 limma=2.625 edger=2.623 
+peak_rss	181960 kB 
+time_s	rscript_total	2.58 
+RESULT	PASS	limma-edger-compare 
+wall_s	2.65

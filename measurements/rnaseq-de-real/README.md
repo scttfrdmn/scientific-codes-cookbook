@@ -1,8 +1,8 @@
-# DESeq2 and limma-voom on a real study, Graviton4 and x86
+# DESeq2 and limma-voom on a real study, Graviton4, Intel and AMD
 
-> **The whole airway study reproduces Bioconductor's published DESeq2 workflow on both chips:
+> **The whole airway study reproduces Bioconductor's published DESeq2 workflow on all three chips:
 > every count it reports and all 60 values it prints, to the last digit.** The study costs
-> **$0.007 billed on Graviton4 and $0.009 on x86**. The statistics take 20 s of the 332 s
+> **$0.007 billed on Graviton4, $0.009 on Intel and $0.010 on AMD**. The statistics take 20 s of the 332 s
 > billed; the rest is boot, Docker and the image pull.
 
 Workload: **GSE52778** (Himes et al. 2014), four primary airway smooth-muscle cell lines, each
@@ -22,7 +22,7 @@ export AWS_PROFILE=aws
 bash stage-inputs.sh "$COOKBOOK_BUCKET"
 for s in $(python3 ../../scripts/spec_arch.py rnaseq-de arm64 "$COOKBOOK_BUCKET" "$(date +%s)" \
              01-deseq2.task.json 02-compare.task.json); do spawn task run --spec "$s" --wait; done
-# x86: the same line with x86_64 in place of arm64; outputs land under measurements-x86_64/
+# x86: the same line with x86_64 (Intel) or amd in place of arm64; outputs land under measurements-x86_64/ or measurements-amd/
 ```
 
 Task 1 (DESeq2 image) runs [`deseq2.R`](deseq2.R). Task 2 (edgeR image, which also ships limma)
@@ -31,29 +31,33 @@ checked by sha256 before they run.
 
 ## Results
 
-2 vCPU / 4 GiB on both chips, same versions, same input bytes. DESeq2 and limma are single-threaded.
+2 vCPU / 4 GiB on every chip, same versions, same input bytes. DESeq2 and limma are single-threaded.
 
 | chip | instance | tool wall (DESeq2 + limma/edgeR) | billed (2 tasks) | peak RSS | $/hr | compute $/study | billed $/study |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `c8g.large` | 16.2 + 3.8 = **20.0 s** | 167 + 165 = 332 s | 1.04 GB | 0.0798 | 0.00044 | **0.0074** |
-| Intel (same gen) | `c8i.large` | 15.2 + 3.4 = **18.6 s** | 166 + 166 = 332 s | 1.07 GB | 0.0937 | 0.00048 | **0.0086** |
+| Intel (same gen) | `c8i.large` | 15.2 + 3.4 = 18.6 s | 166 + 166 = 332 s | 1.07 GB | 0.0937 | 0.00048 | **0.0086** |
+| AMD EPYC 9R45 | `c8a.large` | 12.9 + 2.7 = **15.5 s** | 161 + 160 = 321 s | 1.07 GB | 0.1078 | 0.00047 | **0.0096** |
 
 - **x86 runs the statistics 7% faster, and Graviton4 is still cheaper per study**: 8% on compute,
   15% billed, because the hour costs 17% less. At n = 1 per cell, a 7% wall difference on a
   20-second run is not a performance claim. The two images are also different builds: R 4.5.3 with
   OpenBLAS 0.3.34 on arm64, against R 4.5.2 with OpenBLAS 0.3.30 (DESeq2 image) and 0.3.33 (edgeR
   image) on x86.
+- **AMD runs the statistics fastest (15.5 s, 1 thread per core, OpenBLAS `Cooperlake` kernel) and
+  bills most**, because its hour is the dearest: compute $/study is a wash with Intel, billed is 12%
+  above it and 30% above Graviton4. Same n = 1 caveat.
 - **94% of the bill is overhead.** Per task: about 13 s of boot, 40 s of Docker install, 45 s of
   image pull, and 40–60 s between the end of the task and termination. Two tasks pay it twice. More cores or a newer chip cannot reduce it. The smallest box
   that fits is the right one. Peak RSS is 1 GB, so `c8g.large` has 4x headroom.
 - Wall time includes R startup and package loading. Inside it, DESeq2 takes 5.4 s on `gse` and
   4.1 s on `airway`; voom takes 0.8 s and edgeR-QL 2.6 s.
 
-## What is asserted, on both chips
+## What is asserted, on all three chips
 
 All of these are `stopifnot`-equivalent: a failure fails the task.
 
-| check | kind | observed (both chips) |
+| check | kind | observed (all three chips) |
 |---|---|---|
 | `gse` through rnaseqGene 1.34.0, verbatim: genes kept, `padj<0.1` total / up / down, low-count, outliers, `alpha=0.05`, `lfcThreshold=1` | published reference | **16637, 4381 / 2362 / 2019, 646, 0, 3602, 240**, all equal to the workflow's |
 | the 10 rows the workflow prints from `res`, all 6 columns | published reference | **60 of 60** agree to every printed digit |
@@ -88,7 +92,7 @@ same filter (>= 10 counts in >= 4 samples) and the same design, so that inputs a
 
 ## What differed across chips: fixed points, to their convergence tolerance
 
-Every asserted number and every significance call is identical on both chips: **0 genes flip** at
+Every asserted number and every significance call is identical on all three chips: **0 genes flip** at
 `padj` 0.05 or 0.1, on either matrix. The input matrix and the size factors are **bit-identical**.
 The full-precision tables differ in the last digits, and how much they differ depends on the method:
 
@@ -105,6 +109,13 @@ recipe asserts counts, directions and published digits, and never a full-precisi
 recipe's 2,000-gene synthetic fixture, the DESeq2 difference was 2e-12. A real matrix has more genes
 that need many iterations, so the numerical noise floor is set by the data.
 
+**AMD against Intel: identical to the last digit.** Every column of all three full-precision tables
+(DESeq2 on `gse` and `airway`, and the three-method table) is byte-for-byte the same on `c8a` and
+`c8i`: same x86 images, and here the two x86 cores take the same floating-point path. So AMD against
+Graviton4 is exactly the Intel-against-Graviton4 table above. On AMD both images' OpenBLAS
+(0.3.30, 0.3.33: no Zen 5 target) select the `Cooperlake` kernel; the Intel run's kernel was not
+recorded.
+
 ## Pins
 
 | | |
@@ -113,7 +124,13 @@ that need many iterations, so the numerical noise floor is set by the data.
 | published reference | rnaseqGene 1.34.0 vignette, `bioconductor.org/packages/3.22/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html`; Himes et al. 2014, *PLoS One* 9:e99625 |
 | arm64 images | `quay.io/aarchbio/bioconductor-deseq2@sha256:6d87efaf…`, `quay.io/aarchbio/bioconductor-edger@sha256:09169b35…` |
 | x86 images | `quay.io/biocontainers/bioconductor-deseq2@sha256:de4543b7…`, `quay.io/biocontainers/bioconductor-edger@sha256:6b2154b1…` |
-| raw reports | [results/](results/): each task's `report.tsv`, per chip |
+| raw reports | [results/](results/): each task's `report.tsv`, per chip; `amd/host.txt` is the AMD box's CPU, SMT and OpenBLAS core |
 
 n = 1 per cell. All three methods are deterministic given the matrix, so the asserted results
 are the same on any re-run. The timings are single samples.
+
+**Spend:** the AMD leg (two tasks, both first-attempt green) billed **$0.0096**. It was launched with
+spawn 0.131.1 built from its release tag, not the installed 0.139.1, whose own wrapper leaves too
+little of EC2's 16 KiB user data for this spec (spawn#1246); the spec bytes are the ones the other two
+chips ran, plus one non-fatal line that writes `host.txt` (`/proc/cpuinfo`, the SMT siblings, and
+`OPENBLAS_VERBOSE=2`) before the task's own script starts.

@@ -41,9 +41,10 @@ torch.optim.LBFGS([w], tolerance_grad=1e-12, line_search_fn="strong_wolfe")     
 | chip | instance | samples/s train | samples/s infer | $/epoch | test acc |
 |---|---|---|---|---|---|
 | Graviton4 | `c8g.4xlarge` | 1,004 | **7,071** | 0.0088 | 0.8871 |
-| x86 | `c8i.4xlarge` | **2,099** | 3,280 | **0.0050** | 0.8880 |
+| Intel | `c8i.4xlarge` | 2,099 | 3,280 | 0.0050 | 0.8880 |
+| AMD | `c8a.4xlarge` | **3,243** | 4,546 | **0.0037** | 0.8880 |
 
-**Train on x86, infer on Graviton4.** The cause is one kernel in this build: on aarch64 oneDNN computes the conv weight gradient with its reference GEMM (`gemm:ref`, about 15× slower than x86's), while its SVE forward pass beats AVX-512. The run is bit-identical on a repeat within each chip, and a path across them: the two chips diverge at step 1 and finish 0.09 points apart.
+**Train on x86 (AMD fastest and cheapest), infer on Graviton4.** The cause is one kernel in this build: on aarch64 oneDNN computes the conv weight gradient with its reference GEMM (`gemm:ref`, about 15× slower than x86's), while its SVE forward pass beats AVX-512. The run is bit-identical on a repeat within each chip, and a path across architectures: Graviton4 and x86 diverge at step 1 and finish 0.09 points apart, while Intel and AMD train bit-identically.
 
 ## Shape, size, cost
 
