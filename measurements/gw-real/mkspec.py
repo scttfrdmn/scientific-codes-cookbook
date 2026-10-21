@@ -81,3 +81,31 @@ write("real.task.json", {
     "outputs": [{"source": "/tmp/out/", "destination": OUT}],
     "lifecycle": {"ttl": TTL, "on_complete": "terminate", "cost_limit": COST},
 })
+
+# ---- the two arms that split r1's quantile miss (arms.py): each changes one thing from r1 ---------
+# spawn's bootstrap leaves ~1 KiB of EC2's 16 KiB user data (spawn#1063), so the whole inputs/gw-real/
+# prefix is staged as one input and every pin lives in one staged manifest, itself pinned here.
+A = ["arms.sh", "arms.py", "gwreal.py", "pe.py"]
+R1_RESULT = "a3038ac80dba54aaae0f351a05407d76867ad876a7b2b558ed6655ae0cfc4edc"   # r1's GW150914_result.hdf5
+with open(os.path.join(D, "arms.sha256"), "w") as fh:
+    fh.write(pins(A).replace("\\n", "\n"))
+    fh.writelines(l.replace("  ", "  data/") for l in open(os.path.join(D, "inputs.sha256"))
+                  if l.split()[1] in DATA)
+MANIFEST = hashlib.sha256(open(os.path.join(D, "arms.sha256"), "rb").read()).hexdigest()
+G = "/tmp/g/"
+for name, cmd, extra, ttl, cost in (
+        ("calibration", "printf '%s  r1/GW150914_result.hdf5\\n' | sha256sum -c || { echo 'FAIL: r1 pin'; exit 1; }\n"
+         "bash arms.sh calibration\n" % R1_RESULT,
+         [{"source": S3 + "runs/gw-real/r1/", "destination": G + "r1/"}], "1h", 1.0),
+        ("naccept120", "bash arms.sh sampler 120\n", [], "5h", 7.5)):
+    write("arm-%s.task.json" % name, {
+        "task_id": "cookbook-gw-real-arm-%s" % name,
+        "container": IMAGE,
+        "command": ["bash", "-c", "set +e\nset -uo pipefail\ncd %s\n"
+                    "printf '%s  arms.sha256\\n' | sha256sum -c && sha256sum -c arms.sha256 || { echo 'FAIL: pins'; exit 1; }\n"
+                    % (G, MANIFEST) + cmd],
+        "resources": {"cpu": 64, "memory_gib": 128, "architecture": "arm64", "families": ["c8g"]},
+        "inputs": [{"source": IN, "destination": G}] + extra,
+        "outputs": [{"source": "/tmp/out/", "destination": S3 + "runs/gw-real/arm-%s/" % name}],
+        "lifecycle": {"ttl": ttl, "on_complete": "terminate", "cost_limit": cost},
+    })

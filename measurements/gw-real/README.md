@@ -6,7 +6,8 @@
 > 0.041.** The full 15-parameter run with calibration lands on the published Bayes factor (304.23
 > against 303.45 ± 0.14) and the published medians. It does **not** pass a 5-SE quantile test against
 > the published posterior: its tails are narrower in the same direction on every chip (max |z| 9.6
-> on Graviton4, 14.0 on x86). Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
+> on Graviton4, 14.0 on x86). More calibration curves do not move it; the sampler is the remaining
+> candidate ([the split](#calibration-or-sampler-the-split)). Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
 > (3,543 s billed) at $3.39, and Intel is $3.86.
 
 Workload: **GW150914**, the event every CBC analysis tutorial starts from, run the way a
@@ -123,14 +124,62 @@ F(q05) is 0.018–0.066, F(q95) is 0.939–0.981, and many are more than 5 SE fr
   the per-run SD is 1.4× the bootstrap SE (median over the 51 tests). With each test's error
   replaced by the larger of the two, max |z| is still 9.5. So the miss is not noise the error bar
   left out: these runs measure a slightly narrower posterior than the published one.
-- **Two settings differ from the release and could do it**, and this run cannot tell them apart.
-  Calibration is marginalised over 250 curves instead of sampled in 40 dimensions (it sets the
-  sky and time tails). The sampler explores less: `nlive=500` `acceptance-walk` against 4 ×
-  `nlive=2000` `rwalk` with 100-step walks, and narrow tails are what a short-chain nested sampler
-  gives. One run at 1000 curves, or at `naccept=120`, would split them.
+- **Two settings differ from the release and could do it.** Calibration is marginalised over 250
+  curves instead of sampled in 40 dimensions (it sets the sky and time tails). The sampler explores
+  less: `nlive=500` `acceptance-walk` against 4 × `nlive=2000` `rwalk` with 100-step walks, and
+  narrow tails are what a short-chain nested sampler gives. The next section separates them.
 
 The check is left asserting at 5 SE and failing, because it is the claim we mean. The fixed points
 above are what is verified at scale.
+
+## Calibration or sampler: the split
+
+Each arm changes one thing from the Graviton4 run (r1), on `c8g.16xlarge`, same pinned data,
+priors and seed. **The calibration curve count is ruled out. Raising `naccept` changes nothing,
+because the walks are already capped at `maxmcmc`. So the sampler is the remaining candidate, and
+it is not yet tested.**
+
+| arm | what changed | max \|z\| | mean tail mass (published: 0.05) | 5-SE test | task time | cost |
+|---|---|---|---|---|---|---|
+| r1 | — | 9.57 (8.47 Kish SE) | 0.0404 | fails | 4,476 s billed | $3.17 |
+| 1: calibration | r1's own samples reweighted from 250 to 1,000 and 4,000 fresh curves | 8.39, 8.53 (Kish SE) | 0.0401, 0.0403 | fails | 227 s | $0.16 |
+| 2: sampler | `naccept` 60 → 120 | 16.15 | 0.0369 | fails | 4,466 s | $3.17 |
+| walk probe | r1 settings to iteration 8,769, bilby's walk tuner recorded | — | — | — | 1,941 s | $1.38 |
+
+- **Arm 1 is an importance reweighting, not a new run.** The target is r1's own likelihood, which
+  [`arms.py`](arms.py) reproduces exactly (max |Δ ln L| = 0 at all 15,753 nested samples and 2,722
+  posterior samples). That holds the sampler's path fixed, so the only thing that moves is the
+  curve count. Over r1's posterior, ln L(4,000 curves) − ln L(250) has SD 0.078, and the
+  reweighting keeps 99.7% of the Kish sample size. No F at a published 5% or 95% quantile moves by
+  more than 0.005, and the medians by at most 0.021 (chi_eff). That is noise-free and costs 1/30 of a run. More curves converge on sampling the 40
+  parameters, and the published quantiles lie inside r1's support (F ≥ 0.018). z here uses r1's
+  measured bootstrap/Kish ratio (0.962) times the binomial SE, applied the same way to r1's row
+  ("Kish SE").
+- **Arm 2 did not lengthen the chains.** It made 20.53M likelihood calls against r1's 20.46M and
+  took the same time. [`walks_probe.py`](walks_probe.py) shows why. bilby sets each walk to
+  `naccept` ÷ acceptance rate, capped at `maxmcmc=5000`. On this likelihood the per-step
+  acceptance falls from 1.8% to 0.3% over the first 8,769 iterations ([`results/walks-probe/walks.tsv`](results/walks-probe/walks.tsv)).
+  From about the 1,500th returned chain, every walk sits at the 5,000 cap. The accepted steps per new point
+  fall from 38 to 15, below the 60 asked for, so a larger `naccept` cannot act. Arm 2 is in effect a
+  third run at r1's settings. Only its early walks were longer, so it took a different path. A
+  14-D Gaussian at the same `nlive`, pool and sampler doubles its calls when `naccept` doubles
+  (4.74M → 9.44M, [`results/naccept-probe`](results/naccept-probe/gwlike/naccept_probe.txt)), so
+  the setting itself works.
+- **One run's max |z| is noisy; the direction is not.** Three paths at r1's effective settings give
+  max |z| 9.57, 14.04 (x86) and 16.15. In all three, the mass below the published 5% quantile or
+  above the 95% one averages 0.040, 0.038 and 0.037 per tail, against 0.05.
+- **What would test the sampler:** `maxmcmc` raised to 20,000 (or `nlive=1000`), the one knob
+  that lengthens chains here. Each is ~2× r1, ~$6.5 on `c8g.16xlarge`. It is not run.
+
+```sh
+python3 measurements/gw-real/mkspec.py r1 c8g 64 500 6h 6.0     # writes arm-*.task.json and arms.sha256
+for a in calibration naccept120; do
+  spawn task run --spec "$(python3 scripts/spec_arch.py gw arm64 "$B" r1 measurements/gw-real/arm-$a.task.json)" --wait
+done
+```
+
+`walks-probe.task.json` and `naccept-probe.task.json` are the two probes. Outputs are in
+`results/arm-*`, `results/walks-probe` and `results/naccept-probe`.
 
 ## Fixed point or path
 

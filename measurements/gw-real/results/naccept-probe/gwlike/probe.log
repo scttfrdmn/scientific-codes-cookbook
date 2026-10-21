@@ -1,0 +1,80 @@
+  warnings.warn(
+07:22 bilby INFO    : Running for label 'g', output will be saved to '/tmp/work/p64_60'
+07:22 bilby INFO    : Analysis priors:
+07:22 bilby INFO    : x0=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x1=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x2=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x3=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x4=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x5=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x6=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x7=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x8=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x9=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x10=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x11=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x12=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : x13=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:22 bilby INFO    : Analysis likelihood class: <class '__main__.Gauss'>
+07:22 bilby INFO    : Analysis likelihood noise evidence: nan
+  warnings.warn(
+07:22 bilby INFO    : Single likelihood evaluation took 1.107e-04 s
+07:22 bilby INFO    : Using sampler Dynesty with kwargs {'nlive': 500, 'bound': 'live', 'sample': 'acceptance-walk', 'periodic': None, 'reflective': None, 'update_interval': 600, 'first_update': None, 'rstate': Generator(PCG64) at 0xFFFF7C5F6B20, 'queue_size': 64, 'pool': None, 'use_pool': None, 'live_points': None, 'logl_args': None, 'logl_kwargs': None, 'ptform_args': None, 'ptform_kwargs': None, 'enlarge': None, 'bootstrap': None, 'walks': 100, 'facc': 0.2, 'slices': None, 'ncdim': None, 'blob': False, 'save_evaluation_history': False, 'history_filename': None, 'maxiter': None, 'maxcall': None, 'dlogz': 0.1, 'logl_max': inf, 'add_live': True, 'print_progress': True, 'print_func': <bound method Dynesty._print_func of <bilby.core.sampler.dynesty.Dynesty object at 0xffff7c626510>>, 'save_bounds': False, 'checkpoint_file': None, 'checkpoint_every': 60, 'resume': False, 'seed': None}
+07:22 bilby INFO    : Global meta data was removed from the result object for compatibility. Use the `BILBY_INCLUDE_GLOBAL_METADATA` environment variable to include it. This behaviour will be removed in a future release. For more details see: https://bilby-dev.github.io/bilby/faq.html#global-meta-data
+07:22 bilby INFO    : Checkpoint every check_point_delta_t = 600s
+07:22 bilby INFO    : Using dynesty version 3.1.0
+07:22 bilby INFO    : Setting up multiproccesing pool with 64 processes
+07:22 bilby INFO    : Resume file /tmp/work/p64_60/g_resume.pickle does not exist.
+07:22 bilby INFO    : Generating initial points from the prior
+07:22 bilby INFO    : Using the bilby-implemented ensemble rwalk sampling method with an average of 60 accepted steps up to chain length 5000.
+07:23 bilby INFO    : Starting to close worker pool.
+07:23 bilby INFO    : Finished closing worker pool.
+07:23 bilby INFO    : Rejection sampling nested samples to obtain 3445 posterior samples
+07:23 bilby INFO    : Sampling time: 0:00:40.766304
+07:23 bilby INFO    : Summary of results:
+nsamples: 3445
+ln_noise_evidence:    nan
+ln_evidence: -29.432 +/-  0.248
+ln_bayes_factor:    nan +/-  0.248
+
+nlive=500 ndim=14 npool=64 naccept=60 calls=4742117 tune_calls_in_main=14206 mean_last_walks=369 mean_last_accept=63.0
+07:23 bilby INFO    : Running for label 'g', output will be saved to '/tmp/work/p64_120'
+07:23 bilby INFO    : Analysis priors:
+07:23 bilby INFO    : x0=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x1=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x2=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x3=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x4=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x5=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x6=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x7=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x8=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x9=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x10=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x11=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x12=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : x13=Uniform(minimum=-1, maximum=1, name=None, latex_label=None, unit=None, boundary=None)
+07:23 bilby INFO    : Analysis likelihood class: <class '__main__.Gauss'>
+07:23 bilby INFO    : Analysis likelihood noise evidence: nan
+  warnings.warn(
+07:23 bilby INFO    : Single likelihood evaluation took 1.111e-04 s
+07:23 bilby INFO    : Using sampler Dynesty with kwargs {'nlive': 500, 'bound': 'live', 'sample': 'acceptance-walk', 'periodic': None, 'reflective': None, 'update_interval': 600, 'first_update': None, 'rstate': Generator(PCG64) at 0xFFFF7C6858C0, 'queue_size': 64, 'pool': None, 'use_pool': None, 'live_points': None, 'logl_args': None, 'logl_kwargs': None, 'ptform_args': None, 'ptform_kwargs': None, 'enlarge': None, 'bootstrap': None, 'walks': 100, 'facc': 0.2, 'slices': None, 'ncdim': None, 'blob': False, 'save_evaluation_history': False, 'history_filename': None, 'maxiter': None, 'maxcall': None, 'dlogz': 0.1, 'logl_max': inf, 'add_live': True, 'print_progress': True, 'print_func': <bound method Dynesty._print_func of <bilby.core.sampler.dynesty.Dynesty object at 0xffff6a1fc2d0>>, 'save_bounds': False, 'checkpoint_file': None, 'checkpoint_every': 60, 'resume': False, 'seed': None}
+07:23 bilby INFO    : Global meta data was removed from the result object for compatibility. Use the `BILBY_INCLUDE_GLOBAL_METADATA` environment variable to include it. This behaviour will be removed in a future release. For more details see: https://bilby-dev.github.io/bilby/faq.html#global-meta-data
+07:23 bilby INFO    : Checkpoint every check_point_delta_t = 600s
+07:23 bilby INFO    : Using dynesty version 3.1.0
+07:23 bilby INFO    : Setting up multiproccesing pool with 64 processes
+07:23 bilby INFO    : Resume file /tmp/work/p64_120/g_resume.pickle does not exist.
+07:23 bilby INFO    : Generating initial points from the prior
+07:23 bilby INFO    : Using the bilby-implemented ensemble rwalk sampling method with an average of 120 accepted steps up to chain length 5000.
+07:25 bilby INFO    : Starting to close worker pool.
+07:25 bilby INFO    : Finished closing worker pool.
+07:25 bilby INFO    : Rejection sampling nested samples to obtain 3074 posterior samples
+07:25 bilby INFO    : Sampling time: 0:01:32.942403
+07:25 bilby INFO    : Summary of results:
+nsamples: 3074
+ln_noise_evidence:    nan
+ln_evidence: -29.245 +/-  0.250
+ln_bayes_factor:    nan +/-  0.250
+
+nlive=500 ndim=14 npool=64 naccept=120 calls=9441808 tune_calls_in_main=14251 mean_last_walks=719 mean_last_accept=120.7
+PROBE DONE

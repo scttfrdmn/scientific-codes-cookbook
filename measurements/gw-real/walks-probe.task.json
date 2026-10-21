@@ -1,0 +1,13 @@
+{
+  "task_id": "cookbook-gw-real-walks-probe",
+  "container": "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp/g/\nexport PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1\nprintf 'e7b14228ce288a0e1870d8fa6ee29c021c508d8fcb96cb452f43adbddb205ca1  arms.sha256\\nc8428eedbe7db56bb9608d13d763d3c6e205ca7164c06a4adf61286bc25b76c2  walks_probe.py\\n' | sha256sum -c && sha256sum -c arms.sha256 || { echo 'FAIL: pins'; exit 1; }\nmkdir -p /tmp/out /tmp/work\npython3 -u walks_probe.py 60 9000 data /tmp/out 64 500 2>&1 | grep --line-buffered -v 'Warning\\|deprecated behaviour' | tee /tmp/out/pe.log\nexit ${PIPESTATUS[0]}\n"
+  ],
+  "resources": {"cpu": 64, "memory_gib": 128, "architecture": "arm64", "families": ["c8g"]},
+  "inputs": [{"source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/", "destination": "/tmp/g/"}],
+  "outputs": [{"source": "/tmp/out/", "destination": "s3://${COOKBOOK_BUCKET}/runs/gw-real/walks-probe/"}],
+  "lifecycle": {"ttl": "1h30m", "on_complete": "terminate", "cost_limit": 2.0}
+}
