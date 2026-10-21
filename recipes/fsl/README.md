@@ -40,10 +40,11 @@ flirt -in moving -ref fixed -dof 6 -omat recovered.mat
 
 | chip | instance | cohort wall | $/hr | **billed $/subject** |
 |---|---|---|---|---|
-| **Graviton4** | `c8g.4xlarge` | **39 min** | 0.6381 | **0.0034** |
+| **Graviton4** | `c8g.4xlarge` | 39 min | 0.6381 | **0.0034** |
 | Intel | `c8i.4xlarge` | 60 min | 0.7497 | 0.0061 |
+| AMD | `c8a.4xlarge` | **36 min** | 0.8622 | 0.0045 |
 
-**Take Graviton4: 1.53× faster, 44% cheaper per subject.** Run `robustfov` before `bet` on any scan with a neck — without it BET falls below Dice 0.80 on 75 of 125 subjects.
+**Take Graviton4: cheapest per subject — 44% under Intel, 23% under AMD**, which is 7% faster but dearer by the hour. Run `robustfov` before `bet` on any scan with a neck — without it BET falls below Dice 0.80 on 75 of 125 subjects.
 
 ## Shape, size, cost
 

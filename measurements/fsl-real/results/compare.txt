@@ -1,11 +1,11 @@
 subjects                      125
 BET mask bytes identical      102 / 125
 BET mask voxel count equal    102 / 125
-bet_raw_dice   identical  42/125   max |arm-x86| 0.055752   median 0.000495
-bet_dice       identical 102/125   max |arm-x86| 0.023639   median 0.000000
-resid_mm       identical   0/125   max |arm-x86| 0.149548   median 0.000168
-dice_flirt     identical   0/125   max |arm-x86| 0.021336   median 0.000119
-dice_fnirt     identical   0/125   max |arm-x86| 0.003634   median 0.000269
+bet_raw_dice   identical  42/125   max |arm64-x86_64| 0.055752   median 0.000495
+bet_dice       identical 102/125   max |arm64-x86_64| 0.023639   median 0.000000
+resid_mm       identical   0/125   max |arm64-x86_64| 0.149548   median 0.000168
+dice_flirt     identical   0/125   max |arm64-x86_64| 0.021336   median 0.000119
+dice_fnirt     identical   0/125   max |arm64-x86_64| 0.003634   median 0.000269
   BET differs  A00037511  vox 1195100 vs 1193944  dice 0.883616 vs 0.883225
   BET differs  A00037848  vox 1028507 vs 1028584  dice 0.870127 vs 0.870158
   BET differs  A00040151  vox 1081507 vs 1081030  dice 0.888851 vs 0.887463
@@ -29,10 +29,10 @@ dice_fnirt     identical   0/125   max |arm-x86| 0.003634   median 0.000269
   BET differs  A00062942  vox 1037912 vs 1037001  dice 0.934056 vs 0.932941
   BET differs  A00063326  vox 1193030 vs 1193456  dice 0.890698 vs 0.891608
   BET differs  A00064081  vox 1164207 vs 1166121  dice 0.926527 vs 0.926995
-t_bet      sum arm      990 s   x86     1356 s   x86/arm 1.37
-t_flirt6   sum arm     3513 s   x86     6871 s   x86/arm 1.96
-t_flirt12  sum arm     2352 s   x86     4022 s   x86/arm 1.71
-t_fnirt    sum arm    26548 s   x86    40367 s   x86/arm 1.52
+t_bet      sum arm64      990 s   x86_64     1356 s   x86_64/arm64 1.37
+t_flirt6   sum arm64     3513 s   x86_64     6871 s   x86_64/arm64 1.96
+t_flirt12  sum arm64     2352 s   x86_64     4022 s   x86_64/arm64 1.71
+t_fnirt    sum arm64    26548 s   x86_64    40367 s   x86_64/arm64 1.52
 robustfov improves BET Dice on 125/125 (arm64); min gain 0.0041
 arm64: FNIRT beats its affine start on 125/125, min gain 0.0110; max planted-motion residual 0.1981 mm (bound 0.25)
 x86_64: FNIRT beats its affine start on 125/125, min gain 0.0107; max planted-motion residual 0.2055 mm (bound 0.25)

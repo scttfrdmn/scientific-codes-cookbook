@@ -1,9 +1,10 @@
-# FSL on a real workload — a 125-subject T1 cohort, Graviton4 and x86
+# FSL on a real workload — a 125-subject T1 cohort, Graviton4, Intel and AMD
 
-> **Graviton4 runs the cohort 1.53× faster and 44% cheaper per subject than same-generation Intel,
-> and every assertion holds on both — but on real scans BET is a path, not a fixed point:** the
-> template mask that was byte-identical across chips in [the recipe](../../recipes/fsl/README.md)
-> is identical for only 102 of 125 subjects here.
+> **Graviton4 is the cheapest per subject (44% under Intel, 23% under AMD); AMD is the fastest
+> (7% under Graviton4, 39% under Intel). Every assertion holds on all three — but on real scans BET
+> is an ARM-vs-x86 path, not a fixed point:** the template mask that was byte-identical across chips
+> in [the recipe](../../recipes/fsl/README.md) is identical for only 102 of 125 subjects here, while
+> Intel and AMD agree on every subject byte for byte.
 
 Workload: the **whole** NeuroFeedback Skull-stripped repository (NFBS; Puccio et al. 2016,
 [doi:10.1186/s13742-016-0150-5](https://doi.org/10.1186/s13742-016-0150-5)) — 125 T1w MPRAGE
@@ -20,8 +21,15 @@ measurements/fsl-real/stage-inputs.sh "$(make -s print-bucket)"         # NFBS +
 B=$(make -s print-bucket)
 sed "s|\${COOKBOOK_BUCKET}|$B|g" measurements/fsl-real/cohort.task.json > /tmp/c.json
 spawn task run --spec /tmp/c.json --wait                                                # Graviton4
-spawn task run --spec "$(python3 scripts/spec_arch.py fsl x86_64 $B r1 measurements/fsl-real/cohort.task.json)" --wait  # x86
+spawn task run --spec "$(python3 scripts/spec_arch.py fsl x86_64 $B r1 measurements/fsl-real/cohort.task.json)" --wait  # Intel
+spawn task run --spec "$(python3 scripts/spec_arch.py fsl amd $B r1 measurements/fsl-real/chip.task.json)" --wait     # AMD
 ```
+
+`chip.task.json` is `cohort.task.json` plus a topology and `openblas_get_corename()` record written
+after `run.sh` exits (its exit code is kept). On spawn 0.139.1 the AMD spec exceeds EC2's 16 KiB
+user data (spawn#1063/#1246), so it ran with its inline command moved, byte for byte, into a staged
+sha256-checked file and its outputs declared as one directory: how the code reached the box, not
+what it asserts.
 
 ## Results
 
@@ -32,27 +40,34 @@ same lock-verified FSL, same bytes:
 |---|---|---|---|---|---|---|---|
 | **Graviton4** | `c8g.4xlarge` | **2,332 s** | 2,403 s | 0.6381 | **0.00331** | **0.00341** | 15.9 GiB |
 | Intel Xeon 6975P-C | `c8i.4xlarge` | 3,577 s | 3,645 s | 0.7497 | 0.00596 | 0.00607 | 16.1 GiB |
+| AMD EPYC 9R45 | `c8a.4xlarge` | **2,181 s** | 2,321 s | 0.8622 | 0.00418 | 0.00445 | 16.1 GiB |
 
 - **1.53× faster, 44% cheaper per subject on Graviton4.** By step (summed over the cohort), Intel
   took 1.37× as long for `robustfov`+`bet`, 1.96× for the 6-DOF FLIRT, 1.71× for the 12-DOF
   FLIRT and 1.52× for FNIRT, which is 80% of the work (212 s of a 267 s subject on Graviton4).
-- **That is per vCPU, which is what is rented:** 16 vCPU is 16 cores on `c8g` and 8 cores × 2
-  hyperthreads on `c8i`. 16 single-threaded jobs fill both (`avg_cores` 15.17 and 15.43).
-- **Compute-dominated:** 68–71 s of boot, install, staging and stage-out against 39–60 min of FSL.
+- **AMD is the fastest box and still not the cheapest:** 7% under Graviton4's wall, but its hour
+  costs 35% more, so Graviton4 stays 23% cheaper per subject. Against Intel, AMD is 1.64× faster
+  (FNIRT 0.60×, 6-DOF FLIRT 0.56× of Intel's time); against Graviton4 it is faster on BET and FNIRT
+  (0.81×, 0.91×) and slower on both FLIRTs (1.09×, 1.23×).
+- **That is per vCPU, which is what is rented:** 16 vCPU is 16 cores on `c8g` and `c8a`
+  (`lscpu`: 1 thread per core) and 8 cores × 2 hyperthreads on `c8i`. 16 single-threaded jobs fill
+  all three (`avg_cores` 15.17, 15.43, 15.27). AMD's OpenBLAS 0.3.34 selects `Cooperlake` (no Zen 5
+  kernel); the Graviton4 and Intel legs did not record theirs.
+- **Compute-dominated:** 68–140 s of boot, install, staging and stage-out against 36–60 min of FSL.
 - Peak RSS is the container cgroup, including the 5.5 GiB of `/tmp` the extracted cohort occupies
   (tmpfs high-water 5.6 GiB on both). ~0.6 GiB per FNIRT, so 2 GiB/vCPU (`c8g`) is ample.
 - n = 1 per cell. FSL is deterministic on a given chip, but not across chips (below).
 
-## What held at scale, on both chips
+## What held at scale, on all three chips
 
-| assertion | bound | Graviton4 | x86 |
-|---|---|---|---|
-| all subjects complete | 125 of the archive's 125 | 125 | 125 |
-| **FLIRT undoes a motion planted on each subject's own curated brain** (6°, 21.60 mm at the corners) | < ¼ voxel = 0.25 mm, every subject | max **0.198 mm**, median 0.085 | max **0.206 mm**, median 0.085 |
-| **FNIRT improves on its own affine start** (curated mask warped to MNI152, Dice vs MNI152's brain mask) | every subject | **125 / 125**, min gain 0.011 | **125 / 125**, min gain 0.011 |
-| BET (after `robustfov`) vs the curated mask, Dice | ≥ 0.80 per subject — a gross-failure guard | min 0.832, median 0.901 | min 0.832, median 0.901 |
+| assertion | bound | Graviton4 | Intel | AMD |
+|---|---|---|---|---|
+| all subjects complete | 125 of the archive's 125 | 125 | 125 | 125 |
+| **FLIRT undoes a motion planted on each subject's own curated brain** (6°, 21.60 mm at the corners) | < ¼ voxel = 0.25 mm, every subject | max **0.198 mm**, median 0.085 | max **0.206 mm**, median 0.085 | max **0.206 mm**, median 0.085 |
+| **FNIRT improves on its own affine start** (curated mask warped to MNI152, Dice vs MNI152's brain mask) | every subject | **125 / 125**, min gain 0.011 | **125 / 125**, min gain 0.011 | **125 / 125**, min gain 0.011 |
+| BET (after `robustfov`) vs the curated mask, Dice | ≥ 0.80 per subject — a gross-failure guard | min 0.832, median 0.901 | min 0.832, median 0.901 | min 0.832, median 0.901 |
 
-Reported, not asserted: FLIRT-only Dice to MNI152 median 0.903 → FNIRT 0.955 (both chips); BET's
+Reported, not asserted: FLIRT-only Dice to MNI152 median 0.903 → FNIRT 0.955 (all chips); BET's
 containment of the curated mask median 0.844 — BET's brain is *smaller* than NFBS's generous masks,
 the opposite of its 6.8% superset on the MNI152 template.
 
@@ -63,6 +78,8 @@ also drags FLIRT down — the probe's three FNIRT-worse-than-affine subjects all
 
 ## Fixed point or path, across chips
 
+Graviton4 against either x86 chip (the two give the same numbers):
+
 | quantity | identical across chips | largest difference |
 |---|---|---|
 | BET mask after `robustfov` | **102 / 125** byte-identical | A00054857: 1,026,298 vs 968,097 voxels (Dice 0.930 vs 0.906) |
@@ -70,6 +87,11 @@ also drags FLIRT down — the probe's three FNIRT-worse-than-affine subjects all
 | FLIRT planted-motion residual | 0 / 125 | 0.150 mm |
 | FLIRT 12-DOF Dice to MNI152 | 0 / 125 | 0.021 |
 | FNIRT Dice to MNI152 | 0 / 125 | 0.0036 |
+
+**Intel against AMD: identical on every subject** — all 125 BET masks byte for byte, and every
+FLIRT residual, FLIRT Dice and FNIRT Dice to the printed six digits — although the two run
+different silicon and AMD's OpenBLAS picks an Intel-named kernel. So the split is ARM build against
+x86 build, not chip against chip.
 
 All of these are **paths**: BET deforms a surface mesh over a fixed number of iterations, FLIRT
 and FNIRT are optimisers, and a last-bit difference on one chip can carry each to a different
@@ -86,8 +108,9 @@ each holds on each chip by its own bound, and the cohort statistics agree to thr
 | image | the recipe's `mambaorg/micromamba` per-architecture digests |
 | scripts | `run.sh`, `subject.sh` staged and pinned by sha256 in the spec; `mkspec.py` writes the specs |
 
-Raw per-subject rows for both chips are in [`results/`](results/), with the cross-chip comparison
-from [`compare.py`](compare.py) in `results/compare.txt`.
+Raw per-subject rows for all three chips are in [`results/`](results/), with the cross-chip
+comparisons from [`compare.py`](compare.py) in `results/compare*.txt` (`compare.py arm64 amd`,
+`compare.py x86_64 amd`). Spend for the AMD leg: $0.56 billed.
 
 ## Caveats
 

@@ -34,7 +34,7 @@ freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 | **freebayes** | 644 s | 0.0310 | **0.99695** | 0.95953 |
 | [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99000 | **0.99545** |
 
-**Most precise once filtered, least sensitive** — ~4% fewer truth SNVs at defaults, real rather than a threshold artifact (recall is 0.95953 even unfiltered). Pick it when precision beats sensitivity, or for pooled samples, which is what it is for ([full three-way](../../measurements/callers-real/README.md)). On Intel and AMD the scores are byte-identical. GATK's native x86 PairHMM brings its cost down to 4.4–4.6× bcftools there, and AMD is the fastest box for all three callers ([three chips](../../measurements/callers-real/README.md#on-intel-and-amd-the-same-accuracy-table-byte-for-byte)).
+**Most precise once filtered, least sensitive** — ~4% fewer truth SNVs at defaults, real rather than a threshold artifact (recall is 0.95953 even unfiltered). Pick it when precision beats sensitivity, or for pooled samples, which is what it is for ([full three-way](../../measurements/callers-real/README.md)).
 
 ## Make it yours
 
@@ -50,7 +50,7 @@ freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 
 Two tasks on `c8g.xlarge`: **644 s of calling**, then scoring in the bcftools image ([one tool per image](../../practices/container-path.md)). 385,371 variants — 3× the others, which is the QUAL tail above.
 
-**Generation is the biggest lever measured in this catalog: 2.65× Gv2→Gv5** (1349 → 509 s), the same call getting **52% cheaper** while `$/hr` rises 27.9% — and uniquely, with *no weak step* (1.59× / 1.32× / 1.27×). The variant count is identical on all four chips. [Full ladder](../../measurements/freebayes-real/README.md).
+**Generation is the biggest lever measured in this catalog: 2.65× Gv2→Gv5** (1349 → 509 s), the same call getting **52% cheaper** while `$/hr` rises 27.9% — and uniquely, with *no weak step* (1.59× / 1.32× / 1.27×). The variant count is identical on all four chips. **But x86 is faster here:** same-generation AMD (`c8a.xlarge`) calls chr20 in 357 s, 1.80× Graviton4 and 25% cheaper, Intel in 476 s — same count, same `QUAL≥30` calls. [Full ladder](../../measurements/freebayes-real/README.md).
 
 <details>
 <summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>

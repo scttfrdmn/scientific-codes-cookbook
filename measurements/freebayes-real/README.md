@@ -20,6 +20,35 @@ is **1.08–1.10** on every rung — the tightest ratio in this directory, becau
 makes the ~100 s of provisioning almost invisible. Both columns agree on direction and magnitude,
 so neither needs a caveat.
 
+## Same generation, three chips: x86 calls faster
+
+The Graviton4 rung against same-generation Intel and AMD, 4 vCPU each, from
+[`chip.task.json`](chip.task.json) (the recipe's calling task plus a topology record and its own
+output prefix; bioconda's `linux/amd64` build of 1.3.10 on both x86 chips):
+
+| chip | instance | calling | billed | $/hr | **compute $** | billed $ | variants |
+|---|---|---|---|---|---|---|---|
+| Graviton4 | `c8g.xlarge` | 644 s | 704 s | 0.1595 | 0.0285 | 0.0312 | 385,371 |
+| Intel Xeon 6975P-C | `c8i.xlarge` | 476 s | 587 s | 0.1874 | 0.0248 | 0.0306 | 385,371 |
+| **AMD EPYC 9R45** | `c8a.xlarge` | **357 s** | 460 s | 0.2155 | **0.0214** | **0.0275** | 385,371 |
+
+- **AMD is 1.80× faster than Graviton4 and 25% cheaper per call; Intel 1.35× and 13%.** Even
+  Graviton5 (509 s) is slower than both. freebayes is single-threaded, so this is one core's speed:
+  an Intel 4-vCPU box is 2 cores × 2 hyperthreads, Graviton4 and AMD 8a are 1 thread per core
+  (`lscpu`), and the idle vCPUs do not matter. It is also two builds (aarch.bio's arm64, bioconda's
+  x86), so the gap is chip and compiler together, not chip alone. n = 1 per cell.
+- **What is identical: the variant count (all three), and every record above `QUAL≥30`** — the same
+  113,841 sites, alleles and genotypes on all three, which is what the recipe's filter keeps.
+- **What differs, ARM build against x86 build:** 4 of 385,371 records spell a homopolymer indel's
+  alleles differently at the same position, and 3 more call a different genotype; all 7 have
+  `QUAL` < 28. The other `QUAL` values agree except in the last printed digit (one record at 74.5)
+  or below 1e-7. **Intel against AMD:** same sites, alleles, genotypes, INFO and sample columns on
+  every record; `QUAL` differs on 1,184 records, all below 1e-10 (largest difference 4.8e-16).
+- **Each chip reproduces itself:** the VCF body is byte-identical to the recipe's own earlier run on
+  the same chip (Intel, AMD, and Graviton4 against the `c6g` rung). So the count is a fixed point
+  across chips and the low-`QUAL` tail is an ARM-vs-x86 path.
+- Spend for the two x86 legs: $0.058 billed.
+
 ## The even ladder is the finding
 
 | code | Gv2→Gv5 | per-step | Gv3→Gv4 |
@@ -74,4 +103,8 @@ Graviton launch carrying a cost limit, and concurrency is what triggers the thro
 rung (45m/35m/25m, caps $0.14/$0.12/$0.10), scaled from the measured Graviton4 wall by the worst
 slowdown this catalog had seen; the slowest rung used 1456 s of its 2700 s.
 
-Raw smoke-check output per rung and the ladder as TSV are in [`results/`](results/).
+Raw smoke-check output per rung and the ladder as TSV are in [`results/`](results/). The x86
+legs: `python3 scripts/spec_arch.py freebayes x86_64|amd <bucket> <nonce>
+measurements/freebayes-real/chip.task.json`. On spawn 0.139.1 these exceed EC2's 16 KiB user data
+(spawn#1063/#1246), so they ran with the inline command moved, byte for byte, into a staged
+sha256-checked file.

@@ -36,19 +36,19 @@ flye --nano-hq ERR10114907.fastq.gz -g 4.6m -t 8 -o out
 
 ## Which box — [measured](../../measurements/flye-real/README.md), same reads, 8 vCPU throughout
 
-| generation | instance | Flye | **compute $** | billed $ |
+| chip | instance | Flye | **compute $** | billed $ |
 |---|---|---|---|---|
 | Graviton2 | `c6g.2xlarge` | 511 s | 0.0386 | 0.0543 |
 | Graviton3 | `c7g.2xlarge` | 377 s | 0.0304 | 0.0428 |
 | Graviton4 | `c8g.2xlarge` | 306 s | 0.0271 | 0.0360 |
 | **Graviton5** | `c9g.2xlarge` | **245 s** | **0.0237** | **0.0331** |
+| Intel | `c8i.2xlarge` | 306 s | 0.0319 | 0.0421 |
+| AMD | `c8a.2xlarge` | 226 s | 0.0271 | 0.0408 |
 
-**2.09× over four generations, every step paying for itself** (1.36×, 1.23×, 1.25×) — unlike
-[hmmer](../hmmer/README.md), where Graviton4 is 4% *dearer* than Graviton3 on these same two chips, so
-that weak rung belongs to particular inner loops rather than to the step
-([which comparison applies](../../patterns/cost-per-result.md)). **Size by the assembler's working
-set, not by staging:** tmpfs peaks at **768 MB** against Flye's own **~4.3 GB**, so a 16 GiB box is
-the fit — the opposite of [fastp](../fastp/README.md), where staging picked the family.
+**The same assembly, byte for byte, on all six chips.** Same-generation AMD is the fastest box measured, 1.35× Graviton4 at the same compute $; Intel is no faster and dearer.
+**2.09× over four Graviton generations, every step paying for itself** (1.36×, 1.23×, 1.25×) — unlike [hmmer](../hmmer/README.md), where Graviton4 is 4% *dearer* than Graviton3 on these same two chips, so
+that weak rung belongs to particular inner loops rather than to the step ([which comparison applies](../../patterns/cost-per-result.md)). **Size by the assembler's working
+set, not by staging:** tmpfs peaks at **768 MB** against Flye's own **~4.3 GB**, so a 16 GiB box is the fit — the opposite of [fastp](../fastp/README.md), where staging picked the family.
 
 <details>
 <summary>As shipped: a completion sentinel from the right code path, seven runs of exact agreement, pins</summary>

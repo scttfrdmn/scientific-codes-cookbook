@@ -1,0 +1,16 @@
+subjects                      125
+BET mask bytes identical      125 / 125
+BET mask voxel count equal    125 / 125
+bet_raw_dice   identical 125/125   max |x86_64-amd| 0.000000   median 0.000000
+bet_dice       identical 125/125   max |x86_64-amd| 0.000000   median 0.000000
+resid_mm       identical 125/125   max |x86_64-amd| 0.000000   median 0.000000
+dice_flirt     identical 125/125   max |x86_64-amd| 0.000000   median 0.000000
+dice_fnirt     identical 125/125   max |x86_64-amd| 0.000000   median 0.000000
+t_bet      sum x86_64     1356 s   amd      797 s   amd/x86_64 0.59
+t_flirt6   sum x86_64     6871 s   amd     3817 s   amd/x86_64 0.56
+t_flirt12  sum x86_64     4022 s   amd     2891 s   amd/x86_64 0.72
+t_fnirt    sum x86_64    40367 s   amd    24273 s   amd/x86_64 0.60
+robustfov improves BET Dice on 125/125 (x86_64); min gain 0.0042
+x86_64: FNIRT beats its affine start on 125/125, min gain 0.0107; max planted-motion residual 0.2055 mm (bound 0.25)
+amd: FNIRT beats its affine start on 125/125, min gain 0.0107; max planted-motion residual 0.2055 mm (bound 0.25)
+naive BET below Dice 0.80: 73/125 (x86_64)

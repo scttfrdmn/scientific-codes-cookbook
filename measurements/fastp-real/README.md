@@ -4,16 +4,33 @@
 > and reading the core count right would still have picked the expensive one, because the binding
 > resource was staging space.
 
-fastp 1.3.6 on the complete SRR062634 run (48,297,986 reads, 4.83 Gbp, 100 bp), same image digest,
-same input objects.
+fastp 1.3.6 on the complete SRR062634 run (48,297,986 reads, 4.83 Gbp, 100 bp), same input objects,
+on Graviton4, same-generation Intel and AMD (aarch.bio's arm64 image; bioconda's `linux/amd64` build
+of the same version on both x86 chips).
 
 | instance | vCPU | RAM | `-w` | fastp | billed | $/hr | **$/run** | tmpfs peak |
 |---|---|---|---|---|---|---|---|---|
 | `c8g.4xlarge` | 16 | 32 GiB | 16 | **31 s** | 226 s | 0.6381 | 0.0401 | 7,116 MB |
 | **`m8g.2xlarge`** | 8 | 32 GiB | 8 | 36 s | 226 s | **0.3590** | **0.0225** | 7,154 MB |
+| `c8i.4xlarge` | 16 | 32 GiB | 16 | 29 s | 226 s | 0.7497 | 0.0471 | 7,019 MB |
+| `m8i.2xlarge` | 8 | 32 GiB | 8 | 52 s | 226 s | 0.4234 | 0.0266 | 7,129 MB |
+| `c8a.4xlarge` | 16 | 32 GiB | 16 | 22 s | 160 s | 0.8622 | 0.0383 | 7,230 MB |
+| `m8a.2xlarge` | 8 | 32 GiB | 8 | 32 s | 159 s | 0.4869 | **0.0215** | 7,180 MB |
 
-Every count in the two runs is identical — reads in, each filter bucket, both output read counts. Only
-the wall clock and a 38 MB difference in tmpfs high-water mark differ.
+Every count in the six runs is identical — reads in, each filter bucket, both output read counts,
+Q30 rate and fastp's duplication estimate — so all four assertions (the exact read count, the
+conservation identity, mates paired, outputs == passed) hold on all three chips, and the counts are
+a fixed point across chips. Only the wall clock and the tmpfs high-water mark (7,019–7,230 MB) differ.
+
+- **The m-over-c lesson holds on every chip:** the 8-vCPU `m` box is 44% cheaper than the 16-vCPU
+  `c` box on Graviton4, Intel and AMD alike, because all three need 32 GiB for staging.
+- **Threads are worth more on Intel**, where 8 vCPU is 4 cores × 2 hyperthreads (`lscpu`; Graviton4
+  and AMD 8a are 1 thread per core): 8 → 16 threads bought 1.79× there, 1.45× on AMD, 1.16× on
+  Graviton4. Even so, `c8i` does not pay for itself.
+- **AMD's `m8a.2xlarge` billed 4% under Graviton4's**, on a 159 s window against 226 s; most of that
+  gap is boot, the in-task hashing and gzip counts, and termination lag, not fastp, which is cheapest
+  on Graviton4 ($0.0036 of fastp seconds against AMD's $0.0043 and Intel's $0.0061). n = 1 per
+  cell, so read the billed ordering of Graviton4 and AMD as a tie.
 
 ## Why RAM picks the box and cores do not
 
@@ -52,6 +69,11 @@ make run   RECIPE=fastp          # the m8g rung, as shipped
 ```
 
 The `c8g.4xlarge` leg is the same spec with `resources.families` set to `["c8g"]`, `cpu` 16 and `-w 16`.
+The x86 legs are [`m8-2xl.task.json`](m8-2xl.task.json) and [`c8-4xl.task.json`](c8-4xl.task.json) —
+the recipe's spec with those changes, its own output prefix, and a topology record — resolved by
+`python3 scripts/spec_arch.py fastp x86_64|amd <bucket> <nonce> measurements/fastp-real/<rung>.task.json`.
+On spawn 0.139.1 these exceed EC2's 16 KiB user data (spawn#1063/#1246), so they ran with the inline
+command moved, byte for byte, into a staged sha256-checked file. Spend for the four x86 legs: $0.13.
 
 ## Caveats
 
