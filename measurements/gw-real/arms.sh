@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # measurements/gw-real: one arm of the r1 quantile-miss split (arms.py).
-#   arms.sh calibration | arms.sh sampler <naccept>
+#   arms.sh calibration | arms.sh sampler <naccept> [maxmcmc]
 set +e
 set -uo pipefail
 export PATH=/opt/conda/bin:$PATH TMPDIR=/tmp HOME=/tmp MPLCONFIGDIR=/tmp/mpl
@@ -14,7 +14,7 @@ case "$1" in
     python3 -u arms.py calibration r1/GW150914_result.hdf5 r1/quantiles.tsv data /tmp/out 48 1000 4000 2>&1 \
       | grep --line-buffered -v 'Warning\|deprecated behaviour' | tee /tmp/out/arms.log ;;
   sampler)
-    python3 -u arms.py sampler "$2" data /tmp/out 64 500 2>&1 \
+    python3 -u arms.py sampler "$2" data /tmp/out 64 500 ${3:-} 2>&1 \
       | grep --line-buffered -v 'Warning\|deprecated behaviour' | tee /tmp/out/pe.log ;;
 esac
 RC=${PIPESTATUS[0]}

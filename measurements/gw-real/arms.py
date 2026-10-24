@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """The two arms that separate the r1 quantile miss's candidate causes, each changing one thing.
 
-    arms.py sampler <naccept> <data dir> <out dir> <npool> <nlive>
-        pe.py, byte for byte, with only dynesty's naccept changed (60 in r1).
+    arms.py sampler <naccept> <data dir> <out dir> <npool> <nlive> [maxmcmc]
+        pe.py, byte for byte, with only dynesty's naccept (60 in r1) or the acceptance-walk cap
+        maxmcmc (bilby's default 5000 in r1) changed. Every walk bilby's tuner sets is written to
+        walks.tsv, and a running cap-hit summary is printed, so it survives a kill in command.log.
     arms.py calibration <r1 result.hdf5> <r1 quantiles.tsv> <data dir> <out dir> <npool> <curves...>
         r1's own nested samples and posterior, importance-reweighted from its 250-curve calibration
         marginalisation to N fresh curves, then pe.py's quantile test on the reweighted run."""
@@ -20,21 +22,62 @@ MODE = sys.argv[1]
 
 if MODE == "sampler":
     import bilby
+    from bilby.core.sampler import dynesty3_utils
     NACCEPT = int(sys.argv[2])
+    MAXMCMC = int(sys.argv[7]) if len(sys.argv) > 7 else None
     _run = bilby.run_sampler
 
     def run_sampler(*a, **kw):
         print("arms: naccept %s -> %d" % (kw.get("naccept"), NACCEPT), flush=True)
         kw["naccept"] = NACCEPT
+        if MAXMCMC is not None:
+            print("arms: maxmcmc %s -> %d" % (kw.get("maxmcmc", "default 5000"), MAXMCMC), flush=True)
+            kw["maxmcmc"] = MAXMCMC
         return _run(*a, **kw)
 
+    # walks_probe.py's recorder: per tune call, the walk set and the returned chain's steps
+    W = {"n": 0, "hit": 0, "win": [], "cap": set(), "maxset": 0}
+    os.makedirs(sys.argv[4], exist_ok=True)
+    WLOG = open(os.path.join(sys.argv[4], "walks.tsv"), "w")
+    WLOG.write("tune_call\tnaccept\tmaxmcmc\twalks_set\taccept_returned\treject_returned\n")
+    _tune = dynesty3_utils.EnsembleWalkSampler.tune
+
+    def tune(self, info, update=True):
+        _tune(self, info, update)
+        steps = int(info["accept"]) + int(info["reject"])
+        hit = int(steps >= self.maxmcmc)
+        W["n"] += 1
+        W["hit"] += hit
+        W["win"].append(hit)
+        W["cap"].add(int(self.maxmcmc))
+        W["maxset"] = max(W["maxset"], int(self.sampler_kwargs["walks"]))
+        WLOG.write("%d\t%d\t%d\t%d\t%d\t%d\n" % (W["n"], self.naccept, self.maxmcmc,
+                                                  self.sampler_kwargs["walks"], info["accept"], info["reject"]))
+        WLOG.flush()
+        if W["n"] % 250 == 0:
+            print("walks\ttune %d\tset %d\tcap %d\tcap-hit last 250 %.3f\tall %.3f"
+                  % (W["n"], self.sampler_kwargs["walks"], self.maxmcmc, sum(W["win"]) / 250.0,
+                     W["hit"] / float(W["n"])), flush=True)
+            W["win"] = []
+
+    dynesty3_utils.EnsembleWalkSampler.tune = tune
     bilby.run_sampler = run_sampler
-    sys.argv = [os.path.join(HERE, "pe.py")] + sys.argv[3:]
+    sys.argv = [os.path.join(HERE, "pe.py")] + sys.argv[3:7]
     try:
         runpy.run_path(sys.argv[0], run_name="__main__")
     finally:
+        WLOG.close()
         with open(os.path.join(sys.argv[2], "score.tsv"), "a") as fh:
             fh.write("naccept\t%d\n" % NACCEPT)
+            if MAXMCMC is not None:
+                fh.write("maxmcmc\t%d\n" % MAXMCMC)
+                fh.write("walk_cap_seen_by_tuner\t%s\n" % ",".join(str(c) for c in sorted(W["cap"])))
+                fh.write("walks_tune_calls\t%d\n" % W["n"])
+                fh.write("walks_hit_cap_fraction\t%.4f\n" % (W["hit"] / float(max(W["n"], 1))))
+                fh.write("walks_longest_set\t%d\n" % W["maxset"])
+        if MAXMCMC is not None and W["cap"] != {MAXMCMC}:
+            print("FAIL  the walk tuner saw cap %s, not the requested %d" % (sorted(W["cap"]), MAXMCMC), flush=True)
+            sys.exit(1)
     sys.exit(0)
 
 # ---- calibration ---------------------------------------------------------------------------------

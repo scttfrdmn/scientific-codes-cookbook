@@ -1,0 +1,34 @@
+{
+  "task_id": "cookbook-gw-real-arm-maxmcmc10k",
+  "container": "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\nset -uo pipefail\ncd /tmp/g/\nprintf 'd73b9a07fa15059a465c51f7330992d2d42870e8b9226babd208f570cc4f7604  arms.sha256\\n' | sha256sum -c && sha256sum -c arms.sha256 || { echo 'FAIL: pins'; exit 1; }\nbash arms.sh sampler 60 10000\n"
+  ],
+  "resources": {
+    "cpu": 64,
+    "memory_gib": 128,
+    "architecture": "arm64",
+    "families": [
+      "c8g"
+    ]
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gw-real/",
+      "destination": "/tmp/g/"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/gw-real/arm-maxmcmc10k/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "7h",
+    "on_complete": "terminate",
+    "cost_limit": 9.0
+  }
+}

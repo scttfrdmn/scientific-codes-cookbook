@@ -4,7 +4,7 @@
   "command": [
     "bash",
     "-c",
-    "set +e\nset -uo pipefail\ncd /tmp/g/\nprintf 'e7b14228ce288a0e1870d8fa6ee29c021c508d8fcb96cb452f43adbddb205ca1  arms.sha256\\n' | sha256sum -c && sha256sum -c arms.sha256 || { echo 'FAIL: pins'; exit 1; }\nprintf 'a3038ac80dba54aaae0f351a05407d76867ad876a7b2b558ed6655ae0cfc4edc  r1/GW150914_result.hdf5\\n' | sha256sum -c || { echo 'FAIL: r1 pin'; exit 1; }\nbash arms.sh calibration\n"
+    "set +e\nset -uo pipefail\ncd /tmp/g/\nprintf 'd73b9a07fa15059a465c51f7330992d2d42870e8b9226babd208f570cc4f7604  arms.sha256\\n' | sha256sum -c && sha256sum -c arms.sha256 || { echo 'FAIL: pins'; exit 1; }\nprintf 'a3038ac80dba54aaae0f351a05407d76867ad876a7b2b558ed6655ae0cfc4edc  r1/GW150914_result.hdf5\\n' | sha256sum -c || { echo 'FAIL: r1 pin'; exit 1; }\nbash arms.sh calibration\n"
   ],
   "resources": {
     "cpu": 64,

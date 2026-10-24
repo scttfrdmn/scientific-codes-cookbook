@@ -82,7 +82,7 @@ write("real.task.json", {
     "lifecycle": {"ttl": TTL, "on_complete": "terminate", "cost_limit": COST},
 })
 
-# ---- the two arms that split r1's quantile miss (arms.py): each changes one thing from r1 ---------
+# ---- the arms that split r1's quantile miss (arms.py): each changes one thing from r1 ---------
 # spawn's bootstrap leaves ~1 KiB of EC2's 16 KiB user data (spawn#1063), so the whole inputs/gw-real/
 # prefix is staged as one input and every pin lives in one staged manifest, itself pinned here.
 A = ["arms.sh", "arms.py", "gwreal.py", "pe.py"]
@@ -97,7 +97,8 @@ for name, cmd, extra, ttl, cost in (
         ("calibration", "printf '%s  r1/GW150914_result.hdf5\\n' | sha256sum -c || { echo 'FAIL: r1 pin'; exit 1; }\n"
          "bash arms.sh calibration\n" % R1_RESULT,
          [{"source": S3 + "runs/gw-real/r1/", "destination": G + "r1/"}], "1h", 1.0),
-        ("naccept120", "bash arms.sh sampler 120\n", [], "5h", 7.5)):
+        ("naccept120", "bash arms.sh sampler 120\n", [], "5h", 7.5),
+        ("maxmcmc10k", "bash arms.sh sampler 60 10000\n", [], "7h", 9.0)):
     write("arm-%s.task.json" % name, {
         "task_id": "cookbook-gw-real-arm-%s" % name,
         "container": IMAGE,
