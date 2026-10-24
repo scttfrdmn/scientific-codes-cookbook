@@ -1,0 +1,186 @@
+# measurements/minimap2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole 30x HiFi genome aligned (NA12878 GIAB PacBio HiFi deposit, 9,080,816 reads, against GRCh38 no-alt)"
+
+[[dataset]]
+id = "GRCh38_no_alt_analysis_set.fa (195 sequences of RODA 1000genomes GRCh38_full_analysis_set_plus_decoy_hla.fa)"
+tier = "built"
+pins = "pins.sha256"
+from_recipe = "measurements/bwa-real"
+note = "bwa-real staged the full analysis set; the 195 non-alt/HLA/decoy sequences are extracted here"
+
+[[dataset]]
+id = "GIAB HG001 NISTv4.2.1 GRCh38 chr20 VCF + BED"
+tier = "durable-id"
+pins = "pins.sha256"
+from_recipe = "gatk4"
+
+[[dataset]]
+id = "s3://giab/data/NA12878/PacBio_SequelII_CCS_11kb/HG001_GRCh38/HG001_GRCh38.haplotag.RTG.trio.bam"
+tier = "roda"
+pins = "wg-pins.sha256"
+note = "cut by prep-genome.task.json into 25 FASTQ chunks + pbmm2 placement tables, all pinned; the source BAM's GIAB md5 was not re-checked (read over https, never stored)"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/results.tsv"
+workers = 32
+date = "2026-10-18"
+date_source = "git"
+wall_s = 2618
+billed_s = 4001
+usd_hr = 1.8851
+billed_usd = 2.095
+note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 25.8 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
+
+[[run]]
+instance = "r8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/results.tsv"
+workers = 32
+date = "2026-10-18"
+date_source = "git"
+wall_s = 2880
+billed_s = 5052
+usd_hr = 2.2227
+billed_usd = 3.119
+note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 26.0 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
+
+[[run]]
+instance = "r8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/results.tsv"
+workers = 32
+date = "2026-10-18"
+date_source = "git"
+wall_s = 1774
+billed_s = 3566
+usd_hr = 2.5562
+billed_usd = 2.532
+note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 26.1 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "diagnostic"
+results = "results/arm64/probe-chr20-results.tsv"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 169
+note = "align.task.json sizing probe: the recipe's chr20 reads against the whole genome; README prints $0.051 and peak RSS 19.7 GB but not the billed seconds"
+
+# checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'observed (identical on all three)']
+[[check]]
+id = "pins"
+claim = "staged bytes == pinned sha256"
+kind = "pin"
+observed = "54 files"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "primaries-conserved"
+claim = "primary records == input reads, per chunk and in total"
+kind = "conservation"
+observed = "9,080,816 in 25 chunks"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-duplicates"
+claim = "no read has two primaries; read names unique across chunks"
+kind = "identity"
+observed = "0 duplicates"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "deposit-primaries"
+claim = "every read is one of the deposit's primaries"
+kind = "identity"
+observed = "9,080,816 of 9,080,816"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "floors"
+claim = "mapped ≥ 95% / mean identity ≥ 98%"
+kind = "band"
+bound = "≥ 95% / ≥ 98%"
+observed = "99.716% / 98.7919%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pbmm2-concordance"
+claim = "where both are confident (MAPQ ≥ 30), minimap2's locus overlaps pbmm2's ≥ 0.99"
+kind = "cross-code"
+bound = "≥ 0.99"
+observed = "0.99897 (8,621,026 of 8,629,939)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "chr20-sort"
+claim = "reads placed on chr20: sorted BAM records == SAM records, BAM magic, EOF"
+kind = "conservation"
+observed = "270,050; `1f8b0804`"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "giab-truth"
+claim = "GIAB v4.2.1 chr20 truth SNVs recovered ≥ 0.95"
+kind = "reference"
+bound = "≥ 0.95"
+observed = "0.99960 (69,209 / 28)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "chunk-fastq-recipe"
+claim = "The chr20 chunk FASTQ is byte-identical to the recipe's"
+kind = "reported"
+observed = "byte-identical (fdb979ce…)"
+outcome = "reported"
+
+[[check]]
+id = "chr20-sam-vs-probe"
+claim = "Its SAM is byte-identical to the probe's (16 vs 32 threads, FASTA vs prebuilt .mmi)"
+kind = "reported"
+observed = "byte-identical (a7fcd7e4…)"
+outcome = "reported"
+
+[[check]]
+id = "placement"
+claim = "Chromosome, position, CIGAR, NM, `AS` and flags are identical in every record"
+kind = "reported"
+observed = "24 of 25 chunks byte-identical SAM on all three chips; Intel == AMD on every byte"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "mapq-ms-chr4"
+claim = "chr4 centromere: MAPQ and `ms:i` on near-ties"
+kind = "reported"
+observed = "9 of 662,096 chr4 records differ"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "one supplementary MAPQ 26 (Graviton4) vs 25 (x86), 4 siblings via SA:Z; 4 secondaries ms:i 6978 vs 6979; no record crosses the MAPQ 30 gate"
+
+[[cross_code]]
+with = "published:GIAB-HG001-PacBio-HiFi-pbmm2"
+same_bytes = true
+metric = "locus overlap where both minimap2 and the depositors' pbmm2 have MAPQ ≥ 30"
+tolerance_basis = "restricted to confident calls, where two correct aligners must agree; repeats break ties differently"
+check = "pbmm2-concordance"
+
+[[cross_code]]
+with = "published:GIAB-HG001-NISTv4.2.1"
+same_bytes = false
+metric = "chr20 truth SNVs recovered"
+check = "giab-truth"

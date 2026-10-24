@@ -1,0 +1,167 @@
+# measurements/salmon-real/record.toml -- the SIMPLE case.
+# Everything not here (owner recipe = salmon, tool/version, arm64 + x86 pins, last_verified*,
+# spec paths, families/TTL/cost_limit, staging, chip names) is derived by gen_catalog.py.
+schema = 1
+result_unit = "one complete RNA-seq run quantified (ERR188026, 15.8M reads, all 453,553 Ensembl 116 transcripts)"
+
+[[dataset]]
+id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
+tier = "versioned-release"
+unpinned = "recipes/salmon/stage-inputs.sh fetches the release byte-for-byte but commits no sha256 for the real-workload copy"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (complete run)"
+tier = "durable-id"
+unpinned = "no sha256 committed; ENA accession only"
+
+[[dataset]]
+id = "salmon index (1.68 GB tar)"
+tier = "run-output"
+from_recipe = "salmon"          # recipes/salmon/01-index.task.json; x86 rows read each chip's own index
+note = "arm64 and x86 indexes are different tars; quant.sf is byte-identical regardless"
+
+# --- Graviton generation sweep: 16 threads, 4xlarge, same digest, same bytes -------------
+[[run]]
+instance = "c6g.4xlarge"
+purpose = "generation-sweep"
+spawn_version = "0.111.1"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+threads_per_core = 1            # no host file in results/; author it
+wall_s = 116
+overhead_s = 74
+usd_hr = 0.5440
+compute_usd = 0.0175
+billed_usd = 0.0287
+peak_gib = 6.57
+peak_kind = "rss"
+results = "results/size-c6g-16t.txt"
+
+[[run]]
+instance = "c7g.4xlarge"
+purpose = "generation-sweep"
+spawn_version = "0.111.1"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 83
+overhead_s = 78
+usd_hr = 0.5800
+compute_usd = 0.0134
+billed_usd = 0.0259
+peak_gib = 6.46
+peak_kind = "rss"
+results = "results/size-c7g-16t.txt"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+spawn_version = "0.111.1"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 74
+overhead_s = 51
+usd_hr = 0.6381
+compute_usd = 0.0131
+billed_usd = 0.0222
+peak_gib = 6.59
+peak_kind = "rss"
+results = "results/size-c8g-16t.txt"
+
+[[run]]
+instance = "c9g.4xlarge"
+purpose = "generation-sweep"
+spawn_version = "0.111.1"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 57
+overhead_s = 43
+usd_hr = 0.6955
+compute_usd = 0.0110
+billed_usd = 0.0193
+peak_gib = 6.50
+peak_kind = "rss"
+results = "results/size-c9g-16t.txt"
+
+# --- same generation, three chips ------------------------------------------------------
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+image = "recipe"                # resolves to images_x86_64[0] (biocontainers salmon 2.7.0)
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+threads_per_core = 2            # 8 cores x 2 SMT
+wall_s = 90
+overhead_s = 43
+usd_hr = 0.7497
+compute_usd = 0.0187
+billed_usd = 0.0277
+peak_gib = 6.49
+peak_kind = "rss"
+results = "results/size-c8i-16t.txt"
+note = "overhead not comparable with the arm64 rows: spawn 0.139.1 overlaps Docker install with stage-in"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 55
+overhead_s = 33
+usd_hr = 0.8622
+compute_usd = 0.0132
+billed_usd = 0.0210
+peak_gib = 6.54
+peak_kind = "rss"
+results = "results/size-c8a-16t.txt"
+
+# --- checks: README has no checks table; these are the in-task asserts in results/*.txt -
+[[check]]
+id = "tpm-sum"
+claim = "sum(TPM) == 1000000.00"
+kind = "identity"
+bound = "exact"
+observed = "1000000.00"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "numreads-conservation"
+claim = "sum(NumReads) == num_mapped"
+kind = "conservation"
+bound = "exact"
+observed = "14,913,565"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "quant-sf-bytes"
+claim = "quant.sf byte-identical on Graviton4, Intel and AMD"
+kind = "reported"               # observed after the fact, not an in-task assert
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "salmon-image-no-python-jq"
+scope = "image"
+symptom = "exit 127 on every chip after quant.sf had already staged"
+cause = "the aarchbio salmon image has neither python3 nor jq; the sweep script parsed meta_info.json with python"
+fix = "parse with the shell tools the image actually has; check an image for the interpreters you assume"
+cost = "the first sweep's timings (science recoverable from the staged output)"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1 leaves too little of EC2's 16 KiB user data for this inline script; x86 legs staged a sha256-checked task.sh"

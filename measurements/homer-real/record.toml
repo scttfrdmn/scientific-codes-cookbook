@@ -1,0 +1,178 @@
+# measurements/homer-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole peak set (44,217 ENCODE CTCF peaks) through all three findMotifsGenome.pl runs (genome, offset, vsoffset)"
+
+[[dataset]]
+id = "ENCODE ENCFF796WRU.bed.gz (CTCF ChIP-seq, GM12878, experiment ENCSR000DZN), s3://encode-public"
+tier = "roda"
+pins = "results/arm64/staged.sha256"
+note = "checked on the box against ENCODE's md5 (encode.md5); server-side copy"
+
+[[dataset]]
+id = "GRCh38 no-alt analysis set, 195 sequences"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "measurements/minimap2-real"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 1081
+billed_s = 1152
+usd_hr = 0.7181
+compute_usd = 0.2156
+billed_usd = 0.2298
+peak_gib = 4.41
+peak_kind = "cgroup-memory.peak"
+note = "tool wall = genome 752 + offset 192 + vsoffset 137 s; 5.9 busy cores"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 1311
+billed_s = 1376
+usd_hr = 0.8467
+compute_usd = 0.3083
+billed_usd = 0.3236
+peak_gib = 4.41
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 984
+billed_s = 1040
+usd_hr = 0.9738
+compute_usd = 0.2662
+billed_usd = 0.2813
+peak_gib = 4.41
+peak_kind = "cgroup-memory.peak"
+
+[[check]]
+id = "peaks-md5"
+claim = "staged peak file == ENCODE's md5"
+kind = "pin"
+bound = "sourcing, checked on the box"
+observed = "3f36655e… ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows-accounted"
+claim = "rows == unique summits + duplicates + off-genome"
+kind = "conservation"
+bound = "nothing dropped silently"
+observed = "44,217 = 44,217 + 0 + 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "targets-scanned"
+claim = "HOMER's targets == peaks − our own >70%-N count"
+kind = "conservation"
+bound = "every scannable region scanned"
+observed = "44,217 = 44,217 − 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "offset-targets"
+claim = "offset control: targets == regions − N-masked"
+kind = "conservation"
+bound = "same, independently counted"
+observed = "44,157 = 44,217 − 60"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "top-known-genome"
+claim = "top known motif, genomic background"
+kind = "identity"
+bound = "a CTCF ChIP must find CTCF"
+observed = "CTCF(Zf)/CD4+-CTCF, rank 1 of 1,049"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "top-known-offset"
+claim = "top known motif, offset as background"
+kind = "identity"
+bound = "same, with no random draw"
+observed = "CTCF(Zf)/CD4+-CTCF, rank 1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ctcf-enrichment"
+claim = "CTCF enrichment in peaks"
+kind = "band"
+bound = "≥ 10×"
+observed = "81.3–89.7× (52.05% of peaks)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "89.7× Graviton4, 84.0× Xeon, 81.3× EPYC; an earlier Graviton4 run gave 81.3× (random background draw)"
+
+[[check]]
+id = "offset-control"
+claim = "control: CTCF 100 kb away"
+kind = "band"
+bound = "≤ 3×"
+observed = "0.90–1.10×"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "0.90× Graviton4, 0.92× Xeon, 1.10× EPYC (rank 870 / 819 / 178)"
+
+[[check]]
+id = "denovo-ctcf"
+claim = "de novo motif 1"
+kind = "band"
+bound = "best match is CTCF-family"
+observed = "GCCCCCTRGTGG → CTCF/MA0139.2 (0.944–0.946)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "GCCCCCTRGTGG log p −66,744 (Graviton4), GCCCCCTAGTGG −65,742 (Xeon), GCCCCCTRGTGG −66,067 (EPYC)"
+
+[[check]]
+id = "background-invariance"
+claim = "per motif: 0 ≤ targets(genome bg) − targets(offset bg) ≤ targets dropped"
+kind = "invariance"
+bound = "a motif's target count is a scan of the targets alone"
+observed = "0 of 1,049 violate; 0 dropped, so all 1,049 counts equal"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "vsoffset-bytes"
+claim = "the complete vsoffset knownResults.txt byte-identical on all three chips"
+kind = "reported"
+observed = "0d7a22fd…"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "homer-known-header-weight-sum"
+scope = "tool"
+symptom = "knownResults.txt header reads (of 44,221) for 44,217 sequences"
+blames = "a dropped or duplicated peak"
+cause = "the header's (of N) is a sum of autonormalisation weights, not a count"
+fix = "take HOMER's kept-target count from the GC-bin table in its log"
+
+[[upstream]]
+ref = "bioconda-recipes#70249"
+role = "workaround"
+note = "the x86 image's silent failure; the task carries the recipe's LD_LIBRARY_PATH fix and asserts homer2 loads"

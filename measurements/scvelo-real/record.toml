@@ -1,0 +1,226 @@
+# measurements/scvelo-real/record.toml -- the whole mouse gastrulation atlas through scVelo, three chips.
+schema = 1
+result_unit = "one full scVelo workflow on 89,267 cells, read through velocity_graph, dynamical model on all 1,138 velocity genes"
+
+[[dataset]]
+id = "figshare article 14627496 v1 (doi:10.6084/m9.figshare.14627496.v1), file 28095525 gastrulation.h5ad"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "Pijuan-Sala et al., Nature 2019 (doi:10.1038/s41586-019-0933-9); fetched on AWS by 00-fetch, kept only on a size + figshare MD5 match"
+
+# billed_s = spawn's window minus the n_jobs=1 refit and the pseudotime probe (README's definition);
+# the README's Spend section gives the full-window bills ($0.238 / $0.404 / $0.378), which include them.
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 587
+billed_s = 797
+usd_hr = 0.9426
+compute_usd = 0.154
+billed_usd = 0.209
+peak_gib = 54.3
+peak_kind = "cgroup-memory.peak"
+note = "peak is the box (cgroup, counts the 16 loky workers); the main process's ru_maxrss is 37.8 GiB. recover_dynamics 449.4 s"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1078
+billed_s = 1192
+usd_hr = 1.1114
+compute_usd = 0.333
+billed_usd = 0.368
+peak_gib = 59.1
+peak_kind = "cgroup-memory.peak"
+note = "main ru_maxrss 37.2 GiB. recover_dynamics 865.9 s; two Intel runs took 809 s and 866 s for the same fit"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 636
+billed_s = 717
+usd_hr = 1.2781
+compute_usd = 0.226
+billed_usd = 0.255
+peak_gib = 60.6
+peak_kind = "cgroup-memory.peak"
+note = "main ru_maxrss 30.5 GiB. recover_dynamics 522.0 s"
+
+# --- checks: "What held at scale, on all three chips" (asserted in real.py) -------------
+[[check]]
+id = "staged-h5ad"
+claim = "staged h5ad: sha256 `dd8e53a9…7b2a` (figshare's MD5 checked at fetch)"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+
+[[check]]
+id = "counts-integer"
+claim = "spliced and unspliced are non-negative integers"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "molecule-conservation"
+claim = "`initial_size_spliced/unspliced` == raw row sums; they add to the cell's molecules; the cells add to the dataset"
+kind = "conservation"
+bound = "exact"
+observed = "exact: 1,117,032,301 molecules"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normalize-one-factor"
+claim = "`normalize_per_cell` multiplies every entry by one factor, median/initial size, sparsity unchanged"
+kind = "identity"
+observed = "max rel 1.42e-07 over 248.6 M + 43.0 M entries (float32)"
+outcome = "pass"
+
+[[check]]
+id = "moments-definition"
+claim = "Ms, Mu == mean over each cell and its graph neighbours"
+kind = "identity"
+observed = "rel 5.0e-07 / 3.8e-07"
+outcome = "pass"
+
+[[check]]
+id = "gamma-slope"
+claim = "steady-state γ == the extreme-quantile least-squares slope, recomputed in float64, within the per-gene float32 summation bound 2(n+1)u"
+kind = "identity"
+bound = "2(n+1)u"
+observed = "1.41e-05, 2.7% of bound"
+outcome = "pass"
+
+[[check]]
+id = "velocity-definition"
+claim = "steady-state and stochastic velocity == Mu − γ·Ms"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+
+[[check]]
+id = "njobs-invariance"
+claim = "refitting 16 genes with `n_jobs=1` gives the 16-worker rates, likelihoods and times bit for bit"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+
+[[check]]
+id = "dynamical-velocity-definition"
+claim = "dynamical residual velocity == β·Mu − γ·Ms from the fitted rates"
+kind = "identity"
+observed = "rel 8.4e-08"
+outcome = "pass"
+
+[[check]]
+id = "genes-recoverable"
+claim = "every one of the 1,138 genes is recoverable; rates and likelihoods finite"
+kind = "sentinel"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "gene-set-invariance"
+claim = "a gene's fit doesn't depend on which other genes are fitted"
+kind = "invariance"
+observed = "the 64 genes shared by the sizing probe and the 1,138-gene run: bit-identical α, β, γ, switch time, scaling and likelihood"
+outcome = "pass"
+
+# --- reported, and across chips ---------------------------------------------------------
+[[check]]
+id = "likelihood-cut"
+claim = "genes clear scVelo's 0.001 likelihood cut; pass as dynamical velocity genes"
+kind = "reported"
+observed = "562 / 563 / 564 of 1,138; 499 / 498 / 500"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "562 / 563 / 564 on Graviton4 / Intel / AMD"
+
+[[check]]
+id = "gamma-rank"
+claim = "The dynamical γ/β ranks the steady-state γ at Spearman 0.983"
+kind = "reported"
+observed = "0.983"
+outcome = "reported"
+
+[[check]]
+id = "pseudotime-vs-stage"
+claim = "Velocity pseudotime (stochastic velocity) correlates with embryo stage"
+kind = "reported"
+observed = "Spearman 0.624 on Graviton4 and Intel; AMD timed out in the 300 s probe"
+outcome = { arm64 = "reported", x86_64 = "reported", amd = "not-run" }
+across_chips = "path"
+across_chips_evidence = "Graviton4 vs Intel pseudotime Spearman 0.99999; AMD's terminal_states still iterating in ARPACK after 20 minutes"
+
+[[check]]
+id = "fixed-to-hvgs"
+claim = "Fixed on all three chips: every count and size identity, the 10,766 filtered genes, the 2,000-HVG list (members and order), the 1,138 velocity genes and the 1,138 stochastic velocity genes"
+kind = "reported"
+observed = "10,766; 2,000; 1,138; 1,138"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "knn-graph-path"
+claim = "Path, from the kNN graph on"
+kind = "reported"
+observed = "3,777,600 edges on Graviton4, 3,777,598 on Intel and 3,777,590 on AMD"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "kNN edges 3,777,600 / 3,777,598 / 3,777,590; Intel and AMD differ on the same env twin and the same Cooperlake kernel; steady-state γ moves up to 1.7% (Intel) or 3.3% (AMD)"
+
+[[check]]
+id = "dynamical-rates-path"
+claim = "The dynamical rates are never bit-identical across chips"
+kind = "reported"
+observed = "median relative difference 2e-4 to 2e-3 for α, β, γ and scaling, Spearman ≥ 0.988; switch time 1–2% (Spearman 0.90–0.93)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "2 of 1,138 genes bit-identical between Intel and AMD; median relative difference 2e-4 to 2e-3"
+
+[[trap]]
+id = "scvelo-stochastic-numpy25-valueerror"
+scope = "image"
+symptom = "ValueError: setting an array element with a sequence"
+blames = "the default `scv.tl.velocity(adata)` call"
+cause = "the no-offset generalised least squares (scvelo/tools/optimization.py:184) assigns a shape-(1,) array into a float32 array, and numpy 2.5 refuses; all three chips"
+fix = "patch `leastsq_generalized` with the same arithmetic plus `.item()`, then assert the stochastic velocity identity"
+
+[[trap]]
+id = "scvelo-pseudotime-arpack-stall"
+scope = "tool"
+symptom = "`velocity_pseudotime` on AMD's velocity graph still iterating in ARPACK after 20 minutes (py-spy); the probe records `raises ProbeTimeout after 300.0 s`"
+cause = "`terminal_states` runs ARPACK `eigs(k=10, which=\"LR\")` at the default `tol=0` on the 89k-cell transition matrix; 42 s on Graviton4, 35 s on Intel; AMD's graph differs by about 1,000 of 24.15 M edges"
+fix = "bound the work: compute terminal states on a subset or pass `root_key`/`end_key`"
+cost = "the first AMD run, stopped in the pseudotime solve"
+
+[[trap]]
+id = "scvelo-gamma-float64-selection"
+scope = "method"
+symptom = "the first Intel run failed the γ check while it still used a float64 selection"
+cause = "scVelo picks each gene's extreme-quantile cells in float32; rebuilding that in float64 moves borderline cells across the threshold for 1–2 genes and shifts γ by up to 4.2e-4"
+fix = "rebuild the selection in scVelo's dtype and recompute only the slope in float64; re-run all three chips"
+
+[[trap]]
+id = "scvelo-gastrulation-docstring-size"
+scope = "data"
+symptom = "`scv.datasets.gastrulation` says 116,312 cells. The deposited file has 89,267"
+cause = "the deposited h5ad differs from the docstring; it also carries a third layer keyed `None`, a byte-for-byte copy of `spliced`, and `X == spliced`"
+fix = "assert on the file's own counts, not the docstring's"

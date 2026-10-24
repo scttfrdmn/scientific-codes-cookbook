@@ -1,0 +1,258 @@
+# measurements/archr-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete 10x scATAC run (10k_pbmc_ATACv2_nextgem_Chromium_Controller, 245.9M fragments, 10,246 cells) through the ArchR tutorial path"
+
+[[dataset]]
+id = "10x Genomics 10k_pbmc_ATACv2_nextgem_Chromium_Controller (Cell Ranger ATAC 2.1.0, GRCh38): fragments, index, peaks, cells; Ensembl 98 exon table"
+tier = "versioned-release"
+pins = "../signac-real/pins.sha256"
+from_recipe = "measurements/signac-real"
+note = "signac-real's staged bytes, unchanged (also ../signac-real/ref.sha256)"
+
+[[dataset]]
+id = "UCSC hg38.chrom.sizes; ENCODE blacklist v2, Boyle-Lab/Blacklist tag v2.0 lists/hg38-blacklist.v2.bed.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "trust on first use (recorded by the first fetch); blacklist also checked against its git blob id at the tag"
+
+[[dataset]]
+id = "recount/ outputs (cells, chrom sizes, gene/TSS/peak tables, matrix stats) from 01-reference.task.json"
+tier = "built"
+pins = "ref.sha256"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/cpu.txt"
+threads_per_core = 1            # cpu.txt's sibling line is not in host_facts' spelling
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 1577
+billed_s = 1727
+usd_hr = 0.4713
+compute_usd = 0.2065
+billed_usd = 0.2261
+peak_gib = 7.51
+peak_kind = "vmhwm"
+note = "cgroup memory.peak 18.1-19.1 GiB across chips (forked workers + page cache)"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/cpu.txt"
+threads_per_core = 2            # thread_siblings_list 0,4
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 1990
+billed_s = 2148
+usd_hr = 0.5557
+compute_usd = 0.3072
+billed_usd = 0.3316
+peak_gib = 7.31
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/cpu.txt"
+threads_per_core = 1
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 1438
+billed_s = 1600
+usd_hr = 0.639
+compute_usd = 0.2552
+billed_usd = 0.284
+peak_gib = 7.52
+peak_kind = "vmhwm"
+
+[[check]]
+id = "pins"
+claim = "staged data, recount, script"
+kind = "pin"
+bound = "sha256 pins"
+observed = "13 of 13"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cells"
+claim = "cells"
+kind = "identity"
+bound = "the 10,246 Cell Ranger cells, nothing else"
+observed = "10,246"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "records-vs-signac"
+claim = "cross-code: records per cell"
+kind = "cross-code"
+bound = "recount == signac-real's recount (== Signac CountFragments), every cell"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nfrags"
+claim = "nFrags"
+kind = "identity"
+bound = "== recount: on chr1–22, X, Y, M and 10–2000 bp, every cell"
+observed = "245,920,471 total; 82,883 off-chrom, 2,334 out of window"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "size-classes"
+claim = "nMono/nDi/nMultiFrags"
+kind = "identity"
+bound = "== trunc(w/147)+1 classes, every cell"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tss-enrichment"
+claim = "TSSEnrichment"
+kind = "identity"
+bound = "== round(2(w/101)/max(f/100, 0.2), 3) from recounted window and flank insertions, exactly"
+observed = "median 18.5035"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "overlap-counts"
+claim = "ReadsInTSS / ReadsInPromoter / ReadsInBlacklist"
+kind = "identity"
+bound = "== recount overlaps, every cell"
+observed = "3,121,617 in blacklist"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tile-matrix"
+claim = "TileMatrix, 23 chroms"
+kind = "identity"
+bound = "nnz, sum, Σx², checksum == recount, each chrom; trunc(L/500)+1 tiles"
+observed = "6,062,095 tiles, 270,238,837 nnz"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "insertion-conservation"
+claim = "conservation"
+kind = "conservation"
+bound = "column sum + blacklisted-tile + chrM/chrY insertions == 2 × nFrags, every cell"
+observed = "holds; 3,150,013 + 537,890"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gene-score-matrix"
+claim = "GeneScoreMatrix"
+kind = "identity"
+bound = "one row per gene off chrM/chrY; every entry finite; every cell scored"
+observed = "19,886 genes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "peak-matrix"
+claim = "PeakMatrix, ceiling 4"
+kind = "identity"
+bound = "nnz, sum, Σx², checksum == recount, each chrom"
+observed = "115,744,013 nnz"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frip"
+claim = "ReadsInPeaks / FRIP"
+kind = "identity"
+bound = "== uncapped recount; FRIP == RIP / insertions on chroms with a peak"
+observed = "median FRIP 0.650229"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "native"
+claim = "R binary architecture"
+kind = "native-arch"
+bound = "== host uname -m"
+observed = "aarch64"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "clusters-vs-signac"
+claim = "ArchR's clusters against a Seurat clustering of Signac's own LSI (dims 2–30, the same resolution) on the same chip"
+kind = "reported"
+observed = "ARI 0.672"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "ARI 0.672 on Graviton4 and 0.678 on Intel and AMD"
+
+[[check]]
+id = "frip-vs-signac"
+claim = "ArchR's insertion-based FRIP against Signac's fragment-based FRiP, same peaks"
+kind = "reported"
+observed = "Spearman 0.995"
+outcome = "reported"
+
+[[check]]
+id = "tss-vs-signac"
+claim = "TSS enrichment against Signac's score"
+kind = "reported"
+observed = "Spearman 0.700"
+outcome = "reported"
+
+[[check]]
+id = "cell-qc-md5"
+claim = "cell_qc.tsv md5 and GeneScoreMatrix md5 match on all three chips"
+kind = "reported"
+observed = "48758c6a…, 3149de99…"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "lsi-clusters"
+claim = "iterative LSI embedding and clusters across chips"
+kind = "reported"
+observed = "25 vs 25, ARI 0.870"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "LSI max |diff| up to 3.08 on values up to 5.21 (sign-fixed), ARI 0.870 Intel/AMD vs Graviton4; Intel vs AMD byte-identical (both Cooperlake)"
+corename_sensitive = true
+
+[[cross_code]]
+with = "measurements/signac-real"
+same_bytes = true
+metric = "fragment records per cell, recount vs signac-real's recount (== Signac CountFragments)"
+tolerance_basis = "integer counts of the same bytes: exact"
+check = "records-vs-signac"
+
+[[upstream]]
+ref = "ArchR#2334"
+role = "cited"
+note = "all-NaN GeneScoreMatrix; cannot occur with real gene lengths, finiteness check confirms"
+
+[[trap]]
+id = "archr-nproc-honours-omp"
+scope = "platform"
+symptom = "nproc printed 1 on Graviton4"
+blames = "the box (looks like a 1-vCPU instance)"
+cause = "GNU nproc honours OMP_NUM_THREADS=1; the box had 8 vCPUs (/proc/cpuinfo) and ArchR used 8 threads"
+fix = "read /proc/cpuinfo, not nproc, when OMP_NUM_THREADS is set"
+
+[[trap]]
+id = "archr-readsintss-float-form"
+scope = "tool"
+symptom = "ReadsInTSS is not always n in floating point"
+cause = "ArchR stores ReadsInTSS as (n/101)·101"
+fix = "assert it in that form"

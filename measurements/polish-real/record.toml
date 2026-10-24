@@ -1,0 +1,293 @@
+# measurements/polish-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one polish of the whole E. coli CFT073 Flye draft from ERR12813217 (racon or medaka; the README prices each step separately)"
+
+[[dataset]]
+id = "ENA ERR12813217 (PRJEB51164, E. coli CFT073 R10.4.1, Dorado 0.5.3 sup@v4.3.0), dumped from the AWS Open Data .sra"
+tier = "roda"
+pins = "pins.sha256"
+note = "ERR12813217.sra and the dumped FASTQ; read/base counts checked against ENA's (397,033 / 2,544,407,444)"
+
+[[dataset]]
+id = "Sanderson et al. 2024 Trycycler reference + paper's Flye+Medaka 100x assembly, figshare 10.6084/m9.figshare.25472167.v1"
+tier = "durable-id"
+pins = "results/graviton4-once/fetched/data.sha256"
+
+[[dataset]]
+id = "medaka r1041_e82_400bps_sup_v4.3.0_model_pt.tar.gz from medaka's repository at v2.2.2"
+tier = "versioned-release"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "Flye draft.fa + minimap2 ov.paf, built once on Graviton4"
+tier = "built"
+pins = "pins.sha256"
+
+# --- done once, on Graviton4 ---------------------------------------------------------------
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/graviton4-once/draft/"
+host = "results/graviton4-once/draft/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 1343
+usd_hr = 0.3590
+compute_usd = 0.134
+peak_gib = 4.75
+note = "Flye draft, run once and shared by every chip's polish (its $ is the draft's, not a polish); billed $0.141 printed without billed seconds, so omitted"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/graviton4-once/overlap/"
+host = "results/graviton4-once/overlap/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 44
+note = "minimap2 overlaps, once; billed $0.010 printed without billed seconds, so omitted"
+
+# --- racon, per chip -----------------------------------------------------------------------
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/racon/"
+host = "results/arm64/racon/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 582
+billed_s = 652
+usd_hr = 0.3590
+compute_usd = 0.0580
+peak_gib = 7.47
+peak_kind = "vmhwm"
+note = "README prints billed $ only for racon + medaka together (0.1068)"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/racon/"
+host = "results/x86_64/racon/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 523
+billed_s = 590
+usd_hr = 0.4234
+compute_usd = 0.0615
+peak_gib = 7.45
+peak_kind = "vmhwm"
+note = "billed $ printed only for racon + medaka together (0.1163)"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/racon/"
+host = "results/amd/racon/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 402
+billed_s = 447
+usd_hr = 0.4869
+compute_usd = 0.0544
+peak_gib = 7.46
+peak_kind = "vmhwm"
+note = "billed $ printed only for racon + medaka together (0.0984)"
+
+# --- medaka, per chip (spawn records each as failed: score.py exits 1 on the racon claim) ----
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/medaka/"
+host = "results/arm64/medaka/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 317
+billed_s = 419
+usd_hr = 0.3590
+compute_usd = 0.0316
+peak_gib = 7.77
+peak_kind = "rss"
+note = "ru_maxrss of the largest child; 4.11 busy CPUs"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/medaka/"
+host = "results/x86_64/medaka/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 253
+billed_s = 399
+usd_hr = 0.4234
+compute_usd = 0.0298
+peak_gib = 7.84
+peak_kind = "rss"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/medaka/"
+host = "results/amd/medaka/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 191
+billed_s = 280
+usd_hr = 0.4869
+compute_usd = 0.0258
+peak_gib = 8.26
+peak_kind = "rss"
+
+[[check]]
+id = "read-counts"
+claim = "reads == ENA's read_count / base_count"
+kind = "reference"
+bound = "the dump of RODA's .sra is the whole run"
+observed = "397,033 / 2,544,407,444"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "flye-completed"
+claim = "Flye completed"
+kind = "sentinel"
+bound = "INFO: Final assembly: in its log"
+observed = "1 circular contig, 5,236,920 bp, 504×"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "medaka-completed"
+claim = "medaka completed"
+kind = "sentinel"
+bound = "Polished assembly written to in its log"
+observed = "1 contig"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scorer-planted"
+claim = "scorer: 1,000 substitutions + 100 deletions planted in the truth score exactly 1,100"
+kind = "identity"
+bound = "the metric is exact edit distance, so a planted count is recovered exactly"
+observed = "1,100 (1,000 / 0 / 100)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scorer-rotation"
+claim = "scorer: the truth rotated by 1,234,567 bp and reverse-complemented scores 0"
+kind = "invariance"
+bound = "a circular genome has no fixed start or strand"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "chromosome-placed"
+claim = "every assembly has a contig for the chromosome"
+kind = "identity"
+bound = "minimap2 asm5 places it"
+observed = "4/4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "medaka-improves"
+claim = "medaka: fewer errors than the draft"
+kind = "reference"
+bound = "the polisher's job"
+observed = "10 vs 27"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "racon-improves"
+claim = "racon: fewer errors than the draft"
+kind = "reference"
+bound = "the recipe's claim"
+observed = "FAILS: 411 vs 27"
+outcome = "fail"
+across_chips = "identical"
+
+[[check]]
+id = "score-draft"
+claim = "Flye draft vs the Trycycler truth: errors, Q"
+kind = "reported"
+observed = "27 errors, Q 52.9"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "score-racon"
+claim = "racon, one round vs the Trycycler truth: errors, Q"
+kind = "reported"
+observed = "411 errors, Q 41.1"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "score-medaka"
+claim = "medaka vs the Trycycler truth: errors, Q"
+kind = "reported"
+observed = "10 errors (1 / 4 / 5), Q 57.2"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "score-paper"
+claim = "the paper's own Flye + Medaka, 100× vs the Trycycler truth"
+kind = "reported"
+observed = "599 errors, Q 39.4"
+outcome = "reported"
+
+[[check]]
+id = "consensus-bytes"
+claim = "racon.fa and medaka.fa, Intel and AMD vs Graviton4"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:doi:10.6084/m9.figshare.25472167.v1"
+same_bytes = false
+metric = "exact Levenshtein distance to the paper's Trycycler reference (built from R9.4.1 + Illumina reads, not these)"
+check = "medaka-improves"
+
+[[trap]]
+id = "polish-racon-worsens-flye"
+scope = "method"
+symptom = "racon: fewer errors than the draft FAILS: 411 vs 27"
+blames = "racon or the chip"
+cause = "Flye already polishes its own assembly; one default racon round on reads this accurate undoes some of that (234 bp shorter, +384 errors); the plasmid fixture's infix metric did not penalise a short output"
+fix = "run medaka on a Flye assembly, not racon"
+
+[[trap]]
+id = "polish-medaka-task-failed-state"
+scope = "method"
+symptom = "spawn records each 04-medaka task as failed"
+blames = "medaka"
+cause = "score.py exits 1 on the racon claim, after medaka's own checks have passed"
+fix = "none: the failure is the finding, so the spec keeps the assertion"
+
+[[trap]]
+id = "polish-medaka-model-not-bundled"
+scope = "image"
+symptom = "the image bundles only hac_v6.0.0 and sup_v5.2.0"
+cause = "the basecaller-matched r1041_e82_400bps_sup_v4.3.0 model is not in the image"
+fix = "00-fetch stages it from medaka's repository at v2.2.2, pinned by sha256, and medaka is given the file"
+
+[[trap]]
+id = "polish-ena-ftp-drop"
+scope = "data"
+symptom = "ENA's FTP served 1.1 GB in 38 minutes and then dropped the connection"
+cause = "ENA FTP throughput/connection limits"
+fix = "dump the reads from the AWS Open Data .sra and check counts against ENA's"

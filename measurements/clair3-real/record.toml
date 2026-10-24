@@ -1,0 +1,211 @@
+# measurements/clair3-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole chromosome called: HG002 chr20 from 49x PacBio HiFi Revio"
+
+[[dataset]]
+id = "GIAB HG002_PacBio-HiFi-Revio_20231031_48x_GRCh38-GIABv3.bam, chr20 cut (191,592 reads, 49.2x)"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "measurements/phasing-real"
+note = "cut over HTTPS through GIAB's md5-checked index by phasing-real; reused, not re-staged"
+
+[[dataset]]
+id = "GIAB NISTv4.2.1 GRCh38 HG002_GRCh38_1_22_v4.2.1_benchmark.vcf.gz chr20 + _benchmark_noinconsistent.bed"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "measurements/phasing-real"
+note = "truth VCF is phasing-real's pinned slice (85,951 records); the BED is copied server-side from s3://giab"
+
+[[dataset]]
+id = "GIAB genome-stratifications v3.3 GRCh38, eight BEDs"
+tier = "roda"
+pins = "pins.sha256"
+note = "each also md5-checked against GIAB's GRCh38-genome-stratifications-md5s.txt at staging"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/results.tsv"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 411
+billed_s = 513
+usd_hr = 0.6381
+compute_usd = 0.0728
+billed_usd = 0.0909
+peak_gib = 13.7
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/results.tsv"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 274
+billed_s = 435
+usd_hr = 0.7497
+compute_usd = 0.0571
+billed_usd = 0.0906
+peak_gib = 11.7
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/results.tsv"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 205
+billed_s = 290
+usd_hr = 0.8622
+compute_usd = 0.0491
+billed_usd = 0.0695
+peak_gib = 13.2
+peak_kind = "cgroup-memory.peak"
+
+[[check]]
+id = "pins"
+claim = "sha256 of every staged input == pins; every stratum's md5 == GIAB's"
+kind = "pin"
+bound = "provenance"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "native"
+claim = "hifi_revio bundled; python3 ELF e_machine == uname -m"
+kind = "native-arch"
+bound = "right model, not emulated"
+observed = "183"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "structure"
+claim = "one sample, 0 records off chr20, 0 PASS rows without an ALT allele"
+kind = "identity"
+bound = "structure"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "filter-vocabulary"
+claim = "records == PASS + LowQual + RefCall; no other FILTER"
+kind = "conservation"
+bound = "Clair3's FILTER vocabulary"
+observed = "138,794 = 137,399 + 1,395 + 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "vcfeval-summary"
+claim = "vcfeval's summary TP-base / TP-call / FP / FN == records in its output VCFs"
+kind = "identity"
+bound = "the scorer counts what it wrote"
+observed = "82,221 / 82,251 / 438 / 368"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "calls-scored-once"
+claim = "TP-call + FP == PASS calls overlapping the benchmark regions"
+kind = "conservation"
+bound = "every in-region call is scored once"
+observed = "82,689"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "truth-scored-once"
+claim = "TP-base + FN == truth ALT records overlapping the benchmark regions"
+kind = "conservation"
+bound = "every truth variant is scored once"
+observed = "82,589"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "strata-partition"
+claim = "easy + all-difficult == all, and not-lowmap/segdup + lowmap/segdup == all, for all 8 counts"
+kind = "conservation"
+bound = "a stratum and its complement partition the genome"
+observed = "32 / 32"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "truth-totals"
+claim = "truth totals per stratum and type identical across chips"
+kind = "identity"
+bound = "the truth set does not depend on the caller"
+observed = "18 / 18"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snv-f1"
+claim = "SNV F1 ≥ 0.995 (all regions), ≥ 0.999 (easy)"
+kind = "band"
+bound = "broken-run guard"
+observed = "0.99961 / 0.99995"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "indel-f1-easy"
+claim = "indel F1 ≥ 0.99 in GIAB's easy regions"
+kind = "band"
+bound = "broken-run guard where long reads should reach the truth"
+observed = "1.00000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "indel-f1-all"
+claim = "Indel F1 over all regions is reported, not asserted. An earlier floor of 0.98 failed at 0.96682 on every chip."
+kind = "reported"
+bound = "earlier floor 0.98, moved to the easy stratum after seeing data"
+observed = "0.96682"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "calls-across-chips"
+claim = "PASS sites, alleles, genotypes and FILTERs: 0 differing rows, Intel and AMD each against Graviton4"
+kind = "reported"
+observed = "vcf_sites_md5 34fd0b44… on all three"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "qual-gq"
+claim = "QUAL or GQ differs on 286 of 138,794 rows on Intel and on 332 on AMD, against Graviton4"
+kind = "reported"
+observed = "286 / 332 of 138,794 rows"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "every difference in the last printed digit (23.97 vs 23.98); VCF-body md5 eebf3c95… / 3246197b… / 7baa583f…, Intel and AMD also differ from each other"
+
+[[trap]]
+id = "clair3-indel-floor-from-guess"
+scope = "method"
+symptom = "indel F1 0.96682 failed the all-region floor of 0.98 on every chip"
+blames = "Clair3 or the chip"
+cause = "the floor was set before any run from a guess at Clair3's published HiFi numbers; all 432 FP and 315 of 318 FN indels lie in AllTandemRepeatsandHomopolymers_slop5"
+fix = "guard indel F1 in GIAB's easy stratum (1.00000) and report the all-region number"
+
+[[trap]]
+id = "clair3-no-arm64-scorer"
+scope = "image"
+symptom = "No arm64 image of RTG Tools or hap.py exists"
+cause = "hap.py is linux-64 only on bioconda; rtg-tools 3.13 is noarch but aarch.bio has not built it"
+fix = "run RTG.jar extracted from bioconda's rtg-tools-3.13-hdfd78af_0.tar.bz2 under recipes/picard's pinned JVM"

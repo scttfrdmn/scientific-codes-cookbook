@@ -1,0 +1,403 @@
+# measurements/transcript-assembly-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one sample's assembly, checked: Geuvadis ERR188026 (15.8M pairs) through StringTie (de novo + guided) or gffcompare"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
+tier = "durable-id"
+unpinned = "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest"
+note = "same reads as salmon-real, star-real and rnaseq-counts-real"
+
+[[dataset]]
+id = "Ensembl 116 Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
+tier = "versioned-release"
+unpinned = "checked against Ensembl release-116 CHECKSUMS (BSD sum, results/align/pins.txt); no sha256 manifest"
+
+[[dataset]]
+id = "Ensembl 116 GRCh38.116.gtf.gz (646,577 transcripts)"
+tier = "versioned-release"
+pins = "ref.sha256"
+
+[[dataset]]
+id = "HISAT2 --dta index GRCh38_116, built once on Graviton4 (task 00)"
+tier = "built"
+pins = "results/align/index.sha256"
+
+[[dataset]]
+id = "ERR188026.hisat2.bam (+ .bai, junctions.tsv, chrom.sizes), built once on Graviton4 (tasks 00, 01)"
+tier = "built"
+pins = "inputs.sha256"
+
+# --- shared alignment and sort, Graviton4 only -------------------------------------------
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/align/"
+host = "results/align/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+note = "hisat2-build 520 s at 6.2 GiB and alignment 133 s at 4.5 GiB, $0.156 billed: two walls in one task and no billed seconds printed, so no wall or $ fields"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/sort/"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 55
+note = "sorting and junction extraction; $0.021 billed printed without billed seconds, so omitted"
+
+# --- StringTie: one task per chip; the billed window covers all four assemblies and the checks
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/stringtie/"
+host = "results/arm64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 48.6
+billed_s = 454
+usd_hr = 0.359
+compute_usd = 0.0048
+billed_usd = 0.0453
+peak_gib = 0.09
+peak_kind = "rss"
+note = "StringTie de novo -p 8"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/stringtie/"
+host = "results/x86_64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 40.3
+billed_s = 526
+usd_hr = 0.4234
+compute_usd = 0.0047
+billed_usd = 0.0619
+peak_gib = 0.09
+peak_kind = "rss"
+note = "StringTie de novo -p 8"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/stringtie/"
+host = "results/amd/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 27.2
+billed_s = 325
+usd_hr = 0.4869
+compute_usd = 0.0037
+billed_usd = 0.044
+peak_gib = 0.09
+peak_kind = "rss"
+note = "StringTie de novo -p 8"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/stringtie/"
+host = "results/arm64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 100.6
+usd_hr = 0.359
+compute_usd = 0.0100
+peak_gib = 1.24
+peak_kind = "rss"
+note = "StringTie guided -p 8, same task and box as the de novo row (billed window shared, not repeated)"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/stringtie/"
+host = "results/x86_64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 138.0
+usd_hr = 0.4234
+compute_usd = 0.0162
+peak_gib = 1.24
+peak_kind = "rss"
+note = "StringTie guided -p 8, same task and box as the de novo row"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/stringtie/"
+host = "results/amd/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 63.4
+usd_hr = 0.4869
+compute_usd = 0.0086
+peak_gib = 1.24
+peak_kind = "rss"
+note = "StringTie guided -p 8, same task and box as the de novo row"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+results = "results/arm64/stringtie/"
+host = "results/arm64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+note = "StringTie -p 1, same task: compound wall 60.0 / 122.8 s and peak 0.04 / 1.04 GiB (de novo / guided), no $; fields omitted"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "core-sweep"
+results = "results/x86_64/stringtie/"
+host = "results/x86_64/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+note = "StringTie -p 1, same task: compound wall 48.0 / 156.2 s (de novo / guided), no $; fields omitted"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "core-sweep"
+results = "results/amd/stringtie/"
+host = "results/amd/stringtie/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+note = "StringTie -p 1, same task: compound wall 34.6 / 77.2 s (de novo / guided), no $; fields omitted"
+
+# --- gffcompare: single-threaded, four comparisons per billed window ------------------------
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+results = "results/arm64/gffcompare/"
+host = "results/arm64/gffcompare/host.txt"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 43
+billed_s = 242
+usd_hr = 0.1795
+compute_usd = 0.0021
+billed_usd = 0.0121
+note = "gffcompare (de novo); peak printed as 6.3 GB container memory.peak incl. page cache (GB, not GiB), so peak_gib omitted"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/gffcompare/"
+host = "results/x86_64/gffcompare/host.txt"
+threads_per_core = 2
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 84
+billed_s = 407
+usd_hr = 0.2117
+compute_usd = 0.0049
+billed_usd = 0.0239
+note = "gffcompare (de novo); 6.3 GB memory.peak, peak_gib omitted"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/gffcompare/"
+host = "results/amd/gffcompare/host.txt"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 27
+billed_s = 171
+usd_hr = 0.2434
+compute_usd = 0.0018
+billed_usd = 0.0116
+note = "gffcompare (de novo); 6.3 GB memory.peak, peak_gib omitted"
+
+[[check]]
+id = "input-pins"
+claim = "reads / genome / GTF"
+kind = "pin"
+bound = "md5 / sum / sha256 == published pin"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hisat2-pairs"
+claim = "hisat2 pairs"
+kind = "reference"
+bound = "== ENA read_count"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "bam-primary"
+claim = "BAM primary records"
+kind = "conservation"
+bound = "== 2 × input pairs"
+observed = "31,600,254"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "transcript-structure"
+claim = "transcripts (de novo / guided)"
+kind = "identity"
+bound = "structure valid: span == exon span, exons sorted and disjoint, within chromosome, multi-exon stranded"
+observed = "28,999 / 85,818, all valid"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "denovo-introns-read-spanned"
+claim = "de novo introns spanned by no read"
+kind = "identity"
+bound = "0 (every intron is a CIGAR N in the BAM)"
+observed = "0 of 116,972"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tpm-fpkm-constant"
+claim = "TPM vs cov, FPKM vs cov"
+kind = "identity"
+bound = "one constant per assembly, every transcript, within print rounding"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fpkm-cov-modes"
+claim = "FPKM/cov, de novo vs guided"
+kind = "invariance"
+bound = "equal (it is a property of the BAM, not of the assembly)"
+observed = "0.451816409387 vs …382 (1.2e-11)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "thread-invariance"
+claim = "-p 8 vs -p 1"
+kind = "invariance"
+bound = "same transcripts, same cov/FPKM/TPM (ids and order set aside)"
+observed = "identical, both modes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gffcompare-rows"
+claim = "gffcompare tmap rows / query mRNAs / class-code sum"
+kind = "conservation"
+bound = "== transcripts"
+observed = "28,999 / 85,818"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gffcompare-introns"
+claim = "gffcompare query introns / reference introns"
+kind = "identity"
+bound = "== independent count"
+observed = "116,972 / 698,582"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gffcompare-intron-sens-prec"
+claim = "gffcompare intron sensitivity / precision"
+kind = "identity"
+bound = "== recomputed from the independent counts"
+observed = "de novo 16.3 / 97.6, guided 17.8 / 98.4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gffcompare-eq"
+claim = "gffcompare = on multi-exon transcripts"
+kind = "identity"
+bound = "== independent intron-chain matches"
+observed = "12,330 / 64,307"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tpm-sum"
+claim = "TPM sum"
+kind = "reported"
+bound = "observation"
+observed = "995,439.9 de novo / 978,157.8 guided"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "guided-introns-read-spanned"
+claim = "guided introns spanned by no read"
+kind = "reported"
+bound = "observation"
+observed = "0 of 126,568"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "intron-chain-denovo"
+claim = "gffcompare intron chain sens / prec, de novo"
+kind = "reported"
+bound = "observation"
+observed = "2.0 / 45.1 (-R: 3.2 / 45.1)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "base-guided"
+claim = "gffcompare base sens / prec, guided"
+kind = "reported"
+bound = "observation"
+observed = "32.2 / 98.8 (-R: 57.7 / 98.8)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "canonical-assemblies"
+claim = "All four assemblies have the same canonical sha256 on Graviton4, Intel and AMD"
+kind = "identity"
+bound = "asserted (collect.sh)"
+observed = "identical on all three"
+outcome = "pass"
+across_chips = "identical"
+
+[[trap]]
+id = "transcript-assembly-stringtie-thread-order"
+scope = "tool"
+symptom = "the GTF's sha256 differs between -p 8 runs"
+blames = "a non-deterministic assembly"
+cause = "at -p 8 the record order and the STRG numbering follow which bundle finishes first"
+fix = "compare StringTie outputs by content in canonical form (ids dropped, records sorted), never with diff"
+
+[[trap]]
+id = "transcript-assembly-tpm-not-1e6"
+scope = "tool"
+symptom = "TPMs don't sum to 1e6 (995,439.9 de novo)"
+cause = "TPM = cov × 1e6 / C with C = 1,306,215, larger than the printed transcripts' total cov: the normaliser includes coverage not in the output"
+fix = "assert the per-assembly constant, report the sum"
+
+[[trap]]
+id = "transcript-assembly-gffcompare-min-intron"
+scope = "tool"
+symptom = "an assembled transcript across OAZ1's or OAZ2's 1 bp frameshift gap is = to gffcompare but has no match under a naive intron chain"
+blames = "gffcompare's counts"
+cause = "gclib treats a gap of 4 bp or less as no intron (GFF_MIN_INTRON = 4, gff.h); Ensembl 116 has 57 such gaps"
+fix = "apply gffcompare's own short-intron rule in the independent count"

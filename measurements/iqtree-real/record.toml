@@ -1,0 +1,194 @@
+# measurements/iqtree-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one gene-family tree as shipped: ModelFinder, ML search and 1,000 ultrafast bootstraps on Pfam 38.2 PF01255.25 (919 sequences x 533 columns)"
+
+[[dataset]]
+id = "Pfam 38.2 Pfam-A.seed.gz, family PF01255.25 seed alignment (919 x 533)"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "pfam38.2_seed_alignment.fa and the extracted pf01255.25_seed.fa are both pinned; md5 checked against EBI at staging"
+
+[[dataset]]
+id = "g4-ml.treefile (Graviton4 task 1 ML tree, re-evaluated under LG+G4 on x86 in task 4)"
+tier = "run-output"
+pins = "pins.sha256"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 34950
+billed_s = 35147
+usd_hr = 0.319
+compute_usd = 3.0969
+billed_usd = 3.1144
+peak_gib = 1.53
+peak_kind = "rss"
+note = "ran to the 1,001-iteration cap (bootstrap did not converge); per-unit-of-work $ is the README's second table"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 27613
+billed_s = 27706
+usd_hr = 0.3748
+compute_usd = 2.8748
+billed_usd = 2.8845
+peak_gib = 1.61
+peak_kind = "rss"
+note = "ran to the 1,001-iteration cap (bootstrap did not converge)"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 5868
+billed_s = 5982
+usd_hr = 0.4311
+compute_usd = 0.7027
+billed_usd = 0.7163
+peak_gib = 1.51
+peak_kind = "rss"
+note = "bootstrap converged at 400 iterations, so this row's $/result is mostly the path, not the chip"
+
+# checks: the README's "What held at scale, on all three chips" rows; observed = the Graviton4 cell
+[[check]]
+id = "taxa"
+claim = "taxa: alignment = IQ-TREE = ML tree = consensus tree"
+kind = "identity"
+observed = "919"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tree-shape"
+claim = "ML tree has 2n−3 branches and n−3 UFBoot supports, all 0..100"
+kind = "identity"
+observed = "1,835 / 916"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "aic-bic-closed-form"
+claim = "AIC = −2L + 2k, BIC = −2L + k ln 533, as printed"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "modelfinder-rows"
+claim = "every ModelFinder row's AIC and BIC from its own lnL and df"
+kind = "identity"
+observed = "0 off"
+outcome = "pass"
+
+[[check]]
+id = "bic-minimum"
+claim = "chosen model = BIC minimum over all 29 fits"
+kind = "identity"
+observed = "`Q.PFAM+I+R10`"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "search-improves"
+claim = "final logL ≥ ModelFinder's logL for that model"
+kind = "identity"
+observed = "−254905.02 ≥ −256067.97"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "final logL −254905.02 (Graviton4) / −254978.23 (Xeon) / −254959.48 (EPYC); spans 73 units"
+
+[[check]]
+id = "lg-g4-fixed-point"
+claim = "own ML tree under LG+G4: re-optimising moves logL < 0.001"
+kind = "identity"
+bound = "< 0.001"
+observed = "2 passes"
+outcome = "pass"
+
+[[check]]
+id = "raxml-at-point"
+claim = "RAxML-NG at IQ-TREE's point, nothing optimised"
+kind = "cross-code"
+bound = "0.01"
+observed = "Δ 5.3e-5"
+outcome = "pass"
+
+[[check]]
+id = "raxml-reoptimise"
+claim = "RAxML-NG re-optimising from it"
+kind = "cross-code"
+bound = "0.01"
+observed = "+4.5e-4"
+outcome = "pass"
+
+# across chips, observed not asserted
+[[check]]
+id = "g4tree-everywhere"
+claim = "Graviton4's tree re-optimised under LG+G4 on each chip (task 4)"
+kind = "reported"
+observed = "−256990.2156 everywhere, pass for pass"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "−256990.2156 on all three chips; 1,835 branch lengths byte-identical on EPYC, differ by 1e-10 in one branch on Xeon"
+
+[[check]]
+id = "modelfinder-gamma-fits"
+claim = "ModelFinder's gamma and invariant fits (`LG`, `+I`, `+G4`, `+I+G4`), and its three smallest FreeRate fits (`+R2`, `+R3`, `+I+R2`)"
+kind = "reported"
+observed = "identical to every printed digit on all three chips"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "freerate-fits"
+claim = "The other 22 FreeRate fits are a path, even on one chip"
+kind = "reported"
+observed = "up to 2.21 lnL on Graviton4 and 0.72 on Xeon from EPYC's; 2.13 between two EPYC runs"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "differ from EPYC's by up to 2.21 lnL (Graviton4) and 0.72 (Xeon), and by 2.13 between two EPYC runs of the same image, seed and thread count (task 5)"
+
+[[check]]
+id = "ml-tree-rf"
+claim = "The three ML trees differ by Robinson-Foulds"
+kind = "reported"
+observed = "606 (Xeon) and 658 (EPYC) of 1,832 from Graviton4's"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "RF 606 (Xeon) and 658 (EPYC) of 1,832; UFBoot supports on shared splits differ by up to 82 points; 1,001 / 1,001 / 400 iterations"
+
+[[cross_code]]
+with = "recipes/raxml-ng"
+same_bytes = true
+metric = "log-likelihood of IQ-TREE's LG+G4 optimum, evaluated (nothing optimised) and re-optimised by RAxML-NG"
+tolerance_basis = "0.01, the recipe's bound, set by what IQ-TREE prints (logL and alpha to 4 decimals), not by how closely the codes happened to agree"
+check = "raxml-at-point"
+
+[[trap]]
+id = "iqtree-te-single-pass"
+scope = "tool"
+symptom = "a single IQ-TREE pass stopped 124–151 units short (Graviton4 −257113.89, optimum −256990.22)"
+cause = "`-te` started from task 1's branch lengths, fitted under `Q.PFAM+I+R10` and 25–44% too long for LG+G4"
+fix = "when you compare trees or models by re-optimising a fixed topology, repeat the evaluation until it stops moving"
+
+[[trap]]
+id = "iqtree-seed-threads-not-reproducible"
+scope = "tool"
+symptom = "FreeRate fits differ by 2.13 lnL between two EPYC runs of the same image with the same seed and thread count"
+cause = "at `-T 8` IQ-TREE 3.1.3's FreeRate fits vary run to run on one chip, so each run ends on its own tree"
+fix = "do not assert search outputs across runs; whether `-T 1` restores reproducibility was not tested"

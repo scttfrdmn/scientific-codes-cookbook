@@ -1,0 +1,213 @@
+# measurements/siesta-real/record.toml -- SIESTA 5.4.2's own suite + a 1,359-atom Si quantum dot at DZP.
+schema = 1
+result_unit = "the whole verified job: the 5.4.2 regression suite and its checks, plus the Si987H372 dot at SZ (three runs) and DZP (two runs)"
+
+[[dataset]]
+id = "siesta-project/siesta tag 5.4.2 (commit 0e2722c), Tests/: 396 files listed in manifest.tsv with git blob ids"
+tier = "test-suite"
+pins = "pins.sha256"
+note = "the README calls it 'a durable public id, a versioned release'; fetched on AWS by 00-fetch, each file kept only if its blob id matches the release tree. Pseudos/Si.psf is byte-identical to recipes/siesta's pin"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16                    # 4 tests x 4 ranks in the suite; 16 ranks for the dot
+wall_s = 4506
+billed_s = 4667
+usd_hr = 0.6381
+compute_usd = 0.799
+billed_usd = 0.827
+peak_gib = 22.4
+peak_kind = "cgroup-memory.peak"
+note = "billed is EC2 launch to termination; DZP dot 1,600 s (ScaLAPACK D&C) + 2,677 s (ELSI-ELPA); largest process 1.84–1.85 GiB ru_maxrss"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 4094
+billed_s = 4185
+usd_hr = 0.7497
+compute_usd = 0.853
+billed_usd = 0.872
+peak_gib = 26.0
+peak_kind = "cgroup-memory.peak"
+note = "dft env linux-64 twin; 16 ranks on 8 cores (mpiexec --map-by :OVERSUBSCRIBE)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 2321
+billed_s = 2442
+usd_hr = 0.8622
+compute_usd = 0.556
+billed_usd = 0.585
+peak_gib = 26.0
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: "What held at scale, on all three chips" (real.py) --------------------------
+[[check]]
+id = "suite-runs"
+claim = "tests selected by the build's guards; each runs to SIESTA's end-of-run line"
+kind = "sentinel"
+observed = "133 / 133"
+outcome = "pass"
+across_chips = "n/a"            # 134 / 134 on x86: x86 SIESTA has DFT-D3, arm64 does not
+
+[[check]]
+id = "rank-count"
+claim = "Running on 4 nodes in every suite test, 16 nodes in every dot run"
+kind = "rank-count"
+observed = "133 + 5"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "suite-references"
+claim = "every SCF-converged test passes upstream's yaml_compare.py against its committed reference"
+kind = "reference"
+bound = "upstream's test-cfg.yml tolerances"
+observed = "112 / 112"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "converged single-point Etot differs Graviton4 vs x86 by at most 2.8e-5 eV (ts_chain); converged trajectories 1.5e-5 eV (zm_broyden)"
+
+[[check]]
+id = "suite-values-compared"
+claim = "non-zero reference values those 112 tests compare"
+kind = "identity"
+observed = "1,815"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dot-one-step-reference"
+claim = "dot, one step, D&C and MRRR: Etot within upstream's Etot tolerance (0.003 eV) of the committed ELPA-2 reference −110997.549364"
+kind = "reference"
+bound = "0.003 eV"
+observed = "0 eV"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "0 eV (Graviton4) vs −5.2e-5 eV (Xeon, EPYC): −110997.549364 vs −110997.549416"
+
+[[check]]
+id = "dot-converged"
+claim = "dot, SZ and DZP: SCF cycle converged, a force on each of the 1,359 atoms"
+kind = "sentinel"
+observed = "3 / 3"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dot-charge"
+claim = "dot: Mulliken Qtot == 4,320 valence electrons (987 × 4 + 372 × 1)"
+kind = "conservation"
+bound = "4,320"
+observed = "4320.000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dot-eigensolvers"
+claim = "dot, DZP: ScaLAPACK D&C and ELSI-ELPA reach the same Etot (< 0.003 eV)"
+kind = "cross-code"
+bound = "< 0.003 eV"
+observed = "0 eV"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "DZP Etot −112015.936544 eV (Graviton4) vs −112015.936557 eV (both x86), with both eigensolvers"
+
+[[check]]
+id = "dot-dzp-cross-chip"
+claim = "the dot, DZP, converged, Graviton4 vs x86 (compare.py)"
+kind = "band"
+bound = "< 0.003 eV"
+observed = "1.3e-5 eV"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "−112015.936544 vs −112015.936557, diff +0.000013 eV, scf steps 14 vs 14; SZ 5.2e-5 eV"
+
+# --- reported: stopped before convergence (SCF_NOT_CONV), outside upstream's tolerance -------
+[[check]]
+id = "unconv-fe-spin"
+claim = "02.SpinPolarization/fe_spin, worst term Eharris (stopped before convergence)"
+kind = "reported"
+observed = "6.0×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "6.0× (Graviton4) vs 9.6× (x86, both)"
+
+[[check]]
+id = "unconv-fe-spin-directphi"
+claim = "02.SpinPolarization/fe_spin_directphi, worst term Eharris (stopped before convergence)"
+kind = "reported"
+observed = "15.2×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "15.2× vs 24.4×; Etot differs by 0.016 eV, the largest of any test"
+
+[[check]]
+id = "unconv-fe-noncol-gga"
+claim = "02.SpinPolarization/fe_noncol_gga, worst term Ebs (stopped before convergence)"
+kind = "reported"
+observed = "29.3×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "29.3× vs 25.4×"
+
+[[check]]
+id = "unconv-fe-noncol-kp"
+claim = "02.SpinPolarization/fe_noncol_kp, worst term Ebs (stopped before convergence)"
+kind = "reported"
+observed = "pass (0.47×)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "pass (0.47×) on Graviton4 vs 1.30× on x86: the verdict itself differs by chip"
+
+[[check]]
+id = "unconv-fe-noncol-sp"
+claim = "02.SpinPolarization/fe_noncol_sp, worst term Ebs (stopped before convergence)"
+kind = "reported"
+observed = "1,177×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "1,177× vs 1,172×"
+
+[[check]]
+id = "unconv-fept-x-x"
+claim = "03.SpinOrbit/FePt-X-X, worst term Ekin (stopped before convergence)"
+kind = "reported"
+observed = "14.5×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "14.5× vs 33.6×; Ekin differs by up to 0.82 eV"
+
+[[check]]
+id = "unconv-chargemix"
+claim = "04.SCFMixing/chargemix, worst term Ebs (stopped before convergence)"
+kind = "reported"
+observed = "102×"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "102× vs 104×"
+
+[[trap]]
+id = "siesta-openmpi5-oversubscribe"
+scope = "tool"
+symptom = "Open MPI 5 refused 16 ranks on Intel's 8 cores"
+cause = "Open MPI 5 counts slots by physical core and ignores the environment variable the recipe sets (OMPI_MCA_rmaps_base_oversubscribe)"
+fix = "mpiexec --bind-to none --map-by :OVERSUBSCRIBE"
+cost = "two x86 launches stopped in their first minutes"

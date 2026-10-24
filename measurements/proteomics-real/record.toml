@@ -1,0 +1,289 @@
+# measurements/proteomics-real/record.toml -- drafted by the #118 extraction, then authored.
+# Two tasks per chip (search, rescore): each run row is one task, and its $ is that task's share of
+# the result. README's per-experiment figures are the two rows summed (Graviton4 $0.0346 / $0.0624).
+schema = 1
+result_unit = "the whole six-run PXD083239 experiment, searched and rescored"
+
+[[dataset]]
+id = "PRIDE PXD083239 (CC0): 6 mzML, 6 .pdResult, SwissProt_Human_01062026.fasta"
+tier = "durable-id"
+pins = "source.sha256"
+note = "PRIDE publishes no checksums for this project; source.sha256 is the sha256 of what PRIDE served, re-checked at stage-in"
+
+[[dataset]]
+id = "ref/ref_<run>.tsv: the submitters' q <= 0.01 target PSMs as (mzML spectrum, peptide), plus target.fasta and the staged mzML names"
+tier = "built"
+pins = "derived.sha256"
+note = "built by stage.py from the .pdResult files, joined to the mzML by PD's own retention time (all 168,552 land on exactly one spectrum)"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+wall_s = 378
+billed_s = 647
+usd_hr = 0.319
+compute_usd = 0.0335
+billed_usd = 0.0573
+peak_gib = 2.4
+peak_kind = "rss"
+note = "search task (openms); task script 474 s; tmpfs high-water 4.9 GiB"
+
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 52
+billed_s = 227
+usd_hr = 0.0798
+compute_usd = 0.0012
+billed_usd = 0.005
+peak_gib = 0.25
+peak_kind = "rss"
+note = "rescore task (percolator, defaults); task script 115 s"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 2            # no host file; README: an Intel 8i box shows 2
+wall_s = 338
+billed_s = 651
+usd_hr = 0.3748
+compute_usd = 0.0352
+billed_usd = 0.0678
+peak_gib = 2.4
+peak_kind = "rss"
+note = "search task; task script 504 s"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+threads_per_core = 2
+wall_s = 61
+billed_s = 230
+usd_hr = 0.0937
+compute_usd = 0.0016
+billed_usd = 0.006
+peak_gib = 0.27
+peak_kind = "rss"
+note = "rescore task; task script 138 s"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-21"
+date_source = "git"
+workers = 8
+threads_per_core = 1            # no host file; README: siblings == cpu cores on the AMD box
+wall_s = 276
+billed_s = 581
+usd_hr = 0.4311
+compute_usd = 0.0331
+billed_usd = 0.0696
+peak_gib = 2.35
+peak_kind = "rss"
+note = "search task; task script 411 s; no tmpfs figure (see trap proteomics-amd-df-reads-root-disk)"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-21"
+date_source = "git"
+threads_per_core = 1
+wall_s = 31
+billed_s = 160
+usd_hr = 0.1078
+compute_usd = 0.0009
+billed_usd = 0.0048
+peak_gib = 0.31
+peak_kind = "rss"
+note = "rescore task; task script 73 s"
+
+# --- checks: '## What held at scale, on all three chips' (every cell 'same' on all three) ---
+[[check]]
+id = "source-sha256"
+claim = "staged bytes == the sha256 of what PRIDE served (`source.sha256`)"
+kind = "pin"
+bound = "provenance; PRIDE publishes none for this project"
+observed = "15 files"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "decoys-matched"
+claim = "decoys 1:1 with targets, same length and amino-acid composition"
+kind = "identity"
+bound = "a mass-matched decoy space is the FDR's premise"
+observed = "26,836 / 26,836, 0 mismatched"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "psm-accounting"
+claim = "every PSM survives FDR, rows aligned; targets + decoys = total"
+kind = "conservation"
+bound = "accounting"
+observed = "538,544 = 343,121 + 195,423"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "q-monotone"
+claim = "q single-valued and non-increasing in the score"
+kind = "identity"
+bound = "definition of a q-value"
+observed = "0 violations, all 6 runs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "q-recomputed"
+claim = "**every q recomputed from the decoy counts** (running min of D/T)"
+kind = "identity"
+bound = "a q-value is a function of the ranking"
+observed = "**343,121 of 343,121, max diff 5.551e-16**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fdr-1pct"
+claim = "decoys above the 1% threshold ≤ 1% of the targets it accepts"
+kind = "identity"
+bound = "follows from the recomputation"
+observed = "660 over 66,370"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pin-labels"
+claim = "PIN labels == the indexer's target/decoy classes"
+kind = "conservation"
+bound = "the writer accounts for every PSM"
+observed = "6 of 6 runs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "percolator-in-out"
+claim = "Percolator: in == out, per class; 0 rows in the wrong class"
+kind = "conservation"
+bound = "conservation and partition"
+observed = "538,544, 0 misfiled"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "percolator-q-monotone"
+claim = "Percolator q non-increasing across score groups"
+kind = "identity"
+bound = "definition"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "same-seed-twice"
+claim = "**same seed twice, byte-identical**"
+kind = "identity"
+bound = "the SVM's CV splits are seeded"
+observed = "**6 of 6 runs**"
+outcome = "pass"
+
+[[check]]
+id = "vs-submitters-pd"
+claim = "**same peptide as the submitters' search, where both accept at 1%**"
+kind = "cross-code"
+bound = "cross-engine; floor 0.98 from the two FDR budgets"
+observed = "**131,190 / 132,054 = 0.9935** (worst run 0.9914)"
+outcome = "pass"
+across_chips = "identical"
+
+# --- observed, not asserted ---
+[[check]]
+id = "percolator-accepted"
+claim = "Percolator accepts PSMs at 1% FDR, against the submitters' published count"
+kind = "reported"
+observed = "147,880 vs 168,552 (0.88×); hyperscore FDR alone 66,370"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "seed-is-input"
+claim = "Seed 7 changes the q-value of GFP_C001_1's targets"
+kind = "reported"
+observed = "53,771 of 53,772"
+outcome = "reported"
+
+[[check]]
+id = "palindromic-decoys"
+claim = "pseudo-reversed decoys equal to their target (palindromic tryptic peptides)"
+kind = "reported"
+observed = "4 of the 26,836"
+outcome = "reported"
+
+[[check]]
+id = "hyperscore-cross-chip"
+claim = "search result across chips: peptide, charge, decoy flag and q-value on all 538,544 PSMs; hyperscores"
+kind = "reported"
+observed = "21,966 hyperscores (4.1%) differ in the last bits, max 4.1e-15 relative"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "peptide, charge, decoy flag and q identical on all 538,544 PSMs; 21,966 hyperscores differ, max 4.1e-15 relative, ARM vs x86 build; AMD == Intel byte for byte"
+
+[[check]]
+id = "pep-cross-chip"
+claim = "Percolator's ranking is identical; its PEP is not"
+kind = "reported"
+observed = "PEP differs on 20,027–36,692 target rows per run, at most 1.1e-2 absolute"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "PSM order, SVM score, q-value and accepted set match; PEP differs on 20,027–36,692 rows per run, max 1.1e-2 absolute; AMD == Intel byte for byte"
+
+[[cross_code]]
+with = "published:PXD083239-ProteomeDiscoverer-2.5"
+same_bytes = true
+metric = "same peptide on the same spectrum where both accept at 1% FDR, I/L folded"
+tolerance_basis = "at 1% FDR each, about 2% of shared calls can be wrong in expectation, so a correct pair agrees on >= 98%"
+check = "vs-submitters-pd"
+
+[[trap]]
+id = "proteomics-percolatoradapter-needs-binary"
+scope = "tool"
+symptom = "Pointed at `/bin/true`, it writes the PIN and then exits 1 looking for output"
+cause = "PercolatorAdapter writes -out_pin before it calls the binary but insists the binary exists, and one tool per image means percolator is never in the openms image"
+fix = "point it at /bin/true, expect the exit 1, and check the PIN's label counts"
+
+[[trap]]
+id = "proteomics-mzml-scan-numbering"
+scope = "data"
+symptom = "the mzML's `scan=N` matches neither the raw scan number PD stores nor PD's SpectrumID"
+cause = "these mzML are Proteome Discoverer's own MS2 export, and scan=N is the exporter's numbering, which drifts from both"
+fix = "map each published PSM onto the mzML by PD's own retention time (all 168,552 land on exactly one spectrum within 1e-6 min, charge agrees on every one)"
+
+[[trap]]
+id = "proteomics-pride-slow-https"
+scope = "data"
+symptom = "PRIDE's HTTPS front end gives ~0.6 MB/s per connection even from us-west-2"
+cause = "PRIDE's per-connection throughput"
+fix = "fetch all 13 files at once from a spawn task straight into the bucket (6.4 GB in ~10 minutes)"
+
+[[trap]]
+id = "proteomics-amd-df-reads-root-disk"
+scope = "platform"
+symptom = "the in-task `df /tmp` read the container's root disk (5.2 GiB used), so the AMD leg has no tmpfs figure"
+cause = "a spec that stages one directory makes spawn bind-mount /tmp/in and /tmp/out, not /tmp itself; the staged mzML still sat in the host's tmpfs under /tmp/in"
+fix = "none applied here; the AMD leg reports no tmpfs figure"

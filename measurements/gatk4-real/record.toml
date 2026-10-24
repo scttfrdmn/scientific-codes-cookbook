@@ -1,0 +1,210 @@
+# measurements/gatk4-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one HaplotypeCaller call set over the sweep interval chr20:1,000,000-3,000,000 (NA12878, ~33x)"
+
+[[dataset]]
+id = "NYGC 30x NA12878 CRAM, ENA ERR3239334"
+tier = "durable-id"
+unpinned = "no sha256 committed; ENA accession only"
+
+[[dataset]]
+id = "NA12878 chr20 36x BAM (built from ERR3239334, inputs/gatk4/NA12878.chr20.30x.bam)"
+tier = "built"
+unpinned = "its sha256 is printed in results/prep-check.txt (a check output from the build run), not a committed sha256 manifest"
+from_recipe = "gatk4"
+
+[[dataset]]
+id = "GIAB HG001 v4.2.1 benchmark VCF + high-confidence BED, chr20 slice"
+tier = "versioned-release"
+unpinned = "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+
+[[dataset]]
+id = "GRCh38_full_analysis_set_plus_decoy_hla.fa (chr20 reference + index)"
+tier = "versioned-release"
+unpinned = "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+
+# --- §1: threading canary, c8g.2xlarge, same interval -----------------------------------
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+results = "results/canary.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 77
+note = "--native-pair-hmm-threads 1; 4093 variants"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+results = "results/canary.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 8
+wall_s = 78
+note = "--native-pair-hmm-threads 8; 4093 variants, the flag is inert on AArch64"
+
+# --- §2: generation sweep, 4 vCPU / 8 GiB, one thread ----------------------------------
+[[run]]
+instance = "c6g.xlarge"
+purpose = "generation-sweep"
+results = "results/c6g-smoke-check.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 121
+billed_s = 225
+overhead_s = 104
+usd_hr = 0.1360
+compute_usd = 0.004572
+billed_usd = 0.008500
+
+[[run]]
+instance = "c7g.xlarge"
+purpose = "generation-sweep"
+results = "results/c7g-smoke-check.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 95
+billed_s = 175
+overhead_s = 80
+usd_hr = 0.1450
+compute_usd = 0.003826
+billed_usd = 0.007049
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/c8g-smoke-check.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 79
+billed_s = 151
+overhead_s = 72
+usd_hr = 0.1595
+compute_usd = 0.003501
+billed_usd = 0.006691
+
+[[run]]
+instance = "c9g.xlarge"
+purpose = "generation-sweep"
+results = "results/c9g-smoke-check.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 62
+billed_s = 124
+overhead_s = 62
+usd_hr = 0.1739
+compute_usd = 0.002994
+billed_usd = 0.005989
+
+# --- §3: whole chr20 ------------------------------------------------------------------
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/wholechr20-smoke-check.txt"
+date = "2026-09-26"
+date_source = "git"
+workers = 1
+wall_s = 7929
+billed_s = 7982
+overhead_s = 53
+note = "whole chr20, 131,730 variants; README prints $0.354 for this window, left out because its denominator is the whole chromosome, not this record's result_unit"
+
+# --- checks: in-task asserts (results/*smoke-check.txt, canary.txt, concordance.txt) ----
+[[check]]
+id = "snv-precision"
+claim = "SNV precision vs GIAB HG001 v4.2.1, QUAL>=30, inside the high-confidence BED"
+kind = "reference"
+bound = ">=0.98"
+observed = "0.99000"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "snv-recall"
+claim = "SNV recall vs GIAB HG001 v4.2.1"
+kind = "reference"
+bound = ">=0.99"
+observed = "0.99545"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "snv-f1"
+claim = "SNV F1 vs GIAB HG001 v4.2.1"
+kind = "reference"
+bound = ">=0.985"
+observed = "0.99272"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "indel-concordance"
+claim = "indels (observation)"
+kind = "reported"
+observed = "0.99419 precision, 0.99372 recall, 0.99395 F1"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "truth-denominator"
+claim = "TP + FN = 69,210 is the truth-side SNV count inside the BED, matching the local truth-vs-itself identity test"
+kind = "identity"
+observed = "69,210"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "threads-invariant"
+claim = "variants_8t must equal variants_1t -- threads change speed, never the answer"
+kind = "invariance"
+bound = "=="
+observed = "4093"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "generation-invariant"
+claim = "All four returned exactly 4,093 variants and 3,361 SNVs"
+kind = "invariance"
+bound = "=="
+observed = "4,093 variants, 3,361 SNVs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "java-pairhmm"
+claim = "arm64_java_pairhmm: Intel GKL AVX .so cannot load on AArch64 -> Java LOGLESS_CACHING"
+kind = "native-arch"
+bound = ">=1"
+observed = "1"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "vcf-structure"
+claim = "a VCF that is single-sample (NA12878), entirely on chr20, indexed"
+kind = "identity"
+bound = "sample NA12878, all_on_chr20 0, sample_column 1, vcf_index 1"
+outcome = "pass"
+across_chips = "n/a"
+
+[[cross_code]]
+with = "published:GIAB-HG001-v4.2.1"
+same_bytes = false
+metric = "SNV precision, recall, F1 by POS:REF:ALT inside the high-confidence BED"
+tolerance_basis = "precision floor 0.98 is looser than observed because the recipe applies no variant filtering, so precision is a property of the recipe, not of GATK"
+check = "snv-f1"
+
+[[trap]]
+id = "gatk4-gkl-x86-only-threads-inert"
+scope = "tool"
+symptom = "Unable to load libgkl_compression.so from native/libgkl_compression.so ... cannot open shared object file: No such file or directory (Possible cause: can't load AMD 64 .so on a AARCH64 platform)"
+blames = "a missing file"
+cause = "GATK ships its PairHMM and SmithWaterman accelerators (Intel GKL) as x86-64 native libraries only; on AArch64 both fall back to Java, single-threaded, so --native-pair-hmm-threads is inert"
+fix = "do not buy cores for HaplotypeCaller on Graviton; buy the cheapest box that holds the heap and scatter intervals across tasks"
+cost = "77 s at 1 thread vs 78 s at 8"

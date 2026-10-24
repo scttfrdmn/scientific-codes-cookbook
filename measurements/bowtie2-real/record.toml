@@ -1,0 +1,287 @@
+# measurements/bowtie2-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "one bowtie2 --local alignment of SRR062634 (24,148,993 read pairs) to GRCh38_full_analysis_set_plus_decoy_hla"
+
+[[dataset]]
+id = "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
+tier = "roda"
+unpinned = "RODA object path only; no sha256 committed"
+note = "staged once under inputs/bwa-real/ and read by both bwa-real and this measurement"
+
+[[dataset]]
+id = "1000genomes GRCh38_full_analysis_set_plus_decoy_hla.fa (3,263,683,042 B)"
+tier = "roda"
+unpinned = "byte size asserted in the build task; no sha256 committed"
+note = "bwa-real's exact staged reference, so the bwa cross-check compares placement, not references"
+
+[[dataset]]
+id = "bt2index.tar (bowtie2-build on GRCh38_full_analysis_set_plus_decoy_hla, 4,320,890,880 B)"
+tier = "built"
+unpinned = "sha256 printed in README prose and checked in-task against the build's .sha256 object; no committed manifest"
+note = "built because 1000genomes publishes no .bt2 and bowtie2's published indexes use different references"
+
+[[dataset]]
+id = "bwa-real aln.sorted.bam (bwa mem, same reads, same reference)"
+tier = "run-output"
+from_recipe = "bwa"
+note = "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck"
+
+# --- generation sweep, 16 threads -----------------------------------------------------
+[[run]]
+instance = "c6g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+wall_s = 1536
+billed_s = 1667
+usd_hr = 0.544
+compute_usd = 0.2321
+billed_usd = 0.2519
+
+[[run]]
+instance = "c7g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+wall_s = 1122
+billed_s = 1240
+usd_hr = 0.58
+compute_usd = 0.1808
+billed_usd = 0.1998
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 977
+billed_s = 1063
+usd_hr = 0.6381
+compute_usd = 0.1732
+billed_usd = 0.1884
+peak_gib = 7.7734
+peak_kind = "rss"
+note = "same row in the generation, cross-chip and knee tables. peak is the README peak RSS (the task samples cgroup memory.current)"
+
+[[run]]
+instance = "c9g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+wall_s = 746
+billed_s = 824
+usd_hr = 0.6955
+compute_usd = 0.1441
+billed_usd = 0.1592
+
+# --- the Graviton4 rung on Intel and AMD ----------------------------------------------
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+threads_per_core = 2
+wall_s = 1097
+billed_s = 1246
+usd_hr = 0.7497
+compute_usd = 0.2285
+billed_usd = 0.2595
+note = "ran bowtie2's default build: log prints '[WARNING] Failed to launch x86-64-v3 version, staying with default' (not investigated). Peak RSS 7,960-7,962 MiB across chips, per-chip value not printed"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-07"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 666
+billed_s = 761
+usd_hr = 0.8622
+compute_usd = 0.1595
+billed_usd = 0.1823
+note = "same x86-64-v3 fallback warning as c8i"
+
+# --- knee sweep, Graviton4 -------------------------------------------------------------
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "core-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 32
+wall_s = 490
+billed_s = 575
+usd_hr = 1.2762
+compute_usd = 0.1737
+billed_usd = 0.2038
+peak_gib = 8.1553
+peak_kind = "rss"
+
+[[run]]
+instance = "c8g.12xlarge"
+purpose = "core-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 48
+wall_s = 326
+billed_s = 409
+usd_hr = 1.9142
+compute_usd = 0.1733
+billed_usd = 0.2175
+peak_gib = 8.5293
+peak_kind = "rss"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+date = "2026-10-07"
+date_source = "git"
+workers = 64
+wall_s = 244
+billed_s = 326
+usd_hr = 2.5523
+compute_usd = 0.1730
+billed_usd = 0.2311
+peak_gib = 8.8965
+peak_kind = "rss"
+
+# --- checks: the identity table, the in-task asserts, the bwa cross-check ---------------
+[[check]]
+id = "primary-records"
+claim = "primary_records 48,297,986 on every run = exactly 2 × 24,148,993 read pairs"
+kind = "conservation"
+bound = "== 48297986"
+observed = "48,297,986"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "primary-mapped"
+claim = "primary_mapped"
+kind = "reported"
+observed = "48,198,738"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "primary-mapq30"
+claim = "primary_mapq30"
+kind = "reported"
+observed = "40,042,364"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "alignment-rate"
+claim = "overall alignment rate"
+kind = "band"
+bound = ">= 90%"
+observed = "99.79%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "index-inspect"
+claim = "bowtie2-inspect reading the index back (3,366 sequences) is the gate"
+kind = "sentinel"
+observed = "3,366 sequences"
+outcome = "pass"
+
+[[check]]
+id = "reference-bytes"
+claim = "GRCh38_full_analysis_set_plus_decoy_hla.fa, 3,263,683,042 B (asserted in the build task)"
+kind = "pin"
+bound = "== 3263683042 B"
+outcome = "pass"
+
+[[check]]
+id = "index-sha256"
+claim = "the same index tar (sha256-checked in task)"
+kind = "pin"
+outcome = "pass"
+
+[[check]]
+id = "bwa-same-input"
+claim = "bwa reports 48,297,986 primary records, exactly bowtie2's count"
+kind = "identity"
+bound = "== 48297986"
+observed = "48,297,986"
+outcome = "pass"
+
+[[check]]
+id = "chrom-concordance"
+claim = "chromosome concordance — asserted, floor 0.999"
+kind = "cross-code"
+bound = ">= 0.999"
+observed = "0.999615"
+outcome = "pass"
+
+[[check]]
+id = "names-compared"
+claim = "names compared (MAPQ≥30 on both sides)"
+kind = "band"
+bound = "> 10M"
+observed = "19,974,019"
+outcome = "pass"
+
+[[check]]
+id = "same-base"
+claim = "same base, exactly"
+kind = "reported"
+observed = "0.924444"
+outcome = "reported"
+
+[[check]]
+id = "within-100bp"
+claim = "within 100 bp"
+kind = "reported"
+observed = "0.999563"
+outcome = "reported"
+
+[[cross_code]]
+with = "measurements/bwa-real"
+same_bytes = true
+metric = "chromosome concordance over reads MAPQ>=30 on both sides (clip-invariant); position agreement reported as a curve over tolerances"
+tolerance_basis = "chromosome assignment does not depend on soft-clipping convention; positional residual is bounded by the 100 bp read length (only 1,044 of 20 million disagree beyond it)"
+check = "chrom-concordance"
+
+[[trap]]
+id = "bowtie2-softclip-position-metric"
+scope = "method"
+symptom = "position agreement within 5 bp against a 0.98 floor measured 0.980528 — a 0.05% margin"
+blames = "the tools, read as disagreeing 1.9% of the time"
+cause = "under --local, SAM POS is the leftmost aligned base, so a different soft-clip count shifts POS while both tools agree on placement; the 5 bp tolerance measured clipping convention"
+fix = "assert the clip-invariant claim (same chromosome) and report position agreement as a curve over tolerances"
+
+[[trap]]
+id = "bowtie2-vacuity-guard-band"
+scope = "method"
+symptom = "the guard failed a valid run by 0.13%"
+cause = "the vacuity guard required >20,000,000 names compared, a round number chosen without computing the comparable set, which is 19,974,019"
+fix = "a 10M guard: unambiguously enough to mean something, nowhere near the observed value"
+
+[[trap]]
+id = "bowtie2-early-break-undercount"
+scope = "method"
+symptom = "the two runs report different chromosome-disagreement counts (6,457 then 7,681) on identical inputs"
+blames = "non-determinism"
+cause = "the first version broke out of its per-read loop on the first positional failure, masking chromosome disagreements in reads that had both"
+fix = "check chromosome across all records before considering position; 7,681 is the correct attribution"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "x86 legs: each resolved spec's command staged as a sha256-checked file and run with bash"
+
+[[upstream]]
+ref = "truffle#175"
+role = "workaround"
+note = "launches run serially so cost_limit launches are not refused"

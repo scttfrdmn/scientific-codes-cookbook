@@ -1,0 +1,183 @@
+# measurements/macs2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one genome-wide peak call of ENCODE CTCF ChIP-seq ENCFF933NSJ against control ENCFF768XTH (HCT116, GRCh38)"
+
+[[dataset]]
+id = "ENCODE ENCFF933NSJ.bam (treatment, 2,057,454,374 B) and ENCFF768XTH.bam (control, 3,365,735,271 B), s3://encode-public"
+tier = "roda"
+unpinned = "checked in-task against ENCODE's own published md5 (metadata API); no committed sha256 manifest (pins.sha256 covers only gen.sh and host.sh)"
+
+# --- Graviton generation ladder: 4 vCPU / 32 GiB, same digest, same objects -------------
+[[run]]
+instance = "r6g.xlarge"
+purpose = "generation-sweep"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+wall_s = 741
+billed_s = 865
+usd_hr = 0.2016
+compute_usd = 0.0415
+billed_usd = 0.0484
+note = "CPU part 0xd0c; avg_cores 1.01"
+
+[[run]]
+instance = "r7g.xlarge"
+purpose = "generation-sweep"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+wall_s = 514
+billed_s = 626
+usd_hr = 0.2142
+compute_usd = 0.0306
+billed_usd = 0.0372
+note = "CPU part 0xd40; avg_cores 1.01"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+wall_s = 389
+billed_s = 487
+usd_hr = 0.2357
+compute_usd = 0.0255
+billed_usd = 0.0319
+note = "CPU part 0xd4f; avg_cores 1.01"
+
+[[run]]
+instance = "r9g.xlarge"
+purpose = "generation-sweep"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+wall_s = 309
+billed_s = 395
+usd_hr = 0.2569
+compute_usd = 0.0221
+billed_usd = 0.0282
+note = "CPU part 0xd84; avg_cores 1.00"
+
+# --- same generation as Graviton4, x86 -----------------------------------------------
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+host = "results/host-x86_64.txt"
+threads_per_core = 2            # host file states thread siblings, not threads_per_core
+results = "results/host-x86_64.txt"
+spawn_version = "0.139.1"
+wall_s = 296
+billed_s = 386
+usd_hr = 0.2778
+compute_usd = 0.0228
+billed_usd = 0.0298
+peak_gib = 7.4307
+note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,609 MiB); no peak_kind fits"
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+host = "results/host-amd.txt"
+threads_per_core = 1
+results = "results/host-amd.txt"
+spawn_version = "0.139.1"
+wall_s = 225
+billed_s = 298
+usd_hr = 0.3195
+compute_usd = 0.0200
+billed_usd = 0.0264
+peak_gib = 7.4170
+note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,595 MiB); no peak_kind fits"
+
+# --- sizing instrument, not a recommendation ----------------------------------------
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+wall_s = 389
+peak_gib = 7.6
+peak_kind = "rss"
+note = "clocking run before the sweep: tmpfs high-water 11.1 GiB against 5.05 GiB staged, which ruled out a 16 GiB box; unpriced in the README"
+
+# --- checks: gen.sh's in-task asserts, plus the reported identity ---------------------
+[[check]]
+id = "encode-md5"
+claim = "the bytes must match ENCODE's own published md5 before any compute"
+kind = "pin"
+bound = "md5sum -c"
+outcome = "pass"
+
+[[check]]
+id = "peak-count"
+claim = "50,276 peaks"
+kind = "identity"
+bound = "== 50276"
+observed = "50,276"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "q-cutoff"
+claim = "zero peaks below the `-q 0.05` cutoff"
+kind = "identity"
+bound = "0"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "summits"
+claim = "summits == peaks"
+kind = "identity"
+bound = "=="
+observed = "50,276"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "narrowpeak-sha256"
+claim = "`real_peaks.narrowPeak` is byte-identical on all four generations (and both x86 chips)"
+kind = "reported"
+observed = "sha256 687b97a9bc39fed53555d7e566dd2d44f49cd926d1b91ebaea3ecc7c1638c54d"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "tmpfs-peak"
+claim = "`tmpfs_peak_mib` on every rung"
+kind = "reported"
+observed = "11,409"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "chr20-vs-recipe"
+claim = "whole-genome peaks on chr20 vs the shipped chr20-only recipe"
+kind = "reported"
+observed = "1,397 vs 1,390"
+outcome = "reported"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1's wrapper leaves under 1 KB of EC2's 16 KiB user data; gen.sh staged by sha256 instead of inline"
+
+[[upstream]]
+ref = "truffle#175"
+role = "workaround"
+note = "static price table has no Graviton coverage; rungs launched serially"
+
+[[trap]]
+id = "macs2-bucket-placeholder-not-substituted"
+scope = "platform"
+symptom = "stage-in fails on a literal `${COOKBOOK_BUCKET}` bucket name"
+cause = "`spawn task run` does not substitute `${COOKBOOK_BUCKET}`"
+fix = "pass a spec with the bucket resolved (sed it in before launch)"

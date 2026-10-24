@@ -1,0 +1,180 @@
+# measurements/geospatial-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one state-wide DEM prepared (Colorado GLO-30 mosaic, UTM warp, slope, hillshade) plus every check"
+
+[[dataset]]
+id = "Copernicus DEM GLO-30 Public, 28 COGs Copernicus_DSM_COG_10_N{37..40}_00_W{103..109}_00_DEM.tif, s3://copernicus-dem-30m/ (2022-05-09 objects)"
+tier = "roda"
+pins = "tiles.sha256"
+
+[[dataset]]
+id = "PROJ 9.8.1 test/gie (gie.tar)"
+tier = "test-suite"
+from_recipe = "geospatial"
+note = "the recipe's staged gie.tar"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/results.json"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 158
+billed_s = 286
+usd_hr = 0.6381
+compute_usd = 0.028
+billed_usd = 0.0507
+peak_gib = 18.7
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/results.json"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 166
+billed_s = 286
+usd_hr = 0.7497
+compute_usd = 0.0346
+billed_usd = 0.0596
+peak_gib = 18.7
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/results.json"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 123
+billed_s = 222
+usd_hr = 0.8622
+compute_usd = 0.0295
+billed_usd = 0.0532
+peak_gib = 18.9
+
+# checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'graviton4', 'intel', 'amd']
+[[check]]
+id = "tile-pins"
+claim = "28 tiles match sha256 pins"
+kind = "pin"
+observed = "28/28"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "proj-gie"
+claim = "PROJ 9.8.1 `test/gie`: 6,191 vectors, 0 failed, 0 skipped"
+kind = "reference"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mosaic-offsets"
+claim = "28 tiles → 14,400 × 25,200, each on a whole-pixel offset"
+kind = "identity"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "near-coverage"
+claim = "`-r near -et 0`: valid exactly where the pyproj inverse lands in the mosaic"
+kind = "identity"
+observed = "299,129,688 px, 0 disagree"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "near-lookup"
+claim = "`-r near -et 0`: each output px == the source px pyproj's inverse predicts"
+kind = "identity"
+observed = "**299,129,688 of 299,129,688** exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "roundtrip"
+claim = "32613 → 4326 → 32613 round-trip, every 8th chunk"
+kind = "identity"
+bound = "< 1e-6 m"
+observed = "3.7e-09 m"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "slope-horn"
+claim = "`gdaldem slope` == Horn's formula in float64 numpy, all interior px"
+kind = "cross-code"
+bound = "< 5e-3°"
+observed = "9.70e-04° over 299,058,669 px"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "slope-nodata"
+claim = "slope nodata exactly where a 3×3 neighbour is invalid"
+kind = "identity"
+observed = "0 disagree"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "slope-control"
+claim = "control: Zevenbergen–Thorne instead of Horn"
+kind = "band"
+bound = "> 5e-2 (10x the bound)"
+observed = "misses by 10.26°"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sum-blocksum"
+claim = "`-r sum` on an exact 10× grid == block sums (< 1e-9 relative)"
+kind = "conservation"
+bound = "< 1e-9 relative"
+observed = "3.9e-12"
+outcome = { arm64 = "pass", x86_64 = "fail", amd = "fail" }
+across_chips = "path"
+across_chips_evidence = "3.9e-12 (Graviton4) vs 1.6e-02: FAIL (Intel, AMD, byte-identical); README: 'Not a fixed point at all ... the chip decides whether it is'"
+
+[[check]]
+id = "sum-total"
+claim = "sum(out)/sum(in) = 1 to 1e-9"
+kind = "conservation"
+bound = "1 to 1e-9"
+observed = "1.000000000000"
+outcome = { arm64 = "pass", x86_64 = "fail", amd = "fail" }
+across_chips = "path"
+across_chips_evidence = "1.000000000000 (Graviton4) vs 0.997324: FAIL (Intel, AMD); Graviton4 itself fails under -et 0 (0.999951)"
+
+[[check]]
+id = "bilinear-dem"
+claim = "the bilinear UTM DEM, Intel and AMD against Graviton4"
+kind = "reported"
+observed = "differs in 1 of 309,823 sampled pixels by one float32 ulp (2.4e-4 m)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "1 of 309,823 sampled pixels differs by one float32 ulp (2.4e-4 m); Intel == AMD byte for byte"
+
+[[check]]
+id = "sum-insert-center-long"
+claim = "`-to INSERT_CENTER_LONG=FALSE` restores `-r sum` exactness (sumdiag.py)"
+kind = "reported"
+observed = "exact on all three chips (0 cells off at 1e-9, total ratio 1 to 1e-15)"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "geospatial-gdalwarp-sum-geographic"
+scope = "tool"
+symptom = "gdalwarp -r sum on a lat/lon source loses 0.27% of the total (sum ratio 0.997324; 1,802,620 of 3,628,800 cells short by 0.5, 1.0 or 1.5 source pixels) on Intel and AMD; Graviton4 exact under defaults, fails under -et 0"
+blames = "the CPU (x86 vs ARM)"
+cause = "for a geographic source GDAL 3.12.4 inserts a CENTER_LONG reprojection even for same-CRS, which disables GWKSumPreservingThread's exact rectangle-overlap path; the polygon path drops or splits quads on last-bit noise (last step inferred from code and loss pattern)"
+fix = "pass `-to INSERT_CENTER_LONG=FALSE` to gdalwarp -r sum when the target is the same CRS (exact on all three chips, 24-30% faster)"

@@ -1,0 +1,179 @@
+# measurements/datashader-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole dataset rasterised (all 24 monthly 2009-2010 yellow-taxi files, 679,794,434 points)"
+
+[[dataset]]
+id = "NYC TLC yellow-taxi trip records 2009-01 … 2010-12, d37ci6vzurychx.cloudfront.net/trip-data/ (fetched 2026-10-20)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "RODA's s3://nyc-tlc refuses every request (see r-real), so fetched on AWS by 00-fetch.task.json; rows.tsv holds bytes, rows and row groups per file"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/arm64/host.txt"
+wall_s = 22.7
+billed_s = 165
+usd_hr = 0.9426
+compute_usd = 0.0060
+billed_usd = 0.0432
+peak_gib = 40.8
+peak_kind = "vmhwm"
+results = "results/arm64/"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/x86_64/host.txt"
+wall_s = 26.1
+billed_s = 160
+usd_hr = 1.1114
+compute_usd = 0.0081
+billed_usd = 0.0494
+peak_gib = 42.1
+peak_kind = "vmhwm"
+results = "results/x86_64/"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/amd/host.txt"
+wall_s = 18.3
+billed_s = 132
+usd_hr = 1.2781
+compute_usd = 0.0065
+billed_usd = 0.0469
+peak_gib = 42.1
+peak_kind = "vmhwm"
+results = "results/amd/"
+
+# --- checks: "What held at scale, on all three chips" (all asserted inside the task) ----
+[[check]]
+id = "rows-read"
+claim = "rows read by dask == Parquet footers == the numpy pass"
+kind = "conservation"
+bound = "=="
+observed = "339,897,217"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pickup-total"
+claim = "pickup raster total == numpy boolean inside-count"
+kind = "conservation"
+bound = "=="
+observed = "333,451,537"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dropoff-total"
+claim = "dropoff raster total == numpy boolean inside-count"
+kind = "conservation"
+bound = "=="
+observed = "333,422,546"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sum-totals"
+claim = "passengers / fare-cents raster totals == numpy inside-sums"
+kind = "conservation"
+bound = "=="
+observed = "560,947,025 / 328,796,517,140"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "histogram2d-cells"
+claim = "pickup count, dropoff count, passengers, cents == `np.histogram2d`ᵀ, every cell"
+kind = "identity"
+bound = "every cell"
+observed = "0 of 16,777,216 differ, ×4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "transpose-control"
+claim = "control: the pickup count compared without the transpose"
+kind = "identity"
+bound = "differs"
+observed = "3,601,078 cells differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "partition-invariance"
+claim = "dask persisted (8 partitions) == Σ of pandas rasters over 2 M-row batches"
+kind = "invariance"
+bound = "every cell"
+observed = "0 cells differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "block-sum"
+claim = "2048² and 1024² rasters == the 4096² one block-summed 2×2 and 4×4"
+kind = "invariance"
+bound = "every cell"
+observed = "0 cells differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nan-where-empty"
+claim = "`sum` and `mean` are NaN exactly where the count is 0"
+kind = "identity"
+observed = "14,496,006 empty cells"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mean-sum-count"
+claim = "`mean == sum / count`, every non-empty cell"
+kind = "identity"
+bound = "exact"
+observed = "max |diff| 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "warm-repeat"
+claim = "warm repeat == the `summary` count"
+kind = "invariance"
+observed = "bit-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "crosschip-records"
+claim = "All 49 non-timing records in `results.json` match"
+kind = "reported"
+observed = "49 non-timing records identical on all three chips, 0 differ"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "datashader-dims-named-after-columns"
+scope = "tool"
+symptom = "datashader names a raster's dims after its columns ('plat', 'plon'), not x/y"
+cause = "Canvas.points labels the aggregate's dims with the input column names"
+fix = "assert the raster dims (y column, x column) and compare against np.histogram2d transposed, with an untransposed control"
+cost = "found by a 2-file probe (two probes, $0.03)"
+
+[[trap]]
+id = "datashader-sum-nan-empty"
+scope = "tool"
+symptom = "its `sum` is NaN, not 0, in an empty cell"
+cause = "datashader's sum reduction leaves cells with no points as NaN"
+fix = "assert sum and mean are NaN exactly where the count is 0 (now an in-task assertion)"
+cost = "found by a 2-file probe (two probes, $0.03)"

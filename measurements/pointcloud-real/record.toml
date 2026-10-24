@@ -1,0 +1,208 @@
+# measurements/pointcloud-real/record.toml -- a whole 3DEP project through PDAL, three chips.
+schema = 1
+result_unit = "the whole CA_LassenNP_2020 project tiled, exported, gridded and checked (4,642,900,288 points)"
+
+[[dataset]]
+id = "RODA s3://usgs-lidar-public/CA_LassenNP_2020/ (USGS 3DEP EPT, 109,345 objects), read in place"
+tier = "roda"
+pins = "pins.sha256"
+note = "pins.sha256 pins pins.tsv (key, size, sha256 of every object, written by 00-pin.task.json); pins.tsv itself stays in the bucket"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 647
+billed_s = 1300
+usd_hr = 0.6381
+compute_usd = 0.115
+billed_usd = 0.23
+note = "peak cell is compound (1.40 GiB pdal ru_maxrss / 8.3 GiB box cgroup memory.peak), so no peak_gib; billed holds the laspy check pass (545 s)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 820
+billed_s = 1380
+usd_hr = 0.7497
+compute_usd = 0.171
+billed_usd = 0.287
+note = "peak cell compound (1.27 / 10.1 GiB), omitted; env twin pointcloud-792583991793, a different PDAL build (git 660b06 vs arm64's 27c27c)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 486
+billed_s = 1146
+usd_hr = 0.8622
+compute_usd = 0.116
+billed_usd = 0.274
+note = "peak cell compound (1.24 / 9.8 GiB), omitted"
+
+# --- checks: "What held at scale, on all three chips" (real.py) --------------------------
+[[check]]
+id = "pins"
+claim = "ept.json, 1,585 hierarchy files, the sources manifest and all 107,501 nodes match their sha256 pins"
+kind = "pin"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "point-total"
+claim = "Σ hierarchy counts == Σ source-tile counts == ept.json points"
+kind = "conservation"
+observed = "4,642,900,288"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "node-objects"
+claim = "one data object per non-empty hierarchy node"
+kind = "identity"
+observed = "107,501"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "node-counts"
+claim = "laspy: every node's header count == decoded count == its hierarchy count"
+kind = "conservation"
+observed = "107,501 / 107,501"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tiling-conserves"
+claim = "Σ PDAL points over 125 tiles == ept.json points"
+kind = "conservation"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "decoders-histograms"
+claim = "PDAL (laz-perf) class and return histograms == laspy (lazrs)"
+kind = "cross-code"
+observed = "6 classes, 8 returns"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "decoders-bounds"
+claim = "PDAL min/max X Y Z == laspy, and inside boundsConforming"
+kind = "cross-code"
+observed = "Z 1107.77–2710.99"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mean-z"
+claim = "PDAL mean Z == laspy's exact integer mean, within naive-summation error"
+kind = "band"
+bound = "(n−1)·2⁻⁵³·max|z| per tile, weighted by n; set before the run"
+observed = "Δ 1.2e-8 ≤ 1.2e-5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "laz-roundtrip"
+claim = "written LAZ read back: counts, histograms, min/max identical; mean bit-identical"
+kind = "identity"
+observed = "125 / 125 tiles"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "header-roundtrip"
+claim = "written header: count, bounds, points-by-return == decoded (by PDAL and by laspy)"
+kind = "identity"
+observed = "125 / 125"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "header-format"
+claim = "written header: LAS 1.4, PDRF 6, the EPT's scale and offset"
+kind = "identity"
+observed = "125 / 125"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dtm-count"
+claim = "DTM: Σ count band == class-2 points, per tile"
+kind = "conservation"
+observed = "1,835,934,506"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dtm-algebra"
+claim = "DTM: min finite exactly where count > 0; min ≤ mean"
+kind = "identity"
+observed = "85,319,845 cells"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dtm-mosaic-cross-chip"
+claim = "03-compare: the whole-project 2 m mean DTM mosaics, chip vs chip"
+kind = "reported"
+observed = "10,001 × 17,001 cells, 0 differ"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "laz-bytes"
+claim = "the bytes of the written LAZ"
+kind = "reported"
+observed = "all 125 tiles' LAZ files differ between chips; total size moves by up to 1.5 MB in 26.8 GB"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "also differ between two Graviton4 runs (26,774,277,032 and 26,775,144,802 bytes); one tile run twice on one box: same LAZ bytes False, same order False, same point set True"
+
+[[check]]
+id = "return-number-zero"
+claim = "points with ReturnNumber 0, which LAS forbids"
+kind = "reported"
+observed = "57,303"
+outcome = "reported"
+
+[[trap]]
+id = "pointcloud-ept-point-order"
+scope = "tool"
+symptom = "written LAZ tiles differ byte for byte between two runs on one box (and between chips)"
+blames = "a cross-chip numerical difference"
+cause = "readers.ept emits a tile's points in an order that varies from run to run, and the LAZ encoding follows the order; sorted point records are identical"
+fix = "filters.sort first if you need byte-identical tiles"
+
+[[trap]]
+id = "pointcloud-pdrf1-return-wrap"
+scope = "data"
+symptom = "57,303 points have ReturnNumber 0, which LAS forbids"
+blames = "the LAZ decoders"
+cause = "the EPT's nodes are LAS 1.2 point format 1, whose return number is 3 bits, so the delivered tiles' returns 8, 9 and 10 wrap to 0, 1 and 2"
+fix = "compare points-by-return on returns 1–15; both decoders agree on the wrapped values"
+
+[[trap]]
+id = "pointcloud-mean-z-bound-wrong"
+scope = "method"
+symptom = "a first full Graviton4 run passed every check but the mean-Z one"
+cause = "the naive-summation bound had been written as n·2⁻⁵² rather than n²·2⁻⁵³"
+fix = "derive the bound from (n−1)·2⁻⁵³·Σ|z| before the run"
+cost = "$0.27"

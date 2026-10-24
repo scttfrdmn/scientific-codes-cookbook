@@ -1,0 +1,151 @@
+# measurements/calculix-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole NAFEMS LE10 ladder: 11 solves (5 rungs x SPOOLES and ITERATIVE CHOLESKY, plus rung 8 at 1 thread)"
+
+[[dataset]]
+id = "NAFEMS LE10 thick plate, meshed by le10.py (5-rung C3D20R ladder to 933,248 equations)"
+tier = "built"
+pins = "pins.sha256"            # le10.py + real.sh; geometry, loads and constraints are the benchmark's
+note = "synthetic against a published reference: nothing to download"
+
+[[dataset]]
+id = "NAFEMS, The Standard NAFEMS Benchmarks, rev. 3, 1990: LE10 sigma_yy(D) = -5.38 MPa"
+tier = "durable-id"
+unpinned = "a published reference value, not a file"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 697
+billed_s = 788
+usd_hr = 0.7181
+compute_usd = 0.139
+billed_usd = 0.157
+peak_gib = 39.4
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 710
+billed_s = 767
+usd_hr = 0.8467
+compute_usd = 0.167
+billed_usd = 0.18
+peak_gib = 42.1
+peak_kind = "cgroup-memory.peak"
+note = "x86 cgroup peak ~3 GiB higher because the installed env's page cache counts"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 458
+billed_s = 502
+usd_hr = 0.9738
+compute_usd = 0.124
+billed_usd = 0.136
+peak_gib = 42.1
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+note = "Graviton4 probe, same ladder; README prints only the finest SPOOLES solve (391 s vs 395 s), no tool wall or price; results not committed"
+
+# --- checks: the README's "What held at scale, on all three chips" rows ---------------
+[[check]]
+id = "z-reaction"
+claim = "total z reaction == 1 MPa × meshed upper area"
+kind = "conservation"
+bound = "1e-6 relative"
+observed = "every rung, worst 8.4e-8 relative (bound 1e-6: the `.dat` prints 7 digits)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "xy-reactions-cancel"
+claim = "x and y reactions cancel"
+kind = "conservation"
+observed = "every rung, ≤ 9e-15 of Σ|RF|"
+outcome = "pass"
+
+[[check]]
+id = "sigma-yy-d"
+claim = "σyy(D) at the finest rung within 1% of −5.38"
+kind = "reference"
+bound = "±1% of −5.38"
+observed = "−5.37221, 0.145% off"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "refinement-converges"
+claim = "each refinement changes σyy(D) less"
+kind = "convergence-rate"
+observed = "changes 0.218, 0.054, 0.048, 0.023"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "threads-1-eq-16"
+claim = "1 thread == 16 threads at rung 8"
+kind = "invariance"
+observed = "all 11,346 printed numbers within 6e-14 of their block's largest"
+outcome = "pass"
+
+[[check]]
+id = "ccx-version"
+claim = "`ccx -v` == 2.23"
+kind = "pin"
+bound = "== 2.23"
+observed = "2.23"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "richardson"
+claim = "observed order and Richardson estimate of σyy(D) from the last three rungs"
+kind = "reported"
+observed = "order 1.04, Richardson −5.350"
+outcome = "reported"
+
+[[check]]
+id = "iterative-sigma"
+claim = "ITERATIVE CHOLESKY σyy(D) at rung 16"
+kind = "reported"
+observed = "−5.38196 (Graviton4)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "−5.38196 (Graviton4) vs −5.37462 (Intel and AMD, byte-identical iterative .dat files)"
+
+[[check]]
+id = "spooles-cross-chip"
+claim = "SPOOLES σyy(D), u(D) and every reaction total across chips"
+kind = "reported"
+observed = "identical in every printed digit, on every rung"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:NAFEMS-LE10"
+same_bytes = false
+metric = "σyy(D) at the finest rung, relative difference"
+tolerance_basis = "the published target is given to 3 figures"
+check = "sigma-yy-d"

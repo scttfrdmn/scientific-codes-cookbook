@@ -1,0 +1,269 @@
+# measurements/gsw-real/record.toml -- the whole Argo GDAC through TEOS-10, three chips.
+schema = 1
+result_unit = "the whole Argo archive (30,229 daily files, 1,196,275,148 QC-good levels) converted and verified"
+
+[[dataset]]
+id = "Argo GDAC on the AWS Open Data Registry: s3://argo-gdac-sandbox/pub/geo/<ocean>/<YYYY>/<MM>/<YYYYMMDD>_prof.nc + pub/idx/ar_index_global_prof.txt.gz, copied 2026-10-20"
+tier = "roda"
+pins = "argo.sha256"
+note = "the GDAC is live (files rewritten as delayed-mode QC arrives); argo.source.tsv.gz holds key, ETag, LastModified, size. Frozen citable copy: SEANOE doi:10.17882/42182"
+
+# wall_s = the README's argo.py column, which compute $/result is computed from (convert wall in note).
+[[run]]
+instance = "r8g.16xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/cpu.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+wall_s = 51
+billed_s = 1370
+usd_hr = 3.7702
+compute_usd = 0.0534
+billed_usd = 1.43
+peak_gib = 6.7
+peak_kind = "cgroup-memory.peak"
+note = "convert wall 46.1 s; stage-in 1202 s of the bill"
+
+[[run]]
+instance = "r8i.16xlarge"
+purpose = "cross-chip"
+results = "results/intel/"
+host = "results/intel/cpu.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+wall_s = 65
+billed_s = 1667
+usd_hr = 4.4454
+compute_usd = 0.0803
+billed_usd = 2.06
+peak_gib = 9.7
+peak_kind = "cgroup-memory.peak"
+note = "convert wall 61.2 s; stage-in 1509 s. Ran an argo.task.json without the `timeout 40m` wrapper and with a cpu.txt line calling `free`; argo.py, inputs and box the same"
+
+[[run]]
+instance = "r8a.16xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/cpu.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+wall_s = 38
+billed_s = 1303
+usd_hr = 5.1123
+compute_usd = 0.054
+billed_usd = 1.85
+peak_gib = 9.5
+peak_kind = "cgroup-memory.peak"
+note = "convert wall 35.8 s; stage-in 1149 s"
+
+# --- checks: "What held at scale, on all three chips" (each involution's bound is 1e-9) ---
+[[check]]
+id = "staged-pins"
+claim = "30,230 staged objects match their pins"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+
+[[check]]
+id = "teos10-check-values"
+claim = "the TEOS-10 check-value table, 9 functions at their published tolerances"
+kind = "reference"
+bound = "published tolerances"
+observed = "0 fail"
+outcome = "pass"
+
+[[check]]
+id = "finite"
+claim = "every QC-good level converts to finite SA and CT"
+kind = "identity"
+observed = "0 of 1,196,275,148"
+outcome = "pass"
+
+[[check]]
+id = "sa-sp-sa"
+claim = "SA → SP → SA, every level, at its own lon/lat"
+kind = "invariance"
+bound = "1e-9"
+observed = "1.07e-14"
+outcome = "pass"
+
+[[check]]
+id = "t-ct-t"
+claim = "t → CT → t (`t_from_CT`)"
+kind = "invariance"
+bound = "1e-9"
+observed = "3.91e-14 °C"
+outcome = "pass"
+
+[[check]]
+id = "ct-pt-ct"
+claim = "CT → pt → CT"
+kind = "invariance"
+bound = "1e-9"
+observed = "1.78e-14 °C"
+outcome = "pass"
+
+[[check]]
+id = "p-z-p"
+claim = "p → z → p"
+kind = "invariance"
+bound = "1e-9"
+observed = "4.55e-12 dbar"
+outcome = "pass"
+
+[[check]]
+id = "ct-two-routes"
+claim = "`CT_from_pt(pt0_from_t)` == `CT_from_t`"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+
+[[check]]
+id = "sigma0-two-routes"
+claim = "`sigma0` == `rho(SA, CT, 0) − 1000`"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+
+[[check]]
+id = "rho-specvol"
+claim = "`rho · specvol` − 1"
+kind = "identity"
+observed = "1.1e-16"
+outcome = "pass"
+
+[[check]]
+id = "elementwise"
+claim = "~25 profiles a file converted alone == the whole-file call"
+kind = "invariance"
+observed = "0 differ"
+outcome = "pass"
+
+# --- "Observed, not asserted (identical on all three chips)" ----------------------------
+[[check]]
+id = "profile-counts"
+claim = "profiles; with ≥ 1 good level"
+kind = "reported"
+observed = "3,388,543; 3,017,406"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "level-counts"
+claim = "level slots; filled; converted; rejected by QC"
+kind = "reported"
+observed = "4,481,666,253; 1,339,445,275; 1,196,275,148; 143,170,127"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "data-mode"
+claim = "`DATA_MODE` D / A / R"
+kind = "reported"
+observed = "2,929,043 / 269,699 / 189,801"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "no-salinity-files"
+claim = "files with no salinity at all (early temperature-only floats)"
+kind = "reported"
+observed = "829"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "duplicate-profiles"
+claim = "duplicate (float, cycle, direction) among good profiles"
+kind = "reported"
+observed = "41"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "gdac-index"
+claim = "profiles per ocean, daily files vs the GDAC's own index"
+kind = "reported"
+observed = "A 1,062,630 vs 1,062,595; P 1,672,031 vs 1,672,034; I 653,882 vs 653,885; 76 of 90 ocean-years exact"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "poly-vs-gibbs-rho"
+claim = "75-term polynomial `rho` − Gibbs-function `rho_t_exact`"
+kind = "reported"
+observed = "max 6.27e-4, rms 1.78e-4, mean −5.5e-5 kg m⁻³"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "below-freezing"
+claim = "levels that pass QC but sit below the freezing CT"
+kind = "reported"
+observed = "4,465"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "n2-pairs"
+claim = "N² pairs; negative; with non-increasing pressure"
+kind = "reported"
+observed = "1,192,481,240; 74,865,493 (6.3%); 78,987"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "means"
+claim = "mean SA, CT, σ₀ over every converted level"
+kind = "reported"
+observed = "34.9106255801 g/kg, 7.2483021716 °C, 26.9785325950 kg m⁻³"
+outcome = "reported"
+across_chips = "identical"
+
+# README: Graviton4 vs x86 is "neither a fixed point nor a path" (closed-form, nothing accumulates),
+# so no across_chips is authored for the per-element outputs.
+[[check]]
+id = "graviton-vs-x86-elements"
+claim = "Graviton4 differs from both in the last bits of every file that converts anything"
+kind = "reported"
+observed = "CT 410,402 elements differ, max 2.1e-14 °C; p, t, SP 0"
+outcome = "reported"
+
+[[check]]
+id = "intel-amd-digests"
+claim = "Intel and AMD are byte-identical: every one of the 30,229 per-file digests matches"
+kind = "reported"
+observed = "30,229"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:TEOS-10-check-values"
+same_bytes = false
+metric = "9 gsw functions against the TEOS-10 check-value table"
+tolerance_basis = "the table's own published tolerances"
+check = "teos10-check-values"
+
+[[trap]]
+id = "gsw-argo-gdac-live"
+scope = "data"
+symptom = "stage-inputs.sh reports revised files when a reader re-stages, and fails unless REPIN=1"
+cause = "the GDAC's daily files are rebuilt whenever a float's delayed-mode QC arrives; every 2023 file had been rewritten within the 30 days before staging"
+fix = "results from new bytes are a new measurement; the citable frozen copy is the SEANOE monthly snapshot doi:10.17882/42182"
+
+[[trap]]
+id = "gsw-climate-image-no-free"
+scope = "image"
+symptom = "the Intel task's `cpu.txt` line called `free`, which the image lacks"
+cause = "the climate env's x86 twin image has no `free` binary"
+fix = "the shipped argo.task.json reads /proc/meminfo instead; argo.py, inputs and box were unchanged"
+
+[[trap]]
+id = "gsw-staging-dominates"
+scope = "platform"
+symptom = "stage-in took 19–25 minutes of a 22–28 minute bill; compute 2.9–3.9% of billed"
+cause = "spawn's stage-in moved 215 GB at the CLI default 143–187 MB/s"
+fix = "the CRT client copies the same archive at 2.68 GB/s, in 80 s (lith-vs-copy-real)"

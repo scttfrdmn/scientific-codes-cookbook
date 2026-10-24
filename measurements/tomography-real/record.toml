@@ -1,0 +1,219 @@
+# measurements/tomography-real/record.toml -- TomoPy on a whole TOMCAT scan vs the depositors' own slices.
+schema = 1
+result_unit = "one volume: all 2,160 slices of the BBii scan reconstructed (read, centre, normalise, gridrec); checks excluded"
+
+[[dataset]]
+id = "Zenodo record 4912435 v1.0, doi:10.5281/zenodo.4912435: proj.zip (darks, flats, 1,501 projections)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "fetched on AWS by 00-fetch.task.json, kept only on a size + Zenodo MD5 match"
+
+[[dataset]]
+id = "Zenodo record 4912435 v1.0: rec.zip (the depositors' GridRec reconstruction of every slice)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "the published reference the slices are compared against"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 279
+billed_s = 463
+usd_hr = 0.9426
+compute_usd = 0.073
+billed_usd = 0.121
+note = "peak cell is compound (22.7 GiB ru_maxrss main / 24.2 GiB box cgroup memory.peak), so no peak_gib; billed excludes the checks: whole-task window 5,713 s ($1.50)"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 466
+billed_s = 673
+usd_hr = 1.1114
+compute_usd = 0.144
+billed_usd = 0.208
+note = "peak cell compound (23.0 / 24.4 GiB), omitted; whole-task window 8,323 s ($2.57); env twin tomography-9897b62718c6"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 282
+billed_s = 443
+usd_hr = 1.2781
+compute_usd = 0.1
+billed_usd = 0.157
+note = "peak cell compound (23.0 / 23.9 GiB), omitted; whole-task window 5,116 s ($1.82)"
+
+# --- checks: "What held at scale, on all three chips" (real.py) --------------------------
+[[check]]
+id = "staged-zips"
+claim = "staged zips: sha256 11e31de3…467e / 539178…b5c4 (Zenodo's MD5 checked at fetch)"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scan-shape"
+claim = "30 + 100 + 1,501 + 100 TIFFs, 2560 × 2160 uint16; 2,160 published slices; 0.120° step"
+kind = "identity"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "slice-map"
+claim = "which published slice each row is, found by searching all 2,160 × 8 orientations from two rows"
+kind = "identity"
+bound = "must be one unit-slope map"
+observed = "slice = row + 1, rot270, corr 0.62 vs 0.10 anywhere else"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "slice 1891 rot270 on all chips; corr 0.6224 (Graviton4) vs 0.6225 (x86)"
+
+[[check]]
+id = "centres"
+claim = "three independent centres agree with TOMCAT's within 1 px (the resolution element)"
+kind = "reference"
+bound = "within 1 px"
+observed = "Vo 1323.25, mirror 1323.38, TOMCAT 1323.11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "centre-sweep-peak"
+claim = "gridrec reproduces the published slices best at TOMCAT's centre, on a 0.25 px sweep"
+kind = "reference"
+observed = "1323.11 exactly"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "registration"
+claim = "every slice matches its own published slice better than either neighbour"
+kind = "identity"
+observed = "2,160 of 2,160, margin ≥ 0.087"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frc-published"
+claim = "every slice agrees with the published one above the 1/7 FRC criterion, rings 8 to half Nyquist"
+kind = "reference"
+bound = "FRC > 1/7, rings 8 to half Nyquist"
+observed = "2,160 of 2,160, worst 0.272, median 0.523"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "frc_cross_1_7 identical 2160 of 2160; frc_min_to_half_nyquist max |diff| 2.800e-05"
+
+[[check]]
+id = "finite"
+claim = "every voxel finite"
+kind = "identity"
+observed = "0 non-finite"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ncore-pairing-invariance"
+claim = "gridrec at ncore=1 vs 16, and a row alone vs inside a block"
+kind = "invariance"
+bound = "1e-5 of the peak"
+observed = "7.4e-07 / 6.6e-07 of the peak"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "7.4e-07 / 6.6e-07 (Graviton4) vs 6.7e-07 / 4.6e-07 (Xeon; EPYC same as Xeon)"
+
+[[check]]
+id = "astra-fbp-vs-gridrec"
+claim = "astra's CPU FBP vs TomoPy's gridrec, same sinogram, same centre: FRC > 1/7 rings 8–640"
+kind = "cross-code"
+bound = "FRC > 1/7, rings 8–640"
+observed = "min 0.685–0.704 on 3 rows"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "astra_r1080_fbp_vs_gridrec_corr 0.7983914493837758 (Graviton4) vs 0.7983984118164501 (x86)"
+
+[[check]]
+id = "reprojection-centre"
+claim = "re-projecting gridrec's slice fits the measured sinogram better than a slice 10 px off-centre"
+kind = "band"
+observed = "0.158 vs 0.177 (row 1080: 0.159 vs 0.182)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "astra_r1080_resid_gridrec 0.15862101457150501 vs 0.15862094744011568"
+
+[[check]]
+id = "cgls-monotone"
+claim = "CGLS's residual falls at every one of 30 iterations"
+kind = "convergence-rate"
+observed = "0.240 → 0.102 (row 1080)"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported --------------------------------------------------------------------------
+[[check]]
+id = "slice-bytes"
+claim = "saved slices, Graviton4 vs either x86 chip"
+kind = "reported"
+observed = "no slice is byte-identical; differ by 7.3e-05 to 8.9e-05 of the peak"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 vs x86: 0 of 2160 byte-identical; Intel vs AMD: 2160 of 2160 byte-identical; within-chip pairing difference 7e-07"
+
+[[check]]
+id = "cgls-images"
+claim = "CGLS images, 30 iterations of a path, across chips"
+kind = "reported"
+observed = "differ by up to 9.6e-04"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "cgls_1890.npy max |diff| / max|x| 9.631e-04 Graviton4 vs x86; identical True Intel vs AMD"
+
+[[check]]
+id = "low-rings"
+claim = "rings 1–7 below 1/7 against the published slice (the cupping each code's padding leaves)"
+kind = "reported"
+observed = "1,985 of 2,160 slices"
+outcome = "reported"
+
+[[check]]
+id = "published-scale"
+claim = "published values relative to ours (median slope)"
+kind = "reported"
+observed = "0.43× (0.34–0.53 by slice)"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:zenodo-4912435"
+same_bytes = true
+metric = "per-slice Fourier ring correlation against the depositors' GridRec slice, rings 8 to half Nyquist"
+tolerance_basis = "the 1/7 FRC criterion; rings 1–7 excluded because interior tomography makes FBP's lowest frequencies depend on each code's padding of the truncated sinogram (the ring-8 cut was placed after the sizing probe, stated not derived)"
+check = "frc-published"
+
+[[trap]]
+id = "tomography-tomcat-centre-one-based"
+scope = "data"
+symptom = "TOMCAT's log says \"Center 1324.11\"; fed to TomoPy unchanged, correlation with the published slices falls from 0.645 to 0.432"
+cause = "TOMCAT counts pixels from 1 (its ROI is \"1 - 2560\"); in TomoPy's 0-based pixels the centre is 1323.11"
+fix = "subtract 1: center=1323.11, where the sweep against the published slices peaks"
+cost = "a full pixel of centre error"
+
+[[trap]]
+id = "tomography-astra-fbp-parallel-only"
+scope = "tool"
+symptom = "FBP currently only supports parallel projection geometries"
+cause = "astra's CPU FBP does not accept parallel_vec"
+fix = "edge-pad the sinogram 48 px a side and Fourier-shift it 43.61 px to put the axis at the detector's middle; read re-projection residuals over the measured columns only"

@@ -1,0 +1,208 @@
+# measurements/nilearn-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified run: 871 ABIDE I subjects extracted and checked, the group tangent fit, and three cross-validations of 10, 20 and 10 folds"
+
+[[dataset]]
+id = "ABIDE I Preprocessed (Preprocessed Connectomes Project, C-PAC filt_noglobal), s3://fcp-indi: the 871 quality-checked subjects of fetch_abide_pcp(quality_checked=True), 2,616 objects"
+tier = "roda"
+pins = "abide.sha256"
+note = "S3 full-object SHA256 computed at server-side copy; abide.sha256 is itself pinned in pins.sha256; every staged byte checked in-task"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 32
+wall_s = 459
+billed_s = 953
+usd_hr = 1.8851
+compute_usd = 0.2404
+billed_usd = 0.4990
+peak_gib = 59.5
+
+[[run]]
+instance = "r8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 32
+wall_s = 527
+billed_s = 1148
+usd_hr = 2.2227
+compute_usd = 0.3254
+billed_usd = 0.7088
+peak_gib = 69.8
+
+[[run]]
+instance = "r8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 32
+wall_s = 300
+billed_s = 811
+usd_hr = 2.5562
+compute_usd = 0.2130
+billed_usd = 0.5758
+peak_gib = 57.0
+
+# --- '## What held at scale, on all three chips' (asserted in-task by real.py) ----------
+[[check]]
+id = "cohort"
+claim = "871 subjects, unique FILE_ID and SUB_ID, 403 / 468, 20 sites, all three files staged"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "integer-shift"
+claim = "atlas-to-image voxel map from the two affines is an integer shift"
+kind = "identity"
+observed = "(1,1,0)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "masker-hand-mean"
+claim = "`NiftiLabelsMasker` vs a hand mean over each label's voxels, every element"
+kind = "identity"
+bound = "≤ the float64 summation bound n·ε·mean|x|"
+observed = "0 (bit-equal)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "masker-roundtrip"
+claim = "`NiftiMasker` round trip, in-mask / out-of-mask, on each subject's own mask"
+kind = "identity"
+observed = "0 / 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "detrend-projection"
+claim = "`signal.clean(detrend=True)` ⟂ [1, t], max rel"
+kind = "identity"
+observed = "3.5e-17"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "3.5e-17 (Graviton4) vs 2.8e-17 (Xeon, EPYC)"
+
+[[check]]
+id = "pearson"
+claim = "correlation with `EmpiricalCovariance` vs `np.corrcoef`, < 1e-12"
+kind = "identity"
+bound = "< 1e-12"
+observed = "2.0e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.0e-15 (Graviton4) vs 3.2e-15 (Xeon, EPYC)"
+
+[[check]]
+id = "cpac-cc200"
+claim = "C-PAC's `rois_cc200` vs a mean over the index-aligned atlas, every element"
+kind = "cross-code"
+bound = "≤ n·ε₃₂·mean|x| + ulp₃₂ + 5e-7"
+observed = "6.6e-6 max, inside"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cpac-header-control"
+claim = "control: C-PAC vs nilearn's header-aligned signals must differ by > 1"
+kind = "band"
+bound = "> 1"
+observed = "402.8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tangent-fixed-point"
+claim = "tangent: ‖mean of the 871 tangent matrices‖_F / n² < 1e-7, no max_iter warning"
+kind = "identity"
+bound = "< 1e-7"
+observed = "4.51e-8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tangent-control"
+claim = "control: the same gradient at the arithmetic mean must be > 100× it"
+kind = "band"
+bound = "> 100×"
+observed = "5.76e-4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "whitening"
+claim = "tangent: whitening · mean · whitening = I, < 10³·κ·ε = 1.6e-11 (κ 72.2)"
+kind = "identity"
+bound = "< 1.6e-11"
+observed = "2.4e-14"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.4e-14 (Graviton4) vs 4.5e-14 (Xeon, EPYC)"
+
+[[check]]
+id = "inverse-transform"
+claim = "tangent: `inverse_transform` recovers all 871 covariances, < 10³·κ_max·ε = 1.5e-9"
+kind = "identity"
+bound = "< 1.5e-9"
+observed = "4.9e-14"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "4.9e-14 (Graviton4) vs 9.1e-14 (Xeon, EPYC)"
+
+# --- reported, not asserted --------------------------------------------------------------
+[[check]]
+id = "cv-accuracy"
+claim = "10-fold CV accuracy; leave-one-site-out; diagnosis permuted"
+kind = "reported"
+observed = "0.705 (folds 0.632–0.770); 0.677; 0.509"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "tangent-mean-cross-chip"
+claim = "the tangent mean, x86 vs Graviton4"
+kind = "reported"
+observed = "at most 1.3e-11, or 4.5e-14 relative; 31 of 32,400 entries bit-identical"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "both x86 chips differ from Graviton4 by at most 1.3e-11 (4.5e-14 relative); Intel and AMD byte-identical"
+
+[[check]]
+id = "cpac-correlation"
+claim = "per region, C-PAC's series vs nilearn's header-aligned series"
+kind = "reported"
+observed = "median 0.960; 610 of 871 subjects have a region below r = 0.8, 32 below 0.5, worst r = −0.23"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:ABIDE-I-Preprocessed-rois_cc200"
+same_bytes = true
+metric = "every element of C-PAC's shipped CC200 time series vs a mean over the index-aligned atlas"
+tolerance_basis = "float32 summation bound plus one float32 ulp plus 5e-7, because the release's series are float32"
+check = "cpac-cc200"
+
+[[cross_code]]
+with = "published:Abraham-2017-NeuroImage-147-736"
+same_bytes = true
+metric = "classification accuracy (about 67% reported), observation only"
+check = "cv-accuracy"
+
+[[trap]]
+id = "nilearn-abide-cc200-index-aligned"
+scope = "data"
+symptom = "C-PAC's `rois_cc200` match nilearn only when the atlas is laid on the image by array index; per-region correlation with header-aligned signals as low as r = −0.23"
+cause = "the atlas (63×75×61, origin (93, −129, −72) mm) and images (61×73×61, origin (90, −126, −72)) differ, so index alignment moves every region 3 mm in x and 3 mm in y; the header placement agrees with CC200_ROI_labels.csv to 0.08 mm, index alignment is off by up to 4.31 mm"
+fix = "extract from `func_preproc` with nilearn's header-aligned masker rather than analysing the release's `rois_cc200`"

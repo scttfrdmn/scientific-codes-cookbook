@@ -1,0 +1,185 @@
+# measurements/mesalib-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete verified run: three exact ID renders, the flood and its control, and 32 shaded 4K frames"
+
+[[dataset]]
+id = "s3://elevation-tiles-prod/skadi/N4{5,6}/N4{5,6}E00{6,7}.hgt.gz (Terrain Tiles, SRTM 1-arc-second, four tiles)"
+tier = "roda"
+pins = "pins.sha256"
+note = "Payer: BucketOwner; real.sh and terrain.py are pinned in the same manifest"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 1352
+billed_s = 1459
+usd_hr = 0.3590
+compute_usd = 0.135
+billed_usd = 0.146
+peak_gib = 21.75
+peak_kind = "rss"
+note = "billed is the task window (wrapper start to stage-out done), priced by spawn's cost_estimate; the whole-run wall includes the 1-8 thread sweep"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 705
+billed_s = 785
+usd_hr = 0.4234
+compute_usd = 0.083
+billed_usd = 0.092
+peak_gib = 21.78
+peak_kind = "rss"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 499
+billed_s = 560
+usd_hr = 0.4869
+compute_usd = 0.068
+billed_usd = 0.076
+peak_gib = 21.82
+peak_kind = "rss"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "tiles-pinned"
+claim = "every staged tile, and the decoded mosaic"
+kind = "pin"
+bound = "pinned sha256; 3601² int16 each; no `-32768` voids"
+observed = "4 of 4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tile-edges"
+claim = "adjacent tiles' shared edge rows and columns are identical"
+kind = "identity"
+observed = "4 × 3601 of 4 × 3601"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "interior-ownership"
+claim = "every strictly interior pixel holds the triangle containing its centre"
+kind = "identity"
+observed = "238,140,000 of 238,140,000 at 4050², 8100², 16200²"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "edge-tie"
+claim = "every edge-tie pixel holds one of the two triangles sharing the edge"
+kind = "identity"
+observed = "102,060,000 of 102,060,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "vertex-tie"
+claim = "every vertex-tie pixel holds one of the six triangles at the vertex"
+kind = "identity"
+observed = "4,252,500 of 4,252,500"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-background"
+claim = "no background pixel"
+kind = "identity"
+observed = "0 at every rung"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "llvmpipe"
+claim = "the GL context is Mesa llvmpipe"
+kind = "identity"
+observed = "llvmpipe (LLVM 23.1.2)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "occlusion-depth-buffer"
+claim = "occlusion follows the depth buffer exactly"
+kind = "identity"
+observed = "0 wrong of 65,610,000, 0 ties, twice"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "occlusion-geometry"
+claim = "occlusion matches exact geometry, departing only where the depth buffer's own error explains it"
+kind = "identity"
+observed = "0 departures (17,373,478 terrain pixels, 26.48% above 2000 m)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "negate-z-control"
+claim = "control: negating every z exchanges terrain and plane"
+kind = "invariance"
+observed = "all 65,610,000 pixels exchange"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "depth-kept"
+claim = "a shown terrain pixel keeps exactly the depth it had alone"
+kind = "identity"
+observed = "0 changed"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frame-rerender"
+claim = "a shaded frame re-rendered after 7 others is the same bytes"
+kind = "identity"
+observed = "4 thread counts × 3 chips"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted -----------------------------------------------------------
+[[check]]
+id = "edge-tie-rule"
+claim = "The edge-tie rule, measured: each class went 100% one way (the top-left rule of a y-down raster)"
+kind = "reported"
+observed = "31% of pixel centres sit exactly on an edge"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "depth-error"
+claim = "Depth values are not exact: the 8100² depth buffer vs the plane of the triangle the ID buffer names"
+kind = "reported"
+observed = "up to 3.43e-5 of the depth range (0.41 m over 12 km); 525,211 of 65.6 M pixels off by more than 2⁻²⁰"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "cross-chip-bytes"
+claim = "all three ID buffers (sha256), both flood renders, the depth error, and all 32 shaded 4K frames byte for byte at every thread count"
+kind = "reported"
+observed = "identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "mesalib-display-free-segfault"
+scope = "image"
+symptom = "with no DISPLAY, VTK fails all three display-free backends (`libOSMesa not found` last) and segfaults (exit 139)"
+cause = "none of VTK's three display-free backends loads in this image (as on the recipe), and the probe segfaults rather than raising"
+fix = "start Xvfb and run each stage as its own process (real.sh)"

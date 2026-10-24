@@ -1,0 +1,218 @@
+# measurements/mne-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified session: six runs preprocessed, plus ICA, evokeds, decoding with five nulls, both dipole fits and every check"
+
+[[dataset]]
+id = "OpenNeuro ds000117 v2.0.0 sub-01 ses-meg, s3://openneuro.org (doi:10.18112/openneuro.ds000117.v2.0.0)"
+tier = "roda"
+pins = "data.sha256"
+note = "the RODA path is 'latest', so sources.tsv records each object's S3 VersionId and single-part ETag (md5); 00-pin.task.json checks them on AWS and writes data.sha256"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+date = "2026-10-18"
+date_source = "git"
+host = "results/arm64/host.txt"
+wall_s = 658
+billed_s = 740
+usd_hr = 0.4713
+compute_usd = 0.0861
+billed_usd = 0.0969
+peak_gib = 32.5
+peak_kind = "rss"
+results = "results/arm64/"
+note = "peak is ru_maxrss (identical on all three chips), not the 5 s sampler"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "git"
+host = "results/x86_64/host.txt"
+wall_s = 663
+billed_s = 726
+usd_hr = 0.5557
+compute_usd = 0.1023
+billed_usd = 0.1121
+peak_gib = 32.5
+peak_kind = "rss"
+results = "results/x86_64/"
+note = "peak is ru_maxrss"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "git"
+host = "results/amd/host.txt"
+wall_s = 362
+billed_s = 413
+usd_hr = 0.6390
+compute_usd = 0.0643
+billed_usd = 0.0733
+peak_gib = 32.5
+peak_kind = "rss"
+results = "results/amd/"
+note = "peak is ru_maxrss"
+
+# --- checks: "What held at scale, on all three chips" (asserted in real.py) ------------
+[[check]]
+id = "triggers"
+claim = "887 stimulus triggers (STI101 low byte) == events.tsv codes, each onset = trigger + 37 samples"
+kind = "reference"
+bound = "published: the 34 ms projector delay Wakeman & Henson measured, round(0.034 × 1100)"
+observed = "6 of 6 runs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "buttons"
+claim = "587 button presses == events.tsv samples with zero delay (one L+R press listed under one code)"
+kind = "identity"
+observed = "6 of 6 runs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "parseval"
+claim = "Parseval: one-segment boxcar PSD of 4 whole-run channels"
+kind = "identity"
+observed = "5.6e-16"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "5.6e-16 (Graviton4), 8.9e-16 (Xeon), 8.9e-16 (EPYC)"
+
+[[check]]
+id = "fir-linear"
+claim = "FIR linear on a real MEG + EEG channel, whole run"
+kind = "invariance"
+observed = "1.2e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "avg-reference"
+claim = "average reference on 70 real EEG channels: sums to 0"
+kind = "identity"
+observed = "9.7e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sss-linearity"
+claim = "`maxwell_filter(2.5a − 0.7b) = 2.5f(a) − 0.7f(b)`, two real 20 s segments, < 1e-12"
+kind = "invariance"
+bound = "< 1e-12"
+observed = "3.6e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "3.6e-15 (Graviton4), 3.8e-15 (Xeon), 3.8e-15 (EPYC)"
+
+[[check]]
+id = "sss-rank"
+claim = "SSS output has rank `nfree`: σ[nfree]/σ[nfree−1] < 1e-8, every run"
+kind = "identity"
+bound = "< 1e-8"
+observed = "≤ 6.9e-12"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "≤ 6.9e-12 (Graviton4), ≤ 3.6e-12 (Xeon, EPYC); SSS singular values 1.2e-13 rel Graviton4 vs Xeon"
+
+[[check]]
+id = "epoch-average"
+claim = "epoch average == numpy mean; full-rate baseline mean == 0 (857 × 306 × 1101)"
+kind = "identity"
+observed = "0; 1.1e-16"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "0; 1.1e-16 (Graviton4) vs 0; 1.3e-16 (Xeon, EPYC)"
+
+[[check]]
+id = "ica-roundtrip"
+claim = "ICA `apply(exclude=[])` through all 306 PCA components returns its input"
+kind = "identity"
+observed = "3.8e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "3.8e-15 (Graviton4), 3.0e-15 (Xeon), 2.7e-15 (EPYC)"
+
+[[check]]
+id = "ica-eog"
+claim = "at least one ICA component matches the EOG"
+kind = "band"
+bound = "at least one (artefact present)"
+observed = "[11, 16]"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "decoding-vs-nulls"
+claim = "faces vs scrambled peak AUC > every one of 5 permuted-label nulls, peak after onset"
+kind = "band"
+bound = "> every null"
+observed = "0.8371 vs 0.6075, 168 ms"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "summary identical to the printed four digits; AUC curve max |Δ| 9.2e-5, inside liblinear's tol = 1e-4"
+
+[[check]]
+id = "planted-dipole"
+claim = "planted 50 nAm dipole, real 306-sensor geometry and real noise covariance: < 1 mm, < 1°, 1%"
+kind = "reference"
+bound = "< 1 mm, < 1°, 1%"
+observed = "0.247 mm, 0.20°, 50.20"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "planted dipole position 1.0e-10 mm (Graviton4 vs Xeon), 4.6e-11 mm (vs EPYC), 1.1e-10 mm (Xeon vs EPYC)"
+
+# --- reported, not asserted ------------------------------------------------------------
+[[check]]
+id = "m170-peak"
+claim = "The faces − scrambled gradiometer RMS peaks at 159 ms: the M170"
+kind = "reported"
+observed = "159 ms"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "epochs-kept"
+claim = "Rejection kept 857 of 887 epochs (285 famous, 286 unfamiliar, 286 scrambled)"
+kind = "reported"
+observed = "857 of 887"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "evoked-crosschip"
+claim = "evoked arrays, max |Δ|/max"
+kind = "reported"
+observed = "8.0e-11"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "8.0e-11 Graviton4 vs Xeon and vs EPYC; 2.5e-13 Xeon vs EPYC"
+
+[[check]]
+id = "ica-mixing-crosschip"
+claim = "ICA mixing matrix"
+kind = "reported"
+observed = "3.1e-9"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "3.1e-9 Graviton4 vs Xeon and vs EPYC; 4.6e-12 Xeon vs EPYC (iterative, converged)"
+
+[[check]]
+id = "real-dipole"
+claim = "The real single-dipole fit to the face response is poor: GOF 17.4%, at the 200 ms edge of the window"
+kind = "reported"
+observed = "GOF 17.4%"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "real dipole position 0.26 mm (Graviton4 vs Xeon), 1.6 mm (vs EPYC), 1.4 mm (Xeon vs EPYC): ill-posed fit"
+
+[[trap]]
+id = "mne-sampled-rss-misses-peak"
+scope = "method"
+symptom = "the 5 s RSS sampler in real.sh read only 15.9–27.9 GiB against a 32.5 GiB peak"
+cause = "the peak is brief, around the concatenation and the ICA fit on the whole session"
+fix = "take peak memory from the kernel (ru_maxrss / cgroup memory.peak), not a sampler; an m8g.2xlarge (32 GiB) would not fit"

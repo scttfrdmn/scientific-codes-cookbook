@@ -6,14 +6,14 @@ AWS_ACCOUNT     := $(shell aws sts get-caller-identity --query Account --output 
 AWS_REGION      := $(shell aws configure get region 2>/dev/null)
 COOKBOOK_BUCKET ?= cookbook-$(AWS_ACCOUNT)-$(AWS_REGION)
 
-check: ## frontmatter + markdown-a11y + internal links + spec portability + catalog freshness
+check: ## frontmatter + markdown-a11y + internal links + spec portability + measurement records + catalog freshness
 	@python3 scripts/check_pages.py
 	@python3 scripts/gen_catalog.py --check
 
 inventory: ## per-recipe matrix: frontmatter, contract, last_verified, measurement linkage
 	@python3 scripts/check_pages.py --inventory
 
-catalog: ## regenerate catalog/recipes.md from the recipes' frontmatter + dependencies
+catalog: ## regenerate catalog/recipes.md and catalog/record.json from frontmatter, specs and measurements/*/record.toml
 	@python3 scripts/gen_catalog.py
 
 check-links: ## everything in `check`, plus external link liveness (network)

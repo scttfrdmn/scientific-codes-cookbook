@@ -1,0 +1,237 @@
+# measurements/yoda-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "the fill pass: all 61,540,413 events of CMS record 12341 filled into five YODA objects in 247 jobs and merged"
+
+[[dataset]]
+id = "CMS Open Data record 12341, DoubleMuParked 2012 NanoAOD reduced on muons (doi:10.7483/OPENDATA.CMS.LVG5.QT81), Run2012BC_DoubleMuParked_Muons.root"
+tier = "durable-id"
+pins = "pins.sha256"
+from_recipe = "root"
+note = "the 2.2 GB file measurements/root-real staged, reused, not copied"
+
+[[dataset]]
+id = "Rivet 4.1.4 analyses/ at commit 74816bd4cf29 (rivet-4.1.4 tag): 1,955 .yoda.gz reference files"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "fetched on AWS by 00-fetch; per-file manifest refs.manifest, also pinned"
+
+[[dataset]]
+id = "root-real committed ROOT TH1D histograms hist-mass.txt, hist-nmuon.txt"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "root"
+
+# wall_s is the fill pass, which the README's compute $/result is computed from. billed_s is
+# spawn's task window (wrapper start to stage-out), which excludes instance boot.
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 47.9
+billed_s = 390
+usd_hr = 0.359
+compute_usd = 0.0048
+billed_usd = 0.0389
+peak_gib = 1.29
+peak_kind = "rss"
+note = "YODA's own fills 25.5 cpu-s; ref read 7.9 cpu-s. Peak is per fill worker (ru_maxrss); a reference-read worker peaks at 3.47 GiB, the container at 10.5 GiB (cgroup memory.peak)"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 91.0
+billed_s = 857
+usd_hr = 0.4234
+compute_usd = 0.0107
+billed_usd = 0.1008
+peak_gib = 1.3
+peak_kind = "rss"
+note = "hep env linux-64 twin. YODA fills 34.2 cpu-s. Window is 2.2x the others because yodamerge took 404 s (30.5 s Graviton4, 12.3 s AMD), cause not established. Container peak 20.6 GiB"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 59.7
+billed_s = 351
+usd_hr = 0.4869
+compute_usd = 0.0081
+billed_usd = 0.0475
+peak_gib = 1.3
+peak_kind = "rss"
+note = "hep env linux-64 twin. YODA fills 16.4 cpu-s. Container peak 20.6 GiB"
+
+# --- checks: '## What held at scale, on all three chips' -----------------------------
+[[check]]
+id = "fills-partition"
+claim = "bins + under/overflow hold every fill; numEntries() == sumW == fills"
+kind = "conservation"
+observed = "5 objects, 408,321,011 fills"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bins-vs-numpy"
+claim = "every bin, flows included, == numpy's count of the same values on the object's own edges"
+kind = "cross-code"
+observed = "30,002 + 302 + 202 + 3,300 + 66 bins, 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "root-th1d"
+claim = "/CMS/mass and /CMS/nmuon == root-real's ROOT TH1D of the same bytes"
+kind = "cross-code"
+observed = "all 30,002 bins (112,529 under, 7,909 over) and all 66"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moment-sums"
+claim = "sumWX, sumWX2, sumWY, sumWY2 == numpy's sum of the same terms in fill order"
+kind = "identity"
+observed = "bit-identical, every bin"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "profile-sumwxy"
+claim = "sumWXY of the profile, same comparison"
+kind = "band"
+bound = "within 3 n u Σ|t| (Higham)"
+observed = "240 of 302 bit-equal, worst 1.0e-3 of the bound"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "Graviton4 240 of 302 bins bit-equal to numpy (worst 1.011e-03 of the bound); Intel and AMD 302 of 302"
+
+[[check]]
+id = "serialize-roundtrip"
+claim = "serialize in the worker → deserialize in the parent"
+kind = "identity"
+observed = "lossless, 1,235 objects"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "merge-order"
+claim = "merged in reverse job order"
+kind = "invariance"
+observed = "every count identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rebin-conservation"
+claim = "rebinXBy(100): 30,000 → 300 bins"
+kind = "conservation"
+observed = "each bin == the sum of its 100, flows unchanged"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scalew"
+claim = "scaleW(1/11.6)"
+kind = "identity"
+observed = "sumW == fl(sumW k), sumW2 == fl(sumW2 fl(k²)), bitwise"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normalize"
+claim = "normalize(1.0) on 30,002 bins"
+kind = "band"
+bound = "2 n u for re-summing n bins"
+observed = "1 + 1.155e-13: 0.017 of the bound"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fill-determinism"
+claim = "the first job filled twice"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rivet-refs-pinned"
+claim = "every Rivet reference file == the commit's"
+kind = "pin"
+observed = "1,955 of 1,955"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "read-vs-parser"
+claim = "yoda.read == an independent parser of the text"
+kind = "cross-code"
+observed = "48,368 objects, 6,374,501 values, 7,230,958 errors and 842,001 edges, bit for bit"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ref-write-roundtrip"
+claim = "write what was read → read back"
+kind = "identity"
+observed = "all 13,605,459 values unchanged"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported --------------------------------------------------------------------------
+[[check]]
+id = "text-writer-merged"
+claim = "Written and read back, the merged objects change in 72,606 of 180,166 bin fields"
+kind = "reported"
+observed = "72,606 of 180,166 (worst relative 4.94e-7); 2 bin counts at or above 10⁷ change"
+outcome = "reported"
+
+[[check]]
+id = "bin-edges"
+claim = "YODA's bin edges."
+kind = "reported"
+observed = "68 of 30,001 mass edges differ from numpy.linspace by an ulp on Graviton4"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "mass_edges_ne_numpy_linspace: 68 of 30001 (Graviton4) vs 0 of 30001 (x86); η middle edge -1.11e-16 vs 0.0; log-spaced mu_pt edges identical on all three"
+
+[[cross_code]]
+with = "measurements/root-real"
+same_bytes = true
+metric = "every bin count, flows included, of /CMS/mass (30,002 bins) and /CMS/nmuon (66) against ROOT's TH1D"
+tolerance_basis = "integer counts: exact; holds although YODA's edges differ between chips because no muon pair sits within a few ulps of an edge"
+check = "root-th1d"
+
+[[trap]]
+id = "yoda-text-writer-seven-digits"
+scope = "tool"
+symptom = "a written .yoda file does not reproduce its own bin edges: re-read objects carry different edges in 27,824–27,830 of 30,001 (mass)"
+cause = "writeYODA prints %.6e whatever precision= asks; 2 bin counts at or above 10⁷ change too; yodamerge over the 247 job files gives the same differences"
+fix = "merge in memory, or keep counts below 10⁷ per bin per file"
+
+[[trap]]
+id = "yoda-yodamerge-slow-on-intel"
+scope = "tool"
+symptom = "yodamerge over 247 job files took 404 s on Intel against 30.5 s on Graviton4 and 12.3 s on AMD, the same in both runs (r6 and r7)"
+cause = "not established; the same x86 package set is fast on AMD"
+fix = "none established; merge in memory with + (the fill pass does)"
+cost = "Intel's task window 2.2x the others', billed $0.101 against $0.039"
+
+[[trap]]
+id = "yoda-hepdata-cloudflare"
+scope = "data"
+symptom = "hepdata.net serves a Cloudflare challenge to scripted clients"
+cause = "HEPData's own export is not reachable by a scripted fetch"
+fix = "use Rivet's HEPData-derived reference files, pinned to the rivet-4.1.4 commit"

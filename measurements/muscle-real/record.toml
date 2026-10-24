@@ -1,0 +1,176 @@
+# measurements/muscle-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one `muscle -align` alignment of the whole 919-sequence Pfam 38.2 PF01255.25 seed"
+
+[[dataset]]
+id = "Pfam 38.2 seed PF01255.25 (Prenyltransf): pf01255.25_unaligned.fa + pf01255.25_ref.fa"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "mafft"           # mafft-real's staged bytes, so both aligners score identical input
+note = "staged by measurements/mafft-real/stage-inputs.sh"
+
+[[dataset]]
+id = "mafft L-INS-i alignment of PF01255.25 (mafft_linsi.fa)"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "mafft"
+note = "mafft-real's Graviton4 L-INS-i output, one file used on all three chips"
+
+# The README's $/result cells are compound (-align / -super5 -threads 8); this record's result is
+# -align. Billed $ is wall + a per-chip overhead the README gives only as a range (51-59 s),
+# so billed_usd is left out of every row.
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 1549
+usd_hr = 0.319
+compute_usd = 0.137
+peak_gib = 5.2
+peak_kind = "cgroup-memory.peak"
+note = "-align mean of two runs; -super5 -threads 8 70 s ($0.0062), -threads 1 249 s; billed $/result 0.142 / 0.0109 (overhead not printed per chip); task window 3,788 s"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 1765
+usd_hr = 0.3748
+compute_usd = 0.184
+peak_gib = 5.2
+peak_kind = "cgroup-memory.peak"
+note = "-super5 -threads 8 74 s ($0.0077), -threads 1 241 s; billed $/result 0.190 / 0.0138; task window 4,218 s"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 1421
+usd_hr = 0.4311
+compute_usd = 0.170
+peak_gib = 5.2
+peak_kind = "cgroup-memory.peak"
+note = "-super5 -threads 8 66 s ($0.0079), -threads 1 231 s; billed $/result 0.176 / 0.0140; task window 3,485 s"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1521
+peak_gib = 5.2
+peak_kind = "cgroup-memory.peak"
+note = "00-probe.task.json sizing run, -align once; same alignments as the Graviton4 row; results not committed"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+note = "02-diag.task.json on a fresh c8a.2xlarge reproduced AMD's -threads 1 alignment (0e2de0f5…); GLIBC_TUNABLES ISA narrowing did not move it; results not committed"
+
+# --- checks: the README's "What held at scale, on all three chips" rows ---------------
+[[check]]
+id = "input-eq-pfam-seed"
+claim = "input == Pfam seed, gaps removed"
+kind = "conservation"
+observed = "919 / 207,712"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows-eq-input"
+claim = "every row of every output == its input, gaps removed"
+kind = "conservation"
+observed = "6 of 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ungapped-eq-mafft"
+claim = "every row ungapped == mafft L-INS-i's, gaps removed"
+kind = "cross-code"
+observed = "6 of 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows-same-length"
+claim = "every row the same length"
+kind = "identity"
+observed = "6 of 6"
+outcome = "pass"
+
+[[check]]
+id = "pfam-residues-located"
+claim = "every Pfam residue located in the output"
+kind = "identity"
+observed = "0 unmapped"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scorer-control"
+claim = "scorer control: Pfam scored against itself"
+kind = "identity"
+bound = "SP = TC = 1 exactly"
+observed = "1 / 1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "super5-repeat"
+claim = "`-super5`, two runs, each thread count"
+kind = "identity"
+bound = "byte-identical (seen in the probe first, then asserted)"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "align-repeat"
+claim = "`-align`, two runs (reported, not asserted)"
+kind = "reported"
+observed = "identical"
+outcome = "reported"
+
+[[check]]
+id = "sp-vs-pfam"
+claim = "muscle `-align` SP / TC vs Pfam's curated alignment (an observation, not an assertion)"
+kind = "reported"
+observed = "0.922368 / 0.253700"
+outcome = "reported"
+
+[[check]]
+id = "alignment-bytes-cross-chip"
+claim = "alignment bytes, AMD against Graviton4 (Intel == Graviton4 for all six)"
+kind = "reported"
+observed = "-super5 -threads 8 identical; -super5 -threads 1 and -align differ"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "-align: 1,079 columns both, AMD vs Graviton4 SP 0.999990 / TC 0.998700; -super5 -threads 1: 841 vs 911 columns, SP 0.916922 vs 0.916921, AMD vs Graviton4 SP 0.999990 / TC 0.862330"
+
+[[cross_code]]
+with = "measurements/mafft-real"
+same_bytes = true
+metric = "ungapped content of every row equal to mafft L-INS-i's; SP of muscle against mafft L-INS-i reported"
+tolerance_basis = "content equality is exact (an aligner may only insert gaps); the SP agreement is an observation, since an MSA has no defined precision to set a tolerance from"
+check = "ungapped-eq-mafft"
+
+[[cross_code]]
+with = "published:Pfam-38.2-PF01255.25-seed"
+same_bytes = true
+metric = "SP over Pfam's 88,476,208 same-column residue pairs, TC over its 473 columns"
+tolerance_basis = "an observation, not an assertion: an MSA has no defined precision to set a tolerance from, and Pfam's seed is curated, not a structural truth set"
+check = "sp-vs-pfam"

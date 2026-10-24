@@ -1,0 +1,177 @@
+# measurements/cftime-real/record.toml -- every CMIP6 time axis on AWS, three chips, integer = identical.
+schema = 1
+result_unit = "the whole Pangeo CMIP6 archive's time axes decoded and checked (512,171 stores, 7,291,094,172 values)"
+
+[[dataset]]
+id = "s3://cmip6-pds/pangeo-cmip6.csv.gz VersionId KCB936FiD1GjuGHQxrzBPr.RL.MsTp8U"
+tier = "roda"
+pins = "pins.sha256"
+note = "pins.sha256 also pins the scripts (fetch.py, decode.py, refcal.py, check.py)"
+
+[[dataset]]
+id = "inputs/cftime-real/axes/: 16 shards of the raw time/bounds chunks from s3://cmip6-pds"
+tier = "roda"
+pins = "axes.sha256"
+note = "written once by 00-fetch; every chunk carries its source key, S3 VersionId and sha256, re-checked on read"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 3060
+results = "results/fetch.log"
+note = "00-fetch, run once to build the shards (51 min); the README prices it at $0.28 but prints no $/hr, so no $ field"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 32
+wall_s = 2085
+billed_s = 2203
+usd_hr = 1.2762
+compute_usd = 0.739
+billed_usd = 0.781
+peak_gib = 13.0
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 32
+wall_s = 2781
+billed_s = 2872
+usd_hr = 1.4994
+compute_usd = 1.158
+billed_usd = 1.196
+peak_gib = 16.0
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 32
+wall_s = 1716
+billed_s = 1796
+usd_hr = 1.7243
+compute_usd = 0.822
+billed_usd = 0.86
+peak_gib = 15.5
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: "What held, on all three chips" (check.py); summary.tsv byte-identical ------
+[[check]]
+id = "stores-accounted"
+claim = "every catalog store accounted for exactly once; no store fails to process"
+kind = "conservation"
+observed = "512,171 of 512,171"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "num2date-decodes"
+claim = "num2date succeeds wherever the values fit cftime's int64 µs"
+kind = "identity"
+observed = "983,590 of 983,590"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "roundtrip-int"
+claim = "date2num(num2date(v)) == v exactly, integer encodings"
+kind = "identity"
+bound = "exact"
+observed = "2,585,993,119 of 2,585,993,119"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "roundtrip-float"
+claim = "float encodings back within cftime's 1 µs resolution, and stable on re-decode"
+kind = "band"
+bound = "1 µs"
+observed = "4,705,101,053; max 0.999998 µs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "referee"
+claim = "cftime == an exact-integer referee (refcal.py, no shared code), (Y, M, D, h, m, s, µs) elementwise"
+kind = "cross-code"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "xarray-equals-cftime"
+claim = "xr.decode_cf(use_cftime=True) == cftime.num2date"
+kind = "identity"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "calendar-arithmetic"
+claim = "consecutive datetimes subtract (cftime's calendar arithmetic) to the stored step"
+kind = "identity"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "calendar-control"
+claim = "control: the same values under a different calendar decode differently"
+kind = "identity"
+observed = "972,743 of 972,743 year-long axes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "refusals-justified"
+claim = "every cftime refusal is an exact int64 overflow, and xarray refuses too"
+kind = "identity"
+observed = "236 of 236"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "summary-identical"
+claim = "summary.tsv (70 rows, incl. sha256 of the per-store and per-variable results) byte-identical on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "IDENTICAL (70 rows)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "xarray-default-wrap"
+claim = "xarray's default decode (numpy datetime64[ns], not cftime) silently wraps three MRI-ESM2-0 ssp585 axes"
+kind = "reported"
+observed = "1,395 values off by 584.5 years"
+outcome = "reported"
+
+[[trap]]
+id = "cftime-xarray-datetime64-wrap"
+scope = "tool"
+symptom = "no warning: the 465 values after 2262 in each axis decode to 1677–1715 (off by 2⁶⁴ ns, 584.5 years)"
+cause = "the axes are stored out of order (first value 2101, last 2100); both ends fit datetime64[ns], so xarray takes the fast path and the values past 2262 overflow"
+fix = "decode with use_cftime=True, which decodes all 1,395 correctly"
+
+[[trap]]
+id = "cftime-float64-labelled-int64"
+scope = "data"
+symptom = "cftime and xarray both refuse (OverflowError) on 236 stores (IPSL-CM6A-LR, CNRM-CM6-1, CNRM-ESM2-1)"
+blames = "a decode overflow, which reads like a calendar or range problem"
+cause = "the time bytes are float64 but .zarray says int64; read as labelled they overflow"
+fix = "none applied; the refusal is correct and asserted (refusals-justified)"

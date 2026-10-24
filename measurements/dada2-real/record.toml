@@ -1,0 +1,187 @@
+# measurements/dada2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole 16S study denoised (Kozich 2013 stability run, 362 samples) plus the tutorial reproduction"
+
+[[dataset]]
+id = "s3://mothur/data/MiSeqDevelopmentData/StabilityNoMetaG.tar (Kozich et al. 2013, doi:10.1128/AEM.01043-13)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "stable public source, the authors' own distribution"
+
+[[dataset]]
+id = "s3://mothur/wiki/miseqsopdata.zip (DADA2 tutorial samples + HMP_MOCK.v35.fasta)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/box.txt"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 354
+billed_s = 526
+usd_hr = 0.6381
+compute_usd = 0.0628
+billed_usd = 0.0932
+peak_gib = 18.1
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/box.txt"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 443
+billed_s = 586
+usd_hr = 0.7497
+compute_usd = 0.0922
+billed_usd = 0.122
+peak_gib = 11.3
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/box.txt"
+workers = 16
+date = "2026-10-17"
+date_source = "git"
+wall_s = 311
+billed_s = 461
+usd_hr = 0.8622
+compute_usd = 0.0746
+billed_usd = 0.1104
+peak_gib = 11.9
+
+# checks table (stopifnot-style asserts in-task) in '## What held at scale, on all three chips': columns ['claim', 'kind', 'observed (all three chips)']
+[[check]]
+id = "tutorial-filter"
+claim = "tutorial `filterAndTrim` head (6 samples, in/out)"
+kind = "reference"
+observed = "**identical**, 7793/7113 … 4827/4312"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-learnerrors"
+claim = "tutorial `learnErrors` bases, forward and reverse"
+kind = "reference"
+observed = "**33514080 and 22342720** bases in 139642 reads, as printed"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-sample1"
+claim = "tutorial sample 1: variants inferred"
+kind = "reference"
+observed = "**128**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-seqtab"
+claim = "tutorial `dim(seqtab)`, length table 251–255"
+kind = "reference"
+observed = "**20 × 293**; 1 / 88 / 196 / 6 / 2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-nochim"
+claim = "tutorial `dim(seqtab.nochim)`, non-chimeric fraction"
+kind = "reference"
+observed = "**20 × 232**, **0.9640374**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-track"
+claim = "tutorial `track` head (6 samples × 6 stages)"
+kind = "reference"
+observed = "**36 of 36** counts identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tutorial-mock"
+claim = "tutorial Mock: 20 ASVs, all exact reference matches"
+kind = "reference"
+observed = "**20 / 20**, 0 non-reference reads"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "study-mock"
+claim = "whole study, Mock: still 20 / 20 under the study-wide error model"
+kind = "reference"
+observed = "**20 / 20**, abundances identical to part A"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "subset-invariance"
+claim = "the 20 tutorial samples inside the study are the same reads, and filter to the same counts"
+kind = "invariance"
+observed = "**20 of 20** byte-identical, counts equal"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pool-false-invariance"
+claim = "a sample denoised alone and single-threaded == the same sample in the 16-thread study batch"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "monotone-counts"
+claim = "filtered ≤ input; denoised ≤ filtered; merged ≤ min(denoisedF, denoisedR)"
+kind = "conservation"
+observed = "all 362 samples"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rowsums"
+claim = "`rowSums(seqtab)` == merged reads per sample; chimera removal only drops columns"
+kind = "conservation"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "asv-table-cross-chip"
+claim = "ASV table (362 × 420), per-sample track, ASV totals"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "error-matrices"
+claim = "fitted error matrices `errF`/`errR` (656 cells each)"
+kind = "reported"
+observed = "455 / 480 cells differ, max relative 9.2e-15"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel vs Graviton4 455 / 480 cells differ, max relative 9.2e-15 (AMD the same); AMD vs Intel bit-identical -- build, not vendor"
+
+[[check]]
+id = "mock2"
+claim = "the second mock (`Mock2`) gives 23 ASVs"
+kind = "reported"
+observed = "23 ASVs, 22 exact reference matches; 23rd 19 reads (0.17%), 11 mismatches"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:dada2-tutorial-1.37.0"
+same_bytes = true
+metric = "every number the tutorial prints, on its own 20 samples"
+tolerance_basis = "exact: the tutorial's printed counts are integers and the fraction is printed to 7 digits"
+check = "tutorial-nochim"

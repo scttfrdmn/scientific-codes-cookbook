@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "measurements/<dir>/record.toml",
+  "title": "Measurement record: the authored half of catalog/record.json",
+  "description": "One per measurements/<dir>/. TOML so stdlib tomllib reads it (CI is stdlib-only, python 3.12). Carries ONLY what no artifact already says. Everything derivable (owner recipe, tool, version, pins, verified dates, spec resources/lifecycle, staging, chip/arch/vendor from the instance name, threads_per_core and OpenBLAS corename from a host file, reverse cross-code links, overall status) is computed by gen_catalog.py and must NOT be authored here.",
+  "type": "object",
+  "required": ["schema", "result_unit", "run", "check"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "const": 1 },
+    "result_unit": {
+      "type": "string",
+      "description": "The denominator of every $/result in this record, in words. Required because the arithmetic identity cannot be checked without it (abundance-real's billed $/result is per sample of two)."
+    },
+    "results_per_run": {
+      "type": "number", "default": 1,
+      "description": "How many result_units one run row produces. compute_usd == wall_s * usd_hr / 3600 / results_per_run."
+    },
+    "dataset": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "tier"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Durable identifier: accession, DOI, release+path, RODA bucket key." },
+          "tier": { "enum": ["roda", "durable-id", "versioned-release", "test-suite", "built", "run-output"] },
+          "pins": { "type": "string", "description": "Path (repo-relative or relative to this dir) to a sha256 manifest that pins it. The record never copies a hash." },
+          "unpinned": { "type": "string", "description": "Why there is no pin. Mutually exclusive with pins; surfaces as a gap in record.json." },
+          "from_recipe": { "type": "string", "description": "When the bytes are another recipe's run output or staged prefix (tier run-output / shared stage)." },
+          "note": { "type": "string" }
+        },
+        "anyOf": [ { "required": ["pins"] }, { "required": ["unpinned"] }, { "required": ["from_recipe"] } ]
+      }
+    },
+    "run": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["instance", "date"],
+        "description": "A $ figure needs the time and rate it was computed from (check_pages enforces it): compute_usd needs wall_s and usd_hr, billed_usd needs billed_s (or wall_s + overhead_s) and usd_hr. A run the README prices nowhere carries no usd_hr and no $.",
+        "additionalProperties": false,
+        "properties": {
+          "instance": { "type": "string", "pattern": "^[a-z]+[0-9]+[a-z-]*\\.(?:[0-9]*x?large|metal[a-z0-9-]*)$" },
+          "purpose": { "enum": ["primary", "generation-sweep", "cross-chip", "core-sweep", "diagnostic"], "default": "primary",
+                       "description": "diagnostic rows (gw-real's arms, probes) never feed a 'which box' answer." },
+          "image": { "type": "string", "default": "recipe",
+                     "description": "'recipe' = the owner recipe's pin for this run's arch (resolved and compared at generation time); otherwise a full @sha256 reference." },
+          "spawn_version": { "type": "string" },
+          "date": { "type": "string", "format": "date", "description": "Run date from the completion record. Backfill may use the git date results/ was added, flagged date_source = 'git'." },
+          "date_source": { "enum": ["run", "git"], "default": "run" },
+          "workers": { "type": "integer", "description": "Threads or MPI ranks launched." },
+          "threads_per_core": { "type": "integer", "description": "Author ONLY when no host file exists; otherwise read from host." },
+          "host": { "type": "string", "description": "Path to this run's host-facts file (host.txt etc.); threads_per_core, cpu model/part and openblas corename are read from it." },
+          "wall_s": { "type": "number", "description": "Tool wall, the README table's wall column." },
+          "billed_s": { "type": "number" },
+          "overhead_s": { "type": "number", "description": "When the table gives overhead instead of billed: billed_s = wall_s + overhead_s." },
+          "usd_hr": { "type": "number", "description": "On-demand price the run was costed at (spawn-printed, region below). A historical fact, not a current price." },
+          "region": { "type": "string", "default": "us-west-2" },
+          "compute_usd": { "type": "number" },
+          "billed_usd": { "type": "number" },
+          "peak_gib": { "type": "number" },
+          "peak_kind": { "enum": ["rss", "cgroup-memory.peak", "vmhwm"] },
+          "results": { "type": "string", "description": "Path to the run's committed result artifact(s)." },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "check": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "claim", "kind", "outcome"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+          "claim": { "type": "string", "description": "The README checks-table row's claim, verbatim." },
+          "kind": { "enum": ["identity", "conservation", "sentinel", "reference", "cross-code", "invariance", "convergence-rate", "rank-count", "native-arch", "pin", "band", "reported"],
+                    "description": "Which of CLAUDE.md's assertion shapes it is. 'reported' = printed, not asserted (bound '—')." },
+          "bound": { "type": "string" },
+          "observed": { "type": "string", "description": "As printed in the README (string round-trip target)." },
+          "outcome": {
+            "description": "One value for all chips, or per chip. 'fail' means asserted, failed, and left failing on purpose.",
+            "oneOf": [
+              { "enum": ["pass", "fail", "reported"] },
+              { "type": "object", "additionalProperties": { "enum": ["pass", "fail", "reported", "not-run"] } }
+            ]
+          },
+          "across_chips": { "enum": ["fixed-point", "path", "last-bits", "identical", "n/a"],
+                            "description": "identical = byte/digit-identical on every chip; fixed-point = agrees to a stated precision; path = differs by construction, never asserted equal across chips; last-bits = a direct, non-iterative computation that differs only in its last bits across builds, which nothing amplifies (neither a converged fixed point nor a path)." },
+          "across_chips_evidence": { "type": "string", "description": "The value pair or max diff that justifies across_chips. Required when across_chips is fixed-point, path or last-bits." },
+          "corename_sensitive": { "type": "boolean", "description": "true if the value depends on OpenBLAS kernel selection (large blocked GEMM on a path)." }
+        }
+      }
+    },
+    "cross_code": {
+      "type": "array",
+      "description": "Authored once, in the measurement that runs the comparison; gen_catalog writes the reverse link into the counterpart.",
+      "items": {
+        "type": "object",
+        "required": ["with", "same_bytes", "metric", "check"],
+        "additionalProperties": false,
+        "properties": {
+          "with": { "type": "string", "description": "measurements/<dir> or recipes/<name>, or 'published:<id>' for a published result (RELION, TMR)." },
+          "same_bytes": { "type": "boolean" },
+          "metric": { "type": "string" },
+          "tolerance_basis": { "type": "string", "description": "Why the tolerance is the shared problem's precision, not the codes' observed agreement." },
+          "check": { "type": "string", "description": "id of the check row that asserts it." }
+        }
+      }
+    },
+    "trap": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "scope", "symptom", "cause", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Globally unique; other records reference it by id rather than restating it." },
+          "scope": { "enum": ["platform", "image", "tool", "data", "method"] },
+          "symptom": { "type": "string", "description": "The literal message or behaviour a reader sees, so they can find it by searching for it." },
+          "blames": { "type": "string", "description": "What the symptom wrongly points at, if anything." },
+          "cause": { "type": "string" },
+          "fix": { "type": "string" },
+          "cost": { "type": "string", "description": "Measured cost of hitting it, if known." },
+          "refs": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "trap_refs": { "type": "array", "items": { "type": "string" }, "description": "ids of traps owned by another record that also bit this one." },
+    "upstream": {
+      "type": "array",
+      "description": "Issues this measurement filed, worked around, or is blocked by. State (open/closed) is NEVER stored: it is GitHub's.",
+      "items": {
+        "type": "object",
+        "required": ["ref", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "ref": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?#[0-9]+$" },
+          "role": { "enum": ["filed", "workaround", "blocker", "cited"] },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  }
+}

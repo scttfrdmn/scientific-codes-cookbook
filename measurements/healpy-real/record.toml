@@ -1,0 +1,261 @@
+# measurements/healpy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one full-resolution analysis of the Planck PR3 SMICA IQU map at Nside 2048, with every check"
+
+[[dataset]]
+id = "Planck PR3 (PLA R3.00 / R3.01) via IRSA irsa.ipac.caltech.edu/data/Planck/release_3/: COM_CMB_IQU-smica_2048_R3.00_full.fits, COM_Mask_CMB-common-Mask-{Int,Pol}_2048_R3.00.fits, COM_PowerSpect_CMB-TT-full_R3.01.txt, best-fit minimum-theory R3.01"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "IRSA publishes no checksums; sha256 recorded by 00-fetch on AWS and re-checked in-task (results/<chip>/staged.sha256). The EE file is staged and not used"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 432
+billed_s = 586
+usd_hr = 0.3590
+compute_usd = 0.0431
+billed_usd = 0.0584
+peak_gib = 8.69
+peak_kind = "rss"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 532
+billed_s = 651
+usd_hr = 0.4234
+compute_usd = 0.0626
+billed_usd = 0.0766
+peak_gib = 8.69
+peak_kind = "rss"
+note = "cgroup memory.peak 12.0 GB, because the env install's page cache counts"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 272
+billed_s = 402
+usd_hr = 0.4869
+compute_usd = 0.0368
+billed_usd = 0.0544
+peak_gib = 8.69
+peak_kind = "rss"
+note = "cgroup memory.peak 12.0 GB, because the env install's page cache counts"
+
+# --- '## What held at scale, on all three chips' ------------------------------------
+[[check]]
+id = "npix"
+claim = "every column has 12·2048² pixels; map and masks NESTED; I, Q, U finite"
+kind = "identity"
+observed = "50,331,648, 0 UNSEEN"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "reorder-bijection"
+claim = "`nest2ring` is a permutation; `reorder` == scatter by it; nest→ring→nest; `read_map(nest=False)` == reorder of the raw columns"
+kind = "identity"
+bound = "bit-exact"
+observed = "bit-exact, all pixels"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "area-4pi"
+claim = "Σ pixel areas == 4π"
+kind = "identity"
+bound = "exact"
+observed = "12.566370614359172 exactly"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pix-roundtrip"
+claim = "pix→ang→pix and pix→vec→pix, both orderings"
+kind = "identity"
+observed = "0 misses of 50,331,648 × 4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "astropy-healpix-centres"
+claim = "astropy-healpix vs healpy: pixel centres; each code's `ang2pix` of the other's centres"
+kind = "cross-code"
+bound = "1e-12 rad"
+observed = "≤ 1.8e-15 rad apart; 0 misses"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "astropy-healpix-random"
+claim = "20 M random positions, healpy vs astropy-healpix"
+kind = "cross-code"
+bound = "any disagreement must be a neighbouring pixel"
+observed = "0 disagreements"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "query-disc"
+claim = "`query_disc` (24 discs, 0.5–20°) == brute force over every pixel centre"
+kind = "identity"
+observed = "13,939,367 pixels, 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ud-grade-sum"
+claim = "`ud_grade` 2048 → 1024 … 1: Σ out × ratio == fsum(in)"
+kind = "conservation"
+bound = "4·npix·ε"
+observed = "worst 7.3e-18 rel"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ud-grade-ordering"
+claim = "`ud_grade` in RING == reorder of NESTED"
+kind = "invariance"
+bound = "bit-exact"
+observed = "bit-exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ud-grade-up-down"
+claim = "2048 → 4096 repeats each parent; → 2048 returns the map"
+kind = "identity"
+bound = "bit-exact"
+observed = "bit-exact, 201 M pixels"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "monopole"
+claim = "`map2alm(iter=0)` a₀₀ == √(4π)·mean"
+kind = "identity"
+bound = "4.3e-18"
+observed = "1.1e-21 (x86 6.8e-22)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "|diff| 1.1e-21 (Graviton4) vs 6.8e-22 (x86), both far inside 4.3e-18"
+
+[[check]]
+id = "first-peak"
+claim = "first acoustic peak, SMICA masked pseudo-C_ℓ vs Planck's published PR3 TT, the same quadratic fit (ℓ 170–270)"
+kind = "reference"
+bound = "5 in ℓ"
+observed = "221.62 vs 221.39 (best-fit theory 220.35)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "first-peak fit agrees to 1e-13 in ℓ: 221.61756919475573 (Graviton4) vs 221.6175691947558 (x86)"
+
+[[check]]
+id = "synthesis-vs-scipy"
+claim = "`alm2map` (ℓ ≤ 128, SMICA's own a_ℓm) == direct Σ a_ℓm Y_ℓm with `scipy.special.sph_harm_y` at 4,000 pixels"
+kind = "cross-code"
+bound = "1e-11"
+observed = "3.9e-14 of max|map| (x86 3.8e-14)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "3.9e-14 (Graviton4) vs 3.8e-14 (x86) of max|map|"
+
+[[check]]
+id = "roundtrip-rate"
+claim = "`map2alm(alm2map(a))` residual shrinks by a constant factor per iteration"
+kind = "convergence-rate"
+bound = "factor > 2, spread < 10%"
+observed = "×35.37 / 35.37 / 35.37 at band limit 2048, ×8.32 / 8.28 / 8.28 at 4096"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "convergence factors agree across the three chips to 10 digits"
+
+[[check]]
+id = "rotation-unitary"
+claim = "Galactic → equatorial `rotate_alm` (ℓ ≤ 2048) leaves every C_ℓ unchanged; G → C → G returns the a_ℓm"
+kind = "invariance"
+observed = "4.1e-13; 6.8e-14 (x86 8.0e-14)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "round-trip error 6.8e-14 (Graviton4) vs 8.0e-14 (x86)"
+
+[[check]]
+id = "smoothing-beam"
+claim = "`smoothalm(10′)` C_ℓ == C_ℓ · exp(−ℓ(ℓ+1)σ²), computed independently"
+kind = "identity"
+observed = "1.6e-14 (x86 2.0e-14), all 6,144 ℓ"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.6e-14 (Graviton4) vs 2.0e-14 (x86)"
+
+[[check]]
+id = "synalm-chi2"
+claim = "seeded `synalm` from Planck's best fit, ℓ 2–2500: Σ((2ℓ+1)Ĉ/C − (2ℓ+1)) in σ"
+kind = "band"
+bound = "|z| < 5"
+observed = "TT 1.68σ, EE 0.15σ"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "synfast z-scores agree to 1e-14 across chips"
+
+[[check]]
+id = "anafast-alm2cl"
+claim = "`anafast(alm2map(a))` == `alm2cl(a)`, TT and EE, ℓ ≤ 2500 at Nside 2048"
+kind = "identity"
+bound = "1e-4"
+observed = "4.7e-9"
+outcome = "pass"
+
+# --- '## What is reported, not asserted' --------------------------------------------
+[[check]]
+id = "pseudo-dl-vs-published"
+claim = "SMICA's masked pseudo-D_ℓ vs Planck's published TT (fsky-, beam- and pixel-window-corrected)"
+kind = "reported"
+observed = "within 1% for ℓ < 300, then rising to 1.27 by ℓ ≈ 1500"
+outcome = "reported"
+
+[[check]]
+id = "smica-beam"
+claim = "SMICA's effective intensity beam (the map file's HDU 2) vs a 5′ Gaussian, ℓ ≤ 2000"
+kind = "reported"
+observed = "1.3e-3"
+outcome = "reported"
+
+[[check]]
+id = "cl-cross-chip"
+claim = "full-sky and masked spectra, Graviton4 vs x86"
+kind = "reported"
+observed = "full-sky within 1.0e-11 relative (TT), masked within 3.9e-14"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "cl_full max diff TT 1.0e-11; cl_mask max 3.9e-14; Intel and AMD bit-identical"
+
+[[cross_code]]
+with = "published:Planck-PR3-COM_PowerSpect_CMB-TT-full_R3.01"
+same_bytes = true
+metric = "first acoustic peak, same quadratic fit (ℓ 170–270)"
+tolerance_basis = "set by the estimator: an unbinned quadratic fit to a masked, un-deconvolved pseudo-spectrum; a beam, pixel-window or unit error would move the peak by tens"
+check = "first-peak"
+
+[[trap]]
+id = "healpy-inpainted-columns-differ"
+scope = "data"
+symptom = "`I_STOKES_INP` differs from `I_STOKES` on all but 8 of 49,572,744 pixels (by up to 8.1 mK, against an rms of 0.11 mK)"
+cause = "the inpainted columns are a different map; Q and U differ on every pixel"
+fix = "don't treat `*_INP` as the raw map with holes filled"

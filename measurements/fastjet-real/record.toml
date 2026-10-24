@@ -1,0 +1,177 @@
+# measurements/fastjet-real/record.toml -- LHC Olympics 2020 R&D set, anti-k_t R = 1.0, three chips.
+schema = 1
+result_unit = "one analysis pass: anti-k_t R = 1.0 over all 1.1 M events of the LHC Olympics 2020 R&D set, every check passed"
+
+[[dataset]]
+id = "Zenodo record 6466204 v5 (doi:10.5281/zenodo.6466204): events_anomalydetection_v2.h5 and events_anomalydetection_v2.features.h5"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "the features file is the organisers' own anti-k_t R = 1.0 clustering, the published reference"
+
+[[dataset]]
+id = "lhco-*.f8/.i32/.i8 flat arrays (01-convert of the v5 events file)"
+tier = "built"
+pins = "pins.sha256"
+note = "zero padding dropped; the convert task asserts re-padding gives back every source row exactly"
+
+# wall_s = the README's "whole task (pass + checks)" column, which is what compute $ is computed from;
+# billed_s = the task window (wrapper start to stage-out done, excludes boot).
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 150.0
+billed_s = 378
+usd_hr = 0.359
+compute_usd = 0.015
+billed_usd = 0.0377
+peak_gib = 2.15
+peak_kind = "rss"
+note = "peak is per worker (ru_maxrss); the container's cgroup memory.peak is 14.0 GiB. FastJet pass alone 189.8 cpu-s (23.7 s)"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 199.3
+billed_s = 335
+usd_hr = 0.4234
+compute_usd = 0.0234
+billed_usd = 0.0394
+peak_gib = 2.15
+peak_kind = "rss"
+note = "peak is per worker; container cgroup memory.peak 21.8-22.0 GiB on x86 (env page cache). FastJet pass 264.9 cpu-s (33.1 s); 8 processes on 4 cores x 2 threads"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 107.4
+billed_s = 219
+usd_hr = 0.4869
+compute_usd = 0.0145
+billed_usd = 0.0296
+peak_gib = 2.15
+peak_kind = "rss"
+note = "peak is per worker; container cgroup memory.peak 21.8-22.0 GiB on x86. FastJet pass 159.4 cpu-s (19.9 s)"
+
+# --- checks: the README's "What held at scale, on all three chips" rows -----------------
+[[check]]
+id = "partition"
+claim = "the inclusive jets' constituents are every particle exactly once"
+kind = "conservation"
+observed = "1,100,000 events, 195,918,046 particles"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "four-momentum-sum"
+claim = "Σ jets = Σ particles, per component, per event"
+kind = "conservation"
+bound = "2(n−1)u Σ|x|"
+observed = "worst 7.1% of the rigorous bound 2(n−1)u Σ|x|"
+outcome = "pass"
+
+[[check]]
+id = "collinear-safety"
+claim = "splitting each event's hardest particle into two exact halves changes no jet"
+kind = "invariance"
+observed = "0 of 1.1 M events change, bit-identical"
+outcome = "pass"
+
+[[check]]
+id = "brute-force-antikt"
+claim = "an independent anti-k_t (`brute.py`) finds the same jets"
+kind = "cross-code"
+observed = "every 100th event (11,000): same partition, 4-momenta bit-identical"
+outcome = "pass"
+
+[[check]]
+id = "features-rows"
+claim = "the organisers' features file describes these events row for row"
+kind = "reference"
+observed = "1,100,000 rows, labels 1,100,000 equal, no row matches any other event"
+outcome = "pass"
+
+[[check]]
+id = "leading-jets"
+claim = "their two leading jets (px, py, pz, m) are ours, to their published precision"
+kind = "reference"
+bound = "half a unit in the 6th figure plus float32's half-ulp, plus (n + 2)·2⁻²⁴·E_jet per component"
+observed = "all 8.8 M values; 98.7–99.8% bit-equal once ours is printed their way"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "one m₁ of 1,100,000 crosses a 6th-significant-figure rounding boundary on x86: 1,087,394 bit-equal against 1,087,395"
+
+[[check]]
+id = "determinism"
+claim = "the first chunk clustered twice"
+kind = "identity"
+observed = "identical"
+outcome = "pass"
+
+# --- reported ---------------------------------------------------------------------------
+[[check]]
+id = "assignment-fingerprint"
+claim = "The integer fingerprint of every particle's jet assignment (195.9 M labels, pt-ordered jet rank) is the same on all three"
+kind = "reported"
+observed = "jet counts 15,983,073; 4,231,032 above 20 GeV"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "fp-fingerprints"
+claim = "The input 4-vectors' bit fingerprint differs between Graviton4 and x86. So do the jets', the leading jets' and the τ fingerprints"
+kind = "reported"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "fingerprint_jets arm64 13792942948018768100 vs x86_64 13792942884364010620; Intel and AMD agree exactly on all four"
+
+[[check]]
+id = "nsubjettiness"
+claim = "N-subjettiness τ₁–τ₃ is reported, not asserted"
+kind = "reported"
+observed = "OnePass-KT axes: median relative difference 7e-7; 92–96% of the 6.6 M published τ values bit-equal"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "fingerprint_taus arm64 5737697541208801626 vs x86_64 5737700403118575009"
+
+[[check]]
+id = "control-v4-raw"
+claim = "The same check, run against the raw events file of record v4 and earlier, matched 0 of 1.1 M rows under any permutation"
+kind = "reported"
+observed = "0 of 1.1 M rows"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:zenodo-6466204-features"
+same_bytes = true
+metric = "two leading jets' px, py, pz, signed m², per event, against the organisers' features file"
+tolerance_basis = "built from what the record publishes (6 significant figures stored as float32, float32 particle inputs), not fitted to the differences"
+check = "leading-jets"
+
+[[trap]]
+id = "fastjet-hep-env-no-hdf5"
+scope = "image"
+symptom = "`hep` has no HDF5 reader for Python"
+cause = "aarch.science's hep env ships no h5py/HDF5 Python reader, and the Zenodo record is HDF5"
+fix = "convert in the `md` env (01-convert) to flat float64 arrays, sha256-pinned, then cluster in `hep`"
+
+[[trap]]
+id = "fastjet-lhco-v4-raw-events-mismatch"
+scope = "data"
+symptom = "matched 0 of 1.1 M rows under any permutation"
+cause = "the raw events file of Zenodo record v4 and earlier was never the one the features file describes (the record's 2022 note)"
+fix = "use record v5's events_anomalydetection_v2.h5"

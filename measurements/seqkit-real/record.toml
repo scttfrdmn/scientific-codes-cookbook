@@ -1,0 +1,140 @@
+# measurements/seqkit-real/record.toml -- drafted by the #118 extraction, then authored.
+# The Graviton generation rungs (c6g/c7g/c9g) are priced only on recipes/seqkit's page, not in
+# this README; their walls are in results/ but no run date is stated, so they are not recorded here.
+schema = 1
+result_unit = "seqkit stats + fq2fa over the complete SRR062634 run (48,297,986 reads, both mates)"
+
+[[dataset]]
+id = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz (HG00096), complete run"
+tier = "roda"
+from_recipe = "bwa-samtools"
+note = "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/smoke-check-c8g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+threads_per_core = 1
+wall_s = 93
+billed_s = 227
+usd_hr = 0.3190
+compute_usd = 0.0082
+billed_usd = 0.0201
+note = "tmpfs high-water 5,612 MB"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-c8i-2xl.txt"
+date = "2026-10-21"
+date_source = "run"
+spawn_version = "0.139.1"
+threads_per_core = 2
+wall_s = 86
+billed_s = 166
+usd_hr = 0.3748
+compute_usd = 0.0090
+billed_usd = 0.0173
+note = "inline script staged as a sha256-checked file (spawn 0.139.1's user-data budget); tmpfs high-water 5,612 MB"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-c8a-2xl.txt"
+date = "2026-10-21"
+date_source = "run"
+spawn_version = "0.139.1"
+threads_per_core = 1
+wall_s = 72
+billed_s = 161
+usd_hr = 0.4311
+compute_usd = 0.0086
+billed_usd = 0.0193
+note = "inline script staged as a sha256-checked file; tmpfs high-water 5,612 MB"
+
+# --- checks: the in-task asserts in results/smoke-check-*.txt -------------------------
+[[check]]
+id = "r1-count"
+claim = "r1_num_seqs want 24148993"
+kind = "identity"
+bound = "exact"
+observed = "24148993"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mates-paired"
+claim = "r2_num_seqs want == r1 (mates paired)"
+kind = "identity"
+bound = "=="
+observed = "24148993"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-seqs"
+claim = "total_num_seqs want exactly 48297986 == bwa primary records (48817006 - 519020 suppl.) == fastp before_filtering.total_reads"
+kind = "cross-code"
+bound = "exact"
+observed = "48297986"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-bases"
+claim = "total_sum_len want exactly 4829798600 == fastp total_bases"
+kind = "cross-code"
+bound = "exact"
+observed = "4829798600"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "read-len"
+claim = "read_len want 100/100 (uniform)"
+kind = "identity"
+observed = "min=100 max=100"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fa-format"
+claim = "fa_format want FASTA"
+kind = "identity"
+observed = "FASTA"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fa-records"
+claim = "fa_num_seqs want == total_num_seqs [conversion conserves records]"
+kind = "conservation"
+bound = "exact"
+observed = "48297986"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fa-bases"
+claim = "fa_sum_len want == total_sum_len [conversion conserves bases]"
+kind = "conservation"
+bound = "exact"
+observed = "4829798600"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "stats-bytes"
+claim = "`stats.tsv` and `fa_stats.tsv` byte-identical to Graviton4's"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "measurements/fastp-real"
+same_bytes = true
+metric = "total reads and total bases equal fastp's before_filtering counts on the same run"
+check = "total-seqs"

@@ -1,0 +1,219 @@
+# measurements/ambertools-real/record.toml -- drafted by the #118 extraction, then authored.
+# Graviton generation ladder for sander's 100 ps NVE, plus two OPENBLAS_CORETYPE controls.
+schema = 1
+result_unit = "one 100 ps solvated NVE run of capped alanine dipeptide (tleap build, minimisation, heating and checks included)"
+
+[[dataset]]
+id = "ff14SB + TIP3P leaprc files shipped in the ambertools 26.0 package; system built in-task by tleap"
+tier = "built"
+unpinned = "nothing staged: tleap builds the system in-task from force-field files inside the pinned image (solvateoct is RNG-free, so atom counts are asserted exactly)"
+
+# --- Graviton generation ladder, 2 vCPU, same digest -----------------------------------
+[[run]]
+instance = "c6g.large"
+purpose = "generation-sweep"
+date = "2026-10-03"
+date_source = "git"
+host = "results/cpu-c6g.txt"
+threads_per_core = 1            # host file states CPU part and corename, not threads per core
+wall_s = 1819
+billed_s = 1973
+usd_hr = 0.068
+compute_usd = 0.0344
+billed_usd = 0.0373
+results = "results/smoke-c6g.txt"
+note = "wall_s is the README's 'compute' column; the NVE 100 ps segment alone is 1613 s"
+
+[[run]]
+instance = "c7g.large"
+purpose = "generation-sweep"
+date = "2026-10-03"
+date_source = "git"
+host = "results/cpu-c7g.txt"
+threads_per_core = 1
+wall_s = 1200
+billed_s = 1326
+usd_hr = 0.0725
+compute_usd = 0.0242
+billed_usd = 0.0267
+results = "results/smoke-c7g.txt"
+note = "NVE 100 ps segment 1062 s"
+
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+date = "2026-10-03"
+date_source = "git"
+host = "results/cpu-c8g.txt"
+threads_per_core = 1
+wall_s = 1033
+billed_s = 1186
+usd_hr = 0.0798
+compute_usd = 0.0229
+billed_usd = 0.0263
+results = "results/smoke-c8g.txt"
+note = "the recipe's own verified run is this rung; NVE 100 ps segment 914 s"
+
+[[run]]
+instance = "c9g.large"
+purpose = "generation-sweep"
+date = "2026-10-03"
+date_source = "git"
+host = "results/cpu-c9g.txt"
+threads_per_core = 1
+wall_s = 728
+billed_s = 817
+usd_hr = 0.0869
+compute_usd = 0.0176
+billed_usd = 0.0197
+results = "results/smoke-c9g.txt"
+note = "NVE 100 ps segment 644 s"
+
+# --- controls: one env var changed on one Graviton4 host -------------------------------
+[[run]]
+instance = "c8g.large"
+purpose = "diagnostic"
+date = "2026-10-03"
+date_source = "git"
+results = "results/smoke-coretype-n1-on-gv4.txt"
+note = "OPENBLAS_CORETYPE=NEOVERSEN1 on Graviton4: NVE 100 ps 918 s vs 914 s native (0.4%); not priced"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-03"
+date_source = "git"
+results = "results/smoke-nwchem-coretype-n1.txt"
+note = "nwchem B3LYP/6-31G* caffeine with OPENBLAS_CORETYPE=NEOVERSEN1; walls 127 s serial / 69 s 4-rank (compound, so no wall_s); not priced"
+
+# --- checks: README has no checks table; these are the in-task asserts in results/smoke-*.txt
+[[check]]
+id = "atom-counts"
+claim = "atoms_vacuum exactly 22 (ACE-ALA-NME, ff14SB); atoms_solvated exactly 2101 (+693 TIP3P)"
+kind = "identity"
+bound = "exactly 22 / 2101"
+observed = "22 / 2101"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "crosscode-gromacs"
+claim = "crosscode_sander_vs_gmx: sander vs GROMACS single point on the same topology and coordinates"
+kind = "cross-code"
+bound = "< 0.01 kcal/mol"
+observed = "0.0011 kcal/mol"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nve-frames"
+claim = "nve_frames: Etot prints (100 ps at ntpr=1000)"
+kind = "sentinel"
+bound = ">= 100"
+observed = "100"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "trajectory-decodes"
+claim = "trajectory_decodes: mdtraj reading sander's NetCDF + prmtop"
+kind = "identity"
+bound = "100 x 2101"
+observed = "100 frames x 2101 atoms"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "water-constraint-count"
+claim = "water_constraint_count (3 per rigid water)"
+kind = "identity"
+bound = "1386 O-H + 693 H-H"
+observed = "1386 O-H + 693 H-H"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "shake-holds-water"
+claim = "shake_holds_water: max|d(O-H) - 0.9572| over 138,600 measurements (SHAKE, ntc=2)"
+kind = "identity"
+bound = "< 1e-3 A"
+observed = "8.88e-06 A"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "7.45e-06 (Graviton2, neoversen1) / 8.17e-06 (Graviton3, neoversev1) / 8.88e-06 (Graviton4 and Graviton5, neoversev2); forced NEOVERSEN1 on Graviton4 gives 7.45e-06"
+corename_sensitive = true
+
+[[check]]
+id = "water-stays-rigid"
+claim = "water_stays_rigid: H-H spread over 69,300 measurements"
+kind = "identity"
+bound = "< 1e-3 A"
+observed = "1.31e-05 A"
+outcome = "pass"
+
+[[check]]
+id = "nve-started-hot"
+claim = "nve_started_hot: T(frame 0) (irest=1 kept velocities)"
+kind = "band"
+bound = "> 200 K"
+observed = "306.32 K"
+outcome = "pass"
+
+[[check]]
+id = "nve-temperature"
+claim = "nve_temperature: mean (equipartition after heating to 300)"
+kind = "band"
+bound = "240-360 K"
+observed = "305.2 K"
+outcome = "pass"
+
+[[check]]
+id = "nve-conserved"
+claim = "NVE conservation under 1% of kT per degree of freedom per ns (asserted < 5%: integrator leak far below thermal)"
+kind = "conservation"
+bound = "< 5% of kT(300K)"
+observed = "4.54e-03 kcal/mol per DoF per ns = 0.76% of kT(300K)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "NVE leak 5.68e-03 (Graviton2) / 2.73e-03 (Graviton3) / 4.54e-03 (Graviton4, Graviton5); forced NEOVERSEN1 on Graviton4 gives 5.68e-03"
+corename_sensitive = true
+
+[[check]]
+id = "nve-drift"
+claim = "NVE drift over 100 ps"
+kind = "reported"
+observed = "-1.9126 kcal/mol"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "-1.9126 (native neoversev2) vs -2.3891 kcal/mol (forced NEOVERSEN1) on the same Graviton4 box: 25%"
+corename_sensitive = true
+
+[[check]]
+id = "nwchem-coretype-energy"
+claim = "nwchem DFT energy under the same kernel swap (dft_energy want -625.538048 +/-1e-5)"
+kind = "reference"
+bound = "-625.538048 +/-1e-5 Ha"
+observed = "-625.538048227199 Ha"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "-625.538048227205 Ha (native neoversev2) vs -625.538048227199 Ha (forced neoversen1): 6e-12 Ha"
+
+[[cross_code]]
+with = "recipes/gromacs"
+same_bytes = true
+metric = "single-point potential energy, |sander - GROMACS| over 7 terms matched by name"
+tolerance_basis = "print-precision floor ~0.0005 kcal/mol; ParmEd conversion of ff14SB is lossless (no CMAP, uniform 1-4 scaling)"
+check = "crosscode-gromacs"
+
+[[trap]]
+id = "ambertools-fftw-blamed-for-trajectory-split"
+scope = "image"
+symptom = "one image digest gives exactly three different NVE trajectories across five machines"
+blames = "FFTW's SIMD dispatch (an earlier draft of the page)"
+cause = "OpenBLAS 0.3.34 is DYNAMIC_ARCH and re-selects kernels from the host CPU at load time (liblapack.so.3 -> libopenblasp-r0.3.34.so); the corename predicts the grouping"
+fix = "check openblas_get_corename(); set OPENBLAS_CORETYPE when an exact trajectory is the point (cost 0.4% here)"
+
+[[upstream]]
+ref = "truffle#175"
+role = "workaround"
+note = "static price fallback has no Graviton coverage; rungs launched serially so a throttled Price List call does not refuse a cost-limited launch"

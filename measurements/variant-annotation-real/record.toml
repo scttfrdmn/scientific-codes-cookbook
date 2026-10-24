@@ -1,0 +1,283 @@
+# measurements/variant-annotation-real/record.toml -- drafted by the #118 extraction, then authored.
+# A result is a three-task chain on three instances at two hourly rates, so the README's per-chip
+# tool wall, billed and $/result (in each section header below) cannot sit in one run row; each
+# task is its own row carrying only what the README prints for it. The chain $ are consistent with
+# the step seconds at the two rates; they are left out because no single row can carry them.
+schema = 1
+result_unit = "the whole verified chain (sites prep + bcftools csq, snpEff, VEP) on chromosomes 20-22, three instances"
+
+[[dataset]]
+id = "RODA s3://1000genomes/release/20130502/ALL.chr{20,21,22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+tier = "roda"
+pins = "pins.sha256"
+note = "read from inputs/plink-real/, the same staged bytes measurements/bcftools-real uses"
+
+[[dataset]]
+id = "hs37d5.chr20-22.fa, cut from RODA hs37d5.fa.gz"
+tier = "built"
+pins = "pins.sha256"
+note = "built by measurements/bcftools-real; read from inputs/bcftools-real/"
+
+[[dataset]]
+id = "Ensembl GRCh37 release 87: gff3/homo_sapiens/Homo_sapiens.GRCh37.87.chromosome.{20,21,22}.gff3.gz, Homo_sapiens.GRCh37.cds.all.fa.gz, Homo_sapiens.GRCh37.pep.all.fa.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "fetched on a spawn host by 00-stage and checked there against Ensembl's CHECKSUMS"
+
+# --- c8g: chain tool wall / billed 1,541 s / 2,180 s, compute $/result 0.1657, billed $/result 0.2303 (three instances, two rates: not one row) ---
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/arm64/csq/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.1595
+note = "task 01-csq: sites prep (bcftools) 301 s + bcftools csq 6 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/arm64/snpeff/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.1595
+peak_gib = 1.00
+peak_kind = "vmhwm"
+note = "task 02-snpeff: snpEff build x2 34 s + snpEff ann 467 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/vep/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+wall_s = 729
+usd_hr = 0.6381
+note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
+
+# --- c8i: chain tool wall / billed 1,344 s / 2,362 s, compute $/result 0.1627, billed $/result 0.2707 (three instances, two rates: not one row) ---
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/csq/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.1874
+note = "task 01-csq: sites prep (bcftools) 272 s + bcftools csq 7 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
+
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/snpeff/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.1874
+peak_gib = 1.26
+peak_kind = "vmhwm"
+note = "task 02-snpeff: snpEff build x2 38 s + snpEff ann 433 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/vep/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+wall_s = 592
+usd_hr = 0.7497
+note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
+
+# --- c8a: chain tool wall / billed 927 s / 1,745 s, compute $/result 0.1306, billed $/result 0.2196 (three instances, two rates: not one row) ---
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/csq/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.2155
+note = "task 01-csq: sites prep (bcftools) 204 s + bcftools csq 5 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/snpeff/"
+date = "2026-10-19"
+date_source = "run"
+usd_hr = 0.2155
+peak_gib = 1.19
+peak_kind = "vmhwm"
+note = "task 02-snpeff: snpEff build x2 30 s + snpEff ann 270 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/vep/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+wall_s = 417
+usd_hr = 0.8622
+note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
+
+# --- checks: '## What held at scale, on all three chips' (30 checks per chip in checks.tsv, all ok) ---
+[[check]]
+id = "pins"
+claim = "staged bytes == pinned sha256, scripts included"
+kind = "pin"
+bound = "provenance"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "split-records"
+claim = "split records == ALT alleles in the release"
+kind = "conservation"
+bound = "one record per allele"
+observed = "4,044,736"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "every-record-in-order"
+claim = "each annotator emits every record, IDs in the same order (md5 of the ID column)"
+kind = "conservation"
+bound = "nothing dropped or reordered"
+observed = "×3"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "vep-variants-processed"
+claim = "VEP's own `Variants processed` == sites"
+kind = "conservation"
+bound = "VEP's tally"
+observed = "4,044,736"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snpeff-noann"
+claim = "snpEff: records without an `ANN` == symbolic records left unannotated"
+kind = "identity"
+bound = "its own `Number_of_variants` agrees"
+observed = "2,284, all `<CN*>`"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snpeff-build-translation"
+claim = "snpEff build: transcripts whose translation ≠ Ensembl's peptide"
+kind = "reference"
+bound = "published truth, whole transcripts"
+observed = "**0**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snpeff-build-coverage"
+claim = "snpEff build: protein-coding transcripts with no Ensembl peptide"
+kind = "reference"
+bound = "the database has the published gene set"
+observed = "**0**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "csq-vep-same-pairs"
+claim = "csq and VEP annotate exactly the same coding-SNV pairs"
+kind = "cross-code"
+bound = "same transcript model"
+observed = "187,611 each"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snpeff-extra-pairs"
+claim = "snpEff's pairs beyond those are all ones naming no amino acid"
+kind = "cross-code"
+bound = "VEP calls the same 27 `incomplete_terminal_codon_variant`"
+observed = "27"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ref-residue-vs-ensembl"
+claim = "every annotator's ref residue == Ensembl's peptide at that position, except the off-by-one below"
+kind = "reference"
+bound = "published truth, per pair"
+observed = "180,974 snpEff, 180,974 csq, **187,611 VEP**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "disagreements-explained"
+claim = "every three-way disagreement is one of the three conventions below"
+kind = "cross-code"
+bound = "nothing unexplained"
+observed = "**0 unexplained**"
+outcome = "pass"
+across_chips = "identical"
+
+# --- the three conventions (counts reported; their classification is asserted by disagreements-explained) ---
+[[check]]
+id = "agree-every-field"
+claim = "shared pairs that agree on class, codon, ref and alt"
+kind = "reported"
+observed = "180,337 of 187,611 (96.1%)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "convention-mid-codon-start"
+claim = "CDS starts mid-codon (peptide begins with `X`)"
+kind = "reported"
+observed = "7,262 on 332 transcripts"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "convention-codon-1"
+claim = "codon 1 changes"
+kind = "reported"
+observed = "10"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "convention-internal-stop"
+claim = "stop codon inside the CDS"
+kind = "reported"
+observed = "2"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "vcf-text-cross-chip"
+claim = "sites.vcf.gz, csq.vcf.gz, snpeff.vcf.gz and vep.vcf.gz record text (everything below the ## header), all three pair tables and every value in compare.tsv, Graviton4 vs Intel and vs AMD"
+kind = "reported"
+observed = "identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:Ensembl-GRCh37-release-87-pep"
+same_bytes = true
+metric = "each annotator's ref residue vs Ensembl's published peptide at that position"
+tolerance_basis = "exact: the peptide is the published truth for the same transcript model"
+check = "ref-residue-vs-ensembl"
+
+[[trap]]
+id = "variant-annotation-partial-codon-numbering"
+scope = "tool"
+symptom = "snpEff and csq: 6,637 ref-residue mismatches each against Ensembl's peptide, all on transcripts whose peptide begins with `X`"
+cause = "on a CDS that starts mid-codon, snpEff and csq number from the first complete codon while VEP counts the partial one, so their positions are one less than the peptide Ensembl publishes"
+fix = "pick the tool by the numbering you need; VEP matches Ensembl (0 mismatches)"
+
+[[trap]]
+id = "variant-annotation-snpeff-gff3-types"
+scope = "data"
+symptom = "built from Ensembl's GFF3 as published, 9,693 transcript objects pass snpEff's protein check, against 10,256 with types renamed"
+cause = "Ensembl's GFF3 types transcripts by kind (NMD_transcript_variant, processed_transcript, lincRNA, ...: 14 transcript types and 9 gene types)"
+fix = "rename the type column of every ID=transcript: line to mRNA and every ID=gene: line to gene (coordinates, IDs and biotype= unchanged); whether the as-published database loses pairs was not measured"

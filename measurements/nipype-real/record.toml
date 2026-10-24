@@ -1,0 +1,252 @@
+# measurements/nipype-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one subject of the 123-subject Rockland DTI cohort through the 616-node workflow"
+results_per_run = 123
+
+[[dataset]]
+id = "NFBS Rockland baseline DIFF_137_AP scans, 123 subjects, 492 files, 9.21 GB (RODA, via neuroimaging-real)"
+tier = "roda"
+pins = "../neuroimaging-real/dwi.sha256"
+from_recipe = "measurements/neuroimaging-real"
+note = "checked on every box before any compute"
+
+[[dataset]]
+id = "neuroimaging-real's DIPY maps on the same chip (runs*/neuroimaging-real/cohort/dipy/dipy-maps.tar)"
+tier = "run-output"
+from_recipe = "measurements/neuroimaging-real"
+note = "the bit-identity reference for masks and float32 FA/MD"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 214
+billed_s = 553
+usd_hr = 0.7181
+compute_usd = 0.000347
+billed_usd = 0.000897
+peak_gib = 20.1
+peak_kind = "cgroup-memory.peak"
+note = "wall is phase A (the cohort); billed is the whole task A-E, including 232-245 s of checking re-runs"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 258
+billed_s = 581
+usd_hr = 0.8467
+compute_usd = 0.000493
+billed_usd = 0.001111
+peak_gib = 20.8
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 188
+billed_s = 488
+usd_hr = 0.9738
+compute_usd = 0.000413
+billed_usd = 0.001073
+peak_gib = 19.8
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 38
+peak_gib = 16.4
+peak_kind = "cgroup-memory.peak"
+note = "16-subject sizing probe, phase A only; not priced"
+
+# --- checks: '## What held at scale, on all three chips' (identical on all three) -------
+[[check]]
+id = "executed-graph"
+claim = "executed graph"
+kind = "identity"
+bound = "5 nodes × 123 + 1 join; 9 edges × 123"
+observed = "616 nodes, 1,107 edges"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "each-node-once"
+claim = "each node started and ended once, no exceptions, no crash files"
+kind = "sentinel"
+bound = "exact"
+observed = "616 / 616, 0, 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "side-effects-eq-callbacks"
+claim = "Function-node side effects == nipype's start callbacks"
+kind = "conservation"
+bound = "exact"
+observed = "mask 123, stats 123, join 1 on both counts"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dependency-order"
+claim = "dependency order: no child starts before its parent ends"
+kind = "identity"
+bound = "0 violations"
+observed = "0 of 1,107 edges"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "concurrency"
+claim = "concurrency never exceeds `n_procs`"
+kind = "rank-count"
+bound = "≤ 16"
+observed = "16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "join-cardinality"
+claim = "JoinNode cardinality: one row per subject, ids == the cohort"
+kind = "identity"
+bound = "exact"
+observed = "123 rows, 123 distinct, equal set"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-cross-wiring"
+claim = "no cross-wiring: each row computed from its own subject's scan"
+kind = "identity"
+bound = "123 / 123"
+observed = "123 / 123"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mask-eq-neuroimaging"
+claim = "mask bit-identical to neuroimaging-real's (same chip, xargs-driven)"
+kind = "cross-code"
+bound = "identical"
+observed = "123 / 123"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "wls-eq-neuroimaging"
+claim = "WLS FA and MD == neuroimaging-real's, rounded to float32"
+kind = "cross-code"
+bound = "≤ 1 float32 ulp"
+observed = "0 ulp: 123 / 123 bit-identical, 19,954,065 voxels"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "linear-eq-multiproc"
+claim = "`Linear` == `MultiProc`, fresh `base_dir`, 4 subjects"
+kind = "invariance"
+bound = "array-identical, all 8 maps"
+observed = "4 / 4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "unchanged-rerun"
+claim = "unchanged re-run (C)"
+kind = "identity"
+bound = "0 outputs rewritten, 0 side effects"
+observed = "0, 0 (only `SelectFiles` is resubmitted)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "downstream-change"
+claim = "downstream change (D) re-runs only `stats` and `join`"
+kind = "identity"
+bound = "`stats` 123 + `join` 1; no map rewritten"
+observed = "exactly that; every other field unchanged"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fa-zero-outside-mask"
+claim = "FA zero outside the mask, float32"
+kind = "identity"
+bound = "exact"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tstat-vs-numpy"
+claim = "AFNI `3dTstat -mean` vs numpy"
+kind = "cross-code"
+bound = "< 1e-6 relative"
+observed = "6.695e-08"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "median-fa"
+claim = "cohort median FA in the mask"
+kind = "reported"
+observed = "0.1789 (subject range 0.1446–0.2066)"
+outcome = "reported"
+
+[[check]]
+id = "hash-probe"
+claim = "Phase E: one Function node, executions in two identical runs, given the log file it appends to vs the log's directory"
+kind = "reported"
+observed = "2 (file) vs 1 (directory)"
+outcome = "reported"
+
+[[check]]
+id = "xchip-maps"
+claim = "float32 FA / MD maps across chips (xchip.py)"
+kind = "reported"
+observed = "FA: 21 / 123 subjects identical, 222 of 19,954,065 voxels differ by 1 ulp; MD: 111 / 123 identical, 13 voxels by 1 ulp"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel and AMD vs Graviton4: masks 123 / 123 identical; FA 222 of 19,954,065 voxels differ by 1 ulp, MD 13; Intel == AMD byte-identical. The ~1e-11 float64 fit difference crosses a float32 rounding boundary in 0.001% of voxels"
+
+[[cross_code]]
+with = "measurements/neuroimaging-real"
+same_bytes = true
+metric = "brain masks and WLS FA/MD maps, per subject, float32 ulp"
+tolerance_basis = "DTI writes float32 maps of a float64 fit, so 1 float32 ulp is the precision of the output"
+check = "wls-eq-neuroimaging"
+
+[[trap]]
+id = "nipype-function-node-log-input-reruns"
+scope = "tool"
+symptom = "an unchanged re-run recomputed every mask, and so every dti and stats below it (tstat, an interface node, was reused)"
+blames = "the caching mode (the recipe's withheld claim: identical re-run re-executed everything, under timestamp and content)"
+cause = "nipype hashes a string input that names an existing file by that file (BaseTraitedSpec._get_sorteddict, nipype 1.10.0); a node handed the path of a log it appends to changes its own hash every run"
+fix = "pass the log's directory, not the file"
+cost = "the first probe's caching result"
+
+[[trap]]
+id = "nipype-multiproc-forkserver-main-guard"
+scope = "tool"
+symptom = "An attempt has been made to start a new process before the current process has finished its bootstrapping phase, followed by ConnectionResetError"
+blames = "nothing in the message names nipype"
+cause = "MultiProc on Python 3.14 starts workers by forkserver, which re-imports the script"
+fix = "an if __name__ == \"__main__\": guard around the workflow"
+cost = "the first probe died"

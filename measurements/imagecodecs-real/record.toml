@@ -1,0 +1,276 @@
+# measurements/imagecodecs-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole cohort: 160 annotated CAMELYON16 slides, 321 GB, every tile transcoded to JPEG XL and rebuilt"
+
+[[dataset]]
+id = "RODA s3://camelyon-dataset/CAMELYON16/ (the 160 annotated slides and their LZW tumour masks)"
+tier = "roda"
+pins = "pins.sha256"
+note = "pins.sha256 pins the cohort manifest slides.tsv (measurements/pathology-real's, read from its staged copy), which carries the publisher's md5 for every image and mask; the md5s are checked over the streamed bytes in-task. Streamed in place, never copied"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 64
+wall_s = 2429
+billed_s = 2492
+usd_hr = 2.5523
+compute_usd = 1.722
+billed_usd = 1.767
+peak_gib = 0.5166               # 529 MiB, largest single worker; box cgroup peak 13.2-15.0 GB
+peak_kind = "rss"
+
+[[run]]
+instance = "c8i.16xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 64
+wall_s = 3187
+billed_s = 3237
+usd_hr = 2.9987
+compute_usd = 2.655
+billed_usd = 2.696
+peak_gib = 0.5225               # 535 MiB
+peak_kind = "rss"
+
+[[run]]
+instance = "c8a.16xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 64
+wall_s = 1940
+billed_s = 1979
+usd_hr = 3.4487
+compute_usd = 1.858
+billed_usd = 1.896
+peak_gib = 0.5215               # 534 MiB
+peak_kind = "rss"
+
+# --- checks: '## What held at scale' (asserted per slide by real.py; same on all three chips) ---
+[[check]]
+id = "publisher-md5"
+claim = "image and mask match the publisher's md5"
+kind = "pin"
+bound = "provenance"
+observed = "320 / 320 objects"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tile-grid"
+claim = "page format, tile grid = ⌈H/t⌉·⌈W/t⌉, tile ranges disjoint and inside the file"
+kind = "identity"
+bound = "the TIFF is what it says"
+observed = "1,653 WSI and 1,443 mask pages"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "splice-decodes"
+claim = "**the spliced stream decodes to tifffile's own pixels**"
+kind = "identity"
+bound = "pruning the tables is a header edit, not an image edit"
+observed = "**14,352,374 / 14,352,374 tiles**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jxl-roundtrip"
+claim = "**`jpegxl_decode_jpeg(jpegxl_encode_jpeg(s)) == s`**"
+kind = "identity"
+bound = "JPEG XL's lossless JPEG recompression"
+observed = "**14,352,374 / 14,352,374, 0 refused**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tiff-tile-recovered"
+claim = "the TIFF tile is recovered byte for byte from the rebuilt stream"
+kind = "identity"
+bound = "the archive can be restored"
+observed = "14,352,374 / 14,352,374"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mask-lzw-two-decoders"
+claim = "**mask tiles: imagecodecs' LZW == libtiff's (through Pillow)**"
+kind = "cross-code"
+bound = "two independent LZW decoders"
+observed = "**3,256,103 tiles, 0 differ** (11,096,060 sparse)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pixel-codecs-roundtrip"
+claim = "16 lossless pixel codecs round-trip every 1,024th level-0 tile, `array_equal`"
+kind = "identity"
+bound = "lossless means identical"
+observed = "10,574 tiles × 16, 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+# --- across chips (compare.py) ---
+[[check]]
+id = "decoded-rgb-cross-chip"
+claim = "decoded RGB, sha256 over every tile of every page"
+kind = "identity"
+bound = "integer decode, asserted"
+observed = "160 / 160 identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jxl-bitstream-cross-chip"
+claim = "JPEG XL bitstream sha256"
+kind = "reported"
+observed = "0 / 160"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "0 / 160 slides' JPEG XL sha256 match Graviton4 vs x86; +5,061 B of 237.69 GB (+2 ppm), per slide −1,185 to +2,031 B; Intel == AMD bit for bit"
+
+[[check]]
+id = "libjxl-vs-turbo-decode"
+claim = "libjxl's pixel decode vs libjpeg-turbo, |diff| histogram (every tile from level 2 up)"
+kind = "reported"
+observed = "62.78% exact, 95.31% within 1, 98.95% within 2, at most 32 apart"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "within 2: 98.953% vs 98.952% (float path)"
+
+[[check]]
+id = "archive-saving"
+claim = "JPEG tile data → JPEG XL, every byte recoverable"
+kind = "reported"
+observed = "320.67 GB → 237.69 GB, 1.349×"
+outcome = "reported"
+
+# --- lossless pixel-codec bake-off: ratios reported, not asserted (observed = ratio vs RGB) ---
+[[check]]
+id = "ratio-webp-lossless"
+claim = "webp lossless: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "7.75×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-jpegxl-effort-7"
+claim = "jpegxl effort 7: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "7.32×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-jpeg2k-reversible"
+claim = "jpeg2k reversible: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "7.07×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-jpegxl-effort-1"
+claim = "jpegxl effort 1: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "6.82×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-jpegxl-effort-3"
+claim = "jpegxl effort 3: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "6.45×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-bz2"
+claim = "bz2: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "5.52×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-lzma"
+claim = "lzma: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "5.07×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-png"
+claim = "png: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "5.06×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-jpegls"
+claim = "jpegls: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "4.93×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-brotli-5"
+claim = "brotli 5: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "4.16×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-deflate-6-libdeflate"
+claim = "deflate 6 (libdeflate): lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "4.11×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-zlib-6"
+claim = "zlib 6: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "4.08×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-qoi"
+claim = "qoi: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "4.04×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-zstd-3"
+claim = "zstd 3: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "3.94×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-lerc"
+claim = "lerc: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "3.81×"
+outcome = "reported"
+
+[[check]]
+id = "ratio-lz4"
+claim = "lz4: lossless ratio vs RGB on every 1,024th level-0 tile"
+kind = "reported"
+observed = "2.72×"
+outcome = "reported"
+
+[[trap]]
+id = "imagecodecs-libjxl-refuses-splice"
+scope = "tool"
+symptom = "`jpegxl_encode_jpeg` rejects it with `JXL_ENC_ERR_GENERIC` on every tile (a TIFF tile with all of JPEGTables spliced in, which libjpeg-turbo decodes)"
+cause = "an unreferenced quantisation table (CAMELYON16's tables define 0 and 1, tiles use only 0), and on the 95 Radboud slides a table defined twice (a stripped overview image defines its own)"
+fix = "splice only the tables a tile references and does not define itself; jpegtran -copy none is accepted but re-codes the entropy data, so the rebuild would not be the TIFF's"

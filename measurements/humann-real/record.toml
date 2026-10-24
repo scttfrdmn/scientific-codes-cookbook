@@ -1,0 +1,210 @@
+# measurements/humann-real/record.toml
+schema = 1
+result_unit = "one whole sample: ERR2984773, 17.6M reads (8,785,731 pairs), profiled against the full HUMAnN 3.9 databases"
+
+[[dataset]]
+id = "ENA ERR2984773 (PRJEB29504, ZymoBIOMICS D6300, Nicholls et al. 2019), ERR2984773_{1,2}.fastq.gz"
+tier = "durable-id"
+pins = "pins.sha256"
+from_recipe = "measurements/metaphlan-real"
+note = "staged by measurements/metaphlan-real/stage-inputs.sh; the same reads metaphlan-real profiles"
+
+[[dataset]]
+id = "ERR2984773.profile.txt (MetaPhlAn 4 profile of the same reads)"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "measurements/metaphlan-real"
+
+[[dataset]]
+id = "HUMAnN databases: full_chocophlan.v201901_v31.tar.gz + uniref90_annotated_v201901b_full.tar.gz (bioBakery server)"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "not RODA or a DOI: pinned by tarball sha256 plus a per-file manifest of the 12,774 unpacked files (db.sha256)"
+
+[[dataset]]
+id = "ZymoBIOMICS D6300 composition (zymo_d6300.tsv)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 3785
+billed_s = 4284
+usd_hr = 0.9426
+compute_usd = 0.9911
+billed_usd = 1.1217
+peak_gib = 16.7
+peak_kind = "rss"
+note = "aarch.bio build (diamond 2.2.8, bowtie2 2.5.5); launched under the original $6.00 / 10 h cap"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 3758
+billed_s = 4336
+usd_hr = 1.1114
+compute_usd = 1.1603
+billed_usd = 1.3386
+peak_gib = 16.5
+peak_kind = "rss"
+note = "bioconda build (diamond 2.0.15, bowtie2 2.2.3): compares builds as well as chips"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 2602
+billed_s = 3071
+usd_hr = 1.2781
+compute_usd = 0.9239
+billed_usd = 1.0903
+peak_gib = 16.5
+peak_kind = "rss"
+note = "same bioconda image as Intel: the one like-for-like chip comparison"
+
+# --- "What held at scale" (check.py, in-task, fails the task); observed = Graviton4 ----
+[[check]]
+id = "unmapped-accounting"
+claim = "`UNMAPPED` == reads × HUMAnN's final unaligned %"
+kind = "conservation"
+bound = "half a unit in the last printed place per term"
+observed = "5,569,932 of 17,571,462"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "5,569,932 (Graviton4, diamond 2.2.8) vs 5,538,368 (Intel / AMD, diamond 2.0.15): the translated tier differs with the diamond build"
+
+[[check]]
+id = "family-eq-strata"
+claim = "every family == the sum of its strata"
+kind = "conservation"
+bound = "half a unit in the last printed place per term"
+observed = "119,726 families, worst 2e-10"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "119,726 (Graviton4) vs 120,806 (Intel / AMD) families; the 470 + 2,342 translated-tier families account for every row-set difference"
+
+[[check]]
+id = "no-orphans"
+claim = "every stratified family has a community row, and the reverse"
+kind = "identity"
+observed = "0 orphans"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "unaligned-order"
+claim = "unaligned: translated ≤ nucleotide ≤ 100%"
+kind = "identity"
+observed = "31.70 ≤ 35.47"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "translated 31.70 (Graviton4) vs 31.52 (Intel / AMD); nucleotide 35.4730414578% identical on all three"
+
+[[check]]
+id = "custom-db-species"
+claim = "custom database == the profile's species"
+kind = "identity"
+observed = "25 pangenomes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "strata-in-species"
+claim = "every stratum is one of those species"
+kind = "identity"
+observed = "24 of 24"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zymo-bacteria"
+claim = "every Zymo bacterium recruits gene families"
+kind = "reference"
+bound = "closed list"
+observed = "8/8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pathway-accounting"
+claim = "pathway coverage in [0, 1]; `UNMAPPED`, `UNINTEGRATED` present"
+kind = "identity"
+observed = "2,251 rows"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "2,251 (Graviton4) vs 2,257 (Intel / AMD) rows; 6 pathways appear only on x86 (diamond build)"
+
+[[check]]
+id = "db-manifest"
+claim = "database files == `db.sha256`"
+kind = "pin"
+bound = "0 mismatches"
+observed = "12,774 files, 0 mismatches"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ----------------------------------------------------------
+[[check]]
+id = "nucleotide-tier"
+claim = "All 117,726 species-stratified gene-family rows match exactly on all three chips"
+kind = "reported"
+observed = "RPK sum 29,404,907.9932"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "intel-vs-amd-translated"
+claim = "Intel against AMD (same image, same diamond): 6 of 38,023 translated-tier families differ"
+kind = "reported"
+observed = "by up to 0.64%"
+outcome = "reported"
+
+[[trap]]
+id = "humann-metaphlan-version-parse"
+scope = "tool"
+symptom = "HUMAnN 3.9's MetaPhlAn version check cannot pass against MetaPhlAn 4.2.5 without --bypass-prescreen"
+cause = "HUMAnN 3.9 parses the last line of `metaphlan --version`, and MetaPhlAn 4.2.5 prints a database status line there; --bypass-prescreen also builds the index from all of ChocoPhlAn and ignores the profile"
+fix = "--metaphlan /tmp/shim: a stand-in metaphlan that answers --version with the version line last and refuses any other call"
+refs = ["humann#80"]
+
+[[trap]]
+id = "humann-bowtie2-build-one-core"
+scope = "tool"
+symptom = "38–46% of the wall time runs on one core; 16 vCPUs average 8–10 busy"
+cause = "HUMAnN 3.9 calls bowtie2-build with no --threads (bowtie2_build_opts=[], no flag to set it); its Python steps are serial too"
+fix = "none in HUMAnN 3.9; extra cores only shorten bowtie2 and diamond"
+
+[[trap]]
+id = "humann-fasterq-dump-mate-ids"
+scope = "data"
+symptom = "Nothing fails: 30% less RPK, and 65.2% unaligned printed instead of 57.2%"
+cause = "fasterq-dump --split-files gives both mates the same ID (@ERR2984773.1 …) and HUMAnN keys reads by the first word, merging the mates"
+fix = "add unique /1 /2 suffixes before concatenating (run.sh does)"
+cost = "measured on the 200k-pair canary: UNMAPPED 130,474 vs 228,931, RPK 377,084 vs 539,235"
+
+[[trap]]
+id = "humann-dbs-no-content-length"
+scope = "data"
+symptom = "the first 00-dbs run reported a failure after a complete, CRC-checked download"
+cause = "the bioBakery server streams without a Content-Length"
+fix = "fetch_dbs.py checks the byte count against the length its HEAD reports"
+
+[[upstream]]
+ref = "humann#80"
+role = "workaround"
+note = "MetaPhlAn version parsing; worked around with a --version shim rather than --bypass-prescreen"

@@ -1,0 +1,196 @@
+# measurements/arviz-real/record.toml
+schema = 1
+result_unit = "the whole verified set: 57 posteriordb posteriors sampled, and both draw sets (reference and fresh) diagnosed and checked"
+
+[[dataset]]
+id = "posteriordb 1.1.0 (tag 1.1.0, commit 299b77cf): 57 posteriors with reference posteriors"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "measurements/cmdstan-real"
+note = "reuses cmdstan-real's staged copy in place (256 files, 32 MB, each checked against its git blob)"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1128
+billed_s = 1204
+usd_hr = 0.1795
+compute_usd = 0.0562
+billed_usd = 0.06
+peak_gib = 6.93
+peak_kind = "cgroup-memory.peak"
+note = "wall_s is the whole task (CmdStan compile+sample dominates); ArviZ's own time is 41.8 s"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1261
+billed_s = 1315
+usd_hr = 0.2117
+compute_usd = 0.0742
+billed_usd = 0.0773
+peak_gib = 8.87
+peak_kind = "cgroup-memory.peak"
+note = "the bayes env's linux-64 twin; ArviZ's own time 38.9 s"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 704
+billed_s = 743
+usd_hr = 0.2434
+compute_usd = 0.0476
+billed_usd = 0.0502
+peak_gib = 8.97
+peak_kind = "cgroup-memory.peak"
+note = "the bayes env's linux-64 twin; ArviZ's own time 26.8 s"
+
+# --- the README's "What held at scale" rows; bound 1e-9 relative throughout -----------
+[[check]]
+id = "ref-ess-bulk"
+claim = "`ess_bulk`, 390 reference scalars"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "5.4e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "ArviZ on the reference draws agrees across chips to 2.1e-15 (compare.py fails above 1e-12); 332 of 390 scalars bit-identical"
+
+[[check]]
+id = "ref-ess-tail"
+claim = "`ess(method=\"tail\", prob=0.95)`, same"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "6.1e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "6.1e-15 (Graviton4) vs 4.7e-15 (Xeon, EPYC); cross-chip agreement 2.1e-15"
+
+[[check]]
+id = "ref-rhat"
+claim = "`rhat`, the 22 scalars computed by `posterior` 1.6.1"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "4.9e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "4.9e-15 on all three chips; cross-chip agreement 2.1e-15"
+
+[[check]]
+id = "fit-converged-count"
+claim = "converged continuous scalars (both tools R-hat < 1.01)"
+kind = "reported"
+observed = "1,342"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "1,342 (Graviton4) vs 1,356 (Xeon, EPYC): 24 of 57 posteriors drew byte-identical draws on all three chips, the other 33 differ"
+
+[[check]]
+id = "fit-moments"
+claim = "— mean, sd, 5/50/95% quantiles"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "≤ 1.4e-13"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "fresh draws are a path: 33 of 57 posteriors' draws differ across chips; on the 24 identical ones every value agrees to 4.4e-15"
+
+[[check]]
+id = "fit-ess"
+claim = "— `ess_bulk`, `ess_tail` (prob 0.95)"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "≤ 5.0e-15"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "same as fit-moments: ≤ 5.0e-15 (Graviton4) vs ≤ 4.2e-15 (x86) on different draws"
+
+[[check]]
+id = "fit-mcse"
+claim = "— sd / √(ESS of the unsplit chains)"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "8.3e-13"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "same as fit-moments"
+
+[[check]]
+id = "fit-rhat"
+claim = "R-hat, every continuous scalar with no frozen chain"
+kind = "cross-code"
+bound = "1e-9 relative"
+observed = "4.5e-16"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "4.5e-16 (Graviton4) vs 2.2e-16 (x86) on different draws"
+
+[[check]]
+id = "rank-invariance"
+claim = "`ess_bulk`, `ess_tail`, bulk R-hat under 3.7x + 112.5 and under x³"
+kind = "invariance"
+bound = "bit-identical"
+observed = "0 of 1,356 moved"
+outcome = "pass"
+
+[[check]]
+id = "flags-superset"
+claim = "every posterior `stansummary` flags (R-hat > 1.01), ArviZ flags"
+kind = "cross-code"
+observed = "1 of 1"
+outcome = "pass"
+
+[[check]]
+id = "summary-equals-calls"
+claim = "`az.summary` columns equal `az.rhat` / `az.ess`"
+kind = "identity"
+observed = "57 of 57 fits"
+outcome = "pass"
+
+[[cross_code]]
+with = "published:posteriordb-1.1.0-reference-diagnostics"
+same_bytes = true
+metric = "ESS bulk/tail and R-hat, relative difference, on posteriordb's reference draws vs the values its authors computed in R posterior"
+tolerance_basis = "each statistic is a deterministic function of the same doubles, so two implementations of one definition differ by rounding (~1e-13); definitional differences start at 1.7e-8; 1e-9 sits between"
+check = "ref-ess-bulk"
+
+[[cross_code]]
+with = "recipes/cmdstan"
+same_bytes = true
+metric = "mean, sd, quantiles, ESS, MCSE and R-hat vs Stan's stansummary on the same CmdStan CSVs"
+tolerance_basis = "same rounding-vs-definition argument; 1e-9 relative"
+check = "fit-rhat"
+
+[[trap]]
+id = "arviz-summary-ess-tail-prob"
+scope = "tool"
+symptom = "az.summary's ess_tail is off stansummary on every converged scalar, by up to 34-40%"
+cause = "ArviZ 1.3 takes tail ESS at rcParams[\"stats.ci_prob\"] = 0.89 (11%/89% quantiles); Stan and posterior use 5%/95%; az.summary does not expose prob and its ci_prob argument does not change it"
+fix = "call az.ess(..., method=\"tail\", prob=0.95) to compare with a Stan workflow"
+
+[[trap]]
+id = "arviz-mcse-split-chains"
+scope = "tool"
+symptom = "az.mcse up to 4.2% off stansummary's MCSE on converged scalars"
+cause = "ArviZ computes sd/sqrt(ESS) with the chains split; stansummary uses the unsplit chains"
+fix = "compute Stan's definition from ArviZ's pieces (agrees to 8.3e-13) when comparing"
+
+[[trap]]
+id = "arviz-stansummary-nan-rhat"
+scope = "tool"
+symptom = "stansummary reports R-hat NaN and ESS NaN for a chain that never moved (arma-arma11, seed 20261020); ArviZ reports 1.5245879356513925"
+blames = "nothing: NaN fails no > 1.01 test, so a filter on stansummary's column passes the worst failure in the set"
+cause = "a chain whose 1,000 draws are all identical"
+fix = "use ArviZ's R-hat, or treat NaN as a failure explicitly"

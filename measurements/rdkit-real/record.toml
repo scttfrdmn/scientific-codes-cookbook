@@ -1,0 +1,174 @@
+# measurements/rdkit-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified ChEMBL 37 release: 2,897,819 compounds and every check"
+
+[[dataset]]
+id = "EBI ChEMBL releases/chembl_37/chembl_37_chemreps.txt.gz (292,540,141 bytes; sha256 published in that directory's checksums.txt)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "00-fetch checks EBI's published sha256 on AWS before keeping it; pins.sha256 re-checks at every stage-in"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+wall_s = 483
+billed_s = 571
+usd_hr = 0.319
+compute_usd = 0.0428
+billed_usd = 0.0506
+peak_gib = 0.46
+peak_kind = "rss"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+wall_s = 678
+billed_s = 750
+usd_hr = 0.3748
+compute_usd = 0.0706
+billed_usd = 0.0781
+peak_gib = 0.46
+peak_kind = "rss"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+wall_s = 367
+billed_s = 423
+usd_hr = 0.4311
+compute_usd = 0.0439
+billed_usd = 0.0507
+peak_gib = 0.5
+peak_kind = "rss"
+
+# --- checks: '## What held at scale' (asserted in-task by real.py; same on all three chips) ---
+[[check]]
+id = "rows-in-out"
+claim = "2,897,819 rows, 4 columns each, unique `chembl_id`, one row out per row in"
+kind = "conservation"
+bound = "the release"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "inchikey-format"
+claim = "every key written is a well-formed 27-character InChIKey"
+kind = "identity"
+bound = "InChI's format"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "element-counts"
+claim = "**element counts agree, or the record's SMILES and InChI describe different molecules**"
+kind = "identity"
+bound = "the recipe's exact identity"
+observed = "**2,847,270 + 5 = 2,847,275**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "smiles-idempotent"
+claim = "canonical SMILES is idempotent, every parsed compound"
+kind = "invariance"
+bound = "canonicalisation"
+observed = "2,897,804 / 2,897,804"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "recipe-counts"
+claim = "first 100,000 rows reproduce the recipe's counts: 99,997 / 99,914 / 99,996 / 97,665"
+kind = "reference"
+bound = "the recipe's published values"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted (identical on all three chips) ---
+[[check]]
+id = "smiles-parsed"
+claim = "SMILES parsed"
+kind = "reported"
+observed = "2,897,804"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "full-inchikey"
+claim = "full InChIKey == ChEMBL's"
+kind = "reported"
+observed = "2,894,324 (99.880%)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "connectivity-block"
+claim = "connectivity block == ChEMBL's"
+kind = "reported"
+observed = "2,897,783 (99.9993%)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "connectivity-misses-explained"
+claim = "of the 21 connectivity misses, ChEMBL's own InChI regenerates its key"
+kind = "reported"
+observed = "5 (the PROTACs)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "inchi-roundtrip"
+claim = "ChEMBL's InChI parsed by RDKit / written back unchanged"
+kind = "reported"
+observed = "2,897,574 / 2,894,300"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "canonical-smiles"
+claim = "RDKit's canonical SMILES == ChEMBL's `canonical_smiles`"
+kind = "reported"
+observed = "2,895,158 (99.909%)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "chembl-key-self-hash"
+claim = "`InchiToInchiKey(ChEMBL's InChI)` == ChEMBL's key"
+kind = "reported"
+observed = "2,897,809"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "output-sha256"
+claim = "the 2.9M-row `rdkit_real.tsv` has the same sha256 on all three chips, as do both mismatch lists and every count in metrics.txt"
+kind = "reported"
+observed = "`9a84f0adae6bc1dd…`"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:ChEMBL-37-chemreps"
+same_bytes = true
+metric = "InChIKey connectivity block regenerated from ChEMBL's SMILES vs ChEMBL's published key"
+check = "connectivity-block"

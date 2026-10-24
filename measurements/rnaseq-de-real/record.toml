@@ -1,0 +1,170 @@
+# measurements/rnaseq-de-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one study: GSE52778 airway (8 samples, paired ~ cell + dex) through DESeq2, limma-voom and edgeR-QL"
+
+[[dataset]]
+id = "Bioconductor airway_1.30.0.tar.gz (GSE52778, Himes et al. 2014)"
+tier = "versioned-release"
+unpinned = "full sha256 is printed in the README's Pins and held in stage-inputs.sh; no committed manifest file"
+
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+workers = 1
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 20.0
+billed_s = 332
+usd_hr = 0.0798
+compute_usd = 0.00044
+billed_usd = 0.0074
+note = "tool wall is DESeq2 + limma/edgeR, billed is both tasks; peak RSS printed as 1.04 GB (unit GB, not converted to GiB)"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+workers = 1
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 18.6
+billed_s = 332
+usd_hr = 0.0937
+compute_usd = 0.00048
+billed_usd = 0.0086
+note = "tool wall is DESeq2 + limma/edgeR, billed is both tasks; peak RSS printed as 1.07 GB (unit GB, not converted to GiB)"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+workers = 1
+spawn_version = "0.131.1"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 15.5
+billed_s = 321
+usd_hr = 0.1078
+billed_usd = 0.0096
+note = "tool wall is DESeq2 + limma/edgeR, billed is both tasks; peak RSS printed as 1.07 GB (unit GB, not converted to GiB). README prints compute $/study 0.00047, but 15.5 s x $0.1078/hr = 0.00046; left out"
+
+# checks table in '## What is asserted, on all three chips': columns ['check', 'kind', 'observed (all three chips)']
+[[check]]
+id = "rnaseqgene-counts"
+claim = "`gse` through rnaseqGene 1.34.0, verbatim: genes kept, `padj<0.1` total / up / down, low-count, outliers, `alpha=0.05`, `lfcThreshold=1`"
+kind = "reference"
+observed = "16637, 4381 / 2362 / 2019, 646, 0, 3602, 240, all equal to the workflow's"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rnaseqgene-res-rows"
+claim = "the 10 rows the workflow prints from `res`, all 6 columns"
+kind = "reference"
+observed = "60 of 60 agree to every printed digit"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "size-factors"
+claim = "`airway` size factors vs an independent median-of-ratios in ratio space (no logs)"
+kind = "identity"
+bound = "<= 64 eps"
+observed = "max relative diff 3.2e-16, asserted <= 64 eps"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "deseq2-limma-direction"
+claim = "direction on genes DESeq2 and limma-voom both call at FDR < 0.05"
+kind = "cross-code"
+observed = "4047 of 4047"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "top100"
+claim = "each method's top 100 genes by p-value called by the other at FDR < 0.05"
+kind = "cross-code"
+observed = "100 / 100 both ways"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "three-method-direction"
+claim = "direction on genes all three methods call"
+kind = "cross-code"
+observed = "4019 of 4019"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "himes-genes"
+claim = "the 7 genes Himes et al. name (DUSP1, KLF15, PER1, TSC22D3, C7, CCDC69, CRISPLD2) DE in all three; CRISPLD2 up"
+kind = "reference"
+observed = "7 of 7; CRISPLD2 log2FC 2.627 / 2.625 / 2.623"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-flips"
+claim = "Every asserted number and every significance call is identical on all three chips"
+kind = "reported"
+observed = "0 genes flip at padj 0.05 or 0.1, on either matrix"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "limma-full-precision"
+claim = "limma-voom log2FC / p, full precision"
+kind = "reported"
+observed = "7.6e-12 / 1.8e-13"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "max relative difference arm64 vs x86 7.6e-12 / 1.8e-13; AMD == Intel byte for byte"
+
+[[check]]
+id = "edger-full-precision"
+claim = "edgeR-QL log2FC / p, full precision"
+kind = "reported"
+observed = "3.7e-11 / 9.4e-10"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "max relative difference arm64 vs x86 3.7e-11 / 9.4e-10; AMD == Intel byte for byte"
+
+[[check]]
+id = "deseq2-full-precision"
+claim = "DESeq2 log2FC and p-value, full precision"
+kind = "reported"
+observed = "log2FC 1.3e-7 (gse), 1.9e-8 (airway); p 8.8e-4 at p = 2.5e-111"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "max relative difference arm64 vs x86: log2FC 1.3e-7 (gse), 1.9e-8 (airway); p-value 8.8e-4 at p = 2.5e-111, <= 4.7e-5 where p > 1e-6 -- stops at a convergence tolerance; AMD == Intel byte for byte"
+
+[[check]]
+id = "arithmetic-median"
+claim = "the textbook (arithmetic-mean) median-of-ratios size factors"
+kind = "reported"
+observed = "differs by up to 2.1e-9, inside its AM-GM bound"
+outcome = "reported"
+
+[[check]]
+id = "method-agreement-limits"
+claim = "The limits of that agreement are reported but not asserted"
+kind = "reported"
+observed = "top-100 overlap 84 (DESeq2 vs limma), 77 (DESeq2 vs edgeR); Spearman log2FC 0.9968 / 0.9971 / 0.9994; p-value rank 0.9893"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:rnaseqGene-1.34.0"
+same_bytes = true
+metric = "every count and printed digit of the Bioconductor 3.22 workflow on gse"
+tolerance_basis = "exact to the workflow's printed digits; version-matched (DESeq2 1.50.0 vs the image's 1.50.2 patch)"
+check = "rnaseqgene-res-rows"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "AMD leg launched with spawn 0.131.1 built from its tag; 0.139.1's wrapper leaves too little of the 16 KiB user data"

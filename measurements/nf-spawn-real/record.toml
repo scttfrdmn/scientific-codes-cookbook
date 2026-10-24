@@ -1,0 +1,253 @@
+# measurements/nf-spawn-real/record.toml -- the recipe's DAG over 919 Pfam sequences, three chips.
+# The README's per-chip $/result sums five instances of three sizes ($/hr "0.0798–0.6381"), which no
+# single [[run]] row can carry. So the rows are the direct run's MUSCLE (4xlarge, the peak-memory
+# process) and TREE (mafft) (xlarge, the like-for-like slowest process); the workflow totals are in notes.
+schema = 1
+result_unit = "one run of the DAG: two alignments, two ML trees and their RF distance"
+
+[[dataset]]
+id = "Pfam 38.2 seed PF01255.25 (Prenyltransf), 919 sequences, gaps removed: pf01255.25_unaligned.fa"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "mafft-real's staged bytes, read in place (md5-checked against EBI by mafft-real's staging); pins.sha256 also pins the direct run's rendered scripts"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+host = "results/arm64/direct/muscle/host.txt"
+wall_s = 865
+usd_hr = 0.6381
+peak_gib = 5.19
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/direct/muscle/"
+note = "direct-run MUSCLE (muscle -align); peaks above a large's 4 GiB, hence the 4xlarge"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+host = "results/arm64/direct/tree-mafft/host.txt"
+workers = 4
+wall_s = 17809
+results = "results/arm64/direct/tree-mafft/"
+note = "direct-run TREE (mafft), -T 4, 697 iterations. Whole DAG on Graviton4: workflow wall 17,999 s, billed 27,630 s over 5 windows, compute $1.325 / billed $1.346 per result"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+host = "results/x86_64/direct/muscle/host.txt"
+wall_s = 955
+peak_gib = 5.19
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/direct/muscle/"
+note = "direct-run MUSCLE"
+
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+host = "results/x86_64/direct/tree-mafft/host.txt"
+workers = 4
+wall_s = 13146
+results = "results/x86_64/direct/tree-mafft/"
+note = "direct-run TREE (mafft), 2 cores with SMT. Whole DAG on Intel: workflow wall 13,303 s, billed 23,824 s, compute $1.400 / billed $1.408 per result"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+host = "results/amd/direct/muscle/host.txt"
+wall_s = 811
+peak_gib = 5.19
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/direct/muscle/"
+note = "direct-run MUSCLE"
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+host = "results/amd/direct/tree-mafft/host.txt"
+workers = 4
+wall_s = 5887
+results = "results/amd/direct/tree-mafft/"
+note = "direct-run TREE (mafft). Whole DAG on AMD: workflow wall 7,964 s, billed 13,870 s, compute $0.962 / billed $0.985 per result"
+
+# --- checks: "The identities, at scale, on all three chips" ----------------------------
+[[check]]
+id = "run1-completed"
+claim = "run 1: 5 processes `COMPLETED` exit 0 (trace) and every work dir's `.exitcode` object is `0` (bucket)"
+kind = "sentinel"
+observed = "5 / 5"
+outcome = "pass"
+
+[[check]]
+id = "input-pin"
+claim = "input: sha256 == the pin"
+kind = "pin"
+observed = "bf393f17…"
+outcome = "pass"
+
+[[check]]
+id = "scripts-engine-eq-direct"
+claim = "every process's script: engine `.command.sh` == the direct run's rendered script"
+kind = "identity"
+observed = "5 / 5"
+outcome = "pass"
+
+[[check]]
+id = "identity-lines"
+claim = "MAFFT, MUSCLE: the stage's own identity line, engine == direct"
+kind = "identity"
+observed = "seqs=919 residues=207712"
+outcome = "pass"
+
+[[check]]
+id = "alignment-rows"
+claim = "alignments: every row == its input row with gaps removed (names, residues); one width"
+kind = "conservation"
+observed = "919 rows; 693 / 1,079 columns"
+outcome = "pass"
+
+[[check]]
+id = "alignments-engine-eq-direct"
+claim = "alignments, engine vs direct: byte-identical"
+kind = "identity"
+observed = "2 / 2"
+outcome = "pass"
+
+[[check]]
+id = "mafft-vs-mafft-real"
+claim = "MAFFT vs mafft-real: == its `--auto` output on the same bytes, which chose FFT-NS-2"
+kind = "cross-code"
+observed = "db0911ee…"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tree-shape"
+claim = "every tree, engine and direct: the input's 919 names, unrooted binary: n − 3 = 916 splits"
+kind = "identity"
+observed = "12 / 12"
+outcome = "pass"
+
+[[check]]
+id = "observe-rf"
+claim = "OBSERVE_RF: `iqtree3 -rf` == an independent count of the splits in one tree and not the other, on each run's own trees"
+kind = "cross-code"
+observed = "6 / 6"
+outcome = "pass"
+
+[[check]]
+id = "run2-resume"
+claim = "run 2, `-resume` unchanged: 5 of 5 `CACHED`, no `Submitting task` in the log; published RF bytes == run 1's"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "run3-image-renamed"
+claim = "run 3, OBSERVE_RF's image renamed: 5 of 5 `CACHED` (the image is not in the key, below)"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "run4-cache-off"
+claim = "run 4, OBSERVE_RF's cache off: exactly OBSERVE_RF re-runs, in a new work dir, on the renamed image (Docker's pull line); 4 `CACHED`; its output == run 1's bytes, made from trees that run 1's instances wrote"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "intel-tree-muscle-fixed-points"
+claim = "Intel's two TREE (muscle) trees: each logL a fixed point: re-optimised on its own topology twice, moves < 0.01 then < 0.001"
+kind = "convergence-rate"
+bound = "< 0.01 then < 0.001"
+observed = "−260442.2447 → .2450 → .2450; −260543.0218 → .0217 → .0217"
+outcome = { arm64 = "not-run", x86_64 = "pass", amd = "not-run" }
+
+# --- reported: engine vs direct trees, and across chips ----------------------------------
+[[check]]
+id = "trees-engine-vs-direct"
+claim = "Engine vs direct on the trees is reported, not asserted"
+kind = "reported"
+observed = "TREE (mafft) same newick and logL on all three chips; Intel TREE (muscle) 100.78 log-likelihood units apart, RF 674 of 1,832"
+outcome = "reported"
+
+[[check]]
+id = "tree-mafft-across-chips"
+claim = "TREE (mafft): a fixed point"
+kind = "reported"
+observed = "RF 0, 697 iterations, logL −253070.2935 on all three chips"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "same topology and logL −253070.2935 on all three; Graviton4 differs from Intel/AMD in one of 1,835 branch lengths, in the 10th decimal"
+
+[[check]]
+id = "muscle-across-chips"
+claim = "MUSCLE: Graviton4 and Intel agree, AMD differs by one row"
+kind = "reported"
+observed = "918 of 919 rows identical, 99.1% of residues in an identical column, width 1,079"
+outcome = "reported"
+
+[[check]]
+id = "tree-muscle-across-chips"
+claim = "TREE (muscle): a path"
+kind = "reported"
+observed = "Graviton4 −260580.5902; Intel −260442.2447, −260543.0218, −260526.2050; AMD −260364.8527"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "four runs on the same alignment reached four optima (Graviton4 −260580.5902, Intel −260442.2447 / −260543.0218 / −260526.2050); inter-chip RF 466–568 no larger than Intel's two runs (674)"
+
+[[check]]
+id = "rf-observation"
+claim = "the RF observation is a draw too"
+kind = "reported"
+observed = "712 / 694 / 766"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "712 / 694 / 766 across chips, following the TREE (muscle) path"
+
+[[cross_code]]
+with = "measurements/mafft-real"
+same_bytes = true
+metric = "MAFFT --auto (FFT-NS-2) alignment bytes"
+tolerance_basis = "exact: same tool, same input bytes, deterministic"
+check = "mafft-vs-mafft-real"
+
+[[trap]]
+id = "nf-spawn-image-not-in-cache-key"
+scope = "tool"
+symptom = "run 3 resumed 5 of 5 `CACHED` with OBSERVE_RF's image renamed"
+cause = "Nextflow adds a task's container to its cache key only when a container engine is enabled (`TaskHasher`: `if( task.isContainerEnabled() )`); nf-spawn runs Docker itself and enables none, so `-resume` hands back outputs from the old image after a repin"
+fix = "use a new work dir after any image change, or turn that process's `cache` off"
+
+[[trap]]
+id = "nf-spawn-cost-cap-needs-0-11"
+scope = "platform"
+symptom = "0.10.1, the recipe's pin, writes only `lifecycle.ttl` into each task"
+cause = "`ext.costLimit` (lifecycle.cost_limit) first ships in nf-spawn 0.11.0"
+fix = "nf-spawn 0.11.0 and `ext.costLimit` in the config"
+
+[[trap]]
+id = "nf-spawn-muscle-large-oom"
+scope = "tool"
+symptom = "MUSCLE cannot run on the recipe's `large`: `muscle -align` on 919 sequences peaks at 5.19 GiB, and a `large` has 4 GiB"
+cause = "MUSCLE's memory grows as about n²: 0.17 / 0.52 / 1.42 GiB at 115 / 230 / 460 sequences"
+fix = "give MUSCLE a 4xlarge"
+
+[[trap]]
+id = "nf-spawn-tree-search-not-reproducible"
+scope = "method"
+symptom = "same alignment, image, seed and `-T 4` ended 100.78 log-likelihood units apart, on trees RF 674 of 1,832 apart"
+cause = "IQ-TREE's search at 919 taxa reaches different genuine optima run to run; `-T 4 --seed` does not make it reproducible"
+fix = "report engine-vs-direct trees, do not assert them"

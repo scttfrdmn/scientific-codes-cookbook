@@ -1,0 +1,189 @@
+# measurements/cmdstan-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified set: 48 compiles and 57 posteriordb posteriors sampled twice, plus every check"
+
+[[dataset]]
+id = "posteriordb 1.1.0 (tag object 193fcfc, commit 299b77cf): 256 files for the 57 posteriors with reference draws"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "manifest.tsv lists the files; 00-fetch keeps a file only if its git blob id equals the release tree's"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 4
+wall_s = 1494
+billed_s = 1606
+usd_hr = 0.1795
+compute_usd = 0.0745
+billed_usd = 0.0801
+peak_gib = 6.87
+peak_kind = "cgroup-memory.peak"
+note = "workers = 4 worker processes, one chain at a time each; largest single process 1.86-1.92 GiB ru_maxrss"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 4
+wall_s = 1900
+billed_s = 2031
+usd_hr = 0.2117
+compute_usd = 0.1117
+billed_usd = 0.1194
+peak_gib = 8.77
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 4
+wall_s = 780
+billed_s = 881
+usd_hr = 0.2434
+compute_usd = 0.0527
+billed_usd = 0.0596
+peak_gib = 8.91
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: '## What held at scale' (asserted in-task by real.py; observed = Graviton4) ---
+[[check]]
+id = "release-complete"
+claim = "57 posteriors, 48 models; every reference parameter present in the fit"
+kind = "identity"
+bound = "the release"
+observed = "390 / 390"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "quantile-test"
+claim = "every converged posterior: at q = 0.05, 0.5, 0.95, the fraction of draws below the reference quantile is within 5 SE of q"
+kind = "reference"
+bound = "within 5 SE of q"
+observed = "max \\|z\\| 3.76"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "max |z| 3.76 (Graviton4) vs 3.54 (Xeon, EPYC); each chip passes the reference check independently"
+
+[[check]]
+id = "quantile-test-count"
+claim = "quantile tests, all posteriors"
+kind = "identity"
+observed = "1,170"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "converged-count"
+claim = "converged: R-hat < 1.01 on every parameter, 0 divergent, `diagnose` clean"
+kind = "reported"
+bound = "CmdStan's own verdict"
+observed = "55 of 57"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "55 of 57 (Graviton4) vs 54 of 57 (Xeon, EPYC); which posteriors CmdStan flags depends on the path"
+
+[[check]]
+id = "same-seed-twice"
+claim = "same seed, run twice"
+kind = "identity"
+bound = "determinism"
+observed = "57 of 57 identical"
+outcome = "pass"
+
+[[check]]
+id = "lp-cross-chip"
+claim = "lp__ and its gradient at the first 20 reference draws of 55 posteriors (1,100 points), vs Graviton4 (compare.py)"
+kind = "reference"
+bound = "1e-12 relative lp__, 1e-10 gradient"
+observed = "6.1e-15, 1.9e-13"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "751 of 1,100 points bit-identical; elsewhere lp__ ≤ 6.1e-15 relative and gradient ≤ 1.9e-13 of its scale (both at sblrc-blr)"
+
+[[check]]
+id = "draws-cross-chip"
+claim = "posteriors with byte-identical draws on all three chips"
+kind = "reported"
+observed = "24 of the 57"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "24 of 57 byte-identical at 18 significant digits; the other 33 diverge between the arm64 and x86 builds; largest posterior-mean difference 0.35 reference sd"
+
+[[check]]
+id = "intel-amd-identical"
+claim = "Intel and AMD are byte-identical to each other: all 57 posteriors' draws, all 1,100 log densities"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "km-mean-z"
+claim = "one_comp_mm_elim_abs K_m sampled mean vs the reference (mean ± MCSE, not asserted)"
+kind = "reported"
+observed = "4.04 MCSE"
+outcome = "reported"
+
+[[check]]
+id = "rms-quantile-z"
+claim = "RMS quantile z over converged posteriors"
+kind = "reported"
+observed = "0.928"
+outcome = "reported"
+
+# --- flagged by CmdStan: reported, not checked against the reference (observed = Graviton4) ---
+[[check]]
+id = "flagged-hmm-drive-0"
+claim = "`bball_drive_event_0-hmm_drive_0`"
+kind = "reported"
+observed = "R-hat 1.047, 35 divergent"
+outcome = "reported"
+
+[[check]]
+id = "flagged-logearn-height"
+claim = "`earnings-logearn_height_male`"
+kind = "reported"
+observed = "R-hat 1.0116"
+outcome = "reported"
+
+[[check]]
+id = "flagged-logearn-logheight"
+claim = "`earnings-logearn_logheight_male`"
+kind = "reported"
+observed = "— (Xeon / EPYC: R-hat 1.0104)"
+outcome = "reported"
+
+[[check]]
+id = "flagged-nes-logit"
+claim = "`nes_logit_data-nes_logit_model`"
+kind = "reported"
+observed = "— (Xeon / EPYC: R-hat 1.0106)"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:posteriordb-1.1.0-reference-posteriors"
+same_bytes = true
+metric = "quantile test at q = 0.05, 0.5, 0.95: fraction of draws below the reference quantile vs q, in SE"
+tolerance_basis = "SE = sqrt(q(1−q)(1/ESS + 1/ESS_ref)) from both chains' own ESS; 5 SE over 1,170 tests gives ~6e-4 chance of any false failure"
+check = "quantile-test"
+
+[[trap]]
+id = "cmdstan-posteriordb-info-shape"
+scope = "data"
+symptom = "11 of the 57 reference info files spell the diagnostics key `diagnostics_information` and 46 spell it `diagnostic_information`; one-parameter posteriors (`Rate_1`, `Rate_3`, `Rate_5`) store names and ESS as scalars, not one-element lists"
+cause = "posteriordb 1.1.0 is not uniform"
+fix = "read both forms (real.py does)"
+cost = "found by two Graviton4 sizing runs"

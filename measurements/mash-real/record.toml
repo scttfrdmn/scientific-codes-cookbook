@@ -1,0 +1,262 @@
+# measurements/mash-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the genus sketched and compared all against all: 3,158 GTDB R232 g__Corynebacterium genomes"
+
+[[dataset]]
+id = "GTDB R232 bac120_metadata_r232.tsv.gz + sp_clusters_r232.tsv (g__Corynebacterium: 3,165 genomes, 321 species)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "checked against GTDB's own MD5SUM.txt"
+
+[[dataset]]
+id = "NCBI assemblies GTDB names in g__Corynebacterium, by versioned accession (3,158 fetchable), one flat tar"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "each genome checked against NCBI's md5checksums.txt and GTDB's genome_size; the reproducible pin is the per-genome md5 set, the tar is its envelope; 7 non-representative genomes withdrawn by NCBI (results/prep/missing.tsv)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/results.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 68.8
+billed_s = 192
+usd_hr = 0.6381
+compute_usd = 0.0122
+billed_usd = 0.034
+peak_gib = 0.73
+peak_kind = "vmhwm"
+note = "mash sketch 13.3 + dist 55.5 s; billed also covers the invariance runs and checks; container memory.peak 4.4 GB (page cache)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/results.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 99.9
+billed_s = 284
+usd_hr = 0.7497
+compute_usd = 0.0208
+billed_usd = 0.0591
+peak_gib = 0.72
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/results.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 69.9
+billed_s = 211
+usd_hr = 0.8622
+compute_usd = 0.0167
+billed_usd = 0.0505
+peak_gib = 0.72
+peak_kind = "vmhwm"
+
+# --- sourmash cross-check task (02), same bytes; runs the sourmash image, not mash's pin (digest not printed in the README)
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/arm64/sourmash/"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 202.9
+billed_s = 266
+usd_hr = 0.6381
+compute_usd = 0.036
+billed_usd = 0.0471
+peak_gib = 0.18
+note = "sourmash cross-check: sketch plus a single-threaded Python loop over 910,677 genome-representative pairs; image is sourmash's, not the mash pin"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "diagnostic"
+results = "results/x86_64/sourmash/"
+threads_per_core = 2
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 226.8
+billed_s = 298
+usd_hr = 0.7497
+compute_usd = 0.0472
+billed_usd = 0.0621
+peak_gib = 0.18
+note = "sourmash cross-check; image is sourmash's, not the mash pin"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "diagnostic"
+results = "results/amd/sourmash/"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 142.7
+billed_s = 187
+usd_hr = 0.8622
+compute_usd = 0.0342
+billed_usd = 0.0448
+peak_gib = 0.18
+note = "sourmash cross-check; image is sourmash's, not the mash pin"
+
+[[check]]
+id = "native"
+claim = "binary"
+kind = "native-arch"
+bound = "ELF e_machine == uname -m"
+observed = "183 / 62"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "inputs"
+claim = "inputs"
+kind = "pin"
+bound = "sha256 == pins; tar == genomes.tsv; reps == GTDB's 321 clusters"
+observed = "3,158 / 321"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sketch-repeat"
+claim = "sketch"
+kind = "invariance"
+bound = "two sketches of every genome, byte-identical"
+observed = "ccf6c11f… both"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sketches-full"
+claim = "sketches"
+kind = "identity"
+bound = "one per genome, each full (10,000 hashes)"
+observed = "3,158"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows"
+claim = "rows"
+kind = "identity"
+bound = "exactly N²"
+observed = "9,972,964"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-distance"
+claim = "self distance"
+kind = "identity"
+bound = "exactly 0 with 10000/10000 shared, every genome"
+observed = "3,158"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "closed-form"
+claim = "closed form"
+kind = "identity"
+bound = "d == −ln(2j/(1+j))/21, j = shared/10000, at print precision, every row"
+observed = "0 off (max rel 4.92e-06 of a 5e-06 rounding bound)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "symmetry"
+claim = "symmetry"
+kind = "identity"
+bound = "d(a,b) == d(b,a) and the same shared count, every pair"
+observed = "4,984,903 pairs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "batch-thread-invariance"
+claim = "batch + thread invariance"
+kind = "invariance"
+bound = "reps sketched alone at -p 1, screened against all == those rows of the -p 16 all-vs-all"
+observed = "1,013,718 rows, identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nearest-rep"
+claim = "nearest representative"
+kind = "reference"
+bound = "== GTDB's species call, ≥ 0.95"
+observed = "2,832 of 2,837 = 0.99824"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-ani"
+claim = "published ANI"
+kind = "reference"
+bound = "per-species mean 100(1−d) to the rep vs GTDB's mean intra-species ANI (skani), Spearman ≥ 0.6, species with ≥ 3 genomes"
+observed = "ρ = 0.9776 over 132"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sourmash-nearest-rep"
+claim = "sourmash: nearest rep"
+kind = "cross-code"
+bound = "== GTDB's ≥ 0.95; == mash's ≥ 0.98"
+observed = "0.99753; 0.99894"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sourmash-ani"
+claim = "sourmash: ANI to own rep"
+kind = "cross-code"
+bound = "Spearman vs mash's 1−d ≥ 0.9, every member"
+observed = "ρ = 0.9987 over 2,837"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sourmash-published-ani"
+claim = "sourmash: published ANI"
+kind = "reference"
+bound = "Spearman vs GTDB's mean ANI ≥ 0.6"
+observed = "ρ = 0.9757 over 132"
+outcome = "pass"
+across_chips = "identical"
+
+[[cross_code]]
+with = "recipes/sourmash"
+same_bytes = true
+metric = "nearest representative agreement; Spearman of ANI to own rep vs mash's 1−d"
+tolerance_basis = "floors (0.98, 0.9) set before the run as backstops for a broken sketch or screen, not fits"
+check = "sourmash-ani"
+
+[[cross_code]]
+with = "published:GTDB-R232-skani-ANI"
+same_bytes = false
+metric = "Spearman of per-species mean ANI vs GTDB's mean intra-species ANI (skani), species with ≥ 3 genomes"
+tolerance_basis = "rank, because mash's distance mixes in gene content skani's aligned-fraction ANI leaves out; floor 0.6 set before the run"
+check = "published-ani"
+
+[[trap]]
+id = "mash-busybox-awk-div-zero"
+scope = "image"
+symptom = "first x86 run's BusyBox awk stopped on a division by zero (a pair of identical sketches)"
+blames = "the x86 build of mash"
+cause = "244 ordered pairs of distinct genomes have identical sketches (d = 0); mawk on Graviton4 returns NaN there and passed"
+fix = "guard the division in run.sh and re-run all three chips"
+cost = "$0.055"

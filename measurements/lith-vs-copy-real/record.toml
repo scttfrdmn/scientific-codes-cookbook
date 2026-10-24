@@ -1,0 +1,307 @@
+# measurements/lith-vs-copy-real/record.toml -- drafted by the #118 extraction, then authored.
+# Graviton4 only; the variable is the data path. Three arms per workload: today (spawn's
+# stage-in, the source measurement's own run, not re-run), tuned copy (CLI CRT client), lith.
+# wall_s = the tool's own wall column; billed_s = spawn's window minus the two baseline copies.
+# Peak memory is host MemTotal - MemAvailable (counts the tmpfs): no peak_kind in the enum fits.
+# Request charges ($0.001-0.159) have no field; they are in each row's note.
+schema = 1
+result_unit = "one workload result: the BBii TomoPy reconstruction / one 0.25-degree GFS cycle / one SV caller on HG002 30x / the whole Argo GDAC archive"
+
+[[dataset]]
+id = "tomography-real: the whole BBii scan, 42.4 GB of zips (Zenodo DOI)"
+tier = "durable-id"
+pins = "../tomography-real/pins.sha256"
+note = "re-staged by tomography-real's own stage-inputs.sh; matched the committed pins again"
+
+[[dataset]]
+id = "s3://noaa-gfs-bdp-pds one whole 0.25-degree GFS cycle, 418 objects, 113.1 GB"
+tier = "roda"
+pins = "../gfs-thickness-real/gfs-cycle.sha256"
+note = "re-staged by gfs-thickness-real's own stage-inputs.sh; matched the committed pins again"
+
+[[dataset]]
+id = "GIAB HG002 30x BAM (63.9 GB) + hs37d5 reference (3.2 GB)"
+tier = "roda"
+pins = "../structural-variants-real/pins.sha256"
+note = "structural-variants-real's staged inputs; the 30x BAM is derived by its 00-prep"
+
+[[dataset]]
+id = "Argo GDAC archive, 30,230 files, 215.1 GB"
+tier = "roda"
+pins = "../gsw-real/argo.sha256"
+note = "gsw-real's staged inputs"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 279
+billed_s = 495
+usd_hr = 0.9426
+billed_usd = 0.13
+results = "results/controls.txt"
+note = "tomography today: control: tomography-real-a1, spawn's stage-in at the CLI default, recomputed from its completion record, not re-run; 5,055 requests ($0.002); tmpfs 39.5 GiB; whole task 5,710 s / $1.495"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/tomography-copy-a1/out/host.txt"
+wall_s = 279
+billed_s = 352
+usd_hr = 0.9426
+billed_usd = 0.092
+peak_gib = 74.6
+results = "results/tomography-copy-a1/"
+note = "tomography tuned copy: CRT copy 27 s (1.55 GB/s); 2,530 requests ($0.001); tmpfs 39.6 GiB; whole task 5,579 s / $1.461"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/tomography-lith-b1/out/host.txt"
+wall_s = 365
+billed_s = 477
+usd_hr = 0.7181
+billed_usd = 0.095
+peak_gib = 35.1
+results = "results/tomography-lith-b1/"
+note = "tomography lith: lith v1.18.1, --mem-cache 4GiB; 183,830 requests ($0.074), 422.5 GB fetched to serve 42.4 GB; whole task 6,292 s / $1.255"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 127.6
+billed_s = 689
+usd_hr = 1.8851
+billed_usd = 0.361
+results = "results/controls.txt"
+note = "gfs today: control: gfs-thickness-real-r2, recomputed, not re-run; 13,804 requests ($0.006); tmpfs 107 GiB"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/gfs-copy-a1/out/host.txt"
+wall_s = 124.6
+billed_s = 244
+usd_hr = 1.8851
+billed_usd = 0.128
+peak_gib = 153.9
+results = "results/gfs-copy-a1/"
+note = "gfs tuned copy: CRT copy 63 s (1.79 GB/s); 7,060 requests ($0.003); tmpfs 107.0 GiB"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/gfs-lith-b1/out/host.txt"
+wall_s = 149.0
+billed_s = 294
+usd_hr = 1.4362
+billed_usd = 0.117
+peak_gib = 75.3
+results = "results/gfs-lith-b1/"
+note = "gfs lith: 32,702 requests ($0.013); lith read 226.3 GB, 2.0x"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 230
+billed_s = 690
+usd_hr = 1.8851
+billed_usd = 0.361
+results = "results/controls.txt"
+note = "manta today: control: structural-variants-real-manta-r2, recomputed, not re-run; 8,029 requests ($0.003); tmpfs 62.5 GiB"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/manta-copy-a1/out/host.txt"
+wall_s = 230
+billed_s = 482
+usd_hr = 1.8851
+billed_usd = 0.252
+peak_gib = 68.5
+results = "results/manta-copy-a1/"
+note = "manta tuned copy: CRT copy 40 s (1.68 GB/s); 4,027 requests ($0.002); tmpfs 62.5 GiB"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/manta-lith-b1/out/host.txt"
+wall_s = 1747
+billed_s = 1992
+usd_hr = 1.2762
+billed_usd = 0.706
+peak_gib = 22.5
+results = "results/manta-lith-b1/"
+note = "manta lith: 398,579 requests ($0.159); lith fetched 308.2 GB (4.6x); manta 7.6x slower than from tmpfs"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 1140
+billed_s = 1607
+usd_hr = 1.8851
+billed_usd = 0.842
+results = "results/controls.txt"
+note = "delly today: control: structural-variants-real-delly-r1, recomputed, not re-run; 8,029 requests ($0.003); tmpfs 62.5 GiB"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/delly-copy-a1/out/host.txt"
+wall_s = 1144
+billed_s = 1387
+usd_hr = 1.8851
+billed_usd = 0.726
+peak_gib = 67.2
+results = "results/delly-copy-a1/"
+note = "delly tuned copy: CRT copy 44 s (1.53 GB/s); 4,027 requests ($0.002); tmpfs 62.5 GiB"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+host = "results/delly-lith-b1/out/host.txt"
+wall_s = 1165
+billed_s = 1408
+usd_hr = 1.2762
+billed_usd = 0.499
+peak_gib = 22.2
+results = "results/delly-lith-b1/"
+note = "delly lith: 29,688 requests ($0.012); lith served the BAM as whole-object fills (245.2 GB)"
+
+[[run]]
+instance = "r8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 51
+billed_s = 1332
+usd_hr = 3.7702
+billed_usd = 1.395
+results = "results/controls.txt"
+note = "gsw today: control: gsw-real-a2, recomputed, not re-run; 44,412 + 31 LIST requests ($0.018); tmpfs 200 GiB"
+
+[[run]]
+instance = "r8g.16xlarge"
+purpose = "primary"
+date = "2026-10-24"
+date_source = "run"
+wall_s = 50
+billed_s = 149
+usd_hr = 3.7702
+billed_usd = 0.156
+peak_gib = 216.7
+results = "results/gsw-copy-a1/"
+note = "gsw tuned copy: CRT copy 80 s (2.68 GB/s); 33,391 + 31 requests ($0.014); tmpfs 200.5 GiB"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-24"
+date_source = "run"
+usd_hr = 2.5523
+results = "results/gsw-lith-b2/"
+note = "gsw lith: not finished; stopped twice by its own cost_limit ($2.01, then $1.33); billed >= 1,877 s, >= $1.33, no result; >= 742,216 requests (>= $0.30). Pins passed through lith (553 s, 389 MB/s). b1 log in results/gsw-lith-b1/"
+
+# --- checks: "What held, per arm" (outcome keys are the arms, not chips: Graviton4 only)
+[[check]]
+id = "tomography-arms"
+claim = "tomography: inputs vs `pins.sha256`; every `ok_` assertion (slice map, three centres, 2,160/2,160 FRC, invariance, astra FBP/CGLS)"
+kind = "identity"
+observed = "pass, identical (only `gridrec_s_per_slice` 0.068 vs 0.070)"
+outcome = "pass"
+
+[[check]]
+id = "gfs-arms"
+claim = "gfs: 418 files vs source MD5; `gfs-cycle.sha256` == committed; 155,240 messages vs `.idx`; thickness ≤ 2% above ground; `GFS THICKNESS REAL OK`"
+kind = "pin"
+observed = "pass; `summary.json` identical on all 24 non-timing keys"
+outcome = "pass"
+
+[[check]]
+id = "manta-arms"
+claim = "manta: inputs vs pins; END/SVLEN convention on every record; sentinel"
+kind = "identity"
+observed = "pass, `711477cd…`; VCF byte-identical to the tuned arm"
+outcome = "pass"
+
+[[check]]
+id = "delly-arms"
+claim = "delly: inputs vs pins; MAD 90, 776,849 discordant pairs; BGZF BCF"
+kind = "identity"
+observed = "pass; BCF identical to the tuned arm byte for byte, and to today's except `##fileDate`"
+outcome = "pass"
+
+[[check]]
+id = "gsw-pins"
+claim = "gsw: 30,230 inputs vs pins"
+kind = "pin"
+observed = "pins pass through lith"
+outcome = "pass"
+
+[[check]]
+id = "gsw-identities"
+claim = "gsw: TEOS-10 check values; every involution; `GSW ARGO OK`"
+kind = "identity"
+observed = "argo.py did not complete, so its identities were not reached"
+outcome = { today = "pass", tuned-copy = "pass", lith = "not-run" }
+
+[[trap]]
+id = "lith-vs-copy-cli-default-transfer"
+scope = "platform"
+symptom = "spawn's stage-in copies at 179-293 MB/s"
+blames = "the copy itself"
+cause = "aws s3 cp at the CLI default (10 requests, 8 MiB parts)"
+fix = "preferred_transfer_client = crt, target_bandwidth = the box's peak NIC, 16 MiB parts: 1.53-2.68 GB/s on every box"
+cost = "billed $/result 14-89% higher (tomography 29%, gfs 65%, manta 30%, delly 14%, gsw 89%)"
+refs = ["spawn#1256"]
+
+[[trap]]
+id = "lith-vs-copy-empty-s3-section"
+scope = "tool"
+symptom = "exit 255 on every `aws s3` command (the canary's \"default\" rows)"
+cause = "an empty `s3 =` section in an AWS CLI config file fails every `aws s3` command"
+fix = "omit the section; arm.sh's baselines supply the default figure"
+
+[[trap]]
+id = "lith-vs-copy-cost-limit-no-container-log"
+scope = "method"
+symptom = "the first gsw lith arm, stopped by its cost_limit at $2.01, left no container log"
+cause = "the arm ran its own docker run on the host; the container's output was not streamed anywhere spawn uploads"
+fix = "arm.sh now streams the container log"
+cost = "$2.01"
+
+[[trap]]
+id = "lith-vs-copy-many-readers-one-object"
+scope = "method"
+symptom = "manta 7.6x slower through lith; gsw did not finish under a $1.33 cap"
+cause = "many readers each take a slice of one object; an 8 GiB tier on a small box cannot hold what the next reader wants (gsw cause likely, not diagnosed)"
+fix = "copy (tuned) for many-reader shapes; byte amplification (4.6x, 10.0x, >= 3.7x) says which shape you are in"
+cost = "$3.34 for the two gsw lith attempts"
+
+[[upstream]]
+ref = "spawn#1256"
+role = "cited"
+note = "the CRT-client stage-in fix this measures"

@@ -1,0 +1,242 @@
+# measurements/wgcna-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified run: one signed WGCNA network over 15,045 genes x 1,083 TCGA BRCA tumours plus every check"
+
+[[dataset]]
+id = "GDC PanCanAtlas EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv + merged_sample_quality_annotations.tsv (Hoadley et al. 2018), by GDC file UUID"
+tier = "durable-id"
+pins = "pins.sha256"
+from_recipe = "measurements/glmnet-real"
+note = "fetched and md5-checked by glmnet-real; the same staged objects"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 791
+billed_s = 883
+usd_hr = 0.2356
+compute_usd = 0.0518
+billed_usd = 0.0578
+peak_gib = 14.26
+
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 461
+billed_s = 546
+usd_hr = 0.2778
+compute_usd = 0.0356
+billed_usd = 0.0421
+peak_gib = 14.3
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 238
+billed_s = 335
+usd_hr = 0.3195
+compute_usd = 0.0211
+billed_usd = 0.0297
+peak_gib = 14.3
+
+# checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'graviton4', 'xeon', 'epyc']
+[[check]]
+id = "release-shape"
+claim = "20,531 × 11,069 release, unique ids; 1,083 BRCA primaries, one per patient"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "good-samples-genes"
+claim = "`goodSamplesGenes`"
+kind = "identity"
+observed = "allOK"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cor-closed-form"
+claim = "`WGCNA::cor` vs `crossprod(scale(X))/(n−1)`, all 15,045² entries, ≤ 1e-12"
+kind = "identity"
+bound = "≤ 1e-12"
+observed = "1.4e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.4e-15 (Graviton4) vs 2.7e-15 (Intel, AMD)"
+
+[[check]]
+id = "cor-vs-stats-cor"
+claim = "`WGCNA::cor` vs `stats::cor`, 200 seeded rows × 15,045, ≤ 1e-12"
+kind = "cross-code"
+bound = "≤ 1e-12"
+observed = "5.6e-16"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "5.6e-16 (Graviton4) vs 8.9e-16 (Intel, AMD)"
+
+[[check]]
+id = "adjacency-closed-form"
+claim = "signed adjacency vs `((1+cor)/2)^12`, all entries, ≤ 1e-12"
+kind = "identity"
+bound = "≤ 1e-12"
+observed = "1.1e-14"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.1e-14 (Graviton4) vs 1.6e-14 (Intel, AMD)"
+
+[[check]]
+id = "tom-by-hand"
+claim = "TOM on a 4-node matrix worked by hand, ≤ 1e-15"
+kind = "identity"
+bound = "≤ 1e-15"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tom-closed-form"
+claim = "TOM vs `(L + A)/(min(kᵢ,kⱼ) + 1 − A)`, 500 seeded rows × 15,045, ≤ 1e-12"
+kind = "identity"
+bound = "≤ 1e-12"
+observed = "2.9e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tom-symmetric-threads"
+claim = "TOM symmetric; TOM at 1 vs 4 threads"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "blockwise-twice"
+claim = "`blockwiseModules`, run twice"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "eigengene-pc1"
+claim = "every eigengene vs PC1 of `scale(module)`, 25 modules, ≤ 1e-12"
+kind = "identity"
+bound = "≤ 1e-12"
+observed = "4.3e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "kwithin"
+claim = "`kWithin` vs `rowSums(A[module, module]) − 1`, relative, ≤ 1e-12"
+kind = "identity"
+bound = "≤ 1e-12"
+observed = "2.2e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "proliferation-module"
+claim = "proliferation markers (MKI67, TOP2A, CCNB1 …) share one module"
+kind = "reference"
+bound = "≥ 80% of the set in one non-grey module"
+observed = "10 of 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "luminal-module"
+claim = "luminal/ER markers (ESR1, GATA3, FOXA1 …) share one module"
+kind = "reference"
+bound = "≥ 80% of the set in one non-grey module"
+observed = "10 of 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tcell-module"
+claim = "T-cell markers (CD2, CD3E, LCK …) share one module"
+kind = "reference"
+bound = "≥ 80% of the set in one non-grey module"
+observed = "10 of 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "distinct-modules"
+claim = "the three are distinct modules"
+kind = "reference"
+observed = "11, 4, 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "permuted-control"
+claim = "control, every gene permuted independently: \\|ARI\\| vs the real modules ≤ 0.05"
+kind = "band"
+bound = "|ARI| ≤ 0.05"
+observed = "0, no modules"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "module-assignment"
+claim = "each of the 15,045 genes' module in the one-block network, the 4-block network and the permuted control; module sizes; hubs; powerEstimate; TOM sum"
+kind = "reported"
+observed = "identical on all three chips; TOM sum 8.887362192149486e+05 to all 16 printed digits"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "eigengenes-kwithin-bits"
+claim = "The floating-point values differ only in their last bits"
+kind = "reported"
+observed = "eigengenes ≤ 1.7e-15; 7,421 of 15,045 kWithin bit-identical, the rest ≤ 3.0e-15 relative"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "x86 vs Graviton4 eigengenes differ by at most 1.7e-15, kWithin by at most 3.0e-15 relative; Intel == AMD byte-identical (same bioconda build)"
+
+[[check]]
+id = "modules-reported"
+claim = "25 modules (1,698 genes down to 65); 1,984 genes grey"
+kind = "reported"
+observed = "25 modules; 1,984 grey"
+outcome = "reported"
+
+[[check]]
+id = "power-estimate"
+claim = "`pickSoftThreshold`'s `powerEstimate`"
+kind = "reported"
+observed = "14; signed R² 0.849 at power 12, 0.885 at 14"
+outcome = "reported"
+
+[[check]]
+id = "max-block-size-5000"
+claim = "The default `maxBlockSize = 5000` gives a different answer"
+kind = "reported"
+observed = "4 blocks, 39 modules instead of 25, ARI 0.50 against the one-block network"
+outcome = "reported"
+
+[[trap]]
+id = "wgcna-stats-cor-long-double-aarch64"
+scope = "platform"
+symptom = "stats::cor is 19-40x slower on Graviton4 than on x86 (200 rows: 174.5 s vs 9.0 / 4.3 s); a full 15k x 15k stats::cor took 6,579 s against 4 s for WGCNA::cor"
+blames = "the chip"
+cause = "R's cov.c accumulates every inner product in LDOUBLE; long double is 128-bit IEEE quad in software on aarch64 Linux, 80-bit x87 in hardware on x86"
+fix = "use WGCNA::cor (or crossprod of the scaled matrix) on arm64; never stats::cor on a whole expression matrix"
+cost = "a Graviton4 sizing run of 7,299 s, 90% of it a full-matrix stats::cor"

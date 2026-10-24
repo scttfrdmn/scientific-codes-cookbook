@@ -1,0 +1,122 @@
+# measurements/lith-vs-copy/record.toml -- copy vs lith mount, one bwa alignment, one box.
+# No $ is printed anywhere in the README, so no run carries usd_hr or a cost.
+schema = 1
+result_unit = "one bwa mem alignment of SRR062634 (HG00096, 24.1M read pairs) against the published GRCh38 index"
+
+[[dataset]]
+id = "s3://1000genomes/technical/reference/GRCh38_reference_genome (GRCh38_full_analysis_set_plus_decoy_hla BWA index + .alt)"
+tier = "roda"
+unpinned = "the lith route reads the public prefix in place; no sha256 is committed in this dir"
+note = "the copy route took the five BWA index files from the bucket's inputs/bwa-real/ and omitted the 476 KB .alt"
+
+[[dataset]]
+id = "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
+tier = "roda"
+unpinned = "read in place through lith (mount route) or copied from inputs/bwa-real/ (copy route); no sha256 committed"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+date = "2026-09-25"
+date_source = "git"
+wall_s = 811
+results = "results/copy-route.txt"
+note = "copy route (aws s3 cp to local disk): align 811 s, plus 38 s setup moving 8.84 GiB at 233 MB/s, 849 s total"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+date = "2026-09-25"
+date_source = "git"
+wall_s = 855
+results = "results/lith-route.txt"
+note = "lith FUSE mount of the public 1000genomes bucket: 3,368 bytes moved (index), 1 s index + 0 s mount, align 855 s, 856 s total"
+
+[[check]]
+id = "copy-route-records"
+claim = "copy route → no ALT awareness, 48,392,167 records"
+kind = "reported"
+observed = "48,392,167"
+outcome = "reported"
+
+[[check]]
+id = "mount-route-records"
+claim = "mount route → ALT-aware, 48,817,006 records"
+kind = "reported"
+observed = "48,817,006"
+outcome = "reported"
+
+[[check]]
+id = "alt-aware-records"
+claim = "a fresh ALT-aware run on the recipe's own path returned 48,817,006 — the identical count this mount produced, from a completely different data path"
+kind = "cross-code"
+bound = "identical count"
+observed = "48,817,006"
+outcome = "pass"
+
+[[check]]
+id = "mount-sees-prefix"
+claim = "The mount exposes the prefix as published: 13 entries"
+kind = "reported"
+observed = "13"
+outcome = "reported"
+
+[[cross_code]]
+with = "recipes/bwa-samtools"
+same_bytes = true
+metric = "SAM record count, ALT-aware, same reads and published index, copy-staged vs lith-mounted"
+tolerance_basis = "exact: same aligner, same inputs, so the count is an identity"
+check = "alt-aware-records"
+
+[[trap]]
+id = "lith-vs-copy-missing-alt"
+scope = "data"
+symptom = "`read 0 ALT contigs`; exit 0 and 424,839 fewer records (48,392,167 vs 48,817,006)"
+cause = "copying forced enumerating the prefix, and the copy skipped the 476 KB GRCh38_full_analysis_set_plus_decoy_hla.fa.alt, so bwa mem did no ALT-aware mapping"
+fix = "stage .alt with the index and assert `ALT contigs read > 0` (bwa-samtools now does: 3171)"
+cost = "a wrong exact identity (48,392,167) shipped in bwa-samtools until fixed"
+
+[[trap]]
+id = "lith-vs-copy-launch-no-docker-fuse"
+scope = "platform"
+symptom = "spawn launch --command runs as a non-root user, and an instance launched this way has neither docker nor fuse"
+cause = "the launch path does not install Docker or FUSE (the task-run path has Docker)"
+fix = "sudo dnf install -y docker fuse fuse3 && systemctl enable --now docker (~20 s)"
+cost = "a launch"
+
+[[trap]]
+id = "lith-vs-copy-launch-role-403"
+scope = "platform"
+symptom = "`403 Forbidden` on the first line of the command, while `spawn launch` had already printed `✅ Command execution started`; the instance then idled to TTL"
+cause = "a launch instance's role could not read our own S3 bucket"
+fix = "--iam-managed-policies arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+cost = "a launch, idled to TTL"
+refs = ["spawn#614"]
+
+[[trap]]
+id = "lith-vs-copy-fuse-private-mount"
+scope = "tool"
+symptom = "the container got `Permission denied` on the mount; one run aligned against an empty directory (`WARN /mnt/ref not mounted`)"
+cause = "a FUSE mount is private to the mounting user and the image runs as mambauser; backgrounding `lith mount` from a shell that then exits takes the mount down"
+fix = "lith `--allow-other` with `user_allow_other` uncommented in /etc/fuse.conf, and `--daemon`"
+cost = "a launch"
+
+[[trap]]
+id = "lith-vs-copy-push-every-phase"
+scope = "method"
+symptom = "a first attempt ran 38 minutes and uploaded nothing"
+cause = "it only wrote to S3 at the end; its route-A numbers died with the box"
+fix = "push results after every phase"
+cost = "38 minutes of a launch"
+
+[[upstream]]
+ref = "spawn#610"
+role = "workaround"
+note = "spawn launch rather than task run, because --instance-type pins the box"
+
+[[upstream]]
+ref = "spawn#614"
+role = "workaround"
+note = "launch role could not read our bucket; --iam-managed-policies"

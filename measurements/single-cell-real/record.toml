@@ -1,0 +1,176 @@
+# measurements/single-cell-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole 10x channel (10X_P5_13, 116,459,032 read pairs) from FASTQ to raw, knee and filtered matrices (2 tasks)"
+
+[[dataset]]
+id = "RODA s3://czb-tabula-muris-senis/10x/FASTQs/10X_P5_13/ (both lanes, R1+R2)"
+tier = "roda"
+pins = "pins-map.sha256"
+
+[[dataset]]
+id = "Ensembl release 116 Mus_musculus.GRCm39.cdna.all.fa.gz"
+tier = "versioned-release"
+pins = "pins-map.sha256"
+
+[[dataset]]
+id = "10XGenomics/supernova@b82c3d8e 737K-august-2016.txt (10x v2 permit list, 737,280 barcodes)"
+tier = "versioned-release"
+pins = "pins-quant.sha256"
+
+[[dataset]]
+id = "RODA tabula-muris-senis-full-metadata.csv (the published atlas cells)"
+tier = "roda"
+pins = "pins-quant.sha256"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "run"
+workers = 16
+wall_s = 115
+billed_s = 452
+usd_hr = 0.7181
+compute_usd = 0.0229
+billed_usd = 0.0902
+peak_gib = 3.81
+peak_kind = "rss"
+note = "tool wall 115 s = index 35 + map 65 + quant 15; billed over both tasks; alevin-fry 0.18.3; task-2 tmpfs peak 15.1 GiB"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-13"
+date_source = "run"
+workers = 16
+wall_s = 149
+billed_s = 455
+usd_hr = 0.8467
+compute_usd = 0.035
+billed_usd = 0.107
+peak_gib = 3.56
+peak_kind = "rss"
+note = "NOT the recipe's pin: bioconda piscem 0.23.0 + alevin-fry 0.9.0 (no biocontainers 0.18.3 image; digest not printed in the README, so image is left unset); 149 s = 39 + 79 + 31; the quant column does not compare"
+
+# --- checks: '## What held at scale, on both chips' (claim = identity: assertion; observed = README cell) ---
+[[check]]
+id = "input-fully-read"
+claim = "input fully read: piscem `num_reads` == FASTQ records (R1 == R2)"
+kind = "conservation"
+observed = "**116,459,032** == 116,459,032"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "records-cross-boundary"
+claim = "records cross the tool boundary: alevin-fry `observed` == piscem `num_mapped`"
+kind = "conservation"
+observed = "**86,550,564** == 86,550,564"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "collation-to-quant"
+claim = "collation → quant: records quantified == Σ featureDump `MappedReads` (raw, knee, filtered)"
+kind = "conservation"
+observed = "**81,682,721 / 72,049,675 / 71,318,584**, exact"
+outcome = "pass"
+
+[[check]]
+id = "read-funnel"
+claim = "the read funnel only narrows: mapped ≥ orientation-consistent ≥ raw ≥ filtered"
+kind = "identity"
+observed = "86.55 M ≥ 83.78 M ≥ 81.68 M ≥ 71.32 M"
+outcome = "pass"
+
+[[check]]
+id = "unmapped-file"
+claim = "piscem's unmapped file: header `1 1 3`, whole `(u32, u32)` records; mapped + unmapped ≤ reads"
+kind = "identity"
+observed = "86,550,564 + **29,906,218** ≤ 116,459,032 (809,126 barcodes)"
+outcome = { arm64 = "pass", x86_64 = "not-run" }   # README column says 'both chips'; results/x86_64/quant.txt (0.9.0) has no unmapped_bin lines
+
+[[check]]
+id = "unmapped-in-corrected"
+claim = "unmapped reads reach `CorrectedReads`: per cell, `CorrectedReads − MappedReads` ≥ unmapped reads on that exact barcode; Σ over cells ≤ the file's total"
+kind = "conservation"
+observed = "**0 failures** in 130,375 + 1,814 + 1,814 cells; Σ 28,439,087 / 26,735,274 / 26,442,212 ≤ 29,906,218"
+outcome = { arm64 = "pass", x86_64 = "not-run" }   # the x86 run predates the check; its CorrectedReads is labelled UNRELIABLE
+
+[[check]]
+id = "mapping-rate"
+claim = "`MappingRate` == `MappedReads / CorrectedReads` per cell (within 1e-6)"
+kind = "identity"
+observed = "**all cells**, all three runs"
+outcome = { arm64 = "pass", x86_64 = "not-run" }
+
+[[check]]
+id = "per-cell-totals"
+claim = "per-cell totals: every cell's matrix row sum == its `DeduplicatedReads`, and nnz == `NumGenesExpressed`"
+kind = "conservation"
+observed = "**0 mismatches** in 130,375 + 1,814 + 1,814 cells"
+outcome = "pass"
+
+[[check]]
+id = "matrix-total"
+claim = "matrix total: Σ matrix == Σ `DeduplicatedReads`"
+kind = "conservation"
+observed = "raw **11,111,743**, filtered **9,043,752**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "raw-to-filtered"
+claim = "raw → filtered: every (cell, gene, count) in the filtered matrix is the raw matrix's, and every knee cell is in raw"
+kind = "identity"
+observed = "**identical**, 1,814 of 1,814"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "across-repin"
+claim = "across the repin: sha256 of the sorted (cell, gene, count) triples"
+kind = "identity"
+observed = "raw and filtered **identical** to 0.9.0's on both chips; knee differs (below)"
+outcome = "pass"
+across_chips = "identical"
+
+# --- observed, not asserted ---
+[[check]]
+id = "knee-moved-with-repin"
+claim = "The knee matrix moved with the repin; raw and filtered did not"
+kind = "reported"
+observed = "72,049,675 records against 0.9.0's 72,054,428; 9,134,357 UMIs against 9,136,033"
+outcome = "reported"
+
+[[check]]
+id = "published-cells"
+claim = "All 1,078 published cells are among the 1,814 the knee kept; per-cell UMI totals vs the atlas's n_counts"
+kind = "reported"
+observed = "Spearman 0.927"
+outcome = "reported"
+
+[[check]]
+id = "filtered-umi-share"
+claim = "The filtered cells hold the raw matrix's UMIs"
+kind = "reported"
+observed = "81.4%"
+outcome = "reported"
+
+[[check]]
+id = "rad-bytes"
+claim = "The RAD files differ in bytes across chips (0.9.0-era runs), but their content is the same"
+kind = "reported"
+observed = "`map.rad` is 6,273,069,410 bytes on both chips"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "map.rad 6,273,069,410 bytes on both chips, record order follows thread scheduling; the matrices still hashed identically"
+
+[[trap]]
+id = "single-cell-alevin-fry-090-unmapped-format"
+scope = "tool"
+symptom = "raw `CorrectedReads` was 106,265,597 on one Graviton4 run and 81,682,721 (no unmapped reads at all) on the next; the matrix was unaffected"
+cause = "alevin-fry 0.9.0 reads piscem's unmapped_bc_count.bin as headerless (u64 barcode, u32 count) pairs; piscem 0.23.0 writes a 3-byte header then (u32, u32) records, a layout alevin-fry reads from 0.12.0 on"
+fix = "alevin-fry 0.18.3, and decode piscem's file independently (quant.sh) to check CorrectedReads and MappingRate"

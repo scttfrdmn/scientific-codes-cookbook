@@ -1,0 +1,198 @@
+# measurements/rebound-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one 100-Myr nominal + shadow WHFast pair plus the DE440-span IAS15 checks"
+
+[[dataset]]
+id = "JPL DE440: de440.bsp + gm_de440.tpc from NAIF generic_kernels/{spk/planets,pck}/ (Park et al. 2021, doi:10.3847/1538-3881/abd414)"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "NAIF publishes no checksums; the sha256 recorded by 00-fetch on AWS is the pin, re-checked in-task (results/<chip>/staged.sha256)"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 2
+wall_s = 14535
+billed_s = 14687
+usd_hr = 0.1595
+compute_usd = 0.6441
+billed_usd = 0.6508
+note = "two single-threaded REBOUND processes; peak RSS printed as 51 MB (ru_maxrss of real.py), left out because the unit is MB not GiB/MiB"
+
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 2
+wall_s = 9053
+billed_s = 9170
+usd_hr = 0.1874
+compute_usd = 0.4713
+billed_usd = 0.4774
+note = "peak RSS printed as 54 MB"
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 2
+wall_s = 8700
+billed_s = 8801
+usd_hr = 0.2155
+compute_usd = 0.5209
+billed_usd = 0.5269
+note = "peak RSS printed as 54 MB"
+
+# --- checks: "What held at scale" (observed identical on all three chips) --------------
+[[check]]
+id = "inputs-pinned"
+claim = "staged `de440.bsp`, `gm_de440.tpc` match their pins; ten bodies; DE440 covers every checkpoint"
+kind = "pin"
+observed = "sha256 OK; N = 10; J2000 −450 … +650 yr"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fp-contract-off"
+claim = "`reb_check_fp_contract() == 0`"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ias15-conservation"
+claim = "IAS15 \\|ΔE/E\\| and \\|ΔL\\|/\\|L\\| < ε√N, forward 600 yr and back 400 yr"
+kind = "conservation"
+bound = "ε√N"
+observed = "3.1e-15 / 3.8e-16 < 7.0e-14 (N = 98,161); 3.6e-15 / 3.8e-16 < 5.7e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "de440-1yr"
+claim = "±1 yr with the 1PN Sun, every body but the EMB within 1e-8 of its distance from DE440"
+kind = "band"
+bound = "1e-8"
+observed = "worst 1.1e-9 (Mercury, 74 m)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gr-matters"
+claim = "Newtonian Mercury error > 10× the 1PN error, at +600 and −400 yr"
+kind = "reference"
+bound = "> 10×"
+observed = "45,772 vs 9.6 km (4,790×); 28,527 vs 49 km (579×)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "perihelion-advance"
+claim = "Mercury's 1PN − Newtonian perihelion advance == 6πGM/(c²a(1−e²)) per orbit, ±1%"
+kind = "reference"
+bound = "±1%"
+observed = "42.958 / 42.996 vs 42.981″ per century"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "whfast-order"
+claim = "plain WHFast: halving dt (4 → 2 → 1 d) cuts max \\|ΔE/E\\| by 4 ± 10%, over 1,000 yr"
+kind = "convergence-rate"
+bound = "4 ± 10%"
+observed = "×4.040, ×4.026"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "whfast-angular-momentum"
+claim = "WHFast \\|ΔL\\|/\\|L\\| < 10ε√N at every dt"
+kind = "conservation"
+bound = "10ε√N"
+observed = "1.9e-14 … 8.3e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "correctors"
+claim = "17th-order correctors beat plain WHFast at dt = 4 d by > 100×; \\|ΔE/E\\| < 1e-9"
+kind = "band"
+bound = "> 100×; < 1e-9"
+observed = "7.9e-13 vs 8.2e-10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ias15-determinism"
+claim = "two IAS15 reruns to +100 yr give identical bytes"
+kind = "identity"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "long-runs"
+claim = "both 100-Myr runs: all 201 checkpoints; \\|ΔE/E\\| < 1e-9; \\|ΔL\\|/\\|L\\| < 10ε√N; every orbit bound"
+kind = "conservation"
+bound = "< 1e-9; < 10ε√N"
+observed = "ΔE 1.46e-11 / 9.97e-12; ΔL 1.02e-11 / 4.1e-12 < 2.1e-10; max e 0.275 (Pluto)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "shadow-offset"
+claim = "the shadow starts 1 m from the nominal run"
+kind = "identity"
+observed = "1.000002 m"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ------------------------------------------------------------
+[[check]]
+id = "trajectory-bit-identical"
+claim = "every one of the 201 checkpoints of both 100-Myr WHFast runs, positions and velocities, across chips"
+kind = "reported"
+observed = "bit-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "de440-residuals"
+claim = "DE440 residuals (heliocentric, km, the 1PN model), Mercury at +1 / +100 / +600 yr"
+kind = "reported"
+observed = "0.074 / 6.3 / 9.6 km; EMB 117 / 11,700 / 70,100 km"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "shadow-efold"
+claim = "the shadow's Mercury |Δe| envelope e-folding time"
+kind = "reported"
+observed = "8.3 Myr over 10–100 Myr, 6.9 Myr over 20–80 Myr"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:JPL-DE440"
+same_bytes = true
+metric = "heliocentric distance from DE440, relative, at ±1 yr with the 1PN Sun"
+tolerance_basis = "a band set from the first Graviton4 run; the EMB is reported, not asserted, because the model puts the Earth and Moon at one point"
+check = "de440-1yr"
+
+[[trap]]
+id = "rebound-position-separation-is-shear"
+scope = "method"
+symptom = "longcheck.py's position-based fit gives a 26 Myr e-folding time"
+cause = "the 1 m shift changes Mercury's mean motion, so position separates by shear, not chaos"
+fix = "measure divergence on an unsheared element (eccentricity): 8.3 Myr over 10–100 Myr"

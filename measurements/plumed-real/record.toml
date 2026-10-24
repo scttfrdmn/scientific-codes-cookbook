@@ -1,0 +1,227 @@
+# measurements/plumed-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole cohort: 16,000 RODA pentapeptide trajectories through PLUMED, cpptraj and every check"
+
+[[dataset]]
+id = "RODA Conformational Space of Short Peptides s3://toyokounqpeptides/5pep/, Ala-X-Y-Z-Ala, replicas R2 and R3 (16,000 untouched .tar.bz2 objects)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "bundle (cohort.tar) and its per-object manifest pinned by sha256; each object's MD5 equals RODA's ETag. RODA lists the dataset as not updated, so the bucket bundle is the durable copy"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/graviton4/"
+host = "results/graviton4/host.txt"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 891
+billed_s = 1085
+usd_hr = 0.6381
+compute_usd = 0.158
+billed_usd = 0.192
+peak_gib = 1.24
+peak_kind = "cgroup-memory.peak"
+note = "peak is the container cgroup; each worker peaks at 0.22 GiB (ru_maxrss)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/intel/"
+host = "results/intel/host.txt"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 912
+billed_s = 983
+usd_hr = 0.7497
+compute_usd = 0.19
+billed_usd = 0.205
+peak_gib = 6.80
+peak_kind = "cgroup-memory.peak"
+note = "container cgroup peak also counts the env twin installed at start; each worker 0.31 GiB (ru_maxrss)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 879
+billed_s = 937
+usd_hr = 0.8622
+compute_usd = 0.211
+billed_usd = 0.224
+peak_gib = 6.80
+peak_kind = "cgroup-memory.peak"
+note = "container cgroup peak also counts the env twin; each worker 0.31 GiB (ru_maxrss)"
+
+# --- the first pass, without --no-mpi: byte-identical COLVARs, not priced ----------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/with-mpi/graviton4/"
+host = "results/with-mpi/graviton4/host.txt"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 1982
+note = "first pass without plumed --no-mpi: MPI_Init holds each serial driver call 1.06 s"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "diagnostic"
+results = "results/with-mpi/intel/"
+host = "results/with-mpi/intel/host.txt"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 2018
+note = "first pass without plumed --no-mpi"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "diagnostic"
+results = "results/with-mpi/amd/"
+host = "results/with-mpi/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1956
+note = "first pass without plumed --no-mpi"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "frames-conserved"
+claim = "frames conserved"
+kind = "conservation"
+bound = "each trajectory is 200 frames at `ntwx = 5000` of `nstlim = 10^6`"
+observed = "3,200,000 NetCDF frames = 3,200,000 COLVAR rows = 3,200,000 sander energy records past step 0, at steps 5000·k exactly"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-runs-completed"
+claim = "the published runs completed"
+kind = "sentinel"
+bound = "sander writes `Final Performance Info` only at a clean end"
+observed = "16,000 / 16,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "restart-is-last-frame"
+claim = "the trajectory is the run that ended"
+kind = "identity"
+observed = "`float32(restart) == last frame`, bit for bit, 16,000 / 16,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dcd-lossless"
+claim = "PLUMED read the published bytes"
+kind = "identity"
+observed = "DCD == NetCDF exactly, 16,000 / 16,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "plumed-eq-numpy"
+claim = "PLUMED == an independent evaluation"
+kind = "cross-code"
+bound = "<= 1e-09 (rad, nm)"
+observed = "max 5.0e-11 rad / nm over 174 M values: the 1e-10 print unit"
+outcome = "pass"
+
+[[check]]
+id = "plumed-eq-cpptraj"
+claim = "PLUMED == cpptraj"
+kind = "cross-code"
+bound = "1e-9 plus 32ε/|sin φ|, capped at √(64ε)"
+observed = "5.0e-11 wherever |sin φ| ≥ 0.01; everywhere within its acos error"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "normalised max (Δ − 1e-10)·|sin φ| is 1.4e-16 to 2.0e-16 on every chip; largest raw differences 4.5e-9 (Graviton4) vs 6.9e-9 (x86), all at φ ≈ 0 or ±π"
+
+[[check]]
+id = "shake-fixed-point"
+claim = "every X–H bond is the force field's r0"
+kind = "identity"
+bound = "1.27e-5 (tol + float32 storage)"
+observed = "max |r − r0|/r0 6.72e-6 over 113,760,000 constraint-frames"
+outcome = "pass"
+
+[[check]]
+id = "chirality-conserved"
+claim = "no residue changes handedness"
+kind = "identity"
+observed = "15,520,000 chirality torsions, all negative, min |value| 1.766 rad"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "deterministic-rerun"
+claim = "the computation is deterministic"
+kind = "identity"
+observed = "50 / 50 COLVARs byte-identical on a second pass"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ------------------------------------------------------------
+[[check]]
+id = "colvar-xchip"
+claim = "COLVARs across chips"
+kind = "reported"
+observed = "Intel vs Graviton4: 15,825 of 16,000 byte-identical; 175 differ by at most 1.00e-10"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "175 of 16,000 COLVARs differ Intel/AMD vs Graviton4, max 1.00e-10 (one unit of the %.10f format); Intel and AMD byte-identical for all 16,000"
+
+[[check]]
+id = "no-mpi-startup"
+claim = "plumed --no-mpi drops MPI_Init from a serial driver call (results/startup/startup.txt)"
+kind = "reported"
+observed = "1.468 s → 0.411 s per run, identical COLVAR"
+outcome = "reported"
+
+[[check]]
+id = "cis-omega"
+claim = "cis ω-frames (|ω| < 90°)"
+kind = "reported"
+observed = "191,096 of 12,800,000 (1.5%), 72,753 of them X-Pro"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "a property of the published sampled trajectories, not of the chip; matched on all three anyway"
+
+[[check]]
+id = "replicas-duplicated"
+claim = "R2 and R3 byte-identical trajectories (every .out records ig = 71277)"
+kind = "reported"
+observed = "5,596 of the 8,000 sequences; 10,404 distinct trajectories"
+outcome = "reported"
+
+[[trap]]
+id = "plumed-mpi-init-serial-driver"
+scope = "image"
+symptom = "a serial plumed driver spends 1.06 s of wall per call that is not CPU (1.468 s wall vs 0.467 s cpu), so it hides as idle cores"
+cause = "conda-forge's PLUMED is the mpi_openmpi build, and MPI_Init alone holds each call"
+fix = "plumed --no-mpi driver"
+cost = "the first pass took 1982 / 2018 / 1956 s, about twice the job"
+
+[[trap]]
+id = "plumed-cpptraj-acos-torsion"
+scope = "method"
+symptom = "a flat 1e-9 PLUMED-vs-cpptraj bound fails on exactly one trajectory, at 4.49e-9, where φ = −3.0e-8 rad (a cis peptide bond)"
+blames = "a disagreement between PLUMED and cpptraj"
+cause = "cpptraj's Torsion() (TorsionRoutines.cpp) returns acos(cos φ), whose forward error ~kε/|sin φ| grows without bound at φ → 0 or π; PLUMED and numpy use atan2"
+fix = "assert 1e-9 plus 32ε/|sin φ|, capped at √(64ε), and report the well-conditioned maximum separately"
+
+[[trap]]
+id = "plumed-roda-replicas-not-independent"
+scope = "data"
+symptom = "every one of the 16,000 .out files records the same Langevin seed ig = 71277; for 5,596 of 8,000 sequences R2 and R3 are byte-identical"
+cause = "the published replicas share a seed, so a replica label is maybe the same run"
+fix = "deduplicate by trajectory hash before counting samples"

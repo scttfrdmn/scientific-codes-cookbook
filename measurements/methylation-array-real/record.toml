@@ -1,0 +1,220 @@
+# measurements/methylation-array-real/record.toml -- drafted by the #118 extraction, then authored.
+# Graviton4 only: Intel and AMD are a recorded gap (bioconda's x86 preprocessCore, below).
+schema = 1
+result_unit = "the whole GSE42861 cohort (689 arrays) through one task; the cohort needs both the minfi and the SeSAMe task (README total: 0.473 compute / 0.563 billed)"
+
+[[dataset]]
+id = "GEO GSE42861, GSE42861_RAW.tar (2015-11-04), 1,378 IDATs"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "per-IDAT sha256 in idat.sha256 (itself pinned in pins.sha256), checked in every task"
+
+[[dataset]]
+id = "GSE42861 annotation, derived pheno.tsv from the series-matrix header"
+tier = "built"
+pins = "pins.sha256"
+note = "GEO regenerates the series matrix, so its bytes are not a pin; the derived pheno.tsv is"
+
+[[dataset]]
+id = "SeSAMe ExperimentHub cache: the recipe's four blobs plus probeIDSignature (EH8553)"
+tier = "built"
+unpinned = "built on AWS by sesame-cache.sh (pinned), and task 2 checks all five blob sha256s, but no blob manifest is committed in this dir; hub_index.rds's pin differs from the recipe's"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/minfi/"
+host = "results/arm64/minfi/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 1
+wall_s = 1216
+billed_s = 1427
+usd_hr = 0.9426
+compute_usd = 0.318
+billed_usd = 0.374
+peak_gib = 51.9
+peak_kind = "rss"
+note = "minfi task, single-threaded; read.metharray 398 s, preprocessFunnorm 726 s, dmpFinder 27 s"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/sesame/"
+host = "results/arm64/sesame/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 773
+billed_s = 948
+usd_hr = 0.7181
+compute_usd = 0.154
+billed_usd = 0.189
+peak_gib = 30.9
+peak_kind = "rss"
+note = "SeSAMe task; openSesame under 16 MulticoreParam workers (288 s), inferSex serial (367 s)"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-18"
+date_source = "git"
+note = "first minfi run on a 64 GiB r8g.2xlarge, killed (exit 137) at 54 GiB as funnorm started; not timed or priced"
+
+[[run]]
+instance = "c8i.large"
+purpose = "diagnostic"
+results = "results/x86_64/tls-probe.txt"
+date = "2026-10-21"
+date_source = "run"
+note = "tls-probe, biocontainers image: normalize.quantiles fails with pthread_create() is 22"
+
+[[run]]
+instance = "c8g.large"
+purpose = "diagnostic"
+results = "results/arm64/tls-probe.txt"
+date = "2026-10-21"
+date_source = "run"
+note = "tls-probe, aarchbio image: normalize.quantiles ok"
+
+# --- checks: "What held at scale, on Graviton4"; every row asserted in-task ------------
+[[check]]
+id = "platform-counts"
+claim = "arrays / probes / identity probes"
+kind = "identity"
+bound = "platform, exact"
+observed = "689 / **485,512** / **65**"
+outcome = "pass"
+
+[[check]]
+id = "betas-in-range"
+claim = "raw and funnorm betas in [0, 1]"
+kind = "identity"
+bound = "[0, 1]"
+observed = "[0, 1] and [0, 0.99751]"
+outcome = "pass"
+
+[[check]]
+id = "sex-minfi-sesame"
+claim = "**minfi `getSex` == SeSAMe `inferSex`**"
+kind = "cross-code"
+bound = "cross-code, categorical"
+observed = "**689 / 689**"
+outcome = "pass"
+
+[[check]]
+id = "sex-annotation"
+claim = "annotation mismatches that SeSAMe confirms"
+kind = "reference"
+bound = "constructed truth"
+observed = "**0 mismatches**: minfi, SeSAMe and the annotation agree on all 689"
+outcome = "pass"
+
+[[check]]
+id = "self-match-5000"
+claim = "**each SeSAMe sample's best Spearman match among minfi's 689 is itself** (top 5,000 probes by minfi variance)"
+kind = "cross-code"
+bound = "cross-code matching"
+observed = "**689 / 689**; 689 correct of 474,721 ordered pairs"
+outcome = "pass"
+
+[[check]]
+id = "dmp-f-t2"
+claim = "`dmpFinder` F == pooled two-sample t², over every finite probe"
+kind = "identity"
+bound = "closed form"
+observed = "max diff **3.0e-12** over 484,657 probes"
+outcome = "pass"
+
+[[check]]
+id = "dmp-p-pf"
+claim = "`dmpFinder` p == `pf(F, 1, 687)`"
+kind = "identity"
+bound = "closed form"
+observed = "exact (0)"
+outcome = "pass"
+
+[[check]]
+id = "spearman-rank-identity"
+claim = "Spearman by rank cross-product == `cor(method = \"spearman\")`"
+kind = "identity"
+bound = "identity (the check's own tool)"
+observed = "6.7e-16"
+outcome = "pass"
+
+# --- the identity-matching ladder: only the 5,000-probe rung is asserted ----------------
+[[check]]
+id = "self-match-50000"
+claim = "probes (top by minfi variance) 50,000: matched"
+kind = "reported"
+observed = "689/689; min diagonal 0.97087; margin 0.01922 / 0.03986"
+outcome = "reported"
+
+[[check]]
+id = "self-match-20000"
+claim = "probes (top by minfi variance) 20,000: matched"
+kind = "reported"
+observed = "689/689; min diagonal 0.95196; margin 0.03187 / 0.06667"
+outcome = "reported"
+
+[[check]]
+id = "self-match-1000"
+claim = "probes (top by minfi variance) 1,000: matched"
+kind = "reported"
+observed = "**688/689**; min diagonal 0.71223; margin −0.00100 / 0.19210"
+outcome = "reported"
+
+[[check]]
+id = "snp-probes-no-duplicates"
+claim = "The 65 SNP probes find no duplicate donors."
+kind = "reported"
+observed = "closest pair 2.045 apart"
+outcome = "reported"
+
+[[check]]
+id = "dmp-count"
+claim = "The DMP scan finds 303,507 probes at q < 0.05 and 76,431 at Bonferroni 0.05"
+kind = "reported"
+observed = "303,507 / 76,431 (top: cg26244575, p = 4.2e-65)"
+outcome = "reported"
+
+[[check]]
+id = "repeat-sesame"
+claim = "A repeat SeSAMe run reproduced the beta matrix"
+kind = "reported"
+observed = "sum 144114611.5627523661 over 282,910,849 values"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:GEO-GSE42861-sex-annotation"
+same_bytes = true
+metric = "sex call per sample, minfi getSex and SeSAMe inferSex vs the depositors' annotation"
+tolerance_basis = "categorical: exact agreement"
+check = "sex-annotation"
+
+[[trap]]
+id = "methylation-array-preprocesscore-x86-pthread"
+scope = "image"
+symptom = "ERROR; return code from pthread_create() is 22"
+cause = "preprocessCore 1.72.0 creates threads with a fixed stack of PTHREAD_STACK_MIN + page size (qnorm.c:530); on x86 that is 20,480 bytes against OpenBLAS's 143,360 bytes of static TLS, so glibc refuses with EINVAL; no environment variable changes it (R_THREADS, OPENBLAS_NUM_THREADS, GLIBC_TUNABLES all still fail)"
+fix = "a build with --configure-args=\"--disable-threading\" (bioconda-recipes#31420); until bioconda publishes one, Intel and AMD stay a recorded gap"
+refs = ["bioconda-recipes#31420"]
+
+[[trap]]
+id = "methylation-array-minfi-oom-r8g-2xlarge"
+scope = "tool"
+symptom = "killed (exit 137) at 54 GiB as funnorm started"
+cause = "minfi still held the raw intensities when preprocessFunnorm began; with those freed the peak is 51.9 GiB, plus 8 GiB of staging tmpfs"
+fix = "r8g.4xlarge is the smallest r8g that fits; for a bigger cohort scale the RAM, not the cores"
+
+[[trap]]
+id = "methylation-array-infersex-multicore"
+scope = "tool"
+symptom = "Running inferSex under MulticoreParam lost a worker's result"
+cause = "not established in the README"
+fix = "run inferSex serially"
+
+[[upstream]]
+ref = "bioconda-recipes#31420"
+role = "cited"
+note = "carries the --disable-threading workaround; the x86 gap waits on bioconda publishing a working x86 preprocessCore"

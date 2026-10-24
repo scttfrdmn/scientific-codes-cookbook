@@ -1,0 +1,227 @@
+# measurements/viennarna-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole-set fold of every Rfam 15.1 seed sequence (109,390 RNAs) by RNAfold -p -j16"
+
+[[dataset]]
+id = "EBI /pub/databases/Rfam/15.1/Rfam.seed.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "Rfam publishes no checksum; pins.sha256 holds ours (also real.sh and real.py), checked in-task"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 1743
+usd_hr = 0.6381
+compute_usd = 0.309
+peak_gib = 3.81
+peak_kind = "rss"
+note = "wall = mean of two whole-set folds (1743.2, 1741.8 s); README billed $/result 0.320 = wall + this chip's overhead (range 48-61 s across chips, per-chip value not printed), so billed_usd is left out; whole task window 3,748 s"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 2935
+usd_hr = 0.7497
+compute_usd = 0.611
+peak_gib = 3.98
+peak_kind = "rss"
+note = "README billed $/result 0.621 left out: its overhead seconds are not printed per chip; whole task window 6,195 s"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 1731
+usd_hr = 0.8622
+compute_usd = 0.415
+peak_gib = 3.85
+peak_kind = "rss"
+note = "wall = mean of 1,912 s and 1,551 s on the same box (19% spread); README billed $/result 0.426 left out, overhead not printed per chip; whole task window 3,679 s"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "families"
+claim = "families converted"
+kind = "reference"
+bound = "the Rfam 15.1 README says 4,227"
+observed = "4,227"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "records-in-out"
+claim = "records out == sequences in, same order and sequence"
+kind = "conservation"
+observed = "109,390"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "structure-valid"
+claim = "every MFE and centroid structure is balanced, spans its sequence, and has only canonical pairs and hairpins of ≥ 3"
+kind = "identity"
+observed = "0 bad"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "eval-energy"
+claim = "`eval(MFE structure)` == printed MFE, `eval(centroid)` == printed centroid energy"
+kind = "identity"
+observed = "109,390 / 109,390"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ensemble-le-mfe"
+claim = "G_ensemble ≤ MFE"
+kind = "identity"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mfe-frequency"
+claim = "printed MFE frequency == exp(−(E−G)/kT), to the printed precision"
+kind = "identity"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nothing-beats-mfe"
+claim = "no structure in the MFE search space beats the MFE: Rfam's curated structure mapped onto each sequence, and the centroid"
+kind = "identity"
+observed = "0 below, over 105,440 Rfam and 106,712 centroid structures"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "two-folds"
+claim = "two `-j16` folds of the whole set"
+kind = "identity"
+observed = "byte-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "j1-eq-j16"
+claim = "first 5,000 records at `-j1` == at `-j16`"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "enumeration-count"
+claim = "exhaustive enumeration (`subopt`) of 1,287 sequences ≤ 30 nt: every structure exactly once"
+kind = "cross-code"
+bound = "count == an independent counting recursion"
+observed = "620,147,117 structures, 0 mismatches"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "enumeration-min"
+claim = "lowest enumerated energy and its structure == MFE"
+kind = "identity"
+observed = "1,287 / 1,287"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mccaskill-g"
+claim = "McCaskill G == −kT ln Σ exp(−E/kT) over the enumeration, `pf_smooth=0`"
+kind = "identity"
+bound = "1e-9"
+observed = "max 2.1e-12 kcal/mol"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "the ~1e-13 residuals differ in the last bits on 302 of 1,287 sequences between aarch.bio's arm64 build and bioconda's x86 build; Intel == AMD exactly; all below 3.2e-12"
+
+[[check]]
+id = "mccaskill-bpp"
+claim = "McCaskill base-pair probabilities == enumerated"
+kind = "identity"
+bound = "1e-9"
+observed = "max 3.1e-12"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cli-eq-library"
+claim = "RNAfold's printed G == the library's, to its 2 decimals"
+kind = "identity"
+observed = "max 0.0050"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported ---------------------------------------------------------------------------
+[[check]]
+id = "fold-out-cross-chip"
+claim = "`fold.out` is one file on all three chips, MFE and ensemble lines alike"
+kind = "reported"
+observed = "656,341 lines, sha256 c978404975952937…"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "rfam-agreement-mfe"
+claim = "Agreement with Rfam's curated structure: MFE sensitivity / PPV"
+kind = "reported"
+observed = "0.6880 / 0.4725"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "rfam-agreement-centroid"
+claim = "Agreement with Rfam's curated structure: centroid sensitivity / PPV"
+kind = "reported"
+observed = "0.6753 / 0.5293"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "pf-smooth-default"
+claim = "RNAfold's default (pf_smooth on) G vs the enumerated Boltzmann sum"
+kind = "reported"
+observed = "differs on 98 of 1,287 sequences, by up to −0.0163 kcal/mol"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "viennarna-pf-smooth-default"
+scope = "tool"
+symptom = "RNAfold's G differs from the Boltzmann sum over its own energies by up to −0.0163 kcal/mol (98 of 1,287 sequences)"
+cause = "`pf_smooth` is on by default, and RNAfold has no CLI flag to turn it off"
+fix = "set `md.pf_smooth = 0` in the Python API for exact Boltzmann statistics (agrees to 2e-12)"
+
+[[trap]]
+id = "viennarna-pf-overflow-exit-0"
+scope = "tool"
+symptom = "` [100000.00]` with an all-dot centroid and `frequency ... inf`, exit 0; only `[WARNING] overflow while computing partition function` on stderr"
+cause = "under `-j16` the overflow depends on what else is being folded at the same time, not on the sequence (RF02462|CP003008.1/2390583-2392406 is finite alone and in six later passes)"
+fix = "grep stderr for `overflow` after any `-p -j` batch; the task flags any non-numeric record and refolds it at `-j1`"
+cost = "one sizing-probe pass in seven"
+
+[[trap]]
+id = "viennarna-maxloop-centroid-below-mfe"
+scope = "method"
+symptom = "8 centroids have energy below the MFE"
+cause = "the MFE is a minimum over interior loops of ≤ 30 nt (ViennaRNA's MAXLOOP), not over all structures; every such centroid has a larger interior loop"
+fix = "assert 'nothing beats the MFE' only inside the MFE's search space"

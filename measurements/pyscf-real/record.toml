@@ -1,0 +1,215 @@
+# measurements/pyscf-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole stratum: all 783 characterized QM9 molecules with at most six heavy atoms, every check passed"
+
+[[dataset]]
+id = "QM9, figshare collection 10.6084/m9.figshare.c.978904 (v5): dsgdb9nsd.xyz.tar.bz2, uncharacterized.txt, atomref.txt, validation.txt, readme.txt"
+tier = "durable-id"
+unpinned = "qm9.sha256 sits beside the files in the bucket, not committed here; 00-fetch checks each against figshare's published md5 and every run re-checks the two it reads; the README prints only truncated hashes"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/pyscf/"
+host = "results/arm64/pyscf/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 3280
+billed_s = 3432
+usd_hr = 0.7181
+compute_usd = 0.654
+billed_usd = 0.685
+peak_gib = 2.83
+peak_kind = "rss"
+note = "peak is the largest single worker (ru_maxrss); cgroup memory.peak, counting page cache, was 41.8-44.4 GiB"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/pyscf/"
+host = "results/x86_64/pyscf/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 3461
+billed_s = 3527
+usd_hr = 0.8467
+compute_usd = 0.814
+billed_usd = 0.83
+peak_gib = 2.83
+peak_kind = "rss"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/pyscf/"
+host = "results/amd/pyscf/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1830
+billed_s = 1888
+usd_hr = 0.9738
+compute_usd = 0.495
+billed_usd = 0.511
+peak_gib = 2.83
+peak_kind = "rss"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049"
+results = "results/arm64/psi4/"
+host = "results/arm64/psi4/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1818
+billed_s = 1970
+usd_hr = 0.9426
+compute_usd = 0.476
+billed_usd = 0.516
+peak_gib = 2.33
+peak_kind = "rss"
+note = "Psi4 cross-check task (the psi4 recipe's dft image), 128 GiB for conventional MP2/CC scratch in the half-RAM /tmp; Graviton4 only, Psi4's x86 build does not import"
+
+# --- checks: "What held at scale, on all three chips"; observed = worst chip ------------
+[[check]]
+id = "read-release"
+claim = "read the whole release"
+kind = "identity"
+bound = "133,885 records, 3,054 uncharacterized"
+observed = "as bound"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scf-converges"
+claim = "every SCF converges: B3LYP, RHF"
+kind = "sentinel"
+bound = "783 of 783"
+observed = "783, 783"
+outcome = "pass"
+
+[[check]]
+id = "ccsd-converges"
+claim = "every CCSD converges"
+kind = "sentinel"
+bound = "175 of 175"
+observed = "175"
+outcome = "pass"
+
+[[check]]
+id = "qm9-atomrefs"
+claim = "**QM9 atomic references, UB3LYP (H, C, N, O, F)**"
+kind = "reference"
+bound = "≤ 1e-4 Ha"
+observed = "1.6e-6 (Graviton4 1.2e-6)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "open-shell C, O, F land on a slightly different symmetry-broken UKS solution per chip: O spans 6.1e-7 Ha (−75.0645780 on Graviton4, −75.0645774 on AMD); H and N bit-identical"
+
+[[check]]
+id = "b3lyp-energy"
+claim = "**B3LYP energy == QM9 U0 − ZPVE, every molecule**"
+kind = "reference"
+bound = "≤ 1e-4 Ha"
+observed = "max 5.14e-5, median 5.1e-6"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "B3LYP against Graviton4: Intel within 2.05e-12 Ha and AMD within 2.39e-12 (54 and 37 of 783 bit-identical)"
+
+[[check]]
+id = "b3lyp-homo-lumo"
+claim = "B3LYP HOMO, LUMO == QM9 (printed to 1e-4)"
+kind = "reference"
+bound = "≤ 1e-4 Ha"
+observed = "5.82e-5, 6.67e-5"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "Intel's HOMO and LUMO differ from both other chips by up to 1.65e-7 Ha; AMD agrees with Graviton4 to 2.2e-13"
+
+[[check]]
+id = "b3lyp-dipole"
+claim = "B3LYP dipole == QM9"
+kind = "reference"
+bound = "≤ 1e-3 D"
+observed = "4.11e-4"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "Intel's dipoles differ by 4.6e-7 D (a different SCF path inside the orbital-gradient tolerance)"
+
+[[check]]
+id = "library-basis-control"
+claim = "**control: PySCF's library 6-31G(2df,p) misses QM9**"
+kind = "reference"
+bound = "> 1e-4 Ha on every one of 31"
+observed = "least 1.49e-3, median 4.12e-3"
+outcome = "pass"
+
+[[check]]
+id = "rhf-rotation-invariance"
+claim = "RHF invariant under a random rotation + translation (31 molecules)"
+kind = "invariance"
+bound = "≤ 1e-8 Ha"
+observed = "6.9e-12"
+outcome = "pass"
+
+[[check]]
+id = "psi4-rhf"
+claim = "**PySCF == Psi4, RHF** (783)"
+kind = "cross-code"
+bound = "≤ 1e-8 Ha"
+observed = "2.78e-10, median 1.1e-10"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "RHF within 1.15e-11 of Graviton4; Intel and AMD bit-identical (783 of 783); every chip's PySCF agrees with Graviton4's Psi4 to the same 2.78e-10"
+
+[[check]]
+id = "psi4-mp2"
+claim = "**PySCF == Psi4, MP2 correlation** (783)"
+kind = "cross-code"
+bound = "≤ 1e-7 Ha"
+observed = "5.00e-9"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "MP2 within 9.4e-11 of Graviton4; Intel and AMD bit-identical"
+
+[[check]]
+id = "psi4-ccsd-t"
+claim = "**PySCF == Psi4, CCSD and (T) correlation** (175)"
+kind = "cross-code"
+bound = "≤ 1e-7 Ha"
+observed = "3.24e-9, 1.24e-9"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "CCSD within 1.13e-9 and (T) within 9.5e-11 of Graviton4 (the CCSD spread is its amplitude convergence threshold)"
+
+[[cross_code]]
+with = "recipes/psi4"
+same_bytes = true
+metric = "RHF, MP2, CCSD and (T) energies, |PySCF − Psi4| in Ha, same geometries, exact integrals, same frozen core"
+tolerance_basis = "convergence: RHF to 1e-11 and variational, so second order, bound 1e-8; correlation first order in residual orbital/amplitude errors, bound 1e-7"
+check = "psi4-rhf"
+
+[[cross_code]]
+with = "published:QM9-figshare-10.6084/m9.figshare.c.978904"
+same_bytes = true
+metric = "B3LYP/6-31G(2df,p) energy vs QM9 U0 − ZPVE, every molecule"
+tolerance_basis = "quadrature: PySCF's (75,302) grid moves the energy by up to 2.1e-5 Ha against (150,974), plus Gaussian's own grid error and QM9's 1e-6 print rounding; bound sits below the smallest library-basis error (3.3e-4, NH3)"
+check = "b3lyp-energy"
+
+[[trap]]
+id = "pyscf-same-name-basis"
+scope = "data"
+symptom = "PySCF's library 6-31g(2df,p) lands 3.3e-4 to 8.0e-3 Ha off QM9 (up to 5 kcal/mol), dipoles up to 0.06 D off, and nothing would fail"
+blames = "the functional (b3lyp vs b3lypg) or the grid"
+cause = "PySCF's and the Basis Set Exchange's 6-31G(2df,p) take carbon's 2d exponents from 6-311G(2df) (1.252/0.313); Gaussian 09 uses 2x and 1/2x the 6-31G* d exponent (1.6/0.4) on every first-row atom, with Cartesian d and spherical f (6D/7F)"
+fix = "build Gaussian's basis (qm9.py) and run the SCF inside span(6D/7F) via check_linear_dependency"
+
+[[trap]]
+id = "pyscf-psi4-x86-einsums-abi"
+scope = "image"
+symptom = "undefined symbol: _ZN7einsums13random_engineE"
+cause = "the dft env's linux-64 twin pins psi4 1.11 py314hb58b17a_1 with einsums 1.1.6, but that build was linked against 1.1.5's ABI"
+fix = "none here: the Psi4 cross-check is Graviton4's; conda-forge's later builds (_3, 2026-10-12) depend on einsums >= 1.1.6"

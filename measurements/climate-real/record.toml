@@ -1,0 +1,217 @@
+# measurements/climate-real/record.toml
+schema = 1
+result_unit = "the whole verified year: every reduction and check over all 8,760 hours of 2023 ERA5 2 m temperature"
+
+[[dataset]]
+id = "ERA5 e5.oper.an.sfc.128_167_2t.ll025sc.2023MM*.nc, 12 objects from s3://nsf-ncar-era5/e5.oper.an.sfc/2023MM/ (NSF NCAR RDA ds633.0)"
+tier = "roda"
+pins = "era5-2023.sha256"
+note = "Payer: BucketOwner; checked while streaming from the source and again in-task"
+
+[[dataset]]
+id = "C3S Global Climate Highlights 2023 and July 2023 bulletin (published global means)"
+tier = "durable-id"
+unpinned = "published web values quoted to two decimals, embedded in the checks, not a hashed file"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/cpu.txt"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+wall_s = 884
+billed_s = 1068
+usd_hr = 0.4713
+compute_usd = 0.1157
+billed_usd = 0.1398
+peak_gib = 30.9
+peak_kind = "rss"
+note = "wall_s is era5.py wall; four read passes 239 / 240 / 237 / 163 s"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/cpu.txt"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 2            # README: 4 cores x 2 SMT; cpu.txt does not state it
+wall_s = 1001
+billed_s = 1129
+usd_hr = 0.5557
+compute_usd = 0.1545
+billed_usd = 0.1743
+peak_gib = 32.7
+peak_kind = "rss"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/cpu.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 663
+billed_s = 716
+usd_hr = 0.639
+compute_usd = 0.1177
+billed_usd = 0.1271
+peak_gib = 33.1
+peak_kind = "rss"
+note = "README states the AMD leg ran 2026-10-21; the git date of results/amd is 2026-10-20"
+
+# --- "What held at scale" rows; the AMD column is identical to Intel's in every row ---
+[[check]]
+id = "inputs"
+claim = "12 files match their sha256; 8,760 hours, step 1 h, 365 days × exactly 24"
+kind = "pin"
+bound = "exact"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cell-areas"
+claim = "cell areas `R²Δλ(sin φn − sin φs)` sum to 4πR²; normalised weights sum to 1"
+kind = "identity"
+bound = "1e-12 relative"
+observed = "0.0e+00"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "means-commute"
+claim = "global mean of the daily field == daily mean of the hourly global mean"
+kind = "identity"
+bound = "1e-12 relative"
+observed = "2.9e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "monthly-to-annual"
+claim = "day-weighted monthly means → annual-mean field, every one of 1,038,240 cells"
+kind = "conservation"
+bound = "1e-12 relative"
+observed = "1.8e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "daily-to-annual"
+claim = "daily means → annual-mean field, every cell"
+kind = "conservation"
+bound = "1e-12 relative"
+observed = "2.4e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "groupby-eq-resample"
+claim = "`groupby(\"time.month\")` == `resample(time=\"MS\")`"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "groupby-eq-reshape"
+claim = "hour-of-day climatology: `groupby` == (day, hour) reshape"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "diurnal-anomaly-zero"
+claim = "diurnal anomalies average to zero per hour, every cell"
+kind = "identity"
+bound = "1e-9 K"
+observed = "2.9e-14 K"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "monthly-anomaly-zero"
+claim = "monthly anomalies average to zero per month, every cell"
+kind = "identity"
+bound = "1e-9 K"
+observed = "2.8e-14 K"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "phase-control"
+claim = "control: climatology one hour out of phase"
+kind = "band"
+bound = "> 1 K"
+observed = "misses by 6.58 K"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dask-eq-eager"
+claim = "dask == eager, hourly global series and monthly field, all 12 months"
+kind = "identity"
+bound = "1e-12 relative"
+observed = "bit-identical 12/12"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "c3s-annual"
+claim = "2023 global mean, C3S [Global Climate Highlights 2023](https://climate.copernicus.eu/global-climate-highlights-2023): 14.98 °C"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "14.9829"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "c3s-july"
+claim = "July 2023, C3S [July bulletin](https://climate.copernicus.eu/july-2023-sees-multiple-global-temperature-records-broken): 16.95 °C"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "16.953"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "c3s-record-day"
+claim = "record daily global mean, C3S/WMO: 17.08 °C on 6 July"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "17.0797, 6 July"
+outcome = "pass"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:C3S-Global-Climate-Highlights-2023"
+same_bytes = false
+metric = "2023 global, July 2023 and record-day mean 2 m temperature"
+tolerance_basis = "C3S quotes two decimals (±0.005) and computed from ERA5T, since revised, so ±0.01 °C"
+check = "c3s-annual"
+
+[[trap]]
+id = "climate-groupby-anomaly-oom"
+scope = "method"
+symptom = "OOM-killed at 64 GiB, twice, 7–70 s into the pass"
+cause = "X.groupby(\"time.hour\") - clim then .groupby(\"time.hour\").mean() without flox (absent from the climate env): each hour group is a strided slice through every chunk"
+fix = "reshape the hourly axis: X.coarsen(time=24).construct(time=(\"day\", \"hour\")) gives the identical climatology and streams at a 31 GiB peak"
+cost = "two OOM-killed runs"
+
+[[trap]]
+id = "climate-dask-chunk-misalignment"
+scope = "method"
+symptom = "pass 1 took 239 s with 24-hour dask chunks vs 132 s with 54-hour chunks"
+cause = "the files store 27-hour HDF5 chunks; a chunk split across two dask tasks is decompressed twice"
+fix = "align dask chunks to the file's chunks where the computation allows (the day x hour reshape here needs 24-hour chunks)"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1's wrapper leaves too little of EC2's 16 KiB user data; the inline script moved to a staged, sha256-pinned era5-2023.sh"

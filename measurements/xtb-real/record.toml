@@ -1,0 +1,218 @@
+# measurements/xtb-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole of GMTKN55 with every check run: 14,340 xtb processes"
+
+[[dataset]]
+id = "grimme-lab/GMTKN55 commit 8d485b37a1ca8837e395042671ca5ba4e0714691 (branch v1, the 2017 publication), gmtkn55-v1.tar.gz"
+tier = "versioned-release"
+unpinned = "no sha256 manifest committed in this dir; the archive's full sha256 is printed in the README's Pins table and checked in-task (results/*/sources.check: OK)"
+note = "fetched on AWS by 00-fetch.task.json, checked to carry that commit id"
+
+[[dataset]]
+id = "arXiv:2107.00299v2 (Christensen et al., OrbNet Denali), Table IV, GFN2-xTB column"
+tier = "durable-id"
+unpinned = "published table values transcribed into xtb_run.py, not a hashed file"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/arm64/host.txt"
+wall_s = 19
+billed_s = 169
+usd_hr = 0.6381
+compute_usd = 0.0034
+billed_usd = 0.0300
+peak_gib = 0.03125
+peak_kind = "rss"
+results = "results/arm64/"
+note = "peak is the largest single xtb process (ru_maxrss, C60ISO), 32 MiB; cgroup memory.peak 0.59 GiB. Task exits 1 on the gradient checks by design"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/x86_64/host.txt"
+wall_s = 24
+billed_s = 165
+usd_hr = 0.7497
+compute_usd = 0.0050
+billed_usd = 0.0344
+peak_gib = 0.0332
+peak_kind = "rss"
+results = "results/x86_64/"
+note = "34 MiB ru_maxrss; cgroup memory.peak 3.3 GiB (env twin installs inside the task). 16 workers on 8 cores x 2 threads"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/amd/host.txt"
+wall_s = 14
+billed_s = 105
+usd_hr = 0.8622
+compute_usd = 0.0034
+billed_usd = 0.0251
+peak_gib = 0.0342
+peak_kind = "rss"
+results = "results/amd/"
+note = "35 MiB ru_maxrss; cgroup memory.peak 3.3 GiB"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "whole-release"
+claim = "whole release read"
+kind = "conservation"
+bound = "2,462 structures; 1,505 reactions in 55 subsets"
+observed = "as bound"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scc-converges"
+claim = "SCC converges at xtb's defaults"
+kind = "identity"
+bound = "all but the 4 named"
+observed = "2,458; `CARBHB12/1N`, `G21IP/b+`, `be+`, `c+` exit non-zero with xtb's own \"did not converge\""
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-mae"
+claim = "per-subset MAE == Table IV of arXiv:2107.00299v2 (GFN2-xTB column)"
+kind = "reference"
+bound = "at its printed 0.01 kcal/mol, every subset except the 3 named"
+observed = "39 of 42 identical; CARBHB12 1.14 vs 1.79, NBPRC 10.53 vs 10.51, WATER27 3.15 vs 3.05"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "translation"
+claim = "translational invariance, Σ g = 0"
+kind = "invariance"
+bound = "< 1e-8"
+observed = "1.3e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fd-truncation"
+claim = "finite-difference truncation, central(2h)/central(h) error"
+kind = "convergence-rate"
+bound = "reported (O(h²) predicts 4)"
+observed = "4.00"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "gradient-vs-fd"
+claim = "analytic gradient == 5-point FD of xtb's own energy"
+kind = "identity"
+bound = "|Δ| ≤ 1e-7 + 1e-5 |FD|"
+observed = "FAIL on all three: Graviton4 2,354 of 2,354, Intel 133, AMD 133"
+outcome = "fail"
+across_chips = "n/a"
+across_chips_evidence = "not a path: the analytic gradient differs by 9× between architectures (a different function); Intel == AMD bit-identical on 2,342 of 2,354"
+
+[[check]]
+id = "rotation"
+claim = "rotational invariance, Σ r × g = 0"
+kind = "invariance"
+bound = "≤ 1e-7 Eh"
+observed = "FAIL: Graviton4 1,552 of 2,458, Intel 136, AMD 136"
+outcome = "fail"
+across_chips = "n/a"
+
+# --- reported ----------------------------------------------------------------------------
+[[check]]
+id = "wtmad2"
+claim = "Table IV's WTMAD-2 of 18.89 is reported, not asserted"
+kind = "reported"
+observed = "20.11 here; the table's own MAEs under GMTKN55's formula give 20.17"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "energies-crosschip"
+claim = "Energies are fixed points"
+kind = "reported"
+observed = "Graviton4 within 1.0e-12 Eh of x86 on every structure"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Graviton4 vs x86 max |dE| 1.0e-12 Eh, bit-identical on 2,432 benchmark and 2,438 tight energies; Intel == AMD bit-identical on all 2,458"
+
+[[check]]
+id = "fd-crosschip"
+claim = "The 5-point FD derivatives agree across chips to 7.5e-10 Eh/Bohr"
+kind = "reported"
+observed = "7.5e-10"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "5-point FD derivative max |diff| 7.514e-10 (x86 vs Graviton4)"
+
+[[check]]
+id = "si-scc-solution"
+claim = "Between `--acc 1` and `--acc 0.0001`, the `Si` atom (in W4-11, G21IP and G21EA) moves by 3.0e-3 Eh"
+kind = "reported"
+observed = "3.0e-3 Eh; every other structure ≤ 3.7e-8 Eh"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "tblite-diag"
+claim = "tblite 0.4.0's GFN2, its CLI or `xtb --tblite`"
+kind = "cross-code"
+observed = "right on 9 of 9 (≤ 2.2e-7 rel)"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:arXiv:2107.00299v2-TableIV"
+same_bytes = false
+metric = "per-subset MAE vs GMTKN55 references, GFN2-xTB column"
+tolerance_basis = "Table IV's printed precision, 0.01 kcal/mol"
+check = "published-mae"
+
+[[trap]]
+id = "xtb-arm64-analytic-gradient-wrong"
+scope = "tool"
+symptom = "analytic gradient (`--grad`) wrong on 2,354 of 2,354 multi-atom structures on Graviton4, |g_arm64| / |g_x86| median 8.6; the energy is right"
+cause = "every linux-aarch64 build of xtb is affected (feedstock#50 records seven as bit-identical)"
+fix = "take forces from a finite difference of xtb's own energies, or use tblite's GFN2 (`xtb --tblite`, right on 9 of 9)"
+refs = ["feedstock#50"]
+
+[[trap]]
+id = "xtb-x86-gfn2-gradient-133"
+scope = "tool"
+symptom = "on ACONF/B_G, C1's dE/dx is −5.970e-3 analytic against +1.669e-3 by central difference; torque (0, 0, 2.755e-2) Eh; 133 structures fail on Intel and AMD"
+blames = "conda-forge's build (upstream's ifort release binary fails the identical structures)"
+cause = "in xtb's own GFN2 gradient code; concentrates in heavy p-block elements (Te, Sb, Bi, Pb, P); water, which the recipe's unit-test check uses, is not among them, which is why the recipe passed on x86"
+fix = "`xtb --tblite` gives +1.6695e-3 and a torque of 1e-11 with the same binary"
+
+[[trap]]
+id = "xtb-tblite-060-segfault"
+scope = "image"
+symptom = "tblite 0.6.0's CLI segfaults in this env on every structure, on both architectures (GOMP_parallel, rc 139)"
+cause = "tblite 0.6.0 as packaged in the comp-chem env; tblite 0.4.0 runs"
+fix = "none in the pinned image; the tblite cross-code check is missing from it"
+
+[[upstream]]
+ref = "feedstock#50"
+role = "cited"
+note = "records seven linux-aarch64 xtb builds as bit-identical (the arm64 gradient fault)"
+
+[[upstream]]
+ref = "grimme-lab/xtb#1422"
+role = "cited"
+note = "multicharge ABI fix; with it the gradient is identical (still wrong)"
+
+[[upstream]]
+ref = "grimme-lab/xtb#1378"
+role = "cited"
+note = "working-dir state; ruled out by the clean-room reproduction"

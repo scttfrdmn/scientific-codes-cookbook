@@ -1,0 +1,177 @@
+# measurements/r-arrow-real/record.toml -- 378 M NYC taxi trips through Arrow datasets, three chips.
+schema = 1
+result_unit = "the whole job: every query over 36 raw files, the write_dataset() rewrite, and the queries on the rewrite"
+
+[[dataset]]
+id = "NYC TLC yellow-taxi trip records 2009-01 … 2010-12 and 2023-01 … 2023-12 (36 Parquet files, TLC CloudFront origin)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "2009–2010 fetched on AWS by datashader-real, 2023 by r-real; pins.sha256 concatenates their pin lists. RODA's s3://nyc-tlc refuses every request"
+
+[[dataset]]
+id = "polars 2.0.0 reference tables (files, pay, hour, dist CSVs)"
+tier = "run-output"
+pins = "ref.sha256"
+note = "computed once on Graviton4 by 00-reference.task.json (neuroimaging image, as pinned by recipes/nilearn); every chip must reproduce these bytes"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 93.1
+billed_s = 668
+usd_hr = 0.7181
+compute_usd = 0.0186
+billed_usd = 0.1332
+peak_gib = 6.01
+peak_kind = "vmhwm"
+note = "billed is mostly the data.table cross-check (454 s)"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 88.7
+billed_s = 582
+usd_hr = 0.8467
+compute_usd = 0.0209
+billed_usd = 0.1369
+peak_gib = 6.1
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 62.3
+billed_s = 438
+usd_hr = 0.9738
+compute_usd = 0.0168
+billed_usd = 0.1185
+peak_gib = 6.01
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "diagnostic"
+results = "results/arm64-repeat/"
+threads_per_core = 1
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 92.1
+note = "the Graviton4 repeat (92.1 s vs 93.1 s); the README prices it only as '$0.13' in Spend, so no $ fields"
+
+# --- checks: "What held at scale, on all three chips" (all asserted in analysis.R) -------
+[[check]]
+id = "rows-eq-footer"
+claim = "rows per file == Parquet footer, 36 files"
+kind = "conservation"
+observed = "378,207,443"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rewrite-footers"
+claim = "rewrite's 36 footers sum to the input's"
+kind = "conservation"
+observed = "378,207,443"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pruned-count"
+claim = "partition-pruned `year=2023/month=12` count == that file's footer"
+kind = "identity"
+observed = "3,376,567"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rewrite-eq-raw"
+claim = "rewrite == raw, every line of all four tables"
+kind = "invariance"
+observed = "36 + 23 + 72 + 252 lines"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "acero-eq-datatable"
+claim = "Acero == data.table, the same decoded columns, file by file"
+kind = "cross-code"
+observed = "all four tables"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "acero-eq-polars"
+claim = "Acero == polars 2.0.0, its own Parquet reader and engine, line for line"
+kind = "cross-code"
+observed = "all four tables"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "groups-add-back"
+claim = "payment and hour groups add back to the rows and to the per-file cents totals"
+kind = "conservation"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-cents"
+claim = "`total_amount` over every row, in integer cents"
+kind = "identity"
+observed = "487,662,901,880"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pickup-parse"
+claim = "2009–2010 pickup strings `strptime` could not parse"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rewrite-bytes"
+claim = "The rewrite's total size"
+kind = "reported"
+observed = "2,384,133,940 bytes on Graviton4, 2,384,133,947 on the Graviton4 repeat, 2,384,133,931 on Intel and 2,384,133,921 on AMD"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "≤ 26 bytes of 2.38 GB, varying between runs on one chip too (2,384,133,940 vs 2,384,133,947 on Graviton4); the tables read back are identical"
+
+# No [[cross_code]]: polars and data.table run inside this measurement, not as a sibling recipe.
+
+[[trap]]
+id = "r-arrow-unify-schemas-fails"
+scope = "tool"
+symptom = "Unable to merge: Field VendorID has incompatible types: int64 vs int32"
+blames = "the option's name suggests unify_schemas = TRUE is what reconciles drifting schemas"
+cause = "January 2023 stores VendorID and passenger_count with other types than the rest of the year; unify_schemas = TRUE refuses to merge them"
+fix = "use the default: Arrow takes the first file's schema and casts the later files to it"
+cost = "part of $0.06 of schema and wiring probes"
+
+[[trap]]
+id = "r-arrow-add-filename-expressions"
+scope = "tool"
+symptom = "Expression not supported in Arrow"
+cause = "`as.integer(substr(file, …))` and `case_when(file == … ~ …)` on `add_filename()` are not supported, though grouping on it works"
+fix = "set year and month as constants, one write_dataset() per file; group the per-file table on the path itself"
+cost = "part of $0.06 of schema and wiring probes"

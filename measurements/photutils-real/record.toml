@@ -1,0 +1,186 @@
+# measurements/photutils-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole PS1 projection cell 1749: 100 r-band deep stacks detected, deblended and measured (5,894,052 sources) with every check"
+
+[[dataset]]
+id = "s3://stpubdata/panstarrs/ps1/public/rings.v3.skycell/1749/ rings.v3.skycell.1749.{000..099}.stk.r.unconv{,.wt,.mask}.fits (300 objects)"
+tier = "roda"
+pins = "pins.sha256"
+note = "versioned bucket: S3 versionId + sha256 per object in inputs.tsv; copied server-side"
+
+[[dataset]]
+id = "PS1 IPP catalogues rings.v3.skycell.1749.{000..099}.stk.r.cmf (8.59 M psphot detections)"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "astropy"         # staged and pinned by measurements/astropy-real
+
+# peak_gib omitted: the README prints per-worker ru_maxrss (5.63 / 5.71 / 5.63 GiB x 16) and a
+# task cgroup memory.peak in GB (74.9 / 76.8 / 76.2), neither a single GiB task peak.
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 784
+billed_s = 1068
+usd_hr = 0.9426
+compute_usd = 0.2053
+billed_usd = 0.2796
+note = "peak RSS 5.63 GiB per worker x 16; cgroup memory.peak 74.9 GB"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1181
+billed_s = 1427
+usd_hr = 1.1114
+compute_usd = 0.3646
+billed_usd = 0.4405
+note = "peak RSS 5.71 GiB per worker x 16; cgroup memory.peak 76.8 GB"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 719
+billed_s = 942
+usd_hr = 1.2781
+compute_usd = 0.2553
+billed_usd = 0.3344
+note = "peak RSS 5.63 GiB per worker x 16; cgroup memory.peak 76.2 GB"
+
+# --- checks: the README's "What held at scale, on all three chips" rows ---------------
+[[check]]
+id = "background-affine"
+claim = "`Background2D(2x + 1024)` == 2 `Background2D(x)` + 1024, background and rms"
+kind = "invariance"
+bound = "1e-10 relative"
+observed = "1.1e-14 / 2.6e-15 relative (bound 1e-10)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "background matches bit for bit in none of the 100 images (rms in one); the difference is rounding, at 1e-14 per the affine check, and never moves a pixel across the detection threshold"
+
+[[check]]
+id = "detect-eq-ndimage-label"
+claim = "`detect_sources` == scipy `ndimage.label` on (convolved > 1.5σ) & unmasked, 8-connected, ≥ 10 px"
+kind = "identity"
+bound = "exact"
+observed = "identical pixel sets and counts in every image (3,132,904 segments)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "deblend-partition"
+claim = "deblending is a partition: the same labelled pixels, no child straddles two parents, child areas sum exactly to the parent's"
+kind = "conservation"
+bound = "exact"
+observed = "exact, 3,132,904 parents → 5,894,052 sources"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "parent-flux"
+claim = "each parent's flux == the sum of its children's"
+kind = "conservation"
+bound = "4nε·Σ|x| rounding bound"
+observed = "≤ 0.011 of the 4nε·Σ|x| rounding bound"
+outcome = "pass"
+
+[[check]]
+id = "catalog-eq-bincount"
+claim = "`SourceCatalog.segment_flux` and `area` == `np.bincount` over the same labels"
+kind = "identity"
+bound = "4nε·Σ|x| rounding bound; areas exact"
+observed = "flux ≤ 0.039 (x86 0.044) of the rounding bound; areas exact"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "segment fluxes within 8.2e-16 relative, Graviton4 vs both x86 chips; Intel == AMD bit-identical"
+
+[[check]]
+id = "total-flux"
+claim = "labelled + unlabelled flux == total flux of the image (`math.fsum`)"
+kind = "conservation"
+bound = "4nε·Σ|x| = 1.1e3"
+observed = "3.8e-6 counts (bound 4nε·Σ|x| = 1.1e3)"
+outcome = "pass"
+
+[[check]]
+id = "aperture-additivity"
+claim = "exact circle(18.56 px) == circle(4.16) + three annuli, at every IPP position (62,494 in skycell 000)"
+kind = "identity"
+observed = "≤ 5.5e-16 relative"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "aperture sums within 6.4e-10 relative, Graviton4 vs x86 (largest where a background-subtracted sum is near zero)"
+
+[[check]]
+id = "aperture-area"
+claim = "exact aperture weights on an image of ones == πr², all four radii"
+kind = "identity"
+observed = "≤ 5.6e-16"
+outcome = "pass"
+
+[[check]]
+id = "aperture-variance"
+claim = "`aperture_sum_err`² == the aperture sum of the variance image"
+kind = "identity"
+observed = "≤ 6.7e-16"
+outcome = "pass"
+
+[[check]]
+id = "centroid-vs-ipp"
+claim = "photutils centroid − IPP `X_PSF, Y_PSF`, 37,961 isolated (no IPP neighbour < 25 px), unmasked stars with −15.5 < `PSF_INST_MAG` < −12, after IPP's half-pixel convention (pixel centres at 0.5)"
+kind = "cross-code"
+bound = "median within 0.05 px"
+observed = "median +0.0019 / +0.0006 px, MAD 0.080 / 0.072 (bound 0.05)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "centroids within 9.1e-13 px, Graviton4 vs x86"
+
+# --- reported, not asserted ---------------------------------------------------------
+[[check]]
+id = "ipp-recovery"
+claim = "IPP recovery: isolated bright IPP stars that lie in a photutils segment"
+kind = "reported"
+observed = "37,907 of the 37,961 (99.86%)"
+outcome = "reported"
+
+[[check]]
+id = "aperture-flux-vs-ipp"
+claim = "aperture flux against IPP's r = 12 px radial aperture, same stars"
+kind = "reported"
+observed = "median 1.124 (MAD 0.098) on photutils' background; 0.980 (MAD 0.083) with no background subtracted"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:PS1-3pi-IPP-psphot-cmf-skycell-1749"
+same_bytes = true
+metric = "median centroid offset of 37,961 isolated bright stars, after IPP's half-pixel convention"
+tolerance_basis = "a convention or axis error would be ≥ 0.5 px; 0.05 px is a tenth of that"
+check = "centroid-vs-ipp"
+
+[[trap]]
+id = "photutils-nebular-recovery-misses"
+scope = "method"
+symptom = "an earlier Graviton4 run asserted IPP recovery and failed on 54 misses, all in skycells 037, 039, 065, 074"
+cause = "the 128-px background mesh follows nebulosity (local background 255–2,323 counts against an all-cell median of −84), so the 1.5σ threshold rises to 540–2,070 and a star's convolved peak clears it over fewer than 10 pixels"
+fix = "report IPP recovery, do not assert it; the detection identity proves photutils did what its definition says (a smaller mesh would change it, not tested)"
+
+[[trap]]
+id = "photutils-ipp-ap-flux-not-aperture-sum"
+scope = "data"
+symptom = "at AP_MAG_RADIUS 11 px IPP reports ~337 pixels against the 380 a circle holds; flux 6–9% off a plain sum"
+cause = "IPP's AP_FLUX and AP_NPIX are not an aperture sum (an effective radius of 10.36 px)"
+fix = "do not use those columns; compare against the unconvolved SkyChip.xrad r = 12 px row"

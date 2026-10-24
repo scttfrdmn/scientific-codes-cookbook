@@ -1,0 +1,170 @@
+# measurements/fenicsx-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole run: P1 and P2 refinement ladders to N = 128 (16,974,593 P2 unknowns), both preconditioners, serial and 32-rank passes"
+
+[[dataset]]
+id = "manufactured solution u = sin πx sin πy sin πz on the unit cube, mesh and forms built in-code by poisson3d.py"
+tier = "built"
+pins = "pins.sha256"
+note = "data tier synthetic: nothing to download; the generating scripts (real.sh, poisson3d.py) are sha256-pinned and re-checked in-task"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+wall_s = 168
+billed_s = 267
+usd_hr = 1.4362
+compute_usd = 0.067
+billed_usd = 0.107
+peak_gib = 108.2
+peak_kind = "cgroup-memory.peak"
+note = "wall = serial 76 s + 32-rank 92 s; finest P2 solve 40.5 s BoomerAMG / 20.5 s GAMG"
+
+[[run]]
+instance = "m8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+wall_s = 240
+billed_s = 283
+usd_hr = 1.6934
+compute_usd = 0.113
+billed_usd = 0.133
+peak_gib = 111.1
+peak_kind = "cgroup-memory.peak"
+note = "wall = 94 + 146 s; 32 ranks on 16 cores x 2 threads; finest P2 solve 67.6 s / 35.4 s"
+
+[[run]]
+instance = "m8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+wall_s = 164
+billed_s = 209
+usd_hr = 1.9475
+compute_usd = 0.089
+billed_usd = 0.113
+peak_gib = 111.4
+peak_kind = "cgroup-memory.peak"
+note = "wall = 72 + 92 s; finest P2 solve 43.1 s / 21.4 s"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "git"
+workers = 32
+note = "sizing probe, identical configuration: 79 + 91 s against 76 + 92 s (about 4% noise per pass); not priced, compound wall so no wall_s"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "p2-order"
+claim = "L2 error falls as h³ and H1 as h² (P2)"
+kind = "convergence-rate"
+observed = "finest orders 3.0000 and 1.9994"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p1-order"
+claim = "L2 as h² and H1 as h (P1)"
+kind = "convergence-rate"
+observed = "1.9992 and 0.9997"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "monotone"
+claim = "every rung's error is below the last"
+kind = "convergence-rate"
+observed = "yes, both degrees, both norms"
+outcome = "pass"
+
+[[check]]
+id = "quadratic-exact"
+claim = "P2 and P3 reproduce `1 + x² + 2y² + 3z²`"
+kind = "identity"
+bound = "1e-10"
+observed = "L2 3.9e-15 to 3.4e-14"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "p1-control"
+claim = "P1 does not (the control)"
+kind = "identity"
+observed = "1.622126e-02, identical on all three"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "amg-eq-gamg"
+claim = "BoomerAMG and GAMG reach one discrete solution"
+kind = "cross-code"
+bound = "1e-3 of the discretisation error"
+observed = "‖u_amg − u_gamg‖ = 4.5e-15 to 9.1e-15, 2.6e-8 to 5.3e-8 of the discretisation error"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "serial-eq-32"
+claim = "serial and 32 ranks agree on every shared rung"
+kind = "invariance"
+bound = "1e-6 relative"
+observed = "worst 3.0e-10 to 5.6e-10 relative, 6 rungs"
+outcome = "pass"
+
+[[check]]
+id = "mpi-ranks"
+claim = "`MPI.COMM_WORLD.size == 32`"
+kind = "rank-count"
+bound = "== 32"
+observed = "32"
+outcome = "pass"
+across_chips = "identical"
+
+# --- '## Across chips' observations, reported not asserted ------------------------------
+[[check]]
+id = "l2-across-chips"
+claim = "P2 L2 errors move by a few ulps of the solution, in the assembled system, not in the solver"
+kind = "reported"
+observed = "1.713647784738e-07 (N = 128, BoomerAMG)"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "P2 N = 128 BoomerAMG 1.713647784738e-07 (Graviton4) vs 1.713647905436e-07 (Intel), 7.0e-8 relative, 1.2e-14 absolute; P1 rungs bit-identical; Intel vs AMD 3e-11"
+
+[[check]]
+id = "not-fp-contract"
+claim = "It is not FMA contraction in the JIT-compiled kernels (default vs -ffp-contract=off, serial P2 N = 64)"
+kind = "reported"
+observed = "1.370897387680e-06 both ways on Graviton4"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "1.370897387680e-06 (Graviton4) vs 1.370897392480e-06 (Intel) under both flags"
+
+[[check]]
+id = "p3-quadrature-h1"
+claim = "H1 error of the exactly-represented quadratic in P3 at quadrature degree 9"
+kind = "reported"
+observed = "2.319204e-06"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "fenicsx-p3-degree9-quadrature-h1"
+scope = "tool"
+symptom = "H1 error 2.319204e-06 for a quadratic that P3 represents exactly (1–2e-13 at quadrature degree 4)"
+blames = "the solution"
+cause = "the degree-9 tetrahedral quadrature scheme, not the solution, produces that number"
+fix = "use a quadrature degree that is exact for |∇e|² (degree 4 here); the P2 ladder uses degree 7, unaffected"

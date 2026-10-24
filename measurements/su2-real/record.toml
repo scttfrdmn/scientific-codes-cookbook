@@ -1,0 +1,237 @@
+# measurements/su2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the validation pair: NACA 0012 SA at alpha = 10 and 15 degrees, 897x257 C-grid, each converged from free stream"
+
+[[dataset]]
+id = "su2code/TestCases v8.5.0 (790c80e) rans/naca0012/n0012_897-257.su2"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "fetched on AWS by 00-fetch and kept only if equal to its git blob (manifest.tsv). README's Pins table prints the grid's sha256 as `2588fe11…d68d15`; pins.sha256's grid line ends …151337e (d68d15 is the end of n0012_225-65.su2's hash)"
+
+[[dataset]]
+id = "su2code/TestCases v8.5.0 (790c80e) n0012_225-65.su2 + solution_flow_sa.dat; test_vals from TestCases/parallel_regression.py @ v8.5.0"
+tier = "test-suite"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "su2code/SU2 v8.5.0 (12eb826) TestCases/rans/naca0012/turb_NACA0012_sa.cfg"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "used unchanged except free-stream start, the 897x257 grid, and the angle"
+
+[[dataset]]
+id = "NASA TMR naca0012_val_sa: Summary of CFD SA Results (seven codes)"
+tier = "durable-id"
+unpinned = "a published web table; values embedded in real.py with its URL, not a hashed file"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 536
+billed_s = 647
+usd_hr = 0.6381
+compute_usd = 0.095
+billed_usd = 0.115
+peak_gib = 1.31
+peak_kind = "cgroup-memory.peak"
+note = "s/iter 0.115 (SU2's Performance Summary, alpha = 10)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 1060
+billed_s = 1186
+usd_hr = 0.7497
+compute_usd = 0.221
+billed_usd = 0.247
+peak_gib = 2.35
+peak_kind = "cgroup-memory.peak"
+note = "s/iter 0.229; peak includes the env install's page cache"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 810
+billed_s = 881
+usd_hr = 0.8622
+compute_usd = 0.194
+billed_usd = 0.211
+peak_gib = 2.35
+peak_kind = "cgroup-memory.peak"
+note = "s/iter 0.174; peak includes the env install's page cache"
+
+# --- '## What held at scale, on all three chips' ---------------------------------------
+[[check]]
+id = "native"
+claim = "`SU2_CFD` native: ELF `e_machine` == host's"
+kind = "native-arch"
+bound = "183 / 62"
+observed = "183"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "mpi-ranks"
+claim = "MPI ranks, SU2's own `Cores:`; ParMETIS partitioned"
+kind = "rank-count"
+bound = "== 16 launched"
+observed = "16, yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "converged"
+claim = "converged: `All convergence criteria satisfied`, RMS ρ ≤ 1e-12"
+kind = "sentinel"
+bound = "< 8,000 iterations"
+observed = "2,393 / 2,036"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tmr-cl"
+claim = "TMR: CL at 10°, 15° vs the seven-code mean"
+kind = "reference"
+bound = "±1%"
+observed = "+0.29%, +0.26%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tmr-cd"
+claim = "TMR: CD at 10°, 15° vs the seven-code mean"
+kind = "reference"
+bound = "±4%"
+observed = "+1.95%, +2.81%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "upstream-regression"
+claim = "upstream regression `turb_naca0012_sa`: CL, CD, both linear-iteration counts, heat flux at iteration 5"
+kind = "reference"
+bound = "== upstream's printed digits"
+observed = "1.080346, 0.018385, 20, 20, 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "freestream"
+claim = "free-stream preservation on this grid: Euler, every boundary far-field, 200 iterations"
+kind = "invariance"
+bound = "max log10(RMS ρ) ≤ −12"
+observed = "−15.07"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cross-chip"
+claim = "cross-chip (`compare.py`): CL, CD vs Graviton4"
+kind = "reference"
+bound = "≤ 10× last-100-iteration change"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted --------------------------------------------------------------
+[[check]]
+id = "regression-residuals"
+claim = "upstream regression residual columns vs their own architecture's test_vals"
+kind = "reported"
+bound = "upstream 1e-5"
+observed = "miss by up to 1.1e-4 (Graviton4) and 3.1e-5 (x86)"
+outcome = "reported"
+
+[[check]]
+id = "cd-vs-tmr-codes"
+claim = "SU2's CD vs every code in TMR's table"
+kind = "reported"
+observed = "0.012597 vs 0.01225–0.01245; 0.021870 vs 0.02073–0.02159"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "final-coefficients"
+claim = "final CL, CD, CMz at 10° and 15° (10 significant digits)"
+kind = "reported"
+observed = "1.096666214, 0.01259695005, −0.005266543131"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "cl-history-15"
+claim = "CL along the α = 15° history"
+kind = "reported"
+observed = "max |Δ| 1e-9"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "x86 vs Graviton4 max |Δ| 1e-9 along the alpha = 15 history; the alpha = 10 history max |Δ| 0"
+
+[[check]]
+id = "rms-history"
+claim = "RMS ρ history"
+kind = "reported"
+observed = "differs from iteration 35 (10°) / 79 (15°), max |Δ| 2.7e-6 / 1.4e-5"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "x86 vs Graviton4 differs from iteration 35 (10°) / 79 (15°), max |Δ| 2.7e-6 / 1.4e-5; AMD byte-identical to Intel"
+
+[[check]]
+id = "linear-residual-history"
+claim = "linear-solver residual"
+kind = "reported"
+observed = "differs from iteration 69–71"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "x86 vs Graviton4 differs from iteration 69–71; AMD byte-identical to Intel"
+
+[[check]]
+id = "alpha-0"
+claim = "α = 0° with upstream's config (CFL 1000, 20 FGMRES iterations), Graviton4"
+kind = "reported"
+observed = "RMS ρ = 10^−9.86 in 8,000 iterations; CD 0.0081785 still moving 5e-7 per 100 iterations"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:NASA-TMR-naca0012_val_sa"
+same_bytes = true
+metric = "CL, CD vs the seven-code mean at alpha = 10 and 15"
+tolerance_basis = "TMR: the seven codes 'gave very close results (max 1% difference in lift, 4% difference in drag)', so that spread is the shared problem's precision"
+check = "tmr-cd"
+
+[[cross_code]]
+with = "published:SU2-v8.5.0-parallel_regression-turb_naca0012_sa"
+same_bytes = true
+metric = "CL, CD, linear-iteration counts, heat flux at iteration 5 vs upstream's printed test_vals"
+tolerance_basis = "coefficients and counts to upstream's printed digits; residual columns conceded because upstream's own test_vals and test_vals_aarch64 differ by up to 3.5e-5, beyond its 1e-5"
+check = "upstream-regression"
+
+[[trap]]
+id = "su2-regression-residuals-are-build-bits"
+scope = "method"
+symptom = "the four residual columns miss their own architecture's list by up to 1.1e-4 (Graviton4) and 3.1e-5 (x86)"
+blames = "the build or the chip"
+cause = "upstream's test_vals residuals are the noise floor of a restart from a converged solution (RMS ρ ≈ 1e-12), i.e. the bits of the build that wrote them; test_vals and test_vals_aarch64 differ by up to 3.5e-5"
+fix = "assert coefficients and iteration counts at upstream's digits; report the residuals"
+
+[[trap]]
+id = "su2-n0012-grid-not-mirror-symmetric"
+scope = "data"
+symptom = "CL(10°) + CL(−10°) was −8.4e-6, about twice CL(0°) = −3.5e-6"
+cause = "the 897x257 grid is not exactly mirror-symmetric: its wake line sits at y = 5.35e-8 and mirrored points miss their partners by up to 3.7e-5"
+fix = "α → −α is not an identity on this grid; report the pair, don't assert it"

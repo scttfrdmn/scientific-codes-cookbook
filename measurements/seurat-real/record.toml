@@ -1,0 +1,182 @@
+# measurements/seurat-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete pbmc_10k_v3 run: Scanpy leg + Seurat leg with FindAllMarkers (11,043 cells after QC)"
+
+[[dataset]]
+id = "10x Genomics pbmc_10k_v3_filtered_feature_bc_matrix.tar.gz (Cell Ranger 3.0.0 release path)"
+tier = "versioned-release"
+unpinned = "the full sha256 lives in pbmc10k.task.json and stage-inputs.sh (verified before upload and in-task); no committed sha256 manifest, and the README prints it truncated"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+date = "2026-10-17"
+date_source = "run"
+workers = 4
+threads_per_core = 1
+wall_s = 5023
+billed_s = 5327
+usd_hr = 0.1795
+compute_usd = 0.2504
+billed_usd = 0.2656
+peak_gib = 4.73
+peak_kind = "vmhwm"
+note = "FindAllMarkers 4962 s (98.8%); billed also carries the ~60 s determinism replicate"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-17"
+date_source = "run"
+workers = 4
+threads_per_core = 2
+wall_s = 4231
+billed_s = 4427
+usd_hr = 0.2117
+compute_usd = 0.2488
+billed_usd = 0.2603
+peak_gib = 5.78
+peak_kind = "vmhwm"
+note = "FindAllMarkers 4169 s (98.5%); container cgroup peak 9.53 GiB also counts the env twin's install"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/topo.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 4
+wall_s = 3626
+billed_s = 3761
+usd_hr = 0.2434
+compute_usd = 0.2452
+billed_usd = 0.2543
+peak_gib = 5.74
+peak_kind = "vmhwm"
+note = "FindAllMarkers 3578 s (98.7%); cgroup peak 9.49 GiB; script staged as a sha256-checked file (spawn#1246)"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "dims"
+claim = "raw / post-QC dims: exact 11769 × 33538 → identical sets in both tools"
+kind = "identity"
+observed = "11043 × 20244"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "library-size"
+claim = "per-cell library size: Seurat's `colSums` == Scanpy's, every cell, integer"
+kind = "cross-code"
+observed = "0 of 11043 differ, Σ 88,691,854"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normalize-total"
+claim = "Scanpy `normalize_total`: every cell sums to 1e4"
+kind = "conservation"
+bound = "< 1e-5 (float32)"
+observed = "7.122e-08"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lognormalize"
+claim = "Seurat `LogNormalize`: Σ expm1(data) = 1e4"
+kind = "conservation"
+bound = "< 1e-10 (double)"
+observed = "7.749e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "determinism"
+claim = "determinism, same box: QC lists, library sizes, HVGs, leiden and Seurat labels byte-identical across two fresh processes"
+kind = "identity"
+observed = "identical"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "markers"
+claim = "markers: CD3D/LYZ/MS4A1/NKG7 each a significant (p_adj < 0.05) `FindAllMarkers` marker of the cluster it peaks in, four distinct clusters"
+kind = "identity"
+observed = "10, 0, 4, 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "marker-separation"
+claim = "marker separation: same four markers in four distinct clusters, all three partitions"
+kind = "identity"
+observed = "pass"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "seurat-vs-leiden"
+claim = "Seurat ↔ Scanpy leiden"
+kind = "band"
+bound = "ARI ≥ 0.45 (the recipe's floor)"
+observed = "0.7285"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "0.7285 / 0.8439 / 0.8761 (Graviton4 / Intel / AMD)"
+corename_sensitive = true
+
+# --- '## What differed across chips': partitions, reported ------------------------------
+[[check]]
+id = "seurat-partition-xchip"
+claim = "Seurat (Louvain, `random.seed = 0`) partition across chips"
+kind = "reported"
+observed = "25 clusters (Graviton4), 26 (Intel), 26 (AMD)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "ARI G4 ↔ Intel 0.9728, G4 ↔ AMD 0.9728, Intel ↔ AMD 1.0000 identical (both load Cooperlake)"
+corename_sensitive = true
+
+[[check]]
+id = "leiden-partition-xchip"
+claim = "Scanpy leiden (`random_state = 0`) partition across chips"
+kind = "reported"
+observed = "24 clusters (Graviton4), 22 (Intel), 24 (AMD)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "ARI G4 ↔ Intel 0.8367, G4 ↔ AMD 0.8041, Intel ↔ AMD 0.9220 (same kernel, still differs: not chased down)"
+corename_sensitive = true
+
+[[check]]
+id = "louvain-not-seeded"
+claim = "Scanpy's louvain is not pinned by its seed: two fresh processes on the same box"
+kind = "reported"
+observed = "ARI 0.8379 (21 vs 22 clusters) on Graviton4, 0.8461 on Intel, 0.7297 on AMD"
+outcome = "reported"
+
+[[cross_code]]
+with = "recipes/seurat"
+same_bytes = false
+metric = "Seurat ↔ Scanpy leiden ARI on matched cells, genes and HVG features"
+tolerance_basis = "the recipe's ARI floor of 0.45; the cross-tool ARI is a property of two paths and moves by about ±0.1 between chips"
+check = "seurat-vs-leiden"
+
+[[trap]]
+id = "seurat-findallmarkers-no-presto"
+scope = "image"
+symptom = "FindAllMarkers takes 70–83 minutes, 98.5–98.8% of the workflow, with three of four vCPUs idle"
+blames = "the box (no chip earns its keep: compute $/result 0.2504 / 0.2488 / 0.2452)"
+cause = "the env does not carry presto, so Seurat falls back to its single-threaded R Wilcoxon test (Seurat's own message says so)"
+fix = "install presto (conda has r-presto 1.0.0 for linux-aarch64 on bioconda); everything before markers is 57–58 s"
+
+[[trap]]
+id = "seurat-scanpy-louvain-seed-unpinned"
+scope = "tool"
+symptom = "two fresh processes with random_state = 0 on the same box give different louvain partitions (ARI 0.8379, 21 vs 22 clusters on Graviton4)"
+cause = "Scanpy's louvain is not pinned by its seed"
+fix = "treat every louvain number as one draw; use leiden for anything asserted"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1's wrapper leaves no room in EC2's 16 KiB user data; the AMD leg staged its script as a sha256-checked file, inputs as one prefix, outputs as one directory"

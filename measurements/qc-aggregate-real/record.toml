@@ -1,0 +1,247 @@
+# measurements/qc-aggregate-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole cohort QC'd and aggregated: eleven FASTQ files (446.0M reads), FastQC task plus MultiQC task, with every check"
+
+[[dataset]]
+id = "1000 Genomes HG00096 SRR062634_{1,2}.filt.fastq.gz (s3://1000genomes)"
+tier = "roda"
+pins = "inputs.sha256"
+from_recipe = "measurements/bwa-real"
+note = "the .filt release, not ENA's raw run (24,476,109 spots); read where bwa-real staged it"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (Geuvadis)"
+tier = "durable-id"
+pins = "inputs.sha256"
+from_recipe = "measurements/salmon-real"
+note = "also checked against ENA's published md5 (ena.md5)"
+
+[[dataset]]
+id = "ZymoBIOMICS ERR2984773 (D6300) and ERR2935805 (D6310), RODA SRA"
+tier = "roda"
+pins = "inputs.sha256"
+from_recipe = "measurements/metaphlan-real"
+
+[[dataset]]
+id = "ENA SRR8297998 / SRR8279891 / SRR8281054 (Brunello A375 CRISPR screen)"
+tier = "durable-id"
+pins = "inputs.sha256"
+from_recipe = "measurements/mageck-real"
+note = "also checked against ENA's published md5 (ena.md5)"
+
+# --- FastQC task (task 1). billed_usd omitted: the README's billed $/result is
+# (FastQC wall + overhead) x $/hr PLUS the whole MultiQC task's cost, which a single row
+# cannot carry. Printed billed $/result: 0.0695 / 0.0843 / 0.0724. ----------------------
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+date = "2026-10-18"
+date_source = "run"
+workers = 11
+host = "results/arm64/fastqc.host.txt"
+wall_s = 231
+overhead_s = 109
+usd_hr = 0.7181
+compute_usd = 0.0461
+peak_gib = 4.41
+results = "results/arm64/"
+note = "README billed $/result 0.0695 = FastQC wall + overhead at $/hr plus the MultiQC task; peak is the container's anon memory over all eleven JVMs (not memory.peak); overhead excludes 95–135 s of verification inside the window"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+workers = 11
+host = "results/x86_64/fastqc.host.txt"
+wall_s = 220
+overhead_s = 128
+usd_hr = 0.8467
+compute_usd = 0.0518
+peak_gib = 3.95
+results = "results/x86_64/"
+note = "README billed $/result 0.0843 includes the MultiQC task; peak is container anon memory"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+workers = 11
+host = "results/amd/fastqc.host.txt"
+wall_s = 165
+overhead_s = 96
+usd_hr = 0.9738
+compute_usd = 0.0447
+peak_gib = 4.22
+results = "results/amd/"
+note = "README billed $/result 0.0724 includes the MultiQC task; peak is container anon memory"
+
+# --- MultiQC task (task 2): README prints its wall only (60–95 s window, under $0.003) ----
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+date = "2026-10-18"
+date_source = "run"
+host = "results/arm64/multiqc.host.txt"
+wall_s = 2
+results = "results/arm64/multiqc.smoke-check.txt"
+note = "MultiQC task; its cost is folded into the FastQC row's billed $/result"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+host = "results/x86_64/multiqc.host.txt"
+wall_s = 2
+results = "results/x86_64/multiqc.smoke-check.txt"
+note = "MultiQC task"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+host = "results/amd/multiqc.host.txt"
+wall_s = 2
+results = "results/amd/multiqc.smoke-check.txt"
+note = "MultiQC task"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "total-sequences"
+claim = "FastQC `Total Sequences` == recount == published count"
+kind = "reference"
+bound = "exact"
+observed = "11 of 11 exact; cohort 445,999,501"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bases"
+claim = "recount bases == published bases"
+kind = "reference"
+bound = "exact"
+observed = "11 of 11 exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-bases-format"
+claim = "`Total Bases` == FastQC's `formatLength` of the recount"
+kind = "identity"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gc-percent"
+claim = "`%GC` == ⌊100 (G+C)/(A+C+G+T)⌋"
+kind = "identity"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "length-flagged"
+claim = "`Sequence length`, flagged reads == 0, 0 malformed records"
+kind = "identity"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "histogram-sums"
+claim = "Σ length histogram == Σ per-sequence-quality histogram == N"
+kind = "conservation"
+observed = "22 of 22"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mates"
+claim = "mates hold the same read count"
+kind = "identity"
+observed = "4 of 4 pairs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "multiqc-rows"
+claim = "MultiQC rows == expected N"
+kind = "conservation"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "multiqc-round-trip"
+claim = "reads, length, %GC, dedup% round-trip numerically"
+kind = "identity"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "module-status"
+claim = "every module's PASS/WARN/FAIL == FastQC's `summary.txt`"
+kind = "identity"
+observed = "121 of 121"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "avg-length"
+claim = "`avg_sequence_length` == bases / reads"
+kind = "identity"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "general-stats"
+claim = "General Statistics: round(M × 1e6) == count; %GC; 100 − dedup%; % fails"
+kind = "identity"
+observed = "11 of 11 each"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "withheld-report"
+claim = "withhold the largest report (99.1M reads, 22% of the cohort)"
+kind = "identity"
+bound = "MultiQC exit 0, 10 rows, 0 log lines name it"
+observed = "as the recipe found on its fixture"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "general-stats-float"
+claim = "The General Statistics table stores read counts in millions, as floats"
+kind = "reported"
+observed = "3 of 11 not the integer count without rounding; cohort total 445.99950099999995"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "outputs-crosschip"
+claim = "All 22 `fastqc_data.txt` and `summary.txt` files, the recount, and both MultiQC tables are byte-identical on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "qc-aggregate-multiqc-silent-drop"
+scope = "tool"
+symptom = "MultiQC exit 0, 10 rows, 0 log lines name the withheld report"
+cause = "dropping a cohort member is not an error to MultiQC; the report is silently one sample short"
+fix = "assert MultiQC rows == the expected sample count"
+
+[[trap]]
+id = "qc-aggregate-general-stats-float-millions"
+scope = "tool"
+symptom = "the cohort total reads `445.99950099999995` in the General Statistics table"
+cause = "General Statistics stores read counts in millions, as floats; for 3 of 11 files millions × 1e6 is not the integer count without rounding"
+fix = "read counts from `multiqc_fastqc.txt`, which carries them whole"

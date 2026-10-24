@@ -1,0 +1,158 @@
+# measurements/fastp-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete SRR062634 run QC'd and trimmed (48,297,986 reads, 4.83 Gbp)"
+
+[[dataset]]
+id = "SRA SRR062634 (complete run, 100 bp paired)"
+tier = "roda"
+from_recipe = "bwa-samtools"
+note = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/smoke-check-c8g4xl-16t.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 31
+billed_s = 226
+usd_hr = 0.6381
+billed_usd = 0.0401
+note = "tmpfs peak 7,116 MB (staging high-water mark, not process memory; no peak_kind fits)"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/smoke-check-m8g2xl-8t.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 36
+billed_s = 226
+usd_hr = 0.3590
+compute_usd = 0.0036
+billed_usd = 0.0225
+note = "the shipped rung; tmpfs peak 7,154 MB (staging high-water mark, no peak_kind fits)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-c8i4xl-16t.txt"
+host = "results/topology-c8i4xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 16
+wall_s = 29
+billed_s = 226
+usd_hr = 0.7497
+billed_usd = 0.0471
+note = "tmpfs peak 7,019 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-m8i2xl-8t.txt"
+host = "results/topology-m8i2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 52
+billed_s = 226
+usd_hr = 0.4234
+compute_usd = 0.0061
+billed_usd = 0.0266
+note = "tmpfs peak 7,129 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-c8a4xl-16t.txt"
+host = "results/topology-c8a4xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 16
+wall_s = 22
+billed_s = 160
+usd_hr = 0.8622
+billed_usd = 0.0383
+note = "tmpfs peak 7,230 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-m8a2xl-8t.txt"
+host = "results/topology-m8a2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 32
+billed_s = 159
+usd_hr = 0.4869
+compute_usd = 0.0043
+billed_usd = 0.0215
+note = "tmpfs peak 7,180 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
+
+# --- checks: the four in-task assertions in results/smoke-check-*.txt -----------------
+[[check]]
+id = "read-count"
+claim = "reads_before want exactly 48297986 (== bwa's primary records, 48817006 total - 519020 suppl.)"
+kind = "identity"
+bound = "exact"
+observed = "48297986"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "filter-conservation"
+claim = "accounted_for want == reads_before [CONSERVATION]"
+kind = "conservation"
+bound = "exact"
+observed = "48297986"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mates-paired"
+claim = "out2_reads want == out1 (mates stay paired)"
+kind = "identity"
+bound = "exact"
+observed = "22772943"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "outputs-passed"
+claim = "out1+out2 want == passed_filter"
+kind = "identity"
+bound = "exact"
+observed = "45545886"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "q30-rate"
+claim = "q30_rate (observation)"
+kind = "reported"
+observed = "0.90576"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "dup-rate"
+claim = "fastp_dup_rate 0.00274475 (observation; sequence-based, not picard's 0.008684 by position)"
+kind = "reported"
+outcome = "reported"
+across_chips = "identical"
+
+[[upstream]]
+ref = "spawn#1063"
+role = "workaround"
+note = "x86 specs exceed EC2's 16 KiB user data on 0.139.1; inline command moved into a staged sha256-checked file"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "same user-data limit"

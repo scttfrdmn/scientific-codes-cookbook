@@ -1,0 +1,244 @@
+# measurements/scanpy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one standard Scanpy pipeline over all 161,764 Hao et al. 2021 PBMCs (r2, the standalone run)"
+
+[[dataset]]
+id = "CELLxGENE Census LTS 2025-01-30 h5ads/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad (Hao et al., Cell 2021, doi:10.1016/j.cell.2021.04.048)"
+tier = "roda"
+unpinned = "full sha256 printed in the README's Pins table and embedded in hao2021.task.json (written to pins.sha256 inside the task); no manifest committed in this dir"
+
+# --- three chips, 8 threads, 2xlarge (64 GiB) --------------------------------------------
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+wall_s = 328
+billed_s = 992
+usd_hr = 0.4713
+compute_usd = 0.0429
+billed_usd = 0.1299
+peak_gib = 21.5
+peak_kind = "vmhwm"
+results = "results/arm64/"
+note = "wall = r2; billed also covers the r1 ladder and the replicate. OpenBLAS neoversev2"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 2
+wall_s = 421
+billed_s = 1117
+usd_hr = 0.5557
+compute_usd = 0.0650
+billed_usd = 0.1724
+peak_gib = 22.0
+peak_kind = "vmhwm"
+results = "results/x86_64/"
+note = "linux-64 env twin envs-x86_64/single-cell-957f8c9c38e0; billed includes the twin's install; OpenBLAS Cooperlake"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 238
+billed_s = 679
+usd_hr = 0.6390
+compute_usd = 0.0422
+billed_usd = 0.1205
+peak_gib = 22.1
+peak_kind = "vmhwm"
+results = "results/amd/"
+note = "spawn 0.139.1 installs Docker during stage-in, so billed overhead is not comparable with the others; staged task.sh (spawn#1246)"
+
+# --- checks: '## What held at scale, on all three chips' (claim = observable: assertion) ---
+[[check]]
+id = "h5ad-pin"
+claim = "staged h5ad"
+kind = "pin"
+bound = "sha256 `c55594bd…a29`"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "raw-dimensions"
+claim = "raw dimensions"
+kind = "identity"
+bound = "exactly 161,764 × 20,525, 353,548,607 non-zero, positive integers"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "library-sizes"
+claim = "per-cell library sizes"
+kind = "conservation"
+bound = "integer row sums; Σ = 1,293,147,637"
+observed = "identical file across chips"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normalize-total"
+claim = "`normalize_total`"
+kind = "conservation"
+bound = "every cell sums to 1e4, < 1e-5 (float32)"
+observed = "8.152e-08"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sparsity-pattern"
+claim = "sparsity pattern"
+kind = "identity"
+bound = "`indptr`/`indices` unchanged by normalisation"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "one-factor-per-cell"
+claim = "one factor per cell"
+kind = "identity"
+bound = "`X·lib/1e4` recovers every raw count, rel < 1e-6"
+observed = "1.162e-07"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "log1p-inverts"
+claim = "`log1p` inverts"
+kind = "identity"
+bound = "Σ `expm1` = 1e4 per cell, < 1e-5"
+observed = "3.009e-07"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "3.009e-07 (Graviton4) vs 3.306e-07 (Intel, AMD): libm's expm1 differs in the last bits"
+
+[[check]]
+id = "markers-lineage"
+claim = "**markers → published lineage**"
+kind = "reference"
+bound = "CD3D, LYZ, MS4A1, NKG7 peak in 4 distinct Leiden clusters, each majority T / Mono / B / NK in the authors' `celltype.l1`"
+observed = "70.6% CD8 T, 98.9% Mono, 100% B, 99.7% NK"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "70.6% CD8 T, 98.9% Mono (Graviton4); 71.4%, 99.0% (Intel); 70.2%, 99.0% (AMD) -- the Leiden clustering is a path"
+
+[[check]]
+id = "determinism-same-box"
+claim = "**determinism, same box**"
+kind = "identity"
+bound = "libsize, HVGs, PCA, UMAP, Leiden labels, top-25 markers byte-identical across two fresh processes"
+observed = "identical"
+outcome = "pass"
+across_chips = "n/a"
+
+# --- across chips (crosschip.py): reported, not asserted --------------------------------
+[[check]]
+id = "hvg-list"
+claim = "the library-size file and the 2000-gene HVG list (members *and* order) are byte-identical"
+kind = "reported"
+observed = "2000 of 2000"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "pca"
+claim = "PCA agrees to 7.6e-6 in magnitude (float32 arpack; signs are arbitrary per axis)"
+kind = "reported"
+observed = "7.629e-06"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "max | |a|-|b| | = 7.629e-06 Graviton4 vs Intel and vs AMD; 1.192e-07 Intel vs AMD"
+corename_sensitive = true
+
+[[check]]
+id = "leiden-cross-chip"
+claim = "Leiden gives 27 clusters on Graviton4 and 28 on x86, with ARI 0.9599 across chips"
+kind = "reported"
+observed = "0.9599"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "27 vs 28 clusters, ARI 0.9599 (Graviton4 vs Intel), 0.9577 (vs AMD), 0.9611 (Intel vs AMD)"
+corename_sensitive = true
+
+[[check]]
+id = "umap-cross-chip"
+claim = "UMAP coordinates differ by up to 12.6 units"
+kind = "reported"
+observed = "1.258e+01"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "max | |a|-|b| | = 1.258e+01 Graviton4 vs Intel; 1.152e+01 vs AMD; 1.196e+01 Intel vs AMD"
+corename_sensitive = true
+
+[[check]]
+id = "louvain-run-to-run"
+claim = "Louvain is not pinned by its seed, at 162k cells too"
+kind = "reported"
+observed = "0.9133"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "same-box ARI 0.9133 (Graviton4), 0.9349 (x86), 0.8916 (AMD); across chips 0.9073"
+
+[[check]]
+id = "celltype-majority"
+claim = "cells in a cluster whose majority `celltype.l1` is their own"
+kind = "reported"
+observed = "94.65%"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "94.65% / 94.77% / 94.90% (Graviton4 / Intel / AMD)"
+
+[[check]]
+id = "ari-celltype-l2"
+claim = "ARI against `celltype.l2`"
+kind = "reported"
+observed = "0.522"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "0.522 / 0.530 / 0.526"
+
+[[cross_code]]
+with = "published:Hao2021-doi:10.1016/j.cell.2021.04.048-celltype.l1"
+same_bytes = true
+metric = "majority celltype.l1 of the Leiden cluster where each of CD3D, LYZ, MS4A1, NKG7 peaks"
+tolerance_basis = "the annotation was built from RNA and 228 surface proteins (WNN), so it is an independent truth, not a restated RNA clustering; the claim asserted is the lineage identity, not a band"
+check = "markers-lineage"
+
+[[trap]]
+id = "scanpy-numba-first-neighbors"
+scope = "tool"
+symptom = "The first `neighbors` call in a process includes about 15 s of numba compilation. It took 17.5 s in r2 and 2.7 s in r1's warm full rung"
+cause = "numba JIT compilation on first call"
+fix = "time a warm call, or accept it once per process; a one-off run pays it once"
+
+[[trap]]
+id = "scanpy-louvain-seed-not-pinned"
+scope = "tool"
+symptom = "Two fresh processes on one box gave ARI 0.9133 (27 vs 28 clusters)"
+cause = "Louvain is not pinned by its seed"
+fix = "do not assert on Louvain labels; Leiden is byte-deterministic within a chip"
+
+[[trap]]
+id = "scanpy-published-ncount-rna"
+scope = "data"
+symptom = "matches our library size exactly in only 3,512 cells, differing by up to 231 counts"
+blames = "the library-size computation"
+cause = "the authors' own `nCount_RNA` was computed before CELLxGENE curation"
+fix = "report it, do not use it as the identity; assert integer row sums of the deposited counts"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB user data; the AMD leg staged a sha256-checked task.sh"

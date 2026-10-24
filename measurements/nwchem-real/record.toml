@@ -1,0 +1,226 @@
+# measurements/nwchem-real/record.toml -- one family (c8g), three experiments: rank sweep,
+# right-sized boxes, packing. The README prices nothing, so no $ fields.
+schema = 1
+result_unit = "one caffeine B3LYP/6-31G* single-point energy (217 basis functions)"
+
+[[dataset]]
+id = "caffeine (24 atoms) at B3LYP/6-31G*, geometry and basis inline in the spec"
+tier = "built"
+from_recipe = "nwchem"
+note = "nothing staged: the molecule is the spec; basis sets ship in the env"
+
+# --- 1. one calculation, ranks varied, one c8g.4xlarge --------------------------------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 1
+wall_s = 128
+results = "results/rank-sweep-one-box-c8g-4xl.txt"
+note = "rank sweep, 1 rank on 16 vCPU"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 2
+wall_s = 100
+results = "results/rank-sweep-one-box-c8g-4xl.txt"
+note = "rank sweep, 2 ranks"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 4
+wall_s = 67
+results = "results/rank-sweep-one-box-c8g-4xl.txt"
+note = "rank sweep, 4 ranks"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 41
+results = "results/rank-sweep-one-box-c8g-4xl.txt"
+note = "rank sweep, 8 ranks"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 24
+results = "results/rank-sweep-one-box-c8g-4xl.txt"
+note = "rank sweep, 16 ranks: 5.33x, 33.3% efficiency"
+
+# --- 2. right-sized boxes (instance from each spec's cpu/memory on c8g) ---------------------
+[[run]]
+instance = "c8g.large"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 1
+wall_s = 138
+results = "results/rightsized-1.txt"
+note = "1 rank on 2 vCPU: 50.0% core utilisation (no 1-vCPU box)"
+
+[[run]]
+instance = "c8g.large"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 2
+wall_s = 111
+results = "results/rightsized-2.txt"
+
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 4
+wall_s = 72
+results = "results/rightsized-4.txt"
+
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 42
+results = "results/rightsized-8.txt"
+
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 16
+wall_s = 24
+results = "results/rightsized-16.txt"
+note = "95.4% utilised, 33.3% efficient"
+
+# --- 3. packing: J concurrent jobs x R ranks on one c8g.4xlarge, --bind-to none ------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-03"
+date_source = "git"
+workers = 16
+wall_s = 25
+results = "results/pack-1x16.txt"
+note = "1 job x 16 ranks; wall is for all jobs (25.00 s per calculation)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-03"
+date_source = "git"
+workers = 16
+wall_s = 42
+results = "results/pack-2x8.txt"
+note = "2 jobs x 8 ranks; wall for both (21.00 s per calculation)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-03"
+date_source = "git"
+workers = 16
+wall_s = 72
+results = "results/pack-4x4.txt"
+note = "4 jobs x 4 ranks; wall for all 4 (18.00 s per calculation)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-10-03"
+date_source = "git"
+workers = 16
+wall_s = 110
+results = "results/pack-8x2.txt"
+note = "8 jobs x 2 ranks; wall for all 8 (13.75 s per calculation)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-03"
+date_source = "git"
+workers = 16
+wall_s = 147
+results = "results/pack-16x1.txt"
+note = "16 jobs x 1 rank, the README's recommendation: wall for all 16 (9.19 s per calculation, 2.72x the 1x16 throughput)"
+
+# --- checks: asserted on every rung (results/*.txt) --------------------------------------
+[[check]]
+id = "rank-count"
+claim = "nproc read from NWChem's own output equals the rank count launched"
+kind = "rank-count"
+bound = "== ranks launched"
+observed = "1, 2, 4, 8, 16"
+outcome = "pass"
+
+[[check]]
+id = "basis-functions"
+claim = "217 basis functions, from NWChem, not from the input file"
+kind = "identity"
+bound = "217"
+observed = "217"
+outcome = "pass"
+
+[[check]]
+id = "converged"
+claim = "SCF reached an energy (a converged exit, not a parsed number from a dead run)"
+kind = "sentinel"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "serial-eq-4rank"
+claim = "serial and 4-rank agree"
+kind = "invariance"
+bound = "< 1e-6 Ha"
+observed = "|−625.538048227205 − −625.538048181779| = 4.54e-08 Ha"
+outcome = "pass"
+
+[[check]]
+id = "dft-energy"
+claim = "dft_energy (B3LYP/6-31G*, caffeine)"
+kind = "band"
+bound = "-625.538048 +/-1e-5"
+observed = "-625.538048227205 Ha"
+outcome = "pass"
+
+[[check]]
+id = "packing-contention"
+claim = "each job inside a packed set vs the same R alone on a right-sized box"
+kind = "reported"
+observed = "within 0.0–6.5%"
+outcome = "reported"
+
+[[check]]
+id = "packing-cores-busy"
+claim = "16 cores busy in all five packing configurations (the evidence the binding worked)"
+kind = "reported"
+observed = "avg_cores 14.96–15.87"
+outcome = "reported"
+
+[[trap]]
+id = "nwchem-concurrent-mpiexec-binding"
+scope = "tool"
+symptom = "no error: eight concurrent 2-rank jobs pile all sixteen ranks onto cores 0 and 1 while fourteen cores sit idle, and the wall time collapses"
+blames = "packing contention ('packing contends, as expected')"
+cause = "each concurrent mpiexec believes it owns the machine and binds rank k to core k"
+fix = "mpiexec --bind-to none; check avg_cores"
+

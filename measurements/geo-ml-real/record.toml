@@ -1,0 +1,303 @@
+# measurements/geo-ml-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole workload plus every check: all 85,529 US tracts (vector leg) and Colorado's DEM by 1,447 tracts (raster leg)"
+
+[[dataset]]
+id = "Census TIGER/Line 2024 TRACT/tl_2024_{56 FIPS}_tract.zip"
+tier = "versioned-release"
+pins = "../r-spatial-real/tracts.sha256"
+from_recipe = "measurements/r-spatial-real"
+note = "staged by r-spatial-real; read, not copied"
+
+[[dataset]]
+id = "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)"
+tier = "versioned-release"
+unpinned = "the full sha256 lives in recipes/geo-ml/stage-inputs.sh, which writes pins.sha256 at stage time; no manifest is committed and the README prints only a truncated hash"
+
+[[dataset]]
+id = "Copernicus GLO-30 DEM, 28 COGs over Colorado (inputs/geospatial-real/)"
+tier = "roda"
+pins = "../geospatial-real/tiles.sha256"
+from_recipe = "measurements/geospatial-real"
+note = "read, not copied"
+
+[[dataset]]
+id = "runs{,-x86_64,-amd}/r-spatial-real/r1/{tract-areas,co-tract-zonal}.csv (terra reference, the same chip's)"
+tier = "run-output"
+from_recipe = "measurements/r-spatial-real"
+note = "its sha256 is recorded in each chip's results.json"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/lscpu.txt"
+date = "2026-10-19"
+date_source = "run"
+wall_s = 382
+billed_s = 495
+usd_hr = 0.2356
+compute_usd = 0.025
+billed_usd = 0.0324
+peak_gib = 22.9
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/lscpu.txt"
+date = "2026-10-19"
+date_source = "run"
+wall_s = 373
+billed_s = 429
+usd_hr = 0.2778
+compute_usd = 0.0288
+billed_usd = 0.0331
+peak_gib = 25.7
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/lscpu.txt"
+date = "2026-10-19"
+date_source = "run"
+wall_s = 275
+billed_s = 324
+usd_hr = 0.3195
+compute_usd = 0.0244
+billed_usd = 0.0288
+peak_gib = 25.7
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: "What held at scale, on all three chips"; observed = the Graviton4 cell ------
+[[check]]
+id = "pins"
+claim = "56 tract zips, 28 DEM tiles, the county file and `real.py` match their pins"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "tracts-read"
+claim = "85,529 tracts, unique 11-digit GEOIDs, EPSG:4269"
+kind = "identity"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "geodesic-vs-census"
+claim = "**geodesic area within 1 m² + perimeter × 0.0557 m of Census, every tract**"
+kind = "reference"
+bound = "1 m² + perimeter × 0.0557 m"
+observed = "**0 outside**; worst at 0.2173 of it"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pyproj-terra-area"
+claim = "**pyproj area − terra area < 0.01 m², every tract**"
+kind = "cross-code"
+bound = "< 0.01 m²"
+observed = "max 8.6e-4 m²"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "max 8.6e-4 m² (Graviton4) vs max 3.1e-5 m² (Intel, AMD)"
+
+[[check]]
+id = "tracts-sum-to-county"
+claim = "Σ tract areas == county area, 3,235 counties"
+kind = "conservation"
+observed = "2.5e-16 rel"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.5e-16 rel (Graviton4) vs 3.8e-16 (Intel, AMD)"
+
+[[check]]
+id = "dissolve"
+claim = "`dissolve` rebuilds every county's area"
+kind = "conservation"
+observed = "2.1e-16 rel"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.1e-16 rel (Graviton4) vs 2.0e-16 (Intel, AMD)"
+
+[[check]]
+id = "sjoin-geoid"
+claim = "each tract's representative point is in exactly one county, the one its GEOID names"
+kind = "identity"
+observed = "85,529 of 85,529"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-overlap"
+claim = "no two tracts' interiors meet"
+kind = "identity"
+observed = "0 pairs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "queen-eq-geos"
+claim = "**libpysal Queen == GEOS `intersects`, pair for pair**"
+kind = "cross-code"
+observed = "**269,767 = 269,767**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rook-eq-geos"
+claim = "**libpysal Rook == GEOS boundary∩boundary of dimension 1**"
+kind = "cross-code"
+observed = "**237,369 = 237,369**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rook-subset-queen"
+claim = "rook ⊆ queen; queen symmetric, `s0` = 2 × pairs"
+kind = "identity"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "graph-collapse"
+claim = "**tract graph collapsed by county == the county file's graph**"
+kind = "identity"
+observed = "queen 9,480, rook 9,128, 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moran-sign-flip"
+claim = "Moran's I, sign flip"
+kind = "invariance"
+bound = "0 exactly"
+observed = "0.00e+00"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moran-affine"
+claim = "Moran's I, `3.7y + 112.5`"
+kind = "invariance"
+bound = "exact to n × ε"
+observed = "5.6e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moran-direct"
+claim = "esda Moran == `n/S0 · zᵀWz/zᵀz` (scipy sparse)"
+kind = "identity"
+observed = "1.0e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moran-expectation"
+claim = "`EI` == −1/(n−1), n = 85,141"
+kind = "identity"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ols-routes"
+claim = "four OLS routes agree"
+kind = "cross-code"
+observed = "1.1e-11"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.1e-11 (Graviton4) vs 6.8e-12 (Intel, AMD)"
+
+[[check]]
+id = "residual-moran"
+claim = "residual Moran's I: esda == spreg's `moran_res`"
+kind = "cross-code"
+observed = "1.4e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zonal-cells"
+claim = "**rasterio cells per Colorado tract == terra's, all 1,447**"
+kind = "cross-code"
+observed = "**0 differ**, 360,398,892 cells"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zonal-dm-f32"
+claim = "rasterio decimetre sums == terra's via `round(float32(v × 10))`, all 1,447"
+kind = "cross-code"
+observed = "0 differ, Σ 7,541,399,513,167 dm"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zones-nest"
+claim = "tract zones grouped by county == county zones, 64 counties"
+kind = "identity"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "morans-i-value"
+claim = "Moran's I"
+kind = "reported"
+observed = "0.850996647863 (z_norm 425.5)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "tract-areas-csv"
+claim = "the geodesic tract areas (`tract-areas.csv`, written to 1e-6 m²)"
+kind = "reported"
+observed = "83,783 of 85,529 differ, by at most 1.4e-3 m², or 1.3e-9 relative"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel and AMD against Graviton4, Intel == AMD byte for byte: at most 1.4e-3 m² (1.3e-9 relative); geod_max_rel 5.263060e-05 against 5.263001e-05"
+
+[[check]]
+id = "terra-dm-exact-product"
+claim = "summing `round(v × 10)` computed in double ... misses its decimetre sums"
+kind = "reported"
+observed = "1,289 of 1,447 tracts, state total 313,590 dm lower; 314,868 of the 362.88 M cells"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "measurements/r-spatial-real"
+same_bytes = true
+metric = "per-tract geodesic area, |pyproj - terra| in m²"
+check = "pyproj-terra-area"
+
+[[cross_code]]
+with = "measurements/r-spatial-real"
+same_bytes = true
+metric = "zonal table: cells per tract and decimetre sums, rasterio vs terra"
+tolerance_basis = "exact: GDAL's cell-centre rule and PROJ's same shift make the cell assignment deterministic"
+check = "zonal-cells"
+
+[[cross_code]]
+with = "published:Census-TIGER-2024-ALAND"
+same_bytes = true
+metric = "geodesic area vs Census's area, every tract"
+tolerance_basis = "1 m² + perimeter × 0.0557 m, the bound justified in r-spatial-real"
+check = "geodesic-vs-census"
+
+[[trap]]
+id = "geo-ml-terra-float32-decimetres"
+scope = "tool"
+symptom = "summing round(v × 10) computed in double misses terra's decimetre sums on 1,289 of 1,447 tracts, and the state total comes out 313,590 dm lower"
+blames = "the claim that terra's integers are round(v × 10)"
+cause = "terra's intermediate dem * 10 is a float32 layer (FLT4S is terra's default type for temporary files); a product within half a float32 step of .5 becomes exactly .5 and std::round sends it up"
+fix = "keep the product in double, for example inside app() (that route was not run here); to reproduce terra, round(float32(v × 10))"

@@ -1,0 +1,235 @@
+# measurements/sunpy-real/record.toml -- drafted by the #118 extraction, then authored.
+# The README calls the Graviton4-vs-x86 residual differences "neither a fixed point nor a
+# trajectory" (libm roundings in a non-iterative chain), so the five residual checks carry no
+# across_chips value; the enum has no slot for that.
+schema = 1
+result_unit = "the whole day, checked: all 343 AIA 171 Å maps of 2017-09-06 through the frame round trip, plus the derotated NOAA 12673 datacube"
+
+[[dataset]]
+id = "s3://gov-nasa-hdrl-data1/sdac/sdo/aia/20170906/0171/, all 343 sdo_aia_h2_*_0171_v1.fits (NASA HelioCloud aia.lev2_hc, CC0)"
+tier = "roda"
+pins = "pins.sha256"
+note = "ETag + sha256 per object in inputs.tsv, checked at copy time (S3 server-side SHA256) and again in-task"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 330
+billed_s = 454
+usd_hr = 0.7181
+compute_usd = 0.0659
+billed_usd = 0.0906
+peak_gib = 25.2
+peak_kind = "cgroup-memory.peak"
+note = "box cgroup peak; largest worker ru_maxrss 1.91 GiB"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 722
+billed_s = 816
+usd_hr = 0.8467
+compute_usd = 0.1698
+billed_usd = 0.1919
+peak_gib = 27.4
+peak_kind = "cgroup-memory.peak"
+note = "box cgroup peak; largest worker ru_maxrss 1.92 GiB; 16 workers on 8 SMT cores"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 501
+billed_s = 587
+usd_hr = 0.9738
+compute_usd = 0.1356
+billed_usd = 0.1588
+peak_gib = 28.0
+peak_kind = "cgroup-memory.peak"
+note = "box cgroup peak; largest worker ru_maxrss 1.92 GiB"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+peak_gib = 1.9
+peak_kind = "rss"
+note = "sizing run: six images at 14.5 s each, 1.9 GiB per worker; predicted 5.2 min on 16 workers, the run took 5.5; not priced"
+
+# --- checks: '## What held, on all three chips' -----------------------------------------
+[[check]]
+id = "datasum"
+claim = "FITS `DATASUM`, recomputed from the raw bytes (ones-complement, FITS 4.0 App. J)"
+kind = "pin"
+observed = "343 / 343"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "checksum"
+claim = "FITS `CHECKSUM`: the whole HDU sums to −0"
+kind = "pin"
+observed = "343 / 343"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "datavals"
+claim = "`DATAVALS` == pixels loaded, none blank or NaN"
+kind = "identity"
+bound = "25,000,000 per image"
+observed = "343 / 343"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "datamax"
+claim = "`DATAMAX` == the stored maximum"
+kind = "reference"
+observed = "exact, 343 / 343"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "datamedn-datamin"
+claim = "`DATAMEDN`, `DATAMIN` within 1 DN of the stored image"
+kind = "reference"
+bound = "1 DN"
+observed = "median exact in 318, ±1 DN in 25; min +1 DN in all 343"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "datamean-datarms"
+claim = "`DATAMEAN`, `DATARMS` vs the pixels"
+kind = "reference"
+bound = "1e-4"
+observed = "max rel 1.44e-6 / 1.29e-6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rsun-obs-arcsin"
+claim = "`RSUN_OBS == arcsin(RSUN_REF / DSUN_OBS)`"
+kind = "identity"
+bound = "a sphere's tangent half-angle"
+observed = "max rel 1.2e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rsun-arctan-control"
+claim = "control: `arctan(RSUN_REF / DSUN_OBS)`"
+kind = "identity"
+bound = "must miss by the series' x²/2"
+observed = "1.065e-5, ratio to x²/2 0.999991"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "r-sun-pixels"
+claim = "`R_SUN == RSUN_OBS / CDELT1`"
+kind = "identity"
+observed = "max rel 9.7e-8 (`R_SUN`'s 9 printed digits)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sunpy-rsun-obs"
+claim = "sunpy `rsun_obs` == `RSUN_OBS`"
+kind = "identity"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "disc-finite"
+claim = "HPC → HGS finite exactly on the disc `arcsin(R/d)` predicts"
+kind = "identity"
+bound = "ray–sphere intersection"
+observed = "0 of 8.6 G pixels disagree"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "disc-pixel-count"
+claim = "on-disc pixel count vs π r², r = tan(limb)/CDELT"
+kind = "band"
+bound = "2√2 π r"
+observed = "max |N − π r²| 216 px against 16,916"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frame-round-trip"
+claim = "pixel → HPC → HGS → HPC → pixel, 3.91 G on-disc pixels"
+kind = "invariance"
+bound = "the frames are inverses"
+observed = "max 8.2e-10 px"
+outcome = "pass"
+
+[[check]]
+id = "carrington-lat"
+claim = "Carrington lat == Stonyhurst lat"
+kind = "invariance"
+observed = "max 2.1e-14 deg"
+outcome = "pass"
+
+[[check]]
+id = "carrington-lon-offset"
+claim = "Carrington − Stonyhurst lon is one constant per image"
+kind = "invariance"
+observed = "max spread 1.7e-13 deg over 11.4 M pixels"
+outcome = "pass"
+
+[[check]]
+id = "self-derotation"
+claim = "self-derotation of the 12:00 frame == the 12:00 cutout"
+kind = "identity"
+bound = "a zero-duration rotation is the identity"
+observed = "max rel 1.0e-10, same finite mask"
+outcome = "pass"
+
+[[check]]
+id = "derotation-improves-ncc"
+claim = "derotated frame correlates with 12:00 better than the raw cutout, every |Δt| ≥ 1 h"
+kind = "identity"
+observed = "313 / 313; NCC 0.21–0.63 derotated, 0.03–0.48 raw"
+outcome = "pass"
+
+# --- what the run found: recorded, not asserted ----------------------------------------
+[[check]]
+id = "hgln-obs-vs-vector"
+claim = "`HGLN_OBS` vs JSOC's own HAEX/Y/Z_OBS position vector (read as mean ecliptic of J2000)"
+kind = "reported"
+observed = "24-hour sinusoid, amplitude 0.0107°; sunpy's observer agrees with the vector to 2.7e-9 deg and 11 m"
+outcome = "reported"
+
+[[trap]]
+id = "sunpy-hgln-obs-disagrees-with-vector"
+scope = "data"
+symptom = "HGLN_OBS departs from JSOC's HAEX/Y/Z_OBS position vector in a sinusoid with a 24-hour period and amplitude 0.0107° (about 130 km, 0.18″ on the photosphere)"
+cause = "a property of the aia.lev2_hc product's header, not of sunpy; the vector read as ecliptic of date is instead 0.249° off (about 17.7 years of precession)"
+fix = "let sunpy choose the observer (it agrees with the vector as J2000 ecliptic) rather than building it from HGLN_OBS"
+
+[[trap]]
+id = "sunpy-jsoc-integer-stats-off-by-one"
+scope = "data"
+symptom = "DATAMIN is exactly 1 DN above the stored minimum in all 343 images; DATAMEDN off by 1 DN in 25"
+cause = "consistent with JSOC computing the statistics before the final rounding to integers"
+fix = "check JSOC's integer statistics within 1 DN of the stored image, not exactly (DATAMAX is always exact)"

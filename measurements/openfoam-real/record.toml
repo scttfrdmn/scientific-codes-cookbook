@@ -1,0 +1,225 @@
+# measurements/openfoam-real/record.toml -- the MESSY case: a cross-code assertion that fails
+# on every chip and is reported, not loosened; a published reference; a sibling recipe's grid;
+# fixed points and paths in one run. Owner recipe (openfoam), pins, last_verified*, spec
+# resources (cpu 16, memory 32 GiB, families c8g -> c8i/c8a via spec_arch), ttl 4h,
+# cost_limit 1.5 are all derived. Overall status is derived too: any outcome "fail" makes the
+# record "fail-reported", never "pass".
+schema = 1
+result_unit = "the validation pair: NACA 0012 SA at alpha = 10 and 15 degrees, 897x257 C-grid"
+
+[[dataset]]
+id = "su2code/TestCases v8.5.0 n0012_897-257.su2"
+tier = "versioned-release"
+pins = "pins.sha256"                    # data/n0012_897-257.su2 line; staged by su2-real
+from_recipe = "su2"
+note = "converted to a one-cell-thick polyMesh with SU2's vertex text copied, so both codes solve identical geometry"
+
+[[dataset]]
+id = "NASA TMR naca0012_val_sa: Summary of CFD SA Results (seven codes)"
+tier = "durable-id"
+unpinned = "a published web table; values embedded in su2-real, not a hashed file"
+
+[[run]]
+instance = "c8g.4xlarge"
+date = "2026-10-20"
+date_source = "git"
+workers = 16                             # MPI ranks, hierarchical (4 4 1)
+host = "results/arm64/host.txt"          # threads_per_core 1, CPU part 0xd4f read from here
+wall_s = 3990
+billed_s = 4066
+usd_hr = 0.6381
+compute_usd = 0.707
+billed_usd = 0.721
+peak_gib = 1.08
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/x86_64/host.txt"         # threads_per_core 2: 16 ranks on 8 cores
+wall_s = 4834
+billed_s = 4911
+usd_hr = 0.7497
+compute_usd = 1.007
+billed_usd = 1.023
+peak_gib = 1.07
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/amd/host.txt"
+wall_s = 3247
+billed_s = 3312
+usd_hr = 0.8622
+compute_usd = 0.778
+billed_usd = 0.793
+peak_gib = 1.07
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/"
+
+# --- checks: the README's "What held at scale" rows, verbatim claims ------------------
+[[check]]
+id = "native"
+claim = "rhoSimpleFoam native: ELF e_machine == host's"
+kind = "native-arch"
+bound = "183 / 62"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "mpi-ranks"
+claim = "MPI ranks, OpenFOAM's own nProcs"
+kind = "rank-count"
+bound = "== 16 launched"
+observed = "16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mesh"
+claim = "checkMesh cells, points; topology, openness, pyramids, volumes"
+kind = "identity"
+bound = "229,376 / 460,672; 9 of 9 OK"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "converged"
+claim = "last two 1000-iteration changes shrinking; estimated remaining iterative error"
+kind = "convergence-rate"
+bound = "< 1/10 of TMR's band (1e-3 CL, 4e-3 CD)"
+observed = "≤ 1.1e-5 CL, ≤ 2.2e-4 CD"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "mass"
+claim = "net farfield flux / Σ|flux| (the wall carries none)"
+kind = "conservation"
+bound = "< 1e-9"
+observed = "≤ 2.7e-12"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "tmr-cl"
+claim = "CL at 10°, 15° vs the TMR seven-code mean"
+kind = "reference"
+bound = "±1%"
+observed = "−0.24%, −0.05%"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "CL 10°: 1.0909207487 (Graviton4) vs 1.0909207494 (x86), 7e-10"
+
+[[check]]
+id = "tmr-cd"
+claim = "CD at 10°, 15° vs the TMR seven-code mean"
+kind = "reference"
+bound = "±4%"
+observed = "−0.98%, −1.46%"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "CD 15°: 0.0209618702 vs 0.0209618664"
+
+[[check]]
+id = "su2-cl"
+claim = "SU2, same vertices: CL at 10°, 15°"
+kind = "cross-code"
+bound = "±1%"
+observed = "−0.52%, −0.31%"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same as tmr-cl"
+
+[[check]]
+id = "su2-cd10"
+claim = "SU2, same vertices: CD at 10°"
+kind = "cross-code"
+bound = "±4%"
+observed = "−2.88%"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same as tmr-cd"
+
+[[check]]
+id = "su2-cd15"
+claim = "SU2, same vertices: CD at 15°"
+kind = "cross-code"
+bound = "±4%"
+observed = "−4.15% — FAIL"
+outcome = "fail"                         # every chip; task exits 1 by design; bound not moved
+across_chips = "fixed-point"
+across_chips_evidence = "fails identically on all three chips; OpenFOAM 0.020962 inside TMR's range, SU2 0.021870 above every TMR code"
+
+[[check]]
+id = "cross-chip"
+claim = "CL, CD vs Graviton4 (compare.py)"
+kind = "reference"
+bound = "≤ 10× last-1000-iteration change"
+observed = "≤ 7e-9"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "max 7e-9 (15°); Intel == AMD byte-identical"
+
+[[check]]
+id = "partition"
+claim = "cells per rank identical on all chips"
+kind = "identity"
+bound = "=="
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "history"
+claim = "coefficient history"
+kind = "reported"
+observed = "differs from iteration 1, max |Δ| 1.1e-6 (10°), 2.8e-6 (15°)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 vs x86 differ from iteration 1; Intel == AMD byte-identical (one binary, one partition)"
+
+[[check]]
+id = "gamg-iterations"
+claim = "pressure-solver iterations, alpha = 10°"
+kind = "reported"
+observed = "1,337,977"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "1,337,977 (Graviton4) vs 1,363,253 (Intel, AMD)"
+
+[[cross_code]]
+with = "measurements/su2-real"
+same_bytes = true
+metric = "CL and CD, relative difference, at alpha = 10° and 15°"
+tolerance_basis = "TMR's own code-to-code spread (max 1% lift, 4% drag) is the shared problem's precision; TMR's widest CD pair at 15° is itself 4.15% apart"
+check = "su2-cd15"
+
+[[cross_code]]
+with = "published:NASA-TMR-naca0012_val_sa"
+same_bytes = false
+metric = "CL, CD vs the seven-code mean"
+tolerance_basis = "same TMR spread"
+check = "tmr-cd"
+
+[[trap]]
+id = "openfoam-scotch-unattributable"
+scope = "method"
+symptom = "cross-chip CL spread 4e-6 instead of 7e-10; Intel and AMD disagree though they run one binary"
+cause = "scotch cuts a different partition on each box, which changes the GAMG agglomeration"
+fix = "hierarchical decomposition for a cross-chip comparison; scotch (1.12-1.32x faster) for your own runs"
+
+[[trap]]
+id = "openfoam-impulsive-simplec-diverges"
+scope = "tool"
+symptom = "SIMPLEC from free stream diverges within five iterations"
+cause = "impulsive start with consistent SIMPLEC relaxation"
+fix = "500 iterations of the rhoSimpleFoam/aerofoilNACA0012 tutorial relaxation (p 0.7, rho 0.01), then SIMPLEC"

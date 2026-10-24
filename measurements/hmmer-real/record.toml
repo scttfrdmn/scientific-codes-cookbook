@@ -1,0 +1,179 @@
+# measurements/hmmer-real/record.toml -- Graviton generation ladder + same-generation Intel/AMD.
+schema = 1
+result_unit = "one proteome annotated: all 30,134 Pfam-A 38.2 families against 23,879 human proteins at --cut_ga"
+
+[[dataset]]
+id = "Pfam releases/Pfam38.2/Pfam-A.hmm.gz"
+tier = "versioned-release"
+from_recipe = "hmmer"
+unpinned = "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+
+[[dataset]]
+id = "Ensembl release-116 human pep.all, filtered to one protein per gene"
+tier = "versioned-release"
+from_recipe = "hmmer"
+unpinned = "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+
+[[run]]
+instance = "c6g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-c6g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 2514
+billed_s = 2760
+usd_hr = 0.272
+compute_usd = 0.19
+billed_usd = 0.2085
+
+[[run]]
+instance = "c7g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-c7g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 1763
+billed_s = 1911
+usd_hr = 0.29
+compute_usd = 0.142
+billed_usd = 0.1539
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/smoke-check-c8g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 1669
+billed_s = 1845
+usd_hr = 0.319
+compute_usd = 0.1479
+billed_usd = 0.1635
+
+[[run]]
+instance = "c9g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-c9g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 1322
+billed_s = 1421
+usd_hr = 0.3478
+compute_usd = 0.1277
+billed_usd = 0.1373
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-x86_64-2xl.txt"
+host = "results/host-x86_64.txt"
+spawn_version = "0.139.1"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 1352
+billed_s = 1412
+usd_hr = 0.3748
+compute_usd = 0.1408
+billed_usd = 0.147
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-amd-2xl.txt"
+host = "results/host-amd.txt"
+spawn_version = "0.139.1"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+wall_s = 922
+billed_s = 970
+usd_hr = 0.4311
+compute_usd = 0.1104
+billed_usd = 0.1162
+
+# --- checks: the in-task asserts in results/smoke-check-*.txt; cross-chip.txt ---------------
+[[check]]
+id = "models-searched"
+claim = "models_searched (every family in Pfam-A 38.2)"
+kind = "identity"
+bound = "exactly 30134"
+observed = "30134"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "target-sequences"
+claim = "target_sequences (one protein per gene)"
+kind = "identity"
+bound = "exactly 23879"
+observed = "23879"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ok-trailer"
+claim = "hmmsearch_trailer [ok] (completion sentinel)"
+kind = "sentinel"
+bound = "exactly [ok]"
+observed = "[ok]"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tblout-hits"
+claim = "tblout_hits"
+kind = "identity"
+bound = "exactly 65607"
+observed = "65607"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "both x86 chips return the same 65,607 (protein, family) pairs as Graviton4 (cross-chip.txt: same (protein, family) set True)"
+
+[[check]]
+id = "families-with-hit"
+claim = "families_with_hit"
+kind = "identity"
+bound = "exactly 9473"
+observed = "9473"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "proteins-with-hit"
+claim = "proteins_with_hit (95.23% of genes carry >=1 Pfam domain)"
+kind = "identity"
+bound = "exactly 22740"
+observed = "22740"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tblout-scores"
+claim = "tblout below the hit set: E-values, scores, domain counts, row order (cross-chip.txt)"
+kind = "reported"
+observed = "full E-value differs on 54, full score on 16 (max |d| 0.2 bits), domain-count columns on 2"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "arm64 tblout body sha256 4c374e47711eb9da vs x86_64 and amd a175982561685b76; NEON vs SSE/AVX filters; Intel and AMD agree byte for byte"
+
+[[trap]]
+id = "hmmer-price-api-throttle"
+scope = "platform"
+symptom = "eight concurrent spawn task run calls throttled the AWS Price List API, and spawn refused to launch"
+cause = "truffle's static fallback price table has no Graviton coverage, so spawn cannot enforce the cost cap and correctly refuses rather than drop it"
+fix = "launch the rungs serially"
+refs = ["truffle#175"]
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1's wrapper leaves under 1 KB of the 16 KiB user data; the script is staged as search.sh (pinned in pins.sha256)"
+
+[[upstream]]
+ref = "truffle#175"
+role = "filed"

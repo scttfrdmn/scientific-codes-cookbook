@@ -1,0 +1,129 @@
+# measurements/tree-crosscheck/record.toml
+schema = 1
+result_unit = "one RAxML-NG ML search (13 starts) on Pfam 38.2 PF26127.1, 114 taxa x 477 columns, LG+G4"
+
+[[dataset]]
+id = "Pfam 38.2 seed alignment PF26127.1 (12TM_Mok13), 114 taxa x 477 columns"
+tier = "versioned-release"
+from_recipe = "iqtree"
+unpinned = "staged by make stage RECIPE=iqtree; no sha256 in this dir"
+note = "read by both IQ-TREE and RAxML-NG, so the cross-check is on identical bytes"
+
+# --- RAxML-NG across four Graviton generations: same seed, --threads 8 ------------------
+# README prints $/search (0.0482 / 0.0375 / 0.0404 / 0.0303) but no $/hr, so no $ field is recorded.
+[[run]]
+instance = "c6g.2xlarge"
+purpose = "generation-sweep"
+results = "results/c6g.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 638.1
+note = "search-only elapsed from RAxML-NG's own log; README $/search 0.0482 (no $/hr printed)"
+
+[[run]]
+instance = "c7g.2xlarge"
+purpose = "generation-sweep"
+results = "results/c7g.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 465.0
+note = "README $/search 0.0375 (no $/hr printed)"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 456.0
+note = "the raxml-ng recipe's own run (no per-rung results file here); README $/search 0.0404 (no $/hr printed)"
+
+[[run]]
+instance = "c9g.2xlarge"
+purpose = "generation-sweep"
+results = "results/c9g.txt"
+date = "2026-10-01"
+date_source = "git"
+workers = 8
+wall_s = 313.0
+note = "README $/search 0.0303 (no $/hr printed)"
+
+# --- the cross-check task (results/crosscheck.txt) -------------------------------------
+[[check]]
+id = "iqtree-raxml-lnl"
+claim = "IQ-TREE and RAxML-NG reach the same ML optimum on the same alignment under LG+G4"
+kind = "cross-code"
+bound = "< 0.01 absolute"
+observed = "0.000409 absolute, 7.8e-9 relative"
+outcome = "pass"
+
+[[check]]
+id = "lnl-band"
+claim = "both log-likelihoods in -54000..-52000"
+kind = "band"
+bound = "-54000..-52000"
+observed = "−52706.731 / −52706.731409"
+outcome = "pass"
+
+# --- RAxML-NG's in-task smoke asserts, per rung (results/c*.txt) -----------------------
+[[check]]
+id = "tips"
+claim = "tips_in_best_tree (every taxon present)"
+kind = "identity"
+bound = "exactly 114"
+observed = "114"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "patterns"
+claim = "distinct_site_patterns"
+kind = "identity"
+bound = "exactly 465, and <= 477"
+observed = "465"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "free-parameters"
+claim = "free_parameters (= 2n-3 branches + 1 gamma alpha)"
+kind = "identity"
+bound = "exactly 226"
+observed = "226"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "aic-aicc-bic"
+claim = "aic_identity, aicc_identity, bic_identity (closed forms in k, n, lnL)"
+kind = "identity"
+observed = "105865.462818 / 106275.878818 / 106807.321545"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "final-is-best"
+claim = "final_is_best_of_searches"
+kind = "identity"
+bound = "exactly the best of the 13 searches"
+observed = "-52706.731409"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "−52706.731409 on c6g, c7g, c8g and c9g"
+
+[[check]]
+id = "sentinel"
+claim = "raxml_reported_finished; model_is_LG+G4m; all_sites_in_partition"
+kind = "sentinel"
+observed = "1"
+outcome = "pass"
+across_chips = "identical"
+
+[[cross_code]]
+with = "recipes/iqtree"
+same_bytes = true
+metric = "absolute difference of the ML log-likelihoods, IQ-TREE 3.1.3 (-T 4) vs RAxML-NG 2.0.2 (--threads 8), seed 12345"
+tolerance_basis = "IQ-TREE prints three decimals, so ±0.0005 of rounding is inherent; 0.01 absolute is set by that print, not by the observed agreement"
+check = "iqtree-raxml-lnl"

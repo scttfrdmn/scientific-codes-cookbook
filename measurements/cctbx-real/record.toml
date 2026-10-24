@@ -1,0 +1,197 @@
+# measurements/cctbx-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole cohort: 181 entries of PDB hash directory ab classified, 167 rescored, every check passed"
+
+[[dataset]]
+id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/{mmCIF,structure_factors}/ab/ (181 entries x model + sf)"
+tier = "roda"
+pins = "cohort.sha256"
+note = "362 files, copied server-side with S3's SHA-256 checksum and re-checked at stage-in"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 245
+billed_s = 349
+usd_hr = 0.6381
+compute_usd = 0.043
+billed_usd = 0.062
+peak_gib = 5.9
+peak_kind = "cgroup-memory.peak"
+note = "peak is the box's cgroup memory.peak; the largest single worker's ru_maxrss is 922 MiB"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 285
+billed_s = 406
+usd_hr = 0.7497
+compute_usd = 0.059
+billed_usd = 0.085
+peak_gib = 7.3
+peak_kind = "cgroup-memory.peak"
+note = "box peak also counts the x86 env-twin install; largest worker ru_maxrss 835 MiB"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 188
+billed_s = 282
+usd_hr = 0.8622
+compute_usd = 0.045
+billed_usd = 0.068
+peak_gib = 7.4
+peak_kind = "cgroup-memory.peak"
+note = "box peak also counts the x86 env-twin install; largest worker ru_maxrss 917 MiB"
+
+# --- '## What held at scale, on all three chips' (in-task, real.py) -------------------
+[[check]]
+id = "all-classified"
+claim = "every cohort entry classified"
+kind = "conservation"
+bound = "rescored, skipped or failed with its reason, nothing lost"
+observed = "181 / 181"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "deposited-r"
+claim = "recomputed R reproduces the deposited R"
+kind = "reference"
+bound = "median < 0.01"
+observed = "median |ΔR-work| 0.0065"
+outcome = "pass"
+across_chips = "identical"   # the median; per-entry R is a path (r-work-cross-chip)
+
+[[check]]
+id = "permuted-control"
+claim = "permuted-Fobs control is worse"
+kind = "band"
+bound = "167 / 167"
+observed = "167 / 167, min margin 0.265"
+outcome = "pass"
+
+[[check]]
+id = "p1-expansion"
+claim = "P1 expansion reproduces F_calc"
+kind = "identity"
+observed = "max 4.0e-14 relative"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "P1-expansion residual max |Δ| 1.2e-14 Intel/AMD vs Graviton4; Intel vs AMD bit-identical"
+
+[[check]]
+id = "gemmi-fcalc"
+claim = "gemmi F_calc == cctbx F_calc"
+kind = "cross-code"
+bound = "1e-6 relative"
+observed = "max 1.5e-7 relative"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "max 1.5e-7 relative on all three chips"
+
+[[check]]
+id = "same-atoms"
+claim = "both readers build the same atoms"
+kind = "identity"
+observed = "167 / 167"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scored-deposited-atoms"
+claim = "model_vs_data scored the deposited atoms"
+kind = "identity"
+bound = "R at fixed scales unchanged"
+observed = "0 differ, ΔR 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "finite"
+claim = "R-work, R-free, control finite, in (0, 1)"
+kind = "band"
+bound = "(0, 1)"
+observed = "167 / 167"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cohort-pins"
+claim = "cohort.sha256 (362 files) re-checked at stage-in"
+kind = "pin"
+observed = "362 files"
+outcome = "pass"
+
+# --- 'Across chips: what is a fixed point and what is a path' (observed, not asserted) --
+[[check]]
+id = "reflections-kept-cross-chip"
+claim = "reflections kept after outlier rejection"
+kind = "reported"
+observed = "1 entry differs by 1 (5ab0: 88,242 vs 88,243)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "5ab0: 88,242 vs 88,243 (x86 vs Graviton4); Intel vs AMD identical"
+
+[[check]]
+id = "r-work-cross-chip"
+claim = "R-work"
+kind = "reported"
+observed = "15 / 167 bit-identical, max |Δ| 2.9e-4"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Intel/AMD vs Graviton4: 15 / 167 bit-identical, max |Δ| 2.9e-4; Intel vs AMD bit-identical"
+
+[[check]]
+id = "r-free-cross-chip"
+claim = "R-free"
+kind = "reported"
+observed = "22 / 167, max 6.6e-4"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Intel/AMD vs Graviton4: 22 / 167 bit-identical, max 6.6e-4; Intel vs AMD bit-identical"
+
+[[check]]
+id = "control-r-cross-chip"
+claim = "permuted-Fobs control R"
+kind = "reported"
+observed = "31 / 167, max 4.4e-3"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Intel/AMD vs Graviton4: 31 / 167 bit-identical, max 4.4e-3; Intel vs AMD bit-identical"
+
+[[cross_code]]
+with = "recipes/gemmi"
+same_bytes = true
+metric = "F_calc relative difference, first 40 working reflections per entry by direct summation, IT92 neutral atoms"
+tolerance_basis = "gemmi's Python binding instantiates IT92<float> and evaluates sin²θ/λ² in float, so ~1e-7 relative is the floor; bound 1e-6"
+check = "gemmi-fcalc"
+
+[[cross_code]]
+with = "published:PDB-20260101-deposited-_refine-R"
+same_bytes = true
+metric = "median |R-work recomputed - deposited|"
+check = "deposited-r"
+
+[[trap]]
+id = "cctbx-deepcopy-pdb-precision"
+scope = "tool"
+symptom = "On `8abo`, 3.18593 became 3.186"
+cause = "`copy.deepcopy` of an `iotbx.pdb` hierarchy round-trips through PDB format whenever the model fits it, rounding coordinates to 0.001 Å, B to 0.01 and U to 1e-4; `mmtbx.model.manager(model_input=...)` returns a hierarchy at PDB precision"
+fix = "assert the scored structure equals the file's own atoms (as real.py does); a script that builds its own model manager computes on rounded atoms"
+cost = "moves F_calc by up to 2e-4 relative on this cohort"

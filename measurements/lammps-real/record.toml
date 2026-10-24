@@ -1,0 +1,194 @@
+# measurements/lammps-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole 10 ps run (5,000 steps of the 2,048,000-atom scaled rhodopsin benchmark)"
+
+[[dataset]]
+id = "lammps/lammps patch_22Jul2025 bench/data.rhodo"
+tier = "versioned-release"
+pins = "inputs.sha256"
+from_recipe = "lammps"
+note = "the recipe's staged copy, reused; re-checked in-task"
+
+[[dataset]]
+id = "lammps/lammps patch_22Jul2025 bench/in.rhodo.scaled (run 100 -> run 5000)"
+tier = "versioned-release"
+pins = "inputs.sha256"
+
+[[dataset]]
+id = "lammps/lammps patch_22Jul2025 bench/log.15Jul25.rhodo.fixed.g++.1 (step-0 reference)"
+tier = "test-suite"
+unpinned = "step-0 values embedded in check.py; the README gives only a truncated sha256 (01384b04…7ea528), no manifest"
+
+# --- 5,000-step runs; the 1,000-step runs (results/1k/) print ns/day only, no wall or bill -
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+workers = 64
+host = "results/5k/arm64/host.txt"
+wall_s = 1026
+billed_s = 1185
+usd_hr = 2.5523
+compute_usd = 0.727
+billed_usd = 0.840
+peak_gib = 8.2
+peak_kind = "cgroup-memory.peak"
+results = "results/5k/arm64/"
+
+[[run]]
+instance = "c8i.16xlarge"
+purpose = "cross-chip"
+date = "2026-09-30"
+date_source = "git"
+workers = 64
+host = "results/5k/x86_64/host.txt"
+wall_s = 1408
+billed_s = 1546
+usd_hr = 2.9987
+compute_usd = 1.173
+billed_usd = 1.288
+peak_gib = 13.8
+peak_kind = "cgroup-memory.peak"
+results = "results/5k/x86_64/"
+note = "cgroup peak higher on x86 because the env is installed into the container at start and its page cache is counted"
+
+[[run]]
+instance = "c8a.16xlarge"
+purpose = "cross-chip"
+date = "2026-09-30"
+date_source = "git"
+workers = 64
+host = "results/5k/amd/host.txt"
+wall_s = 997
+billed_s = 1122
+usd_hr = 3.4486
+compute_usd = 0.955
+billed_usd = 1.075
+peak_gib = 13.8
+peak_kind = "cgroup-memory.peak"
+results = "results/5k/amd/"
+note = "cgroup peak higher on x86 because the env is installed into the container at start and its page cache is counted"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "mpi-ranks"
+claim = "MPI ranks, from LAMMPS' log"
+kind = "rank-count"
+bound = "== 64 launched"
+observed = "64"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "topology"
+claim = "atoms; bonds / angles / dihedrals / impropers"
+kind = "identity"
+bound = "exactly 64 × the 32,000-atom system's"
+observed = "2,048,000; 1,774,272 / 2,589,888 / 3,637,056 / 66,176"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "upstream-reference"
+claim = "upstream's committed reference (`bench/log.15Jul25.rhodo.fixed.g++.1`, step 0): every energy term, pressure, volume, and PPPM's `G = 0.24883488`, `grid = 25 32 32`"
+kind = "reference"
+bound = "≤ 1e-4, one unit in the reference's last printed digit"
+observed = "worst 2.9e-5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "extensivity"
+claim = "extensivity: 4×4×4 replica at the same `g_ewald` and a 4× mesh (`100 128 128`), every term incl. `E_long`"
+kind = "invariance"
+bound = "relative ≤ 1e-10 of 64 × the base"
+observed = "4.48e-13"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "4.48e-13 (Graviton4), 4.50e-13 (Intel), 4.50e-13 (AMD)"
+
+[[check]]
+id = "production-step0"
+claim = "production step 0: KE, bonded and vdW terms, volume / 64"
+kind = "reference"
+bound = "≤ 1e-4 of upstream's reference"
+observed = "holds"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "completion-npt"
+claim = "completion; NPT holds 300 K"
+kind = "sentinel"
+bound = "`Total wall time` printed; final T 280–330 K"
+observed = "300.19 K"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "final T 300.19 K (Graviton4), 299.90 K (Intel), 299.87 K (AMD)"
+
+# --- "Fixed point or path" rows, reported ----------------------------------------------
+[[check]]
+id = "step0-totals"
+claim = "step 0 of the production run, every term (13 values to 4 decimals)"
+kind = "reported"
+observed = "−1622758.4228 TotEng"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "base-ecoul"
+claim = "base system at full precision, `E_coul`"
+kind = "reported"
+observed = "207025.8933711299"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "207025.8933711299 (Graviton4) vs 207025.8933711358 (Intel, AMD): 3e-14 relative"
+
+[[check]]
+id = "totenergy-trajectory"
+claim = "TotEng at step 50 / 500"
+kind = "reported"
+observed = "−1621042.3350 / −1607686.2832"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "step 500: −1607686.2832 (Graviton4), −1607672.2604 (Intel), −1607606.4131 (AMD); diverges in the 11th figure by step 50"
+
+[[check]]
+id = "final-state"
+claim = "final T, TotEng at 5,000"
+kind = "reported"
+observed = "300.19 K, −1614292.29"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "−1614292.29 (Graviton4), −1615410.71 (Intel), −1615133.99 (AMD)"
+
+[[check]]
+id = "neighbor-builds"
+claim = "neighbour-list builds"
+kind = "reported"
+observed = "662"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "662 (Graviton4), 655 (Intel), 659 (AMD)"
+
+[[check]]
+id = "ewald-split-auto"
+claim = "Left to choose for itself (the production deck), PPPM picks `G = 0.24521748`, `grid = 96 125 120` for the big box"
+kind = "reported"
+observed = "sum moved by 0.605 of 46,801 kcal/mol (1.3e-5)"
+outcome = "reported"
+
+[[trap]]
+id = "lammps-ompi-devshm-sigbus"
+scope = "platform"
+symptom = "the first collective dies with SIGBUS (exit 135) at 64 ranks"
+cause = "Docker gives the container a 64 MB /dev/shm; Open MPI's shared-memory segments do not fit at this rank count"
+fix = "OMPI_MCA_btl_sm_backing_directory=/tmp"
+
+[[trap]]
+id = "lammps-sort-sawtooth"
+scope = "method"
+symptom = "a 1,000-step run (0.862 / 0.625 / 0.891 ns/day) overstates the steady-state rate by 1.6–2.5%"
+cause = "LAMMPS re-sorts atoms every 1,000 steps (atom_modify sort default) and the rate decays ~13% between sorts as locality drifts"
+fix = "size from whole sort periods"

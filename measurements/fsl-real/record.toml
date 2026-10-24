@@ -1,0 +1,147 @@
+# measurements/fsl-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one subject (T1w scan through robustfov, bet, flirt 6/12-DOF, fnirt)"
+results_per_run = 125
+
+[[dataset]]
+id = "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, Puccio et al. 2016, doi:10.1186/s13742-016-0150-5), 1,751,464,473 bytes"
+tier = "roda"
+unpinned = "no committed sha256 manifest; the README prints the archive's sha256 truncated (fd616b9e…40d2cc) and says it is asserted on the box before any compute"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 16
+threads_per_core = 1            # no host file; README: lscpu 1 thread per core on c8g
+wall_s = 2332
+billed_s = 2403
+usd_hr = 0.6381
+compute_usd = 0.00331
+billed_usd = 0.00341
+peak_gib = 15.9
+peak_kind = "cgroup-memory.peak"
+note = "peak includes the 5.5 GiB of /tmp the extracted cohort occupies"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 16
+threads_per_core = 2            # no host file; README: 8 cores x 2 hyperthreads on c8i
+wall_s = 3577
+billed_s = 3645
+usd_hr = 0.7497
+compute_usd = 0.00596
+billed_usd = 0.00607
+peak_gib = 16.1
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/topology.txt"
+spawn_version = "0.139.1"
+date = "2026-10-21"
+date_source = "git"
+workers = 16
+wall_s = 2181
+billed_s = 2321
+usd_hr = 0.8622
+compute_usd = 0.00418
+billed_usd = 0.00445
+peak_gib = 16.1
+peak_kind = "cgroup-memory.peak"
+note = "ran chip.task.json with its inline command moved byte for byte into a staged sha256-checked file (spawn#1063/#1246)"
+
+# --- checks: '## What held at scale, on all three chips' (observed = Graviton4) ---
+[[check]]
+id = "subjects-complete"
+claim = "all subjects complete"
+kind = "sentinel"
+bound = "125 of the archive's 125"
+observed = "125"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "planted-motion"
+claim = "**FLIRT undoes a motion planted on each subject's own curated brain** (6°, 21.60 mm at the corners)"
+kind = "reference"
+bound = "< ¼ voxel = 0.25 mm, every subject"
+observed = "max **0.198 mm**, median 0.085"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "FLIRT planted-motion residual identical on 0 / 125, largest difference 0.150 mm; max 0.198 mm (Graviton4) vs 0.206 mm (Intel, AMD)"
+
+[[check]]
+id = "fnirt-beats-affine"
+claim = "**FNIRT improves on its own affine start** (curated mask warped to MNI152, Dice vs MNI152's brain mask)"
+kind = "band"
+bound = "every subject"
+observed = "**125 / 125**, min gain 0.011"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "FNIRT Dice to MNI152 identical on 0 / 125, largest difference 0.0036"
+
+[[check]]
+id = "bet-dice"
+claim = "BET (after `robustfov`) vs the curated mask, Dice"
+kind = "band"
+bound = "≥ 0.80 per subject — a gross-failure guard"
+observed = "min 0.832, median 0.901"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "BET mask 102 / 125 byte-identical Graviton4 vs x86; A00054857: 1,026,298 vs 968,097 voxels (Dice 0.930 vs 0.906)"
+
+# --- reported, not asserted ---
+[[check]]
+id = "flirt-fnirt-dice"
+claim = "FLIRT-only Dice to MNI152 median → FNIRT (all chips)"
+kind = "reported"
+observed = "0.903 → 0.955"
+outcome = "reported"
+
+[[check]]
+id = "bet-containment"
+claim = "BET's containment of the curated mask, median"
+kind = "reported"
+observed = "0.844"
+outcome = "reported"
+
+[[check]]
+id = "x86-intel-vs-amd"
+claim = "Intel against AMD: identical on every subject — all 125 BET masks byte for byte, and every FLIRT residual, FLIRT Dice and FNIRT Dice to the printed six digits"
+kind = "reported"
+observed = "identical on every subject"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "fsl-bet-needs-robustfov"
+scope = "method"
+symptom = "Plain `bet` on the whole-head image gives median Dice 0.75 and falls below 0.80 on 75 of 125 subjects (worst 0.34)"
+cause = "the scans include the neck; bet without FSL's own robustfov crop mis-strips them, and drags FLIRT down too"
+fix = "run robustfov before bet (worst Dice 0.83 after, every one of the 125 improves)"
+
+[[trap]]
+id = "fsl-nproc-reads-1"
+scope = "tool"
+symptom = "the `nproc` line in summary.txt reads 1 on a 16-vCPU box"
+cause = "GNU nproc honours OMP_NUM_THREADS=1"
+fix = "read avg_cores (the measured parallelism), not nproc"
+
+[[upstream]]
+ref = "spawn#1063"
+role = "workaround"
+note = "AMD spec exceeds EC2's 16 KiB user data on spawn 0.139.1; inline command moved into a staged sha256-checked file"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "same user-data limit"

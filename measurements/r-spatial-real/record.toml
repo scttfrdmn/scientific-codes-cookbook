@@ -1,0 +1,204 @@
+# measurements/r-spatial-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole workload plus every check: all 85,529 US census tracts measured, aggregated and joined, and Colorado's DEM summarised by its 1,447 tracts by two routes"
+trap_refs = ["geo-ml-terra-float32-decimetres"]   # owned by geo-ml-real, which measured it
+
+[[dataset]]
+id = "Census TIGER/Line 2024 TRACT/tl_2024_{56 FIPS}_tract.zip"
+tier = "versioned-release"
+pins = "tracts.sha256"
+note = "no RODA copy exists; fetched on AWS by fetch.task.json, pinned as fetched on 2026-10-19"
+
+[[dataset]]
+id = "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)"
+tier = "versioned-release"
+from_recipe = "geo-ml"
+note = "read, not copied; README cites a truncated sha256 only"
+
+[[dataset]]
+id = "Copernicus GLO-30, 28 COGs over Colorado (inputs/geospatial-real/)"
+tier = "roda"
+pins = "../geospatial-real/tiles.sha256"
+from_recipe = "measurements/geospatial-real"
+note = "read, not copied"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/lscpu.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 485
+billed_s = 647
+usd_hr = 0.4713
+compute_usd = 0.0635
+billed_usd = 0.0847
+peak_gib = 24.3
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/lscpu.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 498
+billed_s = 589
+usd_hr = 0.5557
+compute_usd = 0.0769
+billed_usd = 0.0909
+peak_gib = 27.1
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/lscpu.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 358
+billed_s = 462
+usd_hr = 0.639
+compute_usd = 0.0635
+billed_usd = 0.082
+peak_gib = 27.2
+peak_kind = "cgroup-memory.peak"
+
+[[check]]
+id = "pins"
+claim = "56 tract zips, 28 DEM tiles and the county file match their sha256 pins"
+kind = "pin"
+bound = "provenance"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "release-shape"
+claim = "85,529 tracts, unique 11-digit GEOIDs, all EPSG:4269"
+kind = "identity"
+bound = "the release"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "census-area"
+claim = "ellipsoidal area within 1 m² + perimeter × 0.0557 m of Census, every tract"
+kind = "reference"
+bound = "Census's reference: 1 m² + perimeter × 0.0557 m"
+observed = "0 of 85,529 outside; worst at 0.217 of the bound"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "84,101 of 85,529 tract areas differ in the printed digits by at most 1.4e-3 m² (1.3e-9 relative), Intel/AMD vs Graviton4; geod_max_rel 5.263066e-05 vs 5.263001e-05"
+
+[[check]]
+id = "census-total"
+claim = "summed tract area vs Census total, relative"
+kind = "reference"
+bound = "the same, in aggregate"
+observed = "6.372e-08"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sphere-control"
+claim = "control: s2's sphere, median error over ellipsoidal's"
+kind = "reference"
+bound = "the area check has teeth"
+observed = "3,632×; 80,328 tracts outside the bound"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "county-additivity"
+claim = "Σ tract areas == county area, all 3,235 counties"
+kind = "conservation"
+bound = "< 1e-12 relative"
+observed = "4.5e-16 relative"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "4.5e-16 (Graviton4) vs 3.8e-16 (Intel, AMD)"
+
+[[check]]
+id = "census-self-consistent"
+claim = "Census's own tract ALAND+AWATER sum to its county figures"
+kind = "conservation"
+bound = "the reference is consistent"
+observed = "3,235 of 3,235 exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "geoid-join"
+claim = "each tract's interior point falls in exactly one county, the one its GEOID names"
+kind = "identity"
+bound = "the ID hierarchy, by geometry"
+observed = "85,529 of 85,529"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zone-partition"
+claim = "tract zones partition the covered cells: counts and integer-decimetre elevation sums"
+kind = "conservation"
+bound = "exact integers in any order"
+observed = "360,398,892 cells, Σ 7,541,399,513,167 dm"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zone-nesting"
+claim = "tract zones grouped by county == county zones, all 64"
+kind = "conservation"
+bound = "nesting"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "extract-vs-zonal"
+claim = "extract() == rasterize()+zonal(), per tract, count and sum"
+kind = "identity"
+bound = "two routes, one cell-centre rule"
+observed = "1,447 of 1,447 exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "unprojected-control"
+claim = "control: rasterize the NAD83 polygons onto the WGS84 grid unprojected"
+kind = "identity"
+bound = "the route check has teeth"
+observed = "913 tracts differ, by up to 61 cells"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "global-sum"
+claim = "base R sum() == terra::global() over all 362.88 M cells"
+kind = "identity"
+bound = "exact integers"
+observed = "7,569,849,656,536"
+outcome = "pass"
+across_chips = "identical"
+
+[[trap]]
+id = "r-spatial-rasterize-no-reproject"
+scope = "tool"
+symptom = "terra::rasterize(v, dem) burns NAD83 polygons onto a WGS84 grid with no warning (0 warnings captured); 913 of 1,447 tracts disagree with extract() by up to 61 cells"
+blames = "a membership-rule difference between rasterize() and extract()"
+cause = "rasterize() does not reproject; extract() does ([extract] transforming vector data to the CRS of the raster); NAD83->WGS84 moves vertices up to 8.0e-6°"
+fix = "terra::project(v, crs(dem)) yourself before rasterize()"
+
+[[trap]]
+id = "r-spatial-flat-relative-area-bound"
+scope = "method"
+symptom = "a flat 1e-5 relative area bound fails on 433 small tracts (worst 5.3e-05 on a 0.11 km² Boston tract, 5.7 m² off)"
+blames = "the area model"
+cause = "ALAND/AWATER are integer m², so 1 m² of rounding is already 9e-6 of that tract"
+fix = "bound by 1 m² + perimeter × 0.0557 m"
+

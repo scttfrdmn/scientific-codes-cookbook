@@ -1,0 +1,234 @@
+# measurements/yt-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole Enzo_64 run analysed: all 51 outputs (z = 99 to 0)"
+
+[[dataset]]
+id = "yt sample data Enzo_64.tar.gz, sha256 from yt 4.4.2 yt/sample_data_registry.json"
+tier = "durable-id"
+pins = "files.sha256"
+note = "fetched and checked against the registry on AWS; the 1,065 unpacked files pinned in files.sha256 and re-checked in-task"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+host = "results/arm64/host.txt"
+wall_s = 32
+billed_s = 108
+usd_hr = 0.319
+compute_usd = 0.0028
+billed_usd = 0.0096
+peak_gib = 0.86
+peak_kind = "rss"
+results = "results/arm64/"
+note = "peak is the largest single worker's ru_maxrss (8 workers)"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+host = "results/x86_64/host.txt"
+wall_s = 50
+billed_s = 121
+usd_hr = 0.3748
+compute_usd = 0.0052
+billed_usd = 0.0126
+peak_gib = 0.86
+peak_kind = "rss"
+results = "results/x86_64/"
+note = "peak is the largest single worker's ru_maxrss (8 workers); astro-ed5afa726bbe linux-64 twin"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+host = "results/amd/host.txt"
+wall_s = 29
+billed_s = 87
+usd_hr = 0.4311
+compute_usd = 0.0035
+billed_usd = 0.0104
+peak_gib = 0.86
+peak_kind = "rss"
+results = "results/amd/"
+note = "peak is the largest single worker's ru_maxrss (8 workers); astro-ed5afa726bbe linux-64 twin"
+
+# --- checks: '## What held, on all three chips' (bound = 'why it must hold'; 1,733 per chip) ---
+
+[[check]]
+id = "enzo-level-info"
+claim = "grids and cells on every level == Enzo's `OutputLevelInformation.out` for that cycle (50 outputs × 5 levels)"
+kind = "reference"
+bound = "the simulation's own record, written as it ran"
+observed = "exact, 250 of 250"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "enzo-output-log"
+claim = "outputs on disk == Enzo's `OutputLog`; time == parameter file == `OutputLog`"
+kind = "reference"
+bound = "the run's record; the parameter file prints 14 digits and the log 16, so the bound is half a unit of the parameter file's last digit"
+observed = "exact / within it, 51 of 51"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "leaf-cells"
+claim = "yt's leaf cells == the reader's leaf cells (its own child masking from the hierarchy), as a multiset of exact values"
+kind = "identity"
+bound = "the same doubles, selected two ways"
+observed = "**bit-identical**, 51 of 51"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gas-mass"
+claim = "gas mass: yt `total_quantity` == reader `fsum(ρ·dV)`"
+kind = "identity"
+bound = "same cells"
+observed = "3.3e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "projection-mass"
+claim = "on-axis projection, all 3 axes: `Σ σ · (2pdx)(2pdy)` == total mass"
+kind = "conservation"
+bound = "the quadtree projection is conservative"
+observed = "5.1e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "profile-mass"
+claim = "1-D density profile and 2-D density–temperature phase: Σ bins == total mass"
+kind = "conservation"
+bound = "every cell lands in one bin"
+observed = "1.5e-15 / 1.7e-15"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "radial-profile-mass"
+claim = "radial profile round the densest point: Σ bins == sphere mass"
+kind = "conservation"
+bound = "same"
+observed = "2.2e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "covering-grid-l2"
+claim = "**covering grid at level 2 (256³) == reader's painting, elementwise**"
+kind = "identity"
+bound = "injection of the same doubles, finer over coarser"
+observed = "**exact (`==`)**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "covering-grid-l4"
+claim = "**covering grid 64³ at level 4 round the densest point == reader's painting**"
+kind = "identity"
+bound = "covers all five levels in 33 outputs"
+observed = "**exact (`==`)**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "transpose-control"
+claim = "control: the reference transposed / flipped must *not* match"
+kind = "identity"
+bound = "both are shape-preserving on a cube, so they are the wrong answers to reject"
+observed = "0.17–1.0 away"
+outcome = "pass"
+
+[[check]]
+id = "weighted-projection-control"
+claim = "control: a weighted projection comes back as an average (`g/cm**3`)"
+kind = "identity"
+bound = "so the unweighted one is integrating"
+observed = "51 of 51"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "particles"
+claim = "particles: count == hierarchy == reader; indices unique; index set and masses == reader"
+kind = "identity"
+bound = "same particles"
+observed = "exact / 1.3e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "ngp-deposit"
+claim = "NGP deposit: `Σ all_count` == N, `Σ all_mass` == particle mass"
+kind = "conservation"
+bound = "each particle lands in one leaf cell"
+observed = "exact / 1.3e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "cosmic-fractions"
+claim = "dark matter == 1 − Ω_b/Ω_m (from the run's `64.init`) in every output; gas == Ω_b/Ω_m at the ICs"
+kind = "reference"
+bound = "Enzo's mass unit is the mean matter density × box"
+observed = "1.3e-16 / 3.3e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "on DD0016 and DD0034 code_mass and code_density differ by 1–2 ulp Graviton4 vs x86, so 10 residuals differ in their last bit, all still ≤ 1e-15; Intel == AMD byte-identical"
+
+[[check]]
+id = "dm-conserved"
+claim = "the dark-matter particle set and mass are the same in all 51 outputs"
+kind = "conservation"
+bound = "DM is neither created nor destroyed"
+observed = "1 index set, spread 0"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted -------------------------------------------------------------
+[[check]]
+id = "projection-images"
+claim = "Projection images on every output. All 102 image hashes differ"
+kind = "reported"
+observed = "9.2e-16 relative"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "800×800 buffers differ on 5–78% of pixels, by at most 9.2e-16 relative (diag.txt: max rel 9.160e-16), so every pixel samples the same quadtree cell"
+
+[[check]]
+id = "enzo-mass-deficit"
+claim = "Enzo_64 does not conserve its own mass, and this is not yt's doing"
+kind = "reported"
+observed = "1 − 9.7e-5"
+outcome = "reported"
+
+[[trap]]
+id = "yt-enzo-axis-order"
+scope = "data"
+symptom = "Enzo stores arrays `(z, y, x)`, yt hands them back `(x, y, z)`"
+cause = "on a 64³ root grid a transpose is shape-preserving, so an axis mix-up would pass any shape check and every conservation total"
+fix = "compare elementwise against the HDF5 arrays transposed, with a transposed/flipped control that must be rejected"
+
+[[trap]]
+id = "yt-unit-roundtrip-ulp"
+scope = "tool"
+symptom = "yt's unit round trip (code units → cgs → code units) moves individual cell and particle masses by one ulp from exact code-unit arithmetic"
+cause = "the code-unit to cgs conversion factors are floating-point products"
+fix = "mass bounds 1e-12, not `==`, so the check does not assert something yt does not promise (measured in diag.py)"

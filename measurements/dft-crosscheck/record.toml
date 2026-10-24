@@ -1,0 +1,125 @@
+# measurements/dft-crosscheck/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one bulk-Si lattice-constant scan (seven lattice constants, LDA, 6x6x6 k; SIESTA's task adds its 5.4.2 reference SCF)"
+
+[[dataset]]
+id = "siesta-project/siesta 5.4.2 Tests/Pseudos/Si.psf"
+tier = "test-suite"
+from_recipe = "siesta"
+note = "staged by make stage RECIPE=siesta, version-matched; GPAW uses its own PAW setup and an ase-built diamond cell"
+
+# --- SIESTA generation rows: wall_s from results/<gen>-siesta.txt; no $ (this README prints no rate)
+[[run]]
+instance = "c6g.xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 2
+wall_s = 52
+results = "results/c6g-siesta.txt"
+note = "SIESTA, 8 SCFs (1 reference + 7 scan points), 2 MPI ranks; size and price are in recipes/siesta's table; 2026-09-30 is recipes/siesta last_verified"
+
+[[run]]
+instance = "c7g.xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 2
+wall_s = 36
+results = "results/c7g-siesta.txt"
+note = "SIESTA, 8 SCFs, 2 MPI ranks"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+workers = 2
+wall_s = 33
+results = "results/c8g-siesta.txt"
+note = "SIESTA, 8 SCFs, 2 MPI ranks"
+
+[[run]]
+instance = "c9g.xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 2
+wall_s = 28
+results = "results/c9g-siesta.txt"
+note = "SIESTA, 8 SCFs, 2 MPI ranks"
+
+# --- checks: crosscheck.task.json's asserts and the SIESTA smoke-check lines in results/ ---
+[[check]]
+id = "a0-agreement"
+claim = "SIESTA and GPAW agree on bulk Si's equilibrium lattice constant"
+kind = "cross-code"
+bound = "0.0300  want difference < this"
+observed = "0.0097"
+outcome = "pass"
+
+[[check]]
+id = "siesta-lda-band"
+claim = "Both land inside the LDA literature band for Si (5.37–5.44 Å) -- SIESTA"
+kind = "band"
+bound = "5.37–5.44 Å"
+observed = "5.4042"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "a0_Ang 5.4042 on c6g, c7g, c8g and c9g"
+
+[[check]]
+id = "gpaw-lda-band"
+claim = "Both land inside the LDA literature band for Si (5.37–5.44 Å) -- GPAW"
+kind = "band"
+bound = "5.37–5.44 Å"
+observed = "5.4139"
+outcome = "pass"
+
+[[check]]
+id = "siesta-reference"
+claim = "ref_energy_eV want -214.377236 (SIESTA's committed 5.4.2 reference)"
+kind = "reference"
+bound = "-214.377236"
+observed = "-214.377236"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "siesta-ranks"
+claim = "ref_ranks want 2 (Running on N nodes)"
+kind = "rank-count"
+bound = "2"
+observed = "2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "siesta-converged"
+claim = "ref_converged want >=1"
+kind = "sentinel"
+bound = ">=1"
+observed = "1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-energy-offset"
+claim = "The curves are the same shape and ~204 eV apart"
+kind = "reported"
+observed = "~204 eV"
+outcome = "reported"
+
+[[cross_code]]
+with = "recipes/gpaw"
+same_bytes = false
+metric = "equilibrium lattice constant a0, same quadratic fit through the same seven points, |difference| in Angstrom"
+tolerance_basis = "0.03 A is the expected spread between a DZP localised basis and a converged plane-wave basis for a covalent semiconductor; XC (LDA), k-mesh (6x6x6, converged to under 0.005 A) and the fit are matched, so the basis is the whole budget"
+check = "a0-agreement"
+
+[[cross_code]]
+with = "recipes/siesta"
+same_bytes = false
+metric = "equilibrium lattice constant a0, same quadratic fit through the same seven points, |difference| in Angstrom"
+tolerance_basis = "same as recipes/gpaw: the DZP-vs-plane-wave basis difference, everything else matched"
+check = "a0-agreement"

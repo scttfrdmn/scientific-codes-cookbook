@@ -1,0 +1,194 @@
+# measurements/glmnet-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "the whole verified run: both lasso fits (A binomial, B gaussian), their CV, and every check"
+
+[[dataset]]
+id = "GDC PanCanAtlas EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv (Hoadley et al. 2018, Cell; 20,531 genes x 11,069 samples)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "fetched by GDC file UUID on AWS (00-fetch), md5-checked against its GDC record; not in RODA tcga-2-open"
+
+[[dataset]]
+id = "GDC PanCanAtlas merged_sample_quality_annotations.tsv"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 1538
+billed_s = 1727
+usd_hr = 0.2356
+compute_usd = 0.1007
+billed_usd = 0.113
+peak_gib = 9.09
+peak_kind = "rss"
+
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 2059
+billed_s = 2147
+usd_hr = 0.2778
+compute_usd = 0.1589
+billed_usd = 0.1657
+peak_gib = 9.09
+peak_kind = "rss"
+note = "the r env's linux-64 locked twin"
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 954
+billed_s = 1062
+usd_hr = 0.3195
+compute_usd = 0.0847
+billed_usd = 0.0943
+peak_gib = 9.09
+peak_kind = "rss"
+note = "the r env's linux-64 locked twin"
+
+# --- checks: '## What held at scale, on all three chips' -----------------------------
+[[check]]
+id = "matrix-shape"
+claim = "20,531 × 11,069, unique gene ids and barcodes, every sample annotated"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "a-lambda-max"
+claim = "A: λ_max == max_j |x̃_jᵀ(y−ȳ)|/n, rel < 1e-12"
+kind = "identity"
+bound = "rel < 1e-12"
+observed = "2.4e-15"
+outcome = "pass"
+
+[[check]]
+id = "a-kkt"
+claim = "A: KKT at all 100 λ ≤ p·√(2·thresh) = 2.3e-6"
+kind = "identity"
+bound = "≤ 2.3e-6"
+observed = "1.526e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "a-kkt-control"
+claim = "A: same check one λ step off must miss by ≥ 1000×"
+kind = "band"
+bound = "≥ 1000×"
+observed = "4.700e-03 (2,035×)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "a-intercept-score"
+claim = "A: intercept score mean(y − p)"
+kind = "identity"
+bound = "same bound"
+observed = "1.095e-16"
+outcome = "pass"
+
+[[check]]
+id = "b-lambda-max"
+claim = "B: λ_max closed form; λ_max(α = 0.5) = λ_max/0.5"
+kind = "identity"
+observed = "9.7e-16; 8.1e-16"
+outcome = "pass"
+
+[[check]]
+id = "b-kkt"
+claim = "B: KKT at all 100 λ ≤ p·√thresh = 2.0e-6"
+kind = "identity"
+bound = "≤ 2.0e-6"
+observed = "1.247e-10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "b-kkt-control"
+claim = "B: control, one λ step off"
+kind = "band"
+bound = "≥ 1000×"
+observed = "3.924e-02 (19,380×)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "b-ridge-dual"
+claim = "B: ridge vs Xᵀ(XXᵀ/n + λI)⁻¹y/n, 5 λ, ≤ 1e3·κ·ε = 4.8e-11"
+kind = "identity"
+bound = "≤ 4.8e-11"
+observed = "3.395e-14"
+outcome = "pass"
+
+[[check]]
+id = "b-ridge-raw-y"
+claim = "B: ridge on raw y solves with λ/sd_y (naive λ: 1.4e-3, reported)"
+kind = "identity"
+bound = "≤ 4.8e-11"
+observed = "3.397e-14"
+outcome = "pass"
+
+[[check]]
+id = "paths-converged"
+claim = "both paths converged at every λ, and lambda.1se lies on them"
+kind = "sentinel"
+observed = "100 / 100"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cv-determinism"
+claim = "cv.glmnet, fixed foldid, run twice"
+kind = "invariance"
+observed = "identical"
+outcome = "pass"
+
+[[check]]
+id = "b-permuted-null"
+claim = "B: permuted-y null at lambda.1se selects nothing, 5 permutations"
+kind = "identity"
+bound = "0 selected"
+observed = "0,0,0,0,0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "support"
+claim = "the support at each of the 200 λ (5,802 and 8,848 nonzeros); the 77 and 219 selected genes"
+kind = "reported"
+observed = "identical on all three chips"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "coefficients"
+claim = "The coefficient values differ only in their last bits."
+kind = "reported"
+observed = "at most 8.7e-15 (A) and 6.3e-13 (B) absolute vs Graviton4"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "both x86 chips differ from Graviton4 by at most 8.7e-15 (A) and 6.3e-13 (B); largest relative 1.5e-9 on just-entered coefficients; Intel == AMD byte-identical (results/compare.txt)"
+
+[[trap]]
+id = "glmnet-tight-thresh-needs-maxit"
+scope = "tool"
+symptom = "Convergence for 83th lambda value not reached … solutions for larger lambdas returned"
+cause = "thresh = 1e-20 with the default maxit = 1e5 stops the binomial path at λ 82 (gaussian at λ 91) and hands back a shorter path"
+fix = "control = list(maxit = 1e6); fail the run if a CV-selected λ falls below the certified path"
+cost = "a sizing run"

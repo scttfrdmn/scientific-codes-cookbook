@@ -1,0 +1,303 @@
+# measurements/mdtraj-real/record.toml
+schema = 1
+result_unit = "the whole dataset: all 60 FAST XTCs (120,060 frames) through every analysis and cross-check, plus the DHFR DCD"
+
+[[dataset]]
+id = "RODA s3://fah-public-data-covid19-cryptic-pockets/SARS-CoV-2/nsp5_monomer/ FAST_simulations/ (60 XTCs) + input_files/ (5 files)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "Folding@home COVID-19 cryptic pockets, Mpro monomer (Zimmerman et al., Nat. Chem. 13, 651 (2021)); copied server-side, ETags equal the source's"
+
+[[dataset]]
+id = "runs/openmm-mdanalysis-real/r1/traj-JAC.dcd + constraints-JAC.npz (100-frame DHFR DCD, 23,558 atoms)"
+tier = "run-output"
+pins = "inputs.sha256"
+from_recipe = "measurements/openmm-mdanalysis-real"
+note = "JAC.prmtop from the sibling's pinned Amber20_Benchmark_Suite.tar.gz (same object, also in inputs.sha256)"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+results = "results/graviton4/"
+host = "results/graviton4/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 30
+wall_s = 1072
+billed_s = 1172
+usd_hr = 1.2762
+compute_usd = 0.38
+billed_usd = 0.416
+peak_gib = 35.4
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+results = "results/intel/"
+host = "results/intel/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 30
+wall_s = 1759
+billed_s = 1817
+usd_hr = 1.4994
+compute_usd = 0.733
+billed_usd = 0.757
+peak_gib = 35.7
+peak_kind = "cgroup-memory.peak"
+note = "30 workers on 16 cores x 2 hyperthreads share cores pairwise"
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 30
+wall_s = 784
+billed_s = 832
+usd_hr = 1.7243
+compute_usd = 0.376
+billed_usd = 0.399
+peak_gib = 38.8
+peak_kind = "cgroup-memory.peak"
+
+# --- "What held at scale" (Mpro XTCs) and the DHFR DCD table; observed = Graviton4 ----
+[[check]]
+id = "xtc-atoms"
+claim = "files; atoms in every XTC == topology == MDAnalysis"
+kind = "identity"
+bound = "60; one count"
+observed = "60; 4,682"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frames"
+claim = "frames, MDTraj == MDAnalysis == the round trip, per file"
+kind = "identity"
+bound = "exact"
+observed = "120,060"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frame-times"
+claim = "frame times"
+kind = "identity"
+bound = "strictly one 20 ps step"
+observed = "0–40,000 ps"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "xtc-grid"
+claim = "every decoded value on the XTC grid (precision 1000)"
+kind = "identity"
+bound = "|1000x − round(1000x)| < 0.01"
+observed = "1.0e-3"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "coords-two-libs"
+claim = "coordinates, MDTraj vs MDAnalysis"
+kind = "cross-code"
+bound = "< 1e-5 nm"
+observed = "3.8e-7 over 1,686,362,760"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "decoded coordinates and boxes bit-identical across all three chips (collect.py fails otherwise)"
+
+[[check]]
+id = "box-two-libs"
+claim = "box lengths / angles, two libraries"
+kind = "cross-code"
+bound = "< 1e-5 nm / 1e-4°"
+observed = "1.3e-6 / 1.1e-5 (60, 60, 90°)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "xtc-round-trip"
+claim = "XTC round trip: MDTraj writes, MDTraj and MDAnalysis read back"
+kind = "identity"
+bound = "exactly 0"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "selections"
+claim = "CA selection and φ/ψ quadruplets == MDAnalysis's own `phi_selection`/`psi_selection`"
+kind = "cross-code"
+bound = "identical"
+observed = "306 CA; 305 / 305"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rmsd-two-libs"
+claim = "CA RMSD², MDTraj (float32 QCP) vs MDAnalysis (float64 QCP)"
+kind = "cross-code"
+bound = "< 1e-5 nm²"
+observed = "2.96e-6"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "2.96e-6 (Graviton4) vs 3.06e-6 (Intel, AMD); CA RMSD differs on 60 of 60 files ARM vs x86, max 7.4e-6 nm; Intel == AMD bit-identical"
+
+[[check]]
+id = "rmsd-kabsch"
+claim = "CA RMSD², MDAnalysis QCP vs an independent float64 Kabsch SVD"
+kind = "cross-code"
+bound = "< 1e-9 nm²"
+observed = "2.1e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rmsd-rigid-motion"
+claim = "CA RMSD² invariant under a random rigid motion of every frame"
+kind = "invariance"
+bound = "< 1e-5 nm²"
+observed = "3.99e-6"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "3.99e-6 on all three chips; the RMSD itself differs ARM vs x86 by up to 7.4e-6 nm"
+
+[[check]]
+id = "rg"
+claim = "unweighted Rg, two libraries; under rigid motion"
+kind = "cross-code"
+bound = "< 1e-5 rel"
+observed = "5.5e-9; 1.5e-8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "phi-psi"
+claim = "φ/ψ, MDTraj vs MDAnalysis, wrapped"
+kind = "cross-code"
+bound = "< 1e-3 rad"
+observed = "2.38e-5"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "φ/ψ differ on 60 of 60 files ARM vs x86, each chip within 2.4e-5 rad of float64 (2.38e-5 on all three)"
+
+[[check]]
+id = "periodic-distances"
+claim = "periodic CA–CA distances (triclinic minimum image), two libraries"
+kind = "cross-code"
+bound = "< 1e-5 nm"
+observed = "5.97e-6"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "identical on 41 of 60 files ARM vs x86; 5.97e-6 on all three chips"
+
+[[check]]
+id = "sasa-sum"
+claim = "per-atom SASA summed == per-residue SASA"
+kind = "conservation"
+bound = "< 1e-5 rel"
+observed = "2.1e-7"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "SASA differs on 60 of 60 files ARM vs x86, total max 2.5e-3 nm² (1.7e-5 rel); 2.1e-7 on all three"
+
+[[check]]
+id = "jac-counts"
+claim = "atoms / frames, MDTraj and MDAnalysis"
+kind = "identity"
+bound = "23,558 / 100"
+observed = "23,558 / 100"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jac-coords"
+claim = "coordinates, 10 × MDTraj vs MDAnalysis"
+kind = "cross-code"
+bound = "< 1e-4 Å"
+observed = "1.14e-5 Å"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jac-constraints"
+claim = "every one of 2,229,000 constrained distances, MDTraj vs MDAnalysis"
+kind = "cross-code"
+bound = "< 1e-4 Å"
+observed = "1.57e-5 Å"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jac-mda-worst"
+claim = "MDAnalysis's worst |d−d₀|/d₀"
+kind = "cross-code"
+bound = "== 1.54e-05, the sibling's printed value"
+observed = "1.5416e-05"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jac-mdtraj-worst"
+claim = "MDTraj's worst |d−d₀|/d₀"
+kind = "band"
+bound = "< 1e-4 (the sibling's float32-DCD bound)"
+observed = "2.3423e-05"
+outcome = "pass"
+across_chips = "identical"
+# --- the cross-chip fixed point collect.py asserts, and the reported DSSP flip --------
+[[check]]
+id = "decode-cross-chip"
+claim = "decoded coordinates and boxes, 60 XTCs + the DCD, bit-identical across chips (collect.py fails if not)"
+kind = "identity"
+bound = "bit-identical"
+observed = "bit-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dssp-cross-chip"
+claim = "DSSP residue-frames, Graviton4 vs x86"
+kind = "reported"
+observed = "3 of 36,738,360 residue-frames differ"
+outcome = "reported"
+
+[[cross_code]]
+with = "measurements/openmm-mdanalysis-real"
+same_bytes = true
+metric = "MDAnalysis's worst constrained-distance deviation |d−d₀|/d₀ on the sibling's DHFR DCD"
+tolerance_basis = "equality to the sibling's printed value 1.54e-05, at its printed precision"
+check = "jac-mda-worst"
+
+[[cross_code]]
+with = "recipes/openmm-mdanalysis"
+same_bytes = true
+metric = "MDTraj vs MDAnalysis decode and shared analyses, in one process on the same XTC bytes"
+tolerance_basis = "two decoders of the same XTC integers agree to float32 at |x| ≤ 11.45 nm (~1e-6 nm), so 1e-5 nm says the same number against a stored quantum of 1e-3 nm; RMSD compared as a square because float32 QCP leaves a ~1e-6 nm² floor"
+check = "coords-two-libs"
+
+[[trap]]
+id = "mdtraj-triclinic-box-lengths-only"
+scope = "method"
+symptom = "hand MDAnalysis only its lengths and the minimum images disagree by 4.5 nm"
+cause = "the box is a rhombic dodecahedron (60°, 60°, 90°); lengths alone describe a different (orthorhombic) cell"
+fix = "pass the box angles too: match the box and the inputs before comparing"
+
+[[trap]]
+id = "mdtraj-mdanalysis-dssp-c-terminus"
+scope = "tool"
+symptom = "MDAnalysis's DSSP refuses when run on the whole protein"
+cause = "the C-terminal residue has no O (it carries OC1/OC2)"
+fix = "select the 305 residues that carry N, CA, C and O"
+
+[[trap]]
+id = "mdtraj-dssp-last-bit-flips"
+scope = "method"
+symptom = "3 of 36.7 million DSSP residue-frames differ between Graviton4 and x86"
+cause = "DSSP is discrete (a hydrogen bond is an energy below a cutoff), so a last-bit float32 difference can flip an assignment"
+fix = "across machines, compare secondary-structure fractions, never per-residue strings"

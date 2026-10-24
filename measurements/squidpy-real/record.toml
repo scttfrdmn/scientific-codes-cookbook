@@ -1,0 +1,274 @@
+# measurements/squidpy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one verified pass over both sections (Slide-seqV2 puck + Visium capture area): every squidpy call plus every check"
+
+[[dataset]]
+id = "CELLxGENE Census LTS 2025-01-30, h5ads/88b7da92-178d-4f27-bc18-b0165b256c67.h5ad (Slide-seqV2 Puck_200903_13)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "s3://cellxgene-census-public-us-west-2, copied server-side; also in pins.sha256 with the scripts"
+
+[[dataset]]
+id = "CELLxGENE Census LTS 2025-01-30, h5ads/05d4a216-5384-4724-bd2a-2ea38f02e7cc.h5ad (Visium RZ_BZ_P12)"
+tier = "roda"
+pins = "inputs.sha256"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 712
+billed_s = 816
+usd_hr = 0.6381
+compute_usd = 0.1262
+billed_usd = 0.1446
+peak_gib = 9.4
+peak_kind = "rss"
+note = "tool wall is r1; billed is spawn's window minus the r2 replicate; container cgroup peak 14.8 GiB"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 744
+billed_s = 806
+usd_hr = 0.7497
+compute_usd = 0.1549
+billed_usd = 0.1678
+peak_gib = 9.5
+peak_kind = "rss"
+note = "container cgroup peak 20.6 GiB (incl. env install)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 539
+billed_s = 586
+usd_hr = 0.8622
+compute_usd = 0.1291
+billed_usd = 0.1403
+peak_gib = 9.5
+peak_kind = "rss"
+note = "container cgroup peak 20.6 GiB"
+
+# --- checks: the README's "What held at scale, on all three chips" rows (real.py) ------
+[[check]]
+id = "deposit-sanity"
+claim = "counts are non-negative integers; obs names unique; positions finite"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "knn-exhaustive"
+claim = "kNN graph == exhaustive float64 kNN, every bead"
+kind = "identity"
+bound = "exact"
+observed = "0 of 44,588 differ; distances rel 0 (10 beads tie at k = 6, checked by distance)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "radius-exhaustive"
+claim = "radius graph == exhaustive, symmetric"
+kind = "identity"
+bound = "exact"
+observed = "0 of 268,136 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "grid-eq-hex-lattice"
+claim = "grid graph from pixel coordinates == the hex lattice from `array_row`/`array_col`, at 1, 2, 3 rings"
+kind = "identity"
+bound = "exact"
+observed = "0 of 19,946 / 58,898 / 115,898 edges differ; ring labels == hop counts"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "grid-ring-size"
+claim = "grid: every spot with a complete ring has exactly 3k(k+1) neighbours"
+kind = "identity"
+bound = "exact"
+observed = "6 / 18 / 36 on 3,135 / 2,860 / 2,603 spots"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "enrichment-counts"
+claim = "enrichment counts == M′AM (one-hot labels), sum == edges"
+kind = "conservation"
+bound = "exact"
+observed = "equal, 5 calls per section"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "planted-halves"
+claim = "planted halves on the real positions: left–left, right–right z > 5, left–right z < −5"
+kind = "band"
+bound = "z > 5 / z < −5"
+observed = "+326 / +338 / −326 (puck)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "shuffled-null"
+claim = "shuffled labels: |z| < 5 on pairs with ≥ 50 expected edges"
+kind = "band"
+bound = "|z| < 5"
+observed = "2.22 (128 pairs)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cooccurrence-kdtree"
+claim = "co-occurrence == KD-tree pair counts at 39 radii"
+kind = "identity"
+observed = "2.8e-14"
+outcome = "pass"
+
+[[check]]
+id = "cooccurrence-asymptote"
+claim = "co-occurrence past the section's diameter == n/(n−1), n(nᵢ−1)/((n−1)nᵢ)"
+kind = "identity"
+observed = "2.2e-16"
+outcome = "pass"
+
+[[check]]
+id = "moran-closed-form"
+claim = "Moran's I == closed form, every gene (≤ per-gene float64 summation bound)"
+kind = "identity"
+bound = "per-gene recursive-summation bound n·u"
+observed = "4.9e-15, 0.4% of bound"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "4.9e-15 (Graviton4) vs 0 (Intel, AMD), both deep inside the bound"
+
+[[check]]
+id = "geary-closed-form"
+claim = "Geary's C == edge-by-edge closed form, every gene (≤ per-gene bound)"
+kind = "identity"
+bound = "per-gene summation bound"
+observed = "2.4e-12, 5.4% of bound"
+outcome = "pass"
+
+[[check]]
+id = "analytic-variances"
+claim = "analytic variances vs Cliff & Ord; Geary's ≠ Moran's"
+kind = "reference"
+observed = "rel 1.9e-8 / 7.0e-8"
+outcome = "pass"
+
+[[check]]
+id = "moran-negation"
+claim = "I(−y) == I(y), every gene, bit for bit"
+kind = "invariance"
+bound = "bit for bit"
+observed = "0 on 19,428 + 14,828"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "moran-affine"
+claim = "I(3.7y + 112.5) vs I(y), every gene (≤ per-gene rounding bound)"
+kind = "invariance"
+bound = "per-gene first-order rounding bound"
+observed = "5.8e-13, 23% of bound"
+outcome = "pass"
+
+[[check]]
+id = "moran-gene-set-independent"
+claim = "a gene's I is the same whichever genes are tested with it"
+kind = "invariance"
+bound = "exact"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pvalue-range"
+claim = "permutation p-values in [1/101, 1]"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "planted-wave"
+claim = "planted wave / pure noise on the real positions: z > 5 / |z| < 5"
+kind = "band"
+bound = "z > 5 / |z| < 5"
+observed = "+126.0 / −0.01 (puck)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "replicate"
+claim = "r1 and r2, fresh processes: every output except timings byte-identical"
+kind = "identity"
+bound = "byte-identical"
+observed = "all 18 outputs"
+outcome = "pass"
+
+# --- across chips and reported (compare.py, ties.py) ---------------------------------
+[[check]]
+id = "statistics-cross-chip"
+claim = "Moran's I and Geary's C, Graviton4 against x86"
+kind = "reported"
+observed = "Moran bit-identical on 19,246 of 19,428 puck genes; Geary on 18,169 of 19,428"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Moran max |Δ| 3.0e-16 (puck), 1.9e-15 (slide); Geary 8.9e-16, 1.6e-14; co-occurrence ≤ 2.2e-16; Intel == AMD byte-identical; gene rankings identical"
+
+[[check]]
+id = "pval-sim-ties"
+claim = "permutation pval_sim, Graviton4 against x86"
+kind = "reported"
+observed = "14 of the 2,000 puck HVGs (16 on the slide) differ; worst by 21 of 100 permutations"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "var_sim agrees to 6e-16 on those genes; 11–96 of 100 permuted values lie within 1e-14 of the observed I, so sims >= score is a last-bit tie"
+
+[[check]]
+id = "svg-counts"
+claim = "spatially variable genes at BH-FDR < 0.05, puck (reported, not asserted)"
+kind = "reported"
+observed = "7,486 of 19,428 analytic; 670 of the 2,000 HVGs by permutation"
+outcome = "reported"
+
+[[trap]]
+id = "squidpy-permutation-leaves-numba-one-thread"
+scope = "tool"
+symptom = "numba.get_num_threads() is 1 after every n_jobs=1 nhood_enrichment; co_occurrence 34.5 s against 6.6 s, Moran's I 165 s against 83 s"
+cause = "squidpy's runner calls numba.set_num_threads(1) before each chunk (squidpy/_utils.py:77, _callback_wrapper); under n_jobs=1 or the threading backend the chunk runs in the calling thread, so the setting outlives the call"
+fix = "numba.set_num_threads(n) after each permutation call"
+cost = "a run stopped when it showed the trap, ~$0.20"
+
+[[trap]]
+id = "squidpy-nhood-enrichment-readonly-memmap"
+scope = "tool"
+symptom = "TypeError: No matching definition for argument type(s) readonly array(uint32, 1d, C), …"
+cause = "the counting kernel is compiled for writable uint32 arrays; loky memory-maps any argument over 1 MB read-only, and the graph's indices cross 1 MB at 262,144 edges"
+fix = "n_jobs=1 for enrichment on a puck-sized section (then reset numba threads, above)"
+
+[[trap]]
+id = "squidpy-seed-depends-on-n-jobs"
+scope = "tool"
+symptom = "enrichment z-scores moved by up to 8.1 (puck) and 0.9 (slide) between n_jobs=1 and n_jobs=16 under the same seed"
+cause = "squidpy seeds each worker's chunk from its position (seed + first index), so a different n_jobs draws a different null"
+fix = "pin n_jobs with the seed"

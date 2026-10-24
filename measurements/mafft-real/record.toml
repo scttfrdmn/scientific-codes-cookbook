@@ -1,0 +1,195 @@
+# measurements/mafft-real/record.toml -- drafted by the #118 extraction, then authored.
+# The README prices two modes per chip ("L-INS-i --threadit 0 / threaded refinement"), each with
+# its own tool wall, so each chip has two run rows. Billed $/result is left out of every row: it is
+# tool wall + that chip's overhead, and the README gives the overhead only as a 34-47 s range.
+schema = 1
+result_unit = "one L-INS-i alignment of the whole Pfam 38.2 PF01255.25 seed (919 sequences), in the row's refinement mode"
+
+[[dataset]]
+id = "Pfam 38.2 PF01255.25 (Prenyltransf) seed, gaps removed: pf01255.25_unaligned.fa"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "measurements/iqtree-real"
+note = "extracted from iqtree-real's staged Pfam-A.seed.gz; md5 checked against EBI's md5_checksums"
+
+[[dataset]]
+id = "Pfam 38.2 PF01255.25 curated seed alignment: pf01255.25_ref.fa"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "the SP/TC reference; byte-identical to iqtree-real's pf01255.25_seed.fa once uppercased and . -> -"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 484
+usd_hr = 0.3190
+compute_usd = 0.0428
+peak_gib = 0.57
+note = "L-INS-i --threadit 0, mean of two runs; README billed $/result 0.0470 left out (overhead not printed per chip). Task billed window for all five alignments 1,283 s"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 131
+usd_hr = 0.3190
+compute_usd = 0.0116
+peak_gib = 0.57
+note = "L-INS-i threaded refinement, mean of two runs; README billed $/result 0.0158 left out"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 468
+usd_hr = 0.3748
+compute_usd = 0.0488
+peak_gib = 0.57
+note = "L-INS-i --threadit 0; README billed $/result 0.0537 left out. Task billed window 1,405 s"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 209
+usd_hr = 0.3748
+compute_usd = 0.0218
+peak_gib = 0.57
+note = "L-INS-i threaded refinement; README billed $/result 0.0267 left out"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 374
+usd_hr = 0.4311
+compute_usd = 0.0447
+peak_gib = 0.57
+note = "L-INS-i --threadit 0; README billed $/result 0.0488 left out. Task billed window 1,015 s"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 8
+wall_s = 114
+usd_hr = 0.4311
+compute_usd = 0.0137
+peak_gib = 0.57
+note = "L-INS-i threaded refinement; README billed $/result 0.0178 left out"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "input-is-seed"
+claim = "input == Pfam seed, gaps removed"
+kind = "identity"
+observed = "919 / 207,712"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows-preserved"
+claim = "every row of every output == its input, gaps removed"
+kind = "conservation"
+observed = "5 of 5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows-same-length"
+claim = "every row the same length"
+kind = "identity"
+observed = "5 of 5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "residues-located"
+claim = "every Pfam residue located in the output"
+kind = "identity"
+observed = "0 unmapped"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scorer-control"
+claim = "scorer control: Pfam scored against itself"
+kind = "identity"
+bound = "SP = TC = 1 exactly"
+observed = "1 / 1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "linsi-reproducible"
+claim = "L-INS-i `--threadit 0`, two runs"
+kind = "identity"
+bound = "byte-identical"
+observed = "a34c93ca…"
+outcome = "pass"
+across_chips = "identical"
+
+# --- agreement with Pfam's curated alignment: an observation, not an assertion ----------
+[[check]]
+id = "sp-linsi"
+claim = "Agreement with Pfam's curated alignment, L-INS-i `--threadit 0` (every chip, every run): columns, SP, TC"
+kind = "reported"
+observed = "631, 0.927568, 0.264271"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "sp-linsi-threaded"
+claim = "Agreement with Pfam's curated alignment, L-INS-i threaded refinement (6 runs): columns, SP, TC"
+kind = "reported"
+observed = "625–647, 0.927580–0.927842, 0.264271–0.266385"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "six runs gave six alignments; Intel vs Graviton4 SP 0.998301, AMD vs Graviton4 0.998176, two runs on one chip 0.998113–0.998471"
+
+[[check]]
+id = "sp-auto"
+claim = "Agreement with Pfam's curated alignment, `--auto` → FFT-NS-2 (every chip): columns, SP, TC"
+kind = "reported"
+observed = "693, 0.924346, 0.234672"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:Pfam-38.2-PF01255.25-seed"
+same_bytes = true
+metric = "SP (fraction of Pfam's 88,476,208 same-column residue pairs reproduced) and TC (whole columns)"
+tolerance_basis = "none: an MSA has no defined precision to set a tolerance from, so agreement is reported, not asserted"
+check = "sp-linsi"
+
+[[trap]]
+id = "mafft-threaded-refinement-nondeterministic"
+scope = "tool"
+symptom = "L-INS-i with threaded refinement returns a different alignment on every run, on every chip (six runs, six sha256s)"
+blames = "the chip"
+cause = "threaded refinement follows a different path on each run; the difference between chips is no larger than between two runs on one chip"
+fix = "--threadit 0 for a reproducible alignment (3.7x slower on Graviton4); never assert exactly on a threaded-refinement alignment"

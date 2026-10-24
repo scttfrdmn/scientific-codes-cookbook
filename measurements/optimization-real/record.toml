@@ -1,0 +1,250 @@
+# measurements/optimization-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified run: 273 Netlib LP solves (HiGHS, SCIP, CBC) and 480 MIPLIB 2017 benchmark MIP solves (HiGHS, SCIP at 300 s), with every check"
+
+[[dataset]]
+id = "COIN-OR Data-Netlib tag releases/1.2.11 (all 91 instances)"
+tier = "versioned-release"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "SoPlex v8.1.0 check/testset/quick.solu (exact Netlib optima, 32 digits) + netlib readme"
+tier = "test-suite"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "MIPLIB 2017 benchmark-v2.test, benchmark.zip, miplib2017-v37.solu, binkar10_1 published solutions 1-3"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "benchmark.zip and netlib's readme have no version in their URL, so they are pinned by sha256 on first fetch; a second fetch 30 minutes later gave identical bytes"
+
+[[run]]
+instance = "r8g.16xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 1872
+billed_s = 1951
+usd_hr = 3.7702
+compute_usd = 1.961
+billed_usd = 2.043
+peak_gib = 115.4
+note = "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371; times.txt prints driver_wall_s 1874"
+
+[[run]]
+instance = "r8i.16xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 1941
+billed_s = 1993
+usd_hr = 4.4454
+compute_usd = 2.397
+billed_usd = 2.461
+peak_gib = 111.7
+note = "MIPs finished 73 + 66; billed $ / finished 0.01771; times.txt prints driver_wall_s 1944"
+
+[[run]]
+instance = "r8a.16xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 1852
+billed_s = 1899
+usd_hr = 5.1124
+compute_usd = 2.63
+billed_usd = 2.697
+peak_gib = 120.2
+note = "MIPs finished 85 + 71; billed $ / finished 0.01729; times.txt prints driver_wall_s 1854"
+
+# checks: the README's "What held at scale, on all three chips" rows (bound = the rule column, observed = Graviton4)
+[[check]]
+id = "lp-soplex"
+claim = "**LP: each solver within 1e-6 of SoPlex's exact optimum, 90 instances**"
+kind = "reference"
+bound = "1e-6, SoPlex's own harness, `check/evaluation.py`"
+observed = "HiGHS ≤ 9.8e-11, SCIP ≤ 2.6e-10, CBC ≤ 5.9e-8"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "SCIP bit-identical on all 91; HiGHS agrees to 9.4e-12 relative (bit-identical on 43 of 91); CBC bit-identical on 90 of 91, PILOT87 301.710365 (arm64) vs 301.7103473 (x86), 5.9e-8 relative"
+
+[[check]]
+id = "lp-three-solvers"
+claim = "LP: three solvers agree, same rule"
+kind = "cross-code"
+bound = "1e-6"
+observed = "5.9e-8"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "5.9e-8 (Graviton4) / 4.8e-10 (Xeon) / 4.8e-10 (EPYC): the PILOT87 CBC difference"
+
+[[check]]
+id = "lp-highs-kkt"
+claim = "LP: HiGHS KKT residuals ≤ 1e-7"
+kind = "band"
+bound = "≤ 1e-7, its own tolerances"
+observed = "primal ≤ 4.9e-8, dual ≤ 9.6e-8"
+outcome = "pass"
+
+[[check]]
+id = "lp-scip-duality"
+claim = "LP: SCIP primal bound == dual bound"
+kind = "identity"
+bound = "strong duality"
+observed = "0 on all 90"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lp-cbc-certificate"
+claim = "LP: CBC's final certificate"
+kind = "sentinel"
+observed = "90 / 90"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mip-solu"
+claim = "**MIP: a finished solve matches the `.solu` optimum**"
+kind = "reference"
+bound = "MIPLIB engine, `parse.awk`"
+observed = "78 + 68 instances"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "78 + 68 (Graviton4) / 72 + 64 (Xeon) / 84 + 69 (EPYC): which instances finish inside 300 s moves with chip speed and, for HiGHS, the search path"
+
+[[check]]
+id = "mip-no-false-infeasible"
+claim = "MIP: no infeasibility claim on an instance with a known solution"
+kind = "reference"
+bound = "MIPLIB engine"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mip-solvers-agree"
+claim = "MIP: both solvers finished and agree"
+kind = "cross-code"
+bound = "cross-code, same rule"
+observed = "58 instances, ≤ 2.5e-11"
+outcome = "pass"
+
+[[check]]
+id = "mip-solchecker"
+claim = "**MIP: every reported solution passes the solution checker**"
+kind = "identity"
+bound = "MIPLIB `solchecker` rule, 1e-4"
+observed = "397 solutions"
+outcome = "pass"
+
+[[check]]
+id = "mip-bracket"
+claim = "**MIP: a stopped run brackets the optimum, so its dual bound cannot cut it off**"
+kind = "reference"
+bound = "added here"
+observed = "all 240 × 2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mip-no-better-incumbent"
+claim = "MIP: no exactly feasible incumbent beats a proven optimum"
+kind = "reference"
+bound = "added here"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+# across chips, reported
+[[check]]
+id = "mip-objectives-cross-chip"
+claim = "MIPLIB, both chips finished"
+kind = "reported"
+observed = "SCIP's objectives are bit-identical on every instance. HiGHS agrees within 2.9e-10"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "SCIP bit-identical; HiGHS within 2.9e-10 (neos5, where both values are 15 within tolerance)"
+
+[[check]]
+id = "scip-node-counts"
+claim = "SCIP's search is the same on all three chips"
+kind = "reported"
+observed = "70 of 70 against AMD"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "highs-node-counts"
+claim = "HiGHS's search differs between arm64 and x86"
+kind = "reported"
+observed = "node counts match on only 25 of the 77 instances that both Graviton4 and AMD finish"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "25 of 77 node counts match Graviton4 vs AMD; Intel and AMD identical (same linux-64 build)"
+
+[[cross_code]]
+with = "published:SoPlex-v8.1.0-quick.solu"
+same_bytes = true
+metric = "relative objective difference vs SoPlex's exact Netlib optimum"
+tolerance_basis = "1e-6, the rule in SoPlex's own harness check/evaluation.py"
+check = "lp-soplex"
+
+[[cross_code]]
+with = "published:miplib2017-v37.solu"
+same_bytes = true
+metric = "finished optimum vs the .solu value; stopped run's bracket contains it"
+tolerance_basis = "the MIPLIB 2017 test engine's parse.awk rule"
+check = "mip-solu"
+
+[[trap]]
+id = "optimization-binkar10-1-solu-artifact"
+scope = "data"
+symptom = "`.solu` v36–v37 lists 6741.38; HiGHS and SCIP both prove 6742.200024 optimal, on every chip"
+cause = "the published value is taken from MIPLIB's solution 3 (2025), which needs 8.2e-7 of integrality slack"
+fix = "run all three published solutions through the checker and compare binkar10_1 against the best exactly feasible one, printing the substitution"
+
+[[trap]]
+id = "optimization-highs-root-overrun"
+scope = "tool"
+symptom = "On germanrr, at a 300 s limit, the log has a root separation round at 38.7 s and its next line at 619 s"
+cause = "HiGHS overruns its time limit at the root node on a few instances"
+fix = "a driver guard kills the solve at 675 s; recorded as errors and counted, reported not failed"
+
+[[trap]]
+id = "optimization-e226-objective-constant"
+scope = "data"
+symptom = "E226's MPS carries an objective constant of 7.113"
+cause = "an RHS on the objective row; all three solvers include it, netlib's and SoPlex's published values exclude it"
+fix = "subtract the constant HiGHS read from the file before comparing"
+
+[[trap]]
+id = "optimization-cbc-postsolve-line"
+scope = "tool"
+symptom = "full model needs cleaning up"
+blames = "CBC's \"After Postsolve … infeasibilities\" line, reporting primal or dual infeasibility as large as 37"
+cause = "Clp re-optimises after that line, so it is not the certificate on 9 of the LPs (80BAU3B, PILOT87 and others)"
+fix = "read the certificate as the state before the last \"Optimal\": the clean-up's final iterate"
+
+[[trap]]
+id = "optimization-netlib-readme-digits"
+scope = "data"
+symptom = "netlib's own 1989 readme is off beyond its printed digits for 18 of the 90 problems; worst GREENBEA at 1.3e-3 relative"
+cause = "the readme's values are inexact, and the readme itself notes the disagreement"
+fix = "use SoPlex's exact quick.solu values as the reference"
+
+[[trap]]
+id = "optimization-bracket-tolerance-feasible"
+scope = "method"
+symptom = "a full run stopped on a bracket check that was counting a tolerance-feasible incumbent as a wrong answer"
+cause = "an incumbent may beat the proven optimum through a row violation inside the solver's feasibility tolerance (SCIP on mas74: 11801.0985 against 11801.18572, 8.1e-7 violation)"
+fix = "fail only an exactly feasible incumbent that beats a proven optimum"

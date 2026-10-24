@@ -1,0 +1,229 @@
+# measurements/kallisto-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one sample quantified at the defaults (run A): ERR188026, 15,800,127 pairs, all 465,769 Ensembl 116 transcripts"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
+tier = "durable-id"
+pins = "reads.md5"
+note = "pinned by ENA's fastq_md5 (md5, not sha256), checked on every box"
+
+[[dataset]]
+id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
+tier = "versioned-release"
+from_recipe = "measurements/salmon-real"
+note = "pinned by Ensembl's CHECKSUMS when salmon-real staged it"
+
+[[dataset]]
+id = "kallisto index built by recipes/kallisto from the Ensembl 116 cDNA (931,285,390 bytes)"
+tier = "built"
+from_recipe = "kallisto"
+note = "hashed on every box; the check asserts all three chips read the same file"
+
+[[dataset]]
+id = "salmon quant.sf, gene map and RSEM ERR188026.{isoforms,genes}.results"
+tier = "run-output"
+pins = "siblings.sha256"
+from_recipe = "measurements/salmon-real"
+note = "RSEM outputs are measurements/rsem-real's"
+
+# billed: the README's billed $/result is the billed window less the B control (389, 392, 270 s),
+# a seconds figure it never prints; billed_s is the whole window and billed_usd is left out.
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 221
+billed_s = 669
+usd_hr = 0.6381
+compute_usd = 0.0392
+peak_gib = 2.7
+peak_kind = "vmhwm"
+note = "README billed $/result 0.0496 = window less B; window as charged $0.1186"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 233
+billed_s = 685
+usd_hr = 0.7497
+compute_usd = 0.0485
+peak_gib = 2.71
+peak_kind = "vmhwm"
+note = "README billed $/result 0.0610 = window less B; window as charged $0.1426"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 162
+billed_s = 476
+usd_hr = 0.8622
+compute_usd = 0.0388
+peak_gib = 2.71
+peak_kind = "vmhwm"
+note = "README billed $/result 0.0493 = window less B; window as charged $0.1140"
+
+# --- checks: "The identities, at scale, on all three chips"; three-value cells are G4 / Intel / AMD
+[[check]]
+id = "pins"
+claim = "reads, index"
+kind = "pin"
+bound = "ENA md5 == published; index sha256 one file across chips"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "n-targets"
+claim = "`n_targets`, rows, ids"
+kind = "identity"
+bound = "== 465,769, the gene map's transcript set"
+observed = "every chip"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "n-processed"
+claim = "`n_processed`"
+kind = "reference"
+bound = "**== ENA `read_count`**"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "n-pseudoaligned"
+claim = "`n_pseudoaligned`, `n_unique`"
+kind = "identity"
+bound = "**identical across chips** (pseudoalignment is per read)"
+observed = "14,510,404 / 1,219,979"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "est-counts-conservation"
+claim = "**Σ est_counts − n_pseudoaligned**"
+kind = "conservation"
+bound = "**within the half-ulp of every printed value** (≤ 28.9)"
+observed = "−0.030, −1.363, −0.218"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "−0.030, −1.363, −0.218 (Graviton4 / Intel / AMD): the default run follows thread order"
+
+[[check]]
+id = "tpm-sum"
+claim = "Σ tpm − 1e6"
+kind = "identity"
+bound = "within the half-ulp of every printed value (≤ 2.09)"
+observed = "−0.131, +0.037, −0.004"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "−0.131, +0.037, −0.004 (Graviton4 / Intel / AMD)"
+
+[[check]]
+id = "tpm-k-est-eff"
+claim = "**tpm = K · est/eff**"
+kind = "identity"
+bound = "**every row on one line, within all three roundings and K's**"
+observed = "0 off"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "tpm-zero"
+claim = "tpm where est_counts == 0"
+kind = "identity"
+bound = "== 0"
+observed = "0"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "spearman-salmon"
+claim = "**transcript Spearman vs salmon**"
+kind = "cross-code"
+bound = "**≥ 0.85**, both detected"
+observed = "0.9084 / 0.9083 / 0.9083 (n ≈ 87,160)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "0.9084 / 0.9083 / 0.9083 (Graviton4 / Intel / AMD)"
+
+[[check]]
+id = "spearman-rsem"
+claim = "transcript Spearman vs RSEM"
+kind = "cross-code"
+bound = "≥ 0.85, both detected"
+observed = "0.8882 / 0.8880 / 0.8880 (n ≈ 95,860)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "0.8882 / 0.8880 / 0.8880 (Graviton4 / Intel / AMD)"
+
+[[check]]
+id = "gene-spearman"
+claim = "**gene Spearman vs salmon / RSEM**"
+kind = "cross-code"
+bound = "**≥ 0.90**, both detected"
+observed = "0.9815 / 0.9885, every chip"
+outcome = "pass"
+
+[[check]]
+id = "log-tpm-pearson"
+claim = "log(1+TPM) Pearson vs salmon"
+kind = "reported"
+bound = "observation"
+observed = "0.9656"
+outcome = "reported"
+
+[[check]]
+id = "b-bytes"
+claim = "B `abundance.tsv`"
+kind = "identity"
+bound = "**byte-identical on all three chips**"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "default-run-path"
+claim = "The default run is a path, and the path is thread order, not the chip."
+kind = "reported"
+observed = "fragment length 155.6 (Graviton4) vs 155.7 (Intel, AMD); EM 1,263, 1,256 and 1,255 rounds; 465,699 of 465,769 eff_length rows differ, by at most 0.32"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 155.6, Intel and AMD 155.7; Intel and AMD run the same binary and still differ; TPM rank agreement across chips 0.999999"
+
+[[cross_code]]
+with = "measurements/salmon-real"
+same_bytes = true
+metric = "transcript and gene Spearman on TPM, transcripts both tools detected"
+tolerance_basis = "rank floors set before the run from the sibling pairs: salmon~kallisto 0.908 on these reads (quant-depth)"
+check = "spearman-salmon"
+
+[[cross_code]]
+with = "measurements/rsem-real"
+same_bytes = true
+metric = "transcript and gene Spearman on TPM, transcripts both tools detected"
+tolerance_basis = "rank floors set before the run from the sibling pairs: RSEM~salmon 0.944 and genes 0.981 (rsem-real)"
+check = "spearman-rsem"
+
+[[trap]]
+id = "kallisto-default-run-thread-order"
+scope = "method"
+symptom = "the default run's abundance.tsv differs across chips, and between Intel and AMD, which run the same binary"
+blames = "the chip"
+cause = "kallisto estimates the fragment-length distribution from whichever pairs the 16 threads reach first"
+fix = "for a byte-identical control pass -l 200 -s 30 (run B); it changes which pairs pseudoalign and is 1.7x slower, so it is a control, not a better default"

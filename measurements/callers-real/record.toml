@@ -1,0 +1,186 @@
+# measurements/callers-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one caller's whole-chr20 call set for NA12878 (GIAB HG001) at 36x"
+
+[[dataset]]
+id = "NYGC 30x NA12878 CRAM -> whole GRCh38 chr20 BAM at 36x"
+tier = "durable-id"
+from_recipe = "gatk4"
+note = "staged by make stage RECIPE=gatk4; all three callers read the same BAM"
+
+[[dataset]]
+id = "GIAB HG001 v4.2.1 truth VCF + high-confidence BED (chr20, 56,000,154 bases)"
+tier = "versioned-release"
+from_recipe = "gatk4"
+
+[[dataset]]
+id = "GRCh38 reference (chr20)"
+tier = "versioned-release"
+from_recipe = "gatk4"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+wall_s = 228
+billed_s = 285
+usd_hr = 0.1595
+billed_usd = 0.0126
+results = "results/bcftools-concordance.txt"
+note = "bcftools mpileup+call"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+wall_s = 644
+billed_s = 704
+usd_hr = 0.1595
+results = "results/freebayes-smoke-check.txt"
+note = "freebayes. billed_usd left out: README prints $0.0310 (and '~700 s' billed in the first table), but 704 s x $0.1595/hr = $0.0312"
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+wall_s = 7929
+billed_s = 7982
+usd_hr = 0.1595
+billed_usd = 0.3537
+note = "GATK4 HaplotypeCaller, single-threaded Java PairHMM on arm64"
+
+# --- Intel c8i.xlarge: the recipes' own verifying runs, 2026-10-12 per the README
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-12"
+date_source = "run"
+threads_per_core = 2
+wall_s = 223
+billed_s = 288
+usd_hr = 0.1874
+billed_usd = 0.0150
+note = "bcftools"
+
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-12"
+date_source = "run"
+threads_per_core = 2
+wall_s = 474
+billed_s = 539
+usd_hr = 0.1874
+billed_usd = 0.0281
+note = "freebayes"
+
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-12"
+date_source = "run"
+threads_per_core = 2
+wall_s = 1228
+billed_s = 1324
+usd_hr = 0.1874
+billed_usd = 0.0689
+note = "GATK4 HaplotypeCaller, native AVX-512 GKL PairHMM"
+
+# --- AMD c8a.xlarge: 2026-10-18/19 per the README (per recipe last_verified_amd)
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+threads_per_core = 1
+wall_s = 174
+billed_s = 216
+usd_hr = 0.2155
+billed_usd = 0.0129
+note = "bcftools"
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+threads_per_core = 1
+wall_s = 358
+billed_s = 414
+usd_hr = 0.2155
+billed_usd = 0.0248
+note = "freebayes"
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+threads_per_core = 1
+wall_s = 849
+billed_s = 944
+usd_hr = 0.2155
+billed_usd = 0.0565
+note = "GATK4 HaplotypeCaller"
+
+# --- checks: "What is asserted, and what is only reported"; scores in results/*/three-way.txt
+[[check]]
+id = "snv-recall-q0"
+claim = "unfiltered SNV recall ≥ 0.95"
+kind = "band"
+bound = "≥ 0.95"
+observed = "0.9595 / 0.9949 / 0.9955"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snv-precision-q30"
+claim = "`QUAL>=30` SNV precision ≥ 0.98"
+kind = "band"
+bound = "≥ 0.98"
+observed = "0.9900 / 0.9953 / 0.9970"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "three-way-bytes"
+claim = "`three-way.txt` is byte-identical on all three chips"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "indels"
+claim = "Indels are reported and never asserted"
+kind = "reported"
+observed = "F1 0.99395 / 0.98563 / 0.95579 (GATK4 / bcftools / freebayes, q0)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "vcf-records"
+claim = "The VCFs are not byte-identical"
+kind = "reported"
+observed = "x86 GKL changes 51 GATK annotations; bcftools 127,617 calls against 127,616"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "bcftools 127,617 calls (x86) against 127,616 (Graviton4); 51 GATK annotations differ; none reaches a scored count"
+
+[[check]]
+id = "freebayes-sample"
+claim = "sample == NA12878; no calls off chr20"
+kind = "identity"
+bound = "NA12878; 0"
+observed = "NA12878; 0"
+outcome = "pass"
+
+[[cross_code]]
+with = "published:GIAB-HG001-v4.2.1"
+same_bytes = false
+metric = "SNV/indel precision, recall, F1 by POS:REF:ALT inside the high-confidence chr20 regions"
+tolerance_basis = "floors are claims every working caller must satisfy, not shaved to the observed values"
+check = "snv-recall-q0"

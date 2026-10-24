@@ -3,13 +3,14 @@
 
   python3 scripts/check_pages.py              # frontmatter + a11y + internal links (fast, offline)
   python3 scripts/check_pages.py --external   # + external link liveness (network, slower)
+  python3 scripts/check_pages.py --records a-real,b-real   # only the measurement-record checks
 
 Errors (exit 1): a recipe page missing frontmatter or a required field; a broken
 internal link. Warnings (exit 0): the markdown-a11y nits. Site-level a11y — colour
 contrast, focus order, Atkinson Hyperlegible — is a site-build gate, not this.
 """
 import subprocess
-import os, re, sys, glob, json, urllib.request
+import os, re, sys, glob, json, decimal, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The image DIGEST is the authoritative version-of-record; tool_version is a friendly
@@ -634,6 +635,211 @@ def check_measurement_linkage():
                              f"published on the page, so this is usually a filing question")
 
 
+# --- measurements/<dir>/record.toml (#118) -------------------------------------------------------
+# The record is a second statement of numbers the README already prints, so these checks are what
+# stop the two drifting: each record must validate against measurements/record.schema.json, its
+# costs must equal wall x rate, every number it carries must be printed in the README or a results
+# file it cites, and every upstream ref the README cites must be listed. Any failure is an error.
+# A missing record is a warning until the backfill closes.
+RECORD_SCHEMA = os.path.join(ROOT, "measurements", "record.schema.json")
+
+
+def _schema_errors(v, s, where):
+    """The subset of JSON Schema record.schema.json uses -- so the schema stays the one statement
+    of the format, with no validator dependency."""
+    out = []
+    if "const" in s and v != s["const"]:
+        out.append(f"{where}: must be {s['const']!r}")
+    if "enum" in s and v not in s["enum"]:
+        out.append(f"{where}: {v!r} not one of {s['enum']}")
+    t = s.get("type")
+    types = {"object": dict, "array": list, "string": str, "boolean": bool, "integer": int, "number": (int, float)}
+    if t and (not isinstance(v, types[t]) or (t in ("integer", "number") and isinstance(v, bool))):
+        return out + [f"{where}: expected {t}, got {type(v).__name__}"]
+    if "pattern" in s and isinstance(v, str) and not re.search(s["pattern"], v):
+        out.append(f"{where}: {v!r} does not match {s['pattern']}")
+    if s.get("format") == "date" and isinstance(v, str) and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+        out.append(f"{where}: {v!r} is not YYYY-MM-DD")
+    if isinstance(v, dict):
+        out += [f"{where}: missing '{k}'" for k in s.get("required", []) if k not in v]
+        props, extra = s.get("properties", {}), s.get("additionalProperties", True)
+        for k, x in v.items():
+            if k in props:
+                out += _schema_errors(x, props[k], f"{where}.{k}")
+            elif extra is False:
+                out.append(f"{where}: unknown key '{k}'")
+            elif isinstance(extra, dict):
+                out += _schema_errors(x, extra, f"{where}.{k}")
+    if isinstance(v, list):
+        if len(v) < s.get("minItems", 0):
+            out.append(f"{where}: needs at least {s['minItems']} item(s)")
+        for i, x in enumerate(v):
+            out += _schema_errors(x, s.get("items", {}), f"{where}[{i}]")
+    if "oneOf" in s and sum(not _schema_errors(v, o, where) for o in s["oneOf"]) != 1:
+        out.append(f"{where}: {v!r} matches none of the allowed forms")
+    if "anyOf" in s and not any(not _schema_errors(v, o, where) for o in s["anyOf"]):
+        out.append(f"{where}: needs one of {[o.get('required') for o in s['anyOf']]}")
+    return out
+
+
+def _norm(s):
+    return re.sub(r"[*`,\\]", "", s.replace("−", "-").replace(" ", " ").replace(" ", " "))
+
+
+_NUM = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?:[eE]([-+]?\d+))?(?![\d])")
+
+
+def _numbers(text):
+    """The numbers printed in a text, keyed at their printed precision: {"6.50"} for 6.50, and the
+    floats of anything in e-notation."""
+    fixed, sci, timed = set(), [], set()
+    for m in _NUM.finditer(text):
+        if m.group(2):
+            sci.append(float(m.group(1) + "e" + m.group(2)))
+        else:
+            fixed.add(m.group(1))
+            if re.match(r"\s?(?:min|minutes|h|hours?|hr)\b", text[m.end():m.end() + 9]):
+                timed.add(m.group(1))
+    return fixed, sci, timed
+
+
+def _printed(key, v, nums):
+    """Is v printed, at whatever precision the page printed it? A rounding of v counts if it keeps
+    two significant figures (so 6.48 matches "6.5" but not "6"); a time may be printed in min or h
+    (with the unit after it), memory in MiB."""
+    fixed, sci, timed = nums
+    vals = [(v, fixed)] + ([(v / 60, timed), (v / 3600, timed)] if key in ("wall_s", "billed_s", "overhead_s") else []) + \
+           ([(v * 1024, fixed)] if key == "peak_gib" else [])
+    for x, pool in vals:
+        for d in range(0, 11):
+            f = f"{x:.{d}f}"
+            if f in pool and (float(f) == x or len(f.replace(".", "").lstrip("0")) >= 2):
+                return True
+        if x and any(abs(t - x) <= 0.01 * abs(x) for t in sci):
+            return True
+    return False
+
+
+def _text_of(path, cap=256 << 10):
+    """A results file's text, or a results dir's report-like files. Data tables (tsv, csv, dat,
+    histories) are skipped: thousands of numbers would let any value 'round-trip'."""
+    files = [path] if os.path.isfile(path) else \
+        sorted(os.path.join(r, f) for r, _, fs in os.walk(path) for f in fs
+               if f.endswith((".txt", ".json", ".log", ".out", ".md"))) if os.path.isdir(path) else []
+    parts = []
+    for f in files:
+        if os.path.getsize(f) <= cap:
+            try:
+                parts.append(open(f, encoding="utf-8").read())
+            except (UnicodeDecodeError, OSError):
+                pass
+    return _norm("\n".join(parts))
+
+
+def _refs(text):
+    """repo#N and github.com/<org>/<repo>/(issues|pull)/N, normalised to repo#N."""
+    refs = {m.group(1) + "#" + m.group(2) for m in
+            re.finditer(r"github\.com/[\w.-]+/([\w.-]+)/(?:issues|pull)/(\d+)", text)}
+    no_urls = re.sub(r"\(?https?://\S+", " ", text)
+    refs |= {m.group(1) + "#" + m.group(2) for m in
+             re.finditer(r"(?<![\w/.#-])(?:[\w.-]+/)?([A-Za-z][\w.-]*)#(\d+)\b", no_urls)}
+    return refs
+
+
+def check_records(only=None):
+    import tomllib
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    from gen_catalog import host_facts, check_status
+    schema = json.load(open(RECORD_SCHEMA, encoding="utf-8"))
+    all_traps, trap_refs, recs = {}, [], {}
+    for mdir in sorted(glob.glob(os.path.join(ROOT, "measurements", "*/"))):
+        name = os.path.basename(mdir.rstrip("/"))
+        rpath = os.path.join(mdir, "record.toml")
+        if not os.path.exists(rpath):
+            if (not only or name in only) and os.path.exists(os.path.join(mdir, "README.md")):
+                warns.append(f"measurements/{name}: no record.toml -- not yet in catalog/record.json (#118)")
+            continue
+        try:
+            rec = tomllib.load(open(rpath, "rb"))
+        except tomllib.TOMLDecodeError as e:
+            errors.append(f"measurements/{name}/record.toml: not TOML: {e}")
+            continue
+        recs[name] = rec
+        for t in rec.get("trap", []):
+            if t.get("id") in all_traps:
+                errors.append(f"measurements/{name}/record.toml: trap id '{t['id']}' already owned by {all_traps[t['id']]}")
+            all_traps[t.get("id")] = name
+        trap_refs += [(name, t) for t in rec.get("trap_refs", [])]
+    for name, rec in recs.items():
+        if only and name not in only:
+            continue
+        rel = f"measurements/{name}/record.toml"
+        mdir = os.path.join(ROOT, "measurements", name)
+        bad = _schema_errors(rec, schema, rel)
+        if bad:
+            errors.extend(bad)
+            continue
+        readme = _norm(open(os.path.join(mdir, "README.md"), encoding="utf-8").read())
+        rnums, everything = _numbers(readme), None
+        rpr = rec.get("results_per_run", 1)
+        for i, run in enumerate(rec["run"]):
+            tag = f"{rel}: run[{i}] {run['instance']}"
+            # 1. arithmetic: a $/result is wall x rate over the result count
+            billed_s = run.get("billed_s", run["wall_s"] + run["overhead_s"] if "overhead_s" in run and "wall_s" in run else None)
+            for secs, key in ((run.get("wall_s"), "compute_usd"), (billed_s, "billed_usd")):
+                if key in run and (secs is None or "usd_hr" not in run):
+                    errors.append(f"{tag}: {key} without the seconds and $/hr it was computed from")
+                elif key in run:
+                    pred = secs * run["usd_hr"] / 3600 / rpr
+                    half_ulp = 0.5 * 10 ** decimal.Decimal(repr(run[key])).as_tuple().exponent
+                    if abs(pred - run[key]) > max(0.01 * run[key], half_ulp) * 1.0001:
+                        errors.append(f"{tag}: {key} {run[key]} != {secs} s x ${run['usd_hr']}/hr / {rpr} = {pred:.5f}")
+            # 2. round-trip: every number is printed in the README or in the results the run cites
+            for key in ("results", "host"):
+                if key in run and not os.path.exists(os.path.join(mdir, run[key])):
+                    errors.append(f"{tag}: {key} path {run[key]} does not exist")
+            art = _numbers(_text_of(os.path.join(mdir, run["results"])) if "results" in run else "")
+            for key in ("wall_s", "billed_s", "overhead_s", "usd_hr", "compute_usd", "billed_usd", "peak_gib"):
+                if key in run and not (_printed(key, run[key], rnums) or _printed(key, run[key], art)):
+                    errors.append(f"{tag}: {key} = {run[key]} is printed in neither README.md nor {run.get('results', 'a cited results file')}")
+            # 3. a host file's facts are read, never re-authored
+            if "host" in run and "threads_per_core" in run and \
+                    host_facts(os.path.join(mdir, run["host"])).get("threads_per_core") is not None:
+                errors.append(f"{tag}: threads_per_core authored although {run['host']} states it")
+        for ds in rec.get("dataset", []):
+            if "pins" in ds and not os.path.exists(os.path.normpath(os.path.join(mdir, ds["pins"]))) \
+                    and not os.path.exists(os.path.join(ROOT, ds["pins"])):
+                errors.append(f"{rel}: dataset '{ds['id']}' pins {ds['pins']}, which does not exist")
+        ids = set()
+        for c in rec["check"]:
+            if c["id"] in ids:
+                errors.append(f"{rel}: check id '{c['id']}' repeats")
+            ids.add(c["id"])
+            for key in ("observed", "bound"):
+                for n in _NUM.findall(_norm(c.get(key, ""))):
+                    n = n[0] + ("e" + n[1] if n[1] else "")
+                    if not _printed("", float(n), rnums) and n not in readme:
+                        everything = _numbers(_text_of(os.path.join(mdir, "results"))) if everything is None else everything
+                        if not _printed("", float(n), everything):
+                            errors.append(f"{rel}: check '{c['id']}' {key} number {n} is printed in neither README.md nor results/")
+            if check_status(c) == "fail" and not re.search(r"\bFAIL|\bfail", readme):
+                errors.append(f"{rel}: check '{c['id']}' records a fail the README never states")
+            if c.get("across_chips") in ("fixed-point", "path", "last-bits") and not c.get("across_chips_evidence"):
+                errors.append(f"{rel}: check '{c['id']}' is across_chips = {c['across_chips']} with no evidence")
+        for x in rec.get("cross_code", []):
+            if x["check"] not in ids:
+                errors.append(f"{rel}: cross_code with {x['with']} names unknown check '{x['check']}'")
+            if not x["with"].startswith("published:") and not os.path.isdir(os.path.join(ROOT, x["with"])):
+                errors.append(f"{rel}: cross_code target {x['with']} does not exist")
+        # 5. completeness: every upstream ref the README cites is in the record
+        listed = {re.sub(r"^.*/", "", u["ref"]) for u in rec.get("upstream", [])}
+        for ref in sorted(_refs(open(os.path.join(mdir, "README.md"), encoding="utf-8").read()) - listed):
+            errors.append(f"{rel}: README cites {ref}; the record has no upstream entry for it")
+    for name, t in trap_refs:
+        if t not in all_traps:
+            errors.append(f"measurements/{name}/record.toml: trap_refs names '{t}', which no record owns")
+
+
 def inventory():
     """Print a per-recipe matrix of the contract elements, so "is this recipe complete?" is a
     query rather than a re-scan. Same verdicts the gate enforces -- one implementation."""
@@ -686,6 +892,12 @@ def main():
     if "--inventory" in sys.argv:
         inventory()
         return
+    if "--records" in sys.argv:          # just the record checks, for some dirs: --records a-real,b-real
+        i = sys.argv.index("--records")
+        check_records(set(sys.argv[i + 1].split(",")) if len(sys.argv) > i + 1 else None)
+        for m in warns + [f"ERROR {e}" for e in errors]:
+            print(m)
+        sys.exit(1 if errors else 0)
     ps = pages()
     for path, needs_fm in ps:
         check(path, needs_fm)
@@ -703,6 +915,7 @@ def main():
     check_page_paths_exist()
     check_diagnostics_survive()
     check_measurement_linkage()
+    check_records()
     if "--external" in sys.argv:
         check_external()
     for w in warns:

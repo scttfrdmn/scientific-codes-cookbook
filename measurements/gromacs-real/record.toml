@@ -1,0 +1,231 @@
+# measurements/gromacs-real/record.toml -- drafted by the #118 extraction, then authored.
+# The decomposition leg only: the generation ladder lives on recipes/gromacs. README prices in
+# $/ns from ns/day, which is not wall x rate, so no row carries a $ figure (usd_hr only).
+schema = 1
+result_unit = "one simulated nanosecond of benchMEM (81,743 atoms, PME, NPT)"
+
+[[dataset]]
+id = "benchMEM (81,743 atoms, PME, Berendsen NPT) tpr"
+tier = "versioned-release"
+from_recipe = "gromacs"
+note = "staged by recipes/gromacs; pins.sha256 here pins only the scripts decomp.sh and host.sh"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+wall_s = 70
+usd_hr = 0.6381
+results = "results/decomp.txt"
+note = "16 ranks x 1 OpenMP threads, 25.538 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+wall_s = 72
+usd_hr = 0.6381
+results = "results/decomp.txt"
+note = "8 ranks x 2 OpenMP threads, 24.860 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+wall_s = 74
+usd_hr = 0.6381
+results = "results/decomp.txt"
+note = "4 ranks x 4 OpenMP threads, 24.168 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+wall_s = 76
+usd_hr = 0.6381
+results = "results/decomp.txt"
+note = "2 ranks x 8 OpenMP threads, 23.292 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+wall_s = 70
+usd_hr = 0.6381
+results = "results/decomp.txt"
+note = "1 ranks x 16 OpenMP threads, 25.432 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 63
+usd_hr = 0.7497
+results = "results/decomp-x86_64.txt"
+note = "16 ranks x 1 OpenMP threads, 28.981 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 65
+usd_hr = 0.7497
+results = "results/decomp-x86_64.txt"
+note = "8 ranks x 2 OpenMP threads, 28.440 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 67
+usd_hr = 0.7497
+results = "results/decomp-x86_64.txt"
+note = "4 ranks x 4 OpenMP threads, 27.044 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 69
+usd_hr = 0.7497
+results = "results/decomp-x86_64.txt"
+note = "2 ranks x 8 OpenMP threads, 26.272 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 63
+usd_hr = 0.7497
+results = "results/decomp-x86_64.txt"
+note = "1 ranks x 16 OpenMP threads, 29.093 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 34
+usd_hr = 0.8622
+results = "results/decomp-amd.txt"
+note = "16 ranks x 1 OpenMP threads, 58.432 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 36
+usd_hr = 0.8622
+results = "results/decomp-amd.txt"
+note = "8 ranks x 2 OpenMP threads, 52.582 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 40
+usd_hr = 0.8622
+results = "results/decomp-amd.txt"
+note = "4 ranks x 4 OpenMP threads, 46.435 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 45
+usd_hr = 0.8622
+results = "results/decomp-amd.txt"
+note = "2 ranks x 8 OpenMP threads, 41.323 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 40
+usd_hr = 0.8622
+results = "results/decomp-amd.txt"
+note = "1 ranks x 16 OpenMP threads, 47.461 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+
+# --- checks: the README's "Checks hold on both" bullet
+[[check]]
+id = "splits-run"
+claim = "all five splits run"
+kind = "sentinel"
+bound = "5 of 5"
+observed = "working_splits 5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ranks-used"
+claim = "`ranks_used` equals the ranks launched in every row"
+kind = "rank-count"
+bound = "== ranks launched"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mean-temperature"
+claim = "The mean temperature prints 301.998 K in all fifteen rows on three chips"
+kind = "reported"
+observed = "301.998 K"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "301.998 K in all fifteen rows on three chips; MD is a path, so that is recorded, not asserted"
+
+[[check]]
+id = "best-split"
+claim = "best ÷ worst"
+kind = "reported"
+observed = "1.096 / 1.107 / 1.414"
+outcome = "reported"
+across_chips = "n/a"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "spawn 0.139.1's wrapper leaves under 1 KB of EC2's 16 KiB user data; decomp.sh staged as a sha256-pinned script"

@@ -1,0 +1,238 @@
+# measurements/specutils-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole healpix group: 40,800 DESI DR1 spectra, 149,477 Gaussian fits by each of specutils and DESI's function, every check"
+
+[[dataset]]
+id = "DESI DR1 s3://desidata dr1/spectro/redux/iron/healpix/main/dark/100/100{00..99}/{coadd,emline}-main-dark-*.fits (200 objects)"
+tier = "roda"
+pins = "pins.sha256"
+note = "desidata is not versioned; the pin is the sha256 DESI publishes per pixel (inputs.tsv), checked at copy time and in-task"
+
+[[dataset]]
+id = "SFD_dust_4096_{ngp,sgp}.fits from kbarbary/sfddata@7a5fe7fa"
+tier = "versioned-release"
+pins = "sfd.sha256"
+note = "checked by git blob id on AWS (stage_sfd.py), then by sha256"
+
+# --- three chips, 16 workers, one OpenBLAS thread each --------------------------------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/arm64/host.txt"
+wall_s = 169
+billed_s = 481
+usd_hr = 0.6381
+compute_usd = 0.0300
+billed_usd = 0.0853
+peak_gib = 1.08
+peak_kind = "rss"
+results = "results/arm64/"
+note = "peak is the largest worker's ru_maxrss (x 16 workers); cgroup memory.peak 9.4 GiB"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/x86_64/host.txt"
+wall_s = 248
+billed_s = 527
+usd_hr = 0.7497
+compute_usd = 0.0516
+billed_usd = 0.1097
+peak_gib = 1.09
+peak_kind = "rss"
+results = "results/x86_64/"
+note = "astro-e2ee19affec3 linux-64 twin; billed includes its install; largest worker x 16, cgroup memory.peak 13.6 GiB"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+host = "results/amd/host.txt"
+wall_s = 125
+billed_s = 401
+usd_hr = 0.8622
+compute_usd = 0.0299
+billed_usd = 0.0960
+peak_gib = 1.09
+peak_kind = "rss"
+results = "results/amd/"
+note = "astro-e2ee19affec3 twin; largest worker x 16, cgroup memory.peak 13.6 GiB"
+
+# --- checks: '## What held at scale, on all three chips' (bound = 'why it must hold') -----
+[[check]]
+id = "loader-raw-hdus"
+claim = "specutils' `DESI coadd` loader == the raw HDUs (wavelength, flux, ivar, mask, TARGETID)"
+kind = "identity"
+bound = "it is the same bytes"
+observed = "bit-identical, 100 of 100 pixels"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "targetids"
+claim = "every spectrum's TARGETID unique and the same set in coadd and catalogue"
+kind = "identity"
+bound = "one row per spectrum"
+observed = "40,800; 244,800 line slots"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cont-catalogue"
+claim = "**`CONT` from the rebuilt input == the catalogue's**"
+kind = "reference"
+bound = "a median of the same float32 fluxes"
+observed = "**149,477 of 149,477 bit-identical**"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "`CONT` ... bit-identical in all 149,849 values, Graviton4 vs both x86 chips"
+
+[[check]]
+id = "ew-definition"
+claim = "catalogue `EW` == `FLUX / ((1+z) CONT)`"
+kind = "identity"
+bound = "emlinefit's rest-frame definition"
+observed = "≤ 1.6e-7 relative (float32)"
+outcome = "pass"
+
+[[check]]
+id = "desi-rerun-flux"
+claim = "DESI's own function, re-run here, == the catalogue `FLUX` on well-posed fits"
+kind = "reference"
+bound = "same code, same inputs"
+observed = "≤ 6.5e-4 σ (x86: 2.1e-4 σ)"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "DESI's curve_fit, with its finite-difference Jacobian, differs by a median 1.7e-8 σ (max 6.5e-4 σ) Graviton4 vs x86"
+
+[[check]]
+id = "ndof"
+claim = "fit_lines' window pixels − free parameters == the catalogue's `NDOF`"
+kind = "identity"
+bound = "the same pixels"
+observed = "every one of 149,477 fits"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "same-chi2-minimum"
+claim = "**specutils and DESI reach the same χ² minimum** on ≥ 99.9% of well-posed fits"
+kind = "cross-code"
+bound = "the same least-squares problem"
+observed = "**34,363 of 34,369** (99.98%)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "No well-posed fit converges to a different minimum on any chip; the same 6 different-minimum fits appear on every chip"
+
+[[check]]
+id = "flux-at-minimum"
+claim = "at that minimum, specutils `F` == DESI's, ≤ 2√(10·ftol·χ²) σ"
+kind = "cross-code"
+bound = "both stop at scipy's ftol = 1e-8"
+observed = "max 0.012 σ, 0.75 of the bound"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "specutils' F differs by a median 6e-13 σ (max 2.2e-7 σ) Graviton4 vs x86; Intel == AMD bit-identical"
+
+[[check]]
+id = "ew-at-minimum"
+claim = "at that minimum, specutils `EW` == the catalogue's"
+kind = "reference"
+bound = "follows from F"
+observed = "≤ 1.2e-3 relative"
+outcome = "pass"
+
+[[check]]
+id = "success-flag"
+claim = "the catalogue's success flag (`NDOF ≥ 0`) reproduced, sub-pixel fits (σ < 0.34 Å) exempt"
+kind = "reference"
+bound = "the same decision"
+observed = "Graviton4: 1 sub-pixel flip, **passes**. Intel and AMD: **fails**, see below"
+outcome = { arm64 = "pass", x86_64 = "fail", amd = "fail" }
+across_chips = "path"
+across_chips_evidence = "pixel 10084 row 257 Hγ (S/N −0.2): Graviton4 walks to σ = 0.054 Å with an all-zero covariance (failed, as the catalogue); Intel and AMD walk to σ = 1.08 Å with a valid covariance (success)"
+
+# --- reported, not asserted ---------------------------------------------------------------
+[[check]]
+id = "default-fitter-tied"
+claim = "specutils' default fitter is wrong on tied models"
+kind = "reported"
+observed = "6,608 of 6,812"
+outcome = "reported"
+
+[[check]]
+id = "different-local-minima"
+claim = "6 well-posed fits found different local minima from the same start"
+kind = "reported"
+observed = "specutils was lower in 3 and DESI in 3"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "flux-ivar-convention"
+claim = "specutils' `FLUX_IVAR` matches the catalogue only after that factor"
+kind = "reported"
+observed = "median 2.8e-5 relative, p99 4.0e-4"
+outcome = "reported"
+
+[[check]]
+id = "line-flux-wings"
+claim = "specutils' `line_flux` over ±3σ of the fitted line, against the Gaussian flux, at S/N ≥ 20"
+kind = "reported"
+observed = "median 1.010 ([O II], 2,515 fits), 1.027 ([O III]), 1.014–1.018 (Balmer)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "intel-amd-bit-identical"
+claim = "Intel and AMD are bit-identical in every output"
+kind = "reported"
+observed = "bit-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:DESI-DR1-iron-emline"
+same_bytes = true
+metric = "χ² minimum and line flux F at it: specutils fit_lines vs DESI's emlines_gaussfit (desispec emlinefit.py @ 952a9a29d0) and the catalogue"
+tolerance_basis = "both stop at scipy's ftol = 1e-8, which leaves a fit up to √(ftol·χ²) parameter-σ from the true minimum and two fits up to twice that apart; with 10x margin the bound is 2√(10·ftol·χ²) σ (0.005–0.08 σ per fit)"
+check = "flux-at-minimum"
+
+[[trap]]
+id = "specutils-tied-analytic-jacobian"
+scope = "tool"
+symptom = "it stops off the minimum on 6,608 of 6,812 well-posed fits ... Flux is off by a median 1.9%"
+cause = "fit_lines defaults to TRFLSQFitter, which uses the compound model's analytic derivative, and that derivative ignores `tied` constraints ([O III] 4960 tied to 5007)"
+fix = "pass estimate_jacobian=True for tied models"
+
+[[trap]]
+id = "specutils-fibermap-ebv"
+scope = "data"
+symptom = "It reproduced only 45,248 of 120,438 `CONT` values bit for bit, with residuals up to 3.5e-6"
+blames = "specutils or the continuum estimate"
+cause = "the fibermap's `EBV` column differs from the SFD lookup emlinefit uses by up to 1.3e-6 mag on targets, and is 0 for sky fibres"
+fix = "stage the SFD maps and call desiutil's lookup at TARGET_RA, TARGET_DEC"
+cost = "the first full Graviton4 run"
+
+[[trap]]
+id = "specutils-ftol-bound-factor-two"
+scope = "method"
+symptom = "Two fits on the first full run exceeded it by up to 1.5× while their χ² agreed within the ftol rule"
+cause = "the first convergence bound left out the factor of two: two fits each up to √(ftol·χ²) from the minimum can be twice that apart"
+fix = "bound 2√(10·ftol·χ²) σ"
+cost = "the first full Graviton4 run (with the EBV trap)"
+
+[[trap]]
+id = "specutils-covariance-convention"
+scope = "tool"
+symptom = "specutils' `FLUX_IVAR` matches the catalogue only after that factor"
+cause = "astropy treats `weights` as absolute errors; curve_fit, as emlinefit calls it, rescales by χ²/dof"
+fix = "multiply the covariance by χ²/dof before comparing"

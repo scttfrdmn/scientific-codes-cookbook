@@ -1,0 +1,241 @@
+# measurements/openmm-mdanalysis-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole task: every single point (CPU, Reference, split by term), 1 ns of JAC and 1,000 steps of STMV"
+
+[[dataset]]
+id = "Amber20_Benchmark_Suite.tar.gz (ambermd.org; JAC/DHFR 23,558 atoms and STMV 1,067,095 atoms)"
+tier = "versioned-release"
+pins = "inputs.sha256"
+note = "no DOI; the archive OpenMM's own examples/benchmarks/benchmark.py fetches, unchanged since 2020-05-23 (Last-Modified)"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+results = "results/graviton4/"
+host = "results/graviton4/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 32
+wall_s = 1986
+billed_s = 2147
+usd_hr = 1.2762
+compute_usd = 0.704
+billed_usd = 0.761
+peak_gib = 11.72
+peak_kind = "cgroup-memory.peak"
+note = "JAC 1 ns 1300 s (66.5 ns/day), STMV 1,000 steps 204 s (1.70 ns/day); Graviton4 ran twice, the second run is tabulated"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+results = "results/intel/"
+host = "results/intel/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 32
+wall_s = 2508
+billed_s = 2626
+usd_hr = 1.4994
+compute_usd = 1.045
+billed_usd = 1.094
+peak_gib = 14.45
+peak_kind = "cgroup-memory.peak"
+note = "JAC 1683 s (51.3 ns/day), STMV 355 s (0.97 ns/day); peak counts the x86 env install's page cache"
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 32
+wall_s = 2179
+billed_s = 2263
+usd_hr = 1.7243
+compute_usd = 1.044
+billed_usd = 1.084
+peak_gib = 14.48
+peak_kind = "cgroup-memory.peak"
+note = "JAC 1561 s (55.3 ns/day), STMV 249 s (1.39 ns/day); peak counts the x86 env install's page cache"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "platform-threads"
+claim = "platform; threads, from the context"
+kind = "rank-count"
+bound = "`CPU`; `Threads` == 32"
+observed = "CPU, 32"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "atoms-constraints"
+claim = "atoms; constraints"
+kind = "reference"
+bound = "suite README: 23,558 / 1,067,095"
+observed = "23,558 / 1,067,095; 22,290 / 978,008"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sander-bonded"
+claim = "OpenMM == sander, bond / angle / dihedral (Reference platform, both double)"
+kind = "cross-code"
+bound = "≤ 1e-6 rel"
+observed = "worst 1.9e-7 (JAC dihedral)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same on all three chips; Reference platform Intel == AMD bit for bit, arm64 within 1-2 ulp (≤ 1.6e-15)"
+
+[[check]]
+id = "sander-lj"
+claim = "OpenMM == sander, Lennard-Jones (`vdwmeth=0` / no dispersion correction)"
+kind = "cross-code"
+bound = "≤ 1e-7 rel"
+observed = "6.5e-9 JAC, 1.4e-10 STMV"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same on all three chips; Reference platform Intel == AMD bit for bit, arm64 within 1-2 ulp (≤ 1.6e-15)"
+
+[[check]]
+id = "sander-elec"
+claim = "OpenMM == sander, electrostatics, after the Coulomb-constant ratio"
+kind = "cross-code"
+bound = "≤ 1e-5 rel (sander's `dsum_tol`)"
+observed = "−1.2e-6 JAC, −1.3e-6 STMV"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same on all three chips; JAC elec −84907.1204236190 bit-identical on all three"
+
+[[check]]
+id = "dispersion-closed-form"
+claim = "OpenMM's dispersion correction == its closed form from the prmtop's A/B and type counts"
+kind = "identity"
+bound = "≤ 1e-7 rel"
+observed = "2.0e-10 / 2.5e-10"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.0e-10 / 2.5e-10 on all three chips"
+
+[[check]]
+id = "cpu-eq-reference"
+claim = "CPU platform (single) == Reference platform (double), each term"
+kind = "identity"
+bound = "≤ 1e-6 rel"
+observed = "≤ 4.1e-8"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "≤ 4.1e-8 (Graviton4), ≤ 1.0e-7 (Intel), ≤ 6.3e-8 (AMD)"
+
+[[check]]
+id = "jac-nve-conserved"
+claim = "JAC NVE conserved over 1 ns"
+kind = "conservation"
+bound = "leak < 5% of kT per DoF per ns"
+observed = "0.029%"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "0.029% (Graviton4), 0.031% (Intel), 0.037% (AMD): statistics of a path, agree"
+
+[[check]]
+id = "jac-temperature"
+claim = "JAC temperature, 1 ns NVE"
+kind = "band"
+bound = "mean 290–310 K"
+observed = "295.99 K"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "295.99 K (Graviton4), 296.14 K (Intel), 295.94 K (AMD)"
+
+[[check]]
+id = "shake-end"
+claim = "SHAKE at the last step (JAC / STMV)"
+kind = "band"
+bound = "max \\|d−d₀\\|/d₀ < 1e-5"
+observed = "2.0e-7 / 4.1e-7"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "2.0e-7 / 4.1e-7 (Graviton4), 3.6e-7 / 6.1e-7 (Intel), 2.4e-7 / 5.9e-7 (AMD)"
+
+[[check]]
+id = "mdanalysis-dcd"
+claim = "MDAnalysis reads OpenMM's DCD against the Amber topology: atoms, 100 frames, box, and every constrained distance in every frame"
+kind = "cross-code"
+bound = "< 1e-4 rel (float32 DCD)"
+observed = "1.54e-5 over 2,229,000"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "1.54e-5 (Graviton4), 1.68e-5 (Intel), 1.78e-5 (AMD)"
+
+# --- "Fixed point or path" table and the sander finding (reported) ---------------------
+[[check]]
+id = "reference-single-point"
+claim = "Reference platform (double) single points, every term, both systems"
+kind = "reported"
+observed = "JAC nonbonded −75813.1839827480"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "−75813.1839827480 (Graviton4) vs …7481 (Intel, AMD bit for bit); arm64 within 1-2 ulp (≤ 1.6e-15)"
+
+[[check]]
+id = "cpu-single-point"
+claim = "CPU platform (single) single point, nonbonded"
+kind = "reported"
+observed = "−75813.181813"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "−75813.181813 / −75813.186699 / −75813.183837: 2.7–6.4e-8 between chips, and Intel ≠ AMD on the same binary"
+
+[[check]]
+id = "jac-etot"
+claim = "JAC Etot at 10 ps / 1 ns"
+kind = "reported"
+observed = "−58468.57 / −58471.06"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "−58468.57 / −58471.06 (Graviton4), −58476.89 / −58462.71 (Intel), −58477.04 / −58470.44 (AMD)"
+
+[[check]]
+id = "sander-vdwmeth1-stmv"
+claim = "sander's default long-range vdW correction (vdwmeth=1) on STMV vs the closed form from the prmtop"
+kind = "reported"
+observed = "−3595.1791 vs −25,200.29; VDWAALS 21,605 kcal/mol higher than OpenMM's"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "recipes/ambertools"
+same_bytes = true
+metric = "single-point energy by term (bond, angle, dihedral, LJ, electrostatics), relative difference, Reference platform vs sander"
+tolerance_basis = "both double precision with sander's own Ewald coefficient, grid and order=5; electrostatics bounded by sander's dsum_tol 1e-5 after dividing out the Coulomb-constant ratio (3.46e-5, a unit not physics)"
+check = "sander-lj"
+
+[[trap]]
+id = "openmm-mdanalysis-sander-vdwcorr-int32"
+scope = "tool"
+symptom = "sander's VDWAALS for STMV is 21,605 kcal/mol higher than OpenMM's (5.6% of the LJ energy); JAC agrees"
+blames = "OpenMM or the force field"
+cause = "sander's vdwmeth=1 correction wraps each n_i·n_j to a signed 32-bit integer; it overflows for a type with more than 46,340 atoms (STMV has 300,053 water oxygens)"
+fix = "vdwmeth=0 on both sides for the cross-check; affects any sander vdwmeth=1 run on more than 46,340 waters (~140,000 atoms of TIP3P); pmemd not tested"
+
+[[trap]]
+id = "openmm-mdanalysis-coulomb-constant"
+scope = "method"
+symptom = "OpenMM's electrostatics 3.34e-5 (JAC) / 3.33e-5 (STMV) larger than sander's on the same bytes"
+cause = "Amber's charges carry 18.2223² = 332.0522 kcal Å/mol e²; OpenMM uses 1/4πε₀ = 332.0637, 3.46e-5 larger on any system"
+fix = "divide out the Coulomb-constant ratio; the residual (1.2–1.3e-6) is PME"
+
+[[trap]]
+id = "openmm-mdanalysis-default-pme"
+scope = "method"
+symptom = "nonbonded energy off by 0.68 kcal/mol on JAC and 10.2 on STMV vs sander"
+cause = "OpenMM's default PME (α = 0.29203 Å⁻¹ from ewaldErrorTolerance 5e-4) is not sander's; and sander defaults to 4th-order B-splines where OpenMM's PME uses 5th"
+fix = "give OpenMM sander's Ewald coefficient (0.30767639 Å⁻¹) and grid, and run sander at order=5"
+
+[[trap]]
+id = "openmm-mdanalysis-pme-params-bad-cast"
+scope = "tool"
+symptom = "getPMEParametersInContext raised std::bad_cast (arm64)"
+cause = "not diagnosed; seen on the arm64 build"
+fix = "take OpenMM's default PME parameters from its documented formulas"

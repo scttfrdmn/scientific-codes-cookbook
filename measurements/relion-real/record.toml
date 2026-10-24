@@ -1,0 +1,198 @@
+# measurements/relion-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete gold-standard 3D auto-refinement (RELION 5.0 tutorial Refine3D/job019, 4,452 particles) run to convergence and post-processed"
+
+[[dataset]]
+id = "MRC-LMB relion50_tutorial_precalculated_results.tar.gz (11,326,844,944 B, 2023-10-26; 24-movie subset of EMPIAR-10204)"
+tier = "versioned-release"
+pins = "inputs.sha256"
+note = "the 40 extracted files are each pinned and re-checked in-task; the archive's sha256 is in prose only. Also holds the depositors' own output for this job, the reference"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+workers = 9
+threads_per_core = 1
+wall_s = 444
+billed_s = 550
+usd_hr = 2.5523
+compute_usd = 0.315
+billed_usd = 0.39
+peak_gib = 20.3
+peak_kind = "cgroup-memory.peak"
+note = "9 MPI ranks x 8 threads; first of n = 3 (444, 444, 451 s). Prices from the AWS Price List API; spawn printed none"
+
+[[run]]
+instance = "c8i.16xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 9
+threads_per_core = 2
+wall_s = 648
+billed_s = 734
+usd_hr = 2.9987
+compute_usd = 0.54
+billed_usd = 0.611
+peak_gib = 22.9
+peak_kind = "cgroup-memory.peak"
+note = "9 x 8, default path; first of n = 2 (648, 651 s)"
+
+[[run]]
+instance = "c8a.16xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+spawn_version = "0.131.1"
+date = "2026-10-20"
+date_source = "git"
+workers = 9
+threads_per_core = 1
+wall_s = 384
+billed_s = 521
+usd_hr = 3.4486
+compute_usd = 0.368
+billed_usd = 0.499
+peak_gib = 24.2
+peak_kind = "cgroup-memory.peak"
+note = "9 x 8, n = 1; spawn 0.131.1 built from its release tag because 0.139.1's wrapper overflows EC2 user data (spawn#1246); cost_limit lowered from $6.40 to $3.00"
+
+[[run]]
+instance = "c8i.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+workers = 9
+threads_per_core = 2
+wall_s = 751
+billed_s = 854
+usd_hr = 2.9987
+compute_usd = 0.626
+billed_usd = 0.711
+peak_gib = 21.2
+peak_kind = "cgroup-memory.peak"
+note = "x86 build's vectorised `--cpu` kernels: slower than the default path (751 s vs 648 s); arm64 has no --cpu"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+date = "2026-10-20"
+date_source = "git"
+workers = 9
+note = "9 ranks x 1 thread, determinism.task.json: 2,439–2,480 s (a range over two runs; no per-run wall or price printed)"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "core-sweep"
+date = "2026-10-20"
+date_source = "git"
+workers = 3
+note = "3 ranks x 1 thread, serial.task.json: 8,141–8,329 s (~$0.41); a range, no per-run wall or $/hr printed"
+
+# checks: the README's "What held at scale, on all three chips" rows (observed = Graviton4)
+[[check]]
+id = "mpi-layout"
+claim = "MPI layout, from RELION's own `run.out`"
+kind = "rank-count"
+bound = "exactly the ranks × threads launched"
+observed = "9 × 8 (and 3 × 1)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "converged"
+claim = "converged, and RELION marked the job successful"
+kind = "sentinel"
+bound = "`Refinement has converged, stopping now` + `RELION_JOB_EXIT_SUCCESS`"
+observed = "every run"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "particles-conserved"
+claim = "every particle in, every particle out"
+kind = "conservation"
+bound = "4,452 = 4,452, same image names"
+observed = "4,452"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "halfset-split"
+claim = "**half-set split equals the depositors', particle for particle**"
+kind = "reference"
+bound = "4,452 of 4,452, seeded with their recorded `--random_seed 1697716706`"
+observed = "4,452 (2,220 / 2,232)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "postprocess-control"
+claim = "**control: their half-maps through `relion_postprocess` reproduce their PostProcess**"
+kind = "reference"
+bound = "129 shells × 8 columns, max|diff| ≤ 1e-6; resolution and B-factor equal"
+observed = "0.000e+00, 3.153109 Å, −31.39202"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "our-resolution"
+claim = "our map, post-processed the same way"
+kind = "band"
+bound = "> Nyquist (2.489 Å) and ≤ 4.0 Å"
+observed = "3.153109 Å"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "3.153109 Å on all three chips at 9 × 8 and in 11 of 12 refinements; one Graviton4 9 × 1 run stopped one Fourier shell coarser, at 3.184640 Å"
+
+# fixed point or path: reported, not asserted
+[[check]]
+id = "run-data-star"
+claim = "`run_data.star` (every particle's angles and offsets), which layouts reproduce"
+kind = "reported"
+observed = "x86 9 × 8 runs byte-identical (`b8d0cd0c…`), AMD byte-identical to Intel's, Graviton4 3 × 1 identical to x86's; Graviton4 9 × 8 runs 1–3 all differ"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "auto B-factor −34.71771 (x86 9 × 8, AMD, Graviton4 3 × 1) vs −34.93, −37.26, −36.12 (Graviton4 9 × 8 runs 1–3)"
+
+[[check]]
+id = "amd-vs-intel-fsc"
+claim = "AMD lands on Intel's refinement exactly"
+kind = "reported"
+observed = "one value of the 1,032 in our post-processed FSC table differs, in its 6th digit (shell 108, −4.83426e-04 against −4.83427e-04)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "map-fsc-vs-depositors"
+claim = "against the depositors' final map, the map-to-map FSC of every default-path run"
+kind = "reported"
+observed = "≥ 0.665 to Nyquist (the `--cpu` run: ≥ 0.413); corrected gold-standard FSC curves differ from the depositors' by at most 0.034"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:relion50_tutorial_precalculated_results-Refine3D-job019"
+same_bytes = true
+metric = "half-set split particle for particle; their half-maps through relion_postprocess vs their PostProcess FSC table, resolution and B-factor"
+tolerance_basis = "the split is drawn from the recorded seed before any floating point, and post-processing is deterministic arithmetic over fixed maps, so 1e-6 on the FSC table is a format-level bound"
+check = "postprocess-control"
+
+[[trap]]
+id = "relion-check-threads-line-at-one-thread"
+scope = "method"
+symptom = "their check reports that one line as a failure"
+cause = "RELION omits the threads line from run.out at one thread; the 9 × 1 pair predates the check.py clause that accepts it"
+fix = "check.py now accepts the omission at one thread"
+
+[[trap]]
+id = "relion-busybox-no-lscpu"
+scope = "image"
+symptom = "The x86 image's BusyBox has no `lscpu`"
+cause = "bioconda's x86 image has a BusyBox userland"
+fix = "none in-task; threads per core taken from the other c8a/r8a AMD legs (1 thread per core)"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "AMD leg ran spawn 0.131.1 built from its release tag, because 0.139.1's wrapper leaves too little of EC2's 16 KiB user data"

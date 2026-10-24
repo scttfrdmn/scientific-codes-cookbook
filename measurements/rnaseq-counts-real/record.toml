@@ -1,0 +1,364 @@
+# measurements/rnaseq-counts-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one sample's verified count table (ERR188026, 15,800,127 pairs, 78,941 Ensembl 116 genes), per counting tool"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
+tier = "durable-id"
+pins = "results/align/pins.txt"
+note = "ENA fastq_md5 (md5, not sha256), checked on the box before alignment"
+
+[[dataset]]
+id = "Ensembl release-116 GRCh38.116.gtf.gz"
+tier = "versioned-release"
+pins = "inputs.sha256"
+note = "also checked against Ensembl's CHECKSUMS sum in results/align/pins.txt"
+
+[[dataset]]
+id = "star-real's STAR index inputs/star-index-GRCh38-116/"
+tier = "built"
+pins = "results/align/index.sha256"
+from_recipe = "measurements/star-real"
+
+[[dataset]]
+id = "STAR alignment of ERR188026 (reads.bam, ReadsPerGene.out.tab, Log.final.out), built once on Graviton4 by task 0"
+tier = "built"
+pins = "inputs.sha256"
+note = "every counting task, on every chip, reads these same bytes"
+
+# --- featureCounts -T 8; the billed window covers both thread counts ------------------------
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/featurecounts/"
+host = "results/arm64/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+wall_s = 26
+billed_s = 168
+usd_hr = 0.3191
+compute_usd = 0.0023
+billed_usd = 0.0149
+peak_gib = 0.78
+peak_kind = "vmhwm"
+note = "featureCounts -T 8; container memory.peak 5.5 GB, mostly page cache"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/featurecounts/"
+host = "results/x86_64/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+wall_s = 26
+billed_s = 154
+usd_hr = 0.3748
+compute_usd = 0.0027
+billed_usd = 0.016
+peak_gib = 0.78
+peak_kind = "vmhwm"
+note = "featureCounts -T 8"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/featurecounts/"
+host = "results/amd/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 8
+wall_s = 17
+billed_s = 124
+usd_hr = 0.4311
+compute_usd = 0.002
+billed_usd = 0.0148
+peak_gib = 0.78
+peak_kind = "vmhwm"
+note = "featureCounts -T 8"
+
+# --- featureCounts -T 1, same task and box; no separate bill -----------------------------
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+results = "results/arm64/featurecounts/"
+host = "results/arm64/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 63
+usd_hr = 0.3191
+compute_usd = 0.0056
+peak_gib = 0.51
+peak_kind = "vmhwm"
+note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "core-sweep"
+results = "results/x86_64/featurecounts/"
+host = "results/x86_64/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 60
+usd_hr = 0.3748
+compute_usd = 0.0062
+peak_gib = 0.51
+peak_kind = "vmhwm"
+note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "core-sweep"
+results = "results/amd/featurecounts/"
+host = "results/amd/featurecounts/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 44
+usd_hr = 0.4311
+compute_usd = 0.0053
+peak_gib = 0.51
+peak_kind = "vmhwm"
+note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
+
+# --- HTSeq, one process --------------------------------------------------------------------
+[[run]]
+instance = "r8g.large"
+purpose = "primary"
+results = "results/arm64/htseq/"
+host = "results/arm64/htseq/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 898
+billed_s = 988
+usd_hr = 0.1178
+compute_usd = 0.0294
+billed_usd = 0.0323
+peak_gib = 0.23
+peak_kind = "vmhwm"
+note = "HTSeq"
+
+[[run]]
+instance = "r8i.large"
+purpose = "cross-chip"
+results = "results/x86_64/htseq/"
+host = "results/x86_64/htseq/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 902
+billed_s = 993
+usd_hr = 0.1389
+compute_usd = 0.0348
+billed_usd = 0.0383
+peak_gib = 0.24
+peak_kind = "vmhwm"
+note = "HTSeq"
+
+[[run]]
+instance = "r8a.large"
+purpose = "cross-chip"
+results = "results/amd/htseq/"
+host = "results/amd/htseq/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 1
+wall_s = 525
+billed_s = 580
+usd_hr = 0.1598
+compute_usd = 0.0233
+billed_usd = 0.0257
+peak_gib = 0.24
+peak_kind = "vmhwm"
+note = "HTSeq"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+results = "results/align/"
+date = "2026-10-19"
+date_source = "run"
+wall_s = 66
+note = "task 0, STAR alignment of the pinned input, Graviton4 only; README prints $0.080 billed but no billed seconds, so no $ is recorded"
+
+# --- checks: "The identities, at scale, on all three chips"; observed is every chip's ------
+[[check]]
+id = "input-pins"
+claim = "reads vs ENA / GTF vs Ensembl"
+kind = "pin"
+bound = "md5 / `sum` == published"
+observed = "yes"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "star-input-pairs"
+claim = "STAR input pairs"
+kind = "reference"
+bound = "== ENA `read_count`"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "htseq-conservation"
+claim = "HTSeq: genes + every `__` class"
+kind = "conservation"
+bound = "**== input pairs**"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "star-readspergene-conservation"
+claim = "STAR ReadsPerGene, each of 3 columns"
+kind = "conservation"
+bound = "**== input pairs**"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "htseq-eq-star"
+claim = "**HTSeq vs STAR GeneCounts (unstranded)**"
+kind = "cross-code"
+bound = "**identical, every gene**"
+observed = "**0 of 78,941 differ**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "htseq-classes-eq-star"
+claim = "HTSeq `__no_feature` / `__ambiguous` / `__alignment_not_unique` / `__not_aligned`"
+kind = "cross-code"
+bound = "**== STAR's `N_` rows**"
+observed = "448,202 / 2,202,143 / 898,248 / 291,590"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "unique-eq-star"
+claim = "HTSeq unique classes, featureCounts assigned + no-features + ambiguity"
+kind = "conservation"
+bound = "**== STAR uniquely mapped**"
+observed = "14,610,289"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-unmapped"
+claim = "featureCounts unmapped"
+kind = "conservation"
+bound = "**== STAR unmapped + too-many-loci**"
+observed = "291,590"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-multimapping"
+claim = "featureCounts multimapping records"
+kind = "band"
+bound = "in [2, 10] × STAR multi-loci"
+observed = "2,555,038 (2.84×)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-gene-sum"
+claim = "featureCounts gene sum"
+kind = "conservation"
+bound = "**== its Assigned**"
+observed = "12,637,595"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-threads"
+claim = "featureCounts `-T 8` vs `-T 1`"
+kind = "invariance"
+bound = "**byte-identical counts and summary**"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-htseq-genes-differing"
+claim = "featureCounts vs HTSeq: genes differing"
+kind = "reported"
+bound = "observation"
+observed = "9,436"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "fc-ge-htseq"
+claim = "**featureCounts ≥ HTSeq on every differing gene**"
+kind = "identity"
+bound = "**all**"
+observed = "9,436 of 9,436"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-htseq-difference-is-ambiguity"
+claim = "**Σ(featureCounts − HTSeq)**"
+kind = "conservation"
+bound = "**== HTSeq ambiguous − featureCounts ambiguity**"
+observed = "677,651 == 677,651"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-feature-equal"
+claim = "no-feature pairs, featureCounts vs HTSeq"
+kind = "cross-code"
+bound = "**equal**"
+observed = "448,202"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fc-htseq-spearman"
+claim = "Spearman, featureCounts vs HTSeq"
+kind = "reported"
+bound = "observation"
+observed = "0.9901 (25,675 genes)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "star-stranded"
+claim = "STAR stranded columns, forward / reverse"
+kind = "reported"
+bound = "observation"
+observed = "7,393,223 / 7,387,405 (1.0008)"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "cross-chip-bytes"
+claim = "`fc_counts.tsv` (`73c46d8b…`), the featureCounts summary, `htseq_counts.tsv` (`c2db026c…`) and both check files are byte-identical on Graviton4, Intel and AMD"
+kind = "identity"
+bound = "byte-identical"
+observed = "identical (results/crosschip.txt)"
+outcome = "pass"
+across_chips = "identical"
+
+[[cross_code]]
+with = "measurements/star-real"
+same_bytes = true
+metric = "per-gene counts, HTSeq -s no vs STAR GeneCounts unstranded column, plus the four unassigned classes"
+tolerance_basis = "exact: STAR's manual says its counts coincide with htseq-count's defaults (with -s no and secondary alignments ignored)"
+check = "htseq-eq-star"
+
+[[trap]]
+id = "rnaseq-counts-fc-multimapper-records"
+scope = "tool"
+symptom = "featureCounts reports 2,555,038 multimapping for 898,248 multi-mapped pairs"
+cause = "featureCounts' multimapper class counts alignment records, not pairs; adding --primary changed no count"
+fix = "run the conservation identity through STAR's own log instead"
+

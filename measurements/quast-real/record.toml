@@ -1,0 +1,168 @@
+# measurements/quast-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one QUAST report covering all fourteen assemblies"
+
+[[dataset]]
+id = "NCBI RefSeq GCF_000005845.2 (E. coli K-12 MG1655, U00096.3) + its annotation GFF (9,523 features)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "staged by 00-prep from NCBI, md5- and length-checked (results/prep/)"
+
+[[dataset]]
+id = "nine published closed E. coli K-12 MG1655 genomes from NCBI GenBank (assemblies.tsv accessions)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "spades-real's assembly of the whole DRR171213 run, contigs and scaffolds"
+tier = "run-output"
+pins = "pins.sha256"
+note = "from measurements/spades-real; spades-real.report.tsv is the reproduction target"
+
+[[dataset]]
+id = "three planted-truth controls (self, planted, chimera) built from the reference by mkcontrols.py"
+tier = "built"
+pins = "pins.sha256"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 12.6
+billed_s = 103
+usd_hr = 0.319
+compute_usd = 0.00112
+billed_usd = 0.0091
+peak_gib = 0.2422
+peak_kind = "rss"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 14.3
+billed_s = 144
+usd_hr = 0.3749
+compute_usd = 0.00149
+billed_usd = 0.015
+peak_gib = 0.2461
+peak_kind = "rss"
+note = "bioconda's x86 QUAST 5.3.0, which bundles minimap2 2.28 (aarch.bio's arm64 image ships 2.31)"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 9.9
+billed_s = 90
+usd_hr = 0.4311
+compute_usd = 0.00119
+billed_usd = 0.0108
+peak_gib = 0.2441
+peak_kind = "rss"
+
+# --- checks: "What held at scale, on all three chips" (59 checks per chip in results/<chip>/checks.txt)
+[[check]]
+id = "length-stats"
+claim = "length statistics, 14 assemblies: the 29 QUAST length rows (counts and totals at each threshold, largest, GC, N's, N50/N90/NG50/NG90, L50–LG90, auN, auNG) == an independent Python recomputation from the same FASTA bytes"
+kind = "cross-code"
+bound = "=="
+observed = "406 of 406 equal"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self"
+claim = "`self`: GF 100.000, duplication 1.000, 0 misassemblies, mismatches, indels, unaligned; NGA50 == 4,641,652"
+kind = "identity"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "planted"
+claim = "`planted`: 50 mismatches, 20 indels (all ≤ 5 bp), indel length 60, 0 misassemblies"
+kind = "reference"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "chimera"
+claim = "`chimera`: 7 contigs, 1 misassembly (a contig relocation, 0 inversions or translocations), misassembled length 1,200,000; N50 600,000, NA50 600,000, largest alignment 650,000"
+kind = "reference"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "annotation"
+claim = "annotation: `# genomic features` == the GFF's own line count (9,523, the chromosome-long `region` included) whole in `self` and `planted`; in `chimera`, exactly the 13 features that cross a cut are partial"
+kind = "conservation"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "spades-report"
+claim = "`spades_contigs`: all 54 rows == spades-real's QUAST report on the same bytes"
+kind = "reference"
+bound = "=="
+observed = "equal (GF 98.599, NGA50 176,019)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-gf"
+claim = "published genomes: genome fraction ≥ 95% of U00096.3 (the same strain)"
+kind = "band"
+bound = "≥ 95%"
+observed = "97.710–100.000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "completion"
+claim = "QUAST completion: exit 0 **and** `Thank you for using QUAST!` in `quast.log`"
+kind = "sentinel"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "report-bytes"
+claim = "All 54 `.tsv`/`.txt` files QUAST wrote are byte-identical on all three"
+kind = "reported"
+observed = "byte-identical (results/compare.txt)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "published-metrics"
+claim = "Observed for the nine published genomes, not asserted"
+kind = "reported"
+observed = "ont_2023 58.11 indels /100 kbp; ont_2024 GF 97.710, 31 misassemblies"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "measurements/spades-real"
+same_bytes = true
+metric = "all 54 rows of QUAST's report for spades_contigs"
+check = "spades-report"

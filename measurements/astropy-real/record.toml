@@ -1,0 +1,239 @@
+# measurements/astropy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one HEALPix order-4 pixel (808) cross-matched, Gaia DR3 x Pan-STARRS1, plus 100 PS1 skycells round-tripped through their WCS"
+
+[[dataset]]
+id = "s3://stpubdata/gaia/gaia_dr3/public/hats/gaia/dataset/Norder=5/Dir=0/Npix=3232-3235.parquet (Gaia DR3 gaia_source HATS)"
+tier = "roda"
+pins = "pins.sha256"
+note = "S3 versionId + sha256 per object in inputs.tsv, checked at copy time and again in-task"
+
+[[dataset]]
+id = "s3://stpubdata/panstarrs/ps1/public/hats/otmo/otmo/dataset/Norder=5/Dir=0/Npix=3232-3235.parquet (PS1 DR2 ObjectThin + MeanObject HATS)"
+tier = "roda"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "s3://stpubdata PS1 rings.v3.skycell.1749.000-099.stk.r.cmf (100 r-band stack catalogues)"
+tier = "roda"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 866.3
+billed_s = 1079
+usd_hr = 0.2356
+compute_usd = 0.0567
+billed_usd = 0.0706
+peak_gib = 8.52
+peak_kind = "rss"
+note = "wall is the task total; cross-match 65.3 s, WCS sweep 767.3 s"
+
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-17"
+date_source = "git"
+threads_per_core = 2
+wall_s = 811.2
+billed_s = 951
+usd_hr = 0.2778
+compute_usd = 0.0626
+billed_usd = 0.0734
+peak_gib = 8.46
+peak_kind = "rss"
+note = "wall is the task total; cross-match 52.0 s, WCS sweep 728.4 s"
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-17"
+date_source = "git"
+threads_per_core = 1
+wall_s = 651.0
+billed_s = 761
+usd_hr = 0.3195
+compute_usd = 0.0578
+billed_usd = 0.0675
+peak_gib = 8.50
+peak_kind = "rss"
+note = "wall is the task total; cross-match 48.7 s, WCS sweep 575.2 s; command staged as a sha256-checked file (spawn#1246)"
+
+# --- checks: the README's "What held, on all three chips" rows ---------------------------
+[[check]]
+id = "gaia-galactic"
+claim = "Gaia's catalogued `l, b` == ICRS → Hipparcos Galactic frame (ESA 1997 §1.5.3), built on astropy's transform graph"
+kind = "reference"
+observed = "4.8e-4 µas max"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gaia-ecliptic"
+claim = "Gaia's `ecl_lon, ecl_lat` == ICRS → Chapront et al. 2002 ecliptic (ε = 84381.4110″, φ = −55.42 mas)"
+kind = "reference"
+observed = "7.7e-4 µas"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "builtin-frames"
+claim = "astropy's built-in `Galactic` / `BarycentricMeanEcliptic` + the rotation between the two frame definitions == Gaia's catalogue"
+kind = "reference"
+observed = "6.3e-4 / 8.8e-4 µas"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "6.3e-4 / 8.8e-4 µas (Graviton4) vs 6.5e-4 / 9.0e-4 µas (Intel and AMD); every µas-scale residual sits at the float64 floor on every chip"
+
+[[check]]
+id = "frame-round-trip"
+claim = "ICRS → Galactic, FK5, Supergalactic, ecliptic, **FK4 B1950** → ICRS, 4.1 M sources"
+kind = "identity"
+observed = "all < 9e-4 µas"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "space-motion-round-trip"
+claim = "`apply_space_motion` 2016 → 2000 → 2016, 2,539,463 sources with v_t < 0.01c (21,377 parallax-noise sources above it are reported)"
+kind = "identity"
+observed = "3.4e-4 µas"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "motion-vs-pm"
+claim = "16 yr of motion vs 16 × catalogued pm, 187,576 stars with \\|pm\\| > 10 mas/yr, each within its own bound"
+kind = "reference"
+bound = "θ² + β² + θβ_t + 2\\|β_r\\| + 2\\|v_r dt/d\\| + L_B + 1 nas/(16\\|pm\\|)"
+observed = "187,576 of 187,576"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tcb-tdb-shortfall"
+claim = "for stars with no RV, the median shortfall is L_B = 1.550519768e-8"
+kind = "reference"
+observed = "L_B + 3.7e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "healpix29"
+claim = "HATS `_healpix_29` (hats-import) vs healpy `ang2pix` at order 29"
+kind = "cross-code"
+observed = "Gaia 0, PS1 2 (both adjacent)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ps1-cartesian"
+claim = "PS1's catalogued `cx, cy, cz` == astropy's cartesian"
+kind = "reference"
+observed = "1.7e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "search-around-sky"
+claim = "`search_around_sky(G, P)` == `search_around_sky(P, G)`, and == scipy `cKDTree` at chord 2 sin(r/2)"
+kind = "cross-code"
+observed = "4,023,363 pairs, 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nearest-neighbour"
+claim = "nearest neighbour read off the pair list == `match_coordinates_sky`"
+kind = "identity"
+observed = "1.8e-5 µas"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "high-pm-propagation"
+claim = "propagating 872 high-pm (> 50 mas/yr) matches to their PS1 mean epoch"
+kind = "band"
+observed = "251.75 → 15.59 mas median"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ipp-wcs"
+claim = "IPP's own `RA_PSF, DEC_PSF` == header WCS at `X_PSF, Y_PSF`, 8.59 M detections, FITS 1-based"
+kind = "reference"
+bound = "one float32 ulp of the 6274-px range (122 µas)"
+observed = "15.2 µas max, 0.61 µas median"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "wcs-round-trip"
+claim = "every pixel of 100 skycells, pix → world → pix"
+kind = "identity"
+observed = "3.93 G pixels, 8.8e-10 px"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fits-decode"
+claim = "merged catalogue (3,740,227 mutual best matches) → FITS → read"
+kind = "identity"
+observed = "bit-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "merged-catalogue-cross-chip"
+claim = "the merged catalogue's `source_id` ↔ `objID` pairing is identical on all 3,740,227 rows"
+kind = "reported"
+observed = "only `sep_arcsec` differs, in 399,106 rows, by at most 2 ulp (2.2e-16 arcsec)"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "pairing identical on all 3,740,227 rows; sep_arcsec differs in 399,106 rows by at most 2 ulp (2.2e-16 arcsec), libm trig rounding; Intel == AMD bit-identical (matches.fits same sha256)"
+
+[[check]]
+id = "fitted-rotation"
+claim = "fitted-vs-predicted rotation angle"
+kind = "reported"
+observed = "0.16 µas on Graviton4, 0.96 µas on x86"
+outcome = "reported"
+
+[[trap]]
+id = "astropy-parquet-healpix29-keyerror"
+scope = "tool"
+symptom = "KeyError('_healpix_29')"
+blames = "Gaia DR3's HATS files"
+cause = "astropy 8.0.1 read_table_parquet looks up header_cols[col.name] for every column, and the table_meta_yaml astropy wrote before hats-import added _healpix_29 does not describe it"
+fix = "read the catalogues through pyarrow; upstream fix is header_cols.get(col.name, {})"
+
+[[trap]]
+id = "astropy-tcb-tdb-proper-motion"
+scope = "method"
+symptom = "16 yr of motion falls short of 16 × catalogued pm by a median 1.55426e-8 for stars with no RV"
+cause = "Gaia's proper motions are per year of TCB and ERFA starpm propagates in TDB, so 16 TCB years become 16(1 − L_B) years of motion"
+fix = "include L_B in the bound"
+cost = "a check whose bound left it out failed on both chips"
+
+[[trap]]
+id = "astropy-arccos-rotation-floor"
+scope = "method"
+symptom = "fitted rotation check failed"
+cause = "arccos((tr − 1)/2) has a sqrt(ε) ≈ 3 mas floor, and a rotation fitted over a 3.6° field cannot verify a rotation to 1 µas"
+fix = "report the fitted angle; assert by applying the predicted matrix to every star"
+
+[[trap]]
+id = "astropy-ipp-float32-positions"
+scope = "data"
+symptom = "a per-detection half-ulp bound failed by 11 µas"
+cause = "IPP's X_PSF is >f4 and its pixel arithmetic is not a single rounding"
+fix = "bound at one float32 ulp at the image's pixel range (122 µas), the precision of the shared problem"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "spawn 0.139.1's wrapper takes ~14.7 KB of EC2's 16 KiB user data; the AMD leg's command was staged as a sha256-checked file"

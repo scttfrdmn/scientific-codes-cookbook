@@ -1,0 +1,243 @@
+# measurements/signac-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete 10x scATAC run (10k_pbmc_ATACv2_nextgem_Chromium_Controller, 257.6M fragments, 10,246 cells) through the Signac vignette's QC and reduction path"
+
+[[dataset]]
+id = "10x Genomics cell-atac/2.1.0 10k_pbmc_ATACv2_nextgem_Chromium_Controller: fragments.tsv.gz (+ .tbi), peaks.bed, singlecell.csv"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "trust on first use (recorded by the first fetch, 2026-10-18); no open-data holding carries the fragments file"
+
+[[dataset]]
+id = "Ensembl release 98 Homo_sapiens.GRCh38.98.gtf.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "also checked against Ensembl's own CHECKSUMS (BSD sum 47563 45618)"
+
+[[dataset]]
+id = "awk recount of the fragments (bins.awk, overlap.awk, windows.awk), 01-reference.task.json"
+tier = "built"
+pins = "ref.sha256"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/cpu.txt"
+threads_per_core = 1            # cpu.txt's sibling line is not in host_facts' spelling
+date = "2026-10-17"
+date_source = "git"
+workers = 4
+wall_s = 1652
+billed_s = 1848
+usd_hr = 0.2356
+compute_usd = 0.1081
+billed_usd = 0.1209
+peak_gib = 16.74
+peak_kind = "vmhwm"
+note = "r2; the first Graviton run failed a cell-order check and printed the same md5s"
+
+[[run]]
+instance = "r8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/cpu.txt"
+threads_per_core = 2            # thread_siblings_list 0,2
+date = "2026-10-17"
+date_source = "git"
+workers = 4
+wall_s = 1842
+billed_s = 2028
+usd_hr = 0.2778
+compute_usd = 0.1421
+billed_usd = 0.1565
+peak_gib = 17.88
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "r8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/cpu.txt"
+threads_per_core = 1
+date = "2026-10-17"
+date_source = "git"
+workers = 4
+wall_s = 1456
+billed_s = 1603
+usd_hr = 0.3195
+compute_usd = 0.1292
+billed_usd = 0.1423
+peak_gib = 17.77
+peak_kind = "vmhwm"
+
+[[check]]
+id = "pins"
+claim = "staged data, recount, script"
+kind = "pin"
+bound = "sha256 pins"
+observed = "16 of 16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "count-fragments"
+claim = "CountFragments, 549,529 barcodes"
+kind = "identity"
+bound = "records, sum(col5), <147, 148..293 all == recount, per barcode"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "length-bins"
+claim = "length-bin conservation"
+kind = "conservation"
+bound = "records == nfr + mono + ≥295 + {147, 294}"
+observed = "holds; 621,334 in neither bin"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "feature-matrix"
+claim = "FeatureMatrix, 165,434 × 10,246"
+kind = "identity"
+bound = "nnz, sum, Σx², checksum, every row and column sum == half-open overlap recount"
+observed = "115,788,819 nnz, 160,246,308 total"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "frip"
+claim = "FRiP"
+kind = "identity"
+bound = "== recount peak fragments / recount records"
+observed = "median 0.686902"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nucleosome-signal"
+claim = "NucleosomeSignal"
+kind = "identity"
+bound = "== mono / nfr over the first ncells × 5000 = 51,230,000 records"
+observed = "median 0.66082"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gene-activity"
+claim = "GeneActivity, 19,615 genes"
+kind = "identity"
+bound = "Signac's regions == windows.awk's; matrix == overlap recount, as above"
+observed = "87,596,808 nnz, 206,660,378 total"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tfidf"
+claim = "RunTFIDF(method = 1)"
+kind = "identity"
+bound = "log1p(x/colSum · ncol/rowSum · 1e4) on all 115.8M nonzeros, max abs ≤ 1e-12"
+observed = "8.9e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "svd-triplets"
+claim = "RunSVD triplets"
+kind = "identity"
+bound = "‖Av − du‖/d and ‖Aᵀu − dv‖/d ≤ 1e-5 (Signac's tol)"
+observed = "2.5e-10, 5.4e-17"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "svd-bases"
+claim = "RunSVD bases"
+kind = "identity"
+bound = "‖UᵀU − I‖, ‖VᵀV − I‖ ≤ 1e-8; d decreasing"
+observed = "1.6e-14, 7.1e-15"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.6e-14, 7.1e-15 (Graviton4) vs 1.5e-14, 7.6e-15 (Intel, AMD)"
+
+[[check]]
+id = "tss-finite"
+claim = "TSS enrichment"
+kind = "band"
+bound = "finite and ≥ 0 for every cell"
+observed = "median 5.5377, 43 cells < 2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "recount-vs-cellranger"
+claim = "Fragments overlapping at least one peak, per barcode, equal singlecell.csv's peak_region_fragments for all 573,155 barcodes"
+kind = "cross-code"
+bound = "=="
+observed = "573,155 barcodes"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "passed-filters"
+claim = "recount's record count equals passed_filters"
+kind = "reported"
+observed = "572,516 barcodes; 9,670 of the 10,246 cells"
+outcome = "reported"
+
+[[check]]
+id = "lsi1-depth"
+claim = "LSI_1 correlates with depth"
+kind = "reported"
+observed = "r = 0.9282"
+outcome = "reported"
+
+[[check]]
+id = "svd-no-skip"
+claim = "largest singular value RunSVD did not return (30 rounds of subspace iteration on A − UDVᵀ) below d₅₀"
+kind = "reported"
+observed = "339.858 < 340.852"
+outcome = "reported"
+
+[[check]]
+id = "singular-values-cross-chip"
+claim = "50 singular values across chips"
+kind = "reported"
+observed = "max rel diff 3.2e-15"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel/AMD vs Graviton4 max rel diff 3.2e-15; LSI embeddings ≤ 1e-12; Intel vs AMD bit-identical (both Cooperlake)"
+corename_sensitive = true
+
+[[check]]
+id = "count-md5s"
+claim = "md5s of CountFragments, FeatureMatrix, GeneActivity and the per-cell QC table"
+kind = "reported"
+observed = "identical on all three"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:10x-cell-atac-2.1.0-singlecell.csv"
+same_bytes = true
+metric = "per-barcode fragments overlapping at least one peak vs Cell Ranger's peak_region_fragments"
+tolerance_basis = "integer counts over the same fragments file: exact"
+check = "recount-vs-cellranger"
+
+[[trap]]
+id = "signac-identical-attribute"
+scope = "method"
+symptom = "a cell-order assertion written with identical() tripped on an attribute, while every count check passed"
+cause = "identical() compares attributes as well as values"
+fix = "rewrite as an elementwise comparison"
+cost = "the first Graviton run"
+
+[[trap]]
+id = "signac-passed-filters-not-rowcount"
+scope = "data"
+symptom = "recount records equal Cell Ranger's passed_filters for only 9,670 of the 10,246 cells"
+blames = "the recount"
+cause = "Cell Ranger's passed_filters is not the fragment file's row count for 5.6% of cells"
+fix = "check against peak_region_fragments (all 573,155 barcodes equal); report passed_filters, don't assert it"

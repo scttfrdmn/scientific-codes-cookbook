@@ -1,0 +1,192 @@
+# measurements/psi4-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole DESS66 set: all 66 dimers with every check passed (plus the 12 control jobs)"
+
+[[dataset]]
+id = "DESS66, Zenodo 10.5281/zenodo.5676284 v1.0.0, DESS66.zip"
+tier = "durable-id"
+unpinned = "dess66.sha256 sits beside the zip in the bucket and every run re-checks it, but no sha256 manifest is committed in this dir; the README prints Zenodo's md5 and a truncated sha256"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 7253
+billed_s = 7426
+usd_hr = 0.9426
+compute_usd = 1.899
+billed_usd = 1.944
+peak_gib = 18.2
+peak_kind = "rss"
+note = "4 workers x 4 threads; peak is the largest single Psi4 ru_maxrss, the box's cgroup memory.peak was 96.1 GiB"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb169ab520904d1d1caacb1"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 4683
+billed_s = 4845
+usd_hr = 1.1114
+compute_usd = 1.446
+billed_usd = 1.496
+peak_gib = 18.3
+peak_kind = "rss"
+note = "psi4's own upstream image, not the recipe's dft env twin (whose psi4 does not import); box memory.peak 92.6 GiB"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb169ab520904d1d1caacb1"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 3840
+billed_s = 4002
+usd_hr = 1.2781
+compute_usd = 1.363
+billed_usd = 1.421
+peak_gib = 18.3
+peak_kind = "rss"
+note = "psi4's own upstream image; box memory.peak 93.3 GiB"
+
+# --- checks: "What held at scale, on all three chips" (observed = worst chip) ----------
+[[check]]
+id = "zip-pins"
+claim = "DESS66.zip matches Zenodo's md5 and its pinned sha256"
+kind = "pin"
+bound = "exact"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "s66-rows"
+claim = "66 rows, 66 distinct `geom_id` and system names"
+kind = "identity"
+bound = "exact"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "all-finish"
+claim = "every calculation finishes (66 + 6 rotated + 6 controls)"
+kind = "sentinel"
+bound = "78 of 78"
+observed = "78"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-sums"
+claim = "published: `sapt_all` == sum of its 8 terms; `tz_MP2_all` == HF + os + ss"
+kind = "conservation"
+bound = "≤ 6e-5 (print rounding)"
+observed = "2.0e-5, 1.0e-5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "psi4-sums"
+claim = "Psi4: SAPT0 total == sum of its 8 terms; MP2 interaction == HF + os + ss"
+kind = "conservation"
+bound = "≤ 1e-9"
+observed = "7.1e-15, 6.7e-11"
+outcome = "pass"
+
+[[check]]
+id = "sapt0-columns"
+claim = "every SAPT0 column == DESS66, every dimer (es, ex, exs2, ind, exind, disp, exdisp os/ss, δHF, total)"
+kind = "reference"
+bound = "≤ 1e-2 kcal/mol"
+observed = "5.31e-4 (exch10, S66 row 19)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "every chip misses DESS66 by the same amount to three digits (worst 5.31e-4 on all three)"
+
+[[check]]
+id = "hf-mp2-columns"
+claim = "every CP DF-HF/MP2 aVTZ column == DESS66, every dimer (HF, MP2 os, ss, total)"
+kind = "reference"
+bound = "≤ 1e-2 kcal/mol"
+observed = "1.24e-3 (MP2 ss, row 59)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "every chip misses DESS66 by the same amount to three digits (worst 1.24e-3 on all three)"
+
+[[check]]
+id = "rigid-motion"
+claim = "SAPT0 terms unchanged under a rigid rotation + translation (6 dimers)"
+kind = "invariance"
+bound = "≤ 1e-5"
+observed = "4.16e-7"
+outcome = "pass"
+
+[[check]]
+id = "default-sapt0-control"
+claim = "control: Psi4's default SAPT0 misses DESS66 (6 dimers)"
+kind = "reference"
+bound = "> 1e-2 on some column"
+observed = "≥ 0.332 (ind)"
+outcome = "pass"
+
+# --- across chips (results/crosschip.txt), reported --------------------------------------
+[[check]]
+id = "cross-chip"
+claim = "Every column is a converged fixed point, and the three chips agree far inside the bound"
+kind = "reported"
+observed = "≤ 2.5e-5 kcal/mol"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel vs Graviton4: SAPT0 total ≤ 1.29e-5, CP HF ≤ 4.4e-6, MP2 correlation ≤ 2.5e-7; AMD vs Graviton4: ≤ 2.13e-5, 5.7e-6, 3.7e-7; no column bit-identical across any pair, Intel and AMD included"
+
+[[check]]
+id = "sapt0-quality"
+claim = "SAPT0/aVTZ total and CP DF-MP2/aVTZ vs DESS66's silver-standard reference"
+kind = "reported"
+observed = "MAE 1.12 kcal/mol (SAPT0, overbinds every dimer), 0.49 kcal/mol (MP2)"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:zenodo-5676284-DESS66"
+same_bytes = true
+metric = "every SAPT0 and CP DF-HF/MP2 aVTZ column, |Δ| kcal/mol per dimer, on DESRES's published geometries"
+tolerance_basis = "set by DESRES's convergence: their SCFs ran at 1e-6, and re-converging three dimers at 1e-6 vs 1e-10 moved columns by up to 2.35e-3; 1e-2 is 4x that shift and 33x below the smallest control miss"
+check = "sapt0-columns"
+
+[[trap]]
+id = "psi4-probe-psio-error-disk-full"
+scope = "method"
+symptom = "24 of 78 jobs died with `PSIO_ERROR`"
+cause = "16 single-threaded workers with 6 GB each pushed the DF integrals out of core and filled the 100 GB root disk"
+fix = "4 workers x 28 GB, so the integrals stay in memory (box averages 12.0-13.6 busy cores instead of 6.3)"
+
+[[trap]]
+id = "psi4-snsmp2-options-raise"
+scope = "tool"
+symptom = "copying sns-mp2's options into Psi4 1.11 verbatim raises"
+cause = "1.10 renamed SAPT `D_CONVERGENCE` to `CPHF_R_CONVERGENCE` and removed SAPT `E_CONVERGENCE`"
+fix = "use sapt__cphf_r_convergence"
+
+[[trap]]
+id = "psi4-dft-twin-einsums-symbol"
+scope = "image"
+symptom = "undefined symbol: _ZN7einsums13random_engineE"
+cause = "the dft env's linux-64 twin's psi4 1.11 py314hb58b17a_1 does not import"
+fix = "run x86 on psi4's own upstream image psi4/psi4:1.11.0 by its linux/amd64 digest; re-locking the twin would be a pin swap and was not done"
+
+[[trap]]
+id = "psi4-default-sapt0-basis"
+scope = "method"
+symptom = "default Psi4 SAPT0 components differ from DES370K-family data: induction by 0.33-2.55 kcal/mol, exchange-induction by 0.25-1.78"
+blames = "an error in either"
+cause = "energy(\"sapt0\") defaults to the dimer-centred basis and a JK electrostatics fit; DESRES used monomer-centred bases and the RI fit"
+fix = "sapt_basis=\"monomer\" and df_basis_elst aug-cc-pvtz-ri"

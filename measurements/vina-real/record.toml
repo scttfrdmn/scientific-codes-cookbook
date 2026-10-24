@@ -1,0 +1,205 @@
+# measurements/vina-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole benchmark: 513 PoseBusters redocks (85 Astex Diverse + 428 PoseBusters Benchmark) and every check"
+
+[[dataset]]
+id = "Zenodo 10.5281/zenodo.8278563 posebusters_paper_data.zip + posebusters_paper_results.csv"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "md5 checked against the Zenodo record in 00-fetch"
+
+[[dataset]]
+id = "PoseBusters 308-complex subset id list (authors' published posebusters_pdb_ccd_ids.txt)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "prep.tar: Open Babel 3.2.1 receptor/ligand PDBQT built once on Graviton4 by prep.py"
+tier = "built"
+pins = "pins.sha256"
+note = "receptor preparation is not reproducible run to run, so the tar is the pin; a re-prepared tar is a new input"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 3609
+billed_s = 3685
+usd_hr = 1.2762
+compute_usd = 1.279
+billed_usd = 1.306
+peak_gib = 2.12
+peak_kind = "rss"
+workers = 32
+note = "wall is one ligand: 7PK0_BYC took 3,596 s of 3,609; box cgroup peak 27–30 GiB, mostly page cache"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 4857
+billed_s = 4910
+usd_hr = 1.4994
+compute_usd = 2.023
+billed_usd = 2.045
+peak_gib = 2.12
+peak_kind = "rss"
+workers = 32
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 2754
+billed_s = 2801
+usd_hr = 1.7243
+compute_usd = 1.319
+billed_usd = 1.342
+peak_gib = 2.12
+peak_kind = "rss"
+workers = 32
+
+# checks: dock.py's in-task asserts, the README's "What held at scale" table (observed = Graviton4)
+[[check]]
+id = "all-docked"
+claim = "all 513 complexes dock and return ranked poses"
+kind = "sentinel"
+observed = "513"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "crystal-rmsd-zero"
+claim = "crystal ligand → PDBQT → RMSD to the crystal SDF is 0"
+kind = "identity"
+observed = "0.00000 Å"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "conformer-rmsd-zero"
+claim = "starting conformer → PDBQT → RMSD is 0 (< 0.002 Å; PDBQT keeps 3 decimals)"
+kind = "identity"
+bound = "< 0.002 Å"
+observed = "0.00062 Å"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "redock-reproducible"
+claim = "10 complexes re-docked in fresh processes give identical poses"
+kind = "identity"
+observed = "10/10"
+outcome = "pass"
+
+[[check]]
+id = "top1-floor"
+claim = "top-1 ≤ 2 Å on each set ≥ 25%"
+kind = "band"
+bound = "≥ 25%"
+observed = "58.8 / 49.8 / 56.8%"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "58.8 / 49.8 / 56.8% (Graviton4) vs 57.6 / 50.9 / 57.5% (Intel, AMD); 24 of 513 verdicts flip"
+
+[[check]]
+id = "crystal-pose-score"
+claim = "crystal-pose score"
+kind = "identity"
+bound = "fixed point, asserted"
+observed = "513/513 identical"
+outcome = "pass"
+across_chips = "identical"
+
+# reported, not asserted: against PoseBusters' own Vina run (different receptor/ligand prep)
+[[check]]
+id = "posebusters-astex"
+claim = "Astex Diverse, 85"
+kind = "reported"
+observed = "50 (58.8%) vs PoseBusters' Vina 49 (57.6%)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "50 (Graviton4) vs 49 (Intel / AMD)"
+
+[[check]]
+id = "posebusters-308"
+claim = "PoseBusters, 308"
+kind = "reported"
+observed = "175 (56.8%) vs PoseBusters' Vina 184 (59.7%)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "175 (Graviton4) vs 177 (Intel / AMD)"
+
+[[check]]
+id = "posebusters-428"
+claim = "PoseBusters, 428"
+kind = "reported"
+observed = "213 (49.8%) vs PoseBusters' Vina 224 (52.3%)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "213 (Graviton4) vs 218 (Intel / AMD)"
+
+# across chips, reported
+[[check]]
+id = "crystal-pose-optimised"
+claim = "crystal pose, locally optimised"
+kind = "reported"
+observed = "512/513 (7MSR_DCA: 0.008 kcal/mol)"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "512/513 identical Graviton4 vs either x86; 7MSR_DCA differs by 0.008 kcal/mol; Intel vs AMD 513/513"
+
+[[check]]
+id = "docked-poses"
+claim = "docked poses"
+kind = "reported"
+observed = "0/513 byte-identical vs Graviton4; Intel vs AMD 513/513"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "docked top energy 4/513 identical, mean +0.010 (x86 vs Graviton4); Intel vs AMD 513/513 identical"
+
+[[cross_code]]
+with = "published:zenodo-8278563-posebusters_paper_results"
+same_bytes = false
+metric = "count of complexes whose top pose is within 2 Å of the crystal ligand, per set"
+tolerance_basis = "reported, not asserted: PoseBusters protonated receptors with reduce and prepared ligands with Meeko, this run used Open Babel"
+check = "posebusters-428"
+
+[[trap]]
+id = "vina-prep-not-reproducible"
+scope = "tool"
+symptom = "Running `prep.py` twice on one box gave different bytes for all 513 receptor files and none of the ligand files"
+cause = "Open Babel places some ARG and HIS polar hydrogens at different coordinates run to run"
+fix = "pin `prep.tar`; treat a re-prepared tar as a new input"
+cost = "moved 27 crystal-pose scores (by up to 0.19 kcal/mol) and 201–204 docked top energies"
+
+[[trap]]
+id = "vina-untyped-elements"
+scope = "tool"
+symptom = "Five receptors carry an element Vina has no type for (B, Mo, V, Xe)"
+cause = "Vina's atom typing has no type for those elements"
+fix = "those atoms are dropped, listed in results/prep/prep_notes.tsv"
+
+[[trap]]
+id = "vina-box-too-small"
+scope = "data"
+symptom = "Six ligands do not fit a 25 Å box about their own centroid"
+cause = "PoseBusters' protocol fixes a 25 Å cube"
+fix = "widen their box to 26–30 Å, listed in results/prep/prep_notes.tsv"
+
+[[trap]]
+id = "vina-optimised-crystal-not-fixed-point"
+scope = "method"
+symptom = "7MSR_DCA shows it is not one at Vina's reported precision"
+blames = "`dock.py`'s docstring, which calls the optimised crystal pose a fixed point"
+cause = "a short local minimisation is not a fixed point at 0.001 kcal/mol"
+fix = "`compare.py` reports it rather than asserting it"

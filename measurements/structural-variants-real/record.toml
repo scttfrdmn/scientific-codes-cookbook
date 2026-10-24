@@ -1,0 +1,267 @@
+# measurements/structural-variants-real/record.toml -- manta and delly on whole-genome HG002 30x, three chips.
+schema = 1
+result_unit = "one whole genome called and checked by one caller"
+
+[[dataset]]
+id = "s3://giab NHGRI novoalign HG002.hs37d5.60x.1.bam (+ .bai), HG002 (NA24385), GRCh37 hs37d5"
+tier = "roda"
+pins = "pins.sha256"
+note = "copied server-side into the bucket"
+
+[[dataset]]
+id = "s3://1000genomes hs37d5.fa.gz (+ .fai)"
+tier = "roda"
+pins = "pins.sha256"
+note = "names and lengths asserted == 1000 Genomes' published .fai; 00-prep's decompressed hs37d5.fa is pinned too"
+
+[[dataset]]
+id = "s3://giab GIAB HG002 SV v0.6 Tier 1: HG002_SVs_Tier1_v0.6.vcf.gz (+ .tbi) and HG002_SVs_Tier1_v0.6.bed"
+tier = "roda"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "HG002.hs37d5.30x.bam (+ .bai): the 60x BAM subsampled to 30x with a fixed seed by 00-prep"
+tier = "built"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "delly v2.6.0 excludeTemplates/human.hg19.excl.tsv"
+tier = "versioned-release"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/manta/"
+host = "results/arm64/manta/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 230
+billed_s = 690
+usd_hr = 1.8851
+compute_usd = 0.12
+billed_usd = 0.361
+peak_gib = 3.3
+peak_kind = "rss"
+note = "manta; peak is ru_maxrss over pyflow's tasks (cgroup memory.peak 3.4 GiB)"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/delly/"
+host = "results/arm64/delly/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 1140
+billed_s = 1607
+usd_hr = 1.8851
+compute_usd = 0.597
+billed_usd = 0.842
+peak_gib = 1.1
+peak_kind = "vmhwm"
+note = "delly sr -h 32"
+
+[[run]]
+instance = "r8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/manta/"
+host = "results/x86_64/manta/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 320
+billed_s = 714
+usd_hr = 2.2227
+compute_usd = 0.198
+billed_usd = 0.441
+peak_gib = 3.3
+peak_kind = "rss"
+note = "manta; 16 cores x 2 threads"
+
+[[run]]
+instance = "r8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/delly/"
+host = "results/x86_64/delly/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 1160
+billed_s = 1552
+usd_hr = 2.2227
+compute_usd = 0.716
+billed_usd = 0.958
+peak_gib = 1.1
+peak_kind = "vmhwm"
+note = "delly"
+
+[[run]]
+instance = "r8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/manta/"
+host = "results/amd/manta/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 199
+billed_s = 510
+usd_hr = 2.5562
+compute_usd = 0.141
+billed_usd = 0.362
+peak_gib = 3.3
+peak_kind = "rss"
+note = "manta"
+
+[[run]]
+instance = "r8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/delly/"
+host = "results/amd/delly/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 890
+billed_s = 1191
+usd_hr = 2.5562
+compute_usd = 0.632
+billed_usd = 0.846
+peak_gib = 1.1
+peak_kind = "vmhwm"
+note = "delly"
+
+# --- checks: "The checks, at scale, on all three chips" (observed on every chip) ---------
+[[check]]
+id = "subsample-fraction"
+claim = "30× subsample: kept fraction 0.5 ± 0.005 (hash-based, ~1e9 reads: 250 sd)"
+kind = "band"
+bound = "0.5 ± 0.005"
+observed = "0.500008; mean depth 29.6"
+outcome = "pass"
+
+[[check]]
+id = "reference-fai"
+claim = "reference: names and lengths == 1000 Genomes' published `.fai`; BAM `@SQ` == both"
+kind = "reference"
+observed = "86 contigs; our `.fai` is byte-identical to theirs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "benchmark-count"
+claim = "benchmark: truvari's base count, per type, == an independent count of Tier 1 PASS calls 50 bp–50 kb inside one BED interval"
+kind = "identity"
+observed = "4,199 DEL + 5,442 INS = 9,641"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "manta-completion"
+claim = "manta completion: pyflow's `successfully completed` line; BGZF VCF; sample == the read group's"
+kind = "sentinel"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "manta-convention"
+claim = "manta convention: every explicit record: `END == POS+len(REF)−1`; every DEL: `−SVLEN == END−POS`; every explicit INS: `SVLEN == len(ALT)−1`"
+kind = "identity"
+observed = "0 exceptions in 13,862 records"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "delly-convention"
+claim = "delly convention: every DEL: `|SVLEN| ==` deleted length + 1 (the recipe's 1001 for 1000)"
+kind = "identity"
+observed = "0 exceptions in 6,965"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "delly-evidence"
+claim = "delly evidence: `MAD > 0`, discordant pairs > 0, BCF magic"
+kind = "sentinel"
+observed = "MAD 90, 776,849 pairs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "precision-vs-tier1"
+claim = "precision vs Tier 1: ≥ 0.8 for both callers: PASS calls in confident regions are mostly real"
+kind = "reference"
+bound = "≥ 0.8"
+observed = "manta 0.957, delly 0.892"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "manta-delly-intervals"
+claim = "manta ↔ delly: precise deletion pairs mostly claim the same deleted interval"
+kind = "cross-code"
+observed = "7 of 8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "across-chips"
+claim = "across chips: every record and every score identical"
+kind = "identity"
+observed = "manta `711477cd…`, delly `9992b21f…` on all three"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported: recall is never asserted -----------------------------------------------------
+[[check]]
+id = "manta-score"
+claim = "manta vs GIAB HG002 SV v0.6 Tier 1 (truvari, README_SV_v0.6 rules)"
+kind = "reported"
+observed = "TP 3,485, FP 155, FN 6,156; precision 0.9574, recall 0.3615, F1 0.5248; DEL recall 0.6101, INS recall 0.1696"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "delly-score"
+claim = "delly vs GIAB HG002 SV v0.6 Tier 1 (truvari, README_SV_v0.6 rules)"
+kind = "reported"
+observed = "TP 687, FP 83, FN 8,954; precision 0.8922, recall 0.0713, F1 0.1320; DEL recall 0.1500, INS recall 0.0105"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:GIAB-HG002-SV-v0.6-Tier1"
+same_bytes = true
+metric = "truvari precision/recall on DEL and INS calls, PASS only, inside the Tier 1 BED"
+tolerance_basis = "GIAB's own published matching rules (README_SV_v0.6: --passonly --includebed, -r 2000, -p 0); precision floor 0.8, recall reported, never asserted"
+check = "precision-vs-tier1"
+
+[[trap]]
+id = "structural-variants-manta-memtotal-tmpfs"
+scope = "platform"
+symptom = "Manta's pyflow sizes its task pool from `MemTotal`, which counts the tmpfs as free"
+cause = "staging lives in a half-RAM tmpfs holding the 59.6 GiB BAM plus the 3.2 GB reference, which MemTotal does not subtract"
+fix = "`runWorkflow.py -g 150` tells pyflow what is left"
+
+[[trap]]
+id = "structural-variants-cosign-per-arch-digest"
+scope = "image"
+symptom = "cosign on the per-arch digest says `no signatures found`"
+cause = "aarch.bio signs the index, and the manta and delly pins are the arm64 entries of signed indexes"
+fix = "verify the parent index: manta `7020a19f…` (sign-existing.yml) and delly `b6eac55c…` (publish.yml), playgroundlogic/aarchbio on main"
+
+[[trap]]
+id = "structural-variants-razf-gzip-exit2"
+scope = "data"
+symptom = "a prep that stopped at gzip's exit 2 on the RAZF reference's trailing index"
+cause = "RAZF ends in its own index, which gzip reports as \"trailing garbage\" with exit 2"
+fix = "prep.sh accepts gzip exit 0 or 2 and lets the .fai check against 1000 Genomes' published one prove the decompression"
+cost = "$0.26"
+
+[[trap]]
+id = "structural-variants-manta-ins-end"
+scope = "method"
+symptom = "a first Graviton4 manta run whose insertion check guessed `END == POS`"
+cause = "manta writes `END` as the last replaced base on every explicit record"
+fix = "assert `END == POS+len(REF)−1` on every explicit record; the re-run's records were identical"
+cost = "$0.37"

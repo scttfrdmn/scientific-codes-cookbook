@@ -1,0 +1,250 @@
+# measurements/mrbayes-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one converged posterior (2 runs x 4 chains to ASDSF < 0.01, 114 taxa, LG+G4)"
+
+[[dataset]]
+id = "Pfam 38.2 PF26127.1 seed alignment (114 sequences x 477 columns), aln.fa"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "iqtree"
+
+[[dataset]]
+id = "IQ-TREE and RAxML-NG ML results on the same alignment (iqout.treefile/.iqtree, rx.raxml.bestTree/.bestModel/.log)"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "iqtree"
+note = "RAxML-NG's from recipes/raxml-ng; both staged and pinned by stage-inputs.sh"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 6528
+billed_s = 6648
+usd_hr = 0.3190
+compute_usd = 0.5785
+billed_usd = 0.5892
+peak_gib = 0.48
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/"
+note = "README's column says peak RSS; score.tsv's source is cgroup_memory_peak_bytes 515653632. Non-SSE likelihood calculator"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 2
+wall_s = 6101
+billed_s = 6250
+usd_hr = 0.3748
+compute_usd = 0.6352
+billed_usd = 0.6508
+peak_gib = 0.48
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/"
+note = "4 cores x 2 threads; SSE likelihood calculator"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 1765
+billed_s = 1833
+usd_hr = 0.4311
+compute_usd = 0.2113
+billed_usd = 0.2195
+peak_gib = 0.48
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/"
+note = "SSE likelihood calculator; cost_limit 1.45 (others 1.50)"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "mpi-ranks"
+claim = "8 MPI ranks, parallel build"
+kind = "rank-count"
+bound = "MrBayes' own banner"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "model"
+claim = "model `Fixed(LG)`, 4 gamma categories"
+kind = "identity"
+bound = "like-with-like vs the ML trees"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "stoprule"
+claim = "stopped by its own rule, ASDSF < 0.01"
+kind = "sentinel"
+bound = "the run's bound"
+observed = "0.009557"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "ASDSF 0.009557 (Graviton4) against 0.009389 (Xeon, EPYC); all three stopped at the same check, 560,000"
+
+[[check]]
+id = "sumt-asdsf"
+claim = "sumt's ASDSF from the written `.t` == the sampler's last"
+kind = "identity"
+bound = "same samples, same burn-in"
+observed = "equal"
+outcome = "pass"
+
+[[check]]
+id = "sample-count"
+claim = "`.p` rows and `.t` trees per run == 560,000/500 + 1"
+kind = "identity"
+bound = "sampling arithmetic"
+observed = "1,121 ×2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "topology-posterior-sum"
+claim = "topology posteriors sum to 1.000"
+kind = "conservation"
+bound = "conservation"
+observed = "1,677 topologies"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "consensus-tstat"
+claim = "majority-rule consensus == the splits `.tstat` puts above 0.5"
+kind = "identity"
+bound = "definition"
+observed = "106 = 106"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lnl-vs-iqtree"
+claim = "MrBayes lnL at IQ-TREE's tree, lengths, alpha vs IQ-TREE `-blfix` there"
+kind = "cross-code"
+bound = "0.01"
+observed = "Δ 2.3e-4"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "−52706.730467 on Graviton4 and −52706.730477 on both x86 chips (1.0e-5)"
+
+[[check]]
+id = "lnl-vs-raxml"
+claim = "same at RAxML-NG's point, vs IQ-TREE and vs RAxML-NG's own"
+kind = "cross-code"
+bound = "0.01"
+observed = "Δ 4.8e-4 / 4.7e-4"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "−52706.731880 and −52706.731885"
+
+[[check]]
+id = "best-state-le-ml"
+claim = "best state either cold chain ever visited ≤ the ML point"
+kind = "identity"
+bound = "nothing beats the maximum"
+observed = "−52795.45 ≤ −52706.73"
+outcome = "pass"
+
+[[check]]
+id = "determinism"
+claim = "same seed, same 8 ranks → identical `.p` and `.t`"
+kind = "identity"
+bound = "determinism"
+observed = "yes"
+outcome = "pass"
+across_chips = "n/a"
+
+# --- against the ML tree: reported, not asserted -------------------------------------
+[[check]]
+id = "consensus-in-ml"
+claim = "consensus splits in the ML tree"
+kind = "reported"
+observed = "102 of 106"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "max-pp-not-in-ml"
+claim = "highest posterior of a split the ML tree lacks"
+kind = "reported"
+observed = "0.659"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "0.659 (Graviton4) vs 0.655 (Xeon, EPYC); split posteriors differ by at most 0.008, on 25 of the 106 splits"
+
+[[check]]
+id = "pp95-in-ml"
+claim = "splits with posterior ≥ 0.95 / of those, missing from the ML tree"
+kind = "reported"
+observed = "74 / **0**"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ml-unresolved"
+claim = "ML splits the consensus leaves unresolved"
+kind = "reported"
+observed = "9"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "psrf"
+claim = "TL / alpha: PSRF"
+kind = "reported"
+observed = "1.001 / 1.000"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "1.001 / 1.000 (Graviton4) vs 1.001 / 0.999 (Xeon, EPYC)"
+
+[[check]]
+id = "min-ess"
+claim = "TL / alpha: min ESS"
+kind = "reported"
+observed = "201 / 678"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "201 / 678 (Graviton4) vs 310 / 708 (Xeon, EPYC)"
+
+[[check]]
+id = "chain-path"
+claim = "Intel's and AMD's `.p` files are byte-identical ... Run 2 matches through generation 549,500. From 550,000 its last 21 samples differ"
+kind = "reported"
+observed = "549,500"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 run 1 matches x86 on all 1,121 samples; run 2 through generation 549,500, its last 21 samples differ; Intel == AMD byte-identical"
+
+[[cross_code]]
+with = "recipes/iqtree"
+same_bytes = true
+metric = "MrBayes lnL at IQ-TREE's tree, branch lengths and alpha vs IQ-TREE -blfix there, |Δ|"
+tolerance_basis = "MrBayes computes in single precision, and one float32 rounding of a 52,707-unit total is 3.1e-3; the 0.01 bound is set by the arithmetic, not by how closely the codes happened to agree"
+check = "lnl-vs-iqtree"
+
+[[cross_code]]
+with = "recipes/raxml-ng"
+same_bytes = true
+metric = "MrBayes lnL at RAxML-NG's point vs IQ-TREE there and vs RAxML-NG's own final lnL, |Δ|"
+tolerance_basis = "same single-precision bound, 0.01"
+check = "lnl-vs-raxml"
+
+[[trap]]
+id = "mrbayes-arm64-no-vector-kernel"
+scope = "image"
+symptom = "Using standard non-SSE likelihood calculator for division 1 (single-precision)"
+cause = "the arm64 build has no vector likelihood kernel; both x86 runs use MrBayes' SSE one"
+fix = "none here; read the calculator line, and treat a cross-chip timing as a build comparison too"

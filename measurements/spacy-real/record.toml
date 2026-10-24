@@ -1,0 +1,254 @@
+# measurements/spacy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole corpus annotated and checked (89,339 PMC OA articles, 795M tokens), plus the UD English-EWT evaluation"
+
+[[dataset]]
+id = "s3://pmc-oa-opendata PMCIDs 10000000–10099999, latest version of each (89,339 articles, 4,416,694,237 bytes)"
+tier = "roda"
+pins = "shards.sha256"
+note = "fetched on AWS by 00-fetch.task.json, each .txt kept only if its md5 equals PMC's metadata/<id>.<v>.json; written as 256 reproducible gzip shards. PMC can rewrite objects in place, so shards.sha256 is the pin"
+
+[[dataset]]
+id = "UniversalDependencies/UD_English-EWT tag r2.18 (commit b7711cce), all three splits"
+tier = "versioned-release"
+pins = "ewt.sha256"
+note = "each file checked against the tag's git blob id"
+
+[[dataset]]
+id = "ufal/conll2018 conll18_ud_eval.py at 1a2c3733"
+tier = "versioned-release"
+pins = "ewt.sha256"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+host = "results/arm64/host.txt"
+wall_s = 2299
+billed_s = 2364
+usd_hr = 1.2762
+compute_usd = 0.815
+billed_usd = 0.838
+peak_gib = 30.7
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+host = "results/x86_64/host.txt"
+wall_s = 2708
+billed_s = 2766
+usd_hr = 1.4994
+compute_usd = 1.128
+billed_usd = 1.152
+peak_gib = 30.9
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/"
+note = "32 processes on 16 cores x 2 threads"
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+host = "results/amd/host.txt"
+wall_s = 2531
+billed_s = 2577
+usd_hr = 1.7243
+compute_usd = 1.212
+billed_usd = 1.234
+peak_gib = 30.3
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "pmc-md5"
+claim = "every staged PMC text matches the md5 in PMC's own `metadata/<id>.json`"
+kind = "pin"
+bound = "exact"
+observed = "89,339 of 89,339"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "articles-once"
+claim = "every article in the manifest processed once"
+kind = "conservation"
+bound = "exact"
+observed = "89,339 of 89,339"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lossless-tokens"
+claim = "every paragraph reproduces from its tokens (`text_with_ws` joined)"
+kind = "identity"
+bound = "exact"
+observed = "15,136,783 of 15,136,783"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "token-offsets"
+claim = "every token's offsets index the text, and tokens are contiguous"
+kind = "identity"
+bound = "0 failures"
+observed = "0 of 795,195,869 tokens"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sentence-partition"
+claim = "sentences partition each doc"
+kind = "conservation"
+bound = "0 failures"
+observed = "42.6M sentences, 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "docbin-round-trip"
+claim = "DocBin round trip changes no token, tag, lemma, morph, head, sentence or entity"
+kind = "invariance"
+bound = "exact"
+observed = "89,339 articles, 9.67 GB of DocBin"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "batch-invariance"
+claim = "one paragraph at a time == `nlp.pipe` (first article of each shard)"
+kind = "invariance"
+bound = "exact"
+observed = "42,539 paragraphs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "n-process-invariance"
+claim = "`nlp.pipe(n_process=4)` == serial"
+kind = "invariance"
+bound = "exact"
+observed = "2,000 of 2,000 paragraphs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "string-hash"
+claim = "every distinct string interned: round trip, and hash == MurmurHash64A (independent implementation; spaCy's fixed symbols == their table ids)"
+kind = "cross-code"
+bound = "exact"
+observed = "39,859,261 strings (2,656 symbols)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ewt-gold-text"
+claim = "EWT gold text: tokens + `SpaceAfter`/`SpacesAfter` reproduce each `# text`"
+kind = "identity"
+bound = "exact"
+observed = "16,622 of 16,622"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ewt-scorers-gold"
+claim = "EWT gold tokens: UPOS, XPOS and UAS, spaCy `Scorer` == CoNLL 2018 scorer == a recount"
+kind = "cross-code"
+bound = "integer counts equal; Scorer within 1e-12"
+observed = "all 9 (3 splits × 3)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ewt-raw-accepted"
+claim = "EWT raw text: the CoNLL 2018 scorer accepts the system output (it refuses if the characters differ from gold)"
+kind = "identity"
+bound = "accepted"
+observed = "3 of 3 splits; 1,174 of 1,174 documents lossless"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ewt-scorers-tokens"
+claim = "EWT raw text: token P/R/F, spaCy `score_tokenization` == CoNLL 2018"
+kind = "cross-code"
+bound = "counts equal; within 1e-12"
+observed = "all 3 splits"
+outcome = "pass"
+across_chips = "identical"
+
+# --- the accuracies: recorded, not asserted (test split shown) -------------------------
+[[check]]
+id = "acc-xpos"
+claim = "XPOS (PTB tags), gold tokens"
+kind = "reported"
+observed = "0.9234"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "acc-upos"
+claim = "UPOS, gold tokens"
+kind = "reported"
+observed = "0.9259"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "acc-uas"
+claim = "UAS, gold tokens"
+kind = "reported"
+observed = "0.5643"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "acc-tokens-f1"
+claim = "tokens F1, raw text"
+kind = "reported"
+observed = "0.9564"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "acc-sentences-f1"
+claim = "sentences F1, raw text"
+kind = "reported"
+observed = "0.6894"
+outcome = "reported"
+across_chips = "identical"
+
+# --- "Fixed point or path" -------------------------------------------------------------
+[[check]]
+id = "tokenization-crosschip"
+claim = "Tokenization is rule-based and a fixed point: identical on every chip"
+kind = "reported"
+observed = "tokenization digest matches on all 89,339 articles; 795,195,869 tokens on all three"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "neural-layers-crosschip"
+claim = "The neural layers are a path"
+kind = "reported"
+observed = "at most 0.23% of articles differ in a layer digest (dependency parse: 193 Intel, 205 AMD)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "articles whose dependency-parse digest differs from Graviton4's: 193 (Intel), 205 (AMD), 113 Intel vs AMD on the same linux-64 build; Intel 3 fewer sentences, AMD one more entity"
+
+[[trap]]
+id = "spacy-uas-convention-mismatch"
+scope = "method"
+symptom = "UAS 0.56 on UD English-EWT gold tokens"
+blames = "parser quality"
+cause = "spaCy's English parser follows ClearNLP's dependency conventions; UD makes content words heads where ClearNLP makes function words heads (copulas, auxiliaries, case markers)"
+fix = "read UAS against UD only as a scorer-agreement check; LAS is not reported, because the label sets differ"

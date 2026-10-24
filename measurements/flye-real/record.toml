@@ -1,0 +1,148 @@
+# measurements/flye-real/record.toml -- apparatus dir: the README is a pointer to recipes/flye and
+# prints no timings or prices; walls come from the per-rung results files. No $ here (the cost table
+# lives on the recipe page, not in this dir's README or results).
+schema = 1
+result_unit = "one assembly of ERR10114907 (Flye --nano-hq -t 8)"
+
+[[dataset]]
+id = "ENA run ERR10114907 (MinION, 55,898 reads / 299,527,299 bases)"
+tier = "durable-id"
+from_recipe = "flye"
+unpinned = "no sha256 manifest committed; recipes/flye/stage-inputs.sh checks the download against ENA's own read and base counts"
+
+[[run]]
+instance = "c6g.2xlarge"
+purpose = "generation-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 511
+results = "results/smoke-check-c6g-2xl.txt"
+note = "generation rungs asserted bands, not the exact values"
+
+[[run]]
+instance = "c7g.2xlarge"
+purpose = "generation-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 377
+results = "results/smoke-check-c7g-2xl.txt"
+
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 312
+results = "results/smoke-check-c8g-2xl.txt"
+note = "recipes/flye's table prints 306 s for this rung, the results file 312 s"
+
+[[run]]
+instance = "c9g.2xlarge"
+purpose = "generation-sweep"
+date = "2026-10-02"
+date_source = "git"
+workers = 8
+wall_s = 245
+results = "results/smoke-check-c9g-2xl.txt"
+
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-21"
+date_source = "git"
+workers = 8
+host = "results/topology-c8i-2xl.txt"
+wall_s = 306
+results = "results/smoke-check-c8i-2xl.txt"
+note = "chip.task.json with the inline command moved into a staged sha256-checked file (spawn#1063/#1246)"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-21"
+date_source = "git"
+workers = 8
+host = "results/topology-c8a-2xl.txt"
+wall_s = 226
+results = "results/smoke-check-c8a-2xl.txt"
+note = "the two x86 legs cost $0.083 billed together"
+
+# --- checks: the in-task asserts in results/smoke-check-*.txt ------------------------------
+[[check]]
+id = "final-assembly-sentinel"
+claim = "flye_done: completion sentinel 'INFO: Final assembly:' present"
+kind = "sentinel"
+bound = "1"
+observed = "1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-length"
+claim = "total_length"
+kind = "identity"
+bound = "exactly 4754056 (c8g/c8i/c8a); 4400000..5400000 on the c6g/c7g/c9g rungs"
+observed = "4754056"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "largest-contig"
+claim = "largest_contig"
+kind = "identity"
+bound = "exactly 4722868 (c8g/c8i/c8a); >= 4000000 on the c6g/c7g/c9g rungs"
+observed = "4722868"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "largest-circular"
+claim = "largest_is_circular (a closed bacterial chromosome)"
+kind = "identity"
+bound = "Y"
+observed = "Y"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "contigs"
+claim = "contigs (chromosome + plasmid, at -t 8)"
+kind = "identity"
+bound = "exactly 2 (c8g/c8i/c8a); observation only on the c6g/c7g/c9g rungs"
+observed = "2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "circular-contigs"
+claim = "circular_contigs (both closed)"
+kind = "identity"
+bound = "exactly 2 (c8g/c8i/c8a); observation only on the c6g/c7g/c9g rungs"
+observed = "2"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "assembly-bytes"
+claim = "assembly.fasta byte-identical to Graviton4's on every generation rung and on Intel and AMD"
+kind = "reported"
+observed = "byte-identical (sha256 0451707a…)"
+outcome = "reported"
+across_chips = "identical"
+
+[[upstream]]
+ref = "spawn#1063"
+role = "workaround"
+note = "chip.task.json exceeds EC2's 16 KiB user data on 0.139.1; inline command moved into a staged sha256-checked file"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "same user-data limit"

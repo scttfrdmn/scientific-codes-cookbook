@@ -1,0 +1,253 @@
+# measurements/popgen-real/record.toml
+schema = 1
+result_unit = "both workloads over the whole genome with every check: 1000 Genomes Phase 3's 22 autosomes, and a 2.88 Gb Out-of-Africa coalescent genome for 3,336 haplotypes"
+
+[[dataset]]
+id = "RODA s3://1000genomes/release/20130502/ALL.chr{1..22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz + integrated_call_samples_v3.20130502.ALL.panel (doi:10.1038/nature15393)"
+tier = "roda"
+pins = "../plink-real/vcf.sha256"
+from_recipe = "measurements/plink-real"
+note = "staged once by plink-real under inputs/plink-real/ and read in place; re-checked on every box"
+
+[[dataset]]
+id = "plink-real/results/arm64/id-all.txt (PLINK 1.9 per-chromosome SNP counts), staged as plink-real-id-all.txt"
+tier = "run-output"
+from_recipe = "measurements/plink-real"
+note = "pinned by sha256 in the spec"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 1618
+billed_s = 1750
+usd_hr = 0.7181
+compute_usd = 0.3227
+billed_usd = 0.3491
+peak_gib = 2.93
+peak_kind = "rss"
+note = "peak is the largest single worker; the container cgroup peaked at 18.0 GiB"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 2110
+billed_s = 2199
+usd_hr = 0.8467
+compute_usd = 0.4963
+billed_usd = 0.5172
+peak_gib = 2.84
+peak_kind = "rss"
+note = "16 processes on 8 physical cores; cgroup peak 20.8 GiB"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 16
+wall_s = 1166
+billed_s = 1240
+usd_hr = 0.9738
+compute_usd = 0.3154
+billed_usd = 0.3354
+peak_gib = 2.91
+peak_kind = "rss"
+note = "cgroup peak 20.8 GiB"
+
+# --- "What held at scale": every row asserted in-run, identical on all three chips ----
+[[check]]
+id = "inputs"
+claim = "24 inputs match sha256"
+kind = "pin"
+observed = "24 of 24"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snps-eq-plink"
+claim = "biallelic ACGT SNPs per chromosome == PLINK 1.9's import of the same bytes"
+kind = "cross-code"
+observed = "22 of 22, 77,818,345"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ac-an"
+claim = "ALT count from GT == INFO `AC`; called alleles == `AN` == 5008"
+kind = "reference"
+observed = "0 mismatches"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pop-af"
+claim = "per super-population ALT count == round(`<POP>_AF` × 2N)"
+kind = "reference"
+bound = "exact (4-decimal AF, 2N ≤ 1322)"
+observed = "0 of 389,091,725"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pops-sum-ac"
+claim = "five populations sum to `AC`; no missing calls"
+kind = "conservation"
+observed = "0 / 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pairs-partition"
+claim = "pairs partition: C(n,2)·π_T == Σ C(n_k,2)·π_k + Σ n_k n_l d_kl, every site"
+kind = "conservation"
+observed = "worst 2.9e-16 relative over 77.8 M sites"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pairs-partition-control"
+claim = "control: the same identity with the next site's between-terms"
+kind = "identity"
+bound = "must fail"
+observed = "fails at 94.6% of sites"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hudson-fst-identity"
+claim = "`hudson_fst` num/den == between − mean within / between, every site"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tree-shape"
+claim = "every simulated tree: 1 root, 2n−2 = 6,670 edges; every internal node binary along the genome (edge-table sweep)"
+kind = "identity"
+observed = "0 of 19,992,103 trees"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "infinite-sites"
+claim = "infinite sites: sites == mutations"
+kind = "identity"
+observed = "48,802,039 == 48,802,039"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "seed-determinism"
+claim = "same seed reproduces chr22's tables; another seed does not"
+kind = "identity"
+observed = "yes / no"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tskit-eq-allel"
+claim = "tskit (trees) == scikit-allel (genotypes): π per population, pooled π, divergence for 3 pairs"
+kind = "cross-code"
+bound = "m·ε for m summed sites (1.8e-10 to 9.4e-10 by chromosome)"
+observed = "worst 2.5e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "segsites"
+claim = "segregating sites, tskit == allel"
+kind = "cross-code"
+bound = "exact"
+observed = "exact, 22 of 22"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hudson-fst-cross"
+claim = "Hudson Fst from tskit's π/d_xy == allel's `hudson_fst`"
+kind = "cross-code"
+bound = "1.3e-7"
+observed = "4.6e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tajimas-d"
+claim = "Tajima's D, tskit == formula on allel's π and S"
+kind = "cross-code"
+observed = "2.2e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "site-pi-poisson"
+claim = "site π == μ × branch π, Poisson variance from the branch AFS: Σz² over 22 chromosomes < χ²₂₂(0.9999) = 55.5"
+kind = "band"
+bound = "Σz² < 55.5"
+observed = "Σz² 29.8, max |z| 2.95"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mutations-poisson"
+claim = "mutations == μ × total branch length, same test"
+kind = "band"
+bound = "Σz² < 55.5"
+observed = "Σz² 16.5, max |z| 2.26"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ------------------------------------------------------------
+[[check]]
+id = "fst-afr-eas"
+claim = "Hudson Fst (± delete-one-chromosome jackknife SE), AFR–EAS"
+kind = "reported"
+observed = "0.1500 ± 0.0013"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "sim-mutation-columns"
+claim = "Graviton4 vs x86: re-simulated chr22 tables hashed column by column (colhash.py)"
+kind = "reported"
+observed = "nodes, edges, mutations.node, mutations.site identical; sites.position and mutations.time differ by one ulp"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "383.0451739756154 vs 383.04517397561534; follows the build (arm64 env vs linux-64 twin), Intel == AMD byte for byte"
+
+[[check]]
+id = "expected-pi-ddot"
+claim = "`pi_expected` and `pi_variance` (μ·B·w) across builds"
+kind = "reported"
+observed = "≤ 1e-15 relative"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "differ at ≤ 1e-15 relative (np.dot, OpenBLAS ddot: neoversev2 vs Cooperlake); S_expected does not; the z-scores agree in every printed place"
+corename_sensitive = true
+
+[[cross_code]]
+with = "measurements/plink-real"
+same_bytes = true
+metric = "biallelic ACGT SNP count per chromosome"
+tolerance_basis = "an integer count of the same filter on the same bytes: exact"
+check = "snps-eq-plink"
+
+[[cross_code]]
+with = "published:1000G-Phase3-INFO-AF"
+same_bytes = true
+metric = "per super-population ALT count vs round(<POP>_AF × 2N) on all 389 M rows"
+tolerance_basis = "AF printed to 4 decimals with 2N ≤ 1322, so the rounding is exact"
+check = "pop-af"

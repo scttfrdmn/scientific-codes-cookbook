@@ -1,0 +1,326 @@
+# measurements/openbabel-pdbfixer-real/record.toml
+schema = 1
+result_unit = "the whole workload with every check passing: all 2,897,819 ChEMBL 37 compounds (Open Babel rows), or 247 PDB entries classified and 240 prepared (PDBFixer rows)"
+
+[[dataset]]
+id = "ChEMBL 37 chembl_37_chemreps.txt.gz (EBI)"
+tier = "durable-id"
+pins = "pins.sha256"
+from_recipe = "measurements/rdkit-real"
+note = "sha256 is EBI's published checksum; the same staged bytes rdkit-real read"
+
+[[dataset]]
+id = "rdkit-real's runs*/rdkit-real/chembl37/rdkit_real.tsv.gz (RDKit keys for the cross-check)"
+tier = "run-output"
+from_recipe = "measurements/rdkit-real"
+note = "checked in-run against rdkit-real's uncompressed sha256"
+
+[[dataset]]
+id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/mmCIF/ab/ (247 entries, 1ab0 to 9abp)"
+tier = "roda"
+pins = "cohort.sha256"
+note = "the cohort gemmi-real read and cctbx-real rescored; 181 files equal cctbx-real's pins"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/ob/"
+host = "results/arm64/ob/host-ob.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 900
+billed_s = 988
+usd_hr = 0.319
+compute_usd = 0.0798
+billed_usd = 0.0876
+note = "Open Babel, whole ChEMBL 37; peak RSS printed as worker / box 1.35 / 11.2 GiB (compound cell, peak_gib omitted)"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/ob/"
+host = "results/x86_64/ob/host-ob.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 1135
+billed_s = 1205
+usd_hr = 0.3748
+compute_usd = 0.1182
+billed_usd = 0.1255
+note = "Open Babel; peak RSS worker / box 1.36 / 12.9 GiB (box includes the env install; peak_gib omitted)"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/ob/"
+host = "results/amd/ob/host-ob.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+wall_s = 672
+billed_s = 730
+usd_hr = 0.4311
+compute_usd = 0.0805
+billed_usd = 0.0874
+note = "Open Babel; peak RSS worker / box 1.36 / 12.8 GiB (peak_gib omitted)"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/fix/"
+host = "results/arm64/fix/host-fix.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 1569
+billed_s = 1660
+usd_hr = 0.7181
+compute_usd = 0.313
+billed_usd = 0.331
+note = "PDBFixer, 247 entries; summed entry time 16,586 s; peak RSS entry / box 1.93 / 7.1 GiB (peak_gib omitted)"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/fix/"
+host = "results/x86_64/fix/host-fix.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 3630
+billed_s = 3683
+usd_hr = 0.8467
+compute_usd = 0.854
+billed_usd = 0.866
+note = "PDBFixer; summed entry time 40,802 s; peak RSS entry / box 1.94 / 8.9 GiB (peak_gib omitted)"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/fix/"
+host = "results/amd/fix/host-fix.txt"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+wall_s = 1826
+billed_s = 1869
+usd_hr = 0.9738
+compute_usd = 0.494
+billed_usd = 0.506
+note = "PDBFixer; summed entry time 19,505 s; peak RSS entry / box 1.94 / 8.8 GiB (peak_gib omitted)"
+
+# --- asserted in-run (Open Babel, then PDBFixer); then the reported Open Babel observables
+
+[[check]]
+id = "ob-rows"
+claim = "one row out per row in, unique ids, every key a well-formed InChIKey"
+kind = "identity"
+observed = "2,897,819"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-molfile-lossless"
+claim = "molfile round trip keeps atoms, bonds, elements, isotopes, formal charges, bond orders and every hydrogen"
+kind = "identity"
+observed = "2,897,819 / 2,897,819"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-molfile-connectivity"
+claim = "molfile round trip keeps the InChI connectivity (stereo layers aside)"
+kind = "identity"
+observed = "2,897,819 / 2,897,819"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-recanonical"
+claim = "re-canonicalising never changes the molecule"
+kind = "invariance"
+observed = "holds; 1 compound's string is not idempotent (below)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-rdkit-input"
+claim = "RDKit's input is rdkit-real's verified output"
+kind = "pin"
+observed = "sha256 9a84f0ad…"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-recipe-slice"
+claim = "first 100,000 rows reproduce the recipe: 100,000 parsed, 99,846 / 99,930 vs ChEMBL, 99,926 / 99,928 vs RDKit"
+kind = "reference"
+bound = "the recipe's published values"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ob-rdkit-formula"
+claim = "element counts (with H) and net charge == RDKit's formula"
+kind = "reported"
+observed = "2,897,804 of 2,897,804 both parsed"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ob-inchikey"
+claim = "full InChIKey == RDKit's / == ChEMBL's"
+kind = "reported"
+observed = "2,897,029 / 2,893,572"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ob-connectivity-block"
+claim = "connectivity block == RDKit's / == ChEMBL's"
+kind = "reported"
+observed = "2,897,204 / 2,897,203"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ob-chembl-inchi"
+claim = "ChEMBL's InChI read and written back unchanged, and keyed to ChEMBL's key"
+kind = "reported"
+observed = "2,897,809 of 2,897,809 parsed"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ob-stereo-lost"
+claim = "InChI after the molfile round trip has lost every stereo layer"
+kind = "reported"
+observed = "1,076,033 of 2,897,819"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "fix-classified"
+claim = "every entry classified: prepared, refused by the force field, or skipped by a declared limit, each with its reason"
+kind = "identity"
+observed = "247: 230 / 10 / 7"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-deposited-unmoved"
+claim = "every deposited heavy atom kept, and not moved"
+kind = "identity"
+observed = "1,907,001 atoms, max shift 0.0 Å"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-heavy-atom-bookkeeping"
+claim = "heavy atoms out == kept + what PDBFixer said it would add"
+kind = "conservation"
+observed = "240 / 240 (1,934,594)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-idempotent"
+claim = "fixed point: PDBFixer on its own output finds nothing missing and adds no hydrogens"
+kind = "invariance"
+observed = "240 / 240"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-charge"
+claim = "Amber14's total charge == the charge counted from the protonation states' atom names"
+kind = "cross-code"
+observed = "230 / 230, max deviation 3.4e-13 e"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-openbabel-reads"
+claim = "Open Babel reads PDBFixer's PDB with the same atoms, hydrogens and elements"
+kind = "cross-code"
+observed = "237 / 237; 3 entries exceed PDB's 99,999 atoms"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fix-pdbx-round-trip"
+claim = "written PDBx reads back with the same atoms"
+kind = "identity"
+observed = "240 / 240"
+outcome = "pass"
+across_chips = "identical"
+
+# --- across chips: the two things that are not identical, both reported ----------------
+[[check]]
+id = "ob-exocyclic-stereo"
+claim = "after the molfile round trip, some canonical SMILES change their ring-exocyclic C=N stereo"
+kind = "reported"
+observed = "91 and 102 on two Graviton4 runs, 104 on Intel, 113 on AMD"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "91 / 102 (two Graviton4 runs) vs 104 (Intel) vs 113 (AMD); same chip and same bytes give a different set, so not a chip effect"
+
+[[check]]
+id = "fix-written-structure-sha"
+claim = "sha256 of the written structure (built atoms' and hydrogens' coordinates)"
+kind = "reported"
+observed = "237 of 240"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "differs on 237 of 240 entries Intel/AMD vs Graviton4, and on 235 of 240 between two Graviton4 runs: a run-to-run path"
+
+[[cross_code]]
+with = "measurements/rdkit-real"
+same_bytes = true
+metric = "element counts and net charge, InChIKey and connectivity vs RDKit's output on the same ChEMBL 37 bytes"
+check = "ob-rdkit-formula"
+
+[[trap]]
+id = "openbabel-osdf-2d-header-drops-inchi-stereo"
+scope = "tool"
+symptom = "a molfile written the way obabel -ismi -osdf writes it reads back with no InChI stereo for 1,076,033 compounds (37%)"
+cause = "Open Babel writes every SMILES-derived molfile with all-zero coordinates and a header claiming 2D, reads it back as 2D, and the InChI writer drops the /b /t /m /s layers"
+fix = "none adopted: a 2D layout (--gen2D) took over 14 minutes per 10,000 compounds on the release's large macrocycles"
+
+[[trap]]
+id = "openbabel-molfile-writer-allocation-order"
+scope = "tool"
+symptom = "same chip and same bytes give a different set of canonical SMILES with changed ring-exocyclic C=N stereo after the molfile round trip"
+cause = "the molfile writer's 0D up/down assignment iterates a pointer-ordered set, so it depends on allocation order"
+fix = "report the count, never assert it"
+refs = ["openbabel#3036"]
+
+[[trap]]
+id = "openbabel-isotope-canonical-not-idempotent"
+scope = "tool"
+symptom = "a Graviton4 Open Babel run's idempotence assertion failed on one compound"
+cause = "CHEMBL3229240 has two symmetric [14CH3] groups; re-reading Open Babel's canonical string gives a different string (RDKit confirms the same molecule)"
+fix = "assert that re-canonicalising never changes the molecule, not that the string is idempotent"
+
+[[trap]]
+id = "pdbfixer-long-tail-entries"
+scope = "tool"
+symptom = "7abh ran 1 h 50 min and did not finish; 7abi and 7abg exhaust a 16 GiB limit"
+cause = "entries needing more than 200 internal residues rebuilt, or 9,705 atoms built onto 17,922 deposited (a side-chain-truncated cryo-EM model)"
+fix = "two declared limits in fix_real.py, with each skipped entry classified with its reason"
+cost = "two Graviton4 PDBFixer runs stopped on the long-tail entries"
+
+[[trap]]
+id = "pdbfixer-amber14-refuses-nucleotide-terminal"
+scope = "tool"
+symptom = "missing 1 P atom and has 1 O atom too many"
+cause = "nucleotides whose atoms match a 3′-terminal template but whose external bonds do not (7abs, 7abz, 8ab0, 8abd, 8aby, 8abz)"
+fix = "none: classified as refused by the force field, which is what an MD user would hit"
+
+[[upstream]]
+ref = "openbabel#3036"
+role = "cited"
+note = "source and a 40-repeat repro of the allocation-order-dependent molfile writer"

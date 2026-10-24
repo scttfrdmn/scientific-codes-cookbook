@@ -1,0 +1,280 @@
+# measurements/rsem-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "one sample (ERR188026, 15,800,127 read pairs) quantified by RSEM against all 465,769 Ensembl 116 transcripts and checked"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (Geuvadis, complete run)"
+tier = "durable-id"
+unpinned = "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest committed"
+note = "the same reads as salmon-real and quant-depth"
+
+[[dataset]]
+id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
+tier = "versioned-release"
+unpinned = "pinned by Ensembl release-116 cdna/CHECKSUMS sum, checked on the box (results/prepare/pins.txt); no sha256 manifest committed"
+
+[[dataset]]
+id = "RSEM reference ens116.{grp,ti,seq} and gene_map.tsv (rsem-prepare-reference, task 00)"
+tier = "built"
+pins = "inputs.sha256"
+
+[[dataset]]
+id = "aln.sam.gz (bowtie2 -k 200 to the transcriptome, 14.3 GB gzipped, task 01)"
+tier = "built"
+pins = "inputs.sha256"
+
+[[dataset]]
+id = "salmon-real quant.sf (ERR188026 against Ensembl 116 cDNA)"
+tier = "run-output"
+pins = "inputs.sha256"
+from_recipe = "salmon"
+note = "measurements/salmon-real output, staged by stage-inputs.sh for the Spearman cross-check"
+
+# --- shared inputs, once, Graviton4 ---------------------------------------------------
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+results = "results/prepare/"
+host = "results/prepare/host.txt"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 19
+note = "task 00, rsem-prepare-reference; README prints $0.008 billed but no $/hr or billed seconds, so no $ on this row"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+results = "results/align/"
+host = "results/align/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 32
+wall_s = 1534
+peak_gib = 4.5
+peak_kind = "rss"
+note = "task 01: bowtie2-build 657 s at 4.5 GiB, then the -k 200 alignment 1534 s averaging 31.94 busy cores; README prints $0.920 billed (and bowtie2 $0.61 compute) but no $/hr, so no $ on this row"
+
+# --- 02-quant, 16 threads on a 4xlarge -----------------------------------------------------
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 2250
+billed_s = 2452
+usd_hr = 0.7181
+compute_usd = 0.4488
+billed_usd = 0.4891
+peak_gib = 10.88
+peak_kind = "vmhwm"
+note = "EM 1526 s (RSEM's 'Time Used for EM.cpp'); the rest is single-threaded SAM parsing. A second Graviton4 run (2230 s, earlier check script) gave the same sha256 for every output"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 3238
+billed_s = 3407
+usd_hr = 0.8467
+compute_usd = 0.7616
+billed_usd = 0.8013
+peak_gib = 10.88
+peak_kind = "vmhwm"
+note = "EM 2572 s; bioconda x86 RSEM (package 1.3.3)"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 1909
+billed_s = 2052
+usd_hr = 0.9738
+compute_usd = 0.5164
+billed_usd = 0.555
+peak_gib = 10.88
+peak_kind = "vmhwm"
+note = "EM 1457 s; bioconda x86 RSEM (package 1.3.3)"
+
+# --- checks: '## The identities, at scale, on all three chips' (observed on every chip) ---
+[[check]]
+id = "input-pins"
+claim = "cDNA / reads: Ensembl sum / ENA md5 == published pin"
+kind = "pin"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bowtie2-pairs"
+claim = "bowtie2 pairs"
+kind = "identity"
+bound = "== ENA read_count"
+observed = "15,800,127"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "read-bookkeeping"
+claim = "RSEM N0 + N1 + N2"
+kind = "conservation"
+bound = "== N_tot == ENA read_count"
+observed = "1,882,102 + 13,918,025 + 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "row-counts"
+claim = "isoform rows, gene rows"
+kind = "identity"
+bound = "== transcripts / distinct genes in the map, every gene_id as mapped"
+observed = "465,769 / 41,145"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "expected-count-sum"
+claim = "Σ expected_count"
+kind = "conservation"
+bound = "== N1 − noise mass, within 0.005 × the 105,801 nonzero printed values"
+observed = "13,918,024.05 (noise 1.7e-8)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tpm-sum"
+claim = "Σ TPM, isoforms / genes"
+kind = "conservation"
+bound = "== 1e6 within 0.005 × nonzero"
+observed = "999,996.96 / 999,999.30"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tpm-fpkm-line"
+claim = "TPM = k · FPKM"
+kind = "identity"
+bound = "every row on one line, within both roundings and k's"
+observed = "0 off, k = 1.16264"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gene-sum-of-isoforms"
+claim = "gene count, TPM, FPKM"
+kind = "conservation"
+bound = "== Σ of its isoforms, every gene (bound 0.005 × (isoforms + 1))"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "isopct"
+claim = "IsoPct, expressed genes"
+kind = "identity"
+bound = "sums to 100"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "effective-length"
+claim = "effective_length"
+kind = "identity"
+bound = "≤ length; TPM 0 where it is 0"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "salmon-ids-subset"
+claim = "salmon ids"
+kind = "identity"
+bound = "⊆ RSEM ids (same FASTA)"
+observed = "453,553 of 465,769"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "transcript-spearman"
+claim = "transcript Spearman vs salmon"
+kind = "cross-code"
+bound = "≥ 0.85, both detected"
+observed = "0.9441 (79,993 transcripts)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gene-spearman"
+claim = "gene Spearman vs salmon"
+kind = "cross-code"
+bound = "≥ 0.90, both detected"
+observed = "0.9812 (17,748 genes)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "transcript-log-pearson"
+claim = "transcript log-Pearson vs salmon"
+kind = "reported"
+bound = "observation"
+observed = "0.9565"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "alignable-fraction"
+claim = "alignable fraction"
+kind = "reported"
+bound = "observation"
+observed = "RSEM 88.09%, salmon 94.39%"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "outputs-byte-identical"
+claim = "Every printed output is byte-identical on all three chips."
+kind = "reported"
+observed = "isoforms.results, genes.results and .cnt same sha256"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "theta-path"
+claim = "The EM's path differs underneath, below the printed digits."
+kind = "reported"
+observed = "116,513 of 465,770 components differ, by at most 2.5e-13 relative"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = ".theta: 116,513 of 465,770 components differ between Graviton4 and either x86 chip, max 2.5e-13 relative; 133 of 7,726 per-round SUM lines differ in the 15th digit, first at round 88; Intel == AMD bit-identical"
+
+[[cross_code]]
+with = "measurements/salmon-real"
+same_bytes = true
+metric = "Spearman of TPM over transcripts (and genes) both tools detect"
+tolerance_basis = "floors set before the run from the sibling pair: salmon and kallisto agree at Spearman 0.908 on these reads (quant-depth); summing to genes removes isoform ambiguity"
+check = "transcript-spearman"
+
+[[trap]]
+id = "rsem-binary-version-mismatch"
+scope = "image"
+symptom = "binaries report v1.3.1"
+cause = "the RSEM package is 1.3.3 (aarch.bio and bioconda alike); the binaries print an older version string"
+fix = "record the package version, not the binary's self-report"
+
+[[trap]]
+id = "rsem-bowtie2-image-no-samtools"
+scope = "image"
+symptom = "the bowtie2 image has no samtools"
+cause = "one tool per image"
+fix = "the SAM travels gzipped and RSEM's htslib reads it directly"

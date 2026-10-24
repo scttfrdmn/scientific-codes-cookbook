@@ -1,0 +1,219 @@
+# measurements/scikit-learn-real/record.toml -- drafted by the #118 extraction, then authored.
+# No results/ committed for the three chip runs: every number is the README's.
+schema = 1
+result_unit = "one whole verified run: all 581,012 Covertype rows, logreg + HGB + RF fits with repeats, affine refits, the lbfgs cross-solver fit and the boosting diagnostic"
+
+[[dataset]]
+id = "covtype.data.gz, figshare file 5976039 (sklearn 1.9.1 datasets/_covtype.py); UCI doi:10.24432/C50K5N"
+tier = "durable-id"
+unpinned = "checked against scikit-learn 1.9.1's own fetch_covtype sha256; the README prints it truncated and no manifest is committed (pins.sha256 is staged, not committed)"
+
+# Compound "fit wall: logreg / HGB / RF" and "compute $/fit" cells share one task and one bill,
+# so they are not split; wall_s is the README's "task compute" (the whole script).
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 657
+billed_s = 826
+usd_hr = 0.319
+billed_usd = 0.0732
+peak_gib = 4.68
+peak_kind = "rss"
+note = "fit wall logreg / HGB / RF 49.0 / 85.6 / 10.6 s, compute $/fit 0.0043 / 0.0076 / 0.0009 (per fit, not per result)"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 2
+wall_s = 693
+billed_s = 825
+usd_hr = 0.3748
+billed_usd = 0.0859
+peak_gib = 4.71
+peak_kind = "rss"
+note = "fit wall 63.1 / 88.4 / 10.6 s, compute $/fit 0.0066 / 0.0092 / 0.0011"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-17"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 465
+billed_s = 580
+usd_hr = 0.4311
+billed_usd = 0.0695
+peak_gib = 4.74
+peak_kind = "rss"
+note = "fit wall 29.6 / 65.2 / 8.3 s, compute $/fit 0.0035 / 0.0078 / 0.0010; overhead (115 s) not comparable: spawn 0.139.1 overlaps Docker install with stage-in; command staged as a sha256-checked task.sh (spawn#1246)"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-17"
+date_source = "git"
+results = "hgb-repro/hgb-repro.log"
+note = "minimal HGB divergence reproduction (20,000 rows, 10 features) plus the full-data diagnostic re-run; instance resolved from hgb-repro.task.json (c8g, 8 cpu, 16 GiB); date is the dir's draft date, not this launch's"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-17"
+date_source = "git"
+results = "hgb-repro/lgb-count.log"
+note = "LightGBM-equivalent vs sklearn at min_samples_leaf 1 / 5 / 20; instance and date as the row above"
+
+# --- checks: the README's "What held at scale, on all three chips" rows ---------------
+[[check]]
+id = "input-pin"
+claim = "sha256 == scikit-learn 1.9.1's own `fetch_covtype` pin; UCI's archive is the same bytes"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "class-counts"
+claim = "class counts == UCI `covtype.info` (211840, 283301, 35754, 2747, 9493, 17367, 20510)"
+kind = "reference"
+bound = "exact"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "one-hot-encoding"
+claim = "every row has exactly one wilderness area and one soil type"
+kind = "identity"
+observed = "581,012 of 581,012"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "logistic-stationarity"
+claim = "logistic stationarity `max|X'(P−Y) + W/C| / n`"
+kind = "identity"
+bound = "1e-6"
+observed = "2.589e-11"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "intercept-conservation"
+claim = "`Σ_i p_ik == n_k` per class (unpenalised intercept)"
+kind = "conservation"
+observed = "1.514e-12 · n"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "1.514e-12 · n (Graviton4, Intel) vs 1.513e-12 · n (AMD)"
+
+[[check]]
+id = "lbfgs-reaches-newton"
+claim = "lbfgs reaches newton-cholesky's minimum, rel"
+kind = "identity"
+bound = "1e-6 relative on the objective"
+observed = "7.6e-10"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "7.6e-10 / 6.1e-10 / 2.3e-09 after 3,963 / 3,893 / 3,684 iterations (Graviton4 / Intel / AMD)"
+
+[[check]]
+id = "hgb-determinism"
+claim = "HGB fit twice, fixed seed, 8 threads: predict_proba bytes"
+kind = "identity"
+bound = "exact"
+observed = "identical"
+outcome = "pass"
+
+[[check]]
+id = "rf-determinism"
+claim = "RF fit twice: node arrays and predict_proba bytes"
+kind = "identity"
+bound = "exact"
+observed = "identical"
+outcome = "pass"
+
+[[check]]
+id = "affine-predictions"
+claim = "HGB and RF refit on `4X + 1024`: predictions"
+kind = "invariance"
+bound = "exact"
+observed = "bit-identical"
+outcome = "pass"
+
+[[check]]
+id = "rf-affine-thresholds"
+claim = "RF on `4X + 1024`: same trees, thresholds `4t + 1024`"
+kind = "invariance"
+bound = "exact"
+observed = "true"
+outcome = "pass"
+
+[[check]]
+id = "accuracy-ordering"
+claim = "accuracy: majority 0.4876 < logreg < both ensembles, ensembles ≥ 0.90"
+kind = "band"
+observed = "ok"
+outcome = "pass"
+
+# --- across chips (reported) -----------------------------------------------------------
+[[check]]
+id = "logistic-optimum-cross-chip"
+claim = "the logistic optimum across chips"
+kind = "reported"
+observed = "objective 0.629010187599845 to all 15 printed digits; accuracy 0.725420"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "coefficients to 1.6e-12 absolute (max |W| 12.2) Graviton4 vs Intel; AMD 5.9e-13 from Intel and 1.7e-12 from Graviton4"
+
+[[check]]
+id = "rf-cross-chip"
+claim = "random forest across chips: node arrays hash, probabilities hash, accuracy"
+kind = "reported"
+observed = "identical, accuracy 0.954468"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "hgb-cross-chip"
+claim = "HistGradientBoosting probabilities across chips"
+kind = "reported"
+observed = "test accuracy 0.969760 on all chips"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "probability bytes differ Graviton4 vs x86; Intel and AMD produce the same bytes (c68ec63e…); accuracy 0.969760 on all"
+
+[[check]]
+id = "hgb-l2-zero-diagnostic"
+claim = "default l2_regularization=0, 100 iterations: training log-loss trace, leaf maximum, accuracy"
+kind = "reported"
+observed = "0.200 at iteration 40, 0.817 at 100; max leaf 5.7e4; accuracy 0.910088"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "scikit-learn-hgb-l2-zero-diverges"
+scope = "tool"
+symptom = "training log-loss falls to 0.200 by iteration 40, then rises — 0.276, 0.358, 0.817 at 100 — while the largest leaf value reaches 5.7e4"
+blames = "overfitting (test accuracy alone at a fixed max_iter would read it so)"
+cause = "sklearn applies min_samples_leaf to true counts, so leaves of ~20–40 rows whose summed hessian sits just above the 1e-3 floor take huge steps (first rise: 34 rows, G = 2.0, H = 1.05e-3, step −191); LightGBM applies min_data_in_leaf to hessian-estimated counts and does not diverge"
+fix = "set l2_regularization (≥ 0.01) for multiclass boosting; or min_hessian_to_split ≥ 0.01, learning_rate=0.05, raw score 0 start, or min_samples_leaf=1"
+
+[[upstream]]
+ref = "scikit-learn#17763"
+role = "cited"
+note = "nearest existing issue (learning rates above 0.1); does not cover this divergence"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "0.139.1's wrapper leaves too little of EC2's 16 KiB user data; AMD leg staged a sha256-checked task.sh"

@@ -1,0 +1,233 @@
+# measurements/blast-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole verified search with its checks (all 20,525 reviewed human proteins vs all of SwissProt)"
+
+[[dataset]]
+id = "NCBI swissprot BLAST database, s3://ncbi-blast-databases snapshot 2026-10-10-01-05-01 (+ taxonomy4blast.sqlite3)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "RODA keeps only the last three snapshots; the pin is the sha256 set and the bucket copy holds the bytes. Queries are extracted from this database with blastdbcmd"
+
+# --- blastp, 16 threads, 4xlarge of each chip -------------------------------------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+host = "results/arm64/blast/host.txt"
+wall_s = 3783
+billed_s = 3882
+usd_hr = 0.6381
+compute_usd = 0.671
+billed_usd = 0.688
+peak_gib = 0.8
+peak_kind = "vmhwm"
+results = "results/arm64/blast/"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+host = "results/x86_64/blast/host.txt"
+wall_s = 5385
+billed_s = 5499
+usd_hr = 0.7497
+compute_usd = 1.121
+billed_usd = 1.145
+peak_gib = 0.79
+peak_kind = "vmhwm"
+results = "results/x86_64/blast/"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+host = "results/amd/blast/host.txt"
+wall_s = 3861
+billed_s = 3954
+usd_hr = 0.8622
+compute_usd = 0.925
+billed_usd = 0.947
+peak_gib = 0.79
+peak_kind = "vmhwm"
+results = "results/amd/blast/"
+
+# --- DIAMOND --very-sensitive cross-code task, same boxes (README prints billed $ only) --
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "run"
+host = "results/arm64/diamond/host.txt"
+wall_s = 73
+billed_s = 131
+usd_hr = 0.6381
+billed_usd = 0.023
+peak_gib = 2.74
+peak_kind = "vmhwm"
+results = "results/arm64/diamond/"
+note = "DIAMOND cross-code task, not a blastp box"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "run"
+host = "results/x86_64/diamond/host.txt"
+wall_s = 64
+billed_s = 128
+usd_hr = 0.7497
+billed_usd = 0.027
+peak_gib = 2.98
+peak_kind = "vmhwm"
+results = "results/x86_64/diamond/"
+note = "DIAMOND cross-code task, not a blastp box"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "run"
+host = "results/amd/diamond/host.txt"
+wall_s = 32
+billed_s = 85
+usd_hr = 0.8622
+billed_usd = 0.020
+peak_gib = 3.00
+peak_kind = "vmhwm"
+results = "results/amd/diamond/"
+note = "DIAMOND cross-code task, not a blastp box"
+
+# --- checks: "The identities, at scale, on all three chips" ----------------------------
+[[check]]
+id = "db-counts"
+claim = "database sequences / residues"
+kind = "reference"
+bound = "== NCBI's published 487,728 / 186,063,409"
+observed = "487,728 / 186,063,409"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fasta-records"
+claim = "exported FASTA records"
+kind = "conservation"
+bound = "== database sequences"
+observed = "487,728"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "query-oids"
+claim = "query OIDs"
+kind = "identity"
+bound = "== distinct OIDs == OIDs with a 9606 defline"
+observed = "20,525"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "queries-with-hit"
+claim = "queries with any hit"
+kind = "reported"
+bound = "recorded"
+observed = "20,522"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "self-hit"
+claim = "queries whose hits contain themselves"
+kind = "identity"
+bound = "== queries with any hit"
+observed = "20,522"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-100pct"
+claim = "self-rows at 100.000% identity"
+kind = "identity"
+bound = "== self-rows"
+observed = "20,522"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-full-length"
+claim = "self-alignments spanning the whole query"
+kind = "reported"
+bound = "observation"
+observed = "20,522"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "self-top-score"
+claim = "self-hit is the top score"
+kind = "reported"
+bound = "observation"
+observed = "20,500"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "diamond-self"
+claim = "DIAMOND: self-rows, at 100%"
+kind = "identity"
+bound = "== queries it hits"
+observed = "20,499, 20,499"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "diamond-blast-intersect"
+claim = "DIAMOND ∩ BLAST+ self-hits"
+kind = "cross-code"
+bound = "observation"
+observed = "20,499 (BLAST+ only: 23; DIAMOND only: 0)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "staged-fasta-crosschip"
+claim = "The query FASTA and the exported database FASTA are identical too. That is asserted"
+kind = "identity"
+bound = "== Graviton4 sha256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hits-tsv-crosschip"
+claim = "BLAST+: identical on all three. hits.tsv sha256 504c664a… on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "7,990,605 rows, byte-identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "diamond-bytes-crosschip"
+claim = "DIAMOND: identical counts, different bytes, and the difference is the build, not the chip"
+kind = "reported"
+observed = "Intel == AMD (9c8ac259…); Graviton4 2647f14b…"
+outcome = "reported"
+across_chips = "n/a"
+
+[[cross_code]]
+with = "recipes/diamond"
+same_bytes = true
+metric = "self-hits found at 100% identity, DIAMOND --very-sensitive vs BLAST+, same --max-target-seqs"
+tolerance_basis = "observation, not asserted: DIAMOND finds a subset (20,499 of 20,522) and none that BLAST+ misses; top-hit or score equality would compare tie-breaking and heuristic scoring"
+check = "diamond-blast-intersect"
+
+[[trap]]
+id = "blast-taxid-expansion"
+scope = "tool"
+symptom = "-taxids 9606 selects 20,526 OIDs, one more than carry a 9606 defline (P84351, taxid 63221)"
+cause = "blastdbcmd -taxids expands to descendant taxa by default (Homo sapiens neanderthalensis)"
+fix = "-no_taxid_expansion, and assert the query set is exactly the 9606 OIDs"

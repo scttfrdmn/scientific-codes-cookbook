@@ -1,0 +1,88 @@
+# measurements/quant-depth/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one depth comparison: kallisto vs salmon agreement at 200,000 and 15,800,127 fragments (README prices nothing)"
+
+[[dataset]]
+id = "ENA ERR188026_{1,2}.fastq.gz (complete run); the 200,000-pair subset is its first 800,000 lines"
+tier = "durable-id"
+unpinned = "no sha256 committed; ENA accession only, staged under inputs/salmon-real"
+from_recipe = "measurements/salmon-real"
+
+[[dataset]]
+id = "kallisto index of Ensembl 116 cDNA (kallisto.idx) and full-depth abundance.tsv"
+tier = "run-output"
+from_recipe = "kallisto"
+
+[[dataset]]
+id = "salmon index of Ensembl 116 cDNA (salmon-index.tar) and full-depth quant-c8g-16t.sf"
+tier = "run-output"
+from_recipe = "salmon"
+
+# --- the README times and prices no run; instance sizes follow from the specs' resources
+# (cpu 16 in family c8g / r8g).
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+results = "results/"
+note = "01-kallisto-sub: kallisto quant -t 16 on the 200,000-pair subset. Instance inferred from the spec (cpu 16, c8g)"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+results = "results/depth.txt"
+note = "02-salmon-sub-and-compare: salmon on the subset plus the metric code. Instance inferred from the spec (cpu 16, r8g)"
+
+[[check]]
+id = "subset-fragments"
+claim = "fragments == 200000 (kallisto run_info n_processed)"
+kind = "identity"
+bound = "200000"
+observed = "200000"
+outcome = "pass"
+
+[[check]]
+id = "spearman-depth-stable"
+claim = "Spearman must be depth-stable: that is the property that makes rank the robust metric"
+kind = "invariance"            # the spec asserts |delta| < 0.05; the README does not print that bound
+observed = "0.9120 / 0.9083"
+outcome = "pass"
+
+[[check]]
+id = "log-pearson-both-detected"
+claim = "log-Pearson, both detected"
+kind = "reported"
+observed = "0.9118 / 0.9656"
+outcome = "reported"
+
+[[check]]
+id = "log-pearson-all"
+claim = "log-Pearson, all 465,769"
+kind = "reported"
+observed = "0.7871 / 0.9214"
+outcome = "reported"
+
+[[check]]
+id = "old-061-not-reproduced"
+claim = "This repo previously recorded `raw log-TPM Pearson 0.61` for this pair. None of the four variants above reproduces it"
+kind = "reported"
+observed = "the closest is 0.7871 (200k fragments, unrestricted)"
+outcome = "reported"
+
+[[cross_code]]
+with = "recipes/kallisto"
+same_bytes = true
+metric = "Spearman rank correlation of TPM over transcripts both tools detect, at two depths"
+tolerance_basis = "the assertion is depth-stability of Spearman, not agreement: different EM models make raw values incomparable, so rank is the like-with-like metric"
+check = "spearman-depth-stable"
+
+[[cross_code]]
+with = "recipes/salmon"
+same_bytes = true
+metric = "Spearman rank correlation of TPM over transcripts both tools detect, at two depths"
+tolerance_basis = "same: a stability bound on rank agreement across a 79x depth change"
+check = "spearman-depth-stable"

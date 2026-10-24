@@ -1,0 +1,167 @@
+# measurements/cp2k-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified set: ten MD runs of 10 steps (five w64 QS_reference functionals + H2O-64 under five layouts)"
+
+[[dataset]]
+id = "cp2k/cp2k v2026.2 benchmarks/QS_reference/w64{PBE,SCAN,PBE0,GAPW,ccGRB}.inp + committed .ref"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "manifest.tsv carries each file's git blob id in the v2026.2 tree; stage-inputs.sh keeps a file only if it matches"
+
+[[dataset]]
+id = "cp2k/cp2k v2026.2 benchmarks/QS/H2O-64.inp + check-release-comparison.py"
+tier = "versioned-release"
+pins = "pins.sha256"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 4032
+billed_s = 4186
+usd_hr = 0.7181
+compute_usd = 0.804
+billed_usd = 0.835
+peak_gib = 15.1
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 4072
+billed_s = 4185
+usd_hr = 0.8467
+compute_usd = 0.958
+billed_usd = 0.984
+peak_gib = 18.9
+peak_kind = "cgroup-memory.peak"
+note = "peak includes page cache and the x86 env install"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 2218
+billed_s = 2322
+usd_hr = 0.9738
+compute_usd = 0.600
+billed_usd = 0.628
+peak_gib = 18.9
+peak_kind = "cgroup-memory.peak"
+note = "peak includes page cache and the x86 env install"
+
+# --- in-task asserts (real.py), the README's "What held at scale" table ------------------
+[[check]]
+id = "program-ended"
+claim = "exit 0 and `PROGRAM ENDED`, every job"
+kind = "sentinel"
+observed = "10 / 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rank-thread-count"
+claim = "MPI processes and OpenMP threads CP2K reports == launched"
+kind = "rank-count"
+observed = "10 / 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "md-steps"
+claim = "11 energies (steps 0–10) and an 11-row `.ener` per job"
+kind = "identity"
+observed = "10 / 10"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scf-converged"
+claim = "every SCF converged, reference set"
+kind = "sentinel"
+observed = "0 failures"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "release-check"
+claim = "H2O-64: every layout's final energy within 1e-10 Ha of the mean"
+kind = "invariance"
+bound = "1e-10 Ha"
+observed = "2.7e-12"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "2.7e-12 (Graviton4), 3.0e-12 (Xeon), 3.0e-12 (EPYC); by step 10 all 15 runs are within 7.0e-12 of each other"
+
+# --- across chips, asserted by compare.py ----------------------------------------------
+[[check]]
+id = "step0-cross-chip"
+claim = "step 0 of each reference job, an SCF converged at the same geometry: \\|Δ\\| ≤ 1e-9 Ha"
+kind = "reference"
+bound = "1e-9 Ha"
+observed = "7.6e-10"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "Graviton4 vs Xeon 7.6e-10, Graviton4 vs EPYC 7.6e-10, Xeon vs EPYC 3.4e-10 (worst case PBE0)"
+
+# --- against the developers' committed .ref (reported, not asserted) ---------------------
+[[check]]
+id = "ref-gga-meta-gapw-ccgrb"
+claim = "PBE, SCAN, GAPW, ccGRB: final potential energy, trajectory average, final conserved quantity vs the committed .ref"
+kind = "reference"
+observed = "all 12 digits, all chips"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ref-pbe0-graviton4"
+claim = "PBE0, Graviton4: final potential energy, trajectory average, final conserved quantity vs the committed .ref"
+kind = "reference"
+observed = "12 digits / 1e-8 / 4e-8"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 and the x86 chips end 1.6e-7 Ha apart; Xeon and EPYC within 4e-10"
+corename_sensitive = true
+
+[[check]]
+id = "ref-pbe0-x86"
+claim = "PBE0, Xeon and EPYC: final potential energy, trajectory average, final conserved quantity vs the committed .ref"
+kind = "reference"
+observed = "−1.6e-7 / −3e-8 / −9e-8"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 and the x86 chips end 1.6e-7 Ha apart; Xeon and EPYC within 4e-10 (same build, same Cooperlake kernel)"
+corename_sensitive = true
+
+[[check]]
+id = "h2o64-step0"
+claim = "H2O-64's step 0 (IGNORE_CONVERGENCE_FAILURE, first SCF stops unconverged at 50 iterations)"
+kind = "reported"
+observed = "3.2e-9 Ha apart at most, over all 15 runs"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "different layouts and chips stop at different iterates, 3.2e-9 Ha apart at most over all 15 runs"
+
+[[cross_code]]
+with = "published:cp2k-v2026.2-benchmarks-QS_reference-ref"
+same_bytes = true
+metric = "final potential energy, trajectory average, final conserved quantity vs the developers' committed .ref (12 printed digits)"
+tolerance_basis = "reported, not asserted: the .ref came from another version (2023.2), another CPU and 48 ranks, after 10 MD steps"
+check = "ref-pbe0-graviton4"
+
+[[trap]]
+id = "cp2k-release-check-regex-misses-2026"
+scope = "tool"
+symptom = "upstream's check-release-comparison.py matches nothing on 2026.2 output"
+cause = "its pattern `ENERGY\\| Total FORCE_EVAL.+?:` needs a colon; the 2026.2 line `ENERGY| Total FORCE_EVAL ( QS ) energy [hartree]` has none"
+fix = "same criterion with a pattern that takes the number after the unit (real.py)"

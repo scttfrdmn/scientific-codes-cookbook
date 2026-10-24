@@ -1,0 +1,210 @@
+# measurements/mageck-real/record.toml -- Brunello in A375, three chips; everything identical but MLE's
+# unseeded permutation columns.
+schema = 1
+result_unit = "one genome-wide screen analysed (count + RRA + MLE; 253M reads, 77,441 guides)"
+
+[[dataset]]
+id = "ENA PRJNA508200: SRR8297998 (plasmid), SRR8279891 (repA), SRR8281054 (repB)"
+tier = "durable-id"
+pins = "inputs.sha256"
+note = "checked against ENA's fastq_md5 on download; fetched on AWS by fetch.sh"
+
+[[dataset]]
+id = "Brunello brunello.tsv, Zenodo 10.5281/zenodo.5750854"
+tier = "durable-id"
+pins = "inputs.sha256"
+
+[[dataset]]
+id = "hart-lab/bagel at 53388adb: CEGv2.txt, NEGv1.txt"
+tier = "versioned-release"
+pins = "inputs.sha256"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 1321
+overhead_s = 99
+usd_hr = 0.359
+compute_usd = 0.132
+billed_usd = 0.142
+peak_gib = 2.05
+peak_kind = "rss"
+note = "wall = count 1224 + RRA 11 + MLE 86 s; billed excludes ~1,500 s of in-task verification (measured window 2987 s); an earlier pass r2 took 1363 s"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 837
+overhead_s = 107
+usd_hr = 0.4234
+compute_usd = 0.098
+billed_usd = 0.111
+peak_gib = 1.92
+peak_kind = "rss"
+note = "wall = 738 / 8 / 91 s; measured window 1908 s incl. ~1,000 s of verification; r2 took 850 s"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 592
+overhead_s = 122
+usd_hr = 0.4869
+compute_usd = 0.08
+billed_usd = 0.097
+peak_gib = 1.78
+peak_kind = "rss"
+note = "wall = 530 / 7 / 55 s; measured window 1427 s incl. ~700 s of verification; r2 took 598 s"
+
+# --- checks: "What held at scale, on all three chips" ------------------------------------
+[[check]]
+id = "input-pins"
+claim = "sha256 of 3 FASTQs, library, CEGv2, NEGv1 == pins; FASTQs == ENA's md5"
+kind = "pin"
+observed = "6 of 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "read-counts"
+claim = "reads per sample == ENA read_count"
+kind = "reference"
+observed = "60,120,685 / 99,121,522 / 93,622,486"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "recount"
+claim = "count table == independent recount, every guide × sample (recount.py: same offset order, first exact 20-mer, MAGeCK's library rules)"
+kind = "cross-code"
+observed = "77,441 × 3, 0 differ, for both offset sets"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mapped-conservation"
+claim = "summary Mapped == table column sum == recount's counted reads; zero-count and total guides == table"
+kind = "conservation"
+observed = "holds, 6 of 6 columns"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gini"
+claim = "Gini == independent recompute"
+kind = "identity"
+observed = "≤ 2.6e-14"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "size-factors"
+claim = "median-of-ratios size factors == recompute"
+kind = "identity"
+observed = "0.0 relative difference"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normalised-counts"
+claim = "normalised counts == raw × size factor"
+kind = "identity"
+observed = "0.0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rra-rerun"
+claim = "RRA rerun on the same table"
+kind = "identity"
+observed = "byte-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "genes-scored"
+claim = "RRA scores exactly the genes with a read; MLE every gene in the table"
+kind = "identity"
+observed = "20,111 / 20,112"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "neg-false-discoveries"
+claim = "NEGv1 genes ≤ 5% of RRA's depleted genes at FDR < 0.05"
+kind = "band"
+bound = "≤ 5%"
+observed = "6 of 1,484 (0.4%)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mle-beta"
+claim = "MLE beta finite; median beta, CEGv2 < NEGv1"
+kind = "band"
+observed = "−1.603 < +0.107"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mle-permutation-p"
+claim = "MLE's permutation p-value and fdr (unseeded np.random in mlemultiprocessing.py)"
+kind = "reported"
+observed = "differ between two runs on the same chip as much as between chips"
+outcome = "reported"
+
+[[check]]
+id = "auto-trim-uncounted"
+claim = "MAGeCK's default --trim-5 AUTO leaves the replicates' reads uncounted"
+kind = "reported"
+observed = "18.6%; counted 62.3% → 80.3% (repA) with all nine offsets; 1,477 vs 1,484 depleted genes"
+outcome = "reported"
+
+[[check]]
+id = "ceg-recall"
+claim = "Recall of CEGv2 at FDR < 0.05; essential vs non-essential AUC"
+kind = "reported"
+observed = "513 of 661 (0.776); AUC 0.9932 by RRA rank, 0.9944 by MLE beta"
+outcome = "reported"
+
+[[trap]]
+id = "mageck-trim5-auto-drops-offsets"
+scope = "tool"
+symptom = "no error: --trim-5 AUTO leaves 18.6% of the replicates' reads uncounted"
+cause = "Broad's staggered primers put the guide at nine offsets (22 to 30); AUTO stops once its picks cover 75% of the first 100,000 reads, so it took six and dropped 22, 27 and 30"
+fix = "--trim-5 22,23,24,25,26,27,28,29,30"
+cost = "depth, not hits here: counted reads 62.3% → 80.3% (repA); 1,477 vs 1,484 depleted genes"
+
+[[trap]]
+id = "mageck-nontargeting-null"
+scope = "method"
+symptom = "--control-sgrna with non-targeting guides calls 85% of genes depleted (16,265 of 19,112, incl. 683 of 897 non-essential)"
+cause = "in a cutting screen every targeting guide pays a DNA-damage cost that non-targeting guides do not"
+fix = "use the default null (all guides) for a knockout dropout: 1,484 genes and 6 NEG"
+
+[[trap]]
+id = "mageck-mle-unseeded-permutation"
+scope = "tool"
+symptom = "MLE's p-value and fdr columns differ between two runs on the same chip"
+blames = "a cross-chip numerical difference"
+cause = "mlemultiprocessing.py shuffles with an unseeded np.random and MAGeCK exposes no seed"
+fix = "compare beta, z, wald-p-value and wald-fdr, which are byte-identical; treat the permutation columns as a random draw"
+
+[[trap]]
+id = "mageck-arm64-python-no-pgo"
+scope = "image"
+symptom = "Graviton4 2.23× slower than AMD on single-threaded mageck count"
+blames = "the Graviton4 chip ('Graviton is slow at Python')"
+cause = "the arm64 image's CPython 3.12.13 (conda-forge, cross-compiled) has no --enable-optimizations or --with-lto; the x86 images' CPython 3.12.11 has PGO + full LTO"
+fix = "none applied; build and core cannot be separated, since no one image runs on both"

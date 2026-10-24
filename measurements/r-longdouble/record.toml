@@ -1,0 +1,108 @@
+# measurements/r-longdouble/record.toml -- drafted by the #118 extraction, then authored.
+# A mechanism probe, not a sizing run: every row is diagnostic. The README prints billed $ per chip
+# ($0.711 / $0.040 / $0.032) but neither the billed seconds nor the $/hr, so no $ field is recorded.
+schema = 1
+result_unit = "one run of probe.R: host facts, timings and agreement on a seeded 1,083 × 15,045 matrix"
+
+[[dataset]]
+id = "seeded 1,083 × 15,045 rnorm matrix (set.seed(20261018)), the wgcna-real shape, built in-code by probe.R"
+tier = "built"
+pins = "pins.sha256"
+note = "probe.R and run.sh pinned; no data staged"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 7940
+note = "Rscript wall from host.txt; aarch.bio R 4.5.3, OpenBLAS 0.3.34. README billed $0.711 left out (no billed seconds or $/hr printed)"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "diagnostic"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 305
+note = "bioconda R 4.5.2, OpenBLAS 0.3.30. README billed $0.040 left out"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "diagnostic"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 204
+note = "bioconda R 4.5.2, OpenBLAS 0.3.30. README billed $0.032 left out"
+
+# --- the only in-task assert is the completion marker; everything else is printed -------
+[[check]]
+id = "probe-completed"
+claim = "PROBE OK written to results.tsv (run.sh fails the task otherwise)"
+kind = "sentinel"
+observed = "OK"
+outcome = "pass"
+
+[[check]]
+id = "longdouble-digits"
+claim = "`.Machine$longdouble.digits`"
+kind = "reported"
+observed = "113 (quad) on Graviton4; 64 (x87) on Intel and AMD"
+outcome = "reported"
+
+[[check]]
+id = "stats-cor-full"
+claim = "`stats::cor`, full 15,045"
+kind = "reported"
+observed = "7,478 s (Graviton4) vs 253 s (Intel), 162 s (AMD)"
+outcome = "reported"
+
+[[check]]
+id = "blas-control"
+claim = "control: BLAS `crossprod(x, 1)` ×10, a `double` dot product"
+kind = "reported"
+observed = "7.9 s (Graviton4) vs 12.3 s (Intel), 6.6 s (AMD)"
+outcome = "reported"
+
+[[check]]
+id = "stats-cor-vs-blas"
+claim = "`stats::cor` agrees with the BLAS forms to round-off: against `crossprod(scale(X))/(n−1)`"
+kind = "reported"
+observed = "≤ 6.7e-16 on arm64, ≤ 1.4e-15 on x86; identical() FALSE on every chip"
+outcome = "reported"
+
+[[check]]
+id = "cor-digest"
+claim = "One cross-chip digest of the full `stats::cor` (Σ entry × column index)"
+kind = "reported"
+observed = "111125851.66533279"
+outcome = "reported"
+across_chips = "identical"
+across_chips_evidence = "equal to 17 printed digits on all three chips; does not show the matrices are bit-identical"
+
+[[check]]
+id = "wgcna-pairwise"
+claim = "`WGCNA::cor(use = \"pairwise.complete.obs\")` vs `stats::cor(use = \"pairwise.complete.obs\")`, 500 × 200, 10% NA"
+kind = "reported"
+observed = "3.3e-16 (arm64), 8.9e-16 (x86)"
+outcome = "reported"
+
+[[trap]]
+id = "r-longdouble-stats-cor-quad"
+scope = "image"
+symptom = "stats::cor on the full 15,045-column matrix takes 7,478 s on Graviton4 against 253 s on Intel; sum, mean and colSums are 9–14× slower too"
+blames = "a slow box (ruled out: a double BLAS dot product on the same data is faster on Graviton4 than on Intel)"
+cause = "R's long double is 113-bit IEEE quad on arm64 Linux, and stats::cor, sum, mean and colSums accumulate in LDOUBLE (cov.c, summary.c, array.c); mechanism inferred, not instrumented"
+fix = "WGCNA::cor or crossprod(scale(X))/(n−1) (2.2 s / 3.4 s); R's configure switch --disable-long-double"
+
+[[trap]]
+id = "r-longdouble-wgcna-cor-na"
+scope = "tool"
+symptom = "Missing values present in input variable 'x'. Consider using use = 'pairwise.complete.obs'."
+cause = "WGCNA::cor defaults to use = \"all.obs\" and errors on NA"
+fix = "use = \"pairwise.complete.obs\" (matches stats::cor to 3.3e-16)"

@@ -1,0 +1,246 @@
+# measurements/snakemake-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the cohort table: eleven whole FASTQ files (446.0M reads) checked and joined"
+
+[[dataset]]
+id = "FASTQs on RODA: 1000 Genomes s3://1000genomes (bwa-real, incl. SRR062634) and SRA (metaphlan-real), as assembled by qc-aggregate-real"
+tier = "roda"
+pins = "../qc-aggregate-real/inputs.sha256"
+from_recipe = "measurements/qc-aggregate-real"
+note = "read where the owning measurements staged them; nothing new fetched"
+
+[[dataset]]
+id = "ENA FASTQs staged by salmon-real and mageck-real, as assembled by qc-aggregate-real"
+tier = "durable-id"
+pins = "../qc-aggregate-real/inputs.sha256"
+from_recipe = "measurements/qc-aggregate-real"
+
+[[dataset]]
+id = "published read/base counts per file: ENA read_count/base_count and the 1000 Genomes .filt count, from qc-aggregate-real's cohort.tsv"
+tier = "durable-id"
+from_recipe = "measurements/qc-aggregate-real"
+note = "stage-inputs.sh uploads one small truth file per FASTQ"
+
+# --- cold run r1: 12 instances per chip; usd_hr is the stats instance's price ------------
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 1
+wall_s = 326
+billed_s = 2134
+usd_hr = 0.0798
+compute_usd = 0.0072
+peak_gib = 0.0244
+peak_kind = "vmhwm"
+note = "11 x c8g.large + a c8g.medium (0.0399 $/hr) for the join; wall_s is seqkit summed over 11 jobs, billed_s the 12 CloudTrail windows summed; README billed $/result 0.0460 mixes the two rates, so billed_usd is left out; workflow wall 5,881 s"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 2
+wall_s = 362
+billed_s = 2216
+usd_hr = 0.0937
+compute_usd = 0.0094
+billed_usd = 0.0577
+peak_gib = 0.0244
+peak_kind = "vmhwm"
+note = "12 x c8i.large (the join too); workflow wall 3,828 s"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 1
+wall_s = 239
+billed_s = 1654
+usd_hr = 0.1078
+compute_usd = 0.0072
+peak_gib = 0.0244
+peak_kind = "vmhwm"
+note = "11 x c8a.large + a c8a.medium (0.0539 $/hr) for the join; README billed $/result 0.0478 mixes the two rates, so billed_usd is left out; workflow wall 5,009 s"
+
+# --- direct.sh: the same eleven files on one large, no Snakemake ---------------------------
+[[run]]
+instance = "c8g.large"
+purpose = "diagnostic"
+results = "results/arm64/direct/"
+host = "results/arm64/direct/host.txt"
+date = "2026-10-21"
+date_source = "run"
+billed_s = 574
+usd_hr = 0.0798
+billed_usd = 0.0127
+note = "direct run, the control the workflow outputs are compared against; window is spawn's started-to-ended"
+
+[[run]]
+instance = "c8i.large"
+purpose = "diagnostic"
+results = "results/x86_64/direct/"
+host = "results/x86_64/direct/host.txt"
+date = "2026-10-20"
+date_source = "run"
+billed_s = 636
+usd_hr = 0.0937
+billed_usd = 0.0166
+note = "direct run"
+
+[[run]]
+instance = "c8a.large"
+purpose = "diagnostic"
+results = "results/amd/direct/"
+host = "results/amd/direct/host.txt"
+date = "2026-10-20"
+date_source = "run"
+billed_s = 507
+usd_hr = 0.1078
+billed_usd = 0.0152
+note = "direct run"
+
+# --- checks: "The identities, at scale, on all three chips"; observed is every chip's ------
+[[check]]
+id = "fastq-pins"
+claim = "each staged FASTQ's sha256 == its pin"
+kind = "pin"
+observed = "11 of 11"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "published-counts"
+claim = "**each file's `num_seqs` / `sum_len` == the published reads / bases**"
+kind = "reference"
+bound = "exact"
+observed = "**11 of 11 exact**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mates-same-reads"
+claim = "each pair's mates hold the same reads"
+kind = "identity"
+observed = "4 of 4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fanout-total"
+claim = "**fan-out total == published total**"
+kind = "conservation"
+observed = "**445,999,501 reads / 32,158,518,768 bases**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cold-run-jobs"
+claim = "the cold run ran exactly 11 `stats` + 1 `cohort`"
+kind = "identity"
+observed = "12 jobs, exit 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "eq-direct"
+claim = "**every output == the same commands without Snakemake**"
+kind = "invariance"
+observed = "**11 of 11 stats rows + the cohort table, byte-identical**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "noop-rerun"
+claim = "**re-run, nothing changed**"
+kind = "identity"
+observed = "**0 jobs, 0 instances, 0 objects rewritten**, 4–5 s"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "touch-one-file"
+claim = "**one file's truth re-uploaded** (same bytes, new S3 mtime)"
+kind = "identity"
+observed = "**2 jobs; exactly their 4 objects rewritten, the other 10 files' untouched**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "touch-cohort"
+claim = "**the cohort truth re-uploaded**"
+kind = "identity"
+observed = "**1 job, 2 objects**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "recreated-eq-cold"
+claim = "every re-created output == the cold run's"
+kind = "invariance"
+observed = "12 of 12, byte-identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "jobs4"
+claim = "`--jobs 4`, once, on Graviton4"
+kind = "reported"
+observed = "2,595 s against 5,881 s for the same billed $0.046; all 12 outputs byte-identical to the cold run's; completions seen up to 701 s after a job's script had ended"
+outcome = "reported"
+
+[[check]]
+id = "cross-chip-outputs"
+claim = "All twelve science outputs of the cold run are **byte-identical** on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "byte-identical, float AvgQual, Q20(%), Q30(%), GC(%) columns included"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "snakemake-script-mtime-rerun"
+scope = "tool"
+symptom = "Code has changed since last execution"
+cause = "a rule script's mtime is a rerun trigger: a fresh copy of stats.sh (or a git checkout) newer than the outputs plans all eleven stats jobs again"
+fix = "copy rule scripts with cp -p"
+
+[[trap]]
+id = "snakemake-interrupt-deletes-outputs"
+scope = "tool"
+symptom = "Nothing to be done (while one stats/*.tsv was missing from S3)"
+cause = "interrupting Snakemake deletes the running job's outputs from S3, and with the join's output still up to date a plain re-run does not bring them back"
+fix = "name the missing file as a target (1 job); the next run then re-runs exactly the join"
+
+[[trap]]
+id = "snakemake-spawn-shared-task-id"
+scope = "platform"
+symptom = "completions seen in batches, up to 701 s after a job's script had ended (--jobs 4)"
+cause = "concurrent jobs of one rule share a spawn task_id: every stats job polls the one smk-stats-1 record and each new launch clears it; a short job launched after a long one would report the long one done while it still ran"
+fix = "--jobs 1"
+refs = ["snakemake-executor-plugin-spawn#19"]
+
+[[trap]]
+id = "snakemake-spawn-nano-wedge"
+scope = "platform"
+symptom = "a threads: 1 rule without mem_mb was sized onto a 0.5 GiB t4g.nano, which wedged in the Docker install"
+cause = "a rule with threads: 1 and no mem_mb is sized to the smallest box, too small for the Docker install"
+fix = "keep mem_mb set on a rule that installs Docker"
+refs = ["snakemake-executor-plugin-spawn#18"]
+
+[[upstream]]
+ref = "snakemake-executor-plugin-spawn#18"
+role = "workaround"
+note = "mem_mb set on every rule"
+
+[[upstream]]
+ref = "snakemake-executor-plugin-spawn#19"
+role = "workaround"
+note = "--jobs 1; concurrent jobs of one rule share a spawn task_id"

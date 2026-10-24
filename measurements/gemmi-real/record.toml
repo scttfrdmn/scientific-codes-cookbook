@@ -1,0 +1,165 @@
+# measurements/gemmi-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole wwPDB archive (RCSB 2026-01-01 snapshot, 246,905 entries) read and checked"
+
+[[dataset]]
+id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/{mmCIF,pdb,structure_factors}/ (672,176 objects)"
+tier = "roda"
+pins = "pins.sha256"
+note = "pinned via manifest.tsv.gz (key, size, ETag per object); stage-inputs.sh rebuilds it from the bucket listing and refuses a mismatch; streamed over HTTPS, nothing copied"
+
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1497
+billed_s = 1667
+usd_hr = 1.2762
+compute_usd = 0.531
+billed_usd = 0.591
+peak_gib = 41.3
+peak_kind = "cgroup-memory.peak"
+note = "64 worker processes plus 6 for the 91 big entries; largest single worker ru_maxrss 5.4 GiB"
+
+[[run]]
+instance = "c8i.8xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1687
+billed_s = 1787
+usd_hr = 1.4994
+compute_usd = 0.703
+billed_usd = 0.744
+peak_gib = 44.8
+peak_kind = "cgroup-memory.peak"
+note = "largest single worker ru_maxrss 5.4 GiB"
+
+[[run]]
+instance = "c8a.8xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1395
+billed_s = 1483
+usd_hr = 1.7243
+compute_usd = 0.668
+billed_usd = 0.71
+peak_gib = 44.2
+peak_kind = "cgroup-memory.peak"
+note = "largest single worker ru_maxrss 5.4 GiB"
+
+# checks: the README's "What held at scale, on all three chips" rows
+[[check]]
+id = "entry-count"
+claim = "246,905 entries"
+kind = "reference"
+bound = "the snapshot README's published count"
+observed = "246,905"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "etag"
+claim = "all 672,176 objects match size and ETag"
+kind = "pin"
+observed = "all; one S3 500 on Graviton4, retried"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mmcif-parses"
+claim = "every mmCIF parses, one block, named for its entry"
+kind = "identity"
+observed = "246,905 / 246,905"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "atom-count"
+claim = "gemmi's atom count == `_atom_site` rows, its models == distinct model numbers"
+kind = "identity"
+observed = "every entry; 2,878,368,146 atoms"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pdb-eq-mmcif"
+claim = "**every PDB-format file == its mmCIF**, read by gemmi's two parsers and written back by one writer"
+kind = "identity"
+bound = "a format bound: one unit in the last place where the PDB column holds fewer digits, never two"
+observed = "234,574 identical, 23 identical once reordered, 3 archive defects"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "spacegroup-closure"
+claim = "every space group used in the archive is closed under composition"
+kind = "identity"
+observed = "92 groups, 35,622 products, 0 outside"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "it-number"
+claim = "gemmi's number for each recorded H-M symbol == `_symmetry.Int_Tables_number`"
+kind = "reference"
+observed = "231,332 of 231,334; the other 2 are non-standard symbols"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "entity-molecules"
+claim = "`_entity.pdbx_number_of_molecules` == the entity's asym units (water aside)"
+kind = "identity"
+observed = "all but 1 archive defect"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sf-parses"
+claim = "every structure-factor file parses into reflection blocks"
+kind = "identity"
+observed = "190,667 of 190,671; the other 4 are malformed files"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "defect-set"
+claim = "`real.py` asserts that the set of entries breaking each claim is exactly this set, so a new defect fails the run, and so does one of these disappearing"
+kind = "identity"
+observed = "7r3k, 4xkt, 2cbi, 1e42, 2w4q, 3zqo, 2yok, 1ldm, 3ldh, 2icy"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sf-dmin0"
+claim = "the resolution computed from Miller indices and the cell, `sf_dmin0`"
+kind = "reported"
+observed = "differs in 17,787 of 190,478 entries by 1–5 ulps (13,383 by one ulp), at most 6.3e-16 relative"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 vs either x86 chip: 17,787 of 190,478 entries differ by 1–5 ulps, at most 6.3e-16 relative; Intel vs AMD byte-identical (entries.tsv sha256 44ff58bc…)"
+corename_sensitive = false
+
+[[trap]]
+id = "gemmi-big-entries-one-pool"
+scope = "method"
+symptom = "Putting the big entries first in a single 64-wide pool peaked at 54.8 GiB on the 64 GB box in a probe"
+cause = "the 91 entries holding an object over 50 MB run concurrently with 64 ordinary workers"
+fix = "run the big entries in a separate, narrower pool (6 workers)"
+
+[[trap]]
+id = "gemmi-s3-transient-errors"
+scope = "platform"
+symptom = "two transient S3 errors (a 500 and a 503)"
+cause = "transient errors streaming 672,176 objects from the public bucket"
+fix = "`real.py` now retries"
+cost = "part of a first full Graviton4 run (six launches, $2.78 total)"

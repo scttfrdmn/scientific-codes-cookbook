@@ -1,0 +1,164 @@
+# measurements/r-real/record.toml -- a year of NYC taxi trips in R, three chips, checked against DuckDB.
+schema = 1
+result_unit = "the 2023 NYC TLC yellow-taxi year read, aggregated three ways and regressed (38,310,226 trips)"
+
+[[dataset]]
+id = "NYC TLC 2023 yellow-taxi trip records, 12 monthly Parquet files, https://d37ci6vzurychx.cloudfront.net/trip-data"
+tier = "durable-id"
+unpinned = "no committed sha256 manifest; per-file sha256s as fetched on 2026-10-17 are constants in stage-inputs.sh, and a TLC re-issue fails staging"
+note = "RODA lists s3://nyc-tlc but it returns 403 to signed requests (open-data-registry#1418), so the TLC's own CloudFront is the source"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/results-arm64-r8g2xl.txt"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 77.3
+billed_s = 287
+usd_hr = 0.4713
+compute_usd = 0.0101
+billed_usd = 0.0376
+peak_gib = 31.66
+peak_kind = "rss"
+note = "billed includes the 0.86 GB aarch.science r image pull (80 s); phases: read 4.8, lm() 15.3, crossprod+solve 17.5 s"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/results-x86_64-r8i2xl.txt"
+date = "2026-10-17"
+date_source = "git"
+threads_per_core = 2
+wall_s = 84.4
+billed_s = 226
+usd_hr = 0.5557
+compute_usd = 0.013
+billed_usd = 0.0349
+peak_gib = 31.49
+peak_kind = "rss"
+note = "x86 env twin installed offline (2 s pull, 10 s stage-in, 4 s install): the lower bill is packaging, not the chip"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/results-amd-r8a2xl.txt"
+host = "results/host-amd-r8a2xl.txt"
+spawn_version = "0.131.1"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 65.2
+billed_s = 161
+usd_hr = 0.639
+compute_usd = 0.0116
+billed_usd = 0.0286
+peak_gib = 31.53
+peak_kind = "rss"
+note = "spawn 0.131.1 built from its release tag (0.139.1's wrapper overflows EC2 user data, spawn#1246)"
+
+# --- checks: "What held at scale, on all three chips" (check.R, vs DuckDB 1.5.6) ------------
+[[check]]
+id = "rows"
+claim = "rows decoded == Parquet footers == DuckDB"
+kind = "cross-code"
+observed = "38,310,226"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "total-cents"
+claim = "total in integer cents == DuckDB"
+kind = "cross-code"
+observed = "109,038,341,189"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "groups-conserve"
+claim = "group sums (62 month×payment, 263 zones) add back to N and to the total"
+kind = "conservation"
+observed = "exact"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "three-engines"
+claim = "data.table == dplyr (tolerance 0) == base rowsum()"
+kind = "identity"
+observed = "TRUE"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "agg-sha-duckdb"
+claim = "both aggregate tables, sha256 == DuckDB's"
+kind = "cross-code"
+observed = "match"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "model-rows"
+claim = "model rows under the filters == DuckDB"
+kind = "cross-code"
+observed = "34,184,942"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lm-rank"
+claim = "lm rank"
+kind = "identity"
+observed = "32 of 32"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normal-equations"
+claim = "normal equations, max cos(Xⱼ, r) < √N·ε (1.3e-12)"
+kind = "band"
+bound = "< √N·ε (1.3e-12)"
+observed = "6.5e-15"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "6.5e-15 (Graviton4) vs 3.3e-16 (Intel, AMD; 3.318e-16 on both)"
+
+[[check]]
+id = "qr-vs-normeq"
+claim = "QR vs solve(XᵀX, Xᵀy), rel. < √N·κ²·ε (4.0e-7, κ = 553.8)"
+kind = "band"
+bound = "< √N·κ²·ε (4.0e-7, κ = 553.8)"
+observed = "3.0e-10"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "3.0e-10 (Graviton4), 4.2e-13 (Intel), 8.5e-13 (AMD)"
+corename_sensitive = true
+
+[[check]]
+id = "coefficients"
+claim = "lm coefficients across chips"
+kind = "reported"
+observed = "differ in the 10th–11th digit (largest absolute difference 1.1e-10)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "intercept 2.1904801166 vs …1167; AMD and Intel byte-identical, all 32 to 16 digits"
+corename_sensitive = true
+
+[[trap]]
+id = "r-nyc-tlc-bucket-403"
+scope = "data"
+symptom = "list, head-object and requester-pays all return 403 from a configured account on s3://nyc-tlc"
+blames = "your AWS credentials"
+cause = "the RODA-listed bucket denies signed requests too (known since 2024)"
+fix = "fetch from the TLC's own CloudFront distribution, pinned by sha256 as fetched"
+refs = ["open-data-registry#1418"]
+
+[[upstream]]
+ref = "awslabs/open-data-registry#1418"
+role = "workaround"
+note = "s3://nyc-tlc returns 403; files come from the TLC's CloudFront instead"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "AMD leg ran on spawn 0.131.1 built from its release tag"

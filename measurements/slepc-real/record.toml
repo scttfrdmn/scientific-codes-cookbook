@@ -1,0 +1,180 @@
+# measurements/slepc-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified run: the 102-pair shift-and-invert solve of the 128³ Dirichlet Laplacian (2,097,152 unknowns), two inertia factorisations, a second solver, and every check"
+
+[[dataset]]
+id = "7-point Dirichlet Laplacian on a 128 x 128 x 128 grid, built in-task; reference = closed-form spectrum sum_d 4 sin^2(k_d pi / 2(N+1))"
+tier = "built"
+pins = "pins.sha256"
+note = "nothing is staged except the two scripts (pinned); stage-inputs.sh checks the closed form against dense eigvalsh on 9³, 12³ and 14³"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 656
+billed_s = 760
+usd_hr = 0.9426
+compute_usd = 0.1718
+billed_usd = 0.199
+peak_gib = 60.7
+peak_kind = "cgroup-memory.peak"
+workers = 16
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 687
+billed_s = 737
+usd_hr = 1.1114
+compute_usd = 0.2121
+billed_usd = 0.2275
+peak_gib = 63.2
+peak_kind = "cgroup-memory.peak"
+workers = 16
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 469
+billed_s = 509
+usd_hr = 1.2781
+compute_usd = 0.1665
+billed_usd = 0.1807
+peak_gib = 63.6
+peak_kind = "cgroup-memory.peak"
+workers = 16
+
+# checks: the README's "What held at scale, on all three chips" rows (observed = Graviton4)
+[[check]]
+id = "mpi-ranks"
+claim = "MPI ranks, read from inside"
+kind = "rank-count"
+bound = "== 16 launched"
+observed = "16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rank0-ownership"
+claim = "rank 0 ownership"
+kind = "rank-count"
+bound = "strict subset"
+observed = "131,072 of 2,097,152 rows"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "converged"
+claim = "converged"
+kind = "band"
+bound = "≥ 102"
+observed = "138, in 4 restarts"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "138 in 4 restarts (Graviton4, Xeon) vs 128 in 5 (EPYC)"
+
+[[check]]
+id = "eigenvalue-vs-exact"
+claim = "**each θᵢ vs exact λᵢ**"
+kind = "reference"
+bound = "≤ ‖rᵢ‖²/δᵢ + 64 ε‖A‖ (Rayleigh-quotient bound)"
+observed = "worst 4.58e-16"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "max |Δθ| over 102 eigenvalues 9.0e-17 (Graviton4 vs Intel), 7.3e-17 (Graviton4 vs AMD), 8.0e-17 (Intel vs AMD)"
+
+[[check]]
+id = "multiplicities"
+claim = "**multiplicities**"
+kind = "reference"
+bound = "all 27 clusters exact"
+observed = "1,3,3,3,1,6,… all match"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sylvester-inertia"
+claim = "**Sylvester inertia, LDLᵀ of A − bI**"
+kind = "identity"
+bound = "102 below the cut, 44 below the mid shift, 0 zero pivots"
+observed = "102 / 44 / 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "orthonormality"
+claim = "**orthonormality**"
+kind = "band"
+bound = "max |XᵀX − I| ≤ 1e-11"
+observed = "2.24e-14"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "2.24e-14 / 1.35e-14 / 1.29e-14; two Graviton4 runs gave 1.10e-14 and 2.24e-14"
+
+[[check]]
+id = "gd-vs-exact"
+claim = "second solver vs exact"
+kind = "reference"
+bound = "each within its own residual"
+observed = "1.95e-15"
+outcome = "pass"
+
+[[check]]
+id = "gd-vs-krylov-schur"
+claim = "**second solver vs Krylov-Schur**"
+kind = "cross-code"
+bound = "within the sum of residuals"
+observed = "2.34e-15"
+outcome = "pass"
+
+# across chips, reported
+[[check]]
+id = "bit-identical-eigenvalues"
+claim = "bit-identical eigenvalues"
+kind = "reported"
+observed = "6 of 102 (Graviton4 vs Intel), 3 of 102 (Graviton4 vs AMD), 16 of 102 (Intel vs AMD)"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "max |Δθ| ≤ 9.0e-17, under 0.04 ε‖A‖"
+
+[[check]]
+id = "gd-iterations"
+claim = "GD iterations (path)"
+kind = "reported"
+observed = "390 vs 391 vs 387"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "390 (Graviton4) vs 391 (Intel) vs 387 (AMD)"
+
+[[trap]]
+id = "slepc-lobpcg-hypre-gamg"
+scope = "tool"
+symptom = "through `PCMatApply_HYPRE_BoomerAMG` that returns hypre error 1, and with GAMG it segfaults even at 48³"
+cause = "LOBPCG applies its preconditioner to a block of vectors"
+fix = "use GD + hypre BoomerAMG as the second solver; only that pairing is verified"
+
+[[trap]]
+id = "slepc-jd-needs-iterative-ksp"
+scope = "tool"
+symptom = "`SLEPC_REAL_ALT=jd-hypre` does not run"
+cause = "JD needs an iterative KSP, not `preonly`"
+fix = "not fixed; GD + hypre is the verified alternative"
+
+[[trap]]
+id = "slepc-suitesparse-403"
+scope = "data"
+symptom = "its file server has answered 403 to every download since 2026-10-14"
+cause = "SuiteSparse's file server refuses downloads; it would also give no reference spectrum"
+fix = "build the operator in-task with a closed-form spectrum"

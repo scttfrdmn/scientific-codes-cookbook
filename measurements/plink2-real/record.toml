@@ -1,0 +1,270 @@
+# measurements/plink2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one genome-wide run of the workflow: 1000 Genomes Phase 3 chr1-22, 2,504 samples, VCF import to PC-adjusted GWAS"
+
+[[dataset]]
+id = "RODA s3://1000genomes/release/20130502/ALL.chr{1..22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz + integrated_call_samples_v3.20130502.ALL.panel (doi:10.1038/nature15393)"
+tier = "roda"
+pins = "stage-inputs.sh"
+note = "the sha256 for all 23 objects are committed inside stage-inputs.sh (not a separate manifest file) and checked on the box; the same objects recipes/plink's real run reads"
+
+# --- p2 (PLINK 2): the workflow. 16 vCPU / 128 GiB, 16 threads --------------------------
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 681
+billed_s = 1213
+usd_hr = 0.9426
+compute_usd = 0.178
+billed_usd = 0.318
+peak_gib = 33.2
+peak_kind = "cgroup-memory.peak"
+note = "wall = union of PLINK 2's own Start/End over 75 logs (results/toolwall.txt); task wall 1,127 s adds the awk identity checks; peak is the container cgroup and includes ~27 GiB of /tmp the task wrote"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+workers = 16
+threads_per_core = 2
+wall_s = 804
+billed_s = 2395
+usd_hr = 1.1114
+compute_usd = 0.248
+billed_usd = 0.739
+peak_gib = 33.1
+peak_kind = "cgroup-memory.peak"
+note = "task wall 2,312 s: the BusyBox-userland identity checks took 1,508 s against 446 s in the arm64 image"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-21"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 601
+billed_s = 1799
+usd_hr = 1.2781
+compute_usd = 0.213
+billed_usd = 0.639
+peak_gib = 33.3
+peak_kind = "cgroup-memory.peak"
+note = "third attempt; task wall 1,762 s (identity checks 1,161 s); staged task body p2-task.sh because spawn's user data is capped at 16 KiB"
+
+# --- p19 (PLINK 1.9): converts the same VCFs and compares, 8 chromosomes at a time --------
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7"
+results = "results/arm64/"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 496
+usd_hr = 0.9426
+note = "PLINK 1.9 cross-check task. README prints '496 s / $0.151 billed'; 496 s x $0.9426/hr = $0.130, so 496 s is not the billed window and the billed seconds are not printed; $ left out"
+
+[[run]]
+instance = "r8i.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a"
+results = "results/x86_64/"
+date = "2026-10-17"
+date_source = "git"
+wall_s = 632
+usd_hr = 1.1114
+note = "PLINK 1.9 cross-check task. README prints '632 s / $0.219'; 632 s x $1.1114/hr = $0.195, billed seconds not printed; $ left out"
+
+[[run]]
+instance = "r8a.4xlarge"
+purpose = "diagnostic"
+image = "quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a"
+results = "results/amd/"
+date = "2026-10-21"
+date_source = "git"
+wall_s = 494
+usd_hr = 1.2781
+note = "PLINK 1.9 cross-check task. README prints '494 s / $0.190'; 494 s x $1.2781/hr = $0.175, billed seconds not printed; $ left out"
+
+# --- '## What held at scale, on all three chips' ---------------------------------------
+[[check]]
+id = "input-sha256"
+claim = "23 inputs match their sha256"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "counts-vs-vcf"
+claim = "`ALT_CTS` == the VCF's INFO `AC`, `OBS_CT` == `AN`, every variant"
+kind = "reference"
+bound = "exact"
+observed = "77,818,345 of 77,818,345"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hardy-freq"
+claim = "`--hardy` classes sum to 2,504 and imply `--freq`'s count"
+kind = "conservation"
+bound = "exact"
+observed = "77,818,337 of 77,818,337"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "maf-filter"
+claim = "`--maf 0.01` keeps exactly the variants `.acount` says it should"
+kind = "identity"
+bound = "exact"
+observed = "12,057,348 == 12,057,348"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p19-same-variants"
+claim = "PLINK 1.9 keeps the same variants, in the same order"
+kind = "cross-code"
+bound = "exact"
+observed = "77,818,337"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p19-counts"
+claim = "minor-allele and total counts == PLINK 1.9's"
+kind = "cross-code"
+bound = "exact"
+observed = "0 mismatches"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p19-hwe"
+claim = "HWE P == PLINK 1.9's, relative"
+kind = "cross-code"
+bound = "≤ 5e-4"
+observed = "max 4.998e-4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p19-eigenvalues"
+claim = "exact-PCA eigenvalues == PLINK 1.9's"
+kind = "cross-code"
+bound = "6 sig. figs"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "orthonormal"
+claim = "eigenvectors orthonormal; every PC sums to 0"
+kind = "identity"
+bound = "bounds from printed loadings"
+observed = "1.3e-7 / 3.2e-6"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "1.3e-7 / 3.2e-6 (Graviton4), 1.4e-7 / 2.9e-6 (Intel), 9.6e-8 / 2.8e-6 (AMD); moves with the approx eigenvectors"
+
+[[check]]
+id = "planted-betas"
+claim = "11 planted betas within 4 SE; Σz² < χ²₁₁(0.999) = 31.26"
+kind = "band"
+bound = "|z| < 4; Σz² < 31.26"
+observed = "max |z| 1.66, Σz² 9.035"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "p19-linear-vs-glm"
+claim = "1.9 `--linear` == `--glm` on the planted SNPs (BETA, t)"
+kind = "cross-code"
+observed = "3.0e-4 / 1.1e-4"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted -----------------------------------------------------------
+[[check]]
+id = "genomic-control"
+claim = "genomic control λ on the even-autosome nulls, without / with 10 PCs"
+kind = "reported"
+observed = "66.9 / 1.0053"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "approx-eigenvectors-cross-chip"
+claim = "approx eigenvectors, per loading after a sign"
+kind = "reported"
+observed = "≤ 2.0e-6 Intel vs Graviton4 (PCs 6, 8, 9, 10 negated); AMD vs Graviton4 ≤ 5.7e-6; AMD vs Intel ≤ 4.1e-6"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "AMD vs Graviton4 ≤ 5.7e-6 (PCs 6, 9, 10 negated); AMD vs Intel, same image and digest, ≤ 4.1e-6 (PC 8 negated)"
+
+[[check]]
+id = "glm-cross-chip"
+claim = "PC-adjusted --glm, across chips"
+kind = "reported"
+observed = "BETA ≤ 8.8e-6 relative, t ≤ 1.7e-6, SE not at all"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "BETA max rel diff 8.79e-06, T_STAT 1.70e-06, SE 0 (AMD vs Graviton4); AMD BETA equals Intel's exactly"
+
+[[cross_code]]
+with = "recipes/plink"
+same_bytes = true
+metric = "variant set and order, minor-allele and total counts, HWE P, exact-PCA eigenvalues, --linear vs --glm"
+tolerance_basis = "integers exact; HWE P to 5e-4 because 1.9 prints 4 significant figures; eigenvalues to the 6 printed figures"
+check = "p19-eigenvalues"
+
+[[cross_code]]
+with = "published:1000G-Phase3-INFO-AC-AN"
+same_bytes = true
+metric = "ALT_CTS == INFO AC, OBS_CT == AN, every variant"
+check = "counts-vs-vcf"
+
+[[trap]]
+id = "plink2-glm-a1-is-minor"
+scope = "tool"
+symptom = "five sign errors in a correct regression when BETA is compared to an ALT-coded truth"
+cause = "`--glm`'s A1 is the minor allele, not ALT — REF on 5 of the 11 planted SNPs"
+fix = "check A1 before comparing BETA to the truth"
+
+[[trap]]
+id = "plink2-pca-approx-unseeded"
+scope = "tool"
+symptom = "unseeded, two runs on one box gave PC1 opposite signs"
+cause = "`--pca approx` is randomized"
+fix = "pass `--seed`; then it is byte-reproducible"
+
+[[trap]]
+id = "plink2-pmerge-collapses-duplicates"
+scope = "tool"
+symptom = "`--pmerge-list` silently collapsed 4 repeated `CHR:POS:REF:ALT` records (8 records, 4 IDs)"
+cause = "duplicate positional IDs in the 1000G VCFs"
+fix = "remove them from both PLINKs explicitly with `--rm-dup exclude-all`"
+
+[[trap]]
+id = "plink2-p19-no-sex-drops-phenotype"
+scope = "tool"
+symptom = "without `--allow-no-sex`, `--linear` skips with a warning and writes nothing"
+cause = "PLINK 1.9 drops every phenotype of a sample with no sex, and the VCFs carry none"
+fix = "`--allow-no-sex`"
+
+[[trap]]
+id = "plink2-tmp-is-root-disk"
+scope = "platform"
+symptom = "`No space left on device` writing `kg.pgen`"
+cause = "with inputs staged as directories and no manifest file directly in /tmp, spawn bind-mounts only the staged directories, and /tmp is the container's 20 GiB root disk"
+fix = "stage the task body itself as a file under /tmp so /tmp is the host tmpfs"
+cost = "the two failed AMD p2 attempts, $0.85"

@@ -1,0 +1,191 @@
+# measurements/pathology-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole cohort: all 160 annotated CAMELYON16 slides and every check"
+
+[[dataset]]
+id = "s3://camelyon-dataset/CAMELYON16/ (111 training + 49 test annotated slides, masks, XMLs, background_tissue/)"
+tier = "roda"
+pins = "slides.tsv"
+note = "read in place over public HTTPS; slides.tsv carries the publisher's md5 (checksums.md5) per image/mask/XML and the S3 single-part ETag per tissue mask, checked while each object streams; slides.tsv itself is sha256-pinned in pins.sha256 and rebuilt by make_slides.py from the recipe's pinned manifests"
+
+[[run]]
+instance = "r8g.8xlarge"
+purpose = "primary"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+host = "results/arm64/host.txt"
+wall_s = 1473
+billed_s = 1544
+usd_hr = 1.8851
+compute_usd = 0.771
+billed_usd = 0.809
+peak_gib = 1.42
+peak_kind = "rss"
+results = "results/arm64/"
+note = "peak is the largest single worker's ru_maxrss; the box's cgroup peak was 104–106 GiB, almost all slides in /tmp tmpfs"
+
+[[run]]
+instance = "r8i.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+host = "results/x86_64/host.txt"
+wall_s = 2211
+billed_s = 2262
+usd_hr = 2.2227
+compute_usd = 1.365
+billed_usd = 1.397
+peak_gib = 1.42
+peak_kind = "rss"
+results = "results/x86_64/"
+note = "32 workers on 16 cores x 2 threads"
+
+[[run]]
+instance = "r8a.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-19"
+date_source = "run"
+workers = 32
+host = "results/amd/host.txt"
+wall_s = 1339
+billed_s = 1379
+usd_hr = 2.5562
+compute_usd = 0.951
+billed_usd = 0.979
+peak_gib = 1.42
+peak_kind = "rss"
+results = "results/amd/"
+
+# --- checks: "What held at scale, on all three chips" (asserted per slide in real.py) --
+[[check]]
+id = "md5-etag"
+claim = "image, mask, XML match the publisher's md5; tissue mask matches its ETag"
+kind = "pin"
+observed = "640 / 640 objects"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "level-sizes"
+claim = "WSI and mask level-0 size equal, and every mask level equals the slide's"
+kind = "identity"
+observed = "160 / 160 (114 masks stop 1–2 levels short)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "downsamples"
+claim = "`level_downsamples` exactly 2**k"
+kind = "identity"
+observed = "160 / 160"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "openslide-tifffile"
+claim = "openslide == tifffile, byte for byte, on every visited block"
+kind = "cross-code"
+bound = "byte for byte"
+observed = "725,548 blocks, 0 px differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mask-labels"
+claim = "mask labels ⊆ {0, 1, 2} at level 0"
+kind = "identity"
+observed = "160 / 160 (no label 1 on exactly the 20 slides the publisher lists as not exhaustively annotated)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mask-pyramid"
+claim = "mask level k == level 0 [::2**k, ::2**k], k = 1–4"
+kind = "identity"
+observed = "0 px differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "polygons-vs-mask"
+claim = "polygons, painted innermost-wins with nonzero fill, == mask==2 beyond 4 px of an outline"
+kind = "identity"
+bound = "beyond 4 px of an outline"
+observed = "35.44 G polygon px, 0 far disagreements"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "exclusion-control"
+claim = "Exclusion interiors not labelled tumour"
+kind = "identity"
+observed = "0 px"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tumour-coverage"
+claim = "no level-4 tumour pixel outside the visited blocks"
+kind = "conservation"
+observed = "0 px"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "known-omitted"
+claim = "tumor_088's \"Annotation 10\" ... is listed in `KNOWN_OMITTED`, its 5,047 far pixels are tallied apart, and the run fails if the omission is not observed"
+kind = "identity"
+observed = "5,047 far pixels"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "outline-dice"
+claim = "Dice ranges from 0.9915 to 0.99996 (median 0.99915). It is reported, not asserted."
+kind = "reported"
+observed = "0.9915 to 0.99996 (median 0.99915)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "patch-manifest"
+claim = "Patch manifest (reported): 10,270,461 tissue patches of 256×256 at level 0"
+kind = "reported"
+observed = "10,270,461 patches; 598,639 contain tumour, 539,983 at least half tumour"
+outcome = "reported"
+across_chips = "identical"
+
+# --- "Across chips" (compare.py, asserted) ---------------------------------------------
+[[check]]
+id = "decoded-rgb-crosschip"
+claim = "decoded RGB, sha256 + sum over every visited block"
+kind = "identity"
+observed = "160 / 160 identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "manifest-crosschip"
+claim = "patch manifest sha256"
+kind = "identity"
+observed = "160 / 160"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "counts-crosschip"
+claim = "every check count, distance histogram, max distance, Dice"
+kind = "identity"
+observed = "160 / 160"
+outcome = "pass"
+across_chips = "identical"
+
+[[trap]]
+id = "pathology-asap-mask-rules"
+scope = "data"
+symptom = "\"Tumor minus Exclusion\", which is what the README describes, fails 3 slides (test_026, test_105, tumor_110); painting in document order fails 5 others"
+blames = "the dataset README's description of the masks"
+cause = "the publisher's masks follow ASAP's rules: nonzero winding fill, and Tumor islands inside Exclusion polygons are kept (innermost polygon decides a pixel)"
+fix = "paint largest polygon first with nonzero fill (fits 159 of 160); tumor_088 Annotation 10 is the one exception, listed in KNOWN_OMITTED"

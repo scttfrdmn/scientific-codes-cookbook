@@ -1,0 +1,164 @@
+# measurements/kraken2-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "both Zymo mock-community runs (ERR2984773 even + ERR2935805 log) classified in one task"
+
+[[dataset]]
+id = "ENA PRJEB29504 ERR2984773 + ERR2935805 (ZymoBIOMICS D6300 even / D6310 log, Nicholls et al. 2019), whole runs"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "measurements/metaphlan-real"
+note = "the same staged bytes metaphlan-real profiles (RODA -> FASTQ.gz)"
+
+[[dataset]]
+id = "k2_standard_08gb_20250402"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "kraken2"
+
+[[dataset]]
+id = "zymo.tsv (ZymoBIOMICS D6300 / D6310 compositions)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+workers = 8
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 193.6
+billed_s = 417
+usd_hr = 0.4713
+billed_usd = 0.0546
+peak_gib = 7.93
+peak_kind = "rss"
+note = "compute $/result printed per sample only (even / log: 0.0055 / 0.0198), so no run-level compute_usd; wall_s is the tool wall of both"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+workers = 8
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 208.6
+billed_s = 416
+usd_hr = 0.5557
+billed_usd = 0.0642
+peak_gib = 7.97
+peak_kind = "rss"
+note = "compute $/result printed per sample only (even / log: 0.0072 / 0.0250), so no run-level compute_usd; wall_s is the tool wall of both"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+workers = 8
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 165.1
+billed_s = 333
+usd_hr = 0.639
+billed_usd = 0.0591
+peak_gib = 7.93
+peak_kind = "rss"
+note = "compute $/result printed per sample only (even / log: 0.0064 / 0.0229), so no run-level compute_usd; wall_s is the tool wall of both"
+
+# checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'even', 'log']
+[[check]]
+id = "read-count"
+claim = "pairs processed == ENA `read_count`"
+kind = "conservation"
+observed = "8,785,731 (even); 47,832,553 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "base-count"
+claim = "Mbp kraken2 prints == ENA `base_count`"
+kind = "conservation"
+observed = "2653.29 (even); 9662.18 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "books"
+claim = "classified + unclassified == processed"
+kind = "conservation"
+observed = "8,133,504 + 652,227 (even); 40,267,635 + 7,564,918 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "report-vs-log"
+claim = "report root / unclassified rows == the log's two counts"
+kind = "identity"
+observed = "yes (even); yes (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "clade-tree"
+claim = "every clade == its taxon reads + its children's clades"
+kind = "conservation"
+observed = "5,309 clades, 0 off (even); 7,194, 0 off (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "per-read-tally"
+claim = "per-read output, tallied by taxid == report's taxon reads"
+kind = "identity"
+observed = "3,438 taxids, 0 off (even); 4,700, 0 off (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "closed-list"
+claim = "unexpected genera above 1% of classified"
+kind = "reference"
+bound = "above 1% of classified"
+observed = "0 (largest Mycobacterium 0.18%) (even); 0 (0.025%) (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "top8-zymo"
+claim = "top 8 genera == the 8 Zymo bacteria"
+kind = "reference"
+observed = "yes (even)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "top3-log-order"
+claim = "top 3 genera, in order == 89.1% > 8.9% > 0.89%"
+kind = "reference"
+observed = "Listeria > Pseudomonas > Bacillus (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "per-read-bytes"
+claim = "per-read output (941 MB even, 3.98 GB log) and each report: same sha256 on all three chips"
+kind = "reported"
+observed = "identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "vs-metaphlan"
+claim = "Against MetaPhlAn on the same bytes: both find all 8 bacteria in the even run"
+kind = "reported"
+observed = "MetaPhlAn Bacillus 0.055%; kraken2 11.8%"
+outcome = "reported"
+
+[[cross_code]]
+with = "measurements/metaphlan-real"
+same_bytes = true
+metric = "the 8 Zymo bacteria found in the even run (observation; the two estimate different quantities)"
+check = "vs-metaphlan"

@@ -1,0 +1,199 @@
+# measurements/ase-phonopy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the complete calculation: both GPAW force sets (Si 64-atom and 16-atom supercells) plus the phonopy analysis of all four force sets"
+
+[[dataset]]
+id = "phonopy/phonopy v4.4.0 example/Si-QE/{phonopy_disp.yaml, supercell-001.out}, example/Si/{phonopy_disp.yaml, vasprun.xml}"
+tier = "versioned-release"
+pins = "inputs.sha256"
+note = "upstream's committed displaced supercells plus the QE and VASP forces on the same bytes; re-checked in-task. GPAW's PAW setups come from the image"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 1078
+billed_s = 1174
+usd_hr = 0.6381
+compute_usd = 0.191
+billed_usd = 0.208
+peak_gib = 10.8
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 840
+billed_s = 894
+usd_hr = 0.7497
+compute_usd = 0.175
+billed_usd = 0.186
+peak_gib = 15.5
+peak_kind = "cgroup-memory.peak"
+note = "x86 cgroup peak counts the page cache of the env installed at start; GPAW's own summed ru_maxrss is 11.8-12.1 GiB on all three"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 439
+billed_s = 484
+usd_hr = 0.8622
+compute_usd = 0.105
+billed_usd = 0.116
+peak_gib = 15.5
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: '## What held at scale, on all three chips' (observed = Graviton4 cell) ---
+[[check]]
+id = "space-group"
+claim = "space group of both committed cells (spglib)"
+kind = "identity"
+bound = "`Fd-3m (227)`"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "displacements"
+claim = "symmetry-reduced displacements, committed and regenerated"
+kind = "identity"
+bound = "exactly 1"
+observed = "1"
+outcome = "pass"
+
+[[check]]
+id = "mpi-ranks"
+claim = "GPAW MPI ranks, from `gpaw.mpi.world.size`"
+kind = "rank-count"
+bound = "== 16 launched"
+observed = "16"
+outcome = "pass"
+
+[[check]]
+id = "newton-third-law"
+claim = "GPAW net force / max force (Newton's third law)"
+kind = "conservation"
+bound = "< 1e-2"
+observed = "≤ 1.3e-6"
+outcome = "pass"
+
+[[check]]
+id = "acoustic-sum-rule"
+claim = "**acoustic sum rule**: Γ acoustic modes, *unsymmetrised* force constants"
+kind = "invariance"
+bound = "< 1e-2 THz"
+observed = "≤ 3.4e-7"
+outcome = "pass"
+
+[[check]]
+id = "x-star-spectra"
+claim = "six symmetry-equivalent X points give identical spectra"
+kind = "invariance"
+bound = "< 1e-8 THz"
+observed = "≤ 1.4e-14"
+outcome = "pass"
+
+[[check]]
+id = "dos-integral"
+claim = "tetrahedron DOS integrates to 3N = 6 modes"
+kind = "conservation"
+bound = "± 1e-2"
+observed = "5.9988–6.0014"
+outcome = "pass"
+
+[[check]]
+id = "f0-zero-point"
+claim = "`F(T=0)` equals ½Σhν over the same mesh"
+kind = "identity"
+bound = "1e-9 relative"
+observed = "equal to 10 figures"
+outcome = "pass"
+
+[[check]]
+id = "entropy-oh2"
+claim = "S = −dF/dT at 300 K, central-difference error ratio h=20→10 K"
+kind = "convergence-rate"
+bound = "4 (O(h²)), 3.5–4.5"
+observed = "3.998"
+outcome = "pass"
+
+[[check]]
+id = "no-imaginary-modes"
+claim = "no imaginary modes along Γ–X–U \\| K–Γ–L"
+kind = "band"
+bound = "> −0.05 THz"
+observed = "yes"
+outcome = "pass"
+
+[[check]]
+id = "cross-chip"
+claim = "**every converged number vs Graviton4** (`collect.py`)"
+kind = "reference"
+bound = "E < 1e-4 eV, F < 1e-4 eV/Å, ν < 1e-3 THz"
+observed = "≤ 3.7e-7 eV, 1.5e-7 eV/Å, 1.0e-4 THz"   # AMD cell (the larger); Graviton4 cell is '—'
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "Intel ≤ 9e-9 eV, 5e-9 eV/Å, 6e-6 THz; AMD ≤ 3.7e-7 eV (64-atom total energy −345.57468611 vs …648), 1.0e-4 THz"
+
+[[check]]
+id = "phonopy-on-reference-forces"
+claim = "Phonopy on the committed QE and VASP forces is identical on all three chips to every printed digit"
+kind = "reported"
+observed = "frequencies to 1e-6 THz and `F(0)` to 10 figures"
+outcome = "reported"
+across_chips = "identical"
+
+# --- cross-code: GPAW vs upstream's committed QE / VASP forces (reported, not asserted) ---
+[[check]]
+id = "gpaw-vs-qe"
+claim = "GPAW, 64 atoms: worst mode vs its reference (QE, 64 atoms, upstream)"
+kind = "reported"
+observed = "5.5% (L TA)"
+outcome = "reported"
+
+[[check]]
+id = "gpaw-vs-vasp"
+claim = "GPAW, 16 atoms: worst mode vs its reference (VASP, 16 atoms, upstream)"
+kind = "reported"
+observed = "1.35%"
+outcome = "reported"
+
+[[check]]
+id = "supercell-convergence"
+claim = "GPAW's two supercells agree at Γ/X/L"
+kind = "reported"
+observed = "0.45%"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:phonopy-v4.4.0-example-Si-QE"
+same_bytes = true
+metric = "phonon frequencies at Γ/X/L, worst mode relative to the reference, with QE's own shifted 4 4 4 1 1 1 k-mesh"
+tolerance_basis = "none asserted: the residue is the pseudopotential / PAW dataset, which no setting matches across codes; a pre-written bound (5.1%, the QE-VASP spread) failed at 5.5% and was dropped as measuring the reference, not GPAW"
+check = "gpaw-vs-qe"
+
+[[cross_code]]
+with = "published:phonopy-v4.4.0-example-Si-VASP"
+same_bytes = true
+metric = "phonon frequencies at Γ/X/L, worst mode relative to the reference, with vasprun.xml's Γ-centred 4×4×4 k-mesh"
+check = "gpaw-vs-vasp"
+
+[[trap]]
+id = "ase-phonopy-kmesh-mismatch"
+scope = "method"
+symptom = "the Γ optical mode lands at 16.50 THz, 9% off; GPAW puts ~2e-3 eV/Å of force on atoms whose VASP force is ~1e-5 -- and every phonopy identity still passes"
+cause = "a shifted Monkhorst-Pack mesh on the 16-atom FCC supercell keeps 2 of its symmetries"
+fix = "run each GPAW force set with the reference's own k-mesh (VASP's Γ-centred 4×4×4 gives 15.17 THz)"

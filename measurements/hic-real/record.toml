@@ -1,0 +1,170 @@
+# measurements/hic-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one complete 4DN Hi-C experiment set (4DNESLLA3R1V, two replicates) through both tasks, every check passed"
+
+[[dataset]]
+id = "4DN 4DNESLLA3R1V deduplicated pairs 4DNFILGIU5G7.pairs.gz + 4DNFI4EZMKAO.pairs.gz, chrom sizes 4DNFI823LSII (s3://4dn-open-data-public, pipeline v0.3.0, GRCh38)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "also pinned by the portal's own md5 (inputs.md5); both checked on the box"
+
+[[dataset]]
+id = "4DN published references 4DNFIHMMV629.pairs.gz (combined list) and 4DNFIFBPTHCU.mcool (s3://4dn-open-data-public)"
+tier = "roda"
+pins = "inputs.sha256"
+note = "the published-result cross-check targets"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/pairs/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+wall_s = 1588
+billed_s = 2242
+usd_hr = 0.6381
+compute_usd = 0.282
+billed_usd = 0.397
+peak_gib = 8.0
+peak_kind = "rss"
+note = "wall = pairtools 1,065 s + cooler 523 s; peak RSS is GNU sort's buffer under pairtools merge --memory 8G, a setting"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/pairs/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+billed_s = 2215
+usd_hr = 0.7497
+billed_usd = 0.461
+peak_gib = 8.0
+peak_kind = "rss"
+note = "pairtools 1,071 s + cooler 502 s; the README prints no total tool time for Intel, so wall_s and its compute $/result (0.328) are left out"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/pairs/host.txt"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+wall_s = 1168
+billed_s = 1759
+usd_hr = 0.8622
+compute_usd = 0.28
+billed_usd = 0.421
+peak_gib = 8.0
+peak_kind = "rss"
+note = "wall = pairtools 801 s + cooler 367 s"
+
+# --- checks: '## The identities, at scale, on all three chips' -------------------------
+[[check]]
+id = "staged-bytes"
+claim = "staged bytes: md5 == 4DN's published, sha256 == pinned"
+kind = "pin"
+observed = "all 5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "merge-filter-multiset"
+claim = "merge conserves, then the filter: our merged + filtered list == 4DN's combined list, as a multiset"
+kind = "reference"
+observed = "151,438,963 records, same sorted-body md5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sort-key-order"
+claim = "sort-key order (`chrom1 pos1 chrom2 pos2`): identical to 4DN's, line for line"
+kind = "reference"
+observed = "same md5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dedup-bookkeeping"
+claim = "dedup bookkeeping: `total == nodups + dups`, every run"
+kind = "conservation"
+observed = "3 of 3"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dedup-idempotent"
+claim = "dedup is idempotent: `dedup(dedup(rep1))` finds 0"
+kind = "identity"
+observed = "0 of 89,084,106"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "planted-duplicates"
+claim = "planted duplicates: rep2 merged with itself: dups == 82,325,899, kept list byte-identical to rep2"
+kind = "identity"
+observed = "both"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "load-conserves"
+claim = "load conserves: `.cool` total == task 1's record count, at every resolution"
+kind = "conservation"
+observed = "151,438,963 × 13"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "published-matrix"
+claim = "4DN's published matrix: bins and every pixel (`bin1_id`, `bin2_id`, `count`) == 4DNFIFBPTHCU, all 13 resolutions"
+kind = "reference"
+observed = "113.8M pixels at 1 kb … 49,038 at 10 Mb"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "upper-triangle"
+claim = "upper triangle: no pixel with `bin1 > bin2`"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "symmetry"
+claim = "symmetry: genome-wide 1 Mb matrix `M == M.T` exactly"
+kind = "identity"
+observed = "0.0 over 8,007,979 nonzeros"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ice-weights"
+claim = "ICE weights vs 4DN's: same masked bins; max rel diff < 10·√tol"
+kind = "reference"
+bound = "< 10·√tol (3.2e-2)"
+observed = "0 at 1 Mb, ≤ 1.5e-15 at 100 kb and 10 kb"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "identical at 1 Mb, within 9.4e-16 relative at 100 kb and 10 kb; two runs on the same Graviton4 differ at the same level (1.46e-15 against 1.22e-15 from 4DN's at 100 kb)"
+
+[[check]]
+id = "redup-observation"
+claim = "4DN's 1.1.0 lists re-deduplicated by 1.1.3"
+kind = "reported"
+observed = "rep1: 13, rep2: 0"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:4DN-4DNFIFBPTHCU"
+same_bytes = true
+metric = "bins and every pixel (bin1_id, bin2_id, count) at all 13 resolutions, exact"
+tolerance_basis = "integer results from the same input lists, so exact equality; ICE weights bounded by the stop rule (two converged solutions can differ by order √tol)"
+check = "published-matrix"

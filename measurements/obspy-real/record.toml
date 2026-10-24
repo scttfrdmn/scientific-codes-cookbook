@@ -1,0 +1,237 @@
+# measurements/obspy-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified network-day: all 720 CI HH? channels for 2019-07-06 (Ridgecrest Mw 7.1), every check run"
+
+[[dataset]]
+id = "s3://scedc-pds/continuous_waveforms/2019/2019_187/CI?????HH????2019187.ms (720 objects)"
+tier = "roda"
+pins = "day187.sha256"
+note = "SCEDC on the AWS Open Data Registry, Payer: BucketOwner; sha256 taken on AWS from the server-side copy on 2026-10-18"
+
+[[dataset]]
+id = "s3://scedc-pds/FDSNstationXML/CI/CI_<sta>.xml (239 stations) + event_phases/2019/2019_187/38457511.phase"
+tier = "roda"
+pins = "day187.sha256"
+note = "StationXML files are living documents upstream: a re-stage failing the check means SCEDC re-issued metadata"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/cpu.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 488
+billed_s = 647
+usd_hr = 0.7181
+compute_usd = 0.0973
+billed_usd = 0.1291
+note = "peak RSS printed as compound 1.88 / 34.0 GiB (worker / box, box includes the 11 GB tmpfs input); peak_gib omitted"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/cpu.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 712
+billed_s = 826
+usd_hr = 0.8467
+compute_usd = 0.1674
+billed_usd = 0.1943
+note = "peak RSS printed as compound 1.89 / 34.0 GiB (worker / box); peak_gib omitted"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/cpu.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+wall_s = 416
+billed_s = 521
+usd_hr = 0.9738
+compute_usd = 0.1125
+billed_usd = 0.1409
+note = "peak RSS printed as compound 1.89 / 33.7 GiB (worker / box); peak_gib omitted"
+
+[[check]]
+id = "pins"
+claim = "962 staged files match their sha256"
+kind = "pin"
+bound = "provenance"
+observed = "962"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nsamp-conservation"
+claim = "decoded samples == Σ nsamp from the record headers, parsed in real.py without libmseed"
+kind = "conservation"
+bound = "conservation"
+observed = "6,159,279,810 both ways"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "steim2-roundtrip"
+claim = "STEIM2 re-encode → decode, every one of 33,774 traces"
+kind = "identity"
+bound = "lossless encoding"
+observed = "bit-identical 720/720 files"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "time-arithmetic"
+claim = "endtime − starttime == (npts−1)/rate, every trace"
+kind = "identity"
+bound = "time arithmetic"
+observed = "0 s"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "split-merge"
+claim = "split each channel's longest trace in three, merge"
+kind = "conservation"
+bound = "conservation"
+observed = "bit-identical 720/720"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "stationxml-epoch"
+claim = "exactly one StationXML epoch covers the whole day"
+kind = "identity"
+bound = "metadata selection"
+observed = "720/720"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "evalresp-vs-numpy"
+claim = "stage 1: evalresp (C) == poles and zeros evaluated in numpy, 200 frequencies"
+kind = "cross-code"
+bound = "1e-10 relative"
+observed = "max 1.7e-15"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "max 1.7e-15 (Graviton4), 1.3e-15 (Intel, AMD)"
+
+[[check]]
+id = "ppsd-histogram"
+claim = "PPSD histogram total == n_PSD × n_period_bins, every channel"
+kind = "conservation"
+bound = "conservation"
+observed = "33,825 PSDs"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "superposition"
+claim = "deconvolution superposition: rr(3.7x − 1.9y) == 3.7 rr(x) − 1.9 rr(y), y = x reversed, 240 verticals"
+kind = "invariance"
+bound = "1e-10 relative"
+observed = "max 3.42e-13"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "max 3.42e-13 on all three chips; deconvolved traces differ Graviton4 vs x86 in the last bits"
+
+[[check]]
+id = "parseval"
+claim = "Parseval on each 8.6M-sample velocity trace"
+kind = "conservation"
+bound = "1e-12"
+observed = "max 7.9e-16"
+outcome = "pass"
+across_chips = "last-bits"
+across_chips_evidence = "max 7.9e-16 (Graviton4), 8.3e-16 (Intel, AMD)"
+
+[[check]]
+id = "nonvacuous-energy"
+claim = "every velocity trace has energy"
+kind = "identity"
+bound = "the two above are not vacuous"
+observed = "240/240"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "traces-gaps"
+claim = "traces / gaps"
+kind = "reported"
+observed = "33,774 traces; 33,054 gaps, in 24 of the 720 channels"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "psds-per-channel"
+claim = "PSDs per channel"
+kind = "reported"
+observed = "45–47 one-hour segments (47 for a gap-free day)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "psd-in-noise-model"
+claim = "PSD values inside Peterson's NLNM–NHNM"
+kind = "reported"
+observed = "median 0.790 per channel (on the mainshock day)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "pgv"
+claim = "peak ground velocity, HHZ"
+kind = "reported"
+observed = "CI.WBM..HHZ, 0.0359 m/s, after the pre-filter"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "PGV agrees to ≤9.5e-16 relative, Graviton4 vs x86"
+
+[[check]]
+id = "picks"
+claim = "mainshock picks, SCSN event 38457511"
+kind = "reported"
+observed = "95 analyst P/S picks"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "epicentral-distance"
+claim = "epicentral distance, SCSN vs obspy's WGS84 geodesic"
+kind = "reported"
+observed = "within 0.49% (max 0.71 km at BAK, 144 km)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "taup-residual"
+claim = "TauP residual, pick − model (median, MAD, n)"
+kind = "reported"
+observed = "P: −0.525 s, 0.253 s, 79 (iasp91 = ak135). S: +0.980 s iasp91, +1.285 s ak135, 16"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "TauP times differ on 52 of 190 picks by ≤5.2e-13 s, Graviton4 vs x86; Intel == AMD byte-identical"
+
+[[check]]
+id = "velocity-energy-cross-chip"
+claim = "all 240 deconvolved velocity traces differ in the last bits, Intel against Graviton4"
+kind = "reported"
+observed = "per-trace energy agrees to ≤1.8e-15 relative"
+outcome = "reported"
+across_chips = "last-bits"
+across_chips_evidence = "energy ≤1.8e-15 relative, PGV ≤9.5e-16; AMD and Intel byte-identical on every column"
+
+[[trap]]
+id = "obspy-stage-gain-frequency"
+scope = "data"
+symptom = "evaluating A0 · G · ∏(s−z)/∏(s−p) directly is off by up to 4.6% against evalresp"
+blames = "evalresp or the numpy evaluation"
+cause = "336 of 720 channels define the stage gain at a different frequency from A0's normalisation frequency; evalresp scales the stage by G / |T(f_gain)|"
+fix = "honour the gain frequency; the two implementations then agree to 1e-15"

@@ -1,0 +1,159 @@
+# measurements/r-jsonlite-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the complete OpenAlex institutions entity (143,455 records, 2.28 GB of JSON Lines) parsed, round-tripped and checked"
+
+[[dataset]]
+id = "OpenAlex snapshot released 2026-10-14, s3://openalex institutions entity (83 gzipped JSON Lines parts)"
+tier = "roda"
+pins = "institutions.sha256"
+note = "sha256 per part computed on AWS by hash.task.json and checked against OpenAlex's own manifest (record_count, content_length); OpenAlex replaces the snapshot quarterly, so a later release fails the pin"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/score-arm64-r8g2xl.tsv"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 1944
+billed_s = 2088
+usd_hr = 0.4713
+compute_usd = 0.2545
+billed_usd = 0.2734
+peak_gib = 19.0
+peak_kind = "vmhwm"
+note = "peak is the parent's VmHWM; cgroup memory.peak 31.94 GiB adds the workers and page cache"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/score-x86_64-r8i2xl.tsv"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 2
+wall_s = 2204
+billed_s = 2326
+usd_hr = 0.5557
+compute_usd = 0.3402
+billed_usd = 0.3590
+peak_gib = 19.1
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/score-amd-r8a2xl.tsv"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 1350
+billed_s = 1484
+usd_hr = 0.6390
+compute_usd = 0.2396
+billed_usd = 0.2634
+peak_gib = 19.2
+peak_kind = "vmhwm"
+
+# --- '## What held at scale, on all three chips' (asserted in real.R) -------------------
+[[check]]
+id = "manifest-record-count"
+claim = "lines per part == OpenAlex manifest `record_count`, 83 of 83"
+kind = "reference"
+bound = "exact"
+observed = "143,455"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "reader-row-counts"
+claim = "`parse_json` records == `stream_in` rows == Arrow rows == source"
+kind = "conservation"
+bound = "exact"
+observed = "143,455"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "id-order"
+claim = "ids in source order, from all three readers"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lossless-roundtrip"
+claim = "round trip with `digits = I(17), always_decimal = TRUE`: not `identical()`"
+kind = "identity"
+bound = "0"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "default-lossy-control"
+claim = "control: default round trip changes records"
+kind = "identity"
+observed = "143,455"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "arrow-vs-jsonlite"
+claim = "Arrow == jsonlite, bit for bit: id, name, works, cites, lat, lon, alternative names, per-year works"
+kind = "cross-code"
+bound = "0 differ"
+observed = "0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+# --- recorded, not asserted ----------------------------------------------------------
+[[check]]
+id = "conservation-sums"
+claim = "`works_count` and `cited_by_count` sums"
+kind = "reported"
+observed = "302,220,203; 18,155,478,720"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "lossy-counts"
+claim = "records not `identical()` after the round trip: digits = NA; digits = NA, always_decimal = TRUE; digits = I(17)"
+kind = "reported"
+observed = "142,550; 119,904; 136,342"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "byte-identical-reemit"
+claim = "re-serializing with `digits = NA` and `always_decimal` reproduces OpenAlex's line byte for byte"
+kind = "reported"
+observed = "5,871 records"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "dataframe-path"
+claim = "after `stream_out` (`I(17)`, `always_decimal`) and `stream_in`, columns not `identical()`"
+kind = "reported"
+observed = "2 of 28 columns; `associated_institutions` differs in 859 rows"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "lossless-sha256"
+claim = "the whole lossless serialization has one sha256 on all three chips"
+kind = "reported"
+observed = "66727d60…3906265"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "r-jsonlite-digits-na-lossy"
+scope = "tool"
+symptom = "`digits = NA` loses 119,904 of 143,455 records even with `always_decimal = TRUE`; `digits = I(17)` alone loses 136,342"
+cause = "15 digits is not enough for doubles needing 16–17 significant digits, and whole-valued doubles (`0.0`) are written `0` and read back as integer"
+fix = "serialize with `digits = I(17), always_decimal = TRUE`, the only setting that round-trips every record; keep the unsimplified list path, since simplifying to data frames is not lossless"

@@ -1,0 +1,187 @@
+# measurements/foldseek-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole AFDB v6 human proteome (23,586 models) searched against itself, with the alignment table written"
+
+[[dataset]]
+id = "AlphaFold DB v6 UP000005640_9606_HUMAN_v6.tar, ftp.ebi.ac.uk/pub/databases/alphafold/v6/ (UniProt 2025_03)"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "EBI publishes no checksum: trust on first fetch; fetch.py checks size (5,177,506,304 bytes) and model count; also listed in diag.sha256"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 2930
+billed_s = 3504
+usd_hr = 0.6381
+compute_usd = 0.519
+billed_usd = 0.621
+peak_gib = 4.01
+peak_kind = "cgroup-memory.peak"
+note = "second of two runs per chip; billed includes the 2-thread subset re-search check (448 s)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 3144
+billed_s = 3579
+usd_hr = 0.7497
+compute_usd = 0.655
+billed_usd = 0.745
+peak_gib = 3.98
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1715
+billed_s = 2091
+usd_hr = 0.8622
+compute_usd = 0.411
+billed_usd = 0.501
+peak_gib = 3.98
+peak_kind = "cgroup-memory.peak"
+
+[[check]]
+id = "entry-count"
+claim = "23,586 database entries, 23,586 distinct names"
+kind = "reference"
+bound = "EBI's published model count"
+observed = "23,586 / 23,586"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "3di-length"
+claim = "every entry's 3Di string is as long as its sequence"
+kind = "identity"
+bound = "one 3Di state per residue"
+observed = "0 of 23,586 differ; 15,088,388 residues"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-hit"
+claim = "every protein finds itself"
+kind = "identity"
+bound = "the queries are the database"
+observed = "23,585 of 23,586"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-identity"
+claim = "every self-hit is the identity alignment"
+kind = "identity"
+bound = "full length on both sides, identity 1.000, no mismatch or gap"
+observed = "23,585 of 23,585"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-tm-lddt"
+claim = "every self-hit has TM-score 1 and LDDT 1"
+kind = "identity"
+bound = "a structure superposed on itself"
+observed = "alntmscore, qtmscore, ttmscore and LDDT all 1.000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tm-not-outscored"
+claim = "nothing outscores itself on TM-score"
+kind = "identity"
+bound = "TM-score normalised by query length cannot exceed 1"
+observed = "0 queries outscored; 0 ties at 1.000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-hit-set"
+claim = "the proteins with no hit at all are exactly {Q156A1}"
+kind = "identity"
+bound = "named in real.sh, so a new one fails the run, and so does its disappearing"
+observed = "{Q156A1}"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "subset-thread-invariance"
+claim = "a 1-in-50 subset (472 proteins, chosen by name) re-searched at 2 threads gives the full 16-thread run's rows"
+kind = "invariance"
+bound = "a query's hits depend on the query and the database, not the batch or thread count"
+observed = "105,937 rows, byte-identical"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "rerun-determinism"
+claim = "two runs per chip on separate boxes give the same table"
+kind = "invariance"
+bound = "determinism"
+observed = "byte-identical on each chip, though createdb numbered the entries differently each time"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "bits-not-outscored"
+claim = "no protein is outscored by another on bits either"
+kind = "reported"
+observed = "0 on every chip"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "intel-vs-amd"
+claim = "Intel against AMD: byte-identical"
+kind = "reported"
+observed = "all 5,499,733 rows (sha256 d10fd658…)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "graviton-vs-x86-rows"
+claim = "Graviton4 against x86: rows byte-identical"
+kind = "reported"
+observed = "5,452,599 rows (99.14%)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "5,499,743 rows against 5,499,733; 52 pairs differ in the hit set (31 Graviton4-only, 21 x86-only); TM-scores differ in about 20,000 pairs"
+
+[[trap]]
+id = "foldseek-homopolymer-no-self-hit"
+scope = "tool"
+symptom = "Q156A1 (ataxin-8, M followed by 79 Q) has no hit at all, not even itself"
+cause = "its self-alignment scores 8 bits, E = 85.6, far outside -e 10, and the prefilter passes nothing for it, with or without --comp-bias-corr 0"
+fix = "search low-complexity proteins with --exhaustive-search 1 and a looser -e"
+cost = "the first full run on each chip ($1.88) failed on Q156A1"
+
+[[trap]]
+id = "foldseek-createdb-order-varies"
+scope = "tool"
+symptom = "sha_db_lookup_by_key differs on all six runs"
+cause = "createdb numbers the entries in a different order on each run, so a 1-in-50 subset by key picks different proteins on different boxes"
+fix = "choose the subset by name"
+
+[[trap]]
+id = "foldseek-single-stream-fetch-ttl"
+scope = "data"
+symptom = "the first fetch hit its TTL and spawn recorded no cost for it"
+cause = "one HTTPS stream from EBI at about 1 MB/s for a 5.18 GB archive"
+fix = "fetch.py, run on AWS, with size and model-count checks"
+cost = "about $0.36"

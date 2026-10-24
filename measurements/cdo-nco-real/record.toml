@@ -1,0 +1,239 @@
+# measurements/cdo-nco-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "every product of one year (2023) of hourly ERA5 2 m temperature: global, daily, monthly, annual and hour-of-day means, anomalies and a 1-degree conservative regrid"
+
+[[dataset]]
+id = "s3://nsf-ncar-era5 e5.oper.an.sfc.128_167_2t.ll025sc.2023MM*.nc (12 monthly files, 2023)"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "measurements/climate-real"
+note = "staged and pinned by climate-real (era5-2023.sha256); same bytes, re-checked in the task"
+
+[[dataset]]
+id = "xarray global_hourly_2023.npy and annual_mean_2023.npy (climate-real's arm64 run)"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "measurements/climate-real"
+note = "the x86 run wrote byte-identical files (same ETag, checked by stage-inputs.sh)"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 290
+billed_s = 827
+usd_hr = 0.4713
+compute_usd = 0.038
+billed_usd = 0.1083
+note = "billed includes check.py and a third wave timing the two slow defaults on January; without it 550 s, $0.072"
+peak_gib = 2.07
+peak_kind = "rss"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 352
+billed_s = 828
+usd_hr = 0.5557
+compute_usd = 0.0543
+billed_usd = 0.1278
+note = "without the slow-defaults wave 543 s, $0.084"
+peak_gib = 2.1
+peak_kind = "rss"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+wall_s = 232
+billed_s = 582
+usd_hr = 0.639
+compute_usd = 0.0412
+billed_usd = 0.1033
+note = "without the slow-defaults wave 383 s, $0.068"
+peak_gib = 2.1
+peak_kind = "rss"
+
+# --- checks: '## What held at scale, on all three chips' -------------------------------
+[[check]]
+id = "inputs-pinned"
+claim = "12 files match their sha256; 8,760 hours, 365 days, 12 months, 24 hours of day"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "areas-sum"
+claim = "CDO's cell areas sum to 4πR²"
+kind = "identity"
+bound = "telescoping sum"
+observed = "0.0e+00"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cdo-eq-nco"
+claim = "CDO == NCO, annual / 12 monthly / 365 daily fields, every cell: within ½ float32 ulp"
+kind = "cross-code"
+bound = "½ float32 ulp"
+observed = "float32-identical in 392,454,720 of 392,454,720 cells"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "resample-conserves"
+claim = "daily, day-weighted monthly and hour-of-day means → annual field, every cell"
+kind = "conservation"
+bound = "2·8760·u"
+observed = "≤ 2.4e-15"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fldmean-commutes"
+claim = "`fldmean` of the daily field == daily mean of the hourly `fldmean`"
+kind = "invariance"
+bound = "2·1,038,240·u = 2.3e-10"
+observed = "5.6e-13"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "anomalies-zero"
+claim = "monthly anomalies average to zero, every cell"
+kind = "identity"
+bound = "definition of an anomaly"
+observed = "4.2e-14 K"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "anomaly-control"
+claim = "control: climatology one month out of phase"
+kind = "identity"
+bound = "the zero check has teeth"
+observed = "misses by 24.9 K"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "remapcon-conserves"
+claim = "`remapcon` to 1° keeps the global mean, all 8,760 hours"
+kind = "conservation"
+bound = "2(E+E1) = 1.1e-4"
+observed = "1.11e-6"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "remapped global means differ arm64 vs x86 by up to 1.2e-15 relative (cell areas differ in their last bits); same to four decimals on all three chips"
+
+[[check]]
+id = "cdo-vs-xarray-hourly"
+claim = "CDO vs xarray, hourly global mean, all 8,760 hours"
+kind = "cross-code"
+bound = "≤ L1(weights) × ½ range = 8.1e-5 K"
+observed = "2.1e-5 K"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "hourly global means differ arm64 vs x86 by up to 2.2e-15 relative (about ten ulp); Intel == AMD bit for bit"
+
+[[check]]
+id = "cdo-vs-xarray-annual"
+claim = "CDO vs xarray, annual-mean field, every cell"
+kind = "cross-code"
+bound = "same mean; xarray saved float32"
+observed = "float32-identical, 1,038,240 / 1,038,240"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ncwa-vs-numpy"
+claim = "NCO `ncwa -w cell_area` == numpy with the same weights"
+kind = "cross-code"
+bound = "weighted mean"
+observed = "float32-identical 13 / 13"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "c3s-2023-mean"
+claim = "2023 global mean, C3S Global Climate Highlights 2023: 14.98 °C"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "14.9829 (NCO: 14.9829)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "every global mean shown to four decimals is the same on all three chips (results/compare.txt); area weights differ by up to 2.2e-15 relative"
+
+[[check]]
+id = "c3s-july-2023"
+claim = "July 2023, C3S July bulletin: 16.95 °C"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "16.953"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same to four decimals on all three chips (results/compare.txt)"
+
+[[check]]
+id = "c3s-record-day"
+claim = "record daily global mean, C3S/WMO: 17.08 °C on 6 July"
+kind = "reference"
+bound = "±0.01 °C"
+observed = "17.0797, day 187"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same to four decimals on all three chips (results/compare.txt)"
+
+[[check]]
+id = "annual-field-sha"
+claim = "CDO's float64 annual-mean field has the same sha256 as xarray's"
+kind = "reported"
+observed = "1c1073c575740b93"
+outcome = "reported"
+
+[[cross_code]]
+with = "measurements/climate-real"
+same_bytes = true
+metric = "hourly global mean, max |CDO - xarray| over 8,760 hours"
+tolerance_basis = "the two area-weight schemes differ by L1 = 1.2e-6; L1(weights) × ½ range bounds the mean difference at 8.1e-5 K"
+check = "cdo-vs-xarray-hourly"
+
+[[cross_code]]
+with = "measurements/climate-real"
+same_bytes = true
+metric = "annual-mean field, every cell, float32"
+tolerance_basis = "same unweighted time mean; xarray saved float32, so float32 identity is the precision both share"
+check = "cdo-vs-xarray-annual"
+
+[[cross_code]]
+with = "published:C3S-Global-Climate-Highlights-2023"
+same_bytes = false
+metric = "2023 global mean 2 m temperature"
+tolerance_basis = "published values are quoted to two decimals from ERA5T, so ±0.01 °C"
+check = "c3s-2023-mean"
+
+[[trap]]
+id = "cdo-nco-fldmean-recomputes-areas"
+scope = "tool"
+symptom = "cdo fldmean with no cell areas given: 148.0 s on January (Graviton4), 0.19 s per hour"
+cause = "CDO 2.6.1 computes the grid's cell areas again for every timestep when fldmean has to derive them"
+fix = "-setgridarea,area.nc from one cdo gridarea (0.2 s); same mean within 5.4e-14"
+cost = "about 29 minutes per job over the year"
+
+[[trap]]
+id = "cdo-nco-ncra-default-chunk-cache"
+scope = "data"
+symptom = "ncra with the default chunk cache: 277.4 s on January (Graviton4)"
+cause = "the files store 27 × 139 × 277 chunks; NCO reads one hour at a time, so each hour decompresses its 27-hour slab again"
+fix = "--cnk_csh=1000000000 (1 GB cache); result bit-identical, ~12 s per file"

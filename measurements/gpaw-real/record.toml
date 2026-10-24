@@ -1,0 +1,251 @@
+# measurements/gpaw-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one converged SCF (Pt(111) 3x3x4 slab, PW 400 eV, 4x4x1 k, PBE, 36 atoms)"
+
+[[dataset]]
+id = "Pt(111) 3x3x4 slab, 36 atoms, built by ase in knee.sh"
+tier = "built"
+pins = "pins.sha256"            # knee.sh (the builder) and host.sh
+
+# --- the four generations, 16 ranks (results/c{6,7,8,9}g-smoke-check.txt) ----------------
+[[run]]
+instance = "c6g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 779.3
+results = "results/c6g-smoke-check.txt"
+note = "SCF wall only"
+
+[[run]]
+instance = "c7g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 479.8
+results = "results/c7g-smoke-check.txt"
+note = "SCF wall only"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 442.5
+results = "results/c8g-smoke-check.txt"
+note = "SCF wall only; also the right-sized 16-rank rung"
+
+[[run]]
+instance = "c9g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 334.6
+results = "results/c9g-smoke-check.txt"
+note = "SCF wall only"
+
+# --- box sized to the ranks, Graviton4 -------------------------------------------------
+[[run]]
+instance = "c8g.xlarge"
+purpose = "core-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 4
+threads_per_core = 1
+wall_s = 1446.2
+results = "results/rightsized-r4.txt"
+
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 789.4
+results = "results/rightsized-r8.txt"
+
+
+# --- same 16-vCPU box, three rank counts in one task (knee.sh) -------------------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 4
+threads_per_core = 1
+wall_s = 1227.0
+results = "results/knee-samebox.txt"
+note = "one task ran all three rungs"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 8
+threads_per_core = 1
+wall_s = 726.2
+results = "results/knee-samebox.txt"
+
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+date = "2026-09-30"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 452.2
+usd_hr = 0.6381
+compute_usd = 0.0802
+results = "results/knee-samebox.txt"
+note = "the 16-rank control: 2.2% from the c8g-smoke-check run"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 4
+host = "results/host-x86_64.txt"
+wall_s = 459.5
+results = "results/knee-samebox-x86_64.txt"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+host = "results/host-x86_64.txt"
+wall_s = 282.8
+results = "results/knee-samebox-x86_64.txt"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+host = "results/host-x86_64.txt"
+wall_s = 285.9
+usd_hr = 0.7497
+compute_usd = 0.0595
+results = "results/knee-samebox-x86_64.txt"
+note = "billed window covers all three rungs: 1,087 s, $0.226, so no per-SCF billed figure"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 4
+host = "results/host-amd.txt"
+wall_s = 364.8
+results = "results/knee-samebox-amd.txt"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 8
+host = "results/host-amd.txt"
+wall_s = 226.5
+results = "results/knee-samebox-amd.txt"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 16
+host = "results/host-amd.txt"
+wall_s = 150.8
+usd_hr = 0.8622
+compute_usd = 0.0361
+results = "results/knee-samebox-amd.txt"
+note = "billed window covers all three rungs: 788 s, $0.189, so no per-SCF billed figure"
+
+# --- checks: the in-task asserts in results/ and the invariance the README states --------
+[[check]]
+id = "decomposition-invariance"
+claim = "energy_spread_eV want < 0.0001 (decomposition invariance)"
+kind = "invariance"
+bound = "< 0.0001"
+observed = "0.000000"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "All six x86 runs converge in 27 iterations to −219.541414 eV. That is the Graviton number to every printed decimal"
+
+[[check]]
+id = "ranks"
+claim = "ranks_used want 16  (gpaw.mpi.world.size, not a serial fallback)"
+kind = "rank-count"
+bound = "== ranks launched"
+observed = "16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "atoms"
+claim = "atoms want 36"
+kind = "identity"
+bound = "36"
+observed = "36"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "scf-converged"
+claim = "scf_iterations (present only on a converged exit)"
+kind = "sentinel"
+observed = "27"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "energy"
+claim = "Every run below converges in 27 SCF iterations to −219.541414 eV with a Fermi level of 2.050224 eV"
+kind = "reported"
+observed = "-219.541414"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "−219.541414 eV on Graviton4, Intel and AMD, rank-sweep spread 0.000000 eV"
+
+[[check]]
+id = "control-16-ranks"
+claim = "The 16-rank row is the control ... they land 2.2% apart"
+kind = "reported"
+observed = "452.2 s vs 442.5 s"
+outcome = "reported"
+
+[[trap]]
+id = "gpaw-resized-box-scaling"
+scope = "method"
+symptom = "4 → 16 speedup 3.27× (81.7%) on right-sized boxes against 2.71× (67.8%) on the same box"
+blames = "parallel scaling"
+cause = "a scaling study that resizes the instance at each rung is not measuring scaling: four ranks on a 16-vCPU box get the bandwidth of twelve idle cores (+17.9%)"
+fix = "Hold the box fixed, or report both"
+
+[[trap]]
+id = "gpaw-intel-smt-ranks"
+scope = "platform"
+symptom = "On Intel, ranks 9–16 buy nothing: 282.8 s at 8 ranks, 285.9 s at 16"
+cause = "the 16-vCPU Intel box is 8 cores x 2 hyperthreads, and this bandwidth-bound SCF gets nothing from the second thread"
+fix = "Size by cores, not vCPUs"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "spawn 0.139.1's wrapper leaves under 1 KB of EC2's 16 KiB user data; knee.task.json stages knee.sh (sha256 in pins.sha256)"

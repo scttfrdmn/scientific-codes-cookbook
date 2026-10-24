@@ -1,0 +1,220 @@
+# measurements/modflow-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "both published Mobile Bay simulations (postcal and precal), solved and checked"
+
+[[dataset]]
+id = "USGS data release doi:10.5066/P1XKGCSZ, ScienceBase item 674f7ffdd34e5a48687db29b: model.zip (48,586,751 B) and output.zip (323,006,652 B)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "fetched on AWS by 00-fetch.task.json, kept only if size, ScienceBase MD5 and every entry's CRC-32 match. Two edits at run time: Windows path separators to '/', SAVE_FLOWS in the name file"
+
+# Two single-threaded mf6 processes run at once on each box; wall_s is postcal, which the README
+# says sets the compute cost.
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 4090
+billed_s = 4247
+usd_hr = 0.1795
+compute_usd = 0.204
+billed_usd = 0.212
+peak_gib = 0.5391
+peak_kind = "rss"
+note = "precal ran concurrently, 2598 s. Peak is each mf6's ru_maxrss (552 MiB); box cgroup memory.peak 3.4 GiB"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 3467
+billed_s = 3586
+usd_hr = 0.2117
+compute_usd = 0.204
+billed_usd = 0.211
+peak_gib = 0.541
+peak_kind = "rss"
+note = "geoscience env x86 twin. precal 2131 s concurrently. mf6 ru_maxrss 554 MiB; box 4.5 GiB including the env install"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 2831
+billed_s = 2921
+usd_hr = 0.2434
+compute_usd = 0.191
+billed_usd = 0.197
+peak_gib = 0.541
+peak_kind = "rss"
+note = "geoscience env x86 twin. precal 1746 s concurrently. mf6 ru_maxrss 554 MiB; box 4.5 GiB including the env install"
+
+# --- checks: '## What held at scale, on all three chips' ---------------------------
+[[check]]
+id = "archive-provenance"
+claim = "both archive zips match ScienceBase's MD5 and their pinned sha256"
+kind = "pin"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "normal-termination"
+claim = "mf6 is 6.8.1, and stdout says Normal termination of simulation"
+kind = "sentinel"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "output-shape"
+claim = "one head and one budget record per period, a finite head on every active cell"
+kind = "identity"
+observed = "97 / 97, 0 bad"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "grid-connectivity"
+claim = "the grid file's connectivity rows are exactly the 42,822 active cells"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "flowja-antisymmetric"
+claim = "FLOW-JA-FACE is exactly antisymmetric, q(n→m) = −q(m→n) on all 213,000 entries"
+kind = "conservation"
+bound = "exact"
+observed = "max 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "budget-net-binary-listing"
+claim = "every budget term's net flow, and the model's, binary == listing"
+kind = "identity"
+bound = "print precision (5e-5 plus 1e-11 relative)"
+observed = "≤ 0.96 of print precision"
+outcome = "pass"
+
+[[check]]
+id = "budget-gross-binary-listing"
+claim = "every term's gross in and out, binary == listing, CHD excepted (below)"
+kind = "identity"
+bound = "print precision (5e-5 plus 1e-11 relative)"
+observed = "≤ 0.99"
+outcome = "pass"
+
+[[check]]
+id = "gwf-closure"
+claim = "GWF budget closes within 1%, every converged period"
+kind = "conservation"
+bound = "< 1%"
+observed = "0.134% / 0.535%"
+outcome = "pass"
+
+[[check]]
+id = "sfr-uzf-closure"
+claim = "SFR and UZF budgets close within 1%, every converged period"
+kind = "conservation"
+bound = "< 1%"
+observed = "0 / 5.5e-6 %"
+outcome = "pass"
+
+# --- against the published heads ---------------------------------------------------
+[[check]]
+id = "archive-heads-p99"
+claim = "in every period that converged in both runs, 99% of active cells match the archive to within the model's own OUTER_DVCLOSE, 0.1 m"
+kind = "reference"
+bound = "p99 |Δh| ≤ 0.1 m"
+observed = "worst p99 3.2e-4 m"
+outcome = "pass"
+
+[[check]]
+id = "archive-heads-max"
+claim = "postcal, periods converged in both: worst median / p99 / max |Δh|"
+kind = "reported"
+observed = "5.4e-12 / 2.7e-5 / 0.26 m"
+outcome = "reported"
+
+[[check]]
+id = "archive-head-obs"
+claim = "36 head observations, max |Δ|"
+kind = "reported"
+observed = "1.6e-4 m"
+outcome = "reported"
+
+[[check]]
+id = "archive-streamflow-obs"
+claim = "10 streamflow observations, max relative Δ (postcal; precal ≤2.4e-5)"
+kind = "reported"
+observed = "4.4e-4"
+outcome = "reported"
+
+# --- across chips -----------------------------------------------------------------------
+[[check]]
+id = "heads-cross-chip"
+claim = "Intel or AMD against Graviton4: no period is bit-identical, starting with period 1."
+kind = "reported"
+observed = "median cell ≤1.1e-10 m; worst p99 3.1e-4 m (postcal), 4.5e-6 m (precal); max 0.49 m"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "median cell differs by ≤1.1e-10 m; at most 4 of 42,822 cells by more than 0.1 m, largest 0.49 m; Intel vs AMD bit-identical in all 97 periods"
+
+[[check]]
+id = "outer-maximum-periods"
+claim = "postcal periods that hit OUTER_MAXIMUM (archive: 1, 32, 35, 37, 69, 83)"
+kind = "reported"
+observed = "1, 17, 32, 83"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 1, 17, 32, 83; Intel and AMD 1, 32, 83"
+
+[[check]]
+id = "outer-iterations"
+claim = "Postcal took 26,992 outer iterations on Graviton4 and 26,771 on both x86 chips"
+kind = "reported"
+observed = "26,992"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "postcal 26,992 (Graviton4) vs 26,771 (Intel, AMD); precal 17,748 vs 17,007"
+
+[[cross_code]]
+with = "published:doi:10.5066/P1XKGCSZ"
+same_bytes = true
+metric = "per-period |Δh| on active cells against the archive's mf6 6.3.0 (Intel Fortran, Windows) heads"
+tolerance_basis = "the model's own OUTER_DVCLOSE, 0.1 m: mf6 accepts a step as converged once the largest head change is under it; a different mf6 version on a different OS is held to the solver's closure, not to bits"
+check = "archive-heads-p99"
+
+[[trap]]
+id = "modflow-windows-path-separators"
+scope = "data"
+symptom = "on Linux the package files' data (external_data\\mobile_bay.npf_k.txt, .\\mobile_bay.dis) are not found"
+cause = "the archive was written on Windows; mf6 6.8.1 only looks for \\ when it runs on Windows (Sim.f90)"
+fix = "rewrite the 416 backslashes to /, checking each is on an OPEN/CLOSE or package-file line"
+cost = "found by the five 3-period probes on Graviton4"
+
+[[trap]]
+id = "modflow-no-save-flows"
+scope = "data"
+symptom = "as archived, STO and WEL save nothing to the budget file, and a budget with no storage term cannot close"
+cause = "SAVE_FLOWS absent from the name file"
+fix = "add SAVE_FLOWS to the name file; it changes what mf6 writes, not what it solves (the archive comparison is the evidence)"
+
+[[trap]]
+id = "modflow-chd-listing-gross"
+scope = "tool"
+symptom = "the listing's CHD in and CHD out each exceed the per-cell values in the budget file by the same amount (431–2,409 m³/d)"
+cause = "CHD's listing gross is not the budget file's; the net agrees to print precision"
+fix = "leave CHD out of the gross binary == listing check, keep it in the net check"

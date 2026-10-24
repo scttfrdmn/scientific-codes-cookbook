@@ -1,0 +1,209 @@
+# measurements/raxml-ng-real/record.toml
+schema = 1
+result_unit = "one gene-family tree: the adaptive ML search (13 starts) plus 20 bootstrap replicates and supports, PF01255.25 seed, 919 sequences x 533 columns"
+
+[[dataset]]
+id = "Pfam 38.2 seed alignment PF01255.25 (Prenyltransf), extracted from EBI's Pfam-A.seed.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "measurements/iqtree-real"
+note = "iqtree-real streamed Pfam-A.seed.gz, checked EBI's md5 and pinned the extracted family; this measurement reads that one object"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8                     # --threads 8 --workers 1
+wall_s = 30812
+billed_s = 30934
+usd_hr = 0.319
+compute_usd = 2.7306
+billed_usd = 2.7414
+peak_gib = 0.74
+peak_kind = "rss"
+note = "search 14,320 s + 20 bootstraps 16,492 s; aarch.bio arm64 build runs the SSE3 kernel"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 24394
+billed_s = 24511
+usd_hr = 0.3748
+compute_usd = 2.54
+billed_usd = 2.5521
+peak_gib = 0.79
+peak_kind = "rss"
+note = "search 11,448 s + bootstraps 12,946 s; bioconda x86 build, AVX2 kernel"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 8
+wall_s = 9361
+billed_s = 9449
+usd_hr = 0.4311
+compute_usd = 1.1209
+billed_usd = 1.1315
+peak_gib = 0.8
+peak_kind = "rss"
+note = "search 4,269 s + bootstraps 5,092 s; bioconda x86 build, AVX2 kernel"
+
+# --- "What held at scale" (in-task, results/<chip>/checks.txt); observed = Graviton4 --
+[[check]]
+id = "taxa-sites"
+claim = "taxa, sites read = FASTA"
+kind = "identity"
+observed = "919 / 533"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "patterns"
+claim = "patterns, gap %, invariant % = independent count"
+kind = "identity"
+observed = "517 / 57.59 / 12.20"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tips"
+claim = "tips in best tree"
+kind = "identity"
+observed = "919"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "free-parameters"
+claim = "free parameters = 2n − 2"
+kind = "identity"
+observed = "1,836"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "aic-bic"
+claim = "AIC = 2k − 2lnL, BIC = k ln 533 − 2lnL"
+kind = "identity"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "final-is-best"
+claim = "final lnL = best of the 13 searches"
+kind = "identity"
+observed = "−256799.798588"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "all 13 per-search log-likelihoods match to six decimals; best tree, ML trees, start trees, model and FBP tree byte-identical on all three"
+
+[[check]]
+id = "trees-per-search"
+claim = "one ML tree and one start tree per search"
+kind = "conservation"
+observed = "13 / 13"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lnl-at-own-optimum"
+claim = "lnL at its own optimum, nothing optimised"
+kind = "identity"
+observed = "Δ 3e-6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "reopt-no-climb"
+claim = "re-optimising from the optimum"
+kind = "identity"
+bound = "< 0.01"
+observed = "+3.8e-4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "iqtree-same-lnl"
+claim = "IQ-TREE on RAxML-NG's tree, LG+G4, to a fixed point"
+kind = "cross-code"
+bound = "< 0.01"
+observed = "Δ 2.9e-4"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bootstrap-replicates"
+claim = "20 replicates, each with all 919 tips"
+kind = "conservation"
+observed = "20"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fbp-recomputed"
+claim = "916 = n − 3 FBP supports, each = round(100 × share of replicates holding the split)"
+kind = "identity"
+observed = "916 of 916"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sentinel"
+claim = "completion sentinel, LG+G4m over sites 1–533"
+kind = "sentinel"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ------------------------------------------------------------
+[[check]]
+id = "bootstrap-replicate-11"
+claim = "bootstrap replicate log-likelihoods across chips"
+kind = "reported"
+observed = "replicate 11: −261103.182047 against −261103.182273, same topology"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "Graviton4 −261103.182047 vs x86 −261103.182273 (2.3e-4) on replicate 11; Xeon and EPYC byte-identical on all 20; supports identical"
+
+[[check]]
+id = "bsconverge"
+claim = "RAxML-NG's own --bsconverge test on 20 replicates"
+kind = "reported"
+observed = "not converged, average WRF 14.2%"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "tbe-recomputed"
+claim = "TBE recomputed from the replicate trees vs RAxML-NG 2.0.2's supportTBE"
+kind = "reported"
+observed = "up to 0.97 higher; matches on the 275 cherries"
+outcome = "reported"
+
+[[cross_code]]
+with = "recipes/iqtree"
+same_bytes = true
+metric = "lnL of IQ-TREE under LG+G4 on RAxML-NG's best tree, re-optimised to a fixed point"
+tolerance_basis = "IQ-TREE prints lnL to 4 decimals, so the print sets the bound (0.01, the recipe's)"
+check = "iqtree-same-lnl"
+
+[[trap]]
+id = "raxml-ng-tbe-is-fbp"
+scope = "tool"
+symptom = "RAxML-NG 2.0.2 writes FBP ÷ 100 into supportTBE for every branch, on every chip, with --bs-metric tbe alone too"
+blames = "nothing: the in-task TBE ≥ FBP check passes on this output and cannot catch it"
+cause = "1.2.2 passed the reference splits' TBE to its split table, while 2.0.2 passes the replicate's splits"
+fix = "compute TBE another way until it is fixed"

@@ -1,0 +1,213 @@
+# measurements/imputation-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified chain for one 250-person cohort on 1000G Phase 3 chr20 (prep + panel build, Beagle, Minimac4, scoring)"
+
+[[dataset]]
+id = "s3://1000genomes/release/20130502/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
+tier = "roda"
+pins = "pins.sha256"
+note = "the bytes plink-real staged under inputs/plink-real/, reused; split into a 2,254-sample panel and a 250-sample held-out cohort"
+
+[[dataset]]
+id = "s3://1000genomes/release/20130502/supporting/hd_genotype_chip/ALL.chip.omni_broad_sanger_combined.20140818.snps.genotypes.vcf.gz"
+tier = "roda"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "omni.chr20.sites.tsv (the Omni2.5 chr20 site list, built by 00-sites)"
+tier = "built"
+pins = "pins.sha256"
+
+# one row per chip; each is three 4xlarge boxes (prep, beagle, mm4), billed launch to terminate
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+threads_per_core = 1
+wall_s = 638
+billed_s = 1101
+usd_hr = 0.6381
+compute_usd = 0.1131
+billed_usd = 0.1952
+peak_gib = 8.29
+peak_kind = "rss"
+note = "x3 boxes; Beagle 64 s, Minimac4 compress/impute 108/54 s, prep + score 374 + 38 s; peak is the Beagle JVM"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+threads_per_core = 2
+wall_s = 629
+billed_s = 1157
+usd_hr = 0.7497
+compute_usd = 0.1310
+billed_usd = 0.2409
+peak_gib = 6.08
+peak_kind = "rss"
+note = "x3 boxes; Beagle 89 s, Minimac4 compress/impute 99/53 s, prep + score 338 + 50 s"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-19"
+date_source = "run"
+workers = 16
+threads_per_core = 1
+wall_s = 442
+billed_s = 845
+usd_hr = 0.8622
+compute_usd = 0.1059
+billed_usd = 0.2024
+peak_gib = 8.19
+peak_kind = "rss"
+note = "x3 boxes; Beagle 52 s, Minimac4 compress/impute 71/37 s, prep + score 251 + 31 s"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "pins"
+claim = "sha256 of the chr20 VCF, the chip site list and every script == pins"
+kind = "pin"
+observed = "ok"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "leave-out"
+claim = "cohort and panel share no sample"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "panel-an-ac"
+claim = "AN == 4,508 and 0 < AC < AN at every panel site"
+kind = "identity"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "truth-panel-sites"
+claim = "truth sites == panel sites, in order (md5)"
+kind = "identity"
+observed = "equal"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lockstep"
+claim = "both tools' records == the panel's, in lockstep, key by key"
+kind = "identity"
+observed = "1,653,582, 0 out of step"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-holes"
+claim = "holes (missing GT or DS) in either tool's output"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dosage-range"
+claim = "dosages outside [0, 2]"
+kind = "identity"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "masked-count"
+claim = "masked genotypes scored == masked sites × 250, per tool"
+kind = "conservation"
+observed = "399,601,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mm4-typed"
+claim = "Minimac4 `TYPED` records == array sites"
+kind = "identity"
+observed = "55,178"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "beagle-typed-fixed"
+claim = "Beagle changes no typed genotype"
+kind = "identity"
+observed = "0 of 13,794,500"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "af-mean-dosage"
+claim = "\\|INFO AF − mean(DS)/2\\| within print rounding (Beagle ≤ 0.00255, Minimac4 ≤ 0.00025)"
+kind = "identity"
+bound = "Beagle ≤ 0.00255, Minimac4 ≤ 0.00025"
+observed = "0.000320 / 0.000002"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "r2-common"
+claim = "dosage r² vs truth, panel MAF ≥ 5%, ≥ 0.90, per tool"
+kind = "band"
+bound = "≥ 0.90"
+observed = "0.9827 / 0.9827"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hard-call-agreement"
+claim = "Beagle vs Minimac4 hard-call agreement on masked genotypes ≥ 0.99"
+kind = "cross-code"
+bound = "≥ 0.99"
+observed = "0.99925"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "outputs-byte-identical"
+claim = "Every output is byte-identical on all three chips: panel, truth, target, Beagle's VCF, Minimac4's VCF, the whole score table"
+kind = "reported"
+observed = "identical"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "msav-md5"
+claim = "Only the `.msav` panel differs, with three different md5s"
+kind = "reported"
+observed = "three different md5s; Minimac4 imputes byte-identical output from all three"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "ref_msav_md5 DIFFER for Graviton4 vs Intel and vs AMD, and Intel vs AMD, though they ran the same binary; cause not measured"
+
+[[check]]
+id = "shared-errors"
+claim = "They fail on the same genotypes"
+kind = "reported"
+observed = "564,093 wrong in both, 79% of each tool's errors (713,877 Beagle, 710,215 Minimac4)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "mm4-rewrites-typed"
+claim = "Minimac4 rewrites the calls you gave it, at scale"
+kind = "reported"
+observed = "26,353 of 13,794,500 typed genotypes (0.19%)"
+outcome = "reported"
+across_chips = "identical"
+

@@ -1,0 +1,98 @@
+# measurements/openblas-x86/record.toml -- drafted by the #118 extraction, then authored.
+# A probe, not a workload: the README prices and times nothing, so the runs carry no $ and no seconds.
+# The input is synthetic (set.seed(20261004), a 200x200 symmetric matrix built in the probe), so no dataset.
+schema = 1
+result_unit = "one probe run on one instance (fixed-point and attempted-path quantities through OpenBLAS); not priced"
+
+[[run]]
+instance = "c6i.large"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/blas-c6i.txt"
+note = "OpenBLAS kernel SkylakeX; attempted-path probe in results/chaos-c6i.txt"
+
+[[run]]
+instance = "c6a.large"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/blas-c6a.txt"
+note = "OpenBLAS kernel Zen; attempted-path probe in results/chaos-c6a.txt"
+
+[[run]]
+instance = "c7i.large"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/blas-c7i.txt"
+note = "OpenBLAS kernel SapphireRapids; attempted-path probe in results/chaos-c7i.txt"
+
+[[run]]
+instance = "c7a.large"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/blas-c7a.txt"
+note = "OpenBLAS kernel Cooperlake (Zen 4); attempted-path probe in results/chaos-c7a.txt"
+
+[[run]]
+instance = "c8g.large"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/blas-c8g.txt"
+note = "OpenBLAS kernel neoversev2; attempted-path probe in results/chaos-c8g.txt"
+
+# --- checks: the README's per-rung table; printed by the probe, nothing asserted -------
+[[check]]
+id = "kernel-dispatch"
+claim = "OpenBLAS kernel selected per rung (openblas_get_corename, read via ctypes)"
+kind = "reported"
+observed = "SkylakeX, Zen, SapphireRapids, Cooperlake (Zen 4), neoversev2"
+outcome = "reported"
+
+[[check]]
+id = "converged-eigenvalue"
+claim = "converged eigenvalue (dominant eigenvalue by power iteration through dgemv)"
+kind = "reported"
+observed = "−4.026552552113374e+01"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "−4.026552552113374e+01 on all four x86 rungs (four kernels); README prints …374 for c8g.large too, but results/blas-c8g.txt has −4.026552552113372e+01; Apple laptop (neoversen1) …377"
+
+[[check]]
+id = "power-vs-lapack"
+claim = "power iteration vs LAPACK's own eigendecomposition, relative difference (c8g.large)"
+kind = "reported"
+observed = "3.176e-15"
+outcome = "reported"
+
+[[check]]
+id = "chaotic-final-x1"
+claim = "chaotic final x₁ (logistic map at r = 3.9 between dgemv calls)"
+kind = "reported"
+observed = "−2.405351530260680e-01"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "−2.405351530260683e-01 on all four x86 rungs; …680 on neoversev2 (c8g); …677 on neoversen1 (laptop): 1 ulp within arm64; amd64 vs arm64 are different builds, so uninformative"
+
+[[trap]]
+id = "openblas-x86-call-on-c-symbol"
+scope = "method"
+symptom = "`.Call` on them kills the script — which is how the first batch of five rungs was lost"
+cause = "`openblas_get_corename` and `openblas_get_config` are plain C symbols returning `char*`, not registered R routines"
+fix = "read the kernel with `ctypes` rather than R's `.Call`"
+cost = "the first batch of five rungs"
+
+[[trap]]
+id = "openblas-x86-converging-path-probe"
+scope = "method"
+symptom = "the 'path' quantity came back identical everywhere"
+cause = "probe version 1's path was a power iteration, which converges: its 20,000-term sum was ~20000 × λ, a fixed point wearing a path's clothes"
+fix = "add a nonlinearity to make it genuinely chaotic (version 2's logistic map); even that barely moves on a matrix this small, so the result is suggestive, not established"
+
+[[upstream]]
+ref = "truffle#175"
+role = "workaround"
+note = "rungs launched serially"

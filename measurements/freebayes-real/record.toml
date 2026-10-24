@@ -1,0 +1,167 @@
+# measurements/freebayes-real/record.toml
+schema = 1
+result_unit = "one whole-chr20 call: freebayes on NA12878 chr20 at 30x against GRCh38 chr20"
+
+[[dataset]]
+id = "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)"
+tier = "built"
+from_recipe = "freebayes"
+unpinned = "the README commits no sha256 for the 30x BAM it used (the recipe page now pins a 36x BAM instead)"
+
+# --- Graviton generation ladder: 4 vCPU, same digest, same staged objects -------------
+[[run]]
+instance = "c6g.xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-c6g.txt"
+date = "2026-10-03"
+date_source = "git"
+workers = 1                     # freebayes is single-threaded
+wall_s = 1349
+billed_s = 1456
+usd_hr = 0.136
+compute_usd = 0.051
+billed_usd = 0.055
+
+[[run]]
+instance = "c7g.xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-c7g.txt"
+date = "2026-10-03"
+date_source = "git"
+workers = 1
+wall_s = 851
+billed_s = 926
+usd_hr = 0.145
+compute_usd = 0.0343
+billed_usd = 0.0373
+
+[[run]]
+instance = "c8g.xlarge"
+purpose = "primary"
+results = "results/smoke-c8g.txt"
+date = "2026-10-03"
+date_source = "git"
+workers = 1
+threads_per_core = 1            # README: Graviton4 is 1 thread per core (lscpu)
+wall_s = 644
+billed_s = 704
+usd_hr = 0.1595
+compute_usd = 0.0285
+billed_usd = 0.0312
+note = "the recipe's own verified calling task (cookbook-freebayes-chr20) is this rung"
+
+[[run]]
+instance = "c9g.xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-c9g.txt"
+date = "2026-10-03"
+date_source = "git"
+workers = 1
+wall_s = 509
+billed_s = 559
+usd_hr = 0.1739
+compute_usd = 0.0246
+billed_usd = 0.027
+
+# --- same generation, three chips (bioconda linux/amd64 build of 1.3.10 on x86) -------
+[[run]]
+instance = "c8i.xlarge"
+purpose = "cross-chip"
+results = "results/smoke-c8i.txt"
+host = "results/topology-c8i.txt"
+date = "2026-10-21"
+date_source = "git"
+workers = 1
+wall_s = 476
+billed_s = 587
+usd_hr = 0.1874
+compute_usd = 0.0248
+billed_usd = 0.0306
+
+[[run]]
+instance = "c8a.xlarge"
+purpose = "cross-chip"
+results = "results/smoke-c8a.txt"
+host = "results/topology-c8a.txt"
+date = "2026-10-21"
+date_source = "git"
+workers = 1
+wall_s = 357
+billed_s = 460
+usd_hr = 0.2155
+compute_usd = 0.0214
+billed_usd = 0.0275
+
+# --- checks: in-task smoke asserts in results/smoke-*.txt, then the README's comparisons
+[[check]]
+id = "sample"
+claim = "sample name NA12878"
+kind = "identity"
+bound = "want NA12878"
+observed = "NA12878"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "off-chr20"
+claim = "zero off-chr20 records"
+kind = "identity"
+bound = "want 0"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "variant-count"
+claim = "385,371 variants on all four chips"
+kind = "reported"
+observed = "385,371"
+outcome = "reported"
+across_chips = "identical"
+across_chips_evidence = "385,371 on c6g, c7g, c8g, c9g, c8i and c8a"
+
+[[check]]
+id = "qual30-records"
+claim = "every record above `QUAL≥30` — the same 113,841 sites, alleles and genotypes on all three"
+kind = "reported"
+observed = "113,841"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "low-qual-tail"
+claim = "What differs, ARM build against x86 build: 4 of 385,371 records spell a homopolymer indel's alleles differently at the same position, and 3 more call a different genotype; all 7 have `QUAL` < 28"
+kind = "reported"
+observed = "7 of 385,371 records"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "4 allele spellings + 3 genotypes differ ARM vs x86, all QUAL < 28; other QUAL values agree except in the last printed digit (one record at 74.5) or below 1e-7"
+
+[[check]]
+id = "intel-vs-amd-qual"
+claim = "Intel against AMD: same sites, alleles, genotypes, INFO and sample columns on every record; `QUAL` differs on 1,184 records, all below 1e-10"
+kind = "reported"
+observed = "largest difference 4.8e-16"
+outcome = "reported"
+
+[[check]]
+id = "self-reproduce"
+claim = "Each chip reproduces itself: the VCF body is byte-identical to the recipe's own earlier run on the same chip"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+
+[[upstream]]
+ref = "truffle#175"
+role = "workaround"
+note = "the static price fallback has no Graviton coverage; rungs launched serially"
+
+[[upstream]]
+ref = "spawn#1063"
+role = "workaround"
+note = "x86 legs exceed EC2's 16 KiB user data; inline command moved into a staged sha256-checked file"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "same user-data limit"

@@ -1,0 +1,255 @@
+# measurements/lith-kraken2-roda/record.toml -- drafted by the #118 extraction, then authored.
+# An access-pattern study, not a recipe sweep: eleven probe launches, all Graviton, one chip.
+schema = 1
+result_unit = "one 1M-read human WGS sample (SRR062634) classified against the full 1.1 TiB RefSeq-Complete DB on local NVMe"
+
+[[dataset]]
+id = "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes"
+tier = "roda"
+unpinned = "a RODA object; the README records sizes (stat on hash.k2d) but no sha256 manifest is committed"
+note = "bucket reports Payer: BucketOwner, so every GET is free to the requester"
+
+[[dataset]]
+id = "SRA SRR062634 (human WGS reads), 10k / 100k / 1M-read ladder"
+tier = "durable-id"
+unpinned = "no sha256 committed; SRA accession only"
+
+# --- the kraken2 result: copy the runtime set to NVMe, then a read-count ladder -------
+[[run]]
+instance = "r8gd.8xlarge"
+purpose = "primary"
+date = "2026-10-04"
+date_source = "git"
+workers = 32
+wall_s = 510
+usd_hr = 2.3514
+compute_usd = 0.3331
+results = "results/kraken2-cost-ladder.txt"
+note = "wall_s is the 1M rung's task wall (1m_wall_s); the README's 'kraken2 wall' column prints kraken2's own 483.2 s, but its compute $ 0.3331 is priced on the 510 s rung wall. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads"
+
+[[run]]
+instance = "r8gd.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+wall_s = 1561
+usd_hr = 2.3514
+compute_usd = 1.0196
+results = "results/nvme-r8gd-8xl.txt"
+note = "copy of the 1107.6 GiB runtime set to NVMe at max_concurrent_requests 64 (wall_s = copy wall); also the lith mount 4 KiB probe (7.9/s, 23x amplification) and the single-threaded NVMe probe (5,412/s)"
+
+[[run]]
+instance = "r8gd.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+wall_s = 1686
+usd_hr = 2.3514
+compute_usd = 1.1012
+note = "copy at max_concurrent_requests 128 (wall_s = copy wall); no results file committed for this launch"
+
+[[run]]
+instance = "r8gd.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/threadsweep.txt"
+note = "Python S3 depth sweep on the sustained-15 Gb NIC (plateau 905.1/s) and the kraken2 thread ladder (4/8/16/32 threads, plus 32 after drop_caches: 139.909 s cold vs 1.771 s warm)"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "diagnostic"
+region = "us-west-1"
+date = "2026-10-04"
+date_source = "git"
+results = "results/canary-cross-region.txt"
+note = "canary, placed in us-west-1 against the us-west-2 bucket unasked; 1.52 MiB/s cross-region. Its throughput numbers are void"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/readpath-in-region.txt"
+note = "in-region read path: sequential 146 MB/s hash.k2d, 107 MB/s taxo.k2d, aws s3 cp baseline 170.9 MiB/s"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/concurrency-sweep.txt"
+note = "Python/boto3 queue-depth sweep: depth 1 6.9/s, depth 64 465.9/s, depth 1024 788.7/s"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/godepth-c8g2xl.txt"
+note = "the same sweep in Go: depth 8192 34,456.5/s, 0 errors"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+results = "results/density-sweep.txt"
+note = "coalescing-window sweep at realistic density (39.6 KB spacing): 763 -> 32,128 lookups/s; sparse control 1.0x"
+
+[[run]]
+instance = "c8gn.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+usd_hr = 3.792
+results = "results/bandwidth-c8gn16xl.txt"
+note = "sequential range-GET bandwidth on hash.k2d: 18.48 GB/s at 8 MiB x 512 (74% of NIC); the README's $/scan is a projection, not this run's bill"
+
+[[run]]
+instance = "c8gn.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-04"
+date_source = "git"
+usd_hr = 0.9480
+results = "results/sharding-c8gn4xl.txt"
+note = "bandwidth (5.64 GB/s at 8 MiB x 512) and prefix sharding: flat 44,790/s vs 64 prefixes 47,388/s at conc 2048"
+
+# --- checks: no checks table; the identities and observations the prose states -------
+[[check]]
+id = "repeat-rung-identity"
+claim = "the two 100k rungs returned exactly 99,291 classified and 709 unclassified"
+kind = "identity"
+bound = "exact"
+observed = "99,291 / 709 both rungs"
+outcome = "pass"
+
+[[check]]
+id = "classified-sanity"
+claim = "98.6–99.3% classified is the sanity check that matters: these are human reads and human is in RefSeq Complete"
+kind = "reported"
+observed = "98.64%, 99.29%, 99.30%, 99.29%"
+outcome = "reported"
+
+[[check]]
+id = "mount-visible"
+claim = "files visible / `stat` on `hash.k2d`"
+kind = "identity"
+observed = "9 of 9 / `1,189,091,671,800` bytes"
+outcome = "pass"
+
+[[check]]
+id = "cold-warm"
+claim = "identical 100k-read work, cold vs warm (32 threads, drop_caches between)"
+kind = "reported"
+observed = "139.9 s cold, 1.77 s warm: 98.7% I/O wait"
+outcome = "reported"
+
+[[check]]
+id = "mount-amplification"
+claim = "NIC bytes across exactly 200 probes"
+kind = "reported"
+observed = "17 MiB total = 91 KiB per probe = 23×"
+outcome = "reported"
+
+[[check]]
+id = "coalescing-density-control"
+claim = "at sparse density (119 MB apart) the identical coalescing sweep"
+kind = "reported"
+observed = "1.0× — 773.8 → 779.9 lookups/s"
+outcome = "reported"
+
+[[check]]
+id = "go-depth-errors"
+claim = "Go range GETs at depth 8192"
+kind = "reported"
+observed = "34,456.5/s (141 MB/s, 0 errors)"
+outcome = "reported"
+
+[[trap]]
+id = "lith-kraken2-out-of-region-placement"
+scope = "platform"
+symptom = "InvalidInstanceID.NotFound"
+blames = "a dead box (read twice as \"the shell died\" while kraken2 was still faulting)"
+cause = "two runs were placed in us-west-1 against the us-west-2 bucket, unasked-for and silent; cross-region the same work pulled 1.52 MiB/s against 107–146 MB/s"
+fix = "check the region before concluding anything; put the no-tool baseline (aws s3 cp on the same box) in the probe first"
+refs = ["lith#362", "lith#365"]
+
+[[trap]]
+id = "lith-kraken2-launch-command-no-log-staging"
+scope = "platform"
+symptom = "P3 was lost"
+cause = "spawn launch --command does not stage logs out (spawn#643's pre-stop flush is a task run feature)"
+fix = "a probe must stream its result"
+refs = ["spawn#643"]
+
+[[trap]]
+id = "lith-kraken2-container-uid-output"
+scope = "platform"
+symptom = "Unable to open file: /w/out-10k.kraken, reason: Permission denied"
+cause = "chown-ing the NVMe mount to the instance user is not enough: the container runs as the image's user"
+fix = "chmod 1777 the output dir"
+
+[[trap]]
+id = "lith-kraken2-launch-command-errexit"
+scope = "platform"
+symptom = "each script exited before the line that would have reported why; `$-` == `ehB` before any user `set`"
+cause = "spawn launch --command runs under bash -e, and set -uo pipefail does not clear it"
+fix = "use set +e explicitly and check statuses by hand"
+cost = "the kraken2 figure took five launches, four died to three tangled bugs; three wrong diagnoses"
+refs = ["spawn#707"]
+
+[[trap]]
+id = "lith-kraken2-heredoc-binds-last-command"
+scope = "method"
+symptom = "tee writes the script's own source into the results file"
+cause = "`python3 - 2>&1 | tee <<'PY'`: a heredoc binds to the last command in a pipeline, so Python gets an empty stdin"
+fix = "give python3 the heredoc, not the pipeline's last command (the README states the cause; this is its direct reading)"
+cost = "one wasted launch"
+
+[[trap]]
+id = "lith-kraken2-python-client-ceiling"
+scope = "method"
+symptom = "S3 random-lookup plateau past depth 256 (788.7/s; 905.1/s with 4x the cores and a sustained NIC)"
+blames = "S3, the NIC or PPS"
+cause = "the Python/boto3 client: the GIL makes extra cores inert"
+fix = "rewrite the probe in Go: 34,456.5/s at depth 8192 on the same instance type, 44x higher"
+
+[[trap]]
+id = "lith-kraken2-sdk-debug-logging"
+scope = "method"
+symptom = "81,920-request rungs collapse to ~500/s with zero errors"
+cause = "the SDK logged a DEBUG line per request through tee: 20 MB of output and a serialization point"
+fix = "logging.Nop{} and WithClientLogMode(0)"
+
+[[trap]]
+id = "lith-kraken2-no-drop-caches-between-rungs"
+scope = "method"
+symptom = "4→8 threads \"improving\" 27×"
+cause = "no drop_caches between rungs, so the first rung warmed the cache and the rest rode it"
+fix = "drop_caches before every rung that is meant to be cold"
+
+[[upstream]]
+ref = "lith#232"
+role = "cited"
+note = "\"lith has no lever\"; this page supports it"
+
+[[upstream]]
+ref = "lith#362"
+role = "filed"
+note = "out-of-region placement went unwarned"
+
+[[upstream]]
+ref = "lith#365"
+role = "cited"
+note = "the warning shipped same-day"
+
+[[upstream]]
+ref = "spawn#643"
+role = "cited"
+note = "pre-stop flush is a task run feature, not launch --command"
+
+[[upstream]]
+ref = "spawn#707"
+role = "filed"
+note = "asks for the effective shell options to be echoed into command.log"

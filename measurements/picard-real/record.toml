@@ -1,0 +1,158 @@
+# measurements/picard-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one MarkDuplicates run on bwa's whole-genome sorted BAM (48,817,006 records, 4.5 GB)"
+
+[[dataset]]
+id = "bwa's whole-genome sorted BAM (aln.sorted.bam, 48,817,006 records, 4,568,357,482 bytes)"
+tier = "run-output"
+from_recipe = "bwa-samtools"
+note = "x86 legs read their own chip's bwa-samtools BAM, same size; Intel's has arm64's S3 ETag, AMD's was uploaded in different parts so its ETag cannot show byte identity"
+
+# --- Graviton generation sweep, 8 vCPU / 64 GiB, -Xmx24g, same digest, same object
+[[run]]
+instance = "r6g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-r6g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+wall_s = 928
+billed_s = 1150
+usd_hr = 0.4032
+compute_usd = 0.1039
+billed_usd = 0.1288
+
+[[run]]
+instance = "r7g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-r7g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+wall_s = 747
+billed_s = 961
+usd_hr = 0.4284
+compute_usd = 0.0889
+billed_usd = 0.1144
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/smoke-check-r8g2xl.txt"
+date = "2026-10-02"
+date_source = "run"
+wall_s = 591
+billed_s = 826
+usd_hr = 0.4713
+compute_usd = 0.0774
+billed_usd = 0.1081
+note = "date from dup_metrics-r8g2xl.txt '# Started on: Fri Oct 02 01:15:59 UTC 2026'"
+
+[[run]]
+instance = "r9g.2xlarge"
+purpose = "generation-sweep"
+results = "results/smoke-check-r9g-2xl.txt"
+date = "2026-10-01"
+date_source = "git"
+wall_s = 482
+billed_s = 647
+usd_hr = 0.5137
+compute_usd = 0.0688
+billed_usd = 0.0923
+
+# --- same generation, three chips (bioconda x86 Picard 3.5.0)
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-r8i-2xl.txt"
+date = "2026-10-21"
+date_source = "run"
+threads_per_core = 2
+wall_s = 533
+billed_s = 707
+usd_hr = 0.5557
+compute_usd = 0.0823
+billed_usd = 0.1091
+note = "README: 8i vCPUs are 4 cores with SMT. Date from dup_metrics-r8i-2xl.txt, which is byte-identical to the AMD file including its '# Started on: Wed Oct 21 06:00:08 GMT 2026' line"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/smoke-check-r8a-2xl.txt"
+date = "2026-10-21"
+date_source = "run"
+threads_per_core = 1
+wall_s = 459
+billed_s = 581
+usd_hr = 0.639
+compute_usd = 0.0815
+billed_usd = 0.1031
+note = "README: 8a vCPUs are 8 whole cores. Date from dup_metrics-r8a-2xl.txt"
+
+# --- checks: the five in-task assertions (results/smoke-check-*.txt) and the cross-chip identity
+[[check]]
+id = "partition-total"
+claim = "partition total 48,817,006"
+kind = "conservation"
+bound = "want exactly 48817006 (every input record accounted for)"
+observed = "48817006"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "examined-flagstat"
+claim = "examined == flagstat"
+kind = "cross-code"
+bound = "== samtools flagstat primary-mapped"
+observed = "48184934"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "supplementary-flagstat"
+claim = "supplementary == flagstat"
+kind = "cross-code"
+bound = "== samtools flagstat supplementary"
+observed = "519020"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "percent-recomputed"
+claim = "the `PERCENT_DUPLICATION` recomputation"
+kind = "identity"
+bound = "want < 0.000001 (identity)"
+observed = "0.008684"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bam-magic"
+claim = "the BAM magic"
+kind = "sentinel"
+bound = "1f8b0804"
+observed = "1f8b0804"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "dup-metrics-across-chips"
+claim = "`READ_PAIR_DUPLICATES` 206,518 and `PERCENT_DUPLICATION` 0.008684 on all four generations"
+kind = "identity"
+bound = "exact"
+observed = "206,518; 0.008684"
+outcome = "pass"
+across_chips = "identical"
+across_chips_evidence = "`dup_metrics.txt` is identical line for line on Graviton4, Intel and AMD, apart from the `# Started on:` timestamp"
+
+[[check]]
+id = "tmpfs-peak"
+claim = "the tmpfs high-water mark within 2 MB (8,832–8,834 MB)"
+kind = "reported"
+observed = "8,832–8,834 MB; 8,834 MB Intel, 8,815 MB AMD"
+outcome = "reported"
+
+[[trap]]
+id = "picard-spawn-task-run-no-bucket-substitution"
+scope = "platform"
+symptom = "stage-in fails with `Invalid bucket name \"${COOKBOOK_BUCKET}\"`"
+cause = "`make run` substitutes ${COOKBOOK_BUCKET}; `spawn task run` does not"
+fix = "pass a spec with the bucket already resolved"

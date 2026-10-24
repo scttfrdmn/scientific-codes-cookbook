@@ -1,0 +1,203 @@
+# measurements/abundance-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one sample at both ranks (species and genus)"
+results_per_run = 2             # billed $/result divides the box by the two samples
+
+[[dataset]]
+id = "kraken2-real whole-run reports of ENA ERR2984773 (D6300 even) and ERR2935805 (D6310 log), PRJEB29504"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "kraken2"
+note = "measurements/kraken2-real's reports, byte-identical on all three chips there; copied S3-to-S3 under this prefix"
+
+[[dataset]]
+id = "k2_standard_08gb_20250402 database100mers.kmer_distrib, database150mers.kmer_distrib"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "abundance"
+note = "extracted once from the recipe's pinned standard-8 tarball by 00-extract on Graviton4"
+
+[[dataset]]
+id = "zymo.tsv (ZymoBIOMICS D6300 / D6310 published composition)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "kraken2-real's truth table, read from its prefix"
+
+[[run]]
+instance = "r8g.large"
+purpose = "diagnostic"
+results = "results/extract/"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 59
+note = "00-extract: one-time gunzip of the 5.96 GB tarball to the seven kmer_distrib files; serves all three chips"
+
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+billed_s = 69
+usd_hr = 0.0798
+billed_usd = 0.00076
+peak_gib = 0.0311
+peak_kind = "rss"
+note = "README prints Bracken wall 0.35 / 0.38 s and compute $/result 7.8e-6 / 8.4e-6 per sample (even / log); compound cells sharing one bill, so wall_s and compute_usd are omitted"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+billed_s = 77
+usd_hr = 0.0937
+billed_usd = 0.00100
+peak_gib = 0.0314
+peak_kind = "rss"
+note = "README prints Bracken wall 0.32 / 0.39 s and compute $/result 8.3e-6 / 1.0e-5 (even / log); compound cells, omitted"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+billed_s = 48
+usd_hr = 0.1078
+billed_usd = 0.00072
+peak_gib = 0.0315
+peak_kind = "rss"
+note = "README prints Bracken wall 0.24 / 0.25 s and compute $/result 7.2e-6 / 7.5e-6 (even / log); compound cells, omitted"
+
+# checks: '## What held at scale, on all three chips'; observed = even S / G | log S / G
+[[check]]
+id = "total-unclassified"
+claim = "total == ENA `read_count`; unclassified == kraken2's"
+kind = "identity"
+bound = "exact"
+observed = "8,785,731; 652,227 | 47,832,553; 7,564,918"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "books-partition"
+claim = "kept + discarded + distributed + not distributed + unclassified == total"
+kind = "conservation"
+bound = "exact"
+observed = "yes / yes | yes / yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "kept-discarded"
+claim = "kept, discarded == clade reads at the rank, split at `-t 10`"
+kind = "identity"
+bound = "exact"
+observed = "2,683,734 / 6,742,829 | 2,323,122 / 39,042,215"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "distributed"
+claim = "distributed + not distributed == taxon reads above the rank"
+kind = "identity"
+bound = "exact"
+observed = "5,445,614 / 1,389,121 | 37,937,459 / 1,222,898"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "table-rows"
+claim = "table rows == taxa at the rank ≥ threshold; `kraken_assigned_reads` == their clade"
+kind = "identity"
+bound = "exact"
+observed = "226 / 149 rows, 0 off | 231 / 205, 0 off"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "added-reads"
+claim = "`added_reads` == new − assigned, and ≥ 0 on every row"
+kind = "identity"
+bound = "exact"
+observed = "0 off | 0 off"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "read-conservation"
+claim = "kept + distributed − sum(new) ∈ [0, rows)"
+kind = "conservation"
+bound = "[0, rows)"
+observed = "109 / 59 | 111 / 82"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fraction-normalised"
+claim = "`fraction_total_reads` == new / sum(new), to 5 decimals"
+kind = "identity"
+bound = "to 5 decimals"
+observed = "≤ 5.6e-6 | ≤ 5.9e-6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "report-matches-table"
+claim = "`-w` report rows == the table; its root == sum(new) within truncation"
+kind = "identity"
+bound = "within truncation"
+observed = "yes / yes | yes / yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "even-top8"
+claim = "top 8 == the 8 Zymo bacteria"
+kind = "reference"
+bound = "D6300's list"
+observed = "yes / yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "log-top3"
+claim = "top 3 in order == 89.1% > 8.9% > 0.89%"
+kind = "reference"
+bound = "D6310's first three decades"
+observed = "L. monocytogenes > P. aeruginosa > B. spizizenii / genus too"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "closed-list"
+claim = "no genus outside the mock above 1%"
+kind = "band"
+bound = "≤ 1%"
+observed = "FAIL: Xanthomonas 1.6616% (even) | yes: Xanthomonas 0.3855% (log)"
+outcome = "fail"                # every chip's task exits 1; the line was set before Bracken ran and not moved
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:ZymoBIOMICS-D6300-D6310"
+same_bytes = false
+metric = "top-8 membership (even), top-3 order (log), against the published composition"
+check = "log-top3"
+
+[[cross_code]]
+with = "measurements/kraken2-real"
+same_bytes = true
+metric = "the same 1% closed-list line kraken2-real asserts on the same reports"
+check = "closed-list"
+
+[[trap]]
+id = "abundance-x86-image-no-tar"
+scope = "image"
+symptom = "Bioconda's x86 Bracken image has no `tar`"
+cause = "the biocontainers image ships without tar, so it cannot extract kmer_distrib from the index tarball"
+fix = "extract the kmer_distrib files once on Graviton4 (00-extract) and stage them; they are data, so one extraction serves all three chips"

@@ -1,0 +1,176 @@
+# measurements/bismark-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole RRBS sample (ENCFF000LYO) through both aligners and both callers"
+
+[[dataset]]
+id = "ENCODE ENCFF000LYO (GM12878 RRBS replicate 1, ENCSR000DFT), whole run"
+tier = "roda"
+pins = "pins.sha256"
+note = "Illumina 1.5 re-encoded to Phred+33 and trimmed once by prep-trim.sh; the trimmed fastq (31,569,432 reads) is pinned too"
+
+[[dataset]]
+id = "GRCh38 no-alt analysis set (195 sequences)"
+tier = "versioned-release"
+pins = "pins.sha256"
+from_recipe = "measurements/minimap2-real"
+
+[[dataset]]
+id = "Bismark and bwa-meth GRCh38 indices"
+tier = "built"
+pins = "results/staging/index.sha256"
+note = "built once on arm64 by 00-prep-bismark/00-prep-bwameth; bwa-meth index manifest is results/staging/bwameth-index.sha256"
+
+# Billed $/result is NOT recorded: billed covers four tasks, one of them (sort) on m8*.2xlarge at a
+# different rate, so a single $/hr cannot reproduce it.
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+date = "2026-10-18"
+date_source = "git"
+host = "results/arm64/bismark/host.txt"
+wall_s = 1166
+billed_s = 2169
+usd_hr = 0.7181
+compute_usd = 0.2318
+results = "results/arm64/"
+note = "README prints billed $/result 0.4186; left out: 2169 s x 0.7181/hr = 0.4327, the sort task ran on m8g.2xlarge. Peak RSS is per step (9.8 / 29.3 / 15.4 GiB), not one run value"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "git"
+host = "results/x86_64/bismark/host.txt"
+wall_s = 1439
+billed_s = 2481
+usd_hr = 0.8467
+compute_usd = 0.3374
+results = "results/x86_64/"
+note = "README prints billed $/result 0.5655; left out (mixed 4xlarge/2xlarge tasks)"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "git"
+host = "results/amd/bismark/host.txt"
+wall_s = 981
+billed_s = 1784
+usd_hr = 0.9738
+compute_usd = 0.2647
+results = "results/amd/"
+note = "README prints billed $/result 0.4655; left out (mixed 4xlarge/2xlarge tasks)"
+
+# checks table in '## What held at scale, on all three chips'
+[[check]]
+id = "reads-in"
+claim = "reads analysed == reads in"
+kind = "conservation"
+observed = "31,569,432"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bismark-accounting"
+claim = "unique + no alignment + ambiguous == analysed"
+kind = "conservation"
+observed = "14,419,563 + 5,681,768 + 11,468,101"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "calls-extracted"
+claim = "call strings extracted == unique − discarded"
+kind = "conservation"
+observed = "14,419,557 = 14,419,563 − 6"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bam-records"
+claim = "BAM records == unique − discarded, all primary"
+kind = "conservation"
+observed = "14,419,557"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "context-totals"
+claim = "per context, meth / unmeth: align report == splitting report"
+kind = "conservation"
+observed = "CpG 10,069,752 / 36,647,830; CHG 237,729 / 38,609,899; CHH 474,802 / 72,883,590"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cs-analysed"
+claim = "C's analysed: align == extract"
+kind = "conservation"
+observed = "158,923,602"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "coverage-sum"
+claim = "Σ coverage file == CpG totals"
+kind = "conservation"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "multicore-invariance"
+claim = "`-p 8` == `--multicore 4 -p 2`"
+kind = "invariance"
+observed = "alignments and coverage identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "caller-cross"
+claim = "Bismark extractor == MethylDackel, same BAM"
+kind = "cross-code"
+bound = "exact, every cytosine"
+observed = "2,349,220 of 2,349,220 cytosines exact; 46,717,582 calls each"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bwameth-primary"
+claim = "bwa-meth: one primary record per read, no `XM` tags"
+kind = "conservation"
+observed = "31,569,432; `XM` 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "aligner-cross"
+claim = "Bismark vs bwa-meth, MethylDackel on both, MAPQ ≥ 10, ≥ 10 calls in both"
+kind = "cross-code"
+bound = "mean |Δβ| below the two-binomial E|X−Y| baseline at each site's depths"
+observed = "0.0102 vs 0.0332 at 748,470 CpGs; r = 0.9975"
+outcome = "pass"
+across_chips = "identical"
+
+[[trap]]
+id = "bismark-methyldackel-perread-arm"
+scope = "tool"
+symptom = "every `MethylDackel perRead` invocation exits 1 with `Invalid option '�'` before reading the BAM (aarch64 only)"
+blames = "the command-line options"
+cause = "perRead.c stores getopt's return in a char and loops while it is >= 0; char is unsigned on aarch64, so -1 becomes 255"
+fix = "none on ARM (unfixed on MethylDackel master); extract declares the variable int and is unaffected"
+
+[[trap]]
+id = "bismark-bwameth-short-read-t"
+scope = "tool"
+symptom = "bwa-meth maps 0 of 100,000 36 bp reads with no warning"
+cause = "bwa-meth calls `bwa mem -T 40` and a 36 bp read scores at most 36"
+fix = "pass `-T20` as one token (bwa's last -T wins); as two tokens bwa-meth takes `20` as a FASTQ"
+
+[[trap]]
+id = "bismark-bwameth-batch-k"
+scope = "tool"
+symptom = "the first whole run without -K stalled until its 2 h TTL and left no log"
+cause = "bwa's default batch of 10 Mbp per thread projects to ~42 GiB at 16 threads beside ~12 GiB of staged files in tmpfs on a 62 GiB box (consistent with the numbers, not observed directly)"
+fix = "set -K (20 Mbp peaked at 15.4 GiB)"
+cost = "one run to its 2 h TTL"

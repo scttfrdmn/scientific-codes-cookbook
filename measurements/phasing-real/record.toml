@@ -1,0 +1,249 @@
+# measurements/phasing-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole of HG002 chr20 phased twice (HiFi and Illumina) and scored against both GIAB truths"
+
+[[dataset]]
+id = "GIAB NISTv4.2.1 GRCh38 HG002 benchmark VCF (s3://giab/release/AshkenazimTrio/HG002_NA24385_son/NISTv4.2.1/GRCh38), chr20"
+tier = "roda"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "GIAB NISTv4.2.1 phased supplements: HG002_GRCh38_1_22_v4.2.1_benchmark_hifiasm_v11_phasetransfer and _phased_MHCassembly_StrandSeqANDTrio"
+tier = "roda"
+pins = "pins.sha256"
+note = "hifiasm's md5 checked against GIAB's md5.in"
+
+[[dataset]]
+id = "GIAB HG002_PacBio-HiFi-Revio_20231031_48x_GRCh38-GIABv3.bam, chr20 slice"
+tier = "roda"
+pins = "pins.sha256"
+note = "cut over HTTPS through the publisher's .bai, md5-checked against GIAB's README"
+
+[[dataset]]
+id = "NIST HG002.GRCh38.2x250.bam (novoalign), NCBI GIAB FTP ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/..., chr20 slice"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "NCBI's copy, not RODA's: the RODA file is a different, earlier BAM"
+
+[[dataset]]
+id = "GRCh38 chr20.fa"
+tier = "run-output"
+pins = "pins.sha256"
+from_recipe = "bwa-samtools"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+results = "results/prep/"
+note = "00-prep, once: cut both chr20 slices in 30 s each; 4 m 55 s billed, $0.029 (no rate printed, so no $ fields)"
+
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 1
+wall_s = 341
+billed_s = 429
+usd_hr = 0.1795
+compute_usd = 0.017
+billed_usd = 0.0214
+results = "results/arm64/"
+note = "two single-threaded whatshap phase processes concurrently; peak 3.14 GB (WhatsHap's Maximum memory usage, Illumina run) left out: GB, not GiB"
+
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 2
+wall_s = 312
+billed_s = 385
+usd_hr = 0.2117
+compute_usd = 0.0183
+billed_usd = 0.0226
+results = "results/x86_64/"
+note = "two single-threaded whatshap phase processes concurrently; peak 3.31 GB (WhatsHap's Maximum memory usage, Illumina run) left out: GB, not GiB"
+
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 2
+threads_per_core = 1
+wall_s = 225
+billed_s = 292
+usd_hr = 0.2434
+compute_usd = 0.0152
+billed_usd = 0.0197
+results = "results/amd/"
+note = "two single-threaded whatshap phase processes concurrently; peak 3.31 GB (WhatsHap's Maximum memory usage, Illumina run) left out: GB, not GiB"
+
+# --- checks: '## What held at scale, on all three chips' (bound = 'why it must hold') ---
+
+[[check]]
+id = "input-pins"
+claim = "sha256 of every staged input == pins; .bai and hifiasm md5 == GIAB's"
+kind = "pin"
+bound = "provenance"
+observed = "ok"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "reference-and-slices"
+claim = "`chr20.fa` M5 == GRCh38 chr20 (`b18e6c53…`); each slice holds every record the GIAB index puts on chr20"
+kind = "conservation"
+bound = "right reference, nothing dropped"
+observed = "201,925 HiFi / 18,289,203 Illumina"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "truths-genotypes"
+claim = "both truths: same records as the benchmark, same genotypes ignoring phase"
+kind = "identity"
+bound = "phase transfer changes only phase"
+observed = "0 / 0 differ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "outputs-genotypes"
+claim = "both outputs: same records as the input, in order; genotypes unchanged ignoring phase"
+kind = "identity"
+bound = "WhatsHap phases, it does not re-call"
+observed = "0 / 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "hom-unphased"
+claim = "no homozygous or missing call phased or given a PS"
+kind = "identity"
+bound = "only hets carry phase"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ps-naming"
+claim = "every phased het has an integer PS, at or before its block's first phased variant, at an input het's position"
+kind = "identity"
+bound = "WhatsHap's block naming"
+observed = "0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "stats-count"
+claim = "phased hets == `whatshap stats` phased + singletons; block list == PS sets"
+kind = "conservation"
+bound = "the two tools count the same thing"
+observed = "53,385 / 42,182"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "flip-invariance"
+claim = "every pairwise score unchanged when every phased genotype is flipped"
+kind = "invariance"
+bound = "phase is defined only up to a flip"
+observed = "identical"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "truth-genotypes-match"
+claim = "different genotypes vs either truth"
+kind = "identity"
+bound = "same calls on both sides"
+observed = "0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "switch-error"
+claim = "switch error rate vs either truth ≤ 0.05"
+kind = "band"
+bound = "a phasing with no information scores 0.5"
+observed = "0.10% / 0.41%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "block-length-order"
+claim = "HiFi median block (bp) > Illumina's"
+kind = "band"
+bound = "read length sets reach"
+observed = "91,234 > 409"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "native"
+claim = "WhatsHap's core `.so` architecture == `uname -m`"
+kind = "native-arch"
+bound = "not emulated"
+observed = "aarch64"
+outcome = "pass"
+across_chips = "n/a"
+
+# --- scores against the truth (results/arm64/compare.tsv): observed, not asserted -----
+[[check]]
+id = "hifi-switch-error"
+claim = "HiFi 49×: switch error vs hifiasm"
+kind = "reported"
+observed = "0.102% (54 of 52,873)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "illumina-switch-error"
+claim = "Illumina 69×: switch error vs hifiasm"
+kind = "reported"
+observed = "0.410% (130 of 31,722)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "truth-vs-truth"
+claim = "hifiasm vs StrandSeqANDTrio: switch error"
+kind = "reported"
+observed = "0.085% (32 of 37,690)"
+outcome = "reported"
+
+[[check]]
+id = "cross-chip-bytes"
+claim = "the record body of both phased VCFs (md5 `a6e359c4…` HiFi, `d359c291…` Illumina); every read count WhatsHap logs; every block statistic; all 66 pairwise scores"
+kind = "identity"
+observed = "Intel and AMD each agree with Graviton4 on every recorded value"
+outcome = "pass"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:GIAB-HG002-NISTv4.2.1-phased"
+same_bytes = false
+metric = "whatshap compare switch error rate vs hifiasm_v11_phasetransfer and StrandSeqANDTrio"
+tolerance_basis = "a phasing with no information scores 0.5; the 0.05 band is set ten times below that, to catch a broken run (wrong sample, wrong reference) rather than noise"
+check = "switch-error"
+
+[[trap]]
+id = "phasing-roda-illumina-bam-differs"
+scope = "data"
+symptom = "150.3 GB against NCBI's 130.8 GB, its `.bai` md5 is not the published one, and its index puts 32,870,310 records on chr20 against 18,289,203"
+cause = "the RODA copy is the earlier file that, per GIAB's February 2019 note, carried merged-in duplicate reads"
+fix = "take the Illumina BAM from NCBI's GIAB FTP and check the .bai md5 against GIAB's README"
+
+[[trap]]
+id = "phasing-ps-and-span-assumptions"
+scope = "tool"
+symptom = "The first arm64 run failed two checks in `check.py`"
+blames = "WhatsHap"
+cause = "two assumptions the real data disproved: that a PS is always one of its block's variants (7 of 10,338 Illumina blocks name an unphased first variant), and that span measures a short-read block (ten Illumina phase sets span over 1 Mb with 2–32 variants)"
+fix = "assert the PS is an input het's position at or before the block; measure short-read blocks by whatshap stats' pieces"

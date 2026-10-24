@@ -1,0 +1,215 @@
+# measurements/diamond-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one whole proteome searched and checked: makedb of UniRef50 plus blastp of 20,431 reviewed human proteins"
+
+[[dataset]]
+id = "UniProt 2026_03 uniref50.fasta.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "fetch.py checks size and md5 against UniProt's RELEASE.metalink; served from current_release/ only until the next release, so the bucket copy holds the bytes"
+
+[[dataset]]
+id = "UniProt 2026_03 uniprot_sprot.fasta.gz (OX=9606 reviewed entries as queries)"
+tier = "versioned-release"
+pins = "pins.sha256"
+
+[[dataset]]
+id = "UniProt 2026_03 HUMAN_9606_idmapping_selected.tab.gz"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "UniProt's own UniRef50 cluster membership per human entry"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 9480
+billed_s = 9975
+usd_hr = 0.6381
+compute_usd = 1.68
+billed_usd = 1.768
+peak_gib = 16.6
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 11005
+billed_s = 11489
+usd_hr = 0.7497
+compute_usd = 2.292
+billed_usd = 2.393
+peak_gib = 17.0
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 5492
+billed_s = 5902
+usd_hr = 0.8622
+compute_usd = 1.315
+billed_usd = 1.414
+peak_gib = 17.0
+peak_kind = "vmhwm"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/arm64-run1/"
+host = "results/arm64-run1/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+note = "first Graviton4 run: failed only on the cluster-mapping assertion; blastp 9,436 s (0.9% slower), byte-identical hit table, $1.79. README prints no tool wall or billed seconds for it, so no $ fields"
+
+# --- checks: the README's "The identities, at scale, on all three chips" rows --------
+[[check]]
+id = "db-sequences"
+claim = "database sequences (`dbinfo`)"
+kind = "identity"
+bound = "== release note's 38,840,027 == FASTA headers, no duplicate ids"
+observed = "38,840,027"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "db-letters"
+claim = "database letters (`dbinfo`)"
+kind = "conservation"
+bound = "== residues counted from the FASTA"
+observed = "12,182,780,325"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "queries"
+claim = "queries"
+kind = "identity"
+bound = "== UniProt's 20,431 reviewed human entries, no duplicates"
+observed = "20,431"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "queries-without-cluster"
+claim = "queries without a UniRef50 cluster"
+kind = "identity"
+bound = "== queries shorter than 11 residues (UniRef leaves them out)"
+observed = "8 == 8"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mapped-clusters-present"
+claim = "clusters UniProt maps a query to"
+kind = "identity"
+bound = "all present in the FASTA"
+observed = "20,423 of 20,423"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "representatives-named"
+claim = "queries that are their cluster's representative"
+kind = "identity"
+bound = "mapped to the cluster named after them"
+observed = "17,293"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "queries-aligned"
+claim = "queries aligned (DIAMOND's log)"
+kind = "conservation"
+bound = "== distinct queries in the table"
+observed = "20,383"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "qlen"
+claim = "every row's `qlen`"
+kind = "identity"
+bound = "== that query's length"
+observed = "8.1M rows, 0 mismatches"
+outcome = "pass"
+
+[[check]]
+id = "self-hit"
+claim = "representatives with any hit"
+kind = "identity"
+bound = "every one hits itself"
+observed = "17,271 of 17,271"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-identity"
+claim = "those self-rows"
+kind = "identity"
+bound = "all at 100% identity"
+observed = "17,271"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-full-length"
+claim = "self-alignments spanning the whole query"
+kind = "reported"
+bound = "observation"
+observed = "16,654"
+outcome = "reported"
+
+[[check]]
+id = "uniprot-cluster-recovered"
+claim = "queries whose hits include UniProt's own cluster for them"
+kind = "reported"
+bound = "observation"
+observed = "20,336 of 20,423 (99.57%)"
+outcome = "reported"
+
+[[check]]
+id = "hit-table-cross-chip"
+claim = "hit table across chips"
+kind = "reported"
+observed = "Intel and AMD byte-identical (8,107,585 rows); Graviton4 has 8,107,580 pairs, all in the x86 tables; the x86 tables have 5 more, all for one query, and 198 shared rows differ in a reported value"
+outcome = "reported"
+# not classified path: the README attributes it to a different arm64 build (.dmnd differs), not separable from architecture
+
+[[cross_code]]
+with = "published:UniProt-2026_03-UniRef50-cluster-membership"
+same_bytes = true
+metric = "share of queries whose hits include UniProt's own UniRef50 cluster for them"
+tolerance_basis = "observation, not a bound: membership is transitive through UniRef90, so a member need not align to its representative"
+check = "uniprot-cluster-recovered"
+
+[[trap]]
+id = "diamond-short-queries-have-no-cluster"
+scope = "data"
+symptom = "FAIL: only 20423 of 20431 queries map to a UniRef50 cluster"
+cause = "UniRef leaves out sequences shorter than 11 residues; the 8 unmapped queries are exactly those"
+fix = "assert queries without a cluster == queries shorter than 11 residues"
+cost = "$1.79 (the first Graviton4 run)"
+
+[[trap]]
+id = "diamond-busybox-awk-hash-hours"
+scope = "image"
+symptom = "check glue hashing 38.8M ids would have taken hours on the x86 image's BusyBox awk"
+cause = "BusyBox awk in the x86 (bioconda) image"
+fix = "search.sh hashes the 20k clusters instead of the 38.8M ids"
+cost = "about $0.9 for three runs stopped at their check glue"

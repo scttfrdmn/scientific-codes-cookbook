@@ -1,0 +1,174 @@
+# measurements/z3-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole verified run: 4,536 SMT-LIB solves (QF_IDL + QF_RDL + QF_LRA) plus every model check and unsat-core check"
+
+[[dataset]]
+id = "SMT-LIB 2025 non-incremental release, Zenodo 16740866 (2025.08.04): QF_IDL, QF_RDL, QF_LRA .tar.zst"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "00-fetch checks each archive against Zenodo's md5, then writes the sha256 pins; archives unpack under non-incremental/"
+
+# peak_gib is the box's anonymous memory with 64 solves running (times.txt peak_anon_gib), which is
+# none of the schema's peak_kind values, so peak_kind is left out.
+[[run]]
+instance = "m8g.16xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 2373
+billed_s = 2427
+usd_hr = 2.872
+compute_usd = 1.893
+billed_usd = 1.936
+peak_gib = 94.3
+note = "decided in 60 s: 3,475; billed $/decided 0.000557"
+
+[[run]]
+instance = "m8i.16xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 2388
+billed_s = 2438
+usd_hr = 3.387
+compute_usd = 2.247
+billed_usd = 2.294
+peak_gib = 81.6
+note = "decided in 60 s: 3,419; billed $/decided 0.000671"
+
+[[run]]
+instance = "m8a.16xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-18"
+date_source = "git"
+workers = 64
+wall_s = 1963
+billed_s = 2006
+usd_hr = 3.895
+compute_usd = 2.124
+billed_usd = 2.17
+peak_gib = 93.0
+note = "decided in 60 s: 3,560; billed $/decided 0.000610"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-18"
+date_source = "git"
+note = "98-benchmark sizing canary; README prints no wall or price for it; results not committed"
+
+# --- checks: the README's "What held at scale, on all three chips" rows (summarize.py) -
+[[check]]
+id = "every-benchmark-ran"
+claim = "every benchmark ran, once"
+kind = "identity"
+bound = "count == the release README's"
+observed = "4,536"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "no-status-contradiction"
+claim = "no verdict contradicts the published `:status`"
+kind = "reference"
+bound = "SMT-LIB's own labels"
+observed = "3,387 agree, 0 wrong"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "every verdict agrees across chips: 0 disagreements on the 3,418–3,475 benchmarks each pair both decide, including the 21 unlabelled unsat verdicts; agree counts 3,387 / 3,333 / 3,461 move with how many finish inside 60 s"
+
+[[check]]
+id = "sat-models-satisfy"
+claim = "every sat model satisfies the file"
+kind = "identity"
+bound = "each `assert` evaluated by `smtcheck.py`, exact rationals"
+observed = "2,110 / 2,110"
+outcome = "pass"
+
+[[check]]
+id = "core-unsat-alone"
+claim = "every unsat core is unsat on its own"
+kind = "identity"
+bound = "fresh solver, core only"
+observed = "1,176 (47 ran out of time)"
+outcome = "pass"
+
+[[check]]
+id = "core-members-necessary"
+claim = "each core member is necessary"
+kind = "identity"
+bound = "drop one: the rest is sat, and `smtcheck.py` confirms the model"
+observed = "2,386 members, 0 redundant"
+outcome = "pass"
+
+[[check]]
+id = "evaluator-control"
+claim = "control: that model breaks the whole file"
+kind = "identity"
+bound = "the file is unsat, so the evaluator must reject it"
+observed = "2,386 / 2,386 rejected"
+outcome = "pass"
+
+# --- reported, not asserted -----------------------------------------------------------
+[[check]]
+id = "decides-unknown"
+claim = "benchmarks the release labels `unknown` that Z3 decides (Graviton4)"
+kind = "reported"
+observed = "88 (67 sat, 21 unsat)"
+outcome = "reported"
+
+[[check]]
+id = "rlimit-determinism"
+claim = "`rlimit count` on every decided benchmark, across chips"
+kind = "reported"
+observed = "identical except 10: all 7 decided `bcnscheduling` and all 3 decided `vlsat3` files"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "those 10 differ between every pair of chips, including Intel against AMD on the same linux-64 binary; 117 other benchmarks over 19 s on both are identical between Intel and AMD"
+
+[[check]]
+id = "core-size"
+claim = "minimised unsat core size across chips"
+kind = "reported"
+observed = "e.g. `blending/16.smt2` 110 members on Graviton4 and AMD, 219 on Intel"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "blending/16.smt2: 110 (Graviton4, AMD) vs 219 (Intel) with the same rlimit; none of those cores is sat on its own"
+
+[[check]]
+id = "decided-in-limit"
+claim = "benchmarks decided inside 60 s"
+kind = "reported"
+observed = "3,475 / 3,419 / 3,560"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "moves with chip speed: Graviton4 decides 31 QF_IDL benchmarks Intel does not; AMD decides everything Graviton4 does plus 85 more"
+
+[[cross_code]]
+with = "published:SMT-LIB-2025-non-incremental-status"
+same_bytes = true
+metric = "sat/unsat verdict against the benchmark's published :status"
+tolerance_basis = "a verdict is exact: one contradiction is a wrong answer"
+check = "no-status-contradiction"
+
+[[trap]]
+id = "z3-archives-unpack-under-non-incremental"
+scope = "data"
+symptom = "a canary that found no benchmarks"
+cause = "the SMT-LIB archives unpack under non-incremental/"
+fix = "look for benchmarks under non-incremental/"
+
+[[trap]]
+id = "z3-overruns-timeout-and-aborts-oom"
+scope = "tool"
+symptom = "Z3 overruns its own 60 s timeout on 30–32 benchmarks per chip (vlsat3 i series, ecoliMILP); on 2 LassoRanker files per chip it aborts with an uncaught out_of_memory_error (SIGABRT) instead of returning unknown"
+cause = "a resource-limit defect in Z3, not a wrong answer"
+fix = "the driver kills a process at 720 s (twice the limit plus 600 s); count both as not decided and report, not fail"

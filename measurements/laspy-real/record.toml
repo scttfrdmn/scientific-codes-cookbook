@@ -1,0 +1,236 @@
+# measurements/laspy-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "the whole CA_LassenNP_2020 project (128 tiles, 4,642,900,288 points) split, written and checked"
+
+[[dataset]]
+id = "RODA s3://usgs-lidar/Projects/CA_LassenNP_LowerBearCreekHUC10_2020_D20/CA_LassenNP_2020/LAZ/ (128 objects, 26,173,428,355 B)"
+tier = "roda"
+pins = "pins.tsv"
+note = "requester-pays; copied S3 to S3 by stage-inputs.sh. RODA listing in src.tsv; per-tile sha256 and MD5 in pins.tsv"
+
+[[dataset]]
+id = "USGS EPT ept-sources/manifest.json for CA_LassenNP_2020"
+tier = "roda"
+pins = "pins.sha256"
+note = "as pinned by pointcloud-real"
+
+[[dataset]]
+id = "USGS CA_LassenNP_2020.vpc"
+tier = "roda"
+pins = "pins.sha256"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 467
+billed_s = 800
+usd_hr = 0.7181
+compute_usd = 0.093
+billed_usd = 0.16
+peak_gib = 0.4082
+peak_kind = "rss"
+note = "peak is the largest laspy worker ru_maxrss (418 MiB); the box cgroup memory.peak, 28.8 GiB, is mostly page cache of the 27.7 GB written"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 651
+billed_s = 1034
+usd_hr = 0.8467
+compute_usd = 0.153
+billed_usd = 0.243
+peak_gib = 0.4258
+peak_kind = "rss"
+note = "pointcloud env x86 twin. Worker ru_maxrss 436 MiB; box cgroup memory.peak 30.9 GiB"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 389
+billed_s = 660
+usd_hr = 0.9738
+compute_usd = 0.105
+billed_usd = 0.179
+peak_gib = 0.4268
+peak_kind = "rss"
+note = "pointcloud env x86 twin. Worker ru_maxrss 437 MiB; box cgroup memory.peak 30.9 GiB"
+
+# --- checks: '## What held at scale, on all three chips' (every cell 'same' on Intel and AMD)
+[[check]]
+id = "tile-provenance"
+claim = "every tile's size and MD5 == RODA's listing (62 single-part ETags, 66 multipart at 5 MiB parts); sha256 == pins.tsv"
+kind = "pin"
+observed = "128 / 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "source-header"
+claim = "header point count (64-bit) == decoded; header bounds == decoded extents; header points-by-return (15) == decoded"
+kind = "identity"
+observed = "128 / 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "catalogues"
+claim = "decoded count and proj:bbox == USGS's VPC; count and Z bounds == the EPT's sources manifest"
+kind = "reference"
+observed = "128 / 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "chunk-invariance"
+claim = "record bytes identical at chunk sizes 2,000,000 and 1,234,567"
+kind = "invariance"
+observed = "128 / 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "split-partition"
+claim = "ground + rest == source, per tile; ground == class-2 count; class histograms partition"
+kind = "conservation"
+observed = "128 / 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "field-sums"
+claim = "every raw field of PDRF 6, summed over ground + rest == the source's (mod 2⁶⁴)"
+kind = "conservation"
+observed = "11 fields × 128"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "laz-roundtrip"
+claim = "written LAZ decodes to the exact records written (sha256 of the 30-byte records)"
+kind = "identity"
+observed = "256 / 256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "written-header-counts"
+claim = "written header: count, points-by-return == decoded; bounds == extents exactly"
+kind = "identity"
+observed = "256 / 256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "written-header-kept"
+claim = "written header: version 1.4, PDRF 6, scale, offset, global encoding, system id == source"
+kind = "identity"
+observed = "256 / 256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "vlrs-evlrs"
+claim = "written VLRs and EVLRs byte-identical to the source's (laszip VLR aside); parse_crs() equal"
+kind = "identity"
+observed = "256 / 256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pdal-reads"
+claim = "PDAL (laz-perf) reads every laspy-written file: count, min/max XYZ, class and return histograms == laspy"
+kind = "cross-code"
+observed = "256 / 256"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pdal-mean-z"
+claim = "PDAL mean Z == laspy's exact integer mean, within accumulation + print error"
+kind = "band"
+bound = "(n−1)·2⁻⁵³·max|z| + half a unit in PDAL's sixth printed decimal"
+observed = "worst 0.90 of bound"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "project-vs-ept"
+claim = "project: points, class histogram, Σ Z (cm, exact), Z range == the EPT's"
+kind = "cross-code"
+observed = "4,642,900,288; Σ Z 953,651,753,831,395 cm"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "return-hist-mod8"
+claim = "project return histogram mod 8 == the EPT's"
+kind = "cross-code"
+observed = "8 values"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "defaults-control"
+claim = "The control asserts the lookup comes out exactly as that rule predicts, and that every other VLR survives the default call."
+kind = "identity"
+outcome = "pass"
+
+[[check]]
+id = "laz-bytes-cross-chip"
+claim = "all 256 files have the same sha256 on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "20 of 20 values and 128 of 128 tile rows identical (results/compare.txt)"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "measurements/pointcloud-real"
+same_bytes = false
+metric = "project point count, class histogram, exact Σ Z in cm, Z range and return histogram mod 8 against the EPT built from these tiles"
+tolerance_basis = "integer counts and an exact integer sum: no tolerance; return numbers compared mod 8 because the EPT's LAS 1.2 PDRF 1 stores return number in 3 bits"
+check = "project-vs-ept"
+
+[[cross_code]]
+with = "recipes/pointcloud"
+same_bytes = true
+metric = "PDAL (laz-perf) decode of every laspy-written file: count, min/max XYZ, class and return histograms, mean Z"
+tolerance_basis = "counts exact; mean Z bounded by summation error plus half a unit in PDAL's sixth printed decimal"
+check = "pdal-reads"
+
+[[trap]]
+id = "laspy-streaming-writer-drops-evlrs"
+scope = "tool"
+symptom = "parse_crs() returns None on the written file, while the header keeps the WKT bit set"
+cause = "laspy.open(out, mode=\"w\", header=h) + close() does not write the EVLRs, so the WKT CRS is lost (LasData.write() does)"
+fix = "call writer.write_evlrs(h.evlrs) before close()"
+
+[[trap]]
+id = "laspy-classification-lookup-rewritten"
+scope = "tool"
+symptom = "LEX_PotenialGND → LEXPotenialGND: 5 of QSI's 256 Classification Lookup entries change"
+cause = "laspy parses the Classification Lookup VLR into names and keeps only [A-Za-z0-9 ] (laspy 2.7.0 vlrs/known.py)"
+fix = "put the VLR back as raw bytes read from the file: laspy.VLR(\"LASF_Spec\", 0, desc, data)"
+cost = "a failed probe (part of $0.19 for three probes)"
+
+[[trap]]
+id = "laspy-pdal-mean-z-print-precision"
+scope = "method"
+symptom = "a probe failed on the PDAL mean-Z check, not the tool"
+cause = "the mean-Z bound left out PDAL's six printed decimals; the print clause is the larger here (worst file 4.86e-07 off, inside 3.76e-08 + 5.0e-07)"
+fix = "add half a unit in the last digit PDAL prints to the summation-error bound"
+cost = "a failed probe (part of $0.19 for three probes)"

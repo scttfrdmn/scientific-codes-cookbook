@@ -1,0 +1,248 @@
+# measurements/cantera-real/record.toml -- GRI-Mech 3.0 validation set, three chips.
+schema = 1
+result_unit = "the whole study (224 flames, 252 reactors, 2,420 equilibrium states x 3 solvers), every check passed"
+
+[[dataset]]
+id = "GRI-Mech 3.0 (combustion.berkeley.edu/gri-mech/version30): files30/grimech30.dat, thermo30.dat, transport.dat + 24 targets30/ pages"
+tier = "durable-id"
+pins = "sources.sha256"
+note = "1999 release, no DOI; sha256 of every file is the pin, re-checked in every run; targets.tsv transcribed from the pages and re-asserted"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 496
+billed_s = 577
+usd_hr = 0.319
+compute_usd = 0.044
+billed_usd = 0.0511
+peak_gib = 1.74
+peak_kind = "cgroup-memory.peak"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 602
+billed_s = 657
+usd_hr = 0.3748
+compute_usd = 0.0627
+billed_usd = 0.0684
+peak_gib = 4.52
+peak_kind = "cgroup-memory.peak"
+note = "peak counts page cache, including the linux-64 env twin installed at task start"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 294
+billed_s = 342
+usd_hr = 0.4311
+compute_usd = 0.0352
+billed_usd = 0.041
+peak_gib = 4.35
+peak_kind = "cgroup-memory.peak"
+note = "peak counts page cache, including the linux-64 env twin installed at task start"
+
+# --- checks: the README's "What held at scale, on all three chips" rows -----------------
+[[check]]
+id = "mechanism-bits"
+claim = "packaged `gri30.yaml` == `ck2yaml` of the official GRI-Mech 3.0 files: k_f, k_r, h/RT, s/R, c_p/R, viscosity, conductivity, mixture, binary and thermal diffusion coefficients, 84 (T, P) states"
+kind = "identity"
+bound = "exactly 0"
+observed = "0 in every property, 53 species and 325 reactions, same order and duplicate flags"
+outcome = "pass"
+
+[[check]]
+id = "targets-transcription"
+claim = "`targets.tsv` == the 24 pinned target pages (values, mixture, φ, P, T)"
+kind = "pin"
+bound = "exact"
+observed = "all 24"
+outcome = "pass"
+
+[[check]]
+id = "flames-converge"
+claim = "every flame converges, S_u > 0"
+kind = "sentinel"
+bound = "224 of 224"
+observed = "224, 56,087 grid points"
+outcome = "pass"
+
+[[check]]
+id = "flame-continuity"
+claim = "continuity: ρu uniform through the flame"
+kind = "conservation"
+bound = "< 1e-4 (the steady solver's rtol)"
+observed = "2.41e-05"
+outcome = "pass"
+
+[[check]]
+id = "flame-mass-fraction-sum"
+claim = "Σ Y = 1 at every grid point"
+kind = "conservation"
+bound = "rtol + K·atol = 1.0005e-4"
+observed = "2.17e-09"
+outcome = "pass"
+
+[[check]]
+id = "unity-lewis-elements"
+claim = "unity Lewis number: element mass fractions equal the inlet's at every grid point"
+kind = "conservation"
+bound = "< 1e-5"
+observed = "3.05e-07 over 29 flames"
+outcome = "pass"
+
+[[check]]
+id = "differential-diffusion-control"
+claim = "control: mixture-averaged / multicomponent flames move them (differential diffusion)"
+kind = "invariance"
+bound = "> 100× the above"
+observed = "least 2.76e-03"
+outcome = "pass"
+
+[[check]]
+id = "reactors-ignite"
+claim = "every reactor ignites"
+kind = "sentinel"
+bound = "T rise > ½ its equilibrium rise"
+observed = "252 of 252"
+outcome = "pass"
+
+[[check]]
+id = "cv-density"
+claim = "constant volume: density"
+kind = "conservation"
+bound = "< 1e-12"
+observed = "0"
+outcome = "pass"
+
+[[check]]
+id = "reactor-energy"
+claim = "constant volume: internal energy, constant pressure: enthalpy"
+kind = "conservation"
+bound = "≤ rtol × CVODES steps, per trajectory"
+observed = "at most 1.8% of that bound (Intel/AMD 3.8%)"
+outcome = "pass"
+
+[[check]]
+id = "reactor-elements"
+claim = "elements through every trajectory"
+kind = "conservation"
+bound = "< 1e-9"
+observed = "6.9e-13"
+outcome = "pass"
+
+[[check]]
+id = "reactor-end-equals-equilibrium"
+claim = "integrator end state == the equilibrium solver's UV / HP state"
+kind = "cross-code"
+bound = "1e-3 K, max|ΔX| 1e-6"
+observed = "1.32e-4 K, 1.9e-7"
+outcome = "pass"
+
+[[check]]
+id = "page-phi"
+claim = "page φ == the φ of the page's own mole fractions, within print precision"
+kind = "identity"
+bound = "all but IG.6a/6b, those two off by one shared factor 2.75/3.5"
+observed = "as bound"
+outcome = "pass"
+
+[[check]]
+id = "vcs-converges"
+claim = "`vcs` converges"
+kind = "sentinel"
+bound = "every state"
+observed = "2,420 of 2,420"
+outcome = "pass"
+
+[[check]]
+id = "gibbs-certificate"
+claim = "Gibbs-minimum certificate μ_k/RT = Σ_j a_kj λ_j, every species above 1e-12, every solver"
+kind = "identity"
+bound = "≤ 1e-6 (VCS's own minor-species tolerance, `m_tolmin`)"
+observed = "vcs 6.7e-07, gibbs 7.9e-10, element_potential 3.8e-13"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "x86 vs Graviton4 g/RT within 1.1e-15 relative (vcs), 1.7e-15 (gibbs), 4.3e-12 (element_potential)"
+
+[[check]]
+id = "solvers-agree"
+claim = "`gibbs` and `element_potential` == `vcs` where they converge"
+kind = "cross-code"
+bound = "max|ΔX| < 1e-6"
+observed = "5.6e-10, 5.2e-10"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "x86 vs Graviton4 g/RT within 1.1e-15 relative (vcs), 1.7e-15 (gibbs), 4.3e-12 (element_potential)"
+
+[[check]]
+id = "equilibrium-elements"
+claim = "elements through every equilibrium solve"
+kind = "conservation"
+bound = "< 1e-9"
+observed = "2.4e-10"
+outcome = "pass"
+
+[[check]]
+id = "determinism"
+claim = "the run repeats a flame and a reactor in one process and asserts identical bits"
+kind = "identity"
+bound = "identical bits"
+outcome = "pass"
+
+# --- reported, not asserted -------------------------------------------------------------
+[[check]]
+id = "ignition-vs-gri"
+claim = "Ignition (max dT/dt, constant volume) vs GRI-Mech 3.0's own SENKIN predictions"
+kind = "reported"
+observed = "median 1.5% over the 13 targets; IG.1a 664.7 vs 666 µs; IG.St4a 8.5%"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "no ignition delay is bit-identical across the build boundary; largest difference 8.4e-7 relative (IG.6b)"
+
+[[check]]
+id = "flame-speed-vs-gri"
+claim = "GRI-Mech's CH₄ and C₂H₆ flame speeds match Cantera's coarsest grid to 0.1–1.3%; the converged values are 0.5–5% lower"
+kind = "reported"
+observed = "F1 37.96 (0.1) / 36.99 (0.0125) / 36.81 (multi + Soret) vs GRI 37.92"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "20 of 224 flames end on a different number of points; largest S_u difference 0.41% (205 vs 209 points), 0.20% on a same-size grid"
+
+[[check]]
+id = "intel-amd-identical"
+claim = "Intel and AMD are bit-identical to each other on everything"
+kind = "reported"
+observed = "all 224 flame speeds, all 252 ignition delays and end states, all 7,237 converged equilibria"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:GRI-Mech-3.0-targets30"
+same_bytes = true
+metric = "ignition delay (max dT/dt) relative to GRI-Mech 3.0's SENKIN prediction, median over 13 targets"
+tolerance_basis = "none asserted: the pages do not say which ignition criterion each target used, so no tolerance can be justified"
+check = "ignition-vs-gri"
+
+[[trap]]
+id = "cantera-flat-energy-bound"
+scope = "method"
+symptom = "first run failed on Intel: internal-energy drift 1.66e-8 against a flat 1e-8 bound, on the 40 atm φ = 1 reactor at 1250 K (3,838 steps)"
+cause = "the integrator carries T and Y, not u, so u drifts by the per-step error summed over steps; a flat bound picked before any run ignores step count"
+fix = "bound u/h drift at rtol × CVODES steps per trajectory; re-run all three chips on the changed spec"

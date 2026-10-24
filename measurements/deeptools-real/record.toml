@@ -1,0 +1,149 @@
+# measurements/deeptools-real/record.toml -- #118 backfill.
+# Each chip is two tasks on two boxes (01 index+stats, 03 coverage identity); the README prices the
+# pair as one result, so the $ figures live in no single run row (see notes).
+schema = 1
+result_unit = "one BAM's coverage identity: ENCFF933NSJ indexed and stat'd (01), then bamCoverage at binSize 1 and 50 (03)"
+
+[[dataset]]
+id = "ENCODE ENCFF933NSJ.bam (CTCF ChIP-seq, 2,057,454,374 B, md5 48f06f46ac59b93e6ae3110de9730a3e)"
+tier = "durable-id"
+unpinned = "ENCODE publishes an md5 per file, checked in both tasks; no sha256 manifest committed"
+
+# --- Graviton4 ---------------------------------------------------------------------------
+[[run]]
+instance = "m8g.xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+billed_s = 114
+usd_hr = 0.1795
+note = "task 01 (samtools index + stats). Pair billed $/result 0.0324 spans 01 + 03, so it is not on either row"
+
+[[run]]
+instance = "m8g.4xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+billed_s = 134
+usd_hr = 0.7181
+results = "results/arm64/identity.tsv"
+note = "task 03: bamCoverage 27 s (binSize 1) + 18 s (binSize 50); compute $/result 0.0090 is both runs at this rate, a summed wall the README does not print as one field, so wall_s and compute_usd are omitted. Date as for task 01"
+
+# --- Intel ----------------------------------------------------------------------------------
+[[run]]
+instance = "m8i.xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 2
+billed_s = 104
+usd_hr = 0.2117
+note = "task 01; pair billed $/result 0.0334"
+
+[[run]]
+instance = "m8i.4xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 2
+billed_s = 116
+usd_hr = 0.8467
+results = "results/x86_64/identity.tsv"
+note = "task 03: bamCoverage 22 s + 16 s; compute $/result 0.0089 over both, omitted as for Graviton4"
+
+# --- AMD ------------------------------------------------------------------------------------
+[[run]]
+instance = "m8a.xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+billed_s = 87
+usd_hr = 0.2434
+note = "task 01; pair billed $/result 0.0294"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+spawn_version = "0.139.1"
+date = "2026-10-20"
+date_source = "git"
+threads_per_core = 1
+billed_s = 87
+usd_hr = 0.9738
+results = "results/amd/identity.tsv"
+note = "task 03: bamCoverage 20 s + 12 s; compute $/result 0.0087 over both, omitted as for Graviton4"
+
+# --- checks ---------------------------------------------------------------------------------
+[[check]]
+id = "coverage-integral-w1"
+claim = "bamCoverage integral, binSize 1 == M bases (reference-aligned)"
+kind = "conservation"
+bound = "exact"
+observed = "2,998,490,520; difference 0"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "m-bases-account"
+claim = "samtools bases mapped (cigar) − inserted bases (from ID lines) = M bases"
+kind = "identity"
+observed = "2,998,622,940 − 132,420 = 2,998,490,520"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "w50-bin-inflation"
+claim = "W=50 within 0.0093% of (L-1+W)/L"
+kind = "band"
+bound = "loose sanity band (1% relative in coverage-identity.sh)"
+observed = "1.644889 vs predicted 1.644737"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bam-md5"
+claim = "ENCODE publishes an md5 per file, so the bytes are checkable at source; the gate runs inside the task"
+kind = "pin"
+outcome = "pass"
+
+[[check]]
+id = "outputs-byte-identical"
+claim = "every output is byte-identical: the .bai, basis.tsv, the 30,869-byte samstats.txt and identity.tsv"
+kind = "reported"
+observed = "byte-identical on Graviton4, Intel and AMD"
+outcome = "reported"
+across_chips = "identical"
+
+[[trap]]
+id = "deeptools-binned-vs-unbinned-integral"
+scope = "method"
+symptom = "integral vs samtools mapped bases at --binSize 50, within 5%: measured 1.644889 — refused"
+blames = "either tool"
+cause = "at bin width W bamCoverage credits a read to every bin it touches, spreading it over ~L-1+W positions; the metric compared a binned quantity with an unbinned one"
+fix = "--binSize 1, where L-1+W = L and the identity holds by construction"
+
+[[trap]]
+id = "deeptools-cigar-counts-insertions"
+scope = "method"
+symptom = "at binSize 1 the integral came out 4.4e-05 short — 132,420 bases in 3.0 Gbp"
+cause = "samtools 'bases mapped (cigar)' counts M and I; reference coverage counts M only"
+fix = "subtract the inserted bases summed from samtools stats ID lines (exactly 132,420) — accounting, not tolerance"
+
+[[trap]]
+id = "deeptools-no-dunder-version"
+scope = "image"
+symptom = "deeptools.__version__ is absent in this build"
+cause = "the packaged module carries no __version__"
+fix = "getattr fallback reporting 'unknown'; take the version from bamCoverage --version"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "task scripts staged and pinned by sha256 (index-and-stats.sh, coverage-identity.sh)"

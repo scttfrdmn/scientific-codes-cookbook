@@ -1,0 +1,312 @@
+# measurements/lineage-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "100,000 designated genomes assigned and checked (one tool)"
+
+[[dataset]]
+id = "cov-lineages/pango-designation v1.38 (commit 5d58f88) lineages.csv + pango_designation/alias_key.json"
+tier = "versioned-release"
+pins = "results/choose/inputs.sha256"
+
+[[dataset]]
+id = "Nextstrain open INSDC release 2026-10-17 (s3://nextstrain-data, by S3 object version): sequences.fasta.zst, metadata.tsv.zst, cog_uk_accessions.tsv.zst"
+tier = "durable-id"
+pins = "results/choose/inputs.sha256"
+
+[[dataset]]
+id = "query.fasta.gz: 100,000 genomes chosen by task 00 (seed 20261020), plus sub.fasta.gz (first 2,000), truth.tsv, accessions.txt"
+tier = "built"
+pins = "results/choose/inputs.sha256"
+note = "headers are INSDC accession.version only"
+
+[[dataset]]
+id = "Nextclade dataset tag 2026-09-07--17-10-15Z"
+tier = "versioned-release"
+from_recipe = "lineage"
+note = "sha256 asserted == the recipe's pin"
+
+[[run]]
+instance = "r8g.xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "run"
+wall_s = 412
+results = "results/choose/"
+note = "task 00, choosing the genomes, once; README prints billed $0.032 but no rate, so no $ fields"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/arm64/pangolin/host.txt"
+wall_s = 1515
+billed_s = 1727
+usd_hr = 0.359
+compute_usd = 0.151
+billed_usd = 0.172
+peak_gib = 5.13
+peak_kind = "rss"
+results = "results/arm64/pangolin/"
+note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/x86_64/pangolin/host.txt"
+wall_s = 1495
+billed_s = 1692
+usd_hr = 0.4234
+compute_usd = 0.176
+billed_usd = 0.199
+peak_gib = 3.91
+peak_kind = "rss"
+results = "results/x86_64/pangolin/"
+note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/amd/pangolin/host.txt"
+wall_s = 628
+billed_s = 808
+usd_hr = 0.4869
+compute_usd = 0.085
+billed_usd = 0.109
+peak_gib = 4.02
+peak_kind = "rss"
+results = "results/amd/pangolin/"
+note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
+
+[[run]]
+instance = "m8g.2xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/arm64/nextclade/host.txt"
+wall_s = 297
+billed_s = 413
+usd_hr = 0.359
+compute_usd = 0.03
+billed_usd = 0.041
+peak_gib = 0.45
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/nextclade/"
+note = "nextclade; billed includes the 2,000-genome single-thread run and the checks"
+
+[[run]]
+instance = "m8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/x86_64/nextclade/host.txt"
+wall_s = 391
+billed_s = 484
+usd_hr = 0.4234
+compute_usd = 0.046
+billed_usd = 0.057
+peak_gib = 0.45
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/nextclade/"
+note = "nextclade; billed includes the 2,000-genome single-thread run and the checks"
+
+[[run]]
+instance = "m8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "run"
+workers = 8
+host = "results/amd/nextclade/host.txt"
+wall_s = 205
+billed_s = 289
+usd_hr = 0.4869
+compute_usd = 0.028
+billed_usd = 0.039
+peak_gib = 0.45
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/nextclade/"
+note = "nextclade; billed includes the 2,000-genome single-thread run and the checks"
+
+# --- checks: '## The identities, at scale, on all three chips' (claim = observable, bound = assertion)
+
+[[check]]
+id = "query-pin"
+claim = "query, labels"
+kind = "pin"
+bound = "sha256 == task 00's pin"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nextclade-dataset-pin"
+claim = "Nextclade dataset"
+kind = "pin"
+bound = "sha256 == the recipe's pin; tag self-reported"
+observed = "`2026-09-07--17-10-15Z`"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rows"
+claim = "rows"
+kind = "identity"
+bound = "**one per genome, no repeats**, both tools, both runs"
+observed = "100,000 / 2,000"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "versions"
+claim = "versions"
+kind = "pin"
+bound = "**pangolin 4.4, `PUSHER-v1.38` on every row**"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "usher-histogram"
+claim = "UShER histogram"
+kind = "conservation"
+bound = "**`L(a/b)` counts sum to b, call is in it, `conflict == (b−a)/b`**"
+observed = "101,949 rows, 0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "qc-unassigned"
+claim = "QC"
+kind = "identity"
+bound = "**fail ⇒ `Unassigned`**"
+observed = "51 fails, all Unassigned"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "is-designated"
+claim = "`is_designated`"
+kind = "identity"
+bound = "**== the aligned-sequence md5 is in pangolin-data's `lineages.hash.csv`**"
+observed = "exactly the 96,540"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "batch-thread-invariance"
+claim = "**batch + thread invariance**"
+kind = "invariance"
+bound = "first 2,000 alone at 1 thread **== their rows** in the 100k run at 8"
+observed = "identical, both tools"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nextclade-totals"
+claim = "Nextclade totals"
+kind = "conservation"
+bound = "**== its own lists**: subs, dels, ins, missing, non-ACGTN, unknown aa, aa subs/dels, private = rev + labeled + unlabeled"
+observed = "100,000 rows, 0 violations"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nextclade-coverage"
+claim = "Nextclade coverage"
+kind = "identity"
+bound = "**== (end − start + 1 − missing − nonACGTN) / 29903, bit for bit**"
+observed = "100,000 rows"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "alias-tables"
+claim = "alias tables"
+kind = "identity"
+bound = "**v1.38 (image) ⊆ v1.41, unchanged**"
+observed = "561 of 561"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pangolin-vs-designation"
+claim = "**pangolin vs designation**"
+kind = "reference"
+bound = "**hierarchy-compatible ≥ 0.95**"
+observed = "**0.99755** (exact 0.97986)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nextclade-vs-pangolin"
+claim = "Nextclade vs pangolin"
+kind = "cross-code"
+bound = "hierarchy-compatible ≥ 0.80 (the recipe's floor)"
+observed = "0.99696 (exact 0.93247)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "nextclade-vs-designation"
+claim = "Nextclade vs designation"
+kind = "reported"
+bound = "observation"
+observed = "0.99565 (exact 0.92505)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "hash-label-vs-designation"
+claim = "hash table's label vs `lineages.csv`"
+kind = "reported"
+bound = "observation"
+observed = "0.99994 (exact 0.99940)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "cross-chip-identical"
+claim = "pangolin's whole report (every column of all 100,000 rows), the 2,000-genome run, and Nextclade's whole TSV (every column, all 100,000 rows) have the same canonical sha256 on Graviton4, Intel and AMD. So do all eight agreement tables"
+kind = "identity"
+observed = "[identical]"
+outcome = "pass"
+across_chips = "identical"
+
+[[trap]]
+id = "lineage-usher-sampled-ompi"
+scope = "image"
+symptom = "usher-sampled is not installed"
+blames = "a missing usher-sampled binary"
+cause = "the image's `usher-sampled` is linked against Open MPI, whose singleton start-up aborts when no `ssh`/`rsh` exists, which is true in the container; pangolin's `usher-sampled --help` probe fails and it falls back to the original `usher`"
+fix = "export OMPI_MCA_plm_rsh_agent=false; pangolin.sh fails if the message appears"
+cost = "the 2,000 genomes took 1,688 s that way and 43 s with the variable set; $0.33 of the $1.10 spend"
+
+[[trap]]
+id = "lineage-usher-runs-twice"
+scope = "image"
+symptom = "the `usher_to_report` rule prints `usher_inference`'s shell output and takes as long as it did, on every chip and in every run"
+cause = "fits UShER being executed twice under this image's snakemake 9.23 (not established)"
+fix = "none: reported here, not worked around"
+
+[[trap]]
+id = "lineage-designation-cache-lookup"
+scope = "tool"
+symptom = "96,540 genomes (96.5%) are byte-identical, after alignment, to the designated sequence, and pangolin's default mode would just return the label from its hash table"
+cause = "pangolin's designation cache answers designated sequences by lookup, so scoring against designations tests the lookup, not the caller"
+fix = "--skip-designation-cache"
+
+[[trap]]
+id = "lineage-memory-peak-page-cache"
+scope = "platform"
+symptom = "The container's `memory.peak` reached 27–28 GiB"
+blames = "pangolin's memory use"
+cause = "almost all page cache for the GB-scale intermediates on the root disk; pangolin's largest process peaks at 4–5 GiB"
+fix = "size by the process RSS, not memory.peak (smaller boxes were not tried)"

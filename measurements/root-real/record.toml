@@ -1,0 +1,167 @@
+# measurements/root-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one df102 dimuon analysis over the whole of CMS Open Data record 12341 (61,540,413 events), with every check"
+
+[[dataset]]
+id = "CERN Open Data record 12341, Run2012BC_DoubleMuParked_Muons.root (doi:10.7483/OPENDATA.CMS.LVG5.QT81)"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "fetched on AWS by 00-fetch.task.json into the bucket"
+
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "primary"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+host = "results/arm64/host.txt"
+wall_s = 22.3
+billed_s = 187
+usd_hr = 0.3190
+compute_usd = 0.0020
+billed_usd = 0.0166
+peak_gib = 2.74
+results = "results/arm64/"
+note = "wall is the event loop; peak is ROOT's (uproot check peaks at 3.0 GiB)"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+host = "results/x86_64/host.txt"
+wall_s = 27.2
+billed_s = 173
+usd_hr = 0.3748
+compute_usd = 0.0028
+billed_usd = 0.0180
+peak_gib = 2.71
+results = "results/x86_64/"
+note = "8 vCPU = 4 cores x 2 threads"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "cross-chip"
+date = "2026-10-18"
+date_source = "run"
+workers = 8
+host = "results/amd/host.txt"
+wall_s = 14.3
+billed_s = 142
+usd_hr = 0.4311
+compute_usd = 0.0017
+billed_usd = 0.0170
+peak_gib = 2.46
+results = "results/amd/"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "event-count"
+claim = "event count"
+kind = "reference"
+bound = "CERN Open Data's `number_events`"
+observed = "61,540,413"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "cutflow"
+claim = "nMuon distribution sums to the events; its `==2` bin equals the filter; OS + SS = 2-muon"
+kind = "conservation"
+observed = "31,104,343 = 24,067,843 + 7,036,500"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "root-uproot-bits"
+claim = "ROOT and uproot decode the file to the same bits"
+kind = "cross-code"
+bound = "two implementations of one format"
+observed = "count, Σ nMuon = 149,322,456, all 66 nMuon bins, and the bit fingerprint of all five muon branches"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "snapshot-round-trip"
+claim = "ROOT's MT Snapshot (jagged branches) reads back in uproot = the same selection made by uproot on the source"
+kind = "invariance"
+bound = "format round-trip"
+observed = "24,067,843 events, five fingerprints equal"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "histogram-partition"
+claim = "mass histogram: bins + under/overflow = selected pairs"
+kind = "conservation"
+observed = "24,067,843 (112,529 under, 7,909 over)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mass-two-formulas"
+claim = "per event, numpy's `E² − |p|²` vs ROOT's `PtEtaPhiMVector`"
+kind = "identity"
+bound = "double-precision forward error, ≤ 64 ε (E₁+E₂)²"
+observed = "6.76 ε"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "6.756 ε on Graviton4, 7.401 ε on both Intel and AMD; worst relative mass difference 1.6e-8 vs 7.6e-9; not one event changes bin"
+
+[[check]]
+id = "one-event-loop"
+claim = "one event loop for every booked result"
+kind = "identity"
+bound = "lazy booking"
+observed = "`GetNRuns() == 1`"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "resonances-pdg"
+claim = "J/ψ, ψ(2S), Υ(1S), Z fitted within 1% of PDG"
+kind = "reference"
+bound = "1% of PDG (physics bound: uncalibrated 2012 muon momentum, FSR)"
+observed = "worst −0.35% (Z)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "root-values-crosschip"
+claim = "Everything ROOT computed is identical on all three chips"
+kind = "reported"
+observed = "24 of 24 values in root.tsv; all 30,002 mass-histogram bins"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "skim-bytes"
+claim = "The skim's size differs by chip"
+kind = "reported"
+observed = "862,200,367 / 862,200,861 / 862,201,128 B"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "862,200,367 / 862,200,861 / 862,201,128 B; contents read back to the same fingerprints on all three"
+
+[[check]]
+id = "jpsi-chi2"
+claim = "The J/ψ fit's χ²/ndf is 589"
+kind = "reported"
+observed = "589"
+outcome = "reported"
+across_chips = "identical"
+
+[[cross_code]]
+with = "published:PDG"
+same_bytes = false
+metric = "fitted resonance mass vs PDG, relative"
+tolerance_basis = "uncalibrated 2012 muon momentum scale is off by ~0.1–0.3% and a Gaussian fit is pulled low by FSR; a wrong mass term or a column swap would move every peak by far more than 1%"
+check = "resonances-pdg"
+
+[[trap]]
+id = "root-mt-snapshot-bytes-path"
+scope = "tool"
+symptom = "the skim's size differs by chip (862,200,367 / 862,200,861 / 862,201,128 B)"
+cause = "the multi-threaded Snapshot merges clusters in the order the threads finish them, so the bytes are a path"
+fix = "compare skims by content (bit fingerprints), never by checksum"

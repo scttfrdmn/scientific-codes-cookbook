@@ -1,0 +1,318 @@
+# measurements/star-real/record.toml -- drafted by the #118 extraction, then authored.
+# Five data paths for one 28.6 GiB index on one m8g.8xlarge; wall_s = setup + align as the
+# README prints it, compute_usd = that at the box's rate (the cross-chip table's "$" figures).
+schema = 1
+result_unit = "one alignment of ERR188026 (15.8M reads) against the published 28.6 GiB GRCh38 + Ensembl 116 index"
+
+[[dataset]]
+id = "STAR 2.7.11b index, GRCh38 + Ensembl 116 (28.6 GiB, 16 files), s3://<bucket>/inputs/star-index-GRCh38-116"
+tier = "run-output"
+from_recipe = "star"
+note = "built and published once by build-publish.sh; lith verifies its sha before mounting"
+
+[[dataset]]
+id = "ENA ERR188026 (complete run, 15,800,127 reads)"
+tier = "durable-id"
+from_recipe = "star"
+note = "staged by make stage RECIPE=star"
+
+# --- Graviton4, first read (page cache dropped before each align), one m8g.8xlarge launch
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 89
+usd_hr = 1.4362
+compute_usd = 0.036
+results = "results/four-data-paths.txt"
+note = "lith mount (S3 in place): 0 s setup, 28 s load; date from STAR's 'Started job on Sep 26'"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 126
+usd_hr = 1.4362
+compute_usd = 0.050
+peak_gib = 30
+results = "results/tmpfs-leg.txt"
+note = "copy -> tmpfs: 58 s copy + 68 s align, 9 s load; tmpfs 29 GiB + STAR 30 GiB peak, 0 OOM events"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 203
+usd_hr = 1.4362
+results = "results/four-data-paths.txt"
+note = "EFS (Elastic, hydrated from S3): 86 s setup, 57 s load; README prices no compute $ for this row. EFS also bills $1.72 to hydrate and $0.86 per read"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 233
+usd_hr = 1.4362
+results = "results/four-data-paths.txt"
+note = "FSx Lustre (S3-linked, 1200 GB @ 125 MB/s/TiB): ~9 min to create, excluded; 174 s load at 168 MiB/s; no compute $ printed; $174.00/month floor"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "primary"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 409
+usd_hr = 1.4362
+compute_usd = 0.163
+results = "results/copy-route.txt"
+note = "copy -> local EBS (gp3): 118 s copy + 291 s align, 231 s load at 127 MiB/s"
+
+# --- Graviton4, steady state: the same box aligning another sample (wall_s = the align column)
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 67
+usd_hr = 1.4362
+results = "results/warm-leg.txt"
+note = "steady state, local EBS with page cache warm: 7 s load"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 68
+usd_hr = 1.4362
+results = "results/tmpfs-leg.txt"
+note = "steady state, tmpfs: 9 s load"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 98
+usd_hr = 1.4362
+results = "results/warm-leg.txt"
+note = "steady state, lith mount under cache pressure from the other routes: 36 s load"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 118
+usd_hr = 1.4362
+results = "results/warm-leg.txt"
+note = "steady state, EFS: 57 s load. compute $ left out: the prose prices 'that align' at $0.047 for 117 s, but the EFS row prints 118 s (117 s is the FSx row)"
+
+[[run]]
+instance = "m8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-09-26"
+date_source = "run"
+workers = 32
+wall_s = 117
+usd_hr = 1.4362
+results = "results/warm-leg.txt"
+note = "steady state, FSx Lustre hydrated: 58 s load"
+
+# --- Intel / AMD, 2026-10-21: mount, tmpfs, EBS on one launch per chip
+[[run]]
+instance = "m8i.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/x86_64/host.txt"
+wall_s = 83
+usd_hr = 1.6934
+compute_usd = 0.039
+results = "results/x86_64/four-data-paths.txt"
+note = "lith mount, 23 s load; bioconda x86 STAR 2.7.11b, lith 1.1.3 amd64. The box billed one 1,327 s window ($0.624) for all five aligns"
+
+[[run]]
+instance = "m8i.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/x86_64/host.txt"
+usd_hr = 1.6934
+results = "results/x86_64/tmpfs-leg.txt"
+note = "copy -> tmpfs, printed as '62 + 73 s · $0.064' (compound cell, no single wall printed; seconds and $ left out); 11 s load"
+
+[[run]]
+instance = "m8i.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/x86_64/host.txt"
+usd_hr = 1.6934
+results = "results/x86_64/four-data-paths.txt"
+note = "copy -> local EBS, printed as '117 + 291 s · $0.192' (compound cell; seconds and $ left out); 230 s load"
+
+[[run]]
+instance = "m8a.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/amd/host.txt"
+wall_s = 79
+usd_hr = 1.9475
+compute_usd = 0.043
+results = "results/amd/four-data-paths.txt"
+note = "lith mount, 25 s load. The box billed one 1,265 s window ($0.684) for all five aligns"
+
+[[run]]
+instance = "m8a.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/amd/host.txt"
+usd_hr = 1.9475
+results = "results/amd/tmpfs-leg.txt"
+note = "copy -> tmpfs, printed as '54 + 62 s · $0.063' (compound cell; seconds and $ left out); 8 s load; oom_events 0"
+
+[[run]]
+instance = "m8a.8xlarge"
+purpose = "cross-chip"
+date = "2026-10-21"
+date_source = "run"
+workers = 32
+host = "results/amd/host.txt"
+usd_hr = 1.9475
+results = "results/amd/four-data-paths.txt"
+note = "copy -> local EBS, printed as '117 + 285 s · $0.217' (compound cell; seconds and $ left out); 230 s load"
+
+# --- checks: the internal control (every route, every chip) and the cross-chip fixed point/path
+[[check]]
+id = "reads-and-unique"
+claim = "All of them returned `input_reads 15800127` and **92.47%** uniquely mapped"
+kind = "invariance"
+bound = "identical across routes"
+observed = "15800127; 92.47%"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "log-final-out"
+claim = "every one of the nine `Log.final.out` files (Graviton4's mount align, and mount ×2 + EBS ×2 on each x86 chip) is identical once its timestamps and speed line are removed"
+kind = "identity"
+observed = "15,800,127 reads, 92.47% unique, every count"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "mapping-time-control"
+claim = "mapping took 56–58 s in every route — that invariance is the internal control"
+kind = "reported"
+observed = "56–58 s"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "tmpfs-no-oom"
+claim = "tmpfs held 29 of 62 GiB with `oom_events 0` on both"
+kind = "reported"
+observed = "oom_events 0"
+outcome = "reported"
+
+[[check]]
+id = "bam-bytes"
+claim = "the BAM's bytes follow thread completion order under `--outSAMtype BAM Unsorted`"
+kind = "reported"
+observed = "2,864,048,823–2,864,097,807 on x86"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "BAM sizes 2,864,048,823–2,864,097,807 on x86; Graviton4 mount 2864083451; follows thread completion order, as on Graviton4"
+
+[[trap]]
+id = "star-ebs-copy-slowest-first-read"
+scope = "method"
+symptom = "STAR's load of the copied index ran at 127 MiB/s (231 s), 8x slower than reading it from S3"
+blames = "S3 (the reflex: stage it local, it'll be fast once it's there)"
+cause = "an mmap'd index is random access, and a single gp3 volume is where that shows; S3 answers it across many parallel connections at ~1 GiB/s"
+fix = "mount for one sample per box; copy into tmpfs for 3+ samples on one box; don't copy to EBS"
+cost = "409 s vs 89 s first read"
+
+[[trap]]
+id = "star-fsx-hydration-throughput-tier"
+scope = "platform"
+symptom = "FSx Lustre first read 174 s at 168 MiB/s, 6x slower than S3"
+cause = "the first read faults 28.6 GiB in from S3 at the throughput tier bought (1200 GB x 125 MB/s/TiB ~ 150 MB/s); 1200 GB is the minimum"
+fix = "don't buy FSx Lustre to make a shared index fast"
+cost = "$174.00/month to hold a 28.6 GiB index"
+
+[[trap]]
+id = "star-efs-per-gib-read-charge"
+scope = "platform"
+symptom = "every alignment that reads the index costs 28.6 GiB x $0.03 = $0.86 in EFS Elastic Throughput"
+cause = "Elastic Throughput bills $0.06/GiB written and $0.03/GiB read; Bursting scales baseline with stored bytes (~1.4 MB/s here)"
+fix = "EFS when the data mutates; price the per-GiB read charge against the number of samples"
+cost = "18x the compute cost of the align it serves"
+
+[[trap]]
+id = "star-tmpfs-copy-oom"
+scope = "platform"
+symptom = "Out of memory: Killed process 34623 (STAR) total-vm:36833440kB, anon-rss:33656832kB"
+cause = "on a c8g.8xlarge (62 GiB) the copy held 29 of the 31 GiB tmpfs and STAR reached for its own 32 GiB"
+fix = "size for copy + working set (~61 GiB here; ~124 GiB of instance on the task path, where /tmp is half of RAM)"
+
+[[trap]]
+id = "star-fsx-import-path-no-link"
+scope = "platform"
+symptom = "--fsx-import-path created no S3 link; the filesystem mounted empty while the CLI printed `Instance Ready`"
+cause = "spored's CreateDataRepositoryAssociation fails on a missing iam:CreateServiceLinkedRole, logged only on the box"
+fix = "create the data-repository association by hand"
+refs = ["spawn#622"]
+
+[[trap]]
+id = "star-fsx-ephemeral-not-reaped"
+scope = "platform"
+symptom = "--fsx-lifecycle ephemeral has been seen not to reap"
+cause = "spawn's FSx lifecycle"
+fix = "`spawn fsx list --region us-west-2` must be empty; delete EFS mount targets and file system, verify FileSystemNotFound"
+refs = ["spawn#613"]
+
+[[trap]]
+id = "star-mambauser-output-dir"
+scope = "image"
+symptom = "STAR's output fails with no log at all"
+cause = "the container runs as mambauser (57439) and cannot write a host directory owned by the login user; the redirect creating the log is itself what's denied"
+fix = "chmod 777 STAR's output dir"
+
+[[trap]]
+id = "star-ssm-no-home"
+scope = "platform"
+symptom = "W=$HOME/work dies on line 3"
+cause = "under set -u an SSM-driven script has no $HOME"
+fix = "don't rely on $HOME in an SSM-driven script"
+
+[[upstream]]
+ref = "spawn#613"
+role = "cited"
+note = "--fsx-lifecycle ephemeral seen not to reap"
+
+[[upstream]]
+ref = "spawn#622"
+role = "workaround"
+note = "FSx data-repository association created by hand"

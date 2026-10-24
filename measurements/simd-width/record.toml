@@ -1,0 +1,134 @@
+# measurements/simd-width/record.toml
+# A cross-recipe instrument: no results/ committed, nothing priced or timed in wall-clock, so the
+# run rows carry instance and date only; every number lives in the checks as printed.
+schema = 1
+result_unit = "one probe + STREAM thread sweep + four-build FP kernel comparison on one Graviton instance (nothing is priced per result)"
+
+[[dataset]]
+id = "STREAM official source stream.c from cs.virginia.edu, sha256 a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b"
+tier = "durable-id"
+unpinned = "the full sha256 is printed in the README and checked in-task (sha256sum -c), but no manifest file is committed"
+
+[[run]]
+instance = "c6g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-22"
+date_source = "git"
+threads_per_core = 1            # README: no SMT on any of them
+note = "probe, STREAM sweep and FP kernel (sv-c6g); no results committed"
+
+[[run]]
+instance = "c7g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-22"
+date_source = "git"
+threads_per_core = 1
+note = "probe, STREAM sweep, FP kernel, disassembly"
+
+# The hpc7g.16xlarge (Graviton3E, us-east-1) run is not a [[run]] row: the schema's instance
+# pattern ^[a-z][0-9]+... rejects the "hpc7g" family name. Its numbers are in the checks below.
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+date = "2026-09-22"
+date_source = "git"
+threads_per_core = 1
+note = "probe, STREAM sweep, FP kernel, disassembly, verify run"
+
+[[run]]
+instance = "c9g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-22"
+date_source = "git"
+threads_per_core = 1
+note = "probe, STREAM sweep, FP kernel, disassembly; the 16-thread STREAM collapse reproduced in a second run"
+
+# --- in-task asserts ---------------------------------------------------------------------
+[[check]]
+id = "stream-source-pin"
+claim = "STREAM source verified in-task by sha256"
+kind = "pin"
+bound = "sha256sum -c"
+observed = "a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b"
+outcome = "pass"
+
+[[check]]
+id = "stream-validates"
+claim = "STREAM's own Solution Validates passing every time"
+kind = "sentinel"
+observed = "Solution Validates"
+outcome = "pass"
+
+# --- reported, not asserted: the measured results --------------------------------------
+[[check]]
+id = "tvb-vs-sve-flag-gv4"
+claim = "FP kernel on Graviton4: -mcpu=neoverse-512tvb vs -march=armv8.2-a+sve vs plain NEON (GFLOP/s, single-threaded, best of three)"
+kind = "reported"
+observed = "12.93 vs 5.63 vs 5.59"
+outcome = "reported"
+
+[[check]]
+id = "tvb-sve-insns"
+claim = "SVE / NEON instructions in the hot loop, by build (disassembly)"
+kind = "reported"
+observed = "512tvb 38 sve / 0 neon; armv8.2-a+sve 22 sve; armv8-a 0 sve / 12 neon"
+outcome = "reported"
+
+[[check]]
+id = "tvb-generation-trend"
+claim = "FP kernel with the right flags, Graviton2 → 3 → 4 → 5"
+kind = "reported"
+observed = "4.99 → 11.84 → 12.93 → 16.18"
+outcome = "reported"
+
+[[check]]
+id = "stream-triad-16t"
+claim = "STREAM Triad, 16 threads, GB/s: c6g / c7g / hpc7g / c8g / c9g"
+kind = "reported"
+observed = "171 / 225 / 227 / 337 / 141"
+outcome = "reported"
+
+[[check]]
+id = "c9g-stream-collapse"
+claim = "c9g.4xlarge STREAM Triad saturates early and declines: 4 / 8 / 16 threads"
+kind = "reported"
+observed = "125 / 156 / 141 GB/s; second run 149.8 GB/s at 16 threads"
+outcome = "reported"
+
+[[check]]
+id = "gv3-vs-gv3e"
+claim = "c7g vs hpc7g at equal thread count: STREAM Triad 16 threads, FP kernel 512tvb, plain NEON"
+kind = "reported"
+observed = "+0.8%, +0.2%, 0%"
+outcome = "reported"
+
+[[check]]
+id = "sve-bits"
+claim = "SVE vector length by generation: Graviton3/3E vs Graviton4/5"
+kind = "reported"
+observed = "256 vs 128 bits"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:aws-hpc7g-35pct-claim"
+same_bytes = false
+metric = "hpc7g vs c7g vector/FP and STREAM throughput at equal thread count, against AWS's 'up to 35% higher vector instruction performance'"
+tolerance_basis = "under 1% on both axes is run-to-run noise; the claim does not reproduce"
+check = "gv3-vs-gv3e"
+
+[[trap]]
+id = "simd-width-sve-flag-without-tuning"
+scope = "method"
+symptom = "-march=armv8.2-a+sve emits SVE yet scores 5.63 GFLOP/s on Graviton4, no better than plain NEON (5.59), against 12.93 for -mcpu=neoverse-512tvb"
+blames = "SVE itself"
+cause = "a feature flag brings the ISA without the scheduling model and unrolling a -mcpu target brings (22 vs 38 SVE instructions in the same loop)"
+fix = "name the CPU (-mcpu=neoverse-512tvb), not the feature flag"
+cost = "up to 2.3x throughput"
+
+[[trap]]
+id = "simd-width-spawn-hpc7g-largest-on-price-tie"
+scope = "platform"
+symptom = "asked for cpu=16 in the hpc7g family, spawn sized hpc7g.16xlarge (64 vCPU) for all three specs"
+cause = "every hpc7g size costs $1.6832/hr, so on a price tie spawn's cheapest-that-fits has no preference and returned the largest"
+fix = "sweep threads on one socket; spawn would need prefer-smallest-on-tie and an exact instance-type pin"

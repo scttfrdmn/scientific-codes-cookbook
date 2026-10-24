@@ -1,0 +1,248 @@
+# measurements/qiskit-real/record.toml -- #118 backfill.
+schema = 1
+result_unit = "the whole QASMBench suite (132 files) compiled to heavy-hex at optimization level 2 and checked"
+
+[[dataset]]
+id = "pnnl/QASMBench commit 357b942396d5c2b7cbc1c229c585a6ef5ccaebac (132 original .qasm + qelib1.inc, README, LICENSE, NOTICE; 254,779,845 bytes)"
+tier = "durable-id"
+pins = "qasmbench.sha256"
+note = "no release or DOI, so the commit is the pin; fetched on AWS and each file checked against the commit tree's git blob ids (qasmbench-357b942.gitblobs)"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 4783
+billed_s = 4887
+usd_hr = 0.4713
+compute_usd = 0.626
+billed_usd = 0.64
+peak_gib = 29.7
+peak_kind = "cgroup-memory.peak"
+note = "8 one-thread worker processes; peak_kind from footprint.txt (cgroup_peak_gib), the README says 'peak mem'"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 4696
+billed_s = 4759
+usd_hr = 0.5557
+compute_usd = 0.725
+billed_usd = 0.735
+peak_gib = 31.3
+peak_kind = "cgroup-memory.peak"
+note = "quantum env linux-64 twin"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-19"
+date_source = "git"
+workers = 8
+wall_s = 3998
+billed_s = 4074
+usd_hr = 0.639
+compute_usd = 0.71
+billed_usd = 0.723
+peak_gib = 31.3
+peak_kind = "cgroup-memory.peak"
+note = "quantum env linux-64 twin"
+
+[[run]]
+instance = "r8g.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-19"
+date_source = "git"
+wall_s = 3374
+usd_hr = 0.94
+note = "'A first run on r8g.4xlarge (16 vCPU) took 3,374 s at $0.94/hr, which is faster but costs more per suite'; no $/result printed. Date = the git date of the verifying runs"
+
+# --- checks: '## What held at scale, on all three chips' (observed = Graviton4) -------
+[[check]]
+id = "compile-or-refuse"
+claim = "every file compiles, or is refused as invalid OpenQASM 2"
+kind = "identity"
+bound = "no other failure"
+observed = "123 compiled, 9 refused (below)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "basis-gates"
+claim = "every compiled gate in {cz, rz, sx, x}, descending into control flow"
+kind = "identity"
+bound = "0"
+observed = "0 of 129.7M"
+outcome = "pass"
+
+[[check]]
+id = "heavy-hex-edges"
+claim = "every compiled two-qubit gate on a heavy-hex edge"
+kind = "identity"
+bound = "0"
+observed = "0 of 34,566,715 cz"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "equiv-dense"
+claim = "compiled == original, dense (compiled width ≤ 28)"
+kind = "identity"
+bound = "1−|⟨E|C⟩|² ≤ 1e-6"
+observed = "51 circuits, widths 2–27, worst 3.6e-9 (qft_n18)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "largest cross-chip difference in 1 − F is 1.4e-9 (multiplier_n350), against a machine-precision bound of 7e-9 for its size"
+
+[[check]]
+id = "equiv-mps-inverse"
+claim = "compiled == original, MPS inverse test (C then E⁻¹, P(|0…0⟩))"
+kind = "identity"
+bound = "≤ 1e-6"
+observed = "42 circuits, widths 29–458, worst 4.6e-7 (qft_n320)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "same verdicts on all three chips; max |diff| in infidelity 1.409e-09 (results/crosschip.txt)"
+
+[[check]]
+id = "machine-precision"
+claim = "... of those, at machine precision"
+kind = "band"
+bound = "≤ 16 eps per gate"
+observed = "88 of 93"
+outcome = "pass"
+
+[[check]]
+id = "qft-level1-exact"
+claim = "the 5 above machine precision compile exactly at level 1"
+kind = "band"
+bound = "≤ 16 eps per gate"
+observed = "all 5 (qft_n18/29/63/160/320)"
+outcome = "pass"
+
+[[check]]
+id = "state-norms"
+claim = "compiled-state norm; original-state norm"
+kind = "conservation"
+bound = "eps × (gates + 2ⁿ)"
+observed = "≤ 2.0e-13; ≤ 2.4e-11"
+outcome = "pass"
+
+[[check]]
+id = "reversible-bitsim"
+claim = "classical-reversible originals: dense amplitude at the integer bit-simulated outcome"
+kind = "reference"
+bound = "1 − P ≤ 1e-10"
+observed = "6 originals up to 28 qubits, exactly 0"
+outcome = "pass"
+
+[[check]]
+id = "clifford-stabilizer"
+claim = "Clifford originals: dense support and 2⁻ᵏ probabilities == terra's StabilizerState"
+kind = "cross-code"
+bound = "1e-10"
+observed = "14 originals up to 30 qubits, ≤ 4.4e-16"
+outcome = "pass"
+
+[[check]]
+id = "qft-basis-amplitudes"
+claim = "QFT of a basis state: every amplitude at 2^(−n/2)"
+kind = "identity"
+bound = "1e-10"
+observed = "3 originals up to 29 qubits, ≤ 8.3e-17"
+outcome = "pass"
+
+[[check]]
+id = "qi-vs-aer"
+claim = "quantum_info.Statevector == Aer (two implementations)"
+kind = "cross-code"
+bound = "1e-10"
+observed = "50 originals, ≤ 7.7e-15"
+outcome = "pass"
+
+[[check]]
+id = "fullwidth-mps-classical"
+claim = "full width: Aer MPS on classical originals returns only the bit-simulated outcome"
+kind = "reference"
+bound = "exact"
+observed = "13 originals up to 433 qubits"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "fullwidth-clifford-support"
+claim = "full width: Aer stabilizer and MPS samples of Clifford originals all in terra's support at one 2⁻ᵏ"
+kind = "cross-code"
+bound = "exact"
+observed = "25 originals up to 280 qubits"
+outcome = "pass"
+across_chips = "identical"
+
+# --- reported, not asserted ----------------------------------------------------------
+[[check]]
+id = "no-semantic-verdict"
+claim = "11 unitary circuits have no semantic verdict: they are too entangled for MPS within 10 minutes"
+kind = "reported"
+observed = "11"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "qugan_n39 finishes its MPS check just inside the limit on Graviton4 and AMD and just outside it on Intel"
+
+[[check]]
+id = "parsed-circuits"
+claim = "The parsed circuits (qubits, gates, depth, two-qubit count) are identical on all 132."
+kind = "reported"
+observed = "identical on all 132"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "cz-count"
+claim = "The cz count is identical on all 123 compiled circuits on Intel and on AMD against Graviton4."
+kind = "reported"
+observed = "identical on 123"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "compiled-qasm"
+claim = "The exact compiled QASM is byte-identical on 55 of 123 (Intel vs Graviton4)."
+kind = "reported"
+observed = "55 of 123"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "gate sequence differs on 33 of 123; bwt_n177 is 53,189,206 vs 53,369,759 gates; AMD byte-identical to Intel on 120 of 123"
+
+[[trap]]
+id = "qiskit-level2-resynthesis-approximate"
+scope = "tool"
+symptom = "qft_n320 compiles to 1 − F = 4.6e-7 (QFT family 3,500–12,700 eps per gate)"
+blames = "a miscompile in layout, routing or translation"
+cause = "level-2 two-qubit resynthesis is approximate even at approximation_degree=1.0: the Weyl decomposition accepts a specialisation at trace fidelity ≥ 1 − 1e-9 per block; CU1(θ) with θ ≤ 4.8e-5 synthesises to zero cz with operator error θ/4, even with approximate=False"
+fix = "recompile at level 1 (no TwoQubitPeepholeOptimization): ≤ 9.9e-10, within machine precision"
+
+[[trap]]
+id = "qiskit-measure-drops-diagonal-gates"
+scope = "method"
+symptom = "dnn_n2, error_correctiond3_n5, ising_n10, dnn_n8, dnn_n16, gcm_h6 and variational_n4 came out 0.5–1.0 off in state fidelity when compiled with measurements"
+blames = "the compiler"
+cause = "compiling a circuit with its final measurements drops diagonal gates before them: correct for the measured distribution, wrong for a state comparison"
+fix = "the semantic check compiles the measurement-free circuit with the same settings and seed; the measured compile stays the timed workload"
+
+[[trap]]
+id = "qiskit-qasmbench-invalid-files"
+scope = "data"
+symptom = "9 QASMBench files are refused with a located parse error, e.g. cx qr[325],qr[325]; at line 1400 of QAOA_3SAT N1000"
+cause = "the three QAOA_3SAT files apply cx to the same qubit twice; vqe_uccsd_n4/6/8/28 and hhl_n10/14 measure a register (q, c) the file never declares"
+fix = "report them, not fix them: editing them would make them someone else's benchmark"

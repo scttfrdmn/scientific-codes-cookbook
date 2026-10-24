@@ -1,0 +1,149 @@
+# measurements/ants-real/record.toml -- x86-only (gap_arm64): Intel and AMD, byte-identical.
+schema = 1
+result_unit = "one subject normalised to MNI152 2 mm (NFBS cohort, 125 subjects per run)"
+results_per_run = 125
+
+[[dataset]]
+id = "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, doi:10.1186/s13742-016-0150-5)"
+tier = "roda"
+unpinned = "no committed sha256 manifest; the full sha256 is a constant in measurements/fsl-real/stage-inputs.sh and is asserted on the box"
+note = "staged once by fsl-real and shared with it"
+
+[[dataset]]
+id = "fsl-data_standard-2208.0-0 MNI152_T1_2mm_brain{,_mask}.nii.gz"
+tier = "versioned-release"
+pins = "mni.sha256"
+note = "package pinned by recipes/fsl's lock; unpacked by 00-template.task.json"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "primary"
+results = "results/x86_64/"
+date = "2026-10-18"
+date_source = "git"
+workers = 16                    # 16 single-threaded subjects at a time
+threads_per_core = 2
+wall_s = 2087
+billed_s = 2154
+usd_hr = 0.7497
+compute_usd = 0.00348
+billed_usd = 0.00359
+peak_gib = 10.4
+peak_kind = "cgroup-memory.peak"
+note = "peak includes the extracted cohort in /tmp (tmpfs high-water 3.3 GiB)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+date = "2026-10-18"
+date_source = "git"
+workers = 16
+threads_per_core = 1
+wall_s = 1325
+billed_s = 1376
+usd_hr = 0.8622
+compute_usd = 0.00254
+billed_usd = 0.00264
+peak_gib = 10.6
+peak_kind = "cgroup-memory.peak"
+
+# --- checks: "What held at scale, on both chips" -----------------------------------------
+[[check]]
+id = "all-complete"
+claim = "all subjects complete"
+kind = "sentinel"
+bound = "125 of the archive's 125"
+observed = "125"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "identity-transform"
+claim = "identity transform, linear interpolation"
+kind = "identity"
+bound = "Σ|out − in| / Σ|in| below one float32 ulp (2⁻²⁴)"
+observed = "max 1.4e-16"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "planted-rigid"
+claim = "a rigid motion planted on each subject's own brain (6° + 5.7 mm, 21.60 mm at the corners), undone by antsRegistration"
+kind = "band"
+bound = "< ¼ voxel = 0.25 mm at every corner"
+observed = "max 0.074 mm, median 0.0063"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "self-registration"
+claim = "brain registered to itself"
+kind = "identity"
+bound = "max|T − I| < 1e-6"
+observed = "0 on all 125"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "syn-beats-affine-dice"
+claim = "SyN improves on its own affine stage (curated mask carried to MNI152, Dice vs MNI152's brain mask)"
+kind = "band"
+bound = "every subject"
+observed = "125 / 125, median 0.9528 → 0.9643"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "syn-raises-correlation"
+claim = "SyN raises the correlation to the template"
+kind = "band"
+bound = "every subject"
+observed = "125 / 125, median 0.914 → 0.940"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "diffeomorphic"
+claim = "the SyN warp is diffeomorphic: Jacobian determinant > 0"
+kind = "identity"
+bound = "0 voxels with det J ≤ 0, whole field"
+observed = "0 (min in brain 0.108)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "inverse-consistency"
+claim = "its inverse undoes it: |W⁻¹(W(x)) − x|, mean inside the MNI152 brain"
+kind = "identity"
+bound = "< 0.1 mm (1/20 of a template voxel; a missing inverse leaves the ~4 mm warp)"
+observed = "max 0.044 mm, median 0.035"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "inverse-worst-voxel"
+claim = "the worst inverse-consistency error at any brain voxel"
+kind = "reported"
+observed = "0.96 mm (median subject 0.50)"
+outcome = "reported"
+
+[[check]]
+id = "warps-byte-identical"
+claim = "SHA-256 of every subject's rigid transform, affine and SyN warp field, Intel vs AMD (compare.py)"
+kind = "reported"
+observed = "125 / 125 each"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "syn-vs-fnirt"
+claim = "SyN's Dice is higher than FNIRT's (fsl-real, same scans; observation, not a cross-validation: the inputs differ)"
+kind = "reported"
+observed = "120 of 125 subjects"
+outcome = "reported"
+
+[[upstream]]
+ref = "conda-forge/ants-feedstock#35"
+role = "blocker"
+note = "the request for an arm64 ants build; Graviton4 has no row until it exists"

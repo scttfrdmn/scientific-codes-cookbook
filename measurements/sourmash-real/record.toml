@@ -1,0 +1,189 @@
+# measurements/sourmash-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one sample (a whole Zymo run) sketched, gathered against GTDB R226, classified and checked"
+results_per_run = 2
+
+[[dataset]]
+id = "ENA PRJEB29504 ERR2984773 + ERR2935805 (ZymoBIOMICS D6300 even / D6310 log), s3://sra-pub-run-odp"
+tier = "roda"
+pins = "pins.sha256"
+from_recipe = "measurements/metaphlan-real"
+note = "RODA -> FASTQ.gz by metaphlan-real; the same staged bytes kraken2-real uses"
+
+[[dataset]]
+id = "sourmash GTDB R10-RS226 gtdb-rs226-reps.k31.sig.zip + gtdb-rs226-reps.lineages.csv (farm.cse.ucdavis.edu/~ctbrown/sourmash-db/gtdb-rs226/)"
+tier = "versioned-release"
+pins = "pins.sha256"
+note = "not a DOI archive, so the sha256 is the pin; 143,384 species-representative sketches"
+
+[[dataset]]
+id = "zymo.tsv (ZymoBIOMICS compositions under GTDB names)"
+tier = "durable-id"
+pins = "pins.sha256"
+
+[[run]]
+instance = "r8g.2xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1077
+billed_s = 1196
+usd_hr = 0.4713
+compute_usd = 0.0705
+billed_usd = 0.0783
+peak_gib = 4.01
+peak_kind = "rss"
+note = "one task runs both samples side by side; $/sample is the task cost halved. wall_s is the task tool wall"
+
+[[run]]
+instance = "r8i.2xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 1032
+billed_s = 1124
+usd_hr = 0.5557
+compute_usd = 0.0797
+billed_usd = 0.0867
+peak_gib = 4.01
+peak_kind = "rss"
+note = "one task runs both samples side by side; $/sample is the task cost halved. wall_s is the task tool wall"
+
+[[run]]
+instance = "r8a.2xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+wall_s = 759
+billed_s = 833
+usd_hr = 0.639
+compute_usd = 0.0674
+billed_usd = 0.0739
+peak_gib = 4.01
+peak_kind = "rss"
+note = "one task runs both samples side by side; $/sample is the task cost halved. wall_s is the task tool wall"
+
+# checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'even', 'log']
+[[check]]
+id = "read-count"
+claim = "sequences sketched == ENA's `read_count` (read from the sketch log, not asserted in-task)"
+kind = "reported"
+observed = "17,571,462 (even); 95,665,106 (log)"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "merge-invariance"
+claim = "sketch(R1+R2) == sig merge(sketch R1, sketch R2)"
+kind = "invariance"
+observed = "201,687 hashes, 2,109,682 weighted (even); 353,242 / 6,551,824 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "gather-read-query"
+claim = "`query_n_hashes`, `query_bp`, `total_weighted_hashes` == the sketch"
+kind = "identity"
+observed = "yes (even); yes (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "remaining-bp"
+claim = "`remaining_bp` == `query_bp` − running sum of `unique_intersect_bp`"
+kind = "conservation"
+observed = "19 rows (even); 21 rows (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "greedy-replay"
+claim = "greedy replay from `matches.zip`, every row"
+kind = "identity"
+observed = "19/19 (even); 21/21 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "assigned-hashes"
+claim = "query ∩ ∪(matches) == the assigned hashes"
+kind = "conservation"
+observed = "24,832 (even); 17,911 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "tax-tree"
+claim = "each rank's `f_weighted_at_rank` sums to 1; every clade == the sum of its children"
+kind = "conservation"
+bound = "1e-9"
+observed = "worst 1.1e-16 (even); worst 1.1e-16 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "classified-cover"
+claim = "classified species == gather's weighted cover"
+kind = "identity"
+observed = "0.7206 (even); 0.8498 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zymo-required"
+claim = "required Zymo species detected"
+kind = "reference"
+observed = "8/8 bacteria (even); 2/2 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "zymo-unexpected"
+claim = "unexpected species above 1%"
+kind = "reference"
+bound = "above 1%"
+observed = "0 (largest 0.39%) (even); 0 (largest 0.31%) (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "log-top-two"
+claim = "top two == the 89.1% and 8.9% species, in order"
+kind = "reference"
+observed = "L. monocytogenes 73.4%, P. aeruginosa 7.7% (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "bytes-cross-chip"
+claim = "query signatures, gather.csv, the tax summary, species.tsv and checks.txt match on Graviton4, Intel and AMD"
+kind = "reported"
+observed = "identical, byte for byte"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "detection-floor"
+claim = "The detection floor is 0.0089%, the same as MetaPhlAn's"
+kind = "reported"
+observed = "L. fermentum at 0.0089% of DNA found (0.0078%); E. faecalis (0.00089%) and S. aureus (0.000089%) not"
+outcome = "reported"
+
+[[check]]
+id = "split-sketch"
+claim = "Sketching R1 and R2 as separate processes and sig merge-ing them, identical result"
+kind = "reported"
+observed = "325–348 s on Graviton4 against 652 s for one process"
+outcome = "reported"
+
+[[cross_code]]
+with = "measurements/metaphlan-real"
+same_bytes = true
+metric = "detection floor on the log run (observation)"
+check = "detection-floor"

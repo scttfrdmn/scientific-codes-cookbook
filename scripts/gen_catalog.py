@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate catalog/recipes.md from the recipes themselves — frontmatter, lede, and the
+"""Generate catalog/recipes.md (and catalog/record.json) from the recipes themselves — frontmatter, lede, and the
 input-dependency each recipe actually has. The inventory is derived, never hand-maintained,
 so it can't drift from what ships (the reviewer's item 2).
 
@@ -11,6 +11,7 @@ that overrides the inference — item 4 slots in here without a rewrite.
     python3 scripts/gen_catalog.py --check     # exit 1 if the committed file is stale
 """
 import glob
+import json
 import os
 import re
 import subprocess
@@ -107,6 +108,179 @@ def spec_inputs(recipe_dir):
     return prefixes, runs
 
 
+# --- catalog/record.json: the structured record of verified work (#118) -------------------------
+# Derived fields (pins, dates, specs, chip, host facts, status, reverse links) are computed here
+# and never authored; measurements/<dir>/record.toml carries only what no artifact states. The
+# checks that keep a record true to its README live in check_pages.py (check_records).
+RECORD_OUT = os.path.join(ROOT, "catalog", "record.json")
+GRAVITON = {"6": "Graviton2", "7": "Graviton3", "8": "Graviton4", "9": "Graviton5"}
+
+
+def fm_list(text, key):
+    """Entries of a frontmatter list (`images:` / `images_x86_64:`)."""
+    m = re.match(r"---\n(.*?)\n---\n", text, re.S)
+    lm = re.search(rf"^{key}:\s*\n((?:\s+-\s+.*\n?)+)", m.group(1) + "\n", re.M) if m else None
+    return re.findall(r"^\s+-\s+(\S+)", lm.group(1), re.M) if lm else []
+
+
+def unq(v):
+    return v.strip().strip('"').strip("'") if isinstance(v, str) else v
+
+
+def chip_of(instance):
+    """arch / vendor / generation from an instance name; None where the family says nothing."""
+    m = re.match(r"([a-z]+)(\d+)([a-z]*)", instance)
+    if not m:
+        return {}
+    fam, gen, suf = m.groups()
+    if suf.startswith("g"):
+        return {"arch": "arm64", "vendor": "AWS", "chip": GRAVITON.get(gen), "generation": int(gen)}
+    if suf.startswith("i"):
+        return {"arch": "x86_64", "vendor": "Intel", "generation": int(gen)}
+    if suf.startswith("a"):
+        return {"arch": "amd", "vendor": "AMD", "generation": int(gen)}
+    return {"generation": int(gen)}
+
+
+def host_facts(path):
+    """threads_per_core, CPU part, model and OpenBLAS corename from a run's host-facts file, in
+    the key spellings the results/ files actually use."""
+    try:
+        t = open(path, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return {}
+    out = {}
+    for key, pat in (("threads_per_core", r"(?:threads_per_core|Thread\(s\) per core)[^\n\d]{0,40}?(\d+)"),
+                     ("cpu_part", r"CPU part\s*:\s*(0x[0-9a-f]+)"),
+                     ("cpu_model", r"model name\s*:\s*(.+)"),
+                     ("openblas_corename", r"openblas_corename\W{1,4}([A-Za-z][\w]*)")):
+        m = re.search(pat, t)
+        if m:
+            out[key] = int(m.group(1)) if key == "threads_per_core" else m.group(1).strip()
+    return out
+
+
+def pin_introduced():
+    """{(recipe, pin-token): date that token first appeared in recipes/<r>/README.md}. One git
+    call for the whole history; a pin token is a digest or an env_x86_64 name."""
+    try:
+        log = subprocess.run(["git", "log", "-p", "--reverse", "--format=DATE %as", "-G", r"sha256:|^env_x86_64:",
+                              "--", "recipes/*/README.md"], cwd=ROOT, capture_output=True, text=True,
+                             check=True).stdout
+    except Exception:
+        return {}
+    first, date, rec = {}, None, None
+    for line in log.splitlines():
+        if line.startswith("DATE "):
+            date = line[5:]
+        elif line.startswith("diff --git"):
+            m = re.search(r"b/recipes/([^/]+)/README.md", line)
+            rec = m.group(1) if m else None
+        elif line.startswith("+") and rec:
+            for tok in re.findall(r"sha256:[0-9a-f]{64}", line):
+                first.setdefault((rec, tok), date)
+            m = re.match(r"\+env_x86_64:\s*(\S+)", line)
+            if m:
+                first.setdefault((rec, m.group(1)), date)
+    return first
+
+
+def recipe_pins(text):
+    fm = frontmatter(text)
+    arm = [unq(fm["image"])] if fm.get("image") else fm_list(text, "images")
+    x86 = fm_list(text, "images_x86_64")
+    env = unq(fm.get("env_x86_64", "")) or None
+    return arm, x86, env
+
+
+def recipe_entry(name, d, text, inputs, updated, meas):
+    fm = frontmatter(text)
+    arm, x86, env = recipe_pins(text)
+    specs = []
+    for s in sorted(glob.glob(os.path.join(d, "*.task.json"))):
+        j = json.load(open(s, encoding="utf-8"))
+        specs.append({"path": os.path.relpath(s, ROOT), "container": j.get("container"),
+                      "resources": j.get("resources", {}),
+                      "lifecycle": {k: v for k, v in j.get("lifecycle", {}).items() if k in ("ttl", "cost_limit")}})
+    out = {"path": os.path.relpath(os.path.join(d, "README.md"), ROOT),
+           "tool": unq(fm.get("tool")), "tool_version": unq(fm.get("tool_version")),
+           "env": unq(fm.get("env")), "spawn_version": unq(fm.get("spawn_version")),
+           "pins": {"arm64": arm,
+                    "x86_64": x86 or ({"env_lock": f"envs-x86_64/{env}.linux-64.lock"} if env else [])},
+           "last_verified": {k: unq(fm.get(f)) for k, f in (("arm64", "last_verified"),
+                             ("x86_64", "last_verified_x86_64"), ("amd", "last_verified_amd")) if fm.get(f)},
+           "gap": {k: unq(fm.get(f"gap_{k}")) for k in ("arm64", "x86_64") if fm.get(f"gap_{k}")},
+           "specs": specs, "inputs": inputs, "measurements": meas, "last_updated": updated}
+    return {k: v for k, v in out.items() if v not in (None, {}, [])}
+
+
+def check_status(c):
+    oc = c.get("outcome", "")
+    return oc if isinstance(oc, str) else ("fail" if "fail" in oc.values() else "pass")
+
+
+def measurement_entries(recipe_texts, owners_of):
+    import tomllib
+    intro = pin_introduced()
+    shallow = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=ROOT,
+                             capture_output=True, text=True).stdout.strip() == "true"
+    meas, traps, upstream, reverse = {}, [], {}, {}
+    for mdir in sorted(glob.glob(os.path.join(ROOT, "measurements", "*/"))):
+        name = os.path.basename(mdir.rstrip("/"))
+        owners = owners_of(name)
+        rpath = os.path.join(mdir, "record.toml")
+        if not os.path.exists(rpath):
+            meas[name] = {"owners": list(owners), "record": None}
+            continue
+        rec = tomllib.load(open(rpath, "rb"))
+        e = {"path": os.path.relpath(rpath, ROOT), "owners": list(owners),
+             "results_per_run": rec.get("results_per_run", 1), **rec}
+        for run in e.get("run", []):
+            run.setdefault("purpose", "primary")
+            run.setdefault("image", "recipe")
+            run.setdefault("region", "us-west-2")
+            run.setdefault("date_source", "run")
+            run.update(chip_of(run.get("instance", "")))
+            if "host" in run:
+                hf = host_facts(os.path.join(mdir, run["host"]))
+                run.update({k: v for k, v in hf.items() if k not in run})
+            if run["image"] == "recipe" and owners and run.get("arch") in ("arm64", "x86_64", "amd"):
+                arm, x86, env = recipe_pins(recipe_texts[owners[0]])
+                toks = arm if run["arch"] == "arm64" else (x86 or ([env] if env else []))
+                if toks:
+                    run["image_resolved"] = toks if run["arch"] == "arm64" or x86 else f"envs-x86_64/{env}.linux-64.lock"
+                keys = [re.search(r"sha256:[0-9a-f]{64}", t).group(0) if "sha256:" in t else t for t in toks]
+                dates = [intro.get((owners[0], k)) for k in keys]
+                # The pin swap rule made visible: a repin after the run means the run measured
+                # other bytes. Not an error -- it is still a true fact about the old ones.
+                if toks and not shallow and all(dates):
+                    run["pin_current"] = max(dates) <= str(run.get("date"))
+        e["status"] = "fail-reported" if any(check_status(c) == "fail" for c in e.get("check", [])) else "pass"
+        e["unpinned"] = [d["id"] for d in e.get("dataset", []) if "unpinned" in d]
+        for t in e.pop("trap", []):
+            traps.append({"owner": f"measurements/{name}", **t})
+        for u in e.get("upstream", []):
+            upstream.setdefault(u["ref"], []).append({"measurement": f"measurements/{name}", "role": u["role"],
+                                                      **({"note": u["note"]} if "note" in u else {})})
+        for x in e.get("cross_code", []):
+            tgt = x["with"].removeprefix("measurements/").rstrip("/")
+            reverse.setdefault(tgt, []).append({"from": f"measurements/{name}", "check": x["check"],
+                                                "metric": x["metric"]})
+        meas[name] = e
+    for tgt, links in reverse.items():
+        if tgt in meas and "run" in meas[tgt]:
+            meas[tgt]["cross_code_from"] = sorted(links, key=lambda l: l["from"])
+    hits = {}
+    for name, e in meas.items():
+        for t in e.get("trap_refs", []):
+            hits.setdefault(t, []).append(f"measurements/{name}")
+    for t in traps:
+        if t["id"] in hits:
+            t["also_hit_by"] = sorted(hits[t["id"]])
+    return (meas, sorted(traps, key=lambda t: t["id"]),
+            [{"ref": r, "uses": sorted(u, key=lambda x: x["measurement"])} for r, u in sorted(upstream.items())])
+
+
 def main():
     recipes = {}  # name -> dir
     for readme in glob.glob(os.path.join(ROOT, "recipes", "*", "README.md")):
@@ -126,7 +300,7 @@ def main():
         for p in stage_builds(recipes[name]):
             builder.setdefault(p, set()).add(name)
 
-    rows = []
+    rows, rec_recipes = [], {}
     for name in sorted(recipes):
         d = recipes[name]
         text = open(os.path.join(d, "README.md"), encoding="utf-8").read()
@@ -170,9 +344,10 @@ def main():
         # build exists -- so this column IS the list of missing x86 builds, generated.
         x86 = fm.get("last_verified_x86_64") or ("gap" if fm.get("gap_x86_64") else "—")
         amd = fm.get("last_verified_amd") or ("gap" if fm.get("gap_x86_64") else "—")
-        rows.append((domain, name, retarget_links(lede(text), d), env, inputs,
-                     git_updated(os.path.relpath(d, ROOT)),
+        updated = git_updated(os.path.relpath(d, ROOT))
+        rows.append((domain, name, retarget_links(lede(text), d), env, inputs, updated,
                      fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "—"), x86, amd))
+        rec_recipes[name] = (d, text, inputs, updated)
 
     # group by domain, alphabetical within
     domains = sorted({r[0] for r in rows})
@@ -209,9 +384,31 @@ def main():
     # Blank the git-derived Updated column before comparing: it advances on every commit that
     # touches a recipe, so gating on it would make the catalog perpetually "stale". Structure,
     # deps, and the hand-set Verified column are still gated.
+    # (The Updated cell is the 5th of 8; the regex anchors on the three date-or-gap cells after it.
+    # It used to anchor on one, which blanked the x86_64 cell and gated on Updated.)
     def norm(t):
-        return re.sub(r"\| (?:\d{4}-\d{2}-\d{2}|—) (\| (?:\d{4}-\d{2}-\d{2}|—) \|)$",
+        return re.sub(r"\| (?:\d{4}-\d{2}-\d{2}|—) ((?:\| (?:\d{4}-\d{2}-\d{2}|—|gap) ){3}\|)$",
                       r"| UPDATED \1", t, flags=re.M)
+
+    # catalog/record.json, from the same pass. Its git-derived last_updated is blanked for --check
+    # for the same reason as the Updated column.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from check_pages import measurement_owners
+    meas, traps, upstream = measurement_entries({n: v[1] for n, v in rec_recipes.items()},
+                                                lambda n: measurement_owners(n, set(rec_recipes)))
+    owned = {}
+    for n in meas:
+        for o in meas[n]["owners"]:
+            owned.setdefault(o, []).append(f"measurements/{n}")
+    record = {"generated_by": "scripts/gen_catalog.py -- do not edit; run `make catalog`",
+              "schema": "measurements/record.schema.json",
+              "recipes": {n: recipe_entry(n, d, t, i, u, owned.get(n, []))
+                          for n, (d, t, i, u) in sorted(rec_recipes.items())},
+              "measurements": meas, "traps": traps, "upstream": upstream}
+    rec_content = json.dumps(record, indent=1, sort_keys=True, ensure_ascii=False) + "\n"
+
+    def rnorm(t):
+        return re.sub(r'"last_updated": "[^"]*"', '"last_updated": ""', t)
 
     if "--check" in sys.argv:
         current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
@@ -226,9 +423,22 @@ def main():
                 print(f"  … {len(d) - 24} more diff lines", file=sys.stderr)
             return 1
         print("catalog/recipes.md up to date")
+        current = open(RECORD_OUT, encoding="utf-8").read() if os.path.exists(RECORD_OUT) else ""
+        if rnorm(current) != rnorm(rec_content):
+            print("catalog/record.json is stale — run `make catalog`", file=sys.stderr)
+            import difflib
+            d = list(difflib.unified_diff(rnorm(current).splitlines(), rnorm(rec_content).splitlines(),
+                                          "committed", "regenerated", lineterm="", n=0))
+            for line in d[:24]:
+                print("  " + line, file=sys.stderr)
+            return 1
+        print("catalog/record.json up to date")
         return 0
     open(OUT, "w", encoding="utf-8").write(content)
-    print(f"wrote {os.path.relpath(OUT, ROOT)} ({len(rows)} recipes)")
+    open(RECORD_OUT, "w", encoding="utf-8").write(rec_content)
+    n_rec = sum(1 for m in meas.values() if "run" in m)
+    print(f"wrote {os.path.relpath(OUT, ROOT)} ({len(rows)} recipes) and "
+          f"{os.path.relpath(RECORD_OUT, ROOT)} ({n_rec} of {len(meas)} measurements recorded)")
     return 0
 
 

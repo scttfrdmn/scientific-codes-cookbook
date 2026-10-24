@@ -1,0 +1,210 @@
+# measurements/warpx-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "the whole benchmark run: Turner et al. (2013) case 1, 128 cells, 512,000 steps (1,280 RF periods)"
+
+[[dataset]]
+id = "WarpX 26.10 Examples/Physics_applications/capacitive_discharge/{inputs_base_1d_picmi.py,analysis_1d.py} (Turner's 129-node case-1 profile, tolerance 0.065)"
+tier = "test-suite"
+pins = "inputs.sha256"
+
+[[dataset]]
+id = "BLAST-WarpX/warpx-data commit b59a35f8 MCC_cross_sections/He/*.dat (Biagi MAGBOLTZ 7.1 / Phelps)"
+tier = "versioned-release"
+pins = "inputs.sha256"
+
+[[run]]
+instance = "c8g.large"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 1
+wall_s = 1228
+billed_s = 1317
+usd_hr = 0.0798
+compute_usd = 0.0272
+billed_usd = 0.0292
+peak_gib = 0.126
+peak_kind = "rss"
+
+[[run]]
+instance = "c8i.large"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 1
+wall_s = 1259
+billed_s = 1337
+usd_hr = 0.0937
+compute_usd = 0.0328
+billed_usd = 0.0348
+peak_gib = 0.1328
+peak_kind = "rss"
+
+[[run]]
+instance = "c8a.large"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/host.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 1
+wall_s = 1031
+billed_s = 1101
+usd_hr = 0.1078
+compute_usd = 0.0309
+billed_usd = 0.033
+peak_gib = 0.1328
+peak_kind = "rss"
+
+# --- sizing probe: 64 RF periods on c8g.4xlarge, OpenMP threads swept; not priced ---------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/probe/check.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 1
+wall_s = 141
+note = "64-period probe; overstated the full run's rate 2.3x"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/probe/check.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 4
+wall_s = 144
+note = "64-period probe"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/probe/check.txt"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 152
+note = "64-period probe; CPU use rose to 4.9 cores, spinning, not working"
+
+# --- checks: "What held at scale, on all three chips" ----------------------------------
+[[check]]
+id = "upstream-deck"
+claim = "deck and analysis are upstream's, at tag `26.10`"
+kind = "pin"
+bound = "sha256; 0 lines changed"
+observed = "yes"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "omp-threads"
+claim = "OpenMP threads, from AMReX's log"
+kind = "rank-count"
+bound = "== 1 launched"
+observed = "1"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "final-diag"
+claim = "completion: final-step diagnostic"
+kind = "sentinel"
+bound = "`diag1512000` written"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "ion-density-shape"
+claim = "ion density"
+kind = "identity"
+bound = "finite, positive, 129 nodes"
+observed = "yes"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "upstream-analysis"
+claim = "**upstream's `analysis_1d.py`**, unmodified"
+kind = "reference"
+bound = "exit 0 (RMS < 0.065)"
+observed = "pass"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "rms-vs-turner"
+claim = "**RMS relative error vs Turner**, interior, recomputed from the pinned script's table"
+kind = "reference"
+bound = "< 0.065, read from that script"
+observed = "**0.0182**"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "max-rel-err"
+claim = "max relative error, interior"
+kind = "reported"
+bound = "reported"
+observed = "0.1361"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "peak-density"
+claim = "peak density"
+kind = "reported"
+bound = "reported (Turner 1.4048e14)"
+observed = "1.4154e14"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "symmetry"
+claim = "symmetry, n(z) vs n(L−z), RMS relative"
+kind = "reported"
+bound = "reported"
+observed = "0.0085"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "ion-density-bytes"
+claim = "time-averaged ion density, all 129 nodes, after 512,000 steps"
+kind = "reported"
+observed = "sha256 `3c4cf95f…bfb7626` on all three chips"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "thread-invariance"
+claim = "the same, 1 / 2 / 4 / 8 / 16 threads and a repeat (64-period probe, Graviton4)"
+kind = "reported"
+observed = "byte-identical"
+outcome = "reported"
+
+[[cross_code]]
+with = "published:Turner2013-doi:10.1063/1.4775084-case1"
+same_bytes = false
+metric = "RMS relative error of the time-averaged ion density vs Turner's 129-node case-1 profile, interior nodes"
+tolerance_basis = "upstream's tolerance = 0.065 from analysis_1d.py at 26.10, asserted as written (set for the coarse CI variant), not tightened"
+check = "rms-vs-turner"
+
+[[trap]]
+id = "warpx-max-grid-size-cli-ignored"
+scope = "tool"
+symptom = "Passing amr.max_grid_size=16 on the command line did not split the grid (Level 0 1 grids 128 cells)"
+cause = "the deck sets warpx_max_grid_size=128, so the domain is one grid and OpenMP has nothing to divide"
+fix = "rent the smallest box at 1 thread; splitting the grid means editing the deck (untested here)"
+
+[[trap]]
+id = "warpx-probe-overstates-rate"
+scope = "method"
+symptom = "64 periods took 141 s, which extrapolates to 47 minutes; the full run took 20"
+cause = "the early discharge holds more particles than the steady state, so the first 5% is the slowest 5%"
+fix = "treat a short probe as a ceiling for TTL sizing, not a representative sample"

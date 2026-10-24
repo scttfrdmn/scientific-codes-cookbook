@@ -1,0 +1,212 @@
+# measurements/megahit-real/record.toml -- drafted by the #118 extraction, then authored.
+schema = 1
+result_unit = "one metagenome assembly (one whole ZymoBIOMICS run)"
+
+[[dataset]]
+id = "ENA PRJEB29504 ERR2984773 (D6300 even, 8,785,731 pairs) and ERR2935805 (D6310 log, 47,832,553 pairs), FASTQ.gz from the RODA .sra"
+tier = "roda"
+pins = "pins.sha256"
+note = "the same staged bytes measurements/metaphlan-real profiles (its stage-inputs.sh converts .sra -> FASTQ.gz)"
+
+[[dataset]]
+id = "Zymo ZymoBIOMICS.STD.refseq.v2.zip (73.0 Mb), from Zymo's S3 bucket by object version id"
+tier = "durable-id"
+pins = "pins.sha256"
+note = "v2 references (2023) postdate the 2019 runs: same strains, re-sequenced"
+
+# --- -t 16, c8*.4xlarge: one task assembles both runs -----------------------------------
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "primary"
+results = "results/arm64/"
+host = "results/arm64/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 984
+billed_s = 1083
+usd_hr = 0.6381
+peak_gib = 7.67
+peak_kind = "rss"
+note = "one task, two assemblies: even 343 s / log 641 s; README prints compute $/result 0.0608 / 0.1137 per assembly and billed $ 0.1920 for both, so neither fits a single per-assembly row and both are left out; peak is the log run's (even 2.10 GiB)"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+results = "results/x86_64/"
+host = "results/x86_64/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 1204
+billed_s = 1282
+usd_hr = 0.7497
+peak_gib = 7.67
+peak_kind = "rss"
+note = "even 394 s / log 810 s; README compute $/result 0.0821 / 0.1686, billed $ (both) 0.2670 -- left out, as for c8g; peak is the log run's (even 2.10 GiB)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+results = "results/amd/"
+host = "results/amd/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+wall_s = 786
+billed_s = 847
+usd_hr = 0.8622
+peak_gib = 7.67
+peak_kind = "rss"
+note = "even 266 s / log 520 s; README compute $/result 0.0638 / 0.1245, billed $ (both) 0.2029 -- left out, as for c8g; peak is the log run's (even 2.10 GiB)"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "diagnostic"
+results = "results/arm64-repeat/"
+host = "results/arm64-repeat/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 16
+note = "second Graviton4 run of 01-assemble (determinism); timings repeated to 1-2%: 340 s even, 631 s log; not priced"
+
+# --- -t 1 on the even run, c8*.2xlarge -------------------------------------------------
+[[run]]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+results = "results/arm64-t1/"
+host = "results/arm64-t1/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 3932
+billed_s = 3996
+usd_hr = 0.319
+compute_usd = 0.3484
+billed_usd = 0.3541
+peak_gib = 2.07
+peak_kind = "rss"
+
+[[run]]
+instance = "c8i.2xlarge"
+purpose = "core-sweep"
+results = "results/x86_64-t1/"
+host = "results/x86_64-t1/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 3527
+billed_s = 3580
+usd_hr = 0.3748
+compute_usd = 0.3672
+billed_usd = 0.3727
+peak_gib = 2.07
+peak_kind = "rss"
+
+[[run]]
+instance = "c8a.2xlarge"
+purpose = "core-sweep"
+results = "results/amd-t1/"
+host = "results/amd-t1/ERR2984773/host.txt"
+date = "2026-10-20"
+date_source = "run"
+workers = 1
+wall_s = 3117
+billed_s = 3163
+usd_hr = 0.4311
+compute_usd = 0.3733
+billed_usd = 0.3788
+peak_gib = 2.07
+peak_kind = "rss"
+
+# --- checks: '## What held at scale, on every assembly' (even / log columns) -------------
+[[check]]
+id = "reads-in-library"
+claim = "reads in MEGAHIT's library == staged reads"
+kind = "conservation"
+bound = "its own `pe, N reads` line; nothing dropped"
+observed = "17,571,462 (even) / 95,665,106 (log)"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "contig-headers"
+claim = "every header's `len=` == its sequence; count and total == MEGAHIT's summary line"
+kind = "identity"
+bound = "the file is the assembly MEGAHIT reports"
+observed = "20,597–20,614 contigs (even) / 14,205–14,212 (log)"
+outcome = "pass"
+
+[[check]]
+id = "completion"
+claim = "completion"
+kind = "sentinel"
+bound = "exit 0 **and** `ALL DONE` in MEGAHIT's log"
+observed = "ok"
+outcome = "pass"
+
+[[check]]
+id = "recovered"
+claim = "**recovered:** genome fraction ≥ 90% (metaQUAST)"
+kind = "reference"
+bound = "each organism abundant enough to assemble"
+observed = "**8/8 bacteria, 95.29–99.27%** (even) / **3/3** (89.1%, 8.9%, 0.89%): 98.47–99.17% (log)"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "per-genome genome fraction agrees to within 0.09 points across all eight even-run assemblies and both builds"
+
+[[check]]
+id = "consensus"
+claim = "**consensus:** ≤ 50 mismatches per 100 kbp vs that strain's own reference"
+kind = "reference"
+bound = "the references are the standard's strains"
+observed = "worst 17.29 (*E. coli*) (even) / worst 9.55 (*P. aeruginosa*) (log)"
+outcome = "pass"
+
+[[check]]
+id = "closed-community"
+claim = "**closed community:** fully unaligned contigs ≤ 0.5% of the assembly (≥ 500 bp)"
+kind = "band"
+bound = "an off-community genome at assemblable depth would be megabases"
+observed = "6,790 bp (0.019%) (even) / 17,902 bp (0.081%) (log)"
+outcome = "pass"
+
+[[check]]
+id = "t1-x86-identical"
+claim = "**`-t 1`, x86 build: Intel == AMD == AMD `--no-hw-accel`**"
+kind = "identity"
+bound = "one thread, one binary package: nothing to reorder"
+observed = "**byte-identical** (`4125aa71…`)"
+outcome = "pass"
+across_chips = "identical"
+
+# --- across builds and runs (compare.py), reported ---
+[[check]]
+id = "arm64-vs-x86-build"
+claim = "Graviton4 `-t 1` vs Intel `-t 1`: contigs in only one of the two"
+kind = "reported"
+observed = "234 vs 251 (0.90 vs 0.92 Mbp)"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "20,597 vs 20,614 contigs, 234 vs 251 in only one (0.90 vs 0.92 Mbp); --no-hw-accel gave the x86 bytes, so the split is the build, not the hardware-accelerated core; about 2.2% of assembled bases"
+
+[[check]]
+id = "threads-same-build"
+claim = "same build, threads/runs differ: contig lengths multiset identical"
+kind = "reported"
+observed = "Graviton4 `-t 16` run 1 vs run 2: 2 (702 bp); Intel vs AMD `-t 16`: 15 (10,011 bp); `-t 16` vs `-t 1`: 14 (42,165 bp)"
+outcome = "reported"
+
+[[check]]
+id = "assembly-floor"
+claim = "The log standard gives the assembly floor: 0.89%, not 0.089%"
+kind = "reported"
+observed = "0.89% of DNA assemble to 98.5% and 61.1%; 0.089% give 3.4% and 5.3%"
+outcome = "reported"
+
+[[check]]
+id = "even-aligned"
+claim = "share of the even assembly's 36.3 Mbp (≥ 500 bp) that aligns"
+kind = "reported"
+observed = "99.62%, N50 117 kbp"
+outcome = "reported"
