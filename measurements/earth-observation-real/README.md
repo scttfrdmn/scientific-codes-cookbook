@@ -5,6 +5,11 @@
 > is reproduced from the pixels, and every output is identical, byte for byte, on Graviton4, Intel
 > and AMD.** Graviton4 and AMD tie on wall time; Graviton4 is cheapest on compute, and the billed
 > cost is $0.07–0.08 on all three because boot dominates. RAM picks the box, not vCPU.
+>
+> **Known error (#120):** the "reflectance" NDVI column applies the declared −0.1 offset to items
+> that already carry `earthsearch:boa_offset_applied: true` (150 of 153), so it is offset twice. The
+> raw-DN column is the correct reflectance NDVI on those scenes. The percentages, timings and
+> cross-chip identity are unaffected. A re-run with the per-item offset is pending.
 
 Workload: **every** Sentinel-2 L2A item of MGRS tile 11SKA (central California) dated 2024 in the
 AWS Open Data `sentinel-cogs` bucket. That is 153 scenes from both relative orbits and three
