@@ -1,18 +1,13 @@
 # rasterio on a real workload — a whole year of one Sentinel-2 tile, three chips
 
 > **Every 2024 acquisition of tile 11SKA (153 scenes, 31.9 GB of COGs read in place from RODA)
-> goes through rasterio in about 100 s on 16 vCPU. Every one of ESA's 1,764 published percentages
+> goes through rasterio in about 105 s on 16 vCPU. Every one of ESA's 1,764 published percentages
 > is reproduced from the pixels, and every output is identical, byte for byte, on Graviton4, Intel
-> and AMD.** Graviton4 and AMD tie on wall time; Graviton4 is cheapest on compute, and the billed
-> cost is $0.07–0.08 on all three because boot dominates. RAM picks the box, not vCPU.
->
-> **Known error (#120):** the "reflectance" NDVI column applies the declared −0.1 offset to items
-> that already carry `earthsearch:boa_offset_applied: true` (150 of 153), so it is offset twice. The
-> raw-DN column is the correct reflectance NDVI on those scenes. The percentages, timings and
-> cross-chip identity are unaffected. The re-run with the per-item offset ([`real.py`](real.py) now,
-> evidence in `results/r2-arm64/`) fails its own guard on one scene: `S2C_11SKA_20241206_1_L2A` says
-> `boa_offset_applied: false`, but its median vegetation red is −0.0572 with the declared offset and
-> +0.0428 without (the same day's S2A scene: +0.0434). The numbers below are from the earlier run.
+> and AMD.** The run does **not** pass its BOA-offset guard: one scene, `S2C_11SKA_20241206_1_L2A`,
+> is flagged `boa_offset_applied: false` while its pixels are already offset, so the run exits 1 on
+> all three chips ([what failed](#what-failed-the-offset-guard), Element84/earth-search#66).
+> Graviton4 and AMD tie on wall time; Graviton4 is cheapest on compute, and billed cost is
+> $0.07–0.10 because boot dominates. RAM picks the box, not vCPU.
 
 Workload: **every** Sentinel-2 L2A item of MGRS tile 11SKA (central California) dated 2024 in the
 AWS Open Data `sentinel-cogs` bucket. That is 153 scenes from both relative orbits and three
@@ -29,10 +24,10 @@ job fanned out by tile, not a different workload. The recipe's fixture is one of
 export AWS_PROFILE=aws B=<your bucket>
 bash measurements/earth-observation-real/stage-inputs.sh "$B"   # copies the 153 STAC items S3-to-S3; scripts + pins
 for a in arm64 x86_64 amd; do
-  spawn task run --spec "$(python3 scripts/spec_arch.py earth-observation $a "$B" r1c \
+  spawn task run --spec "$(python3 scripts/spec_arch.py earth-observation $a "$B" r2 \
     measurements/earth-observation-real/real.task.json)" --wait
 done
-bash measurements/earth-observation-real/collect.sh "$B" r1c   # results/<chip>/, results/compare.txt
+bash measurements/earth-observation-real/collect.sh "$B" r2   # results/<chip>/, results/compare.txt
 ```
 
 The bands are **never copied**. Each worker pulls an object once into memory over HTTPS, hashes it
@@ -47,7 +42,8 @@ Its core, per scene:
 ```python
 with MemoryFile(blob) as mf, mf.open() as s:          # blob: the pinned bytes of B04.tif
     red = s.read(1)
-ref = red.astype(np.float32) * scale + offset        # scale/offset from the item's raster:bands
+off = 0.0 if props["earthsearch:boa_offset_applied"] else band["offset"]   # per item
+ref = red.astype(np.float32) * band["scale"] + off
 ndvi = (nir_r - red_r) / (nir_r + red_r)              # where both reflectances are > 0
 np.maximum(comp, ndvi, out=comp, where=clear & valid) # SCL in {vegetation, bare, water}
 ```
@@ -55,13 +51,14 @@ np.maximum(comp, ndvi, out=comp, where=clear & valid) # SCL in {vegetation, bare
 ## Results
 
 16 vCPU, one `r8?.4xlarge` (128 GiB) per chip, 16 workers, same versions (rasterio 1.5.0, GDAL
-3.12.4, numpy 2.5.2), same input bytes:
+3.12.4, numpy 2.5.2), same input bytes. All three runs exit 1 on the guard below, after every
+output is written and staged:
 
 | chip | instance | real.py wall | task window | billed | $/hr | compute $/result | **billed $/result** | peak memory |
 |---|---|---|---|---|---|---|---|---|
-| Graviton4 | `r8g.4xlarge` | **100.4 s** | 195 s | 286 s | 0.9426 | **0.0263** | 0.0749 | 55.3 GiB |
-| Xeon 6975P-C | `r8i.4xlarge` | 140.3 s | 192 s | 227 s | 1.1114 | 0.0433 | **0.0701** | 57.1 GiB |
-| EPYC 9R45 | `r8a.4xlarge` | 101.8 s | 144 s | 221 s | 1.2781 | 0.0361 | 0.0785 | 51.8 GiB |
+| Graviton4 | `r8g.4xlarge` | 106.1 s | 203 s | 286 s | 0.9426 | **0.0278** | **0.0749** | 59.1 GiB |
+| Xeon 6975P-C | `r8i.4xlarge` | 148.1 s | 193 s | 291 s | 1.1114 | 0.0457 | 0.0898 | 59.7 GiB |
+| EPYC 9R45 | `r8a.4xlarge` | **104.6 s** | 142 s | 281 s | 1.2781 | 0.0371 | 0.0998 | 51.6 GiB |
 
 A *result* is the whole year plus every check below. *real.py wall* is all of it: fetch, decode,
 checks, composite and both COGs. The *task window* runs from spawn's wrapper start to command exit,
@@ -72,28 +69,26 @@ and `Cooperlake` on both x86 chips; nothing here calls BLAS.
 
 | per-worker seconds, summed over 153 scenes | fetch + hash | decode (rasterio + tifffile) | science |
 |---|---|---|---|
-| Graviton4 | 597 | 387 | **410** |
-| Intel | 600 | 516 | 852 |
-| AMD | **575** | **330** | 552 |
+| Graviton4 | 605 | 385 | **494** |
+| Intel | 604 | 508 | 976 |
+| AMD | **574** | **326** | 613 |
 
-- **A year of a tile is about 100 s of 16 vCPU.** That is 31.9 GB through rasterio at ~360 MB/s,
+- **A year of a tile is about 105 s of 16 vCPU.** That is 31.9 GB through rasterio at ~300 MB/s,
   with 41.5 G pixels decoded twice (rasterio, then tifffile). Graviton4 and AMD finish within 1.5 s
   of each other. Intel is 40% slower: the numpy science runs on 8 physical cores under 16 workers
   and takes twice Graviton4's time.
-- **Graviton4 is the cheapest on compute** ($0.026 vs $0.036 AMD, $0.043 Intel). **Billed, the three
-  are within 12%** ($0.070–0.078), because 38–65% of each billed window is not rasterio: Docker install
-  (28–42 s), the image pull (35 s for the arm64 aarch.science image, 2 s for micromamba plus a 3–4 s
-  offline env install on x86), and spawn's self-terminate tick (22–78 s after exit). **These timings
-  are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
-- **Fetch is the same 575–600 worker-seconds on every chip** (30–43% of worker time): reading in
+- **Graviton4 is the cheapest on compute** ($0.028 vs $0.037 AMD, $0.046 Intel) **and billed**.
+  49–63% of each billed window is not rasterio: Docker install, the image pull (the arm64
+  aarch.science image; micromamba plus an offline env install on x86) and spawn's self-terminate
+  tick. **These timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
+- **Fetch is the same 574–605 worker-seconds on every chip** (29–41% of worker time): reading in
   place from the bucket is the data path, and the chip does not move it
   ([data-movement](../../patterns/data-movement.md)).
 - **RAM picks the box.** Each worker holds two 10980² bands, their float32 reflectances and its share
-  of the composite, peaking at 4.5–5.1 GiB. The same run on an `m8g.4xlarge` reached a cgroup peak of
-  58.8 GiB of the 61.7 GiB its kernel reports, so the measurement moved to `r8g`. Fewer workers on
+  of the composite, peaking at 4.7–5.2 GiB. An earlier run on an `m8g.4xlarge` reached a cgroup peak
+  of 58.8 GiB of the 61.7 GiB its kernel reports, so the measurement moved to `r8g`. Fewer workers on
   `m8g` is the cheaper alternative and was not run.
-- n = 1 per chip. Every output is deterministic: two earlier Graviton4 runs, on `m8g.4xlarge`, gave
-  the same composite hash.
+- n = 1 per chip. Every output is deterministic and identical across the three chips (below).
 
 ## What held at scale, on all three chips
 
@@ -105,8 +100,9 @@ and `Cooperlake` on both x86 chips; nothing here calls BLAS.
 | **rasterio == tifffile + imagecodecs, every pixel** | two independent TIFF parsers and codecs on the same bytes | **459 rasters, 41.5 G px** | same | same |
 | block-windowed reads conserve the full read (SCL histogram, B04 sum) | windowed I/O is the large-area idiom | 306/306 | same | same |
 | **ESA's 1,764 published percentages, from the pixels** | the depositors' own numbers | **worst 0.99 of the bound** | same | same |
+| **median red reflectance over ESA vegetation > 0, offset chosen per item from the flag** | vegetation reflects some red | **fails: 129 of 130** | same | same |
 | NDVI from reflectance within [−1, 1] | algebra, both reflectances > 0 | 153/153 | same | same |
-| Σ composite count == Σ per-scene clear observations | conservation through the 16-way reduction | 3,548,472,873 | same | same |
+| Σ composite count == Σ per-scene clear observations | conservation through the 16-way reduction | 6,074,075,564 | same | same |
 | composite finite exactly where the count is > 0 | no observation, no value | yes | yes | yes |
 | both COGs read back equal by rasterio and by tifffile | rasterio's writer, checked by an independent reader | every px | same | same |
 
@@ -126,29 +122,57 @@ pixels, because float32 cannot resolve one pixel in 30 million, and so neither c
 processing baseline 05.11 publish no `s2:dark_features_percentage` (the 81 at 05.10 do), which
 leaves 1,764 values rather than 12 × 153.
 
+## What failed: the offset guard
+
+Every item declares `scale 0.0001, offset −0.1` in `raster:bands`, and 150 of 153 also carry
+`earthsearch:boa_offset_applied: true`: Earth Search has already taken L2A's +1000 DN out of those
+COGs. So the run takes the offset per item from the flag, and checks the choice on the bytes. The
+flag is right almost everywhere: applying the declared −0.1 to every item instead would pass the
+guard on **3 of 130** scenes with vegetation, and following the flag passes on **129**.
+
+The exception is `S2C_11SKA_20241206_1_L2A` (baseline 05.11). It says `false`, so the run applies
+the −0.1. Its median vegetation red is then **−0.0572**, and **+0.0428** without the offset. The same
+tile on the same day from S2A, `S2A_11SKA_20241206_0_L2A`, says `true` and measures **+0.0434**. The
+pixels are offset-applied and the flag says they are not. Two checks fail on it: the guard itself,
+and `every_scene_clean` (152 of 153), which counts the same per-scene failure. The other two items
+flagged `false`, `S2C_11SKA_20241209_1` and `S2C_11SKA_20241216_1`, have no vegetation pixels, so
+the guard cannot test them. The same mismatch is reported upstream on a 2025 tile, and our case is
+added there: Element84/earth-search#66.
+
+The check is left asserting and failing, because it is the claim we mean: the offset a reader would
+apply from the metadata has to give physical reflectance. Neither excluding the scene nor letting
+the pixels pick the offset would keep that claim. **What it costs the outputs:** the scene enters
+the year with the flag's offset, so 0.1 is subtracted from its red and NIR twice. 86,944,090 of its
+10 m pixels stay positive, against 120,560,213 on its S2A twin, and its vegetation's mean NDVI is
++0.9076 against the twin's +0.6947. Its 53,426,979 clear observations are in the composite's
+count and its NDVI enters the maximum; how many composite pixels it wins was not measured. The other
+152 scenes' rows are unaffected, and the percentages do not read the offset at all.
+
 **Reported, not asserted: the recipe's two NDVI claims.** On this year they are tendencies:
 
-| | recipe's method (raw DN) | reflectance (DN × 1e-4 − 0.1) |
+| | recipe's method (raw DN) | reflectance (per-item offset) |
 |---|---|---|
-| p10(vegetation) > p90(not_vegetated) | 127 of 129 scenes | 88 of 113 |
-| mean NDVI(water) < 0 | 66 of 76 scenes | undefined on 96.7% of water px |
+| p10(vegetation) > p90(not_vegetated) | 127 of 129 scenes | 127 of 129 |
+| mean NDVI(water) < 0 | 66 of 76 scenes | 65 of 76; defined on 98.31% of ESA-water 20 m px |
 | NIR < red on ESA-water pixels (offset-free) | 18,701,243 of 26,074,266 (71.7%) | same |
 
-The recipe computes NDVI on raw DNs. Every one of the 153 items, its own included, declares
-`scale 0.0001, offset −0.1` in `raster:bands`. The offset cancels in `NIR − red` but not in the denominator, so raw-DN
-NDVI is pulled toward zero, most of all on dark targets. Over water most NIR DNs are ≤ 1000, so
-reflectance NIR is ≤ 0 and NDVI is undefined. The ordering's two raw-DN exceptions are a 99%-cloud
-scene (`S2A_11SKA_20241027_0`) and a 10,068-pixel swath edge.
+With the offset left out, reflectance is DN × 1e-4 and the scale cancels in NDVI, so on the 150
+flagged-true items the recipe's raw-DN NDVI *is* reflectance NDVI. The two columns differ only in
+masking (reflectance aggregates a 20 m pixel only where all four 10 m values are positive) and on
+the three flagged-false items. Both orderings have the same two exceptions: a 99%-cloud scene
+(`S2A_11SKA_20241027_0`) and a 10,068-pixel swath edge (`S2A_11SKA_20240213_0`).
 
 ## Across chips: fixed point or path
 
-**Nothing differed.** All 19 fixed values in `score.tsv` are identical on Intel and on AMD against
-Graviton4. That includes the composite array's sha256, the count array's, and the **NDVI COG file's
-bytes** (474,540,235 B, `c354845a…`). All 153 rows of `scenes.tsv` are byte-identical too: every
-float64 sum, mean and percentile of every class, printed with `repr`. Nothing here is a path. NDVI is
-an elementwise IEEE divide, the 2×2 aggregation is four elementwise adds, and the composite is a max,
-so each value is one correctly rounded operation, the same on any chip. libdeflate at one version is
-deterministic, so even the compressed bytes agree. The timings are the only thing the chip moved.
+**Nothing differed.** All 24 fixed values in `score.tsv` are identical on Intel and on AMD against
+Graviton4 ([`results/compare.txt`](results/compare.txt)). That includes the composite array's
+sha256, the count array's, the guard's 129/130, and the **NDVI COG file's bytes** (478,961,858 B,
+`2abbfc62…`). All 153 rows of `scenes.tsv` are byte-identical too: every float64 sum, mean and
+percentile of every class, printed with `repr`. The composite covers 120,560,168 px, up to 99
+observations each, mean NDVI 0.722943117. Nothing here is a path. NDVI is an elementwise IEEE
+divide, the 2×2 aggregation is four elementwise adds, and the composite is a max, so each value is
+one correctly rounded operation, the same on any chip. libdeflate at one version is deterministic,
+so even the compressed bytes agree. The timings are the only thing the chip moved.
 
 ## Pins
 

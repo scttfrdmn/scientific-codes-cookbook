@@ -43,12 +43,12 @@ number with nothing to check it against.
 
 | chip | instance | wall | compute $ | **billed $/result** |
 |---|---|---|---|---|
-| Graviton4 | `r8g.4xlarge` | **100 s** | **0.026** | 0.075 |
-| Intel | `r8i.4xlarge` | 140 s | 0.043 | **0.070** |
-| AMD | `r8a.4xlarge` | 102 s | 0.036 | 0.078 |
+| Graviton4 | `r8g.4xlarge` | 106 s | **0.028** | **0.075** |
+| Intel | `r8i.4xlarge` | 148 s | 0.046 | 0.090 |
+| AMD | `r8a.4xlarge` | **105 s** | 0.037 | 0.100 |
 
-The one-scene recipe itself fits `c8g.xlarge` (7 s of compute in a 102 s window). At scale **RAM picks the box** (~5 GiB per worker; an `m8g.4xlarge` hit its ceiling); boot leaves billed costs within 12%
-([not compute cost](../../patterns/layout-and-effective-cost.md)); every output is byte-identical on all three.
+The one-scene recipe itself fits `c8g.xlarge` (7 s of compute in a 102 s window). At scale **RAM picks the box** (~5 GiB per worker; an `m8g.4xlarge` hit its ceiling); boot is 49–63% of each billed window
+([not compute cost](../../patterns/layout-and-effective-cost.md)); every output is byte-identical on all three. Each run exits 1 on one scene whose STAC offset flag is wrong ([the failure](../../measurements/earth-observation-real/README.md), Element84/earth-search#66).
 
 <details>
 <summary>As shipped: reproducing published percentages, two independent derivations, pins, run + verify</summary>

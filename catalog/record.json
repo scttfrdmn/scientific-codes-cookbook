@@ -7620,10 +7620,256 @@
    "unpinned": []
   },
   "earth-observation-real": {
+   "check": [
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "459 band objects + 153 STAC items match sha256 pins",
+     "id": "pins",
+     "kind": "pin",
+     "observed": "612/612",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "every raster's shape, EPSG and transform == its item's `proj:*`",
+     "id": "grid-vs-item",
+     "kind": "reference",
+     "observed": "459/459",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "one CRS and transform for the whole year",
+     "id": "one-grid",
+     "kind": "identity",
+     "observed": "1",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "rasterio == tifffile + imagecodecs, every pixel",
+     "id": "rasterio-eq-tifffile",
+     "kind": "cross-code",
+     "observed": "459 rasters, 41.5 G px",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "block-windowed reads conserve the full read (SCL histogram, B04 sum)",
+     "id": "windowed-reads-conserve",
+     "kind": "conservation",
+     "observed": "306/306",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "5e-7 + 4·2^-24·value",
+     "claim": "ESA's 1,764 published percentages, from the pixels",
+     "id": "esa-percentages",
+     "kind": "reference",
+     "observed": "worst 0.99 of the bound",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "> 0 on every scene with vegetation",
+     "claim": "median red reflectance over ESA vegetation > 0, offset chosen per item from the flag",
+     "id": "veg-red-positive",
+     "kind": "identity",
+     "observed": "fails: 129 of 130 (S2C_11SKA_20241206_1_L2A: -0.0572)",
+     "outcome": "fail"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "[-1, 1]",
+     "claim": "NDVI from reflectance within [−1, 1]",
+     "id": "ndvi-range",
+     "kind": "identity",
+     "observed": "153/153",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "Σ composite count == Σ per-scene clear observations",
+     "id": "composite-count-conserves",
+     "kind": "conservation",
+     "observed": "6,074,075,564",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "composite finite exactly where the count is > 0",
+     "id": "composite-where-observed",
+     "kind": "identity",
+     "observed": "yes",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "exact",
+     "claim": "both COGs read back equal by rasterio and by tifffile",
+     "id": "cog-roundtrip",
+     "kind": "cross-code",
+     "observed": "every px",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "—",
+     "claim": "p10(vegetation) > p90(not_vegetated)",
+     "id": "order-veg-over-bare",
+     "kind": "reported",
+     "observed": "127 of 129 scenes",
+     "outcome": "reported"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "—",
+     "claim": "mean NDVI(water) < 0",
+     "id": "water-ndvi-negative",
+     "kind": "reported",
+     "observed": "65 of 76; defined on 98.31% of ESA-water 20 m px",
+     "outcome": "reported"
+    }
+   ],
+   "cross_code_from": [
+    {
+     "check": "11ska-pins",
+     "from": "measurements/eo-stac-real",
+     "metric": "11SKA 2024 scene set, item-file sha256 pins and 612 asset sizes"
+    }
+   ],
+   "dataset": [
+    {
+     "id": "s3://sentinel-cogs/sentinel-s2-l2a-cogs/11/S/KA/2024/ (B04, B08, SCL of 153 scenes)",
+     "note": "read in place over HTTPS, hashed in-task; the path is not immutable (seven S2C scenes' bands dated 2026)",
+     "pins": "pins.sha256",
+     "tier": "roda"
+    },
+    {
+     "id": "Earth Search STAC items for the 153 scenes (sentinel-cogs <scene>/<id>.json)",
+     "note": "the reference (ESA's published percentages, raster:bands, boa_offset_applied); copied to the bucket S3-to-S3",
+     "pins": "pins.sha256",
+     "tier": "roda"
+    }
+   ],
    "owners": [
     "earth-observation"
    ],
-   "record": null
+   "path": "measurements/earth-observation-real/record.toml",
+   "result_unit": "one tile-year composited (Sentinel-2 L2A 11SKA, 2024: 153 scenes, 31.9 GB) plus every check",
+   "results_per_run": 1,
+   "run": [
+    {
+     "arch": "arm64",
+     "billed_s": 286,
+     "billed_usd": 0.0749,
+     "chip": "Graviton4",
+     "compute_usd": 0.0278,
+     "cpu_part": "0xd4f",
+     "date": "2026-10-24",
+     "date_source": "run",
+     "generation": 8,
+     "host": "results/arm64/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/earth-observation@sha256:8e011f38aea1fa3ad1ce6b40208bf1e6afd69a0848f212b05236e01fbf1a5337"
+     ],
+     "instance": "r8g.4xlarge",
+     "note": "exit 1: the offset guard fails on S2C_11SKA_20241206_1_L2A; every output written and staged",
+     "openblas_corename": "neoversev2",
+     "peak_gib": 59.1,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "primary",
+     "region": "us-west-2",
+     "results": "results/arm64",
+     "spawn_version": "0.142.0",
+     "threads_per_core": 1,
+     "usd_hr": 0.9426,
+     "vendor": "AWS",
+     "wall_s": 106.1,
+     "workers": 16
+    },
+    {
+     "arch": "x86_64",
+     "billed_s": 291,
+     "billed_usd": 0.0898,
+     "compute_usd": 0.0457,
+     "cpu_model": "Intel(R) Xeon(R) 6975P-C",
+     "date": "2026-10-24",
+     "date_source": "run",
+     "generation": 8,
+     "host": "results/x86_64/host.txt",
+     "image": "recipe",
+     "image_resolved": "envs-x86_64/earth-observation-51a38824432a.linux-64.lock",
+     "instance": "r8i.4xlarge",
+     "note": "exit 1, same scene; 16 workers on 8 SMT cores",
+     "openblas_corename": "Cooperlake",
+     "peak_gib": 59.7,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/x86_64",
+     "spawn_version": "0.142.0",
+     "threads_per_core": 2,
+     "usd_hr": 1.1114,
+     "vendor": "Intel",
+     "wall_s": 148.1,
+     "workers": 16
+    },
+    {
+     "arch": "amd",
+     "billed_s": 281,
+     "billed_usd": 0.0998,
+     "compute_usd": 0.0371,
+     "cpu_model": "AMD EPYC 9R45",
+     "date": "2026-10-24",
+     "date_source": "run",
+     "generation": 8,
+     "host": "results/amd/host.txt",
+     "image": "recipe",
+     "image_resolved": "envs-x86_64/earth-observation-51a38824432a.linux-64.lock",
+     "instance": "r8a.4xlarge",
+     "note": "exit 1, same scene",
+     "openblas_corename": "Cooperlake",
+     "peak_gib": 51.6,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/amd",
+     "spawn_version": "0.142.0",
+     "threads_per_core": 1,
+     "usd_hr": 1.2781,
+     "vendor": "AMD",
+     "wall_s": 104.6,
+     "workers": 16
+    }
+   ],
+   "schema": 1,
+   "status": "fail-reported",
+   "unpinned": [],
+   "upstream": [
+    {
+     "note": "boa_offset_applied false on an item whose DNs are already offset; our S2C_11SKA_20241206_1 case is added there. The cause of the failing guard.",
+     "ref": "Element84/earth-search#66",
+     "role": "cited"
+    },
+    {
+     "note": "the double-applied offset this run corrects",
+     "ref": "scttfrdmn/scientific-codes-cookbook#120",
+     "role": "cited"
+    }
+   ]
   },
   "eo-stac-real": {
    "check": [
@@ -51517,6 +51763,16 @@
    ]
   },
   {
+   "ref": "Element84/earth-search#66",
+   "uses": [
+    {
+     "measurement": "measurements/earth-observation-real",
+     "note": "boa_offset_applied false on an item whose DNs are already offset; our S2C_11SKA_20241206_1 case is added there. The cause of the failing guard.",
+     "role": "cited"
+    }
+   ]
+  },
+  {
    "ref": "awslabs/open-data-registry#1418",
    "uses": [
     {
@@ -51662,6 +51918,16 @@
     {
      "measurement": "measurements/scikit-learn-real",
      "note": "nearest existing issue (learning rates above 0.1); does not cover this divergence",
+     "role": "cited"
+    }
+   ]
+  },
+  {
+   "ref": "scttfrdmn/scientific-codes-cookbook#120",
+   "uses": [
+    {
+     "measurement": "measurements/earth-observation-real",
+     "note": "the double-applied offset this run corrects",
      "role": "cited"
     }
    ]
