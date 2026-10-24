@@ -3313,10 +3313,443 @@
    ]
   },
   "bwa-real": {
+   "check": [
+    {
+     "across_chips": "identical",
+     "claim": "48,392,167 SAM records and 48,349,411 mapped pre-`.alt`",
+     "id": "pre-alt-records",
+     "kind": "identity",
+     "observed": "48,392,167 / 48,349,411 on every chip and every generation and core count",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "assert 48817006 -- EXACT",
+     "claim": "48,817,006 and 48,774,176 ALT-aware",
+     "id": "alt-aware-records",
+     "kind": "identity",
+     "observed": "48,817,006 / 48,774,176 on every chip",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "claim": "a 16,173,608,298-byte SAM (17,325,079,973 ALT-aware) with 3,366 `@SQ` lines on every chip",
+     "id": "sam-shape",
+     "kind": "identity",
+     "observed": "16,173,608,298 / 17,325,079,973 bytes, 3,366 @SQ",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": ">= 99.9",
+     "claim": "99.91% of records map, every run",
+     "id": "pct-mapped",
+     "kind": "band",
+     "observed": "99.91",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "fixed-point",
+     "across_chips_evidence": "anon_max_gib 8.68 on c8g, c8i and c8a (size-c8{g,i,a}-16t-disk.txt)",
+     "claim": "Peak RSS was 8.70–8.71 GiB on all four",
+     "id": "peak-memory",
+     "kind": "reported",
+     "observed": "8.70–8.71 GiB (generations); anon RSS 8.68 GiB on every chip",
+     "outcome": "reported"
+    },
+    {
+     "across_chips": "n/a",
+     "claim": "AMD is 1.05× ahead of Graviton4 pre-`.alt` and 1.19× ALT-aware; Intel is 1.43× and 1.22× slower",
+     "id": "chip-speed-ratios",
+     "kind": "reported",
+     "observed": "ratios move by up to 17% between two clean runs",
+     "outcome": "reported"
+    }
+   ],
+   "cross_code_from": [
+    {
+     "check": "chrom-concordance",
+     "from": "measurements/bowtie2-real",
+     "metric": "chromosome concordance over reads MAPQ>=30 on both sides (clip-invariant); position agreement reported as a curve over tolerances"
+    }
+   ],
+   "dataset": [
+    {
+     "id": "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)",
+     "tier": "roda",
+     "unpinned": "no sha256 manifest is committed under measurements/bwa-real; cached from RODA into the bucket by the README's copy loop"
+    },
+    {
+     "id": "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz",
+     "tier": "roda",
+     "unpinned": "no sha256 manifest is committed under measurements/bwa-real"
+    }
+   ],
    "owners": [
     "bwa-samtools"
    ],
-   "record": null
+   "path": "measurements/bwa-real/record.toml",
+   "result_unit": "one alignment: 24,148,993 read pairs (SRR062634, HG00096) against GRCh38_full_analysis_set_plus_decoy_hla",
+   "results_per_run": 1,
+   "run": [
+    {
+     "arch": "arm64",
+     "chip": "Graviton2",
+     "compute_usd": 0.1641,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 6,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c6g.4xlarge",
+     "note": "billed $/result 0.1841; 44,560 reads/s, 15.21 avg cores",
+     "peak_gib": 8.71,
+     "pin_current": true,
+     "purpose": "generation-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c6g-16t.txt",
+     "usd_hr": 0.544,
+     "vendor": "AWS",
+     "wall_s": 1086,
+     "workers": 16
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton3",
+     "compute_usd": 0.1434,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 7,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c7g.4xlarge",
+     "note": "billed $/result 0.1621; 54,373 reads/s, 15.26 avg cores",
+     "peak_gib": 8.7,
+     "pin_current": true,
+     "purpose": "generation-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c7g-16t.txt",
+     "usd_hr": 0.58,
+     "vendor": "AWS",
+     "wall_s": 890,
+     "workers": 16
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 851,
+     "billed_usd": 0.1508,
+     "chip": "Graviton4",
+     "compute_usd": 0.1342,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.4xlarge",
+     "note": "also the 16-core rung of the knee; in-flight awk counter on the timed path; 63,926 reads/s, 15.21 avg cores",
+     "peak_gib": 8.7,
+     "pin_current": true,
+     "purpose": "generation-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c8g-16t.txt",
+     "usd_hr": 0.6381,
+     "vendor": "AWS",
+     "wall_s": 757,
+     "workers": 16
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton5",
+     "compute_usd": 0.114,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 9,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c9g.4xlarge",
+     "note": "billed $/result 0.1320; 82,021 reads/s, 15.18 avg cores",
+     "peak_gib": 8.71,
+     "pin_current": true,
+     "purpose": "generation-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c9g-16t.txt",
+     "usd_hr": 0.6955,
+     "vendor": "AWS",
+     "wall_s": 590,
+     "workers": 16
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton4",
+     "compute_usd": 0.1372,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.8xlarge",
+     "note": "billed $/result 0.1705; 125,044 reads/s, 28.80 avg cores (90%)",
+     "peak_gib": 12.02,
+     "pin_current": true,
+     "purpose": "core-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c8g-32t.txt",
+     "usd_hr": 1.2762,
+     "vendor": "AWS",
+     "wall_s": 387,
+     "workers": 32
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton4",
+     "compute_usd": 0.1377,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.12xlarge",
+     "note": "billed $/result 0.1888; 186,842 reads/s, 40.43 avg cores (84%)",
+     "peak_gib": 15.41,
+     "pin_current": true,
+     "purpose": "core-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c8g-48t.txt",
+     "usd_hr": 1.9142,
+     "vendor": "AWS",
+     "wall_s": 259,
+     "workers": 48
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton4",
+     "compute_usd": 0.1418,
+     "date": "2026-09-25",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "billed $/result 0.2106; 241,961 reads/s, 51.09 avg cores (80%); fixed overhead 93-97 s is 33% of this run",
+     "peak_gib": 18.65,
+     "pin_current": true,
+     "purpose": "core-sweep",
+     "region": "us-west-2",
+     "results": "results/size-c8g-64t.txt",
+     "usd_hr": 2.5523,
+     "vendor": "AWS",
+     "wall_s": 200,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 946,
+     "billed_usd": 0.1677,
+     "chip": "Graviton4",
+     "compute_usd": 0.134,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.4xlarge",
+     "note": "gen-c8g with SAM to disk; peak is anon RSS (memory.current reads 20.19 GiB, page cache from the SAM write); billed includes the untimed count pass",
+     "peak_gib": 8.68,
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/size-c8g-16t-disk.txt",
+     "usd_hr": 0.6381,
+     "vendor": "AWS",
+     "wall_s": 756,
+     "workers": 16
+    },
+    {
+     "arch": "x86_64",
+     "billed_s": 1306,
+     "billed_usd": 0.272,
+     "compute_usd": 0.2251,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8i.4xlarge",
+     "note": "bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT; peak is anon RSS",
+     "peak_gib": 8.68,
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/size-c8i-16t-disk.txt",
+     "usd_hr": 0.7497,
+     "vendor": "Intel",
+     "wall_s": 1081,
+     "workers": 16
+    },
+    {
+     "arch": "amd",
+     "billed_s": 880,
+     "billed_usd": 0.2108,
+     "compute_usd": 0.172,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8a.4xlarge",
+     "note": "bioconda x86 build of the same 0.7.19-r1273; peak is anon RSS",
+     "peak_gib": 8.68,
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/size-c8a-16t-disk.txt",
+     "usd_hr": 0.8622,
+     "vendor": "AMD",
+     "wall_s": 718,
+     "workers": 16
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton4",
+     "compute_usd": 0.1436,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+     ],
+     "instance": "c8g.4xlarge",
+     "note": "bwa-samtools 01-align, ALT-aware, SAM to disk (second clean run per chip); 60,268 reads/s",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/recipe-align-c8g.txt",
+     "usd_hr": 0.6381,
+     "vendor": "AWS",
+     "wall_s": 810,
+     "workers": 16
+    },
+    {
+     "arch": "x86_64",
+     "compute_usd": 0.2055,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8i.4xlarge",
+     "note": "bwa-samtools 01-align, ALT-aware; 49,460 reads/s",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/recipe-align-c8i.txt",
+     "usd_hr": 0.7497,
+     "vendor": "Intel",
+     "wall_s": 987,
+     "workers": 16
+    },
+    {
+     "arch": "amd",
+     "compute_usd": 0.1631,
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8a.4xlarge",
+     "note": "bwa-samtools 01-align, ALT-aware; 71,684 reads/s",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/recipe-align-c8a.txt",
+     "usd_hr": 0.8622,
+     "vendor": "AMD",
+     "wall_s": 681,
+     "workers": 16
+    },
+    {
+     "arch": "x86_64",
+     "date": "2026-10-20",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8i.4xlarge",
+     "note": "earlier row with the awk counter on the timed path; superseded by the 1081 s re-run (spread, not the reader)",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/size-c8i-16t.txt",
+     "vendor": "Intel",
+     "wall_s": 1014,
+     "workers": 16
+    },
+    {
+     "arch": "amd",
+     "date": "2026-10-20",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a",
+      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
+     ],
+     "instance": "c8a.4xlarge",
+     "note": "earlier row with the awk counter on the timed path; superseded by the 718 s re-run",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/size-c8a-16t.txt",
+     "vendor": "AMD",
+     "wall_s": 646,
+     "workers": 16
+    }
+   ],
+   "schema": 1,
+   "status": "pass",
+   "unpinned": [
+    "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)",
+    "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
+   ],
+   "upstream": [
+    {
+     "note": "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form",
+     "ref": "spawn#1246",
+     "role": "workaround"
+    }
+   ]
   },
   "calculix-real": {
    "check": [
@@ -11682,10 +12115,386 @@
    "unpinned": []
   },
   "gw-real": {
+   "check": [
+    {
+     "across_chips": "identical",
+     "bound": "sha256 pins; the release also against Zenodo's md5",
+     "claim": "staged bytes",
+     "id": "staged-bytes",
+     "kind": "pin",
+     "observed": "5 of 5",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "within 0.5 s",
+     "claim": "search: the loudest newSNR of the hour is GW150914, each detector",
+     "id": "search-loudest",
+     "kind": "reference",
+     "observed": "H1 19.51 at …62.428, L1 13.53 at …62.421",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "reduced χ² < 2",
+     "claim": "GW150914 is signal-like",
+     "id": "signal-like",
+     "kind": "band",
+     "observed": "H1 1.04, L1 0.57",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "within the 10.0 ms light travel time",
+     "claim": "L1 − H1 arrival",
+     "id": "arrival-delay",
+     "kind": "identity",
+     "observed": "−6.35 ms",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
+     "claim": "loudest off-source newSNR (reported)",
+     "id": "off-source",
+     "kind": "reported",
+     "observed": "H1 6.50, L1 6.46; L1's loudest raw SNR is a 17.05 glitch at newSNR 4.63",
+     "outcome": "reported"
+    },
+    {
+     "bound": "E|ρ|² = 2, median/(2 ln 2) = 1",
+     "claim": "filter normalisation on noise (reported)",
+     "id": "filter-normalisation",
+     "kind": "reported",
+     "observed": "H1 2.009 / 0.999, L1 2.020 / 1.002",
+     "outcome": "reported"
+    },
+    {
+     "across_chips": "identical",
+     "bound": "to its 2 printed decimals",
+     "claim": "noise log-likelihood == the release's `ln_noise_evidence`",
+     "id": "noise-evidence",
+     "kind": "reference",
+     "observed": "−7288.1157 vs −7288.12",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "fixed-point",
+     "across_chips_evidence": "median -4.296e-03 max 4.130e-02 (Graviton4) vs median -4.366e-03 max 4.122e-02 (x86); marginalised ln L differs by 7e-5",
+     "bound": "max |Δ| < 0.05",
+     "claim": "marginalised ln L at 500 published samples (incl. max-L) == the release's",
+     "id": "lnl-500-samples",
+     "kind": "reference",
+     "observed": "median −0.0043, max 0.041",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "fixed-point",
+     "across_chips_evidence": "H1 21.221077 (Graviton4) vs 21.221094 (x86), 1e-6 relative; Intel == AMD identical",
+     "bound": "rel < 1e-3",
+     "claim": "matched-filter SNR at the published max-L sample == the release's (complex)",
+     "id": "mf-snr-release",
+     "kind": "reference",
+     "observed": "H1 4.6e-6, L1 4.6e-4",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "n/a",
+     "bound": "rel < 1e-10",
+     "claim": "PyCBC SNR == Bilby SNR on Bilby's data, PSD and template",
+     "id": "pycbc-bilby-snr",
+     "kind": "cross-code",
+     "observed": "H1 0, L1 2.3e-16",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "path",
+     "across_chips_evidence": "304.231 +- 0.251 (Graviton4) vs 304.270 +- 0.257 (x86); 20.46M vs 20.12M likelihood calls from the same seed",
+     "bound": "< 5 combined σ",
+     "claim": "ln Bayes factor vs the release's 303.45 ± 0.14",
+     "id": "ln-bayes-factor",
+     "kind": "reference",
+     "observed": "304.23 ± 0.25, 2.7σ [304.27, 2.8σ]",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "path",
+     "across_chips_evidence": "max |z| 9.57 (Graviton4) vs 14.04 (x86, Intel == AMD); same direction on both paths (narrower tails); with each SE replaced by the larger of bootstrap and pair spread, 9.51",
+     "bound": "max |z| < 5",
+     "claim": "every published 5/50/95% quantile within 5 SE of ours, 17 parameters",
+     "id": "quantile-5se",
+     "kind": "reference",
+     "observed": "fails: 9.57 [14.04]",
+     "outcome": "fail"
+    },
+    {
+     "across_chips": "fixed-point",
+     "across_chips_evidence": "H1 max rel SNR difference 2.4e-10, L1 4.9e-10, x86 and AMD vs arm64",
+     "claim": "The search's 20 triggers per detector have identical times and templates",
+     "id": "search-triggers",
+     "kind": "reported",
+     "observed": "SNRs equal to 5e-10 relative",
+     "outcome": "reported"
+    },
+    {
+     "across_chips": "path",
+     "across_chips_evidence": "n_likelihood_evaluations 20456245 (Graviton4) vs 20123289 (x86, AMD identical)",
+     "claim": "The sampler is a path.",
+     "id": "sampler-path",
+     "kind": "reported",
+     "observed": "20.46M against 20.12M likelihood calls, 2,722 against 2,610 posterior samples",
+     "outcome": "reported"
+    }
+   ],
+   "cross_code": [
+    {
+     "check": "quantile-5se",
+     "metric": "fraction of our posterior below each published 5/50/95% quantile, 17 parameters, in units of the combined SE",
+     "same_bytes": false,
+     "tolerance_basis": "5 SE, the SE being the SD of the fraction over 200 dynesty resample_run bootstraps plus the release's own error scaled to its 4 x 2000 live points; GWOSC's file stands in for the C02 frames, so not the same bytes",
+     "with": "published:zenodo-6513631"
+    },
+    {
+     "check": "lnl-500-samples",
+     "metric": "marginalised ln L at 500 published posterior samples, max |Δ|",
+     "same_bytes": false,
+     "tolerance_basis": "covers what differs between the two likelihoods: a rebuilt distance-marginalisation table, lalsimulation 6.1.0 vs 2.4.0, GWOSC's file for the C02 frames; a wrong PSD normalisation or time reference misses by tens to hundreds",
+     "with": "published:zenodo-6513631"
+    }
+   ],
+   "dataset": [
+    {
+     "id": "GWOSC O1 strain, event GW150914-v4: H-H1_LOSC_16_V1 / L-L1_LOSC_16_V1-1126256640-4096 (PE) and the _4_V1 4 kHz files (search)",
+     "note": "fetched on AWS by 00-fetch.task.json; L1 has 774,144 NaN samples outside science",
+     "pins": "inputs.sha256",
+     "tier": "durable-id"
+    },
+    {
+     "id": "GWTC-2.1 PE release v2, doi:10.5281/zenodo.6513631: IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo.h5, run C01:IMRPhenomXPHM",
+     "note": "the published posterior, config, PSDs and ln_noise_evidence; checked against Zenodo's md5 at fetch",
+     "pins": "inputs.sha256",
+     "tier": "durable-id"
+    }
+   ],
    "owners": [
     "gw"
    ],
-   "record": null
+   "path": "measurements/gw-real/record.toml",
+   "result_unit": "one event: GW150914 searched over the GWOSC hour and fully characterised (15-parameter PE with calibration)",
+   "results_per_run": 1,
+   "run": [
+    {
+     "arch": "arm64",
+     "billed_s": 4476,
+     "billed_usd": 3.17,
+     "chip": "Graviton4",
+     "compute_usd": 3.13,
+     "date": "2026-10-20",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/arm64/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB",
+     "openblas_corename": "neoversev2",
+     "peak_gib": 32.2,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "primary",
+     "region": "us-west-2",
+     "results": "results/arm64/",
+     "threads_per_core": 1,
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "wall_s": 4409,
+     "workers": 64
+    },
+    {
+     "arch": "x86_64",
+     "billed_s": 4636,
+     "billed_usd": 3.86,
+     "compute_usd": 3.82,
+     "date": "2026-10-20",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/x86_64/host.txt",
+     "image": "recipe",
+     "image_resolved": "envs-x86_64/gw-ab3a5857bd21.linux-64.lock",
+     "instance": "c8i.16xlarge",
+     "note": "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads",
+     "openblas_corename": "Cooperlake",
+     "peak_gib": 35.8,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/x86_64/",
+     "threads_per_core": 2,
+     "usd_hr": 2.9987,
+     "vendor": "Intel",
+     "wall_s": 4585,
+     "workers": 64
+    },
+    {
+     "arch": "amd",
+     "billed_s": 3543,
+     "billed_usd": 3.39,
+     "compute_usd": 3.35,
+     "date": "2026-10-20",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/amd/host.txt",
+     "image": "recipe",
+     "image_resolved": "envs-x86_64/gw-ab3a5857bd21.linux-64.lock",
+     "instance": "c8a.16xlarge",
+     "note": "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path",
+     "openblas_corename": "Cooperlake",
+     "peak_gib": 33.5,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/amd/",
+     "threads_per_core": 1,
+     "usd_hr": 3.4486,
+     "vendor": "AMD",
+     "wall_s": 3498,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 227,
+     "billed_usd": 0.16,
+     "chip": "Graviton4",
+     "date": "2026-10-21",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/arm-calibration/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails",
+     "peak_gib": 2.31,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/arm-calibration/",
+     "threads_per_core": 1,
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "wall_s": 150,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 4466,
+     "billed_usd": 3.17,
+     "chip": "Graviton4",
+     "date": "2026-10-21",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/arm-naccept120/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails",
+     "peak_gib": 7.29,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/arm-naccept120/",
+     "threads_per_core": 1,
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "wall_s": 4390,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 8047,
+     "billed_usd": 5.71,
+     "chip": "Graviton4",
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/arm-maxmcmc10k/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails",
+     "peak_gib": 8.45,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/arm-maxmcmc10k/",
+     "threads_per_core": 1,
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "wall_s": 7952,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "billed_s": 1941,
+     "billed_usd": 1.38,
+     "chip": "Graviton4",
+     "date": "2026-10-21",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/walks-probe/",
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "chip": "Graviton4",
+     "date": "2026-10-21",
+     "date_source": "git",
+     "generation": 8,
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/naccept-probe/",
+     "vendor": "AWS"
+    }
+   ],
+   "schema": 1,
+   "status": "fail-reported",
+   "unpinned": [],
+   "upstream": [
+    {
+     "note": "the report that the maxmcmc cap is silent",
+     "ref": "bilby-dev/bilby#1162",
+     "role": "cited"
+    }
+   ]
   },
   "healpy-real": {
    "check": [
@@ -41231,7 +42040,7 @@
   },
   "bwa-mem2": {
    "inputs": "stage: bwa-mem2, bwa-samtools",
-   "last_updated": "2026-10-23",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-23",
     "arm64": "2026-10-23",
@@ -41308,7 +42117,7 @@
   },
   "bwa-samtools": {
    "inputs": "stage: bwa-mem2, bwa-samtools",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-24",
     "arm64": "2026-10-24",
@@ -48616,6 +49425,43 @@
    "symptom": "stage-in took 19–25 minutes of a 22–28 minute bill; compute 2.9–3.9% of billed"
   },
   {
+   "cause": "bilby 1.0.4 scaled the PSD by the Tukey window's power loss; bilby 2.x does not",
+   "fix": "BILBY_INCORRECT_PSD_NORMALIZATION=TRUE to reproduce the release",
+   "id": "gw-bilby2-psd-normalisation",
+   "owner": "measurements/gw-real",
+   "scope": "tool",
+   "symptom": "every SNR x0.935 and the noise evidence x0.875 (-6376.32 against -7288.12) against a GWTC-2.1 release"
+  },
+  {
+   "blames": "the naccept setting",
+   "cause": "bilby sets each walk to naccept / acceptance rate, capped at maxmcmc=5000; acceptance falls from 1.8% to 0.3%, so every walk sits at the cap from about the 1,500th chain",
+   "cost": "$3.17 (arm 2)",
+   "fix": "read the walk tuner (walks_probe.py); raise maxmcmc, not naccept",
+   "id": "gw-dynesty-maxmcmc-silent-cap",
+   "owner": "measurements/gw-real",
+   "refs": [
+    "bilby-dev/bilby#1162"
+   ],
+   "scope": "tool",
+   "symptom": "raising naccept 60 -> 120 changes nothing: 20.53M likelihood calls against 20.46M, same time"
+  },
+  {
+   "cause": "the release stores the reconstructed physical time; with time marginalisation geocent_time is the segment start, so the template shifts by 2 s",
+   "fix": "set geocent_time to the prior's fixed value, float(ifos.start_time)",
+   "id": "gw-geocent-time-marginalised",
+   "owner": "measurements/gw-real",
+   "scope": "data",
+   "symptom": "a published sample passed back to a time-marginalised likelihood returns ln L ≈ −1 instead of 323"
+  },
+  {
+   "cause": "lalsimulation changed three IMRPhenomXPHM defaults since 2.4.0: PrecVersion 223->300, FinalSpinMod 3->4, PhenomXHMReleaseVersion 122019->122022",
+   "fix": "gwreal.py sets the 2.4.0 values",
+   "id": "gw-lalsim-xphm-defaults",
+   "owner": "measurements/gw-real",
+   "scope": "tool",
+   "symptom": "ln L at the max-L sample moves by 0.0037"
+  },
+  {
    "cause": "the inpainted columns are a different map; Q and U differ on every pixel",
    "fix": "don't treat `*_INP` as the raw map with holes filled",
    "id": "healpy-inpainted-columns-differ",
@@ -50681,6 +51527,16 @@
    ]
   },
   {
+   "ref": "bilby-dev/bilby#1162",
+   "uses": [
+    {
+     "measurement": "measurements/gw-real",
+     "note": "the report that the maxmcmc cap is silent",
+     "role": "cited"
+    }
+   ]
+  },
+  {
    "ref": "bioconda-recipes#31420",
    "uses": [
     {
@@ -50876,6 +51732,11 @@
     {
      "measurement": "measurements/bowtie2-real",
      "note": "x86 legs: each resolved spec's command staged as a sha256-checked file and run with bash",
+     "role": "workaround"
+    },
+    {
+     "measurement": "measurements/bwa-real",
+     "note": "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form",
      "role": "workaround"
     },
     {

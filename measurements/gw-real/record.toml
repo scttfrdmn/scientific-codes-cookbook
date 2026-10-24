@@ -1,0 +1,318 @@
+# measurements/gw-real/record.toml -- GW150914: PyCBC search of the GWOSC hour + Bilby PE vs GWTC-2.1.
+# Three chips at r1, then four Graviton4 diagnostic arms/probes for the quantile-test miss.
+# The 5-SE quantile test is asserted and fails on every chip (and every arm); left failing on
+# purpose, so status derives as fail-reported. Dates are the git dates results/ landed.
+# Diagnostic rows' "task time" in the README is the billed window; wall_s is phases.txt's.
+schema = 1
+result_unit = "one event: GW150914 searched over the GWOSC hour and fully characterised (15-parameter PE with calibration)"
+
+[[dataset]]
+id = "GWOSC O1 strain, event GW150914-v4: H-H1_LOSC_16_V1 / L-L1_LOSC_16_V1-1126256640-4096 (PE) and the _4_V1 4 kHz files (search)"
+tier = "durable-id"
+pins = "inputs.sha256"
+note = "fetched on AWS by 00-fetch.task.json; L1 has 774,144 NaN samples outside science"
+
+[[dataset]]
+id = "GWTC-2.1 PE release v2, doi:10.5281/zenodo.6513631: IGWN-GWTC2p1-v2-GW150914_095045_PEDataRelease_mixed_nocosmo.h5, run C01:IMRPhenomXPHM"
+tier = "durable-id"
+pins = "inputs.sha256"
+note = "the published posterior, config, PSDs and ln_noise_evidence; checked against Zenodo's md5 at fetch"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "primary"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+host = "results/arm64/host.txt"
+wall_s = 4409
+billed_s = 4476
+usd_hr = 2.5524
+compute_usd = 3.13
+billed_usd = 3.17
+peak_gib = 32.2
+peak_kind = "cgroup-memory.peak"
+results = "results/arm64/"
+note = "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB"
+
+[[run]]
+instance = "c8i.16xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+host = "results/x86_64/host.txt"
+wall_s = 4585
+billed_s = 4636
+usd_hr = 2.9987
+compute_usd = 3.82
+billed_usd = 3.86
+peak_gib = 35.8
+peak_kind = "cgroup-memory.peak"
+results = "results/x86_64/"
+note = "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads"
+
+[[run]]
+instance = "c8a.16xlarge"
+purpose = "cross-chip"
+date = "2026-10-20"
+date_source = "git"
+workers = 64
+host = "results/amd/host.txt"
+wall_s = 3498
+billed_s = 3543
+usd_hr = 3.4486
+compute_usd = 3.35
+billed_usd = 3.39
+peak_gib = 33.5
+peak_kind = "cgroup-memory.peak"
+results = "results/amd/"
+note = "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-21"
+date_source = "git"
+workers = 64
+host = "results/arm-calibration/host.txt"
+wall_s = 150
+billed_s = 227
+usd_hr = 2.5524
+billed_usd = 0.16
+peak_gib = 2.31
+peak_kind = "cgroup-memory.peak"
+results = "results/arm-calibration/"
+note = "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-21"
+date_source = "git"
+workers = 64
+host = "results/arm-naccept120/host.txt"
+wall_s = 4390
+billed_s = 4466
+usd_hr = 2.5524
+billed_usd = 3.17
+peak_gib = 7.29
+peak_kind = "cgroup-memory.peak"
+results = "results/arm-naccept120/"
+note = "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-24"
+date_source = "git"
+workers = 64
+host = "results/arm-maxmcmc10k/host.txt"
+wall_s = 7952
+billed_s = 8047
+usd_hr = 2.5524
+billed_usd = 5.71
+peak_gib = 8.45
+peak_kind = "cgroup-memory.peak"
+results = "results/arm-maxmcmc10k/"
+note = "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-21"
+date_source = "git"
+workers = 64
+billed_s = 1941
+usd_hr = 2.5524
+billed_usd = 1.38
+results = "results/walks-probe/"
+note = "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-21"
+date_source = "git"
+results = "results/naccept-probe/"
+note = "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README"
+
+# --- checks: "What held at scale, on all three chips" -------------------------------------
+[[check]]
+id = "staged-bytes"
+claim = "staged bytes"
+kind = "pin"
+bound = "sha256 pins; the release also against Zenodo's md5"
+observed = "5 of 5"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "search-loudest"
+claim = "search: the loudest newSNR of the hour is GW150914, each detector"
+kind = "reference"
+bound = "within 0.5 s"
+observed = "H1 19.51 at …62.428, L1 13.53 at …62.421"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "signal-like"
+claim = "GW150914 is signal-like"
+kind = "band"
+bound = "reduced χ² < 2"
+observed = "H1 1.04, L1 0.57"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "arrival-delay"
+claim = "L1 − H1 arrival"
+kind = "identity"
+bound = "within the 10.0 ms light travel time"
+observed = "−6.35 ms"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "off-source"
+claim = "loudest off-source newSNR (reported)"
+kind = "reported"
+observed = "H1 6.50, L1 6.46; L1's loudest raw SNR is a 17.05 glitch at newSNR 4.63"
+outcome = "reported"
+across_chips = "identical"
+
+[[check]]
+id = "filter-normalisation"
+claim = "filter normalisation on noise (reported)"
+kind = "reported"
+bound = "E|ρ|² = 2, median/(2 ln 2) = 1"
+observed = "H1 2.009 / 0.999, L1 2.020 / 1.002"
+outcome = "reported"
+
+[[check]]
+id = "noise-evidence"
+claim = "noise log-likelihood == the release's `ln_noise_evidence`"
+kind = "reference"
+bound = "to its 2 printed decimals"
+observed = "−7288.1157 vs −7288.12"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "lnl-500-samples"
+claim = "marginalised ln L at 500 published samples (incl. max-L) == the release's"
+kind = "reference"
+bound = "max |Δ| < 0.05"
+observed = "median −0.0043, max 0.041"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "median -4.296e-03 max 4.130e-02 (Graviton4) vs median -4.366e-03 max 4.122e-02 (x86); marginalised ln L differs by 7e-5"
+
+[[check]]
+id = "mf-snr-release"
+claim = "matched-filter SNR at the published max-L sample == the release's (complex)"
+kind = "reference"
+bound = "rel < 1e-3"
+observed = "H1 4.6e-6, L1 4.6e-4"
+outcome = "pass"
+across_chips = "fixed-point"
+across_chips_evidence = "H1 21.221077 (Graviton4) vs 21.221094 (x86), 1e-6 relative; Intel == AMD identical"
+
+[[check]]
+id = "pycbc-bilby-snr"
+claim = "PyCBC SNR == Bilby SNR on Bilby's data, PSD and template"
+kind = "cross-code"
+bound = "rel < 1e-10"
+observed = "H1 0, L1 2.3e-16"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "ln-bayes-factor"
+claim = "ln Bayes factor vs the release's 303.45 ± 0.14"
+kind = "reference"
+bound = "< 5 combined σ"
+observed = "304.23 ± 0.25, 2.7σ [304.27, 2.8σ]"
+outcome = "pass"
+across_chips = "path"
+across_chips_evidence = "304.231 +- 0.251 (Graviton4) vs 304.270 +- 0.257 (x86); 20.46M vs 20.12M likelihood calls from the same seed"
+
+[[check]]
+id = "quantile-5se"
+claim = "every published 5/50/95% quantile within 5 SE of ours, 17 parameters"
+kind = "reference"
+bound = "max |z| < 5"
+observed = "fails: 9.57 [14.04]"
+outcome = "fail"
+across_chips = "path"
+across_chips_evidence = "max |z| 9.57 (Graviton4) vs 14.04 (x86, Intel == AMD); same direction on both paths (narrower tails); with each SE replaced by the larger of bootstrap and pair spread, 9.51"
+
+# --- reported: fixed point or path ------------------------------------------------------
+[[check]]
+id = "search-triggers"
+claim = "The search's 20 triggers per detector have identical times and templates"
+kind = "reported"
+observed = "SNRs equal to 5e-10 relative"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "H1 max rel SNR difference 2.4e-10, L1 4.9e-10, x86 and AMD vs arm64"
+
+[[check]]
+id = "sampler-path"
+claim = "The sampler is a path."
+kind = "reported"
+observed = "20.46M against 20.12M likelihood calls, 2,722 against 2,610 posterior samples"
+outcome = "reported"
+across_chips = "path"
+across_chips_evidence = "n_likelihood_evaluations 20456245 (Graviton4) vs 20123289 (x86, AMD identical)"
+
+[[cross_code]]
+with = "published:zenodo-6513631"
+same_bytes = false
+metric = "fraction of our posterior below each published 5/50/95% quantile, 17 parameters, in units of the combined SE"
+tolerance_basis = "5 SE, the SE being the SD of the fraction over 200 dynesty resample_run bootstraps plus the release's own error scaled to its 4 x 2000 live points; GWOSC's file stands in for the C02 frames, so not the same bytes"
+check = "quantile-5se"
+
+[[cross_code]]
+with = "published:zenodo-6513631"
+same_bytes = false
+metric = "marginalised ln L at 500 published posterior samples, max |Δ|"
+tolerance_basis = "covers what differs between the two likelihoods: a rebuilt distance-marginalisation table, lalsimulation 6.1.0 vs 2.4.0, GWOSC's file for the C02 frames; a wrong PSD normalisation or time reference misses by tens to hundreds"
+check = "lnl-500-samples"
+
+[[trap]]
+id = "gw-bilby2-psd-normalisation"
+scope = "tool"
+symptom = "every SNR x0.935 and the noise evidence x0.875 (-6376.32 against -7288.12) against a GWTC-2.1 release"
+cause = "bilby 1.0.4 scaled the PSD by the Tukey window's power loss; bilby 2.x does not"
+fix = "BILBY_INCORRECT_PSD_NORMALIZATION=TRUE to reproduce the release"
+
+[[trap]]
+id = "gw-geocent-time-marginalised"
+scope = "data"
+symptom = "a published sample passed back to a time-marginalised likelihood returns ln L ≈ −1 instead of 323"
+cause = "the release stores the reconstructed physical time; with time marginalisation geocent_time is the segment start, so the template shifts by 2 s"
+fix = "set geocent_time to the prior's fixed value, float(ifos.start_time)"
+
+[[trap]]
+id = "gw-lalsim-xphm-defaults"
+scope = "tool"
+symptom = "ln L at the max-L sample moves by 0.0037"
+cause = "lalsimulation changed three IMRPhenomXPHM defaults since 2.4.0: PrecVersion 223->300, FinalSpinMod 3->4, PhenomXHMReleaseVersion 122019->122022"
+fix = "gwreal.py sets the 2.4.0 values"
+
+[[trap]]
+id = "gw-dynesty-maxmcmc-silent-cap"
+scope = "tool"
+symptom = "raising naccept 60 -> 120 changes nothing: 20.53M likelihood calls against 20.46M, same time"
+blames = "the naccept setting"
+cause = "bilby sets each walk to naccept / acceptance rate, capped at maxmcmc=5000; acceptance falls from 1.8% to 0.3%, so every walk sits at the cap from about the 1,500th chain"
+fix = "read the walk tuner (walks_probe.py); raise maxmcmc, not naccept"
+cost = "$3.17 (arm 2)"
+refs = ["bilby-dev/bilby#1162"]
+
+[[upstream]]
+ref = "bilby-dev/bilby#1162"
+role = "cited"
+note = "the report that the maxmcmc cap is silent"

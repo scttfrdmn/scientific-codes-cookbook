@@ -1,0 +1,275 @@
+# measurements/bwa-real/record.toml -- bwa mem, a whole 1000 Genomes run vs the whole GRCh38 index:
+# Graviton generations 2-5, the c8g core knee, and three chips at 16 threads.
+# Owner recipe is bwa-samtools (image = its pins). Dates are the git dates results/ landed.
+# The gen/knee sweeps print billed $/result but not billed seconds (only Graviton4's 851 s is
+# printed), so their billed $ is in each note, not a field. Peak is the README's "peak RSS" =
+# the 1 Hz max of cgroup memory.current (gen/knee) or of memory.stat anon (cross-chip rows);
+# neither is in the peak_kind enum, so no peak_kind. The cross-chip table and recipe-align
+# rows are the 2026-10-24 re-run (#121: SAM to disk, nothing else timed).
+schema = 1
+result_unit = "one alignment: 24,148,993 read pairs (SRR062634, HG00096) against GRCh38_full_analysis_set_plus_decoy_hla"
+
+[[dataset]]
+id = "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)"
+tier = "roda"
+unpinned = "no sha256 manifest is committed under measurements/bwa-real; cached from RODA into the bucket by the README's copy loop"
+
+[[dataset]]
+id = "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
+tier = "roda"
+unpinned = "no sha256 manifest is committed under measurements/bwa-real"
+
+# --- 1. generations: 16 threads on a 4xlarge -----------------------------------------------
+[[run]]
+instance = "c6g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+wall_s = 1086
+usd_hr = 0.5440
+compute_usd = 0.1641
+peak_gib = 8.71
+results = "results/size-c6g-16t.txt"
+note = "billed $/result 0.1841; 44,560 reads/s, 15.21 avg cores"
+
+[[run]]
+instance = "c7g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+wall_s = 890
+usd_hr = 0.5800
+compute_usd = 0.1434
+peak_gib = 8.70
+results = "results/size-c7g-16t.txt"
+note = "billed $/result 0.1621; 54,373 reads/s, 15.26 avg cores"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+wall_s = 757
+billed_s = 851
+usd_hr = 0.6381
+compute_usd = 0.1342
+billed_usd = 0.1508
+peak_gib = 8.70
+results = "results/size-c8g-16t.txt"
+note = "also the 16-core rung of the knee; in-flight awk counter on the timed path; 63,926 reads/s, 15.21 avg cores"
+
+[[run]]
+instance = "c9g.4xlarge"
+purpose = "generation-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 16
+wall_s = 590
+usd_hr = 0.6955
+compute_usd = 0.1140
+peak_gib = 8.71
+results = "results/size-c9g-16t.txt"
+note = "billed $/result 0.1320; 82,021 reads/s, 15.18 avg cores"
+
+# --- 2. the knee: c8g, more cores ----------------------------------------------------------
+[[run]]
+instance = "c8g.8xlarge"
+purpose = "core-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 32
+wall_s = 387
+usd_hr = 1.2762
+compute_usd = 0.1372
+peak_gib = 12.02
+results = "results/size-c8g-32t.txt"
+note = "billed $/result 0.1705; 125,044 reads/s, 28.80 avg cores (90%)"
+
+[[run]]
+instance = "c8g.12xlarge"
+purpose = "core-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 48
+wall_s = 259
+usd_hr = 1.9142
+compute_usd = 0.1377
+peak_gib = 15.41
+results = "results/size-c8g-48t.txt"
+note = "billed $/result 0.1888; 186,842 reads/s, 40.43 avg cores (84%)"
+
+[[run]]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+date = "2026-09-25"
+date_source = "git"
+workers = 64
+wall_s = 200
+usd_hr = 2.5523
+compute_usd = 0.1418
+peak_gib = 18.65
+results = "results/size-c8g-64t.txt"
+note = "billed $/result 0.2106; 241,961 reads/s, 51.09 avg cores (80%); fixed overhead 93-97 s is 33% of this run"
+
+# --- 4. across chips at 16 threads (re-run 2026-10-24: SAM to disk, nothing else timed) -----
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 756
+billed_s = 946
+usd_hr = 0.6381
+compute_usd = 0.1340
+billed_usd = 0.1677
+peak_gib = 8.68
+results = "results/size-c8g-16t-disk.txt"
+note = "gen-c8g with SAM to disk; peak is anon RSS (memory.current reads 20.19 GiB, page cache from the SAM write); billed includes the untimed count pass"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 1081
+billed_s = 1306
+usd_hr = 0.7497
+compute_usd = 0.2251
+billed_usd = 0.2720
+peak_gib = 8.68
+results = "results/size-c8i-16t-disk.txt"
+note = "bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT; peak is anon RSS"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 718
+billed_s = 880
+usd_hr = 0.8622
+compute_usd = 0.1720
+billed_usd = 0.2108
+peak_gib = 8.68
+results = "results/size-c8a-16t-disk.txt"
+note = "bioconda x86 build of the same 0.7.19-r1273; peak is anon RSS"
+
+[[run]]
+instance = "c8g.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 810
+usd_hr = 0.6381
+compute_usd = 0.1436
+results = "results/recipe-align-c8g.txt"
+note = "bwa-samtools 01-align, ALT-aware, SAM to disk (second clean run per chip); 60,268 reads/s"
+
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 987
+usd_hr = 0.7497
+compute_usd = 0.2055
+results = "results/recipe-align-c8i.txt"
+note = "bwa-samtools 01-align, ALT-aware; 49,460 reads/s"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "cross-chip"
+date = "2026-10-24"
+date_source = "git"
+workers = 16
+wall_s = 681
+usd_hr = 0.8622
+compute_usd = 0.1631
+results = "results/recipe-align-c8a.txt"
+note = "bwa-samtools 01-align, ALT-aware; 71,684 reads/s"
+
+# --- superseded x86 rows (in-flight BusyBox awk counter on the timed path) ------------------
+[[run]]
+instance = "c8i.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 1014
+results = "results/size-c8i-16t.txt"
+note = "earlier row with the awk counter on the timed path; superseded by the 1081 s re-run (spread, not the reader)"
+
+[[run]]
+instance = "c8a.4xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+workers = 16
+wall_s = 646
+results = "results/size-c8a-16t.txt"
+note = "earlier row with the awk counter on the timed path; superseded by the 718 s re-run"
+
+# --- checks: the README's stated invariants (no checks table; claims copied from its prose) --
+[[check]]
+id = "pre-alt-records"
+claim = "48,392,167 SAM records and 48,349,411 mapped pre-`.alt`"
+kind = "identity"
+observed = "48,392,167 / 48,349,411 on every chip and every generation and core count"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "alt-aware-records"
+claim = "48,817,006 and 48,774,176 ALT-aware"
+kind = "identity"
+bound = "assert 48817006 -- EXACT"
+observed = "48,817,006 / 48,774,176 on every chip"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "sam-shape"
+claim = "a 16,173,608,298-byte SAM (17,325,079,973 ALT-aware) with 3,366 `@SQ` lines on every chip"
+kind = "identity"
+observed = "16,173,608,298 / 17,325,079,973 bytes, 3,366 @SQ"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "pct-mapped"
+claim = "99.91% of records map, every run"
+kind = "band"
+bound = ">= 99.9"
+observed = "99.91"
+outcome = "pass"
+across_chips = "identical"
+
+[[check]]
+id = "peak-memory"
+claim = "Peak RSS was 8.70–8.71 GiB on all four"
+kind = "reported"
+observed = "8.70–8.71 GiB (generations); anon RSS 8.68 GiB on every chip"
+outcome = "reported"
+across_chips = "fixed-point"
+across_chips_evidence = "anon_max_gib 8.68 on c8g, c8i and c8a (size-c8{g,i,a}-16t-disk.txt)"
+
+[[check]]
+id = "chip-speed-ratios"
+claim = "AMD is 1.05× ahead of Graviton4 pre-`.alt` and 1.19× ALT-aware; Intel is 1.43× and 1.22× slower"
+kind = "reported"
+observed = "ratios move by up to 17% between two clean runs"
+outcome = "reported"
+across_chips = "n/a"
+
+[[upstream]]
+ref = "spawn#1246"
+role = "workaround"
+note = "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form"

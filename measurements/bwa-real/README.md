@@ -171,7 +171,8 @@ n = 1 per cell. Generation rows share one image digest, one input, one thread co
 are comparable to each other; the knee rows share one generation and family. `avg_cores` is
 cgroup `cpu.stat usage_usec` over wall. It is physical-core-equivalent everywhere except `c8i`,
 whose 16 vCPUs are 8 SMT cores. Rates are us-west-2 on-demand at time of measurement. The
-Graviton4 16-core row is reused in all three tables, because it is the same run. The x86 rows
+generation and core tables share one Graviton4 16-core run (757 s, $0.1508). The cross-chip table
+uses the 2026-10-24 re-run (756 s, $0.1677), which also counts the SAM in a separate pass. The x86 rows
 come from a different image (bioconda's x86 build of the same version), so they compare chips
 running the same version, not one binary on two chips. Their output file keeps the spec's
 `c8g-16t-disk` label and lands under `measurements-{x86_64,amd}/`. The copies here are renamed
