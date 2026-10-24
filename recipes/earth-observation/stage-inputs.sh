@@ -16,6 +16,7 @@ set -euo pipefail
 BUCKET="s3://${1:?pass your bucket -- make stage RECIPE=NAME does this}"
 SRC="s3://sentinel-cogs/sentinel-s2-l2a-cogs/11/S/KA/2024/7/S2B_11SKA_20240704_0_L2A"
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 cd "$tmp"
 
@@ -70,4 +71,7 @@ for f in B04.tif B08.tif SCL.tif item.json; do
   aws s3 cp "$f" "$BUCKET/inputs/earth-observation/$f" --only-show-errors
   echo "  -> $BUCKET/inputs/earth-observation/$f"
 done
+# The task's script; 01-cog.task.json carries its sha256, so a stale copy fails, not runs.
+aws s3 cp "$SCRIPT_DIR/scl_ndvi.py" "$BUCKET/inputs/earth-observation/scl_ndvi.py" --only-show-errors
+echo "  -> $BUCKET/inputs/earth-observation/scl_ndvi.py  $(shasum -a 256 "$SCRIPT_DIR/scl_ndvi.py" | cut -d' ' -f1)"
 echo "done."

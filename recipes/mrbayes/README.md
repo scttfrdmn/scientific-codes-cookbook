@@ -4,13 +4,13 @@ tool_version: "3.2.8"
 images:
   - quay.io/aarchbio/mrbayes@sha256:a320f21c5742641ec3db1bd6b443df81bb513589acfe1f8974640fcd1c6556ab
   - quay.io/aarchbio/iqtree@sha256:dc6d9f62d56fd1ca92bfb2a9fbd162d419d4f866de67e6e879ba0f895d2a6fb7
-last_verified_x86_64: 2026-10-13
-last_verified_amd: 2026-10-18
+last_verified_x86_64: 2026-10-23
+last_verified_amd: 2026-10-23
 images_x86_64:
   - quay.io/biocontainers/mrbayes@sha256:9f19aafb555767e28c53df9692d63e126cb27e8273f4b13b0f217fad852ebd1c
   - quay.io/biocontainers/iqtree@sha256:3a7fc305372d818447197cfcb2f870797036170d7ecc7ea656a94c0de250b78d
 spawn_version: 0.127.0
-last_verified: 2026-10-11
+last_verified: 2026-10-23
 ---
 # MrBayes — a Bayesian tree on the same alignment the ML recipes use
 
@@ -23,7 +23,7 @@ Samples a posterior over trees for a 114-taxon Pfam alignment under LG+G4, then 
 
 ```bash
 make stage RECIPE=iqtree         # the alignment lives here; this recipe does NOT copy it
-make stage RECIPE=mrbayes        # just the two awk converters
+make stage RECIPE=mrbayes        # the two awk converters and task 2's compare.sh
 for s in $(make -s spec RECIPE=mrbayes); do spawn task run --spec "$s" --wait; done   # task 2: IQ-TREE RF vs both ML trees
 # task 1, inside MrBayes:
 lset rates=gamma ngammacat=4;  prset aamodelpr=fixed(lg);   # == the ML recipes' LG+G4
@@ -77,7 +77,7 @@ mcmcp ngen=100000 samplefreq=100 nchains=4 nruns=2 stoprule=yes stopval=0.01;  m
 | **RF: IQ-TREE vs RAxML-NG** | *reported* | **0** |
 | RF: majrule vs all-compatible | *reported* | 0 |
 | **control: vs an unrelated topology** | must be large | **446** / 452 |
-| bipartitions with PP ≥ 0.95 | *reported* | 76 of 160 (from `mb.tstat` column 3; the in-task line counts column 2, `#obs`, and prints 160 — [#114](https://github.com/scttfrdmn/scientific-codes-cookbook/issues/114)) |
+| bipartitions with PP ≥ 0.95 | *reported* | 76 of 160 (`mb.tstat` column 3), all three chips |
 | ASDSF | *reported, **not** asserted* | **0.038156** |
 
 ### What is exact here, and why those things and not the tree
@@ -157,7 +157,7 @@ than burning the remaining budget.
 | | |
 |---|---|
 | alignment | Pfam 38.2 `PF26127.1` seed, 114 × 477 — **staged by [iqtree](../iqtree/README.md)**, not re-staged here |
-| checks | `fasta2nexus.awk`, `nexus2newick.awk`, both pinned by sha256 |
+| checks | `fasta2nexus.awk`, `nexus2newick.awk`, `compare.sh`, all pinned by sha256 |
 | images | mrbayes `@sha256:a320f21c5742641ec3…` (3.2.8), iqtree `@sha256:dc6d9f62d56fd1ca92…` (3.1.3) |
 
 cosign-verified against `playgroundlogic/aarchbio`; the signature covers the **manifest-list**
@@ -180,6 +180,7 @@ the digest is the pin. Task 2 reads the x86 IQ-TREE and RAxML-NG trees:
 | sampled trees per run / cumulative P | 1001 / 1.000 | 1001 / 1.000 |
 | distinct topologies / ASDSF | 1,302 / 0.038156 | 1,302 / 0.038156 |
 | RF vs IQ-TREE / RAxML-NG / caterpillar | 16 / 16 / 446 | 16 / 16 / 446 |
+| bipartitions with PP ≥ 0.95 | 76 of 160 | 76 of 160 |
 | `mb.consensus.nwk`, `compare.log` | — | **byte-identical** to arm64 |
 
 **The same chain, not merely the same summaries.** The two builds use different likelihood

@@ -89,5 +89,8 @@ aws s3 cp --region "$REGION" fasta2nexus.awk  "$BUCKET/inputs/mrbayes/fasta2nexu
 aws s3 cp --region "$REGION" nexus2newick.awk "$BUCKET/inputs/mrbayes/nexus2newick.awk" >/dev/null
 aws s3 cp --region "$REGION" pins.sha256     "$BUCKET/inputs/mrbayes/pins.sha256"     >/dev/null
 cat pins.sha256
+# Task 2's script; 02-compare.task.json carries its sha256, so a stale copy fails, not runs.
+aws s3 cp --region "$REGION" "$SCRIPT_DIR/compare.sh" "$BUCKET/inputs/mrbayes/compare.sh" >/dev/null
+echo "$(shasum -a 256 "$SCRIPT_DIR/compare.sh" | cut -d' ' -f1)  compare.sh"
 echo "done."
 echo "  $BUCKET/inputs/mrbayes/  (the alignment is NOT re-staged -- shared with iqtree)"
