@@ -1,0 +1,100 @@
+spawn: [2026-10-24T06:21:29.293Z] wrapper start
+spawn: [2026-10-24T06:21:29.294Z] stage-in start
+download: s3://cookbook-942542972736-us-west-2/inputs/gsw-real/argo.py to ../../tmp/argo.py
+download: s3://cookbook-942542972736-us-west-2/inputs/gsw-real/pins.sha256 to ../../tmp/pins.sha256
+download: s3://cookbook-942542972736-us-west-2/inputs/lith-vs-copy-real/arm.sh to ../../tmp/arm.sh
+download: s3://cookbook-942542972736-us-west-2/inputs/lith-vs-copy-real/orig/gsw-real--argo.task.json to ../../tmp/arm-orig.task.json
+spawn: [2026-10-24T06:21:31.105Z] stage-in done rc=0
+spawn: [2026-10-24T06:21:31.195Z] command start
+arm.sh: OK
+arm	gsw-lith-b2
+mode	lith
+dollar_dash	huB
+image	quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428
+command_sha256	9a0a28a5036a942d8298fa3e628a7ffdf64abf48964c145ebbca6366f465f8c0
+instance_type	c8g.16xlarge
+instance_id	i-0b620df3d78788e6d
+region	us-west-2
+bucket_region	us-west-2
+nproc	64
+mem_total_kb	129538956
+tmp_size	66323947520
+aws_version	aws-cli/2.36.47 Python/3.9.25 Linux/6.18.54-121.166.amzn2023.aarch64 source/aarch64.amzn.2023
+data_objects	30230
+data_bytes	215097413008
+baseline_default	rc 0 9.3 s 343 MB/s
+baseline_tuned	rc 0 2.0 s 1595 MB/s
+baseline_s	18.0
+lith_version	lith 1.18.1
+lith_index_s	2.8
+lith_index_bytes	2408824
+stage_s	25.2   (no copy: binary fetch + index + mount)
+docker_wait_s	41.0
+== staged bytes must match their pins ==
+progress	30.0 s  s3_bytes 6364815396  gets 9407  last: == staged bytes must match their pins ==
+progress	60.0 s  s3_bytes 20525323904  gets 20840  last: == staged bytes must match their pins ==
+progress	90.0 s  s3_bytes 33521632128  gets 30532  last: == staged bytes must match their pins ==
+progress	120.0 s  s3_bytes 46100630180  gets 39939  last: == staged bytes must match their pins ==
+progress	150.1 s  s3_bytes 57632015244  gets 48867  last: == staged bytes must match their pins ==
+progress	180.1 s  s3_bytes 68361585100  gets 57416  last: == staged bytes must match their pins ==
+progress	210.1 s  s3_bytes 79120126576  gets 65928  last: == staged bytes must match their pins ==
+progress	240.1 s  s3_bytes 90262157740  gets 74735  last: == staged bytes must match their pins ==
+progress	270.1 s  s3_bytes 101121888396  gets 83392  last: == staged bytes must match their pins ==
+progress	300.1 s  s3_bytes 111986670044  gets 92093  last: == staged bytes must match their pins ==
+progress	330.2 s  s3_bytes 123523327168  gets 100771  last: == staged bytes must match their pins ==
+progress	360.2 s  s3_bytes 135558402096  gets 109632  last: == staged bytes must match their pins ==
+progress	390.2 s  s3_bytes 147847052788  gets 118176  last: == staged bytes must match their pins ==
+progress	420.2 s  s3_bytes 160972187764  gets 127242  last: == staged bytes must match their pins ==
+progress	450.3 s  s3_bytes 173714374768  gets 136361  last: == staged bytes must match their pins ==
+progress	480.3 s  s3_bytes 186508766700  gets 145016  last: == staged bytes must match their pins ==
+progress	510.3 s  s3_bytes 198951016324  gets 153200  last: == staged bytes must match their pins ==
+progress	540.3 s  s3_bytes 211181016408  gets 161161  last: == staged bytes must match their pins ==
+sha256 in 553s
+CPU(s):                                  64
+Model name:                              Neoverse-V2
+Thread(s) per core:                      1
+NUMA node(s):                            1
+MemTotal:       129538956 kB
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            62G   33M   62G   1% /tmp
+progress	570.3 s  s3_bytes 215477263940  gets 165030  last: tmpfs            62G   33M   62G   1% /tmp
+progress	600.4 s  s3_bytes 228982218052  gets 179515  last: tmpfs            62G   33M   62G   1% /tmp
+progress	630.4 s  s3_bytes 242211515688  gets 193759  last: tmpfs            62G   33M   62G   1% /tmp
+progress	660.4 s  s3_bytes 255910209408  gets 208529  last: tmpfs            62G   33M   62G   1% /tmp
+progress	690.4 s  s3_bytes 272188286240  gets 223163  last: tmpfs            62G   33M   62G   1% /tmp
+progress	720.4 s  s3_bytes 284142978916  gets 236896  last: tmpfs            62G   33M   62G   1% /tmp
+progress	750.4 s  s3_bytes 296557251288  gets 251056  last: tmpfs            62G   33M   62G   1% /tmp
+progress	780.5 s  s3_bytes 308158820496  gets 264993  last: tmpfs            62G   33M   62G   1% /tmp
+progress	810.5 s  s3_bytes 322397465596  gets 280483  last: tmpfs            62G   33M   62G   1% /tmp
+progress	840.5 s  s3_bytes 338845760436  gets 295933  last: tmpfs            62G   33M   62G   1% /tmp
+progress	870.5 s  s3_bytes 353441205004  gets 310232  last: tmpfs            62G   33M   62G   1% /tmp
+progress	900.5 s  s3_bytes 368419958608  gets 324619  last: tmpfs            62G   33M   62G   1% /tmp
+progress	930.6 s  s3_bytes 383398302768  gets 338934  last: tmpfs            62G   33M   62G   1% /tmp
+progress	960.6 s  s3_bytes 398621940168  gets 353398  last: tmpfs            62G   33M   62G   1% /tmp
+progress	990.6 s  s3_bytes 413606145216  gets 367516  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1020.6 s  s3_bytes 428621165712  gets 381780  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1050.6 s  s3_bytes 443677474944  gets 396138  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1080.6 s  s3_bytes 458598847788  gets 410311  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1110.7 s  s3_bytes 474137036292  gets 425019  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1140.7 s  s3_bytes 488765428336  gets 438976  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1170.7 s  s3_bytes 503767394188  gets 453279  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1200.7 s  s3_bytes 518742952408  gets 467464  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1230.7 s  s3_bytes 533941944260  gets 481914  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1260.7 s  s3_bytes 549162344780  gets 496443  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1290.8 s  s3_bytes 564579469920  gets 511068  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1320.8 s  s3_bytes 580190598412  gets 525867  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1350.8 s  s3_bytes 595332367808  gets 540188  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1380.8 s  s3_bytes 611122845476  gets 555108  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1410.8 s  s3_bytes 626008356692  gets 569157  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1440.8 s  s3_bytes 641825522564  gets 584207  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1470.9 s  s3_bytes 657135224588  gets 598654  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1500.9 s  s3_bytes 672279426072  gets 613042  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1530.9 s  s3_bytes 687970365804  gets 627971  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1560.9 s  s3_bytes 702765055512  gets 641971  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1590.9 s  s3_bytes 717732079424  gets 656232  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1620.9 s  s3_bytes 731958785672  gets 669747  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1651.0 s  s3_bytes 747228135384  gets 684281  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1681.0 s  s3_bytes 762317532212  gets 698647  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1711.0 s  s3_bytes 777430218752  gets 713072  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1741.0 s  s3_bytes 792202372724  gets 727217  last: tmpfs            62G   33M   62G   1% /tmp
+progress	1771.0 s  s3_bytes 807931605652  gets 742216  last: tmpfs            62G   33M   62G   1% /tmp

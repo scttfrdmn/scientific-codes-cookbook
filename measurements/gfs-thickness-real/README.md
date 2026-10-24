@@ -57,7 +57,10 @@ to terminate. **Stage-in** is spawn copying the cycle from the bucket into `/tmp
   of every billed window, against about 2 minutes of work. A cycle-sized job is
   [data-movement-bound](../../patterns/data-movement.md). The cheaper shape for a stream-once
   read like this one would overlap fetching with decoding. If you only need the thickness,
-  range-get its 40 messages (5% of each file's 743) through the `.idx` offsets.
+  range-get its 40 messages (5% of each file's 743) through the `.idx` offsets. Most of the 477 s
+  is the CLI's default concurrency. With the CRT client the same copy takes 63 s ($0.128 a cycle),
+  and lith on a 128 GiB box ties with that
+  ([lith-vs-copy-real](../lith-vs-copy-real/README.md)).
 - **Memory picks the family.** tmpfs is half the RAM, so 113 GB of staged input needs `r8.8xlarge`
   (124 GiB `/tmp`, 87% full). The 32 workers add only about 50 GiB on top (2.7 GiB each). Nothing
   smaller holds the cycle.

@@ -50,7 +50,10 @@ x86 the same container also installs the env, which the arm64 image ships prebui
 
 - **The conversion is free and the data path is the bill.** spawn's stage-in moved 215 GB at
   143–187 MB/s, which took 19–25 minutes of a 22–28 minute bill. `argo.py` took under a minute
-  everywhere. That puts compute at **2.9–3.9%** of billed on every chip.
+  everywhere. That puts compute at **2.9–3.9%** of billed on every chip. The 143–187 MB/s is the
+  CLI default. With the CRT client the same copy runs at 2.68 GB/s, in 80 s, for $0.16 per archive.
+  Reading through lith instead did not finish under a $1.33 cap
+  ([lith-vs-copy-real](../lith-vs-copy-real/README.md)).
 - **Memory picks the family, not the cores.** Staging lives in tmpfs (½ RAM), so 215 GB needs a
   512 GiB box before any compute: `r8*.16xlarge`. The run itself peaks under 10 GiB
   ([data movement](../../patterns/data-movement.md)).

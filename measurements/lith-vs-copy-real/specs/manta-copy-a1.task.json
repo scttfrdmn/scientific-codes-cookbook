@@ -1,0 +1,58 @@
+{
+  "task_id": "cookbook-lith-vs-copy-real-manta-copy-a1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\necho '7330406e6fa10bde7f7465a12fff02663eb3d57432367410791dfed97610708f  arm.sh' | sha256sum -c - || exit 1\nbash /tmp/arm.sh\n"
+  ],
+  "resources": {
+    "instance_type": "r8g.8xlarge",
+    "architecture": "arm64",
+    "disk_gib": 120
+  },
+  "env": {
+    "ARM_MODE": "copy",
+    "ARM_ID": "manta-copy-a1",
+    "ARM_BUCKET": "${COOKBOOK_BUCKET}",
+    "ARM_ORIG": "/tmp/arm-orig.task.json",
+    "ARM_ORIG_SHA": "1803e93aff82053e3086ae98133e901c65d501563e3732af18369dd35467e227",
+    "ARM_DATA": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/HG002.hs37d5.30x.bam|/tmp/HG002.hs37d5.30x.bam s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/HG002.hs37d5.30x.bam.bai|/tmp/HG002.hs37d5.30x.bam.bai s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/hs37d5.fa|/tmp/hs37d5.fa s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/hs37d5.fa.fai|/tmp/hs37d5.fa.fai",
+    "ARM_ROOT": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/derived/",
+    "ARM_NIC": "15",
+    "ARM_MEMCACHE": "8GiB",
+    "ARM_S3CFG": "preferred_transfer_client=crt target_bandwidth=15Gb/s multipart_chunksize=16MB"
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/manta.sh",
+      "destination": "/tmp/manta.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/structural-variants-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/arm.sh",
+      "destination": "/tmp/arm.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/orig/structural-variants-real--01-manta.task.json",
+      "destination": "/tmp/arm-orig.task.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/manta-copy-a1/structural-variants-real/manta/"
+    },
+    {
+      "source": "/tmp/arm/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/manta-copy-a1/arm/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "5h",
+    "on_complete": "terminate",
+    "cost_limit": 1.5
+  }
+}

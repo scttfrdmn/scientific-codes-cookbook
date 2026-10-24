@@ -63,7 +63,9 @@ Neither caller links a BLAS. Threads per core: 1 on Graviton4 and AMD, 2 on Inte
 - **The box is sized by the BAM, not the callers.** Both callers need under 3.5 GiB. The 59.6 GiB
   BAM plus the 3.2 GB reference has to fit in the half-RAM `/tmp`, and that needs a 256 GiB box.
   Manta's pyflow sizes its task pool from `MemTotal`, which counts the tmpfs as free, so `-g 150`
-  tells it what is left.
+  tells it what is left. Without the tmpfs, through lith on a 64 GiB `c8g.8xlarge`, delly is
+  cheapest ($0.50) and manta 7.6× slower. A tuned copy stages the 67 GB in 40 s instead of 229 s
+  ([lith-vs-copy-real](../lith-vs-copy-real/README.md)).
 - **AMD is fastest, and Graviton4 is cheapest by a hair.** Per genome (both callers), billed:
   Graviton4 $1.20, AMD $1.21, Intel $1.40. AMD runs manta 1.16× and delly 1.28× faster than
   Graviton4, which almost exactly cancels its 36% dearer hour. Intel's 16 SMT cores run manta

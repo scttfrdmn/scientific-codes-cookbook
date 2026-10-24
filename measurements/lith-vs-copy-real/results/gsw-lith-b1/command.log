@@ -1,0 +1,32 @@
+spawn: [2026-10-24T05:32:31.033Z] wrapper start
+spawn: [2026-10-24T05:32:31.034Z] stage-in start
+download: s3://cookbook-942542972736-us-west-2/inputs/gsw-real/argo.py to ../../tmp/argo.py
+download: s3://cookbook-942542972736-us-west-2/inputs/gsw-real/pins.sha256 to ../../tmp/pins.sha256
+download: s3://cookbook-942542972736-us-west-2/inputs/lith-vs-copy-real/arm.sh to ../../tmp/arm.sh
+download: s3://cookbook-942542972736-us-west-2/inputs/lith-vs-copy-real/orig/gsw-real--argo.task.json to ../../tmp/arm-orig.task.json
+spawn: [2026-10-24T05:32:32.887Z] stage-in done rc=0
+spawn: [2026-10-24T05:32:32.979Z] command start
+arm.sh: OK
+arm	gsw-lith-b1
+mode	lith
+dollar_dash	huB
+image	quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428
+command_sha256	9a0a28a5036a942d8298fa3e628a7ffdf64abf48964c145ebbca6366f465f8c0
+instance_type	c8g.16xlarge
+instance_id	i-000a3ec144d4e0a51
+region	us-west-2
+bucket_region	us-west-2
+nproc	64
+mem_total_kb	129538956
+tmp_size	66323947520
+aws_version	aws-cli/2.36.47 Python/3.9.25 Linux/6.18.54-121.166.amzn2023.aarch64 source/aarch64.amzn.2023
+data_objects	30230
+data_bytes	215097413008
+baseline_default	rc 0 7.6 s 420 MB/s
+baseline_tuned	rc 0 2.5 s 1276 MB/s
+baseline_s	17.1
+lith_version	lith 1.18.1
+lith_index_s	2.6
+lith_index_bytes	2408824
+stage_s	27.7   (no copy: binary fetch + index + mount)
+docker_wait_s	19.0

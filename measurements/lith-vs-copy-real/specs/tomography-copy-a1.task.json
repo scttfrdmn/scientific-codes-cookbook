@@ -1,0 +1,61 @@
+{
+  "task_id": "cookbook-lith-vs-copy-real-tomography-copy-a1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\necho '04e75b2fb9974eddcf45dedccdef810b57868e75f50fe0a0b1eae5195c747a50  arm.sh' | sha256sum -c - || exit 1\nbash /tmp/arm.sh\n"
+  ],
+  "resources": {
+    "instance_type": "r8g.4xlarge",
+    "architecture": "arm64"
+  },
+  "env": {
+    "ARM_MODE": "copy",
+    "ARM_ID": "tomography-copy-a1",
+    "ARM_BUCKET": "${COOKBOOK_BUCKET}",
+    "ARM_ORIG": "/tmp/arm-orig.task.json",
+    "ARM_ORIG_SHA": "f1e5bf155d55dc21135a9742c68c03f1dfccd9ce15255c56f68c2279e8d788e8",
+    "ARM_DATA": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/data/proj.zip|/tmp/proj.zip s3://${COOKBOOK_BUCKET}/inputs/tomography-real/data/rec.zip|/tmp/rec.zip",
+    "ARM_ROOT": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/data/",
+    "ARM_NIC": "7.5",
+    "ARM_MEMCACHE": "8GiB",
+    "ARM_S3CFG": "preferred_transfer_client=crt target_bandwidth=15Gb/s multipart_chunksize=16MB"
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/real.py",
+      "destination": "/tmp/real.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/real.sh",
+      "destination": "/tmp/real.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/tomography-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/arm.sh",
+      "destination": "/tmp/arm.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/orig/tomography-real--real.task.json",
+      "destination": "/tmp/arm-orig.task.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/tomography-copy-a1/tomography-real/real/"
+    },
+    {
+      "source": "/tmp/arm/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/tomography-copy-a1/arm/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "4h",
+    "on_complete": "terminate",
+    "cost_limit": 2.5
+  }
+}

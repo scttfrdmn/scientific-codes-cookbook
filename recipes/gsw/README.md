@@ -48,7 +48,7 @@ One task on `c8g.large` (2 vCPU / 4 GiB), TTL 20m, cap $0.05. The arithmetic is 
 | Xeon 6975P-C | `r8i.16xlarge` | 61.2 s | 1667 s | 2.06 |
 | EPYC 9R45 | `r8a.16xlarge` | **35.8 s** | 1303 s | 1.85 |
 
-**The conversion is 3–4% of the bill. Staging 215 GB is the rest**, and because staging is tmpfs (½ RAM), it is the staging that picks the 512 GiB box. Every round trip holds to within 4e-14 on all three chips. Intel and AMD give byte-identical output. Graviton4 differs from them by at most 2e-14 °C in CT, which is round-off: nothing accumulates.
+**The conversion is 3–4% of the bill. Staging 215 GB is the rest**, and because staging is tmpfs (½ RAM), it is the staging that picks the 512 GiB box. **Tune the copy:** the CLI's CRT client stages the archive in 80 s instead of 1,202 s, and the archive costs $0.16 instead of $1.39 (both priced on spawn's task window, which is why $1.39 is not the table's $1.43). Through lith it did not finish under a $1.33 cap ([measured](../../measurements/lith-vs-copy-real/README.md)). Every round trip holds to within 4e-14 on all three chips. Intel and AMD give byte-identical output. Graviton4 differs from them by at most 2e-14 °C in CT, which is round-off: nothing accumulates.
 
 <details>
 <summary>As shipped: 822 published arrays, 9 functions at their own tolerances, two involutions, and a pinning mistake worth reading</summary>

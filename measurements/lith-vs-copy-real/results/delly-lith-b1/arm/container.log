@@ -1,0 +1,37 @@
+delly.sh: OK
+pins.sha256: OK
+uname_m	aarch64
+nproc	32
+threads_per_core	1
+cpu_part	0xd4f
+mem_total_kb	64644548
+delly	Delly version: v2.6.0
+delly_elf_machine	183
+== staged inputs against pins.sha256 ==
+human.hg19.excl.tsv: OK
+HG002.hs37d5.30x.bam: OK
+HG002.hs37d5.30x.bam.bai: OK
+hs37d5.fa: OK
+hs37d5.fa.fai: OK
+== delly sr ==
+sha256_s	200
+delly_s	1165
+rc	0
+vmhwm_kb	1160840
+cgroup_memory_peak	46120583168
+[2026-Oct-24 04:59:24] Paired-end clustering
+[2026-Oct-24 04:59:24] Split-read assembly
+[2026-Oct-24 05:04:09] Generate REF and ALT probes
+[2026-Oct-24 05:04:14] SV annotation
+[2026-Oct-24 05:14:00] Genotyping
+[2026-Oct-24 05:14:01] Sample statistics
+Sample:HG002,ReadSize=148,Median=555,MAD=90,UniqueDiscordantPairs=776849
+[2026-Oct-24 05:14:01] Done.
+== checks ==
+Sample:HG002,ReadSize=148,Median=555,MAD=90,UniqueDiscordantPairs=776849
+insert_mad	90
+unique_discordant_pairs	776849
+bgzf_magic	1f8b0804
+bcf_magic	BCF
+bcf_bytes	1788601
+DELLY CHECKS PASSED

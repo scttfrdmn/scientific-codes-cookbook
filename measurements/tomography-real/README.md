@@ -69,7 +69,10 @@ checks are excluded and costed separately below. $/hr is spawn's estimate. **Pea
 - **The box is picked by staging, not by TomoPy.** The process peaks at 23 GiB, of which 15.5 GiB is
   the raw projections as uint16. But both zips sit in the half-RAM `/tmp` tmpfs (39.5 GiB), so the
   box needs 128 GiB. A 64 GiB `m8g.4xlarge` has a 32 GiB tmpfs. A run that stages only `proj.zip`
-  (no comparison against the published slices) should fit a 64 GiB box; that was not run.
+  (no comparison against the published slices) should fit a 64 GiB box; that was not run. Copying
+  at tuned concurrency stages both zips in 27 s instead of 149 s. Reading them through lith on a
+  64 GiB `m8g.4xlarge` works, with every assertion identical, but fetches 10× the bytes
+  ([lith-vs-copy-real](../lith-vs-copy-real/README.md)).
 - **The checks are the bill here, not TomoPy.** Whole-task windows were 5,713 s / 8,323 s / 5,116 s
   ($1.50 / $2.57 / $1.82). 86% of that is astra's CPU CGLS: 30 iterations on 2656² takes 78 min on
   Graviton4, and one forward projection of a 2656² slice takes 54–75 s depending on the chip.

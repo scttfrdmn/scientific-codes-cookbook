@@ -1,0 +1,46 @@
+manta.sh: OK
+pins.sha256: OK
+uname_m	aarch64
+nproc	32
+threads_per_core	1
+cpu_part	0xd4f
+mem_total_kb	259242532   (pyflow sizes from this; -g overrides)
+manta	1.6.0
+manta_elf_machine	183
+== staged inputs against pins.sha256 ==
+HG002.hs37d5.30x.bam: OK
+HG002.hs37d5.30x.bam.bai: OK
+hs37d5.fa: OK
+hs37d5.fa.fai: OK
+== configManta.py + runWorkflow.py ==
+sha256_s	192
+config_s	0
+workflow_s	230
+rc	0
+max_process_rss_kb	3521708
+cgroup_memory_peak	3690868736
+[2026-10-24T03:50:40.545483Z] [c476e784b560] [60_1] [WorkflowRunner] 
+[2026-10-24T03:50:40.547304Z] [c476e784b560] [60_1] [WorkflowRunner] Workflow successfully completed all tasks
+[2026-10-24T03:50:40.549131Z] [c476e784b560] [60_1] [WorkflowRunner] Elapsed time for full workflow: 229 sec
+rc	0
+max_child_rss_kb	3521708
+== checks on every record ==
+calls_BND	5920
+calls_DEL	4925
+calls_DUP	426
+calls_INS	2591
+contigs_with_calls	59
+del_svlen_span_mismatch	0
+del_with_svlen	4925
+explicit	6119
+explicit_end_mismatch	0
+ins_explicit	2267
+ins_svlen_mismatch	0
+pass_BND	5044
+pass_DEL	4225
+pass_DUP	185
+pass_INS	2340
+records	13862
+sample	HG002
+records_sha256	711477cd87dec305c626c8f10fdab7819e5e3631732fecfabbc6f293cbeaa1eb
+MANTA CHECKS PASSED

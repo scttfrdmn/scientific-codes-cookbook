@@ -1,0 +1,32 @@
+{
+  "task_id": "cookbook-lith-vs-copy-real-canary",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\necho 'fe2cb449767fc7ca7fddd70852bf124eca2312ee836bab710deb1e276530ed10  canary.sh' | sha256sum -c - || exit 1\nbash /tmp/canary.sh\n"
+  ],
+  "resources": {
+    "instance_type": "c8g.8xlarge",
+    "architecture": "arm64"
+  },
+  "env": {
+    "ARM_BUCKET": "${COOKBOOK_BUCKET}"
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/canary.sh",
+      "destination": "/tmp/canary.sh"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/out/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/canary/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "45m",
+    "on_complete": "terminate",
+    "cost_limit": 0.6
+  }
+}

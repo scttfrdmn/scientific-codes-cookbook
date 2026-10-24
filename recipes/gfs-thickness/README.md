@@ -42,7 +42,7 @@ mpcalc.thickness_hydrostatic(p, T, mixing_ratio=w)   # 5725.61 m vs the file's 5
 
 One task on `m8g.large` (2 vCPU / 8 GiB), TTL 25m, cap $0.08. Decode plus the calculations take seconds; the recorded window is boot and image pull, so **these timings are not compute cost** ([layout](../../patterns/layout-and-effective-cost.md)).
 
-**At scale ([measured](../../measurements/gfs-thickness-real/README.md): a whole 0.25° cycle, 209 hours, 113 GB, 32 processes):** Graviton4 is cheapest per result, and AMD is level with it on speed. Intel's 16 SMT cores take 1.74× as long. **Staging 113 GB is about 60% of every bill**, and tmpfs (half the RAM) is what forces `r8.8xlarge`. Every check holds on all three chips at 1.6e11 decoded values. The decode is byte-identical; thickness differs by ≤3 ulp, x86 against ARM.
+**At scale ([measured](../../measurements/gfs-thickness-real/README.md): a whole 0.25° cycle, 209 hours, 113 GB, 32 processes):** Graviton4 is cheapest per result, and AMD is level with it on speed. Intel's 16 SMT cores take 1.74× as long. **Staging 113 GB is about 60% of every bill**, and tmpfs (half the RAM) is what forces `r8.8xlarge`. Every check holds on all three chips at 1.6e11 decoded values. The decode is byte-identical; thickness differs by ≤3 ulp, x86 against ARM. **Tune the copy:** the CLI's CRT client stages the cycle in 63 s instead of 477 s, which cuts a Graviton4 cycle from $0.361 to $0.128 (both priced on spawn's task window, not on the table's launch-to-terminate). lith on a 128 GiB `m8g.8xlarge` ties at $0.130 with its requests ([measured](../../measurements/lith-vs-copy-real/README.md)).
 
 | chip | instance | gfs.py wall | $/hr | compute $/result | billed | **billed $/result** |
 |---|---|---|---|---|---|---|

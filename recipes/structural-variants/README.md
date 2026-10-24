@@ -53,7 +53,7 @@ mrun/runWorkflow.py -m local -j 2 -g 6                                  # -g is 
 | Xeon 6975P-C | `r8i.8xlarge` | 320 s | 1,160 s | 1.40 |
 | EPYC 9R45 | `r8a.8xlarge` | **199 s** | **890 s** | 1.21 |
 
-**Graviton4 or AMD; not Intel.** AMD is fastest and its dearer hour cancels that almost exactly. Both callers need under 3.5 GiB; the 256 GiB box is for the 60 GiB BAM in the half-RAM `/tmp`. Manta finds 61% of the benchmark's deletions at 0.957 precision, delly 15% at 0.892; calls are byte-identical on all three chips. The fixture's five tasks run on `c8g.large` (manta on `c8g.xlarge`, for its 4 GiB merge step) in seconds of compute; those windows are image pull, **not compute cost**.
+**Graviton4 or AMD; not Intel.** AMD is fastest and its dearer hour cancels that almost exactly. Both callers need under 3.5 GiB; the 256 GiB box is for the 60 GiB BAM in the half-RAM `/tmp`. **Copy for manta, with the CLI's CRT client (40 s, $0.25). Read through lith for delly** on a 64 GiB `c8g.8xlarge` ($0.50, against $0.73 copied). Manta's 32 region readers run 7.6× slower through lith. So $1.20 a genome becomes $0.77 ([measured](../../measurements/lith-vs-copy-real/README.md)). Manta finds 61% of the benchmark's deletions at 0.957 precision, delly 15% at 0.892; calls are byte-identical on all three chips. The fixture's five tasks run on `c8g.large` (manta on `c8g.xlarge`, for its 4 GiB merge step) in seconds of compute; those windows are image pull, **not compute cost**.
 
 <details>
 <summary>As shipped: exact breakpoints, two callers that disagree on notation, three signals, the delly sr rename, manta's memory floor, pins</summary>

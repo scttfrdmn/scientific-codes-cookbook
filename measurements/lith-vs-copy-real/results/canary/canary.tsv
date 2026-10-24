@@ -1,0 +1,37 @@
+dollar_dash	huB
+whoami	ec2-user uid 1000
+instance_type	c8g.8xlarge
+region	us-west-2
+bucket_region	us-west-2
+aws_version	aws-cli/2.36.47 Python/3.9.25 Linux/6.18.54-121.166.amzn2023.aarch64 source/aarch64.amzn.2023
+nproc	32
+mem_total_kb	64644548
+tmp_fs	tmpfs            31G   36K   31G   1% /tmp
+== one 3.19 GB object into tmpfs ==	
+big_default	rc 255  0.26 s  12268 MB/s
+big_c64	rc 0  4.50 s  709 MB/s
+big_c128	rc 0  4.41 s  723 MB/s
+big_crt	rc 0  3.25 s  981 MB/s
+== 365 Argo files into tmpfs ==	
+many_default	rc 255  0.29 s  19886 MB/s  files 0
+many_c64	rc 0  8.93 s  646 MB/s  files 365
+many_c128	rc 0  8.39 s  687 MB/s  files 365
+many_crt	rc 0  3.70 s  1559 MB/s  files 365
+== lith ==	
+lith_sha	verified
+lith_version	lith 1.18.1
+dnf_and_pull	amzn2023.0.1.aarch64                                               dnf rc 0 Created symlink /etc/systemd/system/multi-user.target.wants/docker.service → /usr/lib/systemd/system/docker.service. quay.io/aarchbio/delly@sha256:c1d0492cb7d52d56f0a01e790dd1434ba9ddbb47cc5c95cf90dc12c20d5aaeb5 pull rc 0 
+index_many	rc 0  0.24 s  22088 B
+index_big	rc 0  0.25 s
+mounted	many big
+big_lith	rc 0  3.35 s  952 MB/s
+many_lith_sha256_p64	11.40 s  506 MB/s
+many_lith_vs_copy	identical
+requests_many	get=3777 
+s3_bytes_many	5767045552
+requests_big	get=389 
+s3_bytes_big	3189750467
+== a container reads a lith file through a /tmp symlink and writes /tmp/out ==	
+container_rc	0 ok
+container_fai_sha256	1eab7540d4b62ef0b43b50581d027be37c1ee57da9e9cb75957e750641c8630c  (pin 1eab7540d4b6...)
+DONE	yes

@@ -1,0 +1,77 @@
+{
+  "task_id": "cookbook-lith-vs-copy-real-gsw-lith-b1",
+  "command": [
+    "bash",
+    "-c",
+    "set +e\ncd /tmp\necho '7330406e6fa10bde7f7465a12fff02663eb3d57432367410791dfed97610708f  arm.sh' | sha256sum -c - || exit 1\nbash /tmp/arm.sh\n"
+  ],
+  "resources": {
+    "instance_type": "c8g.16xlarge",
+    "architecture": "arm64"
+  },
+  "env": {
+    "ARM_MODE": "lith",
+    "ARM_ID": "gsw-lith-b1",
+    "ARM_BUCKET": "${COOKBOOK_BUCKET}",
+    "ARM_ORIG": "/tmp/arm-orig.task.json",
+    "ARM_ORIG_SHA": "6b72c2574d69117beb02165e4f92b70751ede05ed903d3943d0d7ec890aaa903",
+    "ARM_DATA": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/argo/|/tmp/argo/",
+    "ARM_ROOT": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/argo/",
+    "ARM_NIC": "30",
+    "ARM_MEMCACHE": "8GiB",
+    "ARM_S3CFG": "preferred_transfer_client=crt target_bandwidth=30Gb/s multipart_chunksize=16MB"
+  },
+  "inputs": [
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/argo.py",
+      "destination": "/tmp/argo.py"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/gsw-real/pins.sha256",
+      "destination": "/tmp/pins.sha256"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/arm.sh",
+      "destination": "/tmp/arm.sh"
+    },
+    {
+      "source": "s3://${COOKBOOK_BUCKET}/inputs/lith-vs-copy-real/orig/gsw-real--argo.task.json",
+      "destination": "/tmp/arm-orig.task.json"
+    }
+  ],
+  "outputs": [
+    {
+      "source": "/tmp/gsw-argo.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/gsw-argo.log"
+    },
+    {
+      "source": "/tmp/gsw-results.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/gsw-results.tsv"
+    },
+    {
+      "source": "/tmp/gsw-years.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/gsw-years.tsv"
+    },
+    {
+      "source": "/tmp/gsw-perfile.tsv",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/gsw-perfile.tsv"
+    },
+    {
+      "source": "/tmp/cpu.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/cpu.txt"
+    },
+    {
+      "source": "/tmp/sample.tar",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/gsw-real/r1/sample.tar"
+    },
+    {
+      "source": "/tmp/arm/",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/lith-vs-copy-real/gsw-lith-b1/arm/"
+    }
+  ],
+  "lifecycle": {
+    "ttl": "90m",
+    "on_complete": "terminate",
+    "cost_limit": 2.0
+  }
+}
