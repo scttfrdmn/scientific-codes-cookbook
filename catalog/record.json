@@ -41310,9 +41310,9 @@
    "inputs": "stage: bwa-mem2, bwa-samtools",
    "last_updated": "2026-10-20",
    "last_verified": {
-    "amd": "2026-10-19",
-    "arm64": "2026-10-01",
-    "x86_64": "2026-10-13"
+    "amd": "2026-10-24",
+    "arm64": "2026-10-24",
+    "x86_64": "2026-10-24"
    },
    "measurements": [
     "measurements/bwa-real"
@@ -41327,18 +41327,19 @@
      "quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561"
     ]
    },
-   "spawn_version": "0.111.1",
+   "spawn_version": "0.142.0",
    "specs": [
     {
      "container": "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba",
      "lifecycle": {
-      "cost_limit": 0.6,
-      "ttl": "40m"
+      "cost_limit": 1.0,
+      "ttl": "90m"
      },
      "path": "recipes/bwa-samtools/01-align.task.json",
      "resources": {
       "architecture": "arm64",
       "cpu": 16,
+      "disk_gib": 40,
       "families": [
        "c8g"
       ],
@@ -42990,7 +42991,7 @@
   "gw": {
    "env": "gw",
    "inputs": "stage",
-   "last_updated": "2026-10-21",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-16",

@@ -36,6 +36,10 @@
     {
       "source": "/tmp/flagstat.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/flagstat.txt"
+    },
+    {
+      "source": "/tmp/sort.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/sort.log"
     }
   ],
   "lifecycle": {

@@ -3,8 +3,8 @@
 > **Every Graviton generation is faster *and* cheaper per result than the one before it — and
 > the cost knee is at 16 cores, not 64, once you pay for the instance rather than the CPU
 > seconds.** Measured on a full 1000 Genomes sequencing run against the whole of GRCh38. AMD
-> aligns it 1.17× faster than Graviton4 and Intel 1.34× slower, with identical record counts on
-> all three. Graviton4 gives the cheapest result.
+> aligns it 1.05–1.19× faster than Graviton4 and Intel 1.22–1.43× slower (two clean runs per
+> chip), with identical record counts on all three. Graviton4 gives the cheapest result.
 
 The workload is deliberately not a toy: **24,148,993 read pairs** (4.83 Gbp, 100 bp) aligned
 to the complete `GRCh38_full_analysis_set_plus_decoy_hla` index. 99.91% of records map, every
@@ -121,33 +121,49 @@ question stops being about the chip and becomes about the data path, which is wh
 
 ## 4. Across chips — Graviton4, Intel and AMD at 16 threads
 
-The `gen-c8g` task again, unchanged, on the same-generation x86 boxes. It uses bioconda's own x86
-build of the same `0.7.19-r1273` (`quay.io/biocontainers/bwa@sha256:99a35e5e…`), the same staged
-bytes and the same `-t 16`, and goes through `scripts/spec_arch.py bwa-samtools {x86_64,amd} …`:
+The `gen-c8g` task on the same-generation x86 boxes. It uses bioconda's own x86 build of the same
+`0.7.19-r1273` (`quay.io/biocontainers/bwa@sha256:99a35e5e…`), the same staged bytes and the same
+`-t 16`, and goes through `scripts/spec_arch.py bwa-samtools {x86_64,amd} …`. bwa writes plain SAM
+to the container disk and nothing else is on the timed path; the counts are taken afterwards:
 
-| chip | instance | threads/core | wall | reads/s | avg cores | peak RSS | $/hr | compute $/result | **billed** | **billed $/result** |
+| chip | instance | threads/core | wall | reads/s | avg cores | anon RSS | $/hr | compute $/result | **billed** | **billed $/result** |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `c8g.4xlarge` | 1 | 757 s | 63,926 | 15.21 | 8.70 GiB | 0.6381 | 0.1342 | 851 s | **0.1508** |
-| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1014 s | 47,724 | 15.33 | 8.70 GiB | 0.7497 | 0.2112 | 1097 s | 0.2284 |
-| EPYC 9R45 | `c8a.4xlarge` | 1 | **646 s** | **74,910** | 15.16 | 8.70 GiB | 0.8622 | 0.1547 | 715 s | 0.1712 |
+| Graviton4 | `c8g.4xlarge` | 1 | 756 s | 64,011 | 15.18 | 8.68 GiB | 0.6381 | **0.1340** | 946 s | **0.1677** |
+| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1081 s | 44,766 | 15.31 | 8.68 GiB | 0.7497 | 0.2251 | 1306 s | 0.2720 |
+| EPYC 9R45 | `c8a.4xlarge` | 1 | **718 s** | **67,399** | 15.19 | 8.68 GiB | 0.8622 | 0.1720 | 880 s | 0.2108 |
 
-- **The alignment is the same on all three:** 48,392,167 SAM records and 48,349,411 mapped,
-  identical counts. With `-t 16` fixed, bwa's batching is fixed too, so the counts are a fixed
-  point, and they agree across chips. (This is the pre-`.alt` input, so it is the 48,392,167 of
-  the tables above, not the recipe's ALT-aware 48,817,006.)
-- **AMD is fastest, 1.17× ahead of Graviton4, and Graviton4 is still the cheapest result.**
-  AMD's hour costs 35% more, so its result costs 14% more billed. Intel is 1.34× slower than
-  Graviton4 and 51% dearer per result. Its 16 vCPUs are 8 cores × 2 SMT threads, and bwa keeps
-  all 16 busy (15.33 avg cores), so this is a vCPU-for-vCPU comparison at the same price tier,
-  not a core-for-core one.
-- Peak RSS is 8.70 GiB on every chip. Memory belongs to the index, not the silicon.
-- Only the 16-thread rung was re-run on x86. The generation and knee sweeps are Graviton-only.
+The recipe's own align task ([bwa-samtools](../../recipes/bwa-samtools/README.md) `01-align`,
+ALT-aware, the same boxes, `-t 16`, SAM to disk) is a second clean run per chip:
 
-The task script is now staged and pinned by sha256 (`align.sh`, `inputs/bwa-real/align.sh`)
-instead of inline. spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB user data for the
-inline form (spawn#1246). `align.sh` also prints `threads_per_core` and `cpu_model`, which only
-report and cannot fail the run. Neither change touches the alignment or the checks.
-Spend for the two x86 legs: $0.40 billed.
+| chip | wall | reads/s | compute $/result |
+|---|---|---|---|
+| Graviton4 `c8g.4xlarge` | 810 s | 60,268 | **0.1436** |
+| Xeon 6975P-C `c8i.4xlarge` | 987 s | 49,460 | 0.2055 |
+| EPYC 9R45 `c8a.4xlarge` | **681 s** | **71,684** | 0.1631 |
+
+- **The alignment is the same on all three:** 48,392,167 SAM records and 48,349,411 mapped
+  pre-`.alt`, 48,817,006 and 48,774,176 ALT-aware, and a 16,173,608,298-byte SAM (17,325,079,973
+  ALT-aware) with 3,366 `@SQ` lines on every chip. With `-t 16` fixed, bwa's batching is fixed
+  too, so the counts are a fixed point.
+- **AMD is fastest and Graviton4 is the cheapest result, in both runs.** AMD is 1.05× ahead of
+  Graviton4 pre-`.alt` and 1.19× ALT-aware; Intel is 1.43× and 1.22× slower. The ratios move by
+  up to 17% between two clean runs, so read them to that precision, not to the digit. AMD's hour costs
+  35% more, so its result costs 14–28% more on compute; Intel's costs 43–68% more. Intel's 16 vCPUs
+  are 8 cores × 2 SMT threads, and bwa keeps all 16 busy (15.31 avg cores), so this is a
+  vCPU-for-vCPU comparison at the same price tier, not a core-for-core one.
+- **The earlier rows (757 / 1014 / 646 s) had an `awk` counter on the timed path**, BusyBox awk on
+  the x86 images. It was not what made them: Graviton4 reproduced 757 s at 756, and both x86 chips
+  came out *slower* without it (1081 and 718 s), which is run-to-run spread, not the reader.
+  Billed is higher than before (946 s against 851 on Graviton4) because counting a 16 GB SAM on disk
+  is now its own pass after the timer, where the old reader did it in flight.
+- Anonymous memory peaks at 8.68 GiB on every chip; memory belongs to the index, not the silicon.
+  (The cgroup's `memory.current` now reads up to 20 GiB, which is page cache from the SAM write.)
+- Only the 16-thread rung was re-run on x86. The generation and knee sweeps are Graviton-only, and
+  keep the in-flight counter, which the Graviton4 re-run shows cost nothing there.
+
+The task script is staged and pinned by sha256 (`align.sh`, `inputs/bwa-real/align.sh`), because
+spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form (spawn#1246).
+`gen-c8g` carries `disk_gib: 40` for the SAM. Spend for the three re-run legs: $0.65 billed.
 
 ## Caveats
 
@@ -158,8 +174,10 @@ whose 16 vCPUs are 8 SMT cores. Rates are us-west-2 on-demand at time of measure
 Graviton4 16-core row is reused in all three tables, because it is the same run. The x86 rows
 come from a different image (bioconda's x86 build of the same version), so they compare chips
 running the same version, not one binary on two chips. Their output file keeps the spec's
-`c8g-16t` label and lands under `measurements-{x86_64,amd}/`. The copies here are renamed
-`size-c8i-16t.txt` and `size-c8a-16t.txt`.
+`c8g-16t-disk` label and lands under `measurements-{x86_64,amd}/`. The copies here are renamed
+`size-c8i-16t-disk.txt` and `size-c8a-16t-disk.txt`; `size-c8{g,i,a}-16t.txt` are the earlier
+in-flight-counter runs. The ALT-aware rows are the recipe's `smoke-check.txt` under
+`runs{,-x86_64,-amd}/bwa-samtools/r1/`, copied here as `recipe-align-c8{g,i,a}.txt`.
 
 A first attempt died twice with **exit 141** before producing anything: `awk … exit` and
 `| head` both stop reading early, SIGPIPE the writer, and under `set -o pipefail` kill the

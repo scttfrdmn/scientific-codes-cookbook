@@ -9,7 +9,10 @@
 > **Known error (#120):** the "reflectance" NDVI column applies the declared −0.1 offset to items
 > that already carry `earthsearch:boa_offset_applied: true` (150 of 153), so it is offset twice. The
 > raw-DN column is the correct reflectance NDVI on those scenes. The percentages, timings and
-> cross-chip identity are unaffected. A re-run with the per-item offset is pending.
+> cross-chip identity are unaffected. The re-run with the per-item offset ([`real.py`](real.py) now,
+> evidence in `results/r2-arm64/`) fails its own guard on one scene: `S2C_11SKA_20241206_1_L2A` says
+> `boa_offset_applied: false`, but its median vegetation red is −0.0572 with the declared offset and
+> +0.0428 without (the same day's S2A scene: +0.0434). The numbers below are from the earlier run.
 
 Workload: **every** Sentinel-2 L2A item of MGRS tile 11SKA (central California) dated 2024 in the
 AWS Open Data `sentinel-cogs` bucket. That is 153 scenes from both relative orbits and three

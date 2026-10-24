@@ -9,8 +9,9 @@ size-ordered list (the sizing probe); the measurement runs all 153.
 
 Per scene: grids equal the STAC item's; rasterio == tifffile/imagecodecs on every pixel of B04,
 B08 and SCL; block-windowed reads conserve the full read; ESA's published percentages are
-reproduced from the pixels; NDVI from scaled reflectance stays in [-1, 1]; the classifier-vs-index
-ordering. Over the year: a greenest-pixel (max NDVI) composite of clear-sky observations at 10 m,
+reproduced from the pixels; the BOA offset is chosen per item from earthsearch:boa_offset_applied
+and checked on the bytes (median red reflectance over ESA vegetation > 0); NDVI from reflectance
+stays in [-1, 1]; the classifier-vs-index ordering. Over the year: a greenest-pixel (max NDVI) composite of clear-sky observations at 10 m,
 whose observation count conserves the per-scene clear counts, written as a COG by rasterio and read
 back exactly by rasterio and by tifffile. Writes score.tsv, scenes.tsv, real.log lines, and the two
 COGs to <out dir>. Prints REAL OK only if every check passed.
@@ -201,17 +202,38 @@ def scene_work(scene, pins, comp, cnt):
     r["water_px10"] = nw
     if nw:
         r["water_nir_lt_red"] = int((nir[wm10] < red[wm10]).sum())
-    del wm10, red, nir
-    arr.clear()
+    del wm10
 
-    # ---- NDVI from reflectance (DN * scale + offset, from the item's raster:bands) ----------
+    # ---- NDVI from reflectance (DN * scale + offset) ------------------------------------------
+    # raster:bands declares scale 0.0001 and offset -0.1 on every item, but an item flagged
+    # earthsearch:boa_offset_applied: true has had L2A's +1000 DN removed already, so applying the
+    # declared offset subtracts 0.1 twice. The offset used is 0 when the flag is true and the
+    # declared one otherwise. Which is right is a property of the bytes, so it is checked on them:
+    # vegetation reflects some red, so its median red reflectance must be > 0.
     rb = item["assets"]["red"]["raster:bands"][0]
     nb = item["assets"]["nir"]["raster:bands"][0]
+    applied = bool(props.get("earthsearch:boa_offset_applied", False))
+    r_off = 0.0 if applied else float(rb.get("offset", 0.0))
+    n_off = 0.0 if applied else float(nb.get("offset", 0.0))
     r["scale_offset"] = "%s/%s" % (rb.get("scale"), rb.get("offset"))
+    r["boa_applied"] = applied
+    r["offset_used"] = "%r/%r" % (r_off, n_off)
+    vm10 = np.broadcast_to((scl == 4)[:, None, :, None], (N20, 2, N20, 2)).reshape(N10, N10) & valid
+    nveg = int(vm10.sum())
+    r["veg_px10"] = nveg
+    if nveg:
+        vred = red[vm10].astype(np.float64) * float(rb.get("scale", 1.0))
+        r["med_veg_red"] = float(np.median(vred + r_off))
+        r["med_veg_red_declared"] = float(np.median(vred + float(rb.get("offset", 0.0))))
+        del vred
+        chk("veg_red_positive", r["med_veg_red"] > 0,
+            "median red reflectance over ESA vegetation %+.4f with offset %r" % (r["med_veg_red"], r_off))
+    del vm10, red, nir
+    arr.clear()
     rf *= np.float32(rb.get("scale", 1.0))
-    rf += np.float32(rb.get("offset", 0.0))
+    rf += np.float32(r_off)
     nf *= np.float32(nb.get("scale", 1.0))
-    nf += np.float32(nb.get("offset", 0.0))
+    nf += np.float32(n_off)
     valid &= rf > 0
     valid &= nf > 0          # NDVI is in [-1, 1] by algebra when both reflectances are positive
     ndvi = nf - rf
@@ -335,7 +357,7 @@ def main():
     rows.sort(key=lambda m: m["scene"])
     nbad = [m for m in rows if m["bad"]]
     check("every_scene_clean", len(rows) == len(run) and not nbad,
-          "%d of %d scenes passed pins, grids, tifffile, windows, scl codes, ndvi range%s" % (
+          "%d of %d scenes passed pins, grids, tifffile, windows, scl codes, veg red > 0, ndvi range%s" % (
               len(rows) - len(nbad), len(run), "" if not nbad else "  bad: " +
               ", ".join(m["scene"] for m in nbad[:10])))
 
@@ -355,6 +377,21 @@ def main():
         "pct_exact", sum(m["pct_exact"] for m in ok), sum(m["pct_published"] for m in ok),
         sum(m["pct_over_one_rounding"] for m in ok)))
 
+    # ---- the BOA offset: per item from the flag, guarded on the pixels ------------------------
+    nflag = sum(1 for m in ok if m.get("boa_applied"))
+    veg = [m for m in ok if "med_veg_red" in m]
+    gpass = [m for m in veg if m["med_veg_red"] > 0]
+    gdecl = [m for m in veg if m["med_veg_red_declared"] > 0]
+    check("veg_red_reflectance_positive", len(gpass) == len(veg) and len(veg) > 0,
+          "median red reflectance over ESA vegetation > 0 on %d of %d scenes with vegetation "
+          "(min %+.4f); boa_offset_applied true on %d of %d items" % (
+              len(gpass), len(veg), min([m["med_veg_red"] for m in veg] or [float("nan")]), nflag, len(ok)))
+    print("%-34s the declared -0.1 on every item would pass on %d of %d   [observation]" % (
+        "veg_red_if_declared_offset", len(gdecl), len(veg)))
+    put("boa_offset_applied", "%d/%d" % (nflag, len(ok)))
+    put("veg_red_positive", "%d/%d" % (len(gpass), len(veg)))
+    put("veg_red_positive_if_declared", "%d/%d" % (len(gdecl), len(veg)))
+
     # ---- classifier vs index ordering, and water: reported, under both NDVI methods -----------
     for tag, pre in (("reflectance", ""), ("recipe_raw_dn", "raw_")):
         both = [m for m in ok if (pre + "p10_veg") in m and (pre + "p90_bare") in m]
@@ -362,6 +399,14 @@ def main():
         print("%-34s p10(veg) > p90(bare) on %d of %d scenes with both classes   [observation]" % (
             "order_" + tag, len(held), len(both)))
         put("order_held_" + tag, "%d/%d" % (len(held), len(both)))
+    rw = [m for m in ok if "mean_water" in m]
+    rwn = [m for m in rw if m["mean_water"] < 0]
+    wscl = sum(int(m["scl_counts"].split(",")[6]) for m in ok)
+    wdef = sum(m.get("n_water", 0) for m in ok)
+    print("%-34s mean reflectance NDVI(water) < 0 on %d of %d scenes; defined on %d of %d ESA-water 20 m px (%.2f%%)   [observation]" % (
+        "water_reflectance_negative", len(rwn), len(rw), wdef, wscl, 100.0 * wdef / max(wscl, 1)))
+    put("water_reflectance_negative", "%d/%d" % (len(rwn), len(rw)))
+    put("water_reflectance_defined_px20", "%d/%d" % (wdef, wscl))
     wat = [m for m in ok if "raw_mean_water" in m]
     wneg = [m for m in wat if m["raw_mean_water"] < 0]
     print("%-34s mean raw-DN NDVI(water) < 0 on %d of %d scenes with water   [observation]" % (
@@ -433,7 +478,8 @@ def main():
 
     # ---- per-scene table (fixed values only) and score ---------------------------------------
     cols = ["scene", "bytes", "scl_valid", "scl_counts", "pct_published", "pct_exact", "pct_ratio", "pct_worst",
-            "scale_offset", "b04_sum", "ndvi_valid", "ndvi_min", "ndvi_max",
+            "scale_offset", "boa_applied", "offset_used", "veg_px10", "med_veg_red",
+            "med_veg_red_declared", "b04_sum", "ndvi_valid", "ndvi_min", "ndvi_max",
             "ndvi_sum", "n_veg", "mean_veg", "p10_veg", "p90_veg", "n_bare", "mean_bare", "p10_bare",
             "p90_bare", "n_water", "mean_water", "raw_mean_veg", "raw_p10_veg", "raw_p90_veg",
             "raw_mean_bare", "raw_p10_bare", "raw_p90_bare", "raw_mean_water", "water_px10",

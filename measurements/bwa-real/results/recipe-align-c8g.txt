@@ -1,0 +1,13 @@
+bwa_version	0.7.19-r1273
+threads	16
+align_wall_s	810   (bwa mem alone, SAM to disk; nothing else timed)
+sam_bytes	17325079973
+sq_lines	3366   (assert >0 -- a SAM header, not just records)
+gzip_s	226   (untimed: compressing the intermediate for 02-sort)
+sam_records	48817006   (assert 48817006 -- EXACT, and cross-validated: the same count came
+sam_records	     back from a lith mount of the published prefix and from a local copy
+sam_records	     including .alt, on different boxes)
+mapped_records	48774176
+pct_mapped	99.91   (assert >= 99.9)
+aln_sam_gz_bytes	5820842885
+reads_per_sec	60268

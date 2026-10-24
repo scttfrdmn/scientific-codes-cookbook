@@ -4,7 +4,7 @@
   "command": [
     "bash",
     "-c",
-    "set -euo pipefail\n# align.sh is staged and pinned, not inline: EC2 user data is 16 KiB and the inline script no longer fits (spawn#1063).\necho \"b778c98d0801806cc064ed675dbed1e6f1524e8612d68719fe42e03638a74704  /tmp/align.sh\" | sha256sum -c || { echo \"FAIL: align.sh does not match its pin\"; exit 1; }\nLBL=c8g-16t THREADS=16 bash /tmp/align.sh\n"
+    "set -euo pipefail\n# align.sh is staged and pinned, not inline: EC2 user data is 16 KiB and the inline script no longer fits (spawn#1063).\necho \"c9217d5539efcfb1dd07166b5abbc2e00bc7a5b75e8fc0742b174db3b2741158  /tmp/align.sh\" | sha256sum -c || { echo \"FAIL: align.sh does not match its pin\"; exit 1; }\nLBL=c8g-16t-disk THREADS=16 bash /tmp/align.sh\n"
   ],
   "resources": {
     "cpu": 16,
@@ -12,7 +12,8 @@
     "architecture": "arm64",
     "families": [
       "c8g"
-    ]
+    ],
+    "disk_gib": 40
   },
   "inputs": [
     {
@@ -54,12 +55,12 @@
   ],
   "outputs": [
     {
-      "source": "/tmp/size-c8g-16t.txt",
-      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/size-c8g-16t.txt"
+      "source": "/tmp/size-c8g-16t-disk.txt",
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/size-c8g-16t-disk.txt"
     },
     {
       "source": "/tmp/bwa.log",
-      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/bwa-c8g-16t.log"
+      "destination": "s3://${COOKBOOK_BUCKET}/measurements/bwa-real/bwa-c8g-16t-disk.log"
     }
   ],
   "lifecycle": {

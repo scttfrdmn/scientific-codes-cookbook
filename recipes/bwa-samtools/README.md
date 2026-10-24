@@ -2,13 +2,13 @@
 tool: bwa
 tool_version: "0.7.19-r1273"
 image: quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba
-last_verified_x86_64: 2026-10-13
-last_verified_amd: 2026-10-19
+last_verified_x86_64: 2026-10-24
+last_verified_amd: 2026-10-24
 images_x86_64:
   - quay.io/biocontainers/bwa@sha256:99a35e5ee4e9c329e8746c4689890b97a3ac5620cb36d374cba69ba52016e72a
   - quay.io/biocontainers/samtools@sha256:a130447589651ed09252aa95a5e4f4132942cdb54d835d81a04a9a930d656561
-spawn_version: 0.111.1
-last_verified: 2026-10-01
+spawn_version: 0.142.0
+last_verified: 2026-10-24
 ---
 # bwa mem — a whole sequencing run against GRCh38
 
@@ -20,12 +20,11 @@ Aligns **24.1M read pairs (4.83 Gbp)** to the complete GRCh38 analysis set on Gr
 
 ```bash
 make stage RECIPE=bwa-samtools   # once — caches the RODA index + reads into your bucket
-for s in $(make -s spec RECIPE=bwa-samtools); do spawn task run --spec "$s" --wait; done   # align (~13 min) then sort+index (~1 min), self-terminating
+for s in $(make -s spec RECIPE=bwa-samtools); do spawn task run --spec "$s" --wait; done   # align (~19 min) then sort+index (~2 min), self-terminating
 make ls    RECIPE=bwa-samtools   # aln.sam.gz, aln.sorted.bam + .bai, smoke checks
-# the alignment itself:
 bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
   GRCh38_full_analysis_set_plus_decoy_hla.fa \
-  SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz | gzip -1 > aln.sam.gz
+  SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz > aln.sam   # then, untimed: gzip -1 < aln.sam > aln.sam.gz
 ```
 
 ## Which box — measured (same bytes, 16 threads, pre-`.alt` so all rows are comparable; ALT-aware adds ~4.6%)
@@ -36,10 +35,11 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | Graviton3 | `c7g.4xlarge` | 890 s | 54,373 | 0.5800 | 0.1621 |
 | Graviton4 | `c8g.4xlarge` | 757 s | 63,926 | 0.6381 | 0.1508 |
 | **Graviton5** | `c9g.4xlarge` | **590 s** | **82,021** | 0.6955 | **0.1320** |
-| Intel Xeon 6975P-C | `c8i.4xlarge` | 1014 s | 47,724 | 0.7497 | 0.2284 |
-| AMD EPYC 9R45 | `c8a.4xlarge` | 646 s | 74,910 | 0.8622 | 0.1712 |
+| Graviton4, SAM to disk | `c8g.4xlarge` | 756 s | 64,011 | 0.6381 | 0.1677 |
+| Intel Xeon 6975P-C, SAM to disk | `c8i.4xlarge` | 1081 s | 44,766 | 0.7497 | 0.2720 |
+| AMD EPYC 9R45, SAM to disk | `c8a.4xlarge` | 718 s | 67,399 | 0.8622 | 0.2108 |
 
-**Take the newest generation, and 16 cores.** Graviton2→5: rate card +28%, wall −46%, result **28% cheaper**; peak RSS is 8.7 GiB on all four, so 32 GiB is right. More cores scale almost perfectly (3.8× on 4×) and compute-only cost barely moves (+5.7%) — but **billed cost rises 40%**, because ~95 s of boot-and-staging is charged whatever the box costs. 64 cores buys wall-clock, not savings. Same generation on x86, using bioconda's x86 build of the same version: AMD is 1.17× faster than Graviton4 but 14% dearer per result, and Intel is 1.34× slower, on 8 SMT cores. The SAM record counts are identical on all three ([measured](../../measurements/bwa-real/README.md)).
+**Take the newest generation, and 16 cores.** Graviton2→5: rate card +28%, wall −46%, result **28% cheaper**; peak RSS is 8.7 GiB on all four, so 32 GiB is right. More cores scale almost perfectly (3.8× on 4×) and compute-only cost barely moves (+5.7%) — but **billed cost rises 40%**, because ~95 s of boot-and-staging is charged whatever the box costs. 64 cores buys wall-clock, not savings. Same generation on x86 (bioconda's x86 build of the same version, compared against Graviton4's SAM-to-disk row, whose billed time includes counting the SAM afterwards): over two clean runs AMD is 1.05–1.19× faster than Graviton4 but 14–28% dearer per result on compute, and Intel is 1.22–1.43× slower, on 8 SMT cores. The SAM record counts are identical on all three ([measured](../../measurements/bwa-real/README.md)).
 
 ## Make it yours
 
@@ -48,7 +48,7 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | `SRR062634` (HG00096) | your FASTQs — edit `stage-inputs.sh` | one run per task; a cohort is this task [fanned out](../../patterns/job-arrays.md), each sized at 16 cores. |
 | published GRCh38 index | your own reference | `bwa index` on a human genome is ~1 h and is **not** needed here: RODA ships one. Build only for a non-model organism. |
 | `-t 16` | `-t 32/48/64` | faster, *more* expensive per result. Memory grows ~0.21 GiB/thread above 16 (8.7 → 18.7 GiB at 64). |
-| `\| gzip -1` | `-o aln.sam` | ~9% wall, takes the intermediate from ~14 GiB to 5.8 GiB — the next task pays for that trip. |
+| `gzip -1` after the aligner | skipping it | takes the intermediate from 17.3 GB to 5.8 GB, which the next task pays for. Never `\| gzip` on the timed path: BusyBox gzip on the x86 images sets the pace (below). |
 
 **Leave the workload** — a real run against a real genome, so the numbers above transfer to your data at the same depth. **Scale it** by fanning out samples, not by growing the box.
 
@@ -62,7 +62,8 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | **ALT contigs read** | **> 0** — the analysis-set reference must be used ALT-aware | **3171** |
 | SAM records | **exactly 48,817,006** | **48,817,006** |
 | mapped | ≥ 99.9% | **99.91%** |
-| `aln.sam.gz` | passes `gzip -t`, > 1 GB | **5,820,842,885 bytes** |
+| SAM header | `@SQ` lines > 0 | **3,366** |
+| `aln.sam.gz` | > 1 GB | **5,820,842,885 bytes** |
 | reproducibility | same count from two independent **data paths** | **identical** |
 
 ### The assertion this recipe got wrong first, and how
@@ -111,10 +112,12 @@ its curve is fixed overhead, which makes the data path the lever, not the chip.
 
 Staging in is **8.9 GiB**, and dropping one file is what makes that tolerable: `bwa mem`
 reads `<prefix>.amb/.ann/.bwt/.pac/.sa` only, so the **3.0 GiB `.fa` is never staged** —
-12 GiB down to 8.9. Staging out the 5.0 GiB `aln.sam.gz` took ~67 s (~75 MB/s). At 16 threads
-single-threaded `gzip -1` keeps up with bwa (~16 MB/s of SAM); at 64 threads it would not, and
-the intermediate would have to go out uncompressed. See
-[copy, mount, or share?](../../patterns/data-movement.md).
+12 GiB down to 8.9. `bwa mem` writes plain SAM (17.3 GB) to the container disk (`/var/tmp`,
+`disk_gib: 40`) and is timed alone; `gzip -1` runs afterwards: 226 s on Graviton4 (GNU gzip),
+1,276 s on Intel and 1,073 s on AMD (BusyBox gzip, single-threaded). An earlier version tee'd the
+SAM through `gzip -1` inside the timer. On Graviton4 that cost nothing (800 s, against 810 without),
+but on x86 the compressor set the pace: 1,561 and 1,180 s recorded for alignments that take 987 and
+681 s. See [copy, mount, or share?](../../patterns/data-movement.md).
 
 ### Pins (data tier: RODA, published)
 
@@ -174,9 +177,11 @@ so the digest is the pin. Same staged bytes:
 | `sam_records` / mapped | 48817006 / 48774176 | 48817006 / 48774176 |
 | `pct_mapped` (align / flagstat) | 99.91 / 99.77 | 99.91 / 99.77 |
 | chr20 baseline primary / mapped | 800000 / 233313 | 800000 / 233313 |
-| `aln.sorted.bam` + `.bai`, `flagstat.txt`, `aln_chr20smoke.sam` | — | **byte-identical** to arm64 |
+| `aln.sorted.bam` | 4,568,357,482 B | same size |
+| `.bai`, `flagstat.txt`, `aln_chr20smoke.sam` | — | **byte-identical** to arm64 (sha256) |
 
-The alignment is the same, bit for bit: the coordinate-sorted BAM and its index match exactly.
+The alignment is the same: the index and flagstat match byte for byte, and AMD (`c8a`/`m8a`) gives the
+same values as Intel in every row.
 `aln.sam.gz` alone differs (5.82 GB vs 5.00 GB) because the compressor does — the ARM image ships
 GNU gzip 1.12, bioconda's x86 image BusyBox gzip — so the bytes inside it, which the sorted BAM is
 built from, are the same. The logs and smoke-check files differ only in wall times and tmpfs
@@ -190,7 +195,7 @@ make run RECIPE=bwa-samtools ARCH=x86_64      # same specs, x86 pins, writes run
 make ls  RECIPE=bwa-samtools
 ```
 
-Expect `smoke-check.txt` with `sam_records 48817006`, `pct_mapped 99.91`, and
+Expect `smoke-check.txt` with `sam_records 48817006`, `sq_lines 3366`, `pct_mapped 99.91`, and
 `aln_sam_gz_bytes` above 5 GB.
 
 </details>

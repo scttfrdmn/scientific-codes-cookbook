@@ -36,6 +36,14 @@
     {
       "source": "/tmp/baseline-check.txt",
       "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/baseline-check.txt"
+    },
+    {
+      "source": "/tmp/bwa.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/baseline-bwa.log"
+    },
+    {
+      "source": "/tmp/bwaidx.log",
+      "destination": "s3://${COOKBOOK_BUCKET}/runs/bwa-samtools/r1/baseline-bwaidx.log"
     }
   ],
   "lifecycle": {

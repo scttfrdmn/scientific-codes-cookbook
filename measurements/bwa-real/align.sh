@@ -36,20 +36,22 @@ printf 'read_pairs\t%s\nread_len\t%s\ntotal_bases\t%s\n' "$NP" "$RL" \
   "$(awk -v p="$NP" -v l="$RL" 'BEGIN{printf "%.2f Gbp", 2*p*l/1e9}')" | tee "size-$LBL.txt"
 
 echo "== bwa mem -t $THREADS on the full GRCh38 index =="
+# bwa writes plain SAM to the container disk (/var/tmp, sized by disk_gib) and nothing else is
+# timed. An earlier version piped it into an awk counter, which on the x86 images is BusyBox awk;
+# a reader on the timed path can time the reader, not the aligner.
+mkdir -p /var/tmp/w
+SAM=/var/tmp/w/aln.sam
 T0=$(date +%s)
-# ONE awk that reads the stream to EOF: counts, and saves the first lines to a file.
-# Do NOT pipe to `head` here -- head exits early, SIGPIPEs bwa, and under `set -o pipefail`
-# the task dies with exit 141 having done all the work. (Hit that here; third time in this
-# project, hence the note.)
 bwa mem -t "$THREADS" -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
-    "$REF" SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz 2> bwa.log \
-  | awk 'NR<=5000 { print > "/tmp/sam_head.txt" }
-         !/^@/ { n++; if ($3!="*") m++ }
-         END { printf "%d\t%d\n", n, m }' > counts.tsv
+    "$REF" SRR062634_1.filt.fastq.gz SRR062634_2.filt.fastq.gz > "$SAM" 2> bwa.log
 T1=$(date +%s)
 WALL=$(( T1 - T0 ))
-read -r NREC NMAP < counts.tsv
 kill $SP 2>/dev/null || true
+SAMB=$(stat -c%s "$SAM")
+# Untimed: one pass for the counts and the header, reading to EOF.
+awk '/^@SQ/{s++; next} /^@/{next} {n++; if ($3!="*") m++} END{printf "%d\t%d\t%d\n", n, m, s}' "$SAM" > counts.tsv
+read -r NREC NMAP NSQ < counts.tsv
+rm -f "$SAM"
 TPC=$(awk -F, '{n=0; for(i=1;i<=NF;i++){k=split($i,r,"-"); n+=(k==2?r[2]-r[1]+1:1)} print n}' /sys/devices/system/cpu/cpu0/topology/thread_siblings_list 2>/dev/null || echo unknown)
 CPUM=$(awk -F': *' '/^model name/{print $2; exit} /^CPU part/{print "CPU part "$2; exit}' /proc/cpuinfo 2>/dev/null || echo unknown)
 
@@ -64,6 +66,9 @@ printf 'cpu_model\t%s\n' "$CPUM"
 printf 'nproc\t%s\n' "$(nproc)"
 printf 'bwa_version\t%s\n' "$BWAVER"
 printf 'bwa_wall_s\t%s\n' "$WALL"
+printf 'timed_path\tbwa mem > SAM on disk, nothing else\n'
+printf 'sam_bytes\t%s\n' "$SAMB"
+printf 'sq_lines\t%s\n' "$NSQ"
 printf 'sam_records\t%s\n' "$NREC"
 printf 'mapped_records\t%s\n' "$NMAP"
 printf 'pct_mapped\t%s\n' "$(awk -v m="$NMAP" -v n="$NREC" 'BEGIN{printf "%.2f", 100*m/n}')"
@@ -74,5 +79,6 @@ printf 'avg_cores\t%s\n' "$CORES"
 printf 'core_efficiency\t%s\n' "$(awk -v c="$CORES" -v t="$THREADS" 'BEGIN{printf "%.0f%%", 100*c/t}')"
 } | tee -a "size-$LBL.txt"
 awk '/Real time|CPU/{last2=prev; prev=$0} END{if(last2)print last2; if(prev)print prev}' bwa.log | tee -a "size-$LBL.txt"
+test "$NSQ" -gt 0 || { echo "no @SQ lines -- not a SAM header"; exit 1; }
 test "$NREC" -gt 1000000 || { echo "only $NREC records -- not a real workload"; exit 1; }
 echo "ALIGN OK"
