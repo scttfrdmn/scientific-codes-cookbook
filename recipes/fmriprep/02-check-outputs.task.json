@@ -1,0 +1,54 @@
+{
+ "task_id": "cookbook-fmriprep-r1-02",
+ "container": "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\necho \"992ec0493a0567ec74da1d1f4f2d590cb4a3316e1b38593b8d854bd80ffd5df5  /tmp/check-outputs.sh\" | sha256sum -c --quiet || { echo 'FAIL: check-outputs.sh does not match its pin'; exit 1; }\nbash /tmp/check-outputs.sh"
+ ],
+ "resources": {
+  "cpu": 2,
+  "memory_gib": 4,
+  "architecture": "x86_64",
+  "families": [
+   "c8i"
+  ]
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/runs-x86_64/fmriprep/r1/out/",
+   "destination": "/tmp/out/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/ds005/sub-01/func/",
+   "destination": "/tmp/func/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/ds005_fasttrack_outputs.txt",
+   "destination": "/tmp/ds005_fasttrack_outputs.txt"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/check-outputs.sh",
+   "destination": "/tmp/check-outputs.sh"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/smoke-check.txt",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/fmriprep/r1/smoke-check.txt"
+  },
+  {
+   "source": "/tmp/outputs.out",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/fmriprep/r1/outputs.out"
+  },
+  {
+   "source": "/tmp/outputs.diff",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/fmriprep/r1/outputs.diff"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "30m",
+  "on_complete": "terminate",
+  "cost_limit": 0.08
+ }
+}

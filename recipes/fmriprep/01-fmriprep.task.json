@@ -1,0 +1,79 @@
+{
+ "task_id": "cookbook-fmriprep-r1-01",
+ "container": "docker.io/nipreps/fmriprep@sha256:bd222fba3a9f07d6ecaa680c412907945106b846a76cd4fbfd86e61667c435f8",
+ "command": [
+  "/tmp/ds005",
+  "/tmp/out",
+  "participant",
+  "-w",
+  "/tmp/work",
+  "--fs-license-file",
+  "/tmp/license.txt",
+  "--fs-subjects-dir",
+  "/tmp/freesurfer",
+  "--derivatives",
+  "anat=/tmp/smriprep",
+  "--sloppy",
+  "--write-graph",
+  "--mem-mb",
+  "14336",
+  "--skull-strip-template",
+  "OASIS30ANTs:res-1",
+  "--output-spaces",
+  "fsaverage5",
+  "fsnative",
+  "--use-plugin",
+  "/tmp/legacy.yml",
+  "--nthreads",
+  "4",
+  "--stop-on-first-crash",
+  "--notrack",
+  "-vv"
+ ],
+ "env": {
+  "FMRIPREP_DEV": "1",
+  "MIGAS_OPTOUT": "1"
+ },
+ "resources": {
+  "cpu": 4,
+  "memory_gib": 16,
+  "architecture": "x86_64",
+  "families": [
+   "m8i"
+  ],
+  "disk_gib": 40
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/ds005/",
+   "destination": "/tmp/ds005/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/freesurfer/",
+   "destination": "/tmp/freesurfer/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/smriprep/",
+   "destination": "/tmp/smriprep/"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/legacy.yml",
+   "destination": "/tmp/legacy.yml"
+  },
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/license.txt",
+   "destination": "/tmp/license.txt"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/runs-x86_64/fmriprep/r1/out/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "2h",
+  "on_complete": "terminate",
+  "cost_limit": 0.5
+ }
+}

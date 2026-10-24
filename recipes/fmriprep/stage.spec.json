@@ -1,0 +1,34 @@
+{
+ "task_id": "cookbook-fmriprep-stage",
+ "command": [
+  "bash",
+  "-c",
+  "set +e\necho \"${FETCH_SHA}  /tmp/fetch-osf.py\" | sha256sum -c --quiet || { echo 'FAIL: fetch-osf.py does not match its pin'; exit 1; }\npython3 -u /tmp/fetch-osf.py"
+ ],
+ "resources": {
+  "cpu": 2,
+  "memory_gib": 4,
+  "architecture": "arm64",
+  "families": [
+   "c8g"
+  ],
+  "disk_gib": 20
+ },
+ "inputs": [
+  {
+   "source": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/fetch-osf.py",
+   "destination": "/tmp/fetch-osf.py"
+  }
+ ],
+ "outputs": [
+  {
+   "source": "/var/tmp/out/",
+   "destination": "s3://${COOKBOOK_BUCKET}/inputs/fmriprep/"
+  }
+ ],
+ "lifecycle": {
+  "ttl": "45m",
+  "on_complete": "terminate",
+  "cost_limit": 0.1
+ }
+}
