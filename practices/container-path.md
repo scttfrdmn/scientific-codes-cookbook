@@ -19,9 +19,12 @@ outside `/tmp` fails at `mkdir` before uid matters at all. Confirmed by a delibe
 inferred (spore-host/spawn#555).
 
 **Do this:** stage every input and write every output as a flat path directly in `/tmp` —
-`/tmp/reads_1.fq.gz`, `/tmp/out.bam`. If a tool insists on writing a directory, `tar` it to one
-flat file and untar it in the consuming task. The `/data` + `/work` layout in spawn's own
-example cannot work on this path.
+`/tmp/reads_1.fq.gz`, `/tmp/out.bam`. A directory may now be staged as a directory (a manifest
+path ending in `/` gets `--recursive`): output parents are created first (spawn#564, fixed
+2026-10-04; measured 2026-10-16 with a nested tree written as uid 1000). Tar is still the right
+shape for one big intermediate. Keep at least one staged file directly in `/tmp`, or the
+container's `/tmp` is the root disk rather than the host tmpfs (spore-host/spawn#1270). The
+`/data` + `/work` layout in spawn's own example still cannot work on this path.
 
 ## The exit code does not prove the output is real
 
