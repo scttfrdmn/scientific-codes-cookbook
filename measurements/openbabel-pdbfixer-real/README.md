@@ -154,7 +154,9 @@ The other four are an ARG with one C–N bond too many (1abi), a C-terminal MET 
 - **The exception is not a chip effect.** After the molfile round trip, some canonical SMILES change
   their ring-exocyclic C=N stereo: 91 and 102 on two Graviton4 runs, 104 on Intel, 113 on AMD. Only 23
   compounds differ in all four runs, and 179 differ in at least one. Same chip and same bytes give a
-  different set, so Open Babel's stereo perception on these molfiles is not deterministic. RDKit
+  different set. The variation is in the molfile *writer*: its 0D up/down assignment iterates a
+  pointer-ordered set, so it depends on allocation order, while reading fixed molfile bytes is
+  deterministic (source and a 40-repeat repro: openbabel/openbabel#3036). RDKit
   reads each pair as different molecules. All but 2–4 per run are cyclobutene-diimine
   (squaramide-like) ring closures. The count is reported, never asserted.
 - **One canonical SMILES is not idempotent**, the same on every chip. CHEMBL3229240 has two
