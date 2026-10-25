@@ -3,6 +3,7 @@
 # $/ns from ns/day, which is not wall x rate, so no row carries a $ figure (usd_hr only).
 schema = 1
 result_unit = "one simulated nanosecond of benchMEM (81,743 atoms, PME, NPT)"
+throughput_unit = "ns/day"
 
 [[dataset]]
 id = "benchMEM (81,743 atoms, PME, Berendsen NPT) tpr"
@@ -22,6 +23,9 @@ wall_s = 70
 usd_hr = 0.6381
 results = "results/decomp.txt"
 note = "16 ranks x 1 OpenMP threads, 25.538 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+throughput = 25.538
+ranks = 16
+threads_per_rank = 1
 
 [[run]]
 instance = "c8g.4xlarge"
@@ -34,6 +38,9 @@ wall_s = 72
 usd_hr = 0.6381
 results = "results/decomp.txt"
 note = "8 ranks x 2 OpenMP threads, 24.860 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+throughput = 24.860
+ranks = 8
+threads_per_rank = 2
 
 [[run]]
 instance = "c8g.4xlarge"
@@ -46,6 +53,9 @@ wall_s = 74
 usd_hr = 0.6381
 results = "results/decomp.txt"
 note = "4 ranks x 4 OpenMP threads, 24.168 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+throughput = 24.168
+ranks = 4
+threads_per_rank = 4
 
 [[run]]
 instance = "c8g.4xlarge"
@@ -58,6 +68,9 @@ wall_s = 76
 usd_hr = 0.6381
 results = "results/decomp.txt"
 note = "2 ranks x 8 OpenMP threads, 23.292 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+throughput = 23.292
+ranks = 2
+threads_per_rank = 8
 
 [[run]]
 instance = "c8g.4xlarge"
@@ -70,6 +83,9 @@ wall_s = 70
 usd_hr = 0.6381
 results = "results/decomp.txt"
 note = "1 ranks x 16 OpenMP threads, 25.432 ns/day; wall_s is mdrun only. Graviton4 leg, on the previous md digest"
+throughput = 25.432
+ranks = 1
+threads_per_rank = 16
 
 [[run]]
 instance = "c8i.4xlarge"
@@ -82,6 +98,9 @@ wall_s = 63
 usd_hr = 0.7497
 results = "results/decomp-x86_64.txt"
 note = "16 ranks x 1 OpenMP threads, 28.981 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+throughput = 28.981
+ranks = 16
+threads_per_rank = 1
 
 [[run]]
 instance = "c8i.4xlarge"
@@ -94,6 +113,9 @@ wall_s = 65
 usd_hr = 0.7497
 results = "results/decomp-x86_64.txt"
 note = "8 ranks x 2 OpenMP threads, 28.440 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+throughput = 28.440
+ranks = 8
+threads_per_rank = 2
 
 [[run]]
 instance = "c8i.4xlarge"
@@ -106,6 +128,9 @@ wall_s = 67
 usd_hr = 0.7497
 results = "results/decomp-x86_64.txt"
 note = "4 ranks x 4 OpenMP threads, 27.044 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+throughput = 27.044
+ranks = 4
+threads_per_rank = 4
 
 [[run]]
 instance = "c8i.4xlarge"
@@ -118,6 +143,9 @@ wall_s = 69
 usd_hr = 0.7497
 results = "results/decomp-x86_64.txt"
 note = "2 ranks x 8 OpenMP threads, 26.272 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+throughput = 26.272
+ranks = 2
+threads_per_rank = 8
 
 [[run]]
 instance = "c8i.4xlarge"
@@ -130,6 +158,9 @@ wall_s = 63
 usd_hr = 0.7497
 results = "results/decomp-x86_64.txt"
 note = "1 ranks x 16 OpenMP threads, 29.093 ns/day; wall_s is mdrun only. md env linux-64 twin md-f7ed8789d24e (MKL)"
+throughput = 29.093
+ranks = 1
+threads_per_rank = 16
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -142,6 +173,9 @@ wall_s = 34
 usd_hr = 0.8622
 results = "results/decomp-amd.txt"
 note = "16 ranks x 1 OpenMP threads, 58.432 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+throughput = 58.432
+ranks = 16
+threads_per_rank = 1
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -154,6 +188,9 @@ wall_s = 36
 usd_hr = 0.8622
 results = "results/decomp-amd.txt"
 note = "8 ranks x 2 OpenMP threads, 52.582 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+throughput = 52.582
+ranks = 8
+threads_per_rank = 2
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -166,6 +203,9 @@ wall_s = 40
 usd_hr = 0.8622
 results = "results/decomp-amd.txt"
 note = "4 ranks x 4 OpenMP threads, 46.435 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+throughput = 46.435
+ranks = 4
+threads_per_rank = 4
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -178,6 +218,9 @@ wall_s = 45
 usd_hr = 0.8622
 results = "results/decomp-amd.txt"
 note = "2 ranks x 8 OpenMP threads, 41.323 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+throughput = 41.323
+ranks = 2
+threads_per_rank = 8
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -190,6 +233,9 @@ wall_s = 40
 usd_hr = 0.8622
 results = "results/decomp-amd.txt"
 note = "1 ranks x 16 OpenMP threads, 47.461 ns/day; wall_s is mdrun only. md env linux-64 twin (MKL)"
+throughput = 47.461
+ranks = 1
+threads_per_rank = 16
 
 # --- checks: the README's "Checks hold on both" bullet
 [[check]]

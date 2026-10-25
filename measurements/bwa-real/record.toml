@@ -1,13 +1,56 @@
 # measurements/bwa-real/record.toml -- bwa mem, a whole 1000 Genomes run vs the whole GRCh38 index:
 # Graviton generations 2-5, the c8g core knee, and three chips at 16 threads.
 # Owner recipe is bwa-samtools (image = its pins). Dates are the git dates results/ landed.
-# The gen/knee sweeps print billed $/result but not billed seconds (only Graviton4's 851 s is
-# printed), so their billed $ is in each note, not a field. Peak is the README's "peak RSS" =
-# the 1 Hz max of cgroup memory.current (gen/knee) or of memory.stat anon (cross-chip rows);
-# neither is in the peak_kind enum, so no peak_kind. The cross-chip table and recipe-align
-# rows are the 2026-10-24 re-run (#121: SAM to disk, nothing else timed).
-schema = 1
+# Schema 2: the gen/knee billed windows are spawn's completion records (results/billed-windows.txt);
+# the cross-chip rows' printed billed is the EC2 window (CloudTrail, same file). Peak is the README's
+# "peak RSS" = the 1 Hz max of cgroup memory.current (gen/knee) or of memory.stat anon (cross-chip).
+# The cross-chip table and recipe-align rows are the 2026-10-24 re-run (#121: SAM to disk).
+schema = 2
 result_unit = "one alignment: 24,148,993 read pairs (SRR062634, HG00096) against GRCh38_full_analysis_set_plus_decoy_hla"
+throughput_unit = "reads/s"
+
+[workload]
+size = { read_pairs = 24148993, read_length = 100 }
+input_gib = 8.9
+note = "embarrassingly parallel over reads against one shared index; bwa mem reads .amb/.ann/.bwt/.pac/.sa only"
+
+[timing]
+wall = "bwa's own [main] Real time (gen/knee: SAM to an in-flight awk counter; cross-chip: SAM to disk, nothing else timed)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size"]
+equal_work = "pre-alt-records"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "billed_usd" }
+note = "every newer generation is faster and cheaper per result"
+
+[[series]]
+id = "knee"
+axis = "workers"
+held = ["image", "input", "family", "generation", "size"]
+equal_work = "pre-alt-records"
+attribution = "same-binary"
+verdict = { shape = "cost-climbs", through = 64, on = "billed_usd" }
+note = "3.79x faster on 4x the cores; compute $ +5.7%, billed +40% because 93-97 s of fixed overhead is billed at 4x the rate"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "pre-alt-records"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 build of the same 0.7.19-r1273 (quay.io/biocontainers); Intel's 16 vCPUs are 8 cores x 2 SMT"
+
+[[series]]
+id = "chip-alt"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "alt-aware-records"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's own 01-align task, ALT-aware: a second clean run per chip"
 
 [[dataset]]
 id = "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)"
@@ -23,201 +66,304 @@ note = "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves t
 
 # --- 1. generations: 16 threads on a 4xlarge -----------------------------------------------
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1086
+billed_s = 1218
 usd_hr = 0.5440
 compute_usd = 0.1641
+billed_usd = 0.1841
+throughput = 44560
+avg_cores = 15.21
 peak_gib = 8.71
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 8.68
 results = "results/size-c6g-16t.txt"
-note = "billed $/result 0.1841; 44,560 reads/s, 15.21 avg cores"
+variant = "in-flight awk counter on the timed path"
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 890
+billed_s = 1006
 usd_hr = 0.5800
 compute_usd = 0.1434
+billed_usd = 0.1621
+throughput = 54373
+avg_cores = 15.26
 peak_gib = 8.70
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 8.68
 results = "results/size-c7g-16t.txt"
-note = "billed $/result 0.1621; 54,373 reads/s, 15.26 avg cores"
+variant = "in-flight awk counter on the timed path"
 
 [[run]]
+id = "gen-c8g"
+in = ["gen", "knee"]
 instance = "c8g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 757
 billed_s = 851
 usd_hr = 0.6381
 compute_usd = 0.1342
 billed_usd = 0.1508
+throughput = 63926
+avg_cores = 15.21
 peak_gib = 8.70
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 8.68
 results = "results/size-c8g-16t.txt"
-note = "also the 16-core rung of the knee; in-flight awk counter on the timed path; 63,926 reads/s, 15.21 avg cores"
+variant = "in-flight awk counter on the timed path"
+note = "also the 16-core rung of the knee"
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 590
+billed_s = 683
 usd_hr = 0.6955
 compute_usd = 0.1140
+billed_usd = 0.1320
+throughput = 82021
+avg_cores = 15.18
 peak_gib = 8.71
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 8.69
 results = "results/size-c9g-16t.txt"
-note = "billed $/result 0.1320; 82,021 reads/s, 15.18 avg cores"
+variant = "in-flight awk counter on the timed path"
 
 # --- 2. the knee: c8g, more cores ----------------------------------------------------------
 [[run]]
+id = "knee-32"
+in = ["knee"]
 instance = "c8g.8xlarge"
 purpose = "core-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 387
+billed_s = 481
 usd_hr = 1.2762
 compute_usd = 0.1372
+billed_usd = 0.1705
+throughput = 125044
+avg_cores = 28.80
 peak_gib = 12.02
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 11.99
 results = "results/size-c8g-32t.txt"
-note = "billed $/result 0.1705; 125,044 reads/s, 28.80 avg cores (90%)"
+variant = "in-flight awk counter on the timed path"
 
 [[run]]
+id = "knee-48"
+in = ["knee"]
 instance = "c8g.12xlarge"
 purpose = "core-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 48
+ranks = 1
+threads_per_rank = 48
 wall_s = 259
+billed_s = 355
 usd_hr = 1.9142
 compute_usd = 0.1377
+billed_usd = 0.1888
+throughput = 186842
+avg_cores = 40.43
 peak_gib = 15.41
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 15.37
 results = "results/size-c8g-48t.txt"
-note = "billed $/result 0.1888; 186,842 reads/s, 40.43 avg cores (84%)"
+variant = "in-flight awk counter on the timed path"
 
 [[run]]
+id = "knee-64"
+in = ["knee"]
 instance = "c8g.16xlarge"
 purpose = "core-sweep"
 date = "2026-09-25"
-date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 64
 wall_s = 200
+billed_s = 297
 usd_hr = 2.5523
 compute_usd = 0.1418
+billed_usd = 0.2106
+throughput = 241961
+avg_cores = 51.09
 peak_gib = 18.65
+peak_kind = "cgroup-memory.current-max"
+anon_gib = 18.60
 results = "results/size-c8g-64t.txt"
-note = "billed $/result 0.2106; 241,961 reads/s, 51.09 avg cores (80%); fixed overhead 93-97 s is 33% of this run"
+variant = "in-flight awk counter on the timed path"
+note = "fixed overhead 93-97 s is 33% of this run"
 
 # --- 4. across chips at 16 threads (re-run 2026-10-24: SAM to disk, nothing else timed) -----
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 756
 billed_s = 946
+billed_basis = "ec2"
 usd_hr = 0.6381
 compute_usd = 0.1340
 billed_usd = 0.1677
+throughput = 64011
+avg_cores = 15.18
 peak_gib = 8.68
+peak_kind = "cgroup-anon-max"
 results = "results/size-c8g-16t-disk.txt"
-note = "gen-c8g with SAM to disk; peak is anon RSS (memory.current reads 20.19 GiB, page cache from the SAM write); billed includes the untimed count pass"
+variant = "SAM to disk; count pass after the timer (billed includes it)"
+note = "memory.current reads 20.19 GiB: page cache from the SAM write"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1081
 billed_s = 1306
+billed_basis = "ec2"
 usd_hr = 0.7497
 compute_usd = 0.2251
 billed_usd = 0.2720
+throughput = 44766
+avg_cores = 15.31
 peak_gib = 8.68
+peak_kind = "cgroup-anon-max"
 results = "results/size-c8i-16t-disk.txt"
-note = "bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT; peak is anon RSS"
+variant = "SAM to disk; count pass after the timer (billed includes it)"
+note = "bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 718
 billed_s = 880
+billed_basis = "ec2"
 usd_hr = 0.8622
 compute_usd = 0.1720
 billed_usd = 0.2108
+throughput = 67399
+avg_cores = 15.19
 peak_gib = 8.68
+peak_kind = "cgroup-anon-max"
 results = "results/size-c8a-16t-disk.txt"
-note = "bioconda x86 build of the same 0.7.19-r1273; peak is anon RSS"
+variant = "SAM to disk; count pass after the timer (billed includes it)"
+note = "bioconda x86 build of the same 0.7.19-r1273"
 
 [[run]]
+id = "alt-c8g"
+in = ["chip-alt"]
 instance = "c8g.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
 wall_s = 810
 usd_hr = 0.6381
 compute_usd = 0.1436
+throughput = 60268
 results = "results/recipe-align-c8g.txt"
-note = "bwa-samtools 01-align, ALT-aware, SAM to disk (second clean run per chip); 60,268 reads/s"
+task = "01-align"
+variant = "bwa-samtools 01-align, ALT-aware, SAM to disk"
 
 [[run]]
+id = "alt-c8i"
+in = ["chip-alt"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
 wall_s = 987
 usd_hr = 0.7497
 compute_usd = 0.2055
+throughput = 49460
 results = "results/recipe-align-c8i.txt"
-note = "bwa-samtools 01-align, ALT-aware; 49,460 reads/s"
+task = "01-align"
+variant = "bwa-samtools 01-align, ALT-aware, SAM to disk"
 
 [[run]]
+id = "alt-c8a"
+in = ["chip-alt"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-24"
-date_source = "git"
 workers = 16
 wall_s = 681
 usd_hr = 0.8622
 compute_usd = 0.1631
+throughput = 71684
 results = "results/recipe-align-c8a.txt"
-note = "bwa-samtools 01-align, ALT-aware; 71,684 reads/s"
+task = "01-align"
+variant = "bwa-samtools 01-align, ALT-aware, SAM to disk"
 
 # --- superseded x86 rows (in-flight BusyBox awk counter on the timed path) ------------------
 [[run]]
+id = "old-c8i"
 instance = "c8i.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"
-date_source = "git"
 workers = 16
 wall_s = 1014
+throughput = 47724
+avg_cores = 15.33
 results = "results/size-c8i-16t.txt"
-note = "earlier row with the awk counter on the timed path; superseded by the 1081 s re-run (spread, not the reader)"
+variant = "in-flight awk counter on the timed path"
+superseded_by = "chip-c8i"
+note = "spread evidence, not the reader: the re-run without the counter was slower"
 
 [[run]]
+id = "old-c8a"
 instance = "c8a.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"
-date_source = "git"
 workers = 16
 wall_s = 646
+throughput = 74910
+avg_cores = 15.16
 results = "results/size-c8a-16t.txt"
-note = "earlier row with the awk counter on the timed path; superseded by the 718 s re-run"
+variant = "in-flight awk counter on the timed path"
+superseded_by = "chip-c8a"
 
 # --- checks: the README's stated invariants (no checks table; claims copied from its prose) --
 [[check]]

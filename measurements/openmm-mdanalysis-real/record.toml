@@ -1,6 +1,7 @@
 # measurements/openmm-mdanalysis-real/record.toml -- drafted by the #118 extraction, then authored.
 schema = 1
 result_unit = "the whole task: every single point (CPU, Reference, split by term), 1 ns of JAC and 1,000 steps of STMV"
+throughput_unit = "ns/day"
 
 [[dataset]]
 id = "Amber20_Benchmark_Suite.tar.gz (ambermd.org; JAC/DHFR 23,558 atoms and STMV 1,067,095 atoms)"
@@ -24,6 +25,7 @@ billed_usd = 0.761
 peak_gib = 11.72
 peak_kind = "cgroup-memory.peak"
 note = "JAC 1 ns 1300 s (66.5 ns/day), STMV 1,000 steps 204 s (1.70 ns/day); Graviton4 ran twice, the second run is tabulated"
+throughput = 66.5
 
 [[run]]
 instance = "c8i.8xlarge"
@@ -41,6 +43,7 @@ billed_usd = 1.094
 peak_gib = 14.45
 peak_kind = "cgroup-memory.peak"
 note = "JAC 1683 s (51.3 ns/day), STMV 355 s (0.97 ns/day); peak counts the x86 env install's page cache"
+throughput = 51.3
 
 [[run]]
 instance = "c8a.8xlarge"
@@ -58,6 +61,7 @@ billed_usd = 1.084
 peak_gib = 14.48
 peak_kind = "cgroup-memory.peak"
 note = "JAC 1561 s (55.3 ns/day), STMV 249 s (1.39 ns/day); peak counts the x86 env install's page cache"
+throughput = 55.3
 
 # --- checks: "What held at scale, on all three chips" ----------------------------------
 [[check]]

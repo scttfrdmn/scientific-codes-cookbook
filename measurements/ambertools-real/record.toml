@@ -2,6 +2,7 @@
 # Graviton generation ladder for sander's 100 ps NVE, plus two OPENBLAS_CORETYPE controls.
 schema = 1
 result_unit = "one 100 ps solvated NVE run of capped alanine dipeptide (tleap build, minimisation, heating and checks included)"
+throughput_unit = "ns/day"
 
 [[dataset]]
 id = "ff14SB + TIP3P leaprc files shipped in the ambertools 26.0 package; system built in-task by tleap"
@@ -23,6 +24,7 @@ compute_usd = 0.0344
 billed_usd = 0.0373
 results = "results/smoke-c6g.txt"
 note = "wall_s is the README's 'compute' column; the NVE 100 ps segment alone is 1613 s"
+throughput = 5.36
 
 [[run]]
 instance = "c7g.large"
@@ -38,6 +40,7 @@ compute_usd = 0.0242
 billed_usd = 0.0267
 results = "results/smoke-c7g.txt"
 note = "NVE 100 ps segment 1062 s"
+throughput = 8.14
 
 [[run]]
 instance = "c8g.large"
@@ -53,6 +56,7 @@ compute_usd = 0.0229
 billed_usd = 0.0263
 results = "results/smoke-c8g.txt"
 note = "the recipe's own verified run is this rung; NVE 100 ps segment 914 s"
+throughput = 9.45
 
 [[run]]
 instance = "c9g.large"
@@ -68,6 +72,7 @@ compute_usd = 0.0176
 billed_usd = 0.0197
 results = "results/smoke-c9g.txt"
 note = "NVE 100 ps segment 644 s"
+throughput = 13.42
 
 # --- controls: one env var changed on one Graviton4 host -------------------------------
 [[run]]
@@ -77,6 +82,7 @@ date = "2026-10-03"
 date_source = "git"
 results = "results/smoke-coretype-n1-on-gv4.txt"
 note = "OPENBLAS_CORETYPE=NEOVERSEN1 on Graviton4: NVE 100 ps 918 s vs 914 s native (0.4%); not priced"
+throughput = 9.41
 
 [[run]]
 instance = "c8g.2xlarge"

@@ -3,6 +3,7 @@
 # spec paths, families/TTL/cost_limit, staging, chip names) is derived by gen_catalog.py.
 schema = 1
 result_unit = "one complete RNA-seq run quantified (ERR188026, 15.8M reads, all 453,553 Ensembl 116 transcripts)"
+throughput_unit = "reads/s"
 
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
@@ -39,6 +40,8 @@ billed_usd = 0.0287
 peak_gib = 6.57
 peak_kind = "rss"
 results = "results/size-c6g-16t.txt"
+avg_cores = 15.11
+throughput = 136208
 
 [[run]]
 instance = "c7g.4xlarge"
@@ -56,6 +59,8 @@ billed_usd = 0.0259
 peak_gib = 6.46
 peak_kind = "rss"
 results = "results/size-c7g-16t.txt"
+avg_cores = 15.17
+throughput = 190363
 
 [[run]]
 instance = "c8g.4xlarge"
@@ -73,6 +78,8 @@ billed_usd = 0.0222
 peak_gib = 6.59
 peak_kind = "rss"
 results = "results/size-c8g-16t.txt"
+avg_cores = 15.12
+throughput = 213515
 
 [[run]]
 instance = "c9g.4xlarge"
@@ -90,6 +97,8 @@ billed_usd = 0.0193
 peak_gib = 6.50
 peak_kind = "rss"
 results = "results/size-c9g-16t.txt"
+avg_cores = 15.20
+throughput = 277195
 
 # --- same generation, three chips ------------------------------------------------------
 [[run]]
@@ -110,6 +119,8 @@ peak_gib = 6.49
 peak_kind = "rss"
 results = "results/size-c8i-16t.txt"
 note = "overhead not comparable with the arm64 rows: spawn 0.139.1 overlaps Docker install with stage-in"
+avg_cores = 14.67
+throughput = 175557
 
 [[run]]
 instance = "c8a.4xlarge"
@@ -127,6 +138,8 @@ billed_usd = 0.0210
 peak_gib = 6.54
 peak_kind = "rss"
 results = "results/size-c8a-16t.txt"
+avg_cores = 15.13
+throughput = 287275
 
 # --- checks: README has no checks table; these are the in-task asserts in results/*.txt -
 [[check]]

@@ -1,95 +1,778 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "measurements/<dir>/record.toml",
-  "title": "Measurement record: the authored half of catalog/record.json",
-  "description": "One per measurements/<dir>/. TOML so stdlib tomllib reads it (CI is stdlib-only, python 3.12). Carries ONLY what no artifact already says. Everything derivable (owner recipe, tool, version, pins, verified dates, spec resources/lifecycle, staging, chip/arch/vendor from the instance name, threads_per_core and OpenBLAS corename from a host file, reverse cross-code links, overall status) is computed by gen_catalog.py and must NOT be authored here.",
+  "title": "Measurement record v2: the authored half of catalog/record.json, with performance as data",
+  "description": "One per measurements/<dir>/. TOML so stdlib tomllib reads it (CI is stdlib-only, python 3.12). Carries ONLY what no artifact already says. Everything derivable (owner recipe, tool, version, pins, verified dates, spec resources/lifecycle, staging, chip/arch/vendor from the instance name, threads_per_core and OpenBLAS corename from a host file, reverse cross-code links, overall status) is computed by gen_catalog.py and must NOT be authored here. v2 adds performance fields to the SAME record: no second file. New fields are optional except where a v1 field was ambiguous (billed_basis on any row with billed_s or overhead_s). Every derived quantity (vcpus, physical cores, utilisation ratios, binding resource, effective $/hr, $/result from throughput, series curves, cost knee, n and spread per configuration, pipeline totals) is computed by gen_catalog.py and must NOT be authored. So is the GPU utilisation plateau (from gpu.util_series).",
   "type": "object",
-  "required": ["schema", "result_unit", "run", "check"],
+  "required": [
+    "schema",
+    "result_unit",
+    "run",
+    "check"
+  ],
   "additionalProperties": false,
   "properties": {
-    "schema": { "const": 1 },
+    "schema": {
+      "enum": [
+        1,
+        2
+      ],
+      "description": "1 = not yet migrated (warns); 2 = performance fields reviewed. Additive optional fields never bump this; a rename or a change of meaning does."
+    },
     "result_unit": {
       "type": "string",
       "description": "The denominator of every $/result in this record, in words. Required because the arithmetic identity cannot be checked without it (abundance-real's billed $/result is per sample of two)."
     },
     "results_per_run": {
-      "type": "number", "default": 1,
+      "type": "number",
+      "default": 1,
       "description": "How many result_units one run row produces. compute_usd == wall_s * usd_hr / 3600 / results_per_run."
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size"
+      ],
+      "description": "What one result computed, as numbers a consumer can MATCH against (never extrapolate from). Defaults every run's size.",
+      "properties": {
+        "size": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Named magnitudes of one result's input/work. Prefer the common keys: reads, read_pairs, bases, atoms, steps, simulated_ns, basis_functions, kpoints, events, samples, files, cells, voxels, sequences, families, generations. A key is a claim: it must be printed in the README."
+        },
+        "input_gib": {
+          "type": "number",
+          "description": "Bytes staged in for one run (GiB). Printed in the README."
+        },
+        "output_gib": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string",
+          "description": "Shape in words (shared index, per-sample fan-out, serial phase ...). Prose, not parsed."
+        }
+      }
+    },
+    "throughput_unit": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_ .-]+/(s|min|hr|day)$",
+      "description": "Unit of every run's `throughput`, e.g. 'ns/day', 'reads/s', 'events/s'. The denominator is one of s|min|hr|day so gen_catalog can convert without a units library. Only where a rate is the tool's natural unit (MD ns/day, per-read aligners); a forced rate is a second result unit."
+    },
+    "throughput_is_result": {
+      "type": "boolean",
+      "default": false,
+      "description": "true when the numerator of throughput_unit IS result_unit (GROMACS: result = 1 ns, throughput in ns/day). Then compute_usd == usd_hr / throughput_per_hour is checked, and $/result is derived for rows that print none."
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Record-wide definitions of the time fields, overridable per run. Required in v2 whenever a row carries billed_s/overhead_s: v1's billed_s meant three different windows in different records.",
+      "properties": {
+        "wall": {
+          "type": "string",
+          "description": "What wall_s times, in words: 'bwa's own Real time', 'mdrun only', 'the task command, timed in-script'."
+        },
+        "billed_basis": {
+          "enum": [
+            "spawn-task",
+            "ec2",
+            "spawn-task-minus-baseline",
+            "sum-of-tasks",
+            "unavailable",
+            "shared-window",
+            "unattributed"
+          ],
+          "description": "spawn-task = the completion record's started_at -> ended_at (wrapper start to stage-out done); ec2 = CloudTrail RunInstances -> TerminateInstances (adds boot and shutdown); spawn-task-minus-baseline = spawn-task minus a measured no-tool copy (lith-vs-copy-real); sum-of-tasks = derived for a pipeline, never authored on a row. unavailable = the README prints a billed figure but no completion record survives, so billed_s/billed_usd stay absent; shared-window = one billed window covers this row and others (two walls in one task, five aligns on one box), so no per-row billed figure exists; unattributed = the README prints this billed window but neither a surviving completion record nor CloudTrail reproduces it (warns: a README number nobody can source)."
+        }
+      }
     },
     "dataset": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "tier"],
+        "required": [
+          "id",
+          "tier"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "description": "Durable identifier: accession, DOI, release+path, RODA bucket key." },
-          "tier": { "enum": ["roda", "durable-id", "versioned-release", "test-suite", "built", "run-output"] },
-          "pins": { "type": "string", "description": "Path (repo-relative or relative to this dir) to a sha256 manifest that pins it. The record never copies a hash." },
-          "unpinned": { "type": "string", "description": "Why there is no pin. Mutually exclusive with pins; surfaces as a gap in record.json." },
-          "from_recipe": { "type": "string", "description": "When the bytes are another recipe's run output or staged prefix (tier run-output / shared stage)." },
-          "note": { "type": "string" }
+          "id": {
+            "type": "string",
+            "description": "Durable identifier: accession, DOI, release+path, RODA bucket key."
+          },
+          "tier": {
+            "enum": [
+              "roda",
+              "durable-id",
+              "versioned-release",
+              "test-suite",
+              "built",
+              "run-output"
+            ]
+          },
+          "pins": {
+            "type": "string",
+            "description": "Path (repo-relative or relative to this dir) to a sha256 manifest that pins it. The record never copies a hash."
+          },
+          "unpinned": {
+            "type": "string",
+            "description": "Why there is no pin. Mutually exclusive with pins; surfaces as a gap in record.json."
+          },
+          "from_recipe": {
+            "type": "string",
+            "description": "When the bytes are another recipe's run output or staged prefix (tier run-output / shared stage)."
+          },
+          "note": {
+            "type": "string"
+          }
         },
-        "anyOf": [ { "required": ["pins"] }, { "required": ["unpinned"] }, { "required": ["from_recipe"] } ]
+        "anyOf": [
+          {
+            "required": [
+              "pins"
+            ]
+          },
+          {
+            "required": [
+              "unpinned"
+            ]
+          },
+          {
+            "required": [
+              "from_recipe"
+            ]
+          }
+        ]
       }
     },
     "run": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["instance", "date"],
+        "required": [
+          "instance",
+          "date"
+        ],
         "description": "A $ figure needs the time and rate it was computed from (check_pages enforces it): compute_usd needs wall_s and usd_hr, billed_usd needs billed_s (or wall_s + overhead_s) and usd_hr. A run the README prices nowhere carries no usd_hr and no $.",
         "additionalProperties": false,
         "properties": {
-          "instance": { "type": "string", "pattern": "^[a-z]+[0-9]+[a-z-]*\\.(?:[0-9]*x?large|metal[a-z0-9-]*)$" },
-          "purpose": { "enum": ["primary", "generation-sweep", "cross-chip", "core-sweep", "diagnostic"], "default": "primary",
-                       "description": "diagnostic rows (gw-real's arms, probes) never feed a 'which box' answer." },
-          "image": { "type": "string", "default": "recipe",
-                     "description": "'recipe' = the owner recipe's pin for this run's arch (resolved and compared at generation time); otherwise a full @sha256 reference." },
-          "spawn_version": { "type": "string" },
-          "date": { "type": "string", "format": "date", "description": "Run date from the completion record. Backfill may use the git date results/ was added, flagged date_source = 'git'." },
-          "date_source": { "enum": ["run", "git"], "default": "run" },
-          "workers": { "type": "integer", "description": "Threads or MPI ranks launched." },
-          "threads_per_core": { "type": "integer", "description": "Author ONLY when no host file exists; otherwise read from host." },
-          "host": { "type": "string", "description": "Path to this run's host-facts file (host.txt etc.); threads_per_core, cpu model/part and openblas corename are read from it." },
-          "wall_s": { "type": "number", "description": "Tool wall, the README table's wall column." },
-          "billed_s": { "type": "number" },
-          "overhead_s": { "type": "number", "description": "When the table gives overhead instead of billed: billed_s = wall_s + overhead_s." },
-          "usd_hr": { "type": "number", "description": "On-demand price the run was costed at (spawn-printed, region below). A historical fact, not a current price." },
-          "region": { "type": "string", "default": "us-west-2" },
-          "compute_usd": { "type": "number" },
-          "billed_usd": { "type": "number" },
-          "peak_gib": { "type": "number" },
-          "peak_kind": { "enum": ["rss", "cgroup-memory.peak", "vmhwm"] },
-          "results": { "type": "string", "description": "Path to the run's committed result artifact(s)." },
-          "note": { "type": "string" }
+          "instance": {
+            "type": "string",
+            "pattern": "^[a-z]+[0-9]+[a-z-]*\\.(?:[0-9]*x?large|metal[a-z0-9-]*)$"
+          },
+          "purpose": {
+            "enum": [
+              "primary",
+              "generation-sweep",
+              "cross-chip",
+              "core-sweep",
+              "diagnostic",
+              "control"
+            ],
+            "default": "primary",
+            "description": "diagnostic rows (gw-real's arms, probes, superseded runs) never feed a 'which box' answer. control = a baseline arm measured for comparison and comparable to the primary rows (lith-vs-copy-real's 'today'), not a probe. Pipeline per-task rows take the purpose of the result they belong to, not diagnostic."
+          },
+          "image": {
+            "type": "string",
+            "default": "recipe",
+            "description": "'recipe' = the owner recipe's pin for this run's arch (resolved and compared at generation time); otherwise a full @sha256 reference."
+          },
+          "spawn_version": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Run date from the completion record. Backfill may use the git date results/ was added, flagged date_source = 'git'."
+          },
+          "date_source": {
+            "enum": [
+              "run",
+              "git"
+            ],
+            "default": "run"
+          },
+          "workers": {
+            "type": "integer",
+            "description": "Threads or MPI ranks launched."
+          },
+          "threads_per_core": {
+            "type": "integer",
+            "description": "Author ONLY when no host file exists; otherwise read from host."
+          },
+          "host": {
+            "type": "string",
+            "description": "Path to this run's host-facts file (host.txt etc.); threads_per_core, cpu model/part and openblas corename are read from it."
+          },
+          "wall_s": {
+            "type": "number",
+            "description": "Tool wall, the README table's wall column."
+          },
+          "billed_s": {
+            "type": "number"
+          },
+          "overhead_s": {
+            "type": "number",
+            "description": "When the table gives overhead instead of billed: billed_s = wall_s + overhead_s."
+          },
+          "usd_hr": {
+            "type": "number",
+            "description": "On-demand price the run was costed at (spawn-printed, region below). A historical fact, not a current price."
+          },
+          "region": {
+            "type": "string",
+            "default": "us-west-2"
+          },
+          "compute_usd": {
+            "type": "number"
+          },
+          "billed_usd": {
+            "type": "number"
+          },
+          "peak_gib": {
+            "type": "number"
+          },
+          "peak_kind": {
+            "enum": [
+              "rss",
+              "cgroup-memory.peak",
+              "vmhwm",
+              "cgroup-memory.current-max",
+              "cgroup-anon-max",
+              "host-used"
+            ],
+            "description": "rss = the tool's RSS; cgroup-memory.peak = whole-run kernel peak (counts page cache); cgroup-memory.current-max = 1 Hz max of memory.current; cgroup-anon-max = 1 Hz max of memory.stat anon (the OOM floor); host-used = MemTotal - MemAvailable (counts the tmpfs). Different kinds are not comparable; a consumer sizing RAM wants anon or rss."
+          },
+          "results": {
+            "type": "string",
+            "description": "Path to the run's committed result artifact(s)."
+          },
+          "note": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_.-]+$",
+            "description": "Unique within the record. Needed only when something references the row (superseded_by, a series that selects by id)."
+          },
+          "in": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Series ids this row belongs to. One row may sit in several (bwa's c8g.4xlarge is the 16-core rung of the knee AND Graviton4 in the generation ladder)."
+          },
+          "task": {
+            "type": "string",
+            "description": "Pipeline task name (spec basename). Rows sharing `attempt` and differing in `task` are one end-to-end result; gen_catalog sums their windows and $ into results[] -- the aggregate is never authored a second time."
+          },
+          "attempt": {
+            "type": "string",
+            "description": "Groups the tasks of one end-to-end result, and separates repeats of one configuration (r1, r2, w1)."
+          },
+          "variant": {
+            "type": "string",
+            "description": "Whatever differs between otherwise-identical rows and has no field ('awk counter on the timed path', 'ALT-aware 01-align'). Part of the configuration key that n and spread are derived over."
+          },
+          "superseded_by": {
+            "type": "string",
+            "description": "id of the row that replaces this one. A superseded row is kept (it is spread evidence) but never answers a query."
+          },
+          "run_outcome": {
+            "enum": [
+              "completed",
+              "failed",
+              "killed-ttl",
+              "killed-cost-limit",
+              "no-capacity"
+            ],
+            "default": "completed",
+            "description": "Whether the RUN finished, distinct from whether its checks held. failed rungs are what a 'wall' verdict rests on (GPAW at 64 ranks); no-capacity records an acquisition that never placed (dated, region-scoped)."
+          },
+          "ranks": {
+            "type": "integer",
+            "description": "MPI ranks (1 for a non-MPI tool)."
+          },
+          "threads_per_rank": {
+            "type": "integer",
+            "description": "OpenMP / tool threads per rank. workers == ranks x threads_per_rank x concurrent is checked."
+          },
+          "concurrent": {
+            "type": "integer",
+            "default": 1,
+            "description": "Independent jobs sharing the box (layout packing, MPS clients). throughput is then the AGGREGATE; per-job is derived."
+          },
+          "bind": {
+            "type": "string",
+            "description": "Launch binding as run ('--map-by slot:PE=4 --bind-to core', 'none'). The 7x GROMACS lever; free text because launchers differ."
+          },
+          "size": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Overrides workload.size for this row (size sweeps)."
+          },
+          "throughput": {
+            "type": "number",
+            "description": "In the record's throughput_unit, as the tool or the script reports it. Aggregate over `concurrent` jobs."
+          },
+          "wall_basis": {
+            "type": "string",
+            "description": "Overrides timing.wall for this row."
+          },
+          "billed_basis": {
+            "enum": [
+              "spawn-task",
+              "ec2",
+              "spawn-task-minus-baseline",
+              "unavailable",
+              "shared-window",
+              "unattributed"
+            ],
+            "description": "Overrides timing.billed_basis for this row."
+          },
+          "ec2_s": {
+            "type": "number",
+            "description": "RunInstances -> TerminateInstances from CloudTrail, when retrieved (plink2-real/results/billed-windows.txt). The launch-to-terminate window a bill is actually made of."
+          },
+          "phase_s": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Where the non-tool time went, from spawn's command.log phase stamps (spawn >= 0.104.0) or lagotto history. Each is a measured interval, not a remainder. tool == wall_s when both present.",
+            "properties": {
+              "acquire": {
+                "type": "number",
+                "description": "Capacity wait before the instance existed (lagotto history WAIT). Unbilled, but time-to-answer."
+              },
+              "boot": {
+                "type": "number"
+              },
+              "docker": {
+                "type": "number"
+              },
+              "pull": {
+                "type": "number"
+              },
+              "stage_in": {
+                "type": "number"
+              },
+              "setup": {
+                "type": "number",
+                "description": "In-task time before useful work that is not staging: CUDA PTX JIT, index load, JVM warmup."
+              },
+              "tool": {
+                "type": "number"
+              },
+              "stage_out": {
+                "type": "number"
+              },
+              "source": {
+                "type": "string",
+                "description": "Path to the file the phases were read from."
+              }
+            }
+          },
+          "avg_cores": {
+            "type": "number",
+            "description": "cgroup cpu.stat usage_usec delta / wall_s delta over the tool window. Cores-equivalent busy; on an SMT box it counts hardware threads."
+          },
+          "peak_cores": {
+            "type": "number",
+            "description": "Max 1 Hz delta of usage_usec (measurements/sizing-ratio instrument). Separates 'never parallelises past N' from 'N-way phase then serial'."
+          },
+          "anon_gib": {
+            "type": "number",
+            "description": "Max memory.stat anon when peak_kind is something else (bwa-real cross-chip rows carry both)."
+          },
+          "tmpfs_peak_gib": {
+            "type": "number",
+            "description": "High-water mark of host /tmp (df), the staging space = 1/2 instance RAM on the spawn task path. Picks the family as often as RSS does (fastp, kraken2)."
+          },
+          "staged_gib": {
+            "type": "number",
+            "description": "Bytes this row staged in, when it differs from workload.input_gib."
+          },
+          "data_path": {
+            "enum": [
+              "stage-default",
+              "stage-crt",
+              "lith",
+              "efs",
+              "fsx-lustre",
+              "ebs-copy",
+              "ebs-snapshot",
+              "s3-native",
+              "none"
+            ],
+            "default": "stage-default",
+            "description": "How inputs reached the tool. stage-default = spawn's stage-in at the AWS CLI default (10 requests, 8 MiB parts) -- its meaning is tied to spawn_version (spawn#1256 would change it); stage-crt = the CRT transfer client, peak-NIC target, 16 MiB parts."
+          },
+          "request_usd": {
+            "type": "number",
+            "description": "S3 GET/HEAD/LIST charges at list price as if you own the bucket (Payer: BucketOwner). Not in billed_usd; total is derived."
+          },
+          "price_basis": {
+            "enum": [
+              "on-demand",
+              "spot",
+              "savings-plan"
+            ],
+            "default": "on-demand"
+          },
+          "price_source": {
+            "enum": [
+              "spawn",
+              "truffle",
+              "pricing-api",
+              "rate-card"
+            ],
+            "default": "spawn",
+            "description": "Where usd_hr came from. 'spawn' = the hourly spawn printed at launch. A historical fact: never a current price."
+          },
+          "simd_path": {
+            "type": "string",
+            "description": "The SIMD/kernel path the TOOL reports it took (GROMACS 'ARM_NEON_ASIMD', bowtie2's x86-64-v3 fallback warning, bwa-mem2 'avx512bw'). Authored from the tool's log; never inferred from the chip."
+          },
+          "build": {
+            "type": "string",
+            "description": "Build channel when image_resolved does not say it (licensed source build, NGC, DLAMI-native)."
+          },
+          "launch": {
+            "enum": [
+              "task",
+              "launch"
+            ],
+            "default": "task",
+            "description": "task = spawn task run (container, TaskSpec); launch = spawn launch --ami ... --command (raw instance; the GPU path until spawn#601)."
+          },
+          "ami": {
+            "type": "string",
+            "description": "AMI id and name, for launch rows (the DLAMI)."
+          },
+          "gpu": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "model",
+              "count",
+              "offload_evidence"
+            ],
+            "description": "Present iff the row used an accelerator. The card view; the row's avg_cores / peak_gib stay the system view, so a GPU row shows all four rented resources. The utilisation summary is derived from util_series (see there); the plateau is never authored.",
+            "properties": {
+              "model": {
+                "type": "string",
+                "description": "As nvidia-smi -L prints it ('NVIDIA L4')."
+              },
+              "count": {
+                "type": "integer",
+                "description": "Devices the tool USED (not the instance's count; that is truffle's)."
+              },
+              "mem_mib": {
+                "type": "integer",
+                "description": "Per-device memory.total in MiB, as nvidia-smi prints it. Instrument units, so the value round-trips against the committed CSV without a conversion."
+              },
+              "driver": {
+                "type": "string"
+              },
+              "cuda": {
+                "type": "string",
+                "description": "CUDA runtime the binary ran against (not the AMI's default toolkit; Amber 26 needs < 12.9 where the DLAMI's default is 13.2)."
+              },
+              "runtime": {
+                "enum": [
+                  "native",
+                  "docker-privileged",
+                  "docker"
+                ],
+                "description": "native = on the DLAMI host; docker-privileged = the --privileged --gpus all form that survives the cgroup v2 device reset."
+              },
+              "offload": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Which parts ran on the GPU, in the tool's own terms ('nonbonded', 'pme', 'update')."
+              },
+              "offload_evidence": {
+                "type": "string",
+                "description": "The tool's own log line(s) proving offload ('1 GPU selected', 'PME tasks will do all aspects on the GPU'). Required: card presence is not GPU use."
+              },
+              "util_series": {
+                "type": "string",
+                "description": "Path to the committed 1 Hz nvidia-smi / DCGM CSV (a utilization.gpu column, % values; a memory.used column in MiB if present). gen_catalog derives util_plateau_pct (median over the active window: first to last sample >= 50% of the series max), util_mean_pct, util_peak_pct, active_fraction and, when memory.used is present, hbm_peak_mib. None of those is authored."
+              },
+              "hbm_peak_mib": {
+                "type": "integer",
+                "description": "Max memory.used (MiB), summed over the devices used. Author it only when no util_series carries memory.used."
+              },
+              "mps_clients": {
+                "type": "integer",
+                "description": "NVIDIA MPS clients sharing each device (== concurrent when packing one card)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "series": {
+      "type": "array",
+      "description": "A sweep: rows that differ on ONE axis and are held equal on everything else. The curve (speedup, efficiency, marginal gain per doubling, $/result per rung, cost knee) is DERIVED from the member rows; only the axis, the held set, the equal-work proof and the author's reading are authored.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "axis",
+          "equal_work",
+          "attribution"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$",
+            "description": "Run rows join a series with in = [id]."
+          },
+          "axis": {
+            "enum": [
+              "workers",
+              "generation",
+              "chip",
+              "size",
+              "layout",
+              "data_path",
+              "concurrent",
+              "gpu_model",
+              "gpu_count",
+              "offload",
+              "accelerator",
+              "instance"
+            ],
+            "description": "The ONE thing varied. 'size' means workload size (run.size); 'layout' means ranks x threads at fixed workers; 'offload' = which stages run on the GPU; 'accelerator' = CPU vs GPU boxes for one result; 'instance' is a free comparison and gets no derived curve."
+          },
+          "size_key": {
+            "type": "string",
+            "description": "For axis = size: which run.size key is the abscissa."
+          },
+          "held": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "image",
+                "input",
+                "family",
+                "instance",
+                "size",
+                "workers",
+                "layout",
+                "data_path",
+                "spawn_version",
+                "generation"
+              ]
+            },
+            "description": "What is equal across members. check_pages verifies each against the rows (image via image_resolved, family from instance, ...)."
+          },
+          "equal_work": {
+            "type": "string",
+            "description": "id of a check that proves every member computed the same thing (record counts, step count). A series whose work differs is not a scaling curve. 'none: <reason>' is allowed and surfaces as unproven."
+          },
+          "attribution": {
+            "enum": [
+              "same-binary",
+              "same-version-other-build",
+              "other-version",
+              "n/a"
+            ],
+            "description": "patterns/cross-architecture.md's grades: same digest; same upstream version from another channel (aarchbio vs biocontainers, env twin); different versions (NGC 2023.2 on GPU vs conda-forge 2026.3 on CPU). Derivable in part from image_resolved; authored because the reason is not."
+          },
+          "attribution_note": {
+            "type": "string",
+            "description": "The confound in words: 'x86 runs the native Intel GKL pairHMM; arm64 the Java one'."
+          },
+          "verdict": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "shape"
+            ],
+            "description": "The author's reading, in patterns/sizing.md's vocabulary. The SPEED knee (`at`) is authored and confined to the series' rungs; no threshold rule derives one. The COST knee (lowest $/result rung) is derived. check_pages verifies only that the verdict is consistent with the rows: `at` is a rung, `through` is the top rung, a `wall` has a failed member above `at`.",
+            "properties": {
+              "shape": {
+                "enum": [
+                  "no-knee",
+                  "knee",
+                  "cost-climbs",
+                  "wall",
+                  "answer-moves",
+                  "flat",
+                  "monotonic",
+                  "none"
+                ],
+                "description": "no-knee = speedup still ~linear at the top rung; knee = speed flattens at `at`; cost-climbs = speed rises, $/result rises; wall = rungs above `at` fail; answer-moves = output changes with the axis; flat = axis does not matter; monotonic = generation/size steps all in one direction; none = no reading."
+              },
+              "at": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "description": "Rung where the shape occurs (must be a member's axis value)."
+              },
+              "through": {
+                "oneOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "description": "Highest rung tested. Must equal the members' max: 'no knee through 64' means untested beyond 64."
+              },
+              "on": {
+                "enum": [
+                  "throughput",
+                  "wall",
+                  "compute_usd",
+                  "billed_usd"
+                ],
+                "default": "throughput"
+              }
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "not_swept": {
+      "type": "array",
+      "description": "An axis deliberately NOT measured, with the reason. Makes 'does X scale past N cores' answerable as 'not measured, because ...' instead of silence.",
+      "items": {
+        "type": "object",
+        "required": [
+          "axis",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "enum": [
+              "workers",
+              "generation",
+              "chip",
+              "size",
+              "layout",
+              "data_path",
+              "concurrent",
+              "gpu_model",
+              "gpu_count",
+              "offload",
+              "accelerator"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": "As the README states it (salmon-real: 'quant finishes in about a minute against 43-78 s of fixed overhead')."
+          }
         }
       }
     },
     "check": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "claim", "kind", "outcome"],
+        "required": [
+          "id",
+          "claim",
+          "kind",
+          "outcome"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
-          "claim": { "type": "string", "description": "The README checks-table row's claim, verbatim." },
-          "kind": { "enum": ["identity", "conservation", "sentinel", "reference", "cross-code", "invariance", "convergence-rate", "rank-count", "native-arch", "pin", "band", "reported"],
-                    "description": "Which of CLAUDE.md's assertion shapes it is. 'reported' = printed, not asserted (bound '—')." },
-          "bound": { "type": "string" },
-          "observed": { "type": "string", "description": "As printed in the README (string round-trip target)." },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+$"
+          },
+          "claim": {
+            "type": "string",
+            "description": "The README checks-table row's claim, verbatim."
+          },
+          "kind": {
+            "enum": [
+              "identity",
+              "conservation",
+              "sentinel",
+              "reference",
+              "cross-code",
+              "invariance",
+              "convergence-rate",
+              "rank-count",
+              "native-arch",
+              "pin",
+              "band",
+              "reported",
+              "offload"
+            ],
+            "description": "Which of CLAUDE.md's assertion shapes it is. 'reported' = printed, not asserted (bound '—'). 'offload' = the tool's log proves the accelerator path ran (GPU recipes' rank-count analogue)."
+          },
+          "bound": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string",
+            "description": "As printed in the README (string round-trip target)."
+          },
           "outcome": {
             "description": "One value for all chips, or per chip. 'fail' means asserted, failed, and left failing on purpose.",
             "oneOf": [
-              { "enum": ["pass", "fail", "reported"] },
-              { "type": "object", "additionalProperties": { "enum": ["pass", "fail", "reported", "not-run"] } }
+              {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "reported"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "reported",
+                    "not-run"
+                  ]
+                }
+              }
             ]
           },
-          "across_chips": { "enum": ["fixed-point", "path", "last-bits", "identical", "n/a"],
-                            "description": "identical = byte/digit-identical on every chip; fixed-point = agrees to a stated precision; path = differs by construction, never asserted equal across chips; last-bits = a direct, non-iterative computation that differs only in its last bits across builds, which nothing amplifies (neither a converged fixed point nor a path)." },
-          "across_chips_evidence": { "type": "string", "description": "The value pair or max diff that justifies across_chips. Required when across_chips is fixed-point, path or last-bits." },
-          "corename_sensitive": { "type": "boolean", "description": "true if the value depends on OpenBLAS kernel selection (large blocked GEMM on a path)." }
+          "across_chips": {
+            "enum": [
+              "fixed-point",
+              "path",
+              "last-bits",
+              "identical",
+              "n/a"
+            ],
+            "description": "identical = byte/digit-identical on every chip; fixed-point = agrees to a stated precision; path = differs by construction, never asserted equal across chips; last-bits = a direct, non-iterative computation that differs only in its last bits across builds, which nothing amplifies (neither a converged fixed point nor a path)."
+          },
+          "across_chips_evidence": {
+            "type": "string",
+            "description": "The value pair or max diff that justifies across_chips. Required when across_chips is fixed-point, path or last-bits."
+          },
+          "corename_sensitive": {
+            "type": "boolean",
+            "description": "true if the value depends on OpenBLAS kernel selection (large blocked GEMM on a path)."
+          }
         }
       }
     },
@@ -98,14 +781,32 @@
       "description": "Authored once, in the measurement that runs the comparison; gen_catalog writes the reverse link into the counterpart.",
       "items": {
         "type": "object",
-        "required": ["with", "same_bytes", "metric", "check"],
+        "required": [
+          "with",
+          "same_bytes",
+          "metric",
+          "check"
+        ],
         "additionalProperties": false,
         "properties": {
-          "with": { "type": "string", "description": "measurements/<dir> or recipes/<name>, or 'published:<id>' for a published result (RELION, TMR)." },
-          "same_bytes": { "type": "boolean" },
-          "metric": { "type": "string" },
-          "tolerance_basis": { "type": "string", "description": "Why the tolerance is the shared problem's precision, not the codes' observed agreement." },
-          "check": { "type": "string", "description": "id of the check row that asserts it." }
+          "with": {
+            "type": "string",
+            "description": "measurements/<dir> or recipes/<name>, or 'published:<id>' for a published result (RELION, TMR)."
+          },
+          "same_bytes": {
+            "type": "boolean"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "tolerance_basis": {
+            "type": "string",
+            "description": "Why the tolerance is the shared problem's precision, not the codes' observed agreement."
+          },
+          "check": {
+            "type": "string",
+            "description": "id of the check row that asserts it."
+          }
         }
       }
     },
@@ -113,32 +814,89 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "scope", "symptom", "cause", "fix"],
+        "required": [
+          "id",
+          "scope",
+          "symptom",
+          "cause",
+          "fix"
+        ],
         "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Globally unique; other records reference it by id rather than restating it." },
-          "scope": { "enum": ["platform", "image", "tool", "data", "method"] },
-          "symptom": { "type": "string", "description": "The literal message or behaviour a reader sees, so they can find it by searching for it." },
-          "blames": { "type": "string", "description": "What the symptom wrongly points at, if anything." },
-          "cause": { "type": "string" },
-          "fix": { "type": "string" },
-          "cost": { "type": "string", "description": "Measured cost of hitting it, if known." },
-          "refs": { "type": "array", "items": { "type": "string" } }
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "description": "Globally unique; other records reference it by id rather than restating it."
+          },
+          "scope": {
+            "enum": [
+              "platform",
+              "image",
+              "tool",
+              "data",
+              "method"
+            ]
+          },
+          "symptom": {
+            "type": "string",
+            "description": "The literal message or behaviour a reader sees, so they can find it by searching for it."
+          },
+          "blames": {
+            "type": "string",
+            "description": "What the symptom wrongly points at, if anything."
+          },
+          "cause": {
+            "type": "string"
+          },
+          "fix": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "string",
+            "description": "Measured cost of hitting it, if known."
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
         }
       }
     },
-    "trap_refs": { "type": "array", "items": { "type": "string" }, "description": "ids of traps owned by another record that also bit this one." },
+    "trap_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "ids of traps owned by another record that also bit this one."
+    },
     "upstream": {
       "type": "array",
       "description": "Issues this measurement filed, worked around, or is blocked by. State (open/closed) is NEVER stored: it is GitHub's.",
       "items": {
         "type": "object",
-        "required": ["ref", "role"],
+        "required": [
+          "ref",
+          "role"
+        ],
         "additionalProperties": false,
         "properties": {
-          "ref": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?#[0-9]+$" },
-          "role": { "enum": ["filed", "workaround", "blocker", "cited"] },
-          "note": { "type": "string" }
+          "ref": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)?#[0-9]+$"
+          },
+          "role": {
+            "enum": [
+              "filed",
+              "workaround",
+              "blocker",
+              "cited"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
         }
       }
     }

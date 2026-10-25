@@ -2,6 +2,7 @@
 # An access-pattern study, not a recipe sweep: eleven probe launches, all Graviton, one chip.
 schema = 1
 result_unit = "one 1M-read human WGS sample (SRR062634) classified against the full 1.1 TiB RefSeq-Complete DB on local NVMe"
+throughput_unit = "lookups/s"
 
 [[dataset]]
 id = "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes"
@@ -97,6 +98,7 @@ date = "2026-10-04"
 date_source = "git"
 results = "results/density-sweep.txt"
 note = "coalescing-window sweep at realistic density (39.6 KB spacing): 763 -> 32,128 lookups/s; sparse control 1.0x"
+throughput = 32128
 
 [[run]]
 instance = "c8gn.16xlarge"
