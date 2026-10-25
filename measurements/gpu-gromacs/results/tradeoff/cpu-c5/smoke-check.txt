@@ -1,0 +1,23 @@
+status: OK  reason: 
+arch: x86_64  gmx_version: 2026.3-conda_forge
+system_atoms: NA
+cpu_run: -nb cpu -ntmpi 1 -ntomp 8 (25000 steps)
+wall_s: 96.011  ns_per_day: 44.997  core_pct: 800.0
+--- md.log perf tail ---
+	M E G A - F L O P S   A C C O U N T I N G
+               Core t (s)   Wall t (s)        (%)
+       Time:      768.087       96.011      800.0
+Performance:       44.997        0.533        3.840            5.491 
+--- mdrun.log tail ---
+starting mdrun 'water in water'
+25000 steps,     50.0 ps.
+
+Writing final coordinates.
+
+               Core t (s)   Wall t (s)        (%)
+       Time:      768.087       96.011      800.0
+                 (ns/day)    (hour/ns)    (ms/step)  (Matom*steps/s) 
+Performance:       44.997        0.533        3.840            5.491 
+
+GROMACS reminds you: "Everybody is Smashing Things Down" (Offspring)
+

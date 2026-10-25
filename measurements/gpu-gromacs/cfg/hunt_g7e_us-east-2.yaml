@@ -1,0 +1,18 @@
+instance_type: g7e.2xlarge
+region: us-east-2
+ami: ami-01874134a5fc06051
+ttl: 15m
+cost_limit: 0.40
+on_complete: terminate
+completion_file: /tmp/SPAWN_COMPLETE
+iam_policy: [s3:ReadOnly, s3:WriteOnly]
+command: |
+  R=s3://cookbook-942542972736-us-west-2/runs/gpu/tradeoff/g7e
+  if ! nvidia-smi -L >/tmp/nv.txt 2>&1; then echo "ABORT no gpu: $(cat /tmp/nv.txt)">/tmp/smoke-check.txt; aws s3 cp /tmp/smoke-check.txt $R/smoke-check.txt --region us-west-2||true; touch /tmp/SPAWN_COMPLETE; exit 0; fi
+  { nvidia-smi -L 2>&1; sudo systemctl start docker 2>&1||true
+    aws s3 cp s3://cookbook-942542972736-us-west-2/inputs/gpu/gpu_measure.sh /tmp/gpu_measure.sh --region us-west-2 2>&1
+    sudo docker run --privileged --gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all --rm -v /tmp:/work nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223 bash /work/gpu_measure.sh 2>&1
+  } > /tmp/host.log 2>&1
+  aws s3 cp /tmp/host.log $R/host.log --region us-west-2 2>&1||true
+  aws s3 cp /tmp/smoke-check.txt $R/smoke-check.txt --region us-west-2 2>&1||true
+  touch /tmp/SPAWN_COMPLETE

@@ -2,7 +2,7 @@
 
 > **$/core-hour is identical for every size in a family and rises across generations while the cost of real work falls.** `c8g.large` and `c8g.4xlarge` are both $0.03988/vCPU-hr — the metric cannot distinguish the sizes you choose between. Graviton2→5 is **+27.9% per core-hour** while $/result on real codes drops **33–45%**. It's constant where you need discrimination and backwards where you need a reversal.
 
-Everyone compares it because it's what procurement reports and chargeback uses, and it never contradicts itself — because it can't. Everything below is one NWChem calculation (caffeine, B3LYP/6-31G\*, 217 basis functions), same digest, same input, on Graviton4.
+Everyone compares it because it's what procurement reports and chargeback uses, and it never contradicts itself — because it can't. Everything below is one NWChem calculation (caffeine, B3LYP/6-31G\*, 217 basis functions), same digest, same input, on Graviton4 ([measured](../measurements/nwchem-real/README.md)).
 
 ## Layout dominates everything else
 

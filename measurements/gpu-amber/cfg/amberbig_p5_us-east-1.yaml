@@ -1,0 +1,25 @@
+instance_type: p5.4xlarge
+region: us-east-1
+ami: ami-041c64b236b082fe4
+ttl: 30m
+cost_limit: 1.60
+on_complete: terminate
+completion_file: /tmp/SPAWN_COMPLETE
+iam_policy: [s3:ReadOnly, s3:WriteOnly]
+command: |
+  B=cookbook-942542972736-us-west-2
+  R=s3://cookbook-942542972736-us-west-2/runs/amber/p5-firm
+  W=/amberwork
+  export TMPDIR=/var/tmp
+  sudo mkdir -p $W && sudo chmod 1777 $W
+  up() { for t in 1 2 3; do aws s3 cp "$1" "$2" --region us-west-2 >/dev/null 2>&1 && return 0; sleep 5; done; return 1; }
+  {
+    df -h / | tail -1; nvidia-smi -L 2>&1 || echo NO_GPU
+    aws s3 cp s3://$B/inputs/amber/pmemd26-cuda.tar.gz $W/ --region us-west-2 2>&1 | tail -1
+    tar xzf $W/pmemd26-cuda.tar.gz -C $W && echo UNTAR_OK || echo UNTAR_FAIL
+    for f in sys.prmtop sys.rst7 md.in amber_firm.sh; do aws s3 cp s3://$B/inputs/amber/$f $W/$f --region us-west-2 >/dev/null 2>&1; done
+    W=$W bash $W/amber_firm.sh 2>&1
+  } > $W/host.log 2>&1
+  up $W/host.log $R/host.log || true
+  up $W/smoke-check.txt $R/smoke-check.txt || true
+  touch /tmp/SPAWN_COMPLETE

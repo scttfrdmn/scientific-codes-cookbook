@@ -1,0 +1,13 @@
+status: FAIL  reason: pmemd-run
+code: Amber26 pmemd.cuda_SPFP (LICENSED — built once from Scott's copy, private bucket; NOT redistributable)
+binary: /work/pmemd26/bin/pmemd.cuda_SPFP
+mechanism: spawn launch + docker run --privileged --gpus all in nvidia/cuda:12.8.1-devel (build+run same image)
+gpu: NVIDIA L4  hbm_total_MB: 23034
+system: NA atoms (tleap TIP3P, ~6.1nm box), 25000 steps, dt=2fs, PME, cut=10A, SHAKE, Langevin 300K
+ns_per_day: NA   compute_wall_s: 0.0
+gpu_compute_util_pct: mean=NA max=0 over 0 samples
+gpu_mem_used_MB: 0 of 23034 => HBM_util_pct: 0.00
+--- util time series (util%,mem_MB @1Hz) ---
+--- mdout timing ---
+--- pmemd.log tail ---
+/work/pmemd26/bin/pmemd.cuda_SPFP: error while loading shared libraries: libemil.so: cannot open shared object file: No such file or directory

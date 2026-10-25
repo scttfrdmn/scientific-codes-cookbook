@@ -1,0 +1,23 @@
+status: OK  reason: 
+arch: x86_64  gmx_version: 2026.3-conda_forge
+system_atoms: NA
+cpu_run: -nb cpu -ntmpi 1 -ntomp 8 (25000 steps)
+wall_s: 39.071  ns_per_day: 110.572  core_pct: 800.0
+--- md.log perf tail ---
+	M E G A - F L O P S   A C C O U N T I N G
+               Core t (s)   Wall t (s)        (%)
+       Time:      312.568       39.071      800.0
+Performance:      110.572        0.217        1.563           13.493 
+--- mdrun.log tail ---
+starting mdrun 'water in water'
+25000 steps,     50.0 ps.
+
+Writing final coordinates.
+
+               Core t (s)   Wall t (s)        (%)
+       Time:      312.568       39.071      800.0
+                 (ns/day)    (hour/ns)    (ms/step)  (Matom*steps/s) 
+Performance:      110.572        0.217        1.563           13.493 
+
+GROMACS reminds you: "The three principal virtues of a programmer are Laziness, Impatience, and Hubris" (Larry Wall)
+
