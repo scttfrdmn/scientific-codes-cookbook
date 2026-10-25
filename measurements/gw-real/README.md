@@ -6,8 +6,8 @@
 > 0.041.** The full 15-parameter run with calibration lands on the published Bayes factor (304.23
 > against 303.45 ± 0.14) and the published medians. It does **not** pass a 5-SE quantile test against
 > the published posterior: its tails are narrower in the same direction on every chip (max |z| 9.6
-> on Graviton4, 14.0 on x86). More calibration curves do not move it, and neither do walks twice as
-> long ([the split](#calibration-or-sampler-the-split)). Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
+> on Graviton4, 14.0 on x86). More calibration curves do not move the tails, walks twice as long do
+> not, and twice the live points move them only a little ([the split](#calibration-or-sampler-the-split)). Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
 > (3,543 s billed) at $3.39, and Intel is $3.86.
 
 Workload: **GW150914**, the event every CBC analysis tutorial starts from, run the way a
@@ -137,9 +137,11 @@ above are what is verified at scale.
 Each arm changes one thing from the Graviton4 run (r1), on `c8g.16xlarge`, same pinned data,
 priors and seed. **The calibration curve count is ruled out. Raising `naccept` changes nothing,
 because the walks are already capped at `maxmcmc`. Doubling that cap doubles the accepted steps per
-chain and the likelihood calls, and the tails do not move: mean tail mass 0.0396, inside the
-0.037–0.040 of the three runs at r1's settings, against the published 0.05.** Chain length up to 2×
-is ruled out as the cause too.
+chain, and the tails do not move: mean tail mass 0.0396, inside the 0.037–0.040 of the three runs at
+r1's settings, against the published 0.05. Doubling the live points moves it to 0.0422, just past
+that spread and still 0.008 short of 0.05, while the 5-SE test fails harder (19 of 51) because its
+error bar shrinks.** Chain length up to 2× is ruled out as the cause. More live points close about a
+third of the gap in one run, less than a 1/`nlive` bias would.
 
 | arm | what changed | max \|z\| | mean tail mass (published: 0.05) | 5-SE test | task time | cost |
 |---|---|---|---|---|---|---|
@@ -147,6 +149,7 @@ is ruled out as the cause too.
 | 1: calibration | r1's own samples reweighted from 250 to 1,000 and 4,000 fresh curves | 8.39, 8.53 (Kish SE) | 0.0401, 0.0403 | fails | 227 s | $0.16 |
 | 2: sampler | `naccept` 60 → 120 | 16.15 | 0.0369 | fails | 4,466 s | $3.17 |
 | 3: sampler | `maxmcmc` 5,000 → 10,000 | 14.45 | 0.0396 | fails | 8,047 s | $5.71 |
+| 4: sampler | `nlive` 500 → 1,000 | 15.06 | 0.0422 | fails | 8,789 s | $6.23 |
 | walk probe | r1 settings to iteration 8,769, bilby's walk tuner recorded | — | — | — | 1,941 s | $1.38 |
 
 - **Arm 1 is an importance reweighting, not a new run.** The target is r1's own likelihood, which
@@ -178,23 +181,33 @@ is ruled out as the cause too.
   of its 14,329 walks still hit the 10,000 cap, all of them from about the 3,750th on. The mean
   tail mass, 0.0396, is where the three runs at r1's settings put it, and 14 of 51 tests are past
   5 SE (13–24 in those runs). Nothing in the tails responds to twice the chain.
+- **Arm 4 added live points and left the chains as short as r1's.** It made 40.06M likelihood
+  calls (1.96× r1) and returned 5,219 posterior samples; ln BF 304.17 ± 0.18 (3.2σ) and the medians
+  still match. 98% of its 28,050 walks hit the 5,000 cap, and at matched compression a
+  returned chain holds no more accepted steps than r1's: 12.5 over its chains 14,000–15,000 against
+  13.2 over r1's 7,000–7,500 ([`results/arm-nlive1000/walks.tsv`](results/arm-nlive1000/walks.tsv)). The mean tail mass rose
+  to 0.0422 (0.0413 low, 0.0430 high), against 0.037–0.040 at r1's settings. That is 0.002 past the
+  spread, less than the spread's own width, so one run does not establish a trend. A sampler bias
+  falling as 1/`nlive` would have halved the gap; the gap went from ~0.011 to 0.008. 19 of 51 tests
+  are past 5 SE (max |z| 15.06), more than at r1, because the bootstrap SE shrinks with twice the
+  samples while the tails stay narrow.
 - **What is left:** chains long enough to reach `naccept`. On [`results/walks-probe/walks.tsv`](results/walks-probe/walks.tsv)'s
   acceptance, the walk needed passes 20,000 by about the 7,000th chain and is still rising, so
-  `maxmcmc=20,000` would be ~3.3× r1's calls, ~$10 on `c8g.16xlarge`, and still capped late.
-  `nlive=1000` is ~2× r1 but tests something else: it adds live points at the same capped walks,
-  so it does not lengthen any chain. Neither is run. The other candidate is the release's own
+  `maxmcmc=20,000` would be ~3.3× r1's calls, ~$10 on `c8g.16xlarge`, and still capped late. A
+  second seed at `nlive=1000` (~$6.2) would say whether arm 4's 0.002 is real. Neither is run. The other candidate is the release's own
   sampler (`rwalk`, 4 × `nlive=2000`); bilby-dev/bilby#1162 is the report that the cap is silent.
 
 ```sh
 python3 measurements/gw-real/mkspec.py r1 c8g 64 500 6h 6.0     # writes arm-*.task.json and arms.sha256
-for a in calibration naccept120 maxmcmc10k; do
+for a in calibration naccept120 maxmcmc10k nlive1000; do
   spawn task run --spec "$(python3 scripts/spec_arch.py gw arm64 "$B" r1 measurements/gw-real/arm-$a.task.json)" --wait
 done
 ```
 
 `walks-probe.task.json` and `naccept-probe.task.json` are the two probes. Outputs are in
-`results/arm-*`, `results/walks-probe` and `results/naccept-probe`. Arm 3 (`arms.sh sampler 60 10000`)
-also records every walk the tuner sets, and prints the cap-hit fraction as it runs.
+`results/arm-*`, `results/walks-probe` and `results/naccept-probe`. Arms 3 and 4 (`arms.sh sampler 60 10000`,
+`arms.sh sampler 60 5000 1000`) also record every walk the tuner sets, and print the cap-hit fraction
+as they run.
 
 ## Fixed point or path
 

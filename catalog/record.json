@@ -12698,6 +12698,33 @@
     },
     {
      "arch": "arm64",
+     "billed_s": 8789,
+     "billed_usd": 6.23,
+     "chip": "Graviton4",
+     "date": "2026-10-24",
+     "date_source": "git",
+     "generation": 8,
+     "host": "results/arm-nlive1000/host.txt",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "instance": "c8g.16xlarge",
+     "note": "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails",
+     "peak_gib": 7.14,
+     "peak_kind": "cgroup-memory.peak",
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "region": "us-west-2",
+     "results": "results/arm-nlive1000/",
+     "threads_per_core": 1,
+     "usd_hr": 2.5524,
+     "vendor": "AWS",
+     "wall_s": 8711,
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
      "billed_s": 1941,
      "billed_usd": 1.38,
      "chip": "Graviton4",
@@ -42011,7 +42038,7 @@
   },
   "bcftools": {
    "inputs": "stage: bcftools, bwa-samtools, gatk4",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-09-30",
@@ -43046,7 +43073,7 @@
   },
   "deeptools": {
    "inputs": "stage",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-09-20",
@@ -43503,7 +43530,7 @@
   },
   "freebayes": {
    "inputs": "stage: bwa-samtools, gatk4",
-   "last_updated": "2026-10-21",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-09-30",
@@ -45363,7 +45390,7 @@
   },
   "mrbayes": {
    "inputs": "stage · run: iqtree, raxml-ng",
-   "last_updated": "2026-10-23",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-23",
     "arm64": "2026-10-23",
@@ -47859,7 +47886,7 @@
   "siesta": {
    "env": "dft",
    "inputs": "stage",
-   "last_updated": "2026-10-19",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "arm64": "2026-09-30",
     "x86_64": "2026-10-17"

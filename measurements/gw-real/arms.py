@@ -2,8 +2,9 @@
 """The two arms that separate the r1 quantile miss's candidate causes, each changing one thing.
 
     arms.py sampler <naccept> <data dir> <out dir> <npool> <nlive> [maxmcmc]
-        pe.py, byte for byte, with only dynesty's naccept (60 in r1) or the acceptance-walk cap
-        maxmcmc (bilby's default 5000 in r1) changed. Every walk bilby's tuner sets is written to
+        pe.py, byte for byte, with only dynesty's naccept (60 in r1), the acceptance-walk cap
+        maxmcmc (bilby's default 5000 in r1) or the live-point count nlive (500 in r1, pe.py's own
+        argument) changed. Every walk bilby's tuner sets is written to
         walks.tsv, and a running cap-hit summary is printed, so it survives a kill in command.log.
     arms.py calibration <r1 result.hdf5> <r1 quantiles.tsv> <data dir> <out dir> <npool> <curves...>
         r1's own nested samples and posterior, importance-reweighted from its 250-curve calibration
@@ -29,6 +30,7 @@ if MODE == "sampler":
 
     def run_sampler(*a, **kw):
         print("arms: naccept %s -> %d" % (kw.get("naccept"), NACCEPT), flush=True)
+        print("arms: nlive %s" % kw.get("nlive"), flush=True)
         kw["naccept"] = NACCEPT
         if MAXMCMC is not None:
             print("arms: maxmcmc %s -> %d" % (kw.get("maxmcmc", "default 5000"), MAXMCMC), flush=True)
