@@ -2,8 +2,8 @@
 
 > **Clair3 2.0.3 calls all of HG002's chr20 from 49× PacBio HiFi Revio reads. RTG vcfeval scores
 > the calls against GIAB's v4.2.1 benchmark, stratified by GIAB's v3.3 regions.** SNV F1 is
-> 0.99961. Indel F1 is 0.96682, which **failed the all-region floor of 0.98 set before any run**; the
-> guard was then moved to GIAB's easy stratum, a bound changed after seeing data, stated here. Every indel error sits in a tandem repeat or homopolymer, and in
+> 0.99961. Indel F1 is 0.96682, which **fails the all-region floor of 0.98 set before any run**, and that
+> failure is reported, not loosened. An easy-stratum guard was added beside it after seeing the data. Every indel error sits in a tandem repeat or homopolymer, and in
 > GIAB's easy regions all 3,387 truth indels are called with zero false positives. Every site,
 > allele, genotype and FILTER is identical on Graviton4, Intel and AMD, so every score is
 > identical too. Only the network's QUAL and GQ move, in the last digit. AMD is fastest (2.0×
@@ -109,14 +109,14 @@ in a stratum is decided by POS (`bcftools -T`), which makes complementary strata
 partition. The region totals use record overlap (`--targets-overlap record`), because that is
 the rule vcfeval itself uses: by POS, one record on each side falls just outside.
 
-**Indel F1 over all regions is reported, not asserted. An earlier floor of 0.98 failed at 0.96682
-on every chip.** That floor was set before any run, from a guess at Clair3's published HiFi
+**Indel F1 over all regions fails its floor of 0.98, at 0.96682 on every chip, and the failure is
+reported, not loosened.** That floor was set before any run, from a guess at Clair3's published HiFi
 numbers, not from anything this chromosome must satisfy. The strata show where the deficit is:
 all 432 false-positive indels and 315 of 318 false negatives lie in
 `AllTandemRepeatsandHomopolymers_slop5`. In GIAB's easy regions indels are perfect. vcfeval's
 best GQ threshold (7) lifts indel F1 only to 0.96921 (`non_snp_roc.tsv.gz`), so no quality
-cutoff removes the problem. The guard moved to the easy stratum, where a broken run would show,
-and the all-region number stands as the finding below.
+cutoff removes the problem. An easy-stratum guard was added beside the failing floor, where a broken run
+would show, and the all-region number stands as the finding below.
 
 ### Scores against the truth (`results/strat/stratified.tsv`, identical on all three chips)
 

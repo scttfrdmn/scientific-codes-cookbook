@@ -171,11 +171,11 @@ across_chips = "identical"
 
 [[check]]
 id = "indel-f1-all"
-claim = "Indel F1 over all regions is reported, not asserted. An earlier floor of 0.98 failed at 0.96682 on every chip."
-kind = "reported"
-bound = "earlier floor 0.98, moved to the easy stratum after seeing data"
+claim = "Indel F1 over all regions >= 0.98, the floor set before any run; it fails at 0.96682 on every chip and stays failing (the easy-stratum check was added beside it, not in its place)"
+kind = "band"
+bound = ">= 0.98"
 observed = "0.96682"
-outcome = "reported"
+outcome = "fail"
 across_chips = "identical"
 
 [[check]]
