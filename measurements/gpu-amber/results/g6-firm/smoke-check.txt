@@ -1,0 +1,98 @@
+AMBER FIRM-UP on NVIDIA L4 (hbm_total_MB=23034)  status=OK 
+purpose: cold-vs-warm startup (CUDA JIT cache = what an AMI would bake) + long-run plateau
+(no JIT cache yet — cold)
+[coldA] steps=25000 rc=0 measured_wall_s=56.8 amber_wall_s=16 ns_per_day=556.24
+      startup_s(to first GPU activity)=36  active=[8 samples, mean 83%]  peak=92%  peak_mem_MB=386
+--- JIT cache after first run ---
+68K	/home/scttfrdmn/.nv/ComputeCache
+[warmB] steps=25000 rc=0 measured_wall_s=8.3 amber_wall_s=8 ns_per_day=553.69
+      startup_s(to first GPU activity)=1  active=[8 samples, mean 91%]  peak=92%  peak_mem_MB=386
+[longC] steps=250000 rc=0 measured_wall_s=79.8 amber_wall_s=80 ns_per_day=544.62
+      startup_s(to first GPU activity)=0  active=[80 samples, mean 91%]  peak=92%  peak_mem_MB=386
+--- full util series, long run (util%,mem_MB @1Hz) ---
+49, 0
+91, 386
+92, 386
+92, 386
+92, 386
+91, 386
+92, 386
+92, 386
+90, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+92, 386
+--- amber timing (long) ---
+|         ns/day =     539.11   seconds/ns =     160.26
+|         ns/day =     544.62   seconds/ns =     158.64
+|  Total wall time:          80    seconds     0.02 hours
+--- disk ---
+/dev/nvme0n1p1   75G   53G   23G  71% /

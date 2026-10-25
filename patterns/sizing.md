@@ -18,17 +18,17 @@ So the knee is set by *your problem's size divided by the cores*, not by the cor
 
 The interesting part is that "more cores" does three categorically different things depending on the code. Every recipe here is one of these three:
 
-- **The answer moves** — [flye](../recipes/flye/README.md). Thread count changes the *assembly*: 10 / 12 / 11 / 14 contigs at `-t 1/2/4/8` on the same reads. Not "more fragmented" — it wanders, and you can't predict the direction. Speed is sublinear too (3.2× at 4 threads, only 4.8× at 8). So more threads is both less useful *and* less reproducible — which is why the recipe pins `-t 1` when it needs an exact assertion and drops to floors when it runs `-t 8` for speed. **If your code is this kind, you can assert bands, not numbers, on a multi-threaded run.**
+- **The answer moves** — [flye](../recipes/flye/README.md). Thread count changes the *assembly*: 10 / 12 / 11 / 14 contigs at `-t 1/2/4/8` on the same reads. Not "more fragmented" — it wanders, and you can't predict the direction. Speed is sublinear too (3.2× at 4 threads, only 4.8× at 8; [measured](../measurements/flye-threads/README.md)). So more threads is both less useful *and* less reproducible — which is why the recipe pins `-t 1` when it needs an exact assertion and drops to floors when it runs `-t 8` for speed. **If your code is this kind, you can assert bands, not numbers, on a multi-threaded run.**
 
-- **The cost climbs** — [GROMACS](../recipes/gromacs/README.md). Throughput keeps rising to 192 cores, but efficiency erodes — 90–100% per doubling up to 96, then **59% across 96→192**, where two things change at once (both measured, below): the run starts spanning **two NUMA nodes** and atoms-per-rank halves. Cost-efficiency halves over the range. There's also an **interior optimum in the decomposition**: at 64 cores, `32×2` (ranks×threads) beat `8×8` by 17%, a 25% spread across all five layouts. **If your code is this kind, the physics is fixed — bigger just costs more per result, and how you split ranks vs threads is a real but second-order dial.**
+- **The cost climbs** — [GROMACS](../recipes/gromacs/README.md). Throughput keeps rising to 192 cores, but efficiency erodes — 90–100% per doubling up to 96, then **59% across 96→192**, where two things change at once ([both measured](../measurements/gromacs-scaling/README.md)): the run starts spanning **two NUMA nodes** and atoms-per-rank halves. Cost-efficiency halves over the range. There's also an **interior optimum in the decomposition**: at 64 cores, `32×2` (ranks×threads) beat `8×8` by 17%, a 25% spread across all five layouts. **If your code is this kind, the physics is fixed — bigger just costs more per result, and how you split ranks vs threads is a real but second-order dial.**
 
-- **It hits a wall** — [GPAW](../recipes/gpaw/README.md). Scales cleanly to 48 ranks (58% efficiency), then at 64 it doesn't slow down — it **fails**: the cell can't be divided further. The energy is identical to 3×10⁻⁵ eV whether you run 1 rank or 48. **If your code is this kind, scale ranks freely for speed and trust the result, but there's a hard ceiling — past it you get an error, not a slow run.**
+- **It hits a wall** — [GPAW](../recipes/gpaw/README.md). Scales cleanly to 48 ranks (58% efficiency, [measured](../measurements/gpaw-scaling/README.md)), then at 64 it doesn't slow down — it **fails**: the cell can't be divided further. No artifact of the failing runs survives. The energy is identical to 3×10⁻⁵ eV whether you run 1 rank or 48. **If your code is this kind, scale ranks freely for speed and trust the result, but there's a hard ceiling — past it you get an error, not a slow run.**
 
 "It got slower" and "it stopped working" need different responses. Knowing which kind of code you have is most of sizing.
 
 ## The launch dominates the decomposition
 
-Before you tune anything, get the launch right — it is worth more than every decomposition choice combined. Running GROMACS as `mpirun -np 1 ... -ntomp 8` pins all 8 threads to **one core** by default and delivers **1.9 ns/day instead of 13.5 — a 7× loss** — because `mpirun`'s default binding gives one rank one core regardless of its thread count. That single flag error dwarfs the 25% you'd chase tuning ranks-vs-threads. **Give each rank its cores** (`--map-by slot:PE=<threads> --bind-to core`) and confirm it before optimizing anything else. Someone agonizing over `32×2` vs `16×4` while their launch costs them 7× is looking at the wrong dial.
+Before you tune anything, get the launch right — it is worth more than every decomposition choice combined. Running GROMACS as `mpirun -np 1 ... -ntomp 8` pins all 8 threads to **one core** by default and delivers **1.9 ns/day instead of 13.5 — a 7× loss** ([measured](../measurements/gromacs-scaling/README.md)) — because `mpirun`'s default binding gives one rank one core regardless of its thread count. That single flag error dwarfs the 25% you'd chase tuning ranks-vs-threads. **Give each rank its cores** (`--map-by slot:PE=<threads> --bind-to core`) and confirm it before optimizing anything else. Someone agonizing over `32×2` vs `16×4` while their launch costs them 7× is looking at the wrong dial.
 
 ## Find your knee: measure, don't guess
 
@@ -53,20 +53,11 @@ If you only need the wall-clock and the deadline is now, ride past the cost knee
 
 ### GROMACS, benchMEM (82k atoms), one c8g node, ntomp=4
 
-| Cores | 8 | 16 | 32 | 48 | 64 | 96 | 192 |
-|---|---|---|---|---|---|---|---|
-| ns/day | 13.0 | 24.7 | 47.2 | 66.1 | 82.8 | 124.1 | 147.7 |
-| ns/day per $/hr | 40.7 | 38.7 | 37.0 | 34.5 | 32.4 | 32.4 | **19.3** |
-
-Efficiency is ~90–100% per doubling to 96, then 59% across 96→192. Two things change at 192, both measured, and this cookbook can't cleanly separate them: the 192-vCPU instance spans **two NUMA nodes** (`node0` = cores 0–95, `node1` = 96–191 — see the topology check below), and atoms-per-rank halves from ~3,400 to ~1,700. Graviton4 c8g is a **single-socket** part, so this is a NUMA-node crossing *within* the socket, not a socket boundary — don't mistake it for one. A **smaller** system would bend sooner from the atoms-per-rank side alone, because that half of the knee is set by work-per-rank, not cores. Note this is the *cost* knee — throughput never actually declines here. A visible throughput decline needs a system small enough to starve, which is not a size anyone reaches for in practice; don't manufacture one to make the point.
+The ladder, 8 → 192 cores with ns/day and ns/day per $/hr at every rung, is in [gromacs-scaling](../measurements/gromacs-scaling/README.md). Efficiency is ~90–100% per doubling to 96, then 59% across 96→192. Two things change at 192, both measured, and this cookbook can't cleanly separate them: the 192-vCPU instance spans **two NUMA nodes** (`node0` = cores 0–95, `node1` = 96–191 — see the topology check below), and atoms-per-rank halves from ~3,400 to ~1,700. Graviton4 c8g is a **single-socket** part, so this is a NUMA-node crossing *within* the socket, not a socket boundary — don't mistake it for one. A **smaller** system would bend sooner from the atoms-per-rank side alone, because that half of the knee is set by work-per-rank, not cores. Note this is the *cost* knee — throughput never actually declines here. A visible throughput decline needs a system small enough to starve, which is not a size anyone reaches for in practice; don't manufacture one to make the point.
 
 ### Decomposition at 64 cores (same box, same work)
 
-| ranks×threads | 64×1 | 32×2 | 16×4 | 8×8 | 4×16 |
-|---|---|---|---|---|---|
-| ns/day | 81.6 | **90.3** | 78.3 | 77.1 | 72.1 |
-
-A 25% spread (90.3 down to 72.1) with an interior optimum at 2 threads/rank; `32×2` beats `8×8` by 17%. On this 64-vCPU box that's GROMACS's own PP/PME balance, **not** a NUMA effect — because a 64-vCPU c8g is one NUMA node (below). We assumed NUMA; the topology capture said otherwise *here*. That's the point of capturing it — and, as the 192-core case shows, of not assuming it stays the same at other sizes.
+Five splits of 64 cores ([measured](../measurements/gromacs-scaling/README.md)): a 25% spread (90.3 down to 72.1) with an interior optimum at 2 threads/rank; `32×2` beats `8×8` by 17%. On this 64-vCPU box that's GROMACS's own PP/PME balance, **not** a NUMA effect — because a 64-vCPU c8g is one NUMA node (below). We assumed NUMA; the topology capture said otherwise *here*. That's the point of capturing it — and, as the 192-core case shows, of not assuming it stays the same at other sizes.
 
 ### Check the machine, don't assume it
 

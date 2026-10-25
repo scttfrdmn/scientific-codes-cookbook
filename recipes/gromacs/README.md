@@ -46,7 +46,7 @@ The ladder was measured on the previous `md` digest (`1ee941664add…`); the rep
 |---|---|---|
 | benchMEM (82k atoms) | your own `.tpr` | a `.tpr` is self-contained, so nothing else needs staging; GROMACS 2026.3 still reads benchMEM's 2015-era file. |
 | `-n 16 -ntomp 1` | any rank×thread split | **depends on the chip** — five splits of 16 cores spanned 9.6% on Graviton4 and 10.7% on Intel, but **41% on AMD**, where 16×1 wins ([measured](../../measurements/gromacs-real/README.md)). Measure before you tune. |
-| 16 cores | more cores, or `benchRIB` (2M atoms) | 82k atoms is small enough that PME limits scaling; a bigger system is how you use a bigger box. |
+| 16 cores | more cores, or `benchRIB` (2M atoms) | 82k atoms is small enough that PME limits scaling; a bigger system is how you use a bigger box. 8→192 cores and a GPU leg are measured in [gromacs-scaling](../../measurements/gromacs-scaling/README.md) and [gpu-gromacs](../../measurements/gpu-gromacs/README.md). |
 
 **Leave the workload** — benchMEM as shipped is what makes ns/day comparable to published numbers. **Scale it** by moving to a larger benchmark before adding cores.
 

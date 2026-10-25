@@ -1,0 +1,82 @@
+MPS packing test on NVIDIA L4 (GROMACS full offload, 25000 steps/run) MPS=on
+question: does packing N systems onto one GPU degrade per-system speed but RECOVER effective cost?
+N=1 ntomp=8  per_system_ns_day=430.1 (DEGRADES)  agg_ns_day=430.1 (RECOVERS)  gpu_util_mean=27%  max=72%  peak_mem_MB=250  wall_s=14.6
+N=2 ntomp=4  per_system_ns_day=372.5 (DEGRADES)  agg_ns_day=744.9 (RECOVERS)  gpu_util_mean=82%  max=98%  peak_mem_MB=463  wall_s=12.3
+N=3 ntomp=2  per_system_ns_day=252.5 (DEGRADES)  agg_ns_day=757.4 (RECOVERS)  gpu_util_mean=91%  max=100%  peak_mem_MB=676  wall_s=18.0
+N=4 ntomp=2  per_system_ns_day=189.6 (DEGRADES)  agg_ns_day=758.2 (RECOVERS)  gpu_util_mean=94%  max=100%  peak_mem_MB=888  wall_s=23.8
+read: agg_ns_day rising with N = idle GPU converted to throughput; effective $/system-ns = rate/agg drops by that factor
+--- util series per N (util%,mem_MB @1Hz) ---
+[N=1]
+0, 1
+0, 38
+0, 232
+0, 232
+0, 232
+52, 248
+21, 248
+72, 248
+38, 248
+58, 248
+36, 250
+0, 250
+0, 250
+64, 250
+63, 250
+[N=2]
+57, 38
+94, 459
+94, 459
+96, 459
+95, 459
+95, 459
+25, 463
+38, 463
+94, 463
+98, 463
+93, 463
+95, 463
+97, 409
+[N=3]
+84, 38
+99, 670
+100, 670
+100, 670
+100, 670
+100, 670
+77, 676
+62, 676
+28, 676
+99, 676
+100, 676
+98, 676
+100, 676
+99, 676
+100, 676
+100, 676
+100, 676
+99, 676
+[N=4]
+90, 38
+61, 880
+100, 880
+100, 880
+100, 880
+100, 880
+100, 886
+0, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888
+100, 888

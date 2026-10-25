@@ -1,0 +1,5 @@
+mpi_world_size_8           8  want exactly 8 (gpaw.mpi world; a serial gpaw under mpiexec -n 8 would report 1)
+mpi_world_size_4           4  want exactly 4
+natoms                     64  want 64 (2x2x2 supercell of the 8-atom conventional cell)
+rank_independent_energy    |-380.305329 - -380.305360| = 3.10e-05 eV  want <1e-4 (DFT energy is rank-independent across decompositions)
+energy_physical            -5.9423 eV/atom  want -7..-4 (bulk Si LDA)
