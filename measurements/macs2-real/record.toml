@@ -5,7 +5,8 @@ result_unit = "one genome-wide peak call of ENCODE CTCF ChIP-seq ENCFF933NSJ aga
 [[dataset]]
 id = "ENCODE ENCFF933NSJ.bam (treatment, 2,057,454,374 B) and ENCFF768XTH.bam (control, 3,365,735,271 B), s3://encode-public"
 tier = "roda"
-unpinned = "checked in-task against ENCODE's own published md5 (metadata API); no committed sha256 manifest (pins.sha256 covers only gen.sh and host.sh)"
+pins = "datasets.md5"
+note = "ENCODE's published md5s (md5, not sha256), copied from stage-inputs.sh; checked in-task"
 
 # --- Graviton generation ladder: 4 vCPU / 32 GiB, same digest, same objects -------------
 [[run]]

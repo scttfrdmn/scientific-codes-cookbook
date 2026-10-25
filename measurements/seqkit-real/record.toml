@@ -7,8 +7,9 @@ result_unit = "seqkit stats + fq2fa over the complete SRR062634 run (48,297,986 
 [[dataset]]
 id = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz (HG00096), complete run"
 tier = "roda"
+pins = "../bwa-real/pins.sha256"
 from_recipe = "bwa-samtools"
-note = "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest"
+note = "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[run]]
 instance = "c8g.2xlarge"

@@ -5,17 +5,20 @@ result_unit = "one genome aligned (HG00096 low-coverage, 3 runs, 73,305,772 pair
 [[dataset]]
 id = "1000 Genomes s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634,SRR062635,SRR062641 _{1,2}.filt.fastq.gz"
 tier = "roda"
-unpinned = "pinned by the md5s 1000 Genomes publishes in sequence.index (sample.tsv), checked in every task; no sha256 manifest committed"
+pins = "datasets.md5"
+note = "1000 Genomes' published md5s (md5, not sha256), copied from sample.tsv; checked in every task"
 
 [[dataset]]
 id = "GRCh38_full_analysis_set_plus_decoy_hla bwa index (the one RODA publishes)"
 tier = "roda"
+pins = "../bwa-real/pins.sha256"
 from_recipe = "measurements/bwa-real"
-note = "every task records its sha256; collect.sh requires all three chips to have read the same bytes"
+note = "every task records its sha256; collect.sh requires all three chips to have read the same bytes; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "bwa-mem2 index of GRCh38_full_analysis_set_plus_decoy_hla (mem2-index.tar, 17.7 GB)"
 tier = "run-output"
+pins = "index.sha256"
 from_recipe = "bwa-mem2"
 note = "recipes/bwa-mem2 00-index tar; sha256 checked identical on all three chips"
 

@@ -5,18 +5,23 @@ result_unit = "one caller's whole-chr20 call set for NA12878 (GIAB HG001) at 36x
 [[dataset]]
 id = "NYGC 30x NA12878 CRAM -> whole GRCh38 chr20 BAM at 36x"
 tier = "durable-id"
+pins = "../gatk4-real/pins.sha256"
 from_recipe = "gatk4"
 note = "staged by make stage RECIPE=gatk4; all three callers read the same BAM"
 
 [[dataset]]
 id = "GIAB HG001 v4.2.1 truth VCF + high-confidence BED (chr20, 56,000,154 bases)"
 tier = "versioned-release"
+pins = "../gatk4-real/pins.sha256"
 from_recipe = "gatk4"
+note = "The sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "GRCh38 reference (chr20)"
 tier = "versioned-release"
+pins = "../gatk4-real/pins.sha256"
 from_recipe = "gatk4"
+note = "The sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[run]]
 instance = "c8g.xlarge"

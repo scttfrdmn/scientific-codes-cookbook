@@ -6,8 +6,8 @@ results_per_run = 125
 [[dataset]]
 id = "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, doi:10.1186/s13742-016-0150-5)"
 tier = "roda"
-unpinned = "no committed sha256 manifest; the full sha256 is a constant in measurements/fsl-real/stage-inputs.sh and is asserted on the box"
-note = "staged once by fsl-real and shared with it"
+pins = "../fsl-real/pins.sha256"
+note = "staged once by fsl-real and shared with it; the sha256 is fsl-real/stage-inputs.sh's, asserted on the box"
 
 [[dataset]]
 id = "fsl-data_standard-2208.0-0 MNI152_T1_2mm_brain{,_mask}.nii.gz"

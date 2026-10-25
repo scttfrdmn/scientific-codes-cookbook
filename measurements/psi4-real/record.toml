@@ -5,7 +5,8 @@ result_unit = "the whole DESS66 set: all 66 dimers with every check passed (plus
 [[dataset]]
 id = "DESS66, Zenodo 10.5281/zenodo.5676284 v1.0.0, DESS66.zip"
 tier = "durable-id"
-unpinned = "dess66.sha256 sits beside the zip in the bucket and every run re-checks it, but no sha256 manifest is committed in this dir; the README prints Zenodo's md5 and a truncated sha256"
+pins = "pins.sha256"
+note = "copied from dess66.sha256 beside the zips in the bucket; every run re-checks the zip it reads; 00-fetch checked Zenodo's md5"
 
 [[run]]
 instance = "r8g.4xlarge"

@@ -5,8 +5,9 @@ result_unit = "one complete SRR062634 run QC'd and trimmed (48,297,986 reads, 4.
 [[dataset]]
 id = "SRA SRR062634 (complete run, 100 bp paired)"
 tier = "roda"
+pins = "../bwa-real/pins.sha256"
 from_recipe = "bwa-samtools"
-note = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest"
+note = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[run]]
 instance = "c8g.4xlarge"

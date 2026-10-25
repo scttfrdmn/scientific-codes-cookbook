@@ -12,12 +12,14 @@ result_unit = "one alignment: 24,148,993 read pairs (SRR062634, HG00096) against
 [[dataset]]
 id = "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)"
 tier = "roda"
-unpinned = "no sha256 manifest is committed under measurements/bwa-real; cached from RODA into the bucket by the README's copy loop"
+pins = "pins.sha256"
+note = "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the RODA originals, hashed in place the same day, are identical, and bwa-mem2-real's runs hashed the same .alt/.amb/.ann/.bwt/.pac/.sa (results/*/bwa/results.tsv)"
 
 [[dataset]]
 id = "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
 tier = "roda"
-unpinned = "no sha256 manifest is committed under measurements/bwa-real"
+pins = "pins.sha256"
+note = "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the RODA originals are identical, and the same sha256s are in qc-aggregate-real/inputs.sha256 and fastp-real's run smoke checks; 1000 Genomes' md5 is in ../bwa-mem2-real/datasets.md5"
 
 # --- 1. generations: 16 threads on a 4xlarge -----------------------------------------------
 [[run]]

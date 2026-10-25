@@ -12,8 +12,9 @@ note = "the BAM gatk4-real built; reused from recipes/gatk4's staged prefix, not
 [[dataset]]
 id = "GRCh38 reference + dictionary (recipes/gatk4's)"
 tier = "run-output"
+pins = "../gatk4-real/pins.sha256"
 from_recipe = "gatk4"
-note = "reused, not copied; not listed in this dir's pins.sha256"
+note = "reused, not copied; not listed in this dir's pins.sha256; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "RODA s3://broad-references wgs_calling_regions.hg38.interval_list"

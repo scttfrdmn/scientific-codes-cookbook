@@ -1,0 +1,14 @@
+# Copied verbatim: the BAM's sha256 from results/prep-check.txt (the build run's own check output);
+# chr20.fa.fai and chr20.dict from recipes/gatk4/stage-inputs.sh (idx.sha256), checked at stage time.
+0ad228c159e7f3b060d3476226f27b016b051f03eb73003f8929c5f954e1e02c  NA12878.chr20.30x.bam
+295950bb320e5f27b37360000d77303187e6399bf8e7705aa26fd4a1c88ba115  chr20.fa.fai
+b9e597b77989d8861aae55670fff9ef6cf554d6c1ea257f2207674855e25977c  chr20.dict
+# Hashed 2026-10-25 (UTC) on AWS (c8g.4xlarge, us-west-2), streaming each object where it lives (aws s3 cp - | sha256sum). This was AFTER the measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# chr20.fa is inputs/bwa-samtools/chr20.fa; truth.* are inputs/gatk4/; the CRAM and its .crai were hashed in place at s3://1000genomes/1000G_2504_high_coverage/data/ERR3239334/.
+# Earlier hashes agree: chr20.fa in clair3-real/phasing-real/pangenome-real pins.sha256; truth.chr20.vcf.gz and .bed in minimap2-real/pins.sha256.
+61eba5b05ef7d9ae5310e756c1143fa48072de3856d36871bb14e57aa2435ff3  chr20.fa
+283d7fe5cfb92b235e6573ade52d63d61c33c176d040fbd74e3b5e5b3e983c96  truth.chr20.vcf.gz
+34f20b9fa129e4f97e47eca0071182e4a70820a6197987bd645911b936e485b0  truth.chr20.vcf.gz.tbi
+058ec9c0f173be45e58bacae7ef4e3c56b8e9ae49838ff9807205cdbced6aee5  truth.chr20.bed
+d8bd230ebf65795c5eda8f9979400f414cddb1114951ab252ad334bee0fc43ec  NA12878.final.cram
+34f4827317b1208c38541d1dccd45d162e565285aef6884b7b16116fe2012d72  NA12878.final.cram.crai

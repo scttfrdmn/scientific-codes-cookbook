@@ -5,23 +5,27 @@ result_unit = "one HaplotypeCaller call set over the sweep interval chr20:1,000,
 [[dataset]]
 id = "NYGC 30x NA12878 CRAM, ENA ERR3239334"
 tier = "durable-id"
-unpinned = "no sha256 committed; ENA accession only"
+pins = "pins.sha256"
+note = "hashed in place at s3://1000genomes/1000G_2504_high_coverage/data/ERR3239334/ with its .crai; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "NA12878 chr20 36x BAM (built from ERR3239334, inputs/gatk4/NA12878.chr20.30x.bam)"
 tier = "built"
-unpinned = "its sha256 is printed in results/prep-check.txt (a check output from the build run), not a committed sha256 manifest"
+pins = "pins.sha256"
 from_recipe = "gatk4"
+note = "sha256 copied from results/prep-check.txt, the build run's own check output"
 
 [[dataset]]
 id = "GIAB HG001 v4.2.1 benchmark VCF + high-confidence BED, chr20 slice"
 tier = "versioned-release"
-unpinned = "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+pins = "pins.sha256"
+note = "inputs/gatk4/truth.*; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the .vcf.gz and .bed sha256s are also in minimap2-real/pins.sha256"
 
 [[dataset]]
 id = "GRCh38_full_analysis_set_plus_decoy_hla.fa (chr20 reference + index)"
 tier = "versioned-release"
-unpinned = "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+pins = "pins.sha256"
+note = "chr20.fa.fai and chr20.dict copied from recipes/gatk4/stage-inputs.sh; chr20.fa (inputs/bwa-samtools/) hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 # --- §1: threading canary, c8g.2xlarge, same interval -----------------------------------
 [[run]]

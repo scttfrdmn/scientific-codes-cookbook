@@ -5,7 +5,8 @@ result_unit = "one 15-epoch ResNet-20 training run on the complete CIFAR-10"
 [[dataset]]
 id = "s3://fast-ai-imageclas/cifar10.tgz (CIFAR-10, AWS Open Data)"
 tier = "roda"
-unpinned = "the archive sha256 is a constant in stage-inputs.sh, verified before upload and re-verified in-task; the pins.sha256 it writes is staged to the bucket, not committed"
+pins = "pins.sha256"
+note = "copied from stage-inputs.sh, verified before upload and re-verified in-task"
 
 [[run]]
 instance = "c8g.4xlarge"

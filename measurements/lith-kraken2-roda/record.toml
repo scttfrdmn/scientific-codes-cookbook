@@ -6,13 +6,14 @@ result_unit = "one 1M-read human WGS sample (SRR062634) classified against the f
 [[dataset]]
 id = "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes"
 tier = "roda"
-unpinned = "a RODA object; the README records sizes (stat on hash.k2d) but no sha256 manifest is committed"
-note = "bucket reports Payer: BucketOwner, so every GET is free to the requester"
+pins = "pins.sha256"
+note = "hash.k2d, taxo.k2d and opts.k2d (the runtime set) hashed in place at the RODA bucket (us-west-2); hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "SRA SRR062634 (human WGS reads), 10k / 100k / 1M-read ladder"
 tier = "durable-id"
-unpinned = "no sha256 committed; SRA accession only"
+pins = "../bwa-real/pins.sha256"
+note = "the ladder subsets SRR062634_1 from inputs/bwa-real/; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 # --- the kraken2 result: copy the runtime set to NVMe, then a read-count ladder -------
 [[run]]

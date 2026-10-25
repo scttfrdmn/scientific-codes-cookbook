@@ -11,12 +11,14 @@ note = "pinned by ENA's fastq_md5 (md5, not sha256), checked on every box"
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
 tier = "versioned-release"
+pins = "../salmon-real/pins.sha256"
 from_recipe = "measurements/salmon-real"
-note = "pinned by Ensembl's CHECKSUMS when salmon-real staged it"
+note = "pinned by Ensembl's CHECKSUMS when salmon-real staged it; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "kallisto index built by recipes/kallisto from the Ensembl 116 cDNA (931,285,390 bytes)"
 tier = "built"
+pins = "index.sha256"
 from_recipe = "kallisto"
 note = "hashed on every box; the check asserts all three chips read the same file"
 

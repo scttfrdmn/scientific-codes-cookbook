@@ -5,8 +5,9 @@ result_unit = "one bulk-Si lattice-constant scan (seven lattice constants, LDA, 
 [[dataset]]
 id = "siesta-project/siesta 5.4.2 Tests/Pseudos/Si.psf"
 tier = "test-suite"
+pins = "pins.sha256"
 from_recipe = "siesta"
-note = "staged by make stage RECIPE=siesta, version-matched; GPAW uses its own PAW setup and an ase-built diamond cell"
+note = "sha256 copied from recipes/siesta/stage-inputs.sh, which checks it at stage time"
 
 # --- SIESTA generation rows: wall_s from results/<gen>-siesta.txt; no $ (this README prints no rate)
 [[run]]

@@ -7,8 +7,9 @@ result_unit = "one assembly of ERR10114907 (Flye --nano-hq -t 8)"
 [[dataset]]
 id = "ENA run ERR10114907 (MinION, 55,898 reads / 299,527,299 bases)"
 tier = "durable-id"
+pins = "pins.sha256"
 from_recipe = "flye"
-unpinned = "no sha256 manifest committed; recipes/flye/stage-inputs.sh checks the download against ENA's own read and base counts"
+note = "inputs/flye/; every spec checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged"
 
 [[run]]
 instance = "c6g.2xlarge"

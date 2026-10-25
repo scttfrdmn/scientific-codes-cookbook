@@ -7,8 +7,9 @@ result_unit = "one simulated nanosecond of benchMEM (81,743 atoms, PME, NPT)"
 [[dataset]]
 id = "benchMEM (81,743 atoms, PME, Berendsen NPT) tpr"
 tier = "versioned-release"
+pins = "datasets.sha256"
 from_recipe = "gromacs"
-note = "staged by recipes/gromacs; pins.sha256 here pins only the scripts decomp.sh and host.sh"
+note = "sha256 copied from recipes/gromacs/stage-inputs.sh, which checks it at stage time"
 
 [[run]]
 instance = "c8g.4xlarge"

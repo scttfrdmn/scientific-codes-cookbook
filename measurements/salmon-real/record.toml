@@ -7,12 +7,14 @@ result_unit = "one complete RNA-seq run quantified (ERR188026, 15.8M reads, all 
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
 tier = "versioned-release"
-unpinned = "recipes/salmon/stage-inputs.sh fetches the release byte-for-byte but commits no sha256 for the real-workload copy"
+pins = "pins.sha256"
+note = "inputs/salmon-real/ensembl116_cdna.fa.gz; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete run)"
 tier = "durable-id"
-unpinned = "no sha256 committed; ENA accession only"
+pins = "../kallisto-real/reads.md5"
+note = "ENA's fastq_md5 (md5, not sha256) for this same object (inputs/salmon-real/), checked on the box by kallisto-real, rsem-real and transcript-assembly-real; salmon-real's own runs did not check it"
 
 [[dataset]]
 id = "salmon index (1.68 GB tar)"

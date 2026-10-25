@@ -5,13 +5,14 @@ result_unit = "one sample's assembly, checked: Geuvadis ERR188026 (15.8M pairs) 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
 tier = "durable-id"
-unpinned = "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest"
-note = "same reads as salmon-real, star-real and rnaseq-counts-real"
+pins = "../kallisto-real/reads.md5"
+note = "ENA's fastq_md5 (md5, not sha256): the values this run checked on the box (results/align/pins.txt)"
 
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
 tier = "versioned-release"
-unpinned = "checked against Ensembl release-116 CHECKSUMS (BSD sum, results/align/pins.txt); no sha256 manifest"
+pins = "pins.sha256"
+note = "inputs/star-real/GRCh38.primary_assembly.fa.gz; the run checked Ensembl's CHECKSUMS sum (results/align/pins.txt); the sha256 was hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "Ensembl 116 GRCh38.116.gtf.gz (646,577 transcripts)"

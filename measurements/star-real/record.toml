@@ -13,8 +13,9 @@ note = "built and published once by build-publish.sh; lith verifies its sha befo
 [[dataset]]
 id = "ENA ERR188026 (complete run, 15,800,127 reads)"
 tier = "durable-id"
+pins = "../kallisto-real/reads.md5"
 from_recipe = "star"
-note = "staged by make stage RECIPE=star"
+note = "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-real/)"
 
 # --- Graviton4, first read (page cache dropped before each align), one m8g.8xlarge launch
 [[run]]

@@ -5,8 +5,8 @@ result_unit = "the 2023 NYC TLC yellow-taxi year read, aggregated three ways and
 [[dataset]]
 id = "NYC TLC 2023 yellow-taxi trip records, 12 monthly Parquet files, https://d37ci6vzurychx.cloudfront.net/trip-data"
 tier = "durable-id"
-unpinned = "no committed sha256 manifest; per-file sha256s as fetched on 2026-10-17 are constants in stage-inputs.sh, and a TLC re-issue fails staging"
-note = "RODA lists s3://nyc-tlc but it returns 403 to signed requests (open-data-registry#1418), so the TLC's own CloudFront is the source"
+pins = "pins.sha256"
+note = "per-file sha256s as fetched on 2026-10-17, copied from stage-inputs.sh; a TLC re-issue fails staging"
 
 [[run]]
 instance = "r8g.2xlarge"

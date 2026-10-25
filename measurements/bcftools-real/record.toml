@@ -12,12 +12,14 @@ note = "read from plink-real's staged inputs/plink-real/ prefix, one copy of the
 [[dataset]]
 id = "RODA s3://1000genomes/release/20130502/integrated_call_samples_v3.20130502.ALL.panel"
 tier = "roda"
-unpinned = "sha256 embedded in stage-inputs.sh's pins.sha256 heredoc and checked in-task; no committed manifest file"
+pins = "pins.sha256"
+note = "copied from stage-inputs.sh's pins.sha256 heredoc; checked in-task"
 
 [[dataset]]
 id = "hs37d5.chr20-22.fa: contigs 20-22 cut verbatim from RODA technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz"
 tier = "built"
-unpinned = "sha256 embedded in stage-inputs.sh's pins.sha256 heredoc and checked in-task; no committed manifest file"
+pins = "pins.sha256"
+note = "copied from stage-inputs.sh's pins.sha256 heredoc (with the source hs37d5.fa.gz); checked in-task"
 
 [[run]]
 instance = "c8g.2xlarge"

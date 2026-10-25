@@ -646,9 +646,9 @@
    "dataset": [
     {
      "id": "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, doi:10.1186/s13742-016-0150-5)",
-     "note": "staged once by fsl-real and shared with it",
-     "tier": "roda",
-     "unpinned": "no committed sha256 manifest; the full sha256 is a constant in measurements/fsl-real/stage-inputs.sh and is asserted on the box"
+     "note": "staged once by fsl-real and shared with it; the sha256 is fsl-real/stage-inputs.sh's, asserted on the box",
+     "pins": "../fsl-real/pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "fsl-data_standard-2208.0-0 MNI152_T1_2mm_brain{,_mask}.nii.gz",
@@ -718,9 +718,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, doi:10.1186/s13742-016-0150-5)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "the request for an arm64 ants build; Graviton4 has no row until it exists",
@@ -1837,13 +1835,15 @@
     },
     {
      "id": "RODA s3://1000genomes/release/20130502/integrated_call_samples_v3.20130502.ALL.panel",
-     "tier": "roda",
-     "unpinned": "sha256 embedded in stage-inputs.sh's pins.sha256 heredoc and checked in-task; no committed manifest file"
+     "note": "copied from stage-inputs.sh's pins.sha256 heredoc; checked in-task",
+     "pins": "pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "hs37d5.chr20-22.fa: contigs 20-22 cut verbatim from RODA technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz",
-     "tier": "built",
-     "unpinned": "sha256 embedded in stage-inputs.sh's pins.sha256 heredoc and checked in-task; no committed manifest file"
+     "note": "copied from stage-inputs.sh's pins.sha256 heredoc (with the source hs37d5.fa.gz); checked in-task",
+     "pins": "pins.sha256",
+     "tier": "built"
     }
    ],
    "owners": [
@@ -1934,10 +1934,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "RODA s3://1000genomes/release/20130502/integrated_call_samples_v3.20130502.ALL.panel",
-    "hs37d5.chr20-22.fa: contigs 20-22 cut verbatim from RODA technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "the AMD leg's resolved spec no longer fit EC2's 16 KiB user data; command staged as a sha256-checked file and outputs staged out as one directory",
@@ -2008,8 +2005,9 @@
     },
     {
      "id": "GRCh38_full_analysis_set_plus_decoy_hla.fa.fai (inputs/bwa-real/)",
-     "tier": "versioned-release",
-     "unpinned": "the README names the .fai but no sha256 manifest is committed for it"
+     "note": "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [
@@ -2161,9 +2159,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "GRCh38_full_analysis_set_plus_decoy_hla.fa.fai (inputs/bwa-real/)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "x86 legs staged each resolved spec's command as a sha256-checked file run with bash",
@@ -3067,21 +3063,21 @@
    "dataset": [
     {
      "id": "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz",
-     "note": "staged once under inputs/bwa-real/ and read by both bwa-real and this measurement",
-     "tier": "roda",
-     "unpinned": "RODA object path only; no sha256 committed"
+     "note": "read from inputs/bwa-real/; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "1000genomes GRCh38_full_analysis_set_plus_decoy_hla.fa (3,263,683,042 B)",
-     "note": "bwa-real's exact staged reference, so the bwa cross-check compares placement, not references",
-     "tier": "roda",
-     "unpinned": "byte size asserted in the build task; no sha256 committed"
+     "note": "read from inputs/bwa-real/ (byte size also asserted in the build task); hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "bt2index.tar (bowtie2-build on GRCh38_full_analysis_set_plus_decoy_hla, 4,320,890,880 B)",
-     "note": "built because 1000genomes publishes no .bt2 and bowtie2's published indexes use different references",
-     "tier": "built",
-     "unpinned": "sha256 printed in README prose and checked in-task against the build's .sha256 object; no committed manifest"
+     "note": "copied from the README and bt2index.tar.sha256 in the bucket (written by the build task); checked in-task",
+     "pins": "pins.sha256",
+     "tier": "built"
     },
     {
      "from_recipe": "bwa",
@@ -3312,11 +3308,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz",
-    "1000genomes GRCh38_full_analysis_set_plus_decoy_hla.fa (3,263,683,042 B)",
-    "bt2index.tar (bowtie2-build on GRCh38_full_analysis_set_plus_decoy_hla, 4,320,890,880 B)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "x86 legs: each resolved spec's command staged as a sha256-checked file and run with bash",
@@ -3400,19 +3392,22 @@
    "dataset": [
     {
      "id": "1000 Genomes s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634,SRR062635,SRR062641 _{1,2}.filt.fastq.gz",
-     "tier": "roda",
-     "unpinned": "pinned by the md5s 1000 Genomes publishes in sequence.index (sample.tsv), checked in every task; no sha256 manifest committed"
+     "note": "1000 Genomes' published md5s (md5, not sha256), copied from sample.tsv; checked in every task",
+     "pins": "datasets.md5",
+     "tier": "roda"
     },
     {
      "from_recipe": "measurements/bwa-real",
      "id": "GRCh38_full_analysis_set_plus_decoy_hla bwa index (the one RODA publishes)",
-     "note": "every task records its sha256; collect.sh requires all three chips to have read the same bytes",
+     "note": "every task records its sha256; collect.sh requires all three chips to have read the same bytes; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
      "tier": "roda"
     },
     {
      "from_recipe": "bwa-mem2",
      "id": "bwa-mem2 index of GRCh38_full_analysis_set_plus_decoy_hla (mem2-index.tar, 17.7 GB)",
      "note": "recipes/bwa-mem2 00-index tar; sha256 checked identical on all three chips",
+     "pins": "index.sha256",
      "tier": "run-output"
     }
    ],
@@ -3588,9 +3583,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "1000 Genomes s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634,SRR062635,SRR062641 _{1,2}.filt.fastq.gz"
-   ]
+   "unpinned": []
   },
   "bwa-real": {
    "check": [
@@ -3656,13 +3649,15 @@
    "dataset": [
     {
      "id": "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)",
-     "tier": "roda",
-     "unpinned": "no sha256 manifest is committed under measurements/bwa-real; cached from RODA into the bucket by the README's copy loop"
+     "note": "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the RODA originals, hashed in place the same day, are identical, and bwa-mem2-real's runs hashed the same .alt/.amb/.ann/.bwt/.pac/.sa (results/*/bwa/results.tsv)",
+     "pins": "pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz",
-     "tier": "roda",
-     "unpinned": "no sha256 manifest is committed under measurements/bwa-real"
+     "note": "hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the RODA originals are identical, and the same sha256s are in qc-aggregate-real/inputs.sha256 and fastp-real's run smoke checks; 1000 Genomes' md5 is in ../bwa-mem2-real/datasets.md5",
+     "pins": "pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -4019,10 +4014,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "s3://1000genomes technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa.{amb,ann,bwt,pac,sa,fai} (the published bwa index)",
-    "s3://1000genomes phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form",
@@ -4315,16 +4307,21 @@
      "from_recipe": "gatk4",
      "id": "NYGC 30x NA12878 CRAM -> whole GRCh38 chr20 BAM at 36x",
      "note": "staged by make stage RECIPE=gatk4; all three callers read the same BAM",
+     "pins": "../gatk4-real/pins.sha256",
      "tier": "durable-id"
     },
     {
      "from_recipe": "gatk4",
      "id": "GIAB HG001 v4.2.1 truth VCF + high-confidence BED (chr20, 56,000,154 bases)",
+     "note": "The sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../gatk4-real/pins.sha256",
      "tier": "versioned-release"
     },
     {
      "from_recipe": "gatk4",
      "id": "GRCh38 reference (chr20)",
+     "note": "The sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../gatk4-real/pins.sha256",
      "tier": "versioned-release"
     }
    ],
@@ -6528,7 +6525,8 @@
     {
      "from_recipe": "gatk4",
      "id": "GRCh38 reference + dictionary (recipes/gatk4's)",
-     "note": "reused, not copied; not listed in this dir's pins.sha256",
+     "note": "reused, not copied; not listed in this dir's pins.sha256; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../gatk4-real/pins.sha256",
      "tier": "run-output"
     },
     {
@@ -7334,8 +7332,9 @@
    "dataset": [
     {
      "id": "ENCODE ENCFF933NSJ.bam (CTCF ChIP-seq, 2,057,454,374 B, md5 48f06f46ac59b93e6ae3110de9730a3e)",
-     "tier": "durable-id",
-     "unpinned": "ENCODE publishes an md5 per file, checked in both tasks; no sha256 manifest committed"
+     "note": "ENCODE's published md5 (md5, not sha256); checked in both tasks",
+     "pins": "datasets.md5",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -7478,9 +7477,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENCODE ENCFF933NSJ.bam (CTCF ChIP-seq, 2,057,454,374 B, md5 48f06f46ac59b93e6ae3110de9730a3e)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "task scripts staged and pinned by sha256 (index-and-stats.sh, coverage-identity.sh)",
@@ -7572,7 +7569,8 @@
     {
      "from_recipe": "siesta",
      "id": "siesta-project/siesta 5.4.2 Tests/Pseudos/Si.psf",
-     "note": "staged by make stage RECIPE=siesta, version-matched; GPAW uses its own PAW setup and an ase-built diamond cell",
+     "note": "sha256 copied from recipes/siesta/stage-inputs.sh, which checks it at stage time",
+     "pins": "pins.sha256",
      "tier": "test-suite"
     }
    ],
@@ -8657,7 +8655,8 @@
     {
      "from_recipe": "bwa-samtools",
      "id": "SRA SRR062634 (complete run, 100 bp paired)",
-     "note": "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest",
+     "note": "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
      "tier": "roda"
     }
    ],
@@ -9119,8 +9118,9 @@
     {
      "from_recipe": "flye",
      "id": "ENA run ERR10114907 (MinION, 55,898 reads / 299,527,299 bases)",
-     "tier": "durable-id",
-     "unpinned": "no sha256 manifest committed; recipes/flye/stage-inputs.sh checks the download against ENA's own read and base counts"
+     "note": "inputs/flye/; every spec checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -9257,9 +9257,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENA run ERR10114907 (MinION, 55,898 reads / 299,527,299 bases)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "chip.task.json exceeds EC2's 16 KiB user data on 0.139.1; inline command moved into a staged sha256-checked file",
@@ -9550,8 +9548,9 @@
     {
      "from_recipe": "freebayes",
      "id": "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)",
-     "tier": "built",
-     "unpinned": "the ladder's tasks read the recipe's S3 object (inputs/gatk4/NA12878.chr20.30x.bam, 36.3x despite the name; sha256 0ad228c1... on recipes/freebayes) but did not re-check its sha256; the 385,371 variants match the recipe's run"
+     "note": "the ladder's tasks read inputs/gatk4/NA12878.chr20.30x.bam (36.3x despite the name) but did not re-check its sha256; the 385,371 variants match the recipe's run",
+     "pins": "../gatk4-real/pins.sha256",
+     "tier": "built"
     }
    ],
    "owners": [
@@ -9710,9 +9709,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "the static price fallback has no Graviton coverage; rungs launched serially",
@@ -9798,8 +9795,9 @@
    "dataset": [
     {
      "id": "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, Puccio et al. 2016, doi:10.1186/s13742-016-0150-5), 1,751,464,473 bytes",
-     "tier": "roda",
-     "unpinned": "no committed sha256 manifest; the README prints the archive's sha256 truncated (fd616b9e…40d2cc) and says it is asserted on the box before any compute"
+     "note": "the full sha256 copied from stage-inputs.sh (SHA=), which asserts it on the box before any compute",
+     "pins": "pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -9894,9 +9892,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, Puccio et al. 2016, doi:10.1186/s13742-016-0150-5), 1,751,464,473 bytes"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "AMD spec exceeds EC2's 16 KiB user data on spawn 0.139.1; inline command moved into a staged sha256-checked file",
@@ -10003,24 +9999,28 @@
    "dataset": [
     {
      "id": "NYGC 30x NA12878 CRAM, ENA ERR3239334",
-     "tier": "durable-id",
-     "unpinned": "no sha256 committed; ENA accession only"
+     "note": "hashed in place at s3://1000genomes/1000G_2504_high_coverage/data/ERR3239334/ with its .crai; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     },
     {
      "from_recipe": "gatk4",
      "id": "NA12878 chr20 36x BAM (built from ERR3239334, inputs/gatk4/NA12878.chr20.30x.bam)",
-     "tier": "built",
-     "unpinned": "its sha256 is printed in results/prep-check.txt (a check output from the build run), not a committed sha256 manifest"
+     "note": "sha256 copied from results/prep-check.txt, the build run's own check output",
+     "pins": "pins.sha256",
+     "tier": "built"
     },
     {
      "id": "GIAB HG001 v4.2.1 benchmark VCF + high-confidence BED, chr20 slice",
-     "tier": "versioned-release",
-     "unpinned": "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+     "note": "inputs/gatk4/truth.*; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the .vcf.gz and .bed sha256s are also in minimap2-real/pins.sha256",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "id": "GRCh38_full_analysis_set_plus_decoy_hla.fa (chr20 reference + index)",
-     "tier": "versioned-release",
-     "unpinned": "no sha256 committed in this dir; staged by make stage RECIPE=gatk4"
+     "note": "chr20.fa.fai and chr20.dict copied from recipes/gatk4/stage-inputs.sh; chr20.fa (inputs/bwa-samtools/) hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [
@@ -10191,12 +10191,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "NYGC 30x NA12878 CRAM, ENA ERR3239334",
-    "NA12878 chr20 36x BAM (built from ERR3239334, inputs/gatk4/NA12878.chr20.30x.bam)",
-    "GIAB HG001 v4.2.1 benchmark VCF + high-confidence BED, chr20 slice",
-    "GRCh38_full_analysis_set_plus_decoy_hla.fa (chr20 reference + index)"
-   ]
+   "unpinned": []
   },
   "gemmi-real": {
    "check": [
@@ -10627,8 +10622,9 @@
     },
     {
      "id": "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)",
-     "tier": "versioned-release",
-     "unpinned": "the full sha256 lives in recipes/geo-ml/stage-inputs.sh, which writes pins.sha256 at stage time; no manifest is committed and the README prints only a truncated hash"
+     "note": "copied from recipes/geo-ml/stage-inputs.sh, which checks it at stage time",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "from_recipe": "measurements/geospatial-real",
@@ -10726,9 +10722,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)"
-   ]
+   "unpinned": []
   },
   "geospatial-real": {
    "check": [
@@ -11904,8 +11898,9 @@
    "dataset": [
     {
      "id": "UCI HIGGS, doi:10.24432/C5V312, ml/machine-learning-databases/00280/HIGGS.csv.gz",
-     "tier": "durable-id",
-     "unpinned": "the full sha256 is printed in the README's Pins table, but no sha256 manifest is committed in this dir (pins.sha256 is staged, not committed)"
+     "note": "copied from the README's Pins table and stage-inputs.sh",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -11987,9 +11982,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "UCI HIGGS, doi:10.24432/C5V312, ml/machine-learning-databases/00280/HIGGS.csv.gz"
-   ]
+   "unpinned": []
   },
   "gromacs-real": {
    "check": [
@@ -12032,7 +12025,8 @@
     {
      "from_recipe": "gromacs",
      "id": "benchMEM (81,743 atoms, PME, Berendsen NPT) tpr",
-     "note": "staged by recipes/gromacs; pins.sha256 here pins only the scripts decomp.sh and host.sh",
+     "note": "sha256 copied from recipes/gromacs/stage-inputs.sh, which checks it at stage time",
+     "pins": "datasets.sha256",
      "tier": "versioned-release"
     }
    ],
@@ -13640,14 +13634,16 @@
     {
      "from_recipe": "hmmer",
      "id": "Pfam releases/Pfam38.2/Pfam-A.hmm.gz",
-     "tier": "versioned-release",
-     "unpinned": "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+     "note": "inputs/hmmer/; search.sh checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged",
+     "pins": "datasets.sha256",
+     "tier": "versioned-release"
     },
     {
      "from_recipe": "hmmer",
      "id": "Ensembl release-116 human pep.all, filtered to one protein per gene",
-     "tier": "versioned-release",
-     "unpinned": "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+     "note": "inputs/hmmer/; search.sh checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged",
+     "pins": "datasets.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [
@@ -13804,10 +13800,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "Pfam releases/Pfam38.2/Pfam-A.hmm.gz",
-    "Ensembl release-116 human pep.all, filtered to one protein per gene"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "0.139.1's wrapper leaves under 1 KB of the 16 KiB user data; the script is staged as search.sh (pinned in pins.sha256)",
@@ -15213,13 +15206,15 @@
     {
      "from_recipe": "measurements/salmon-real",
      "id": "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz",
-     "note": "pinned by Ensembl's CHECKSUMS when salmon-real staged it",
+     "note": "pinned by Ensembl's CHECKSUMS when salmon-real staged it; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../salmon-real/pins.sha256",
      "tier": "versioned-release"
     },
     {
      "from_recipe": "kallisto",
      "id": "kallisto index built by recipes/kallisto from the Ensembl 116 cDNA (931,285,390 bytes)",
      "note": "hashed on every box; the check asserts all three chips read the same file",
+     "pins": "index.sha256",
      "tier": "built"
     },
     {
@@ -15666,8 +15661,9 @@
     },
     {
      "id": "lammps/lammps patch_22Jul2025 bench/log.15Jul25.rhodo.fixed.g++.1 (step-0 reference)",
-     "tier": "test-suite",
-     "unpinned": "step-0 values embedded in check.py; the README gives only a truncated sha256 (01384b04…7ea528), no manifest"
+     "note": "step-0 values embedded in check.py; the file hashed 2026-10-25 from its tag on GitHub, after the runs, and matches the README's truncated sha256",
+     "pins": "pins.sha256",
+     "tier": "test-suite"
     }
    ],
    "owners": [
@@ -15760,9 +15756,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "lammps/lammps patch_22Jul2025 bench/log.15Jul25.rhodo.fixed.g++.1 (step-0 reference)"
-   ]
+   "unpinned": []
   },
   "laspy-real": {
    "check": [
@@ -16185,7 +16179,8 @@
     {
      "from_recipe": "lineage",
      "id": "Nextclade dataset tag 2026-09-07--17-10-15Z",
-     "note": "sha256 asserted == the recipe's pin",
+     "note": "copied from pins.sha256 beside the dataset in the bucket (inputs/lineage/, written by recipes/lineage/stage-inputs.sh)",
+     "pins": "pins.sha256",
      "tier": "versioned-release"
     }
    ],
@@ -16452,14 +16447,15 @@
    "dataset": [
     {
      "id": "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes",
-     "note": "bucket reports Payer: BucketOwner, so every GET is free to the requester",
-     "tier": "roda",
-     "unpinned": "a RODA object; the README records sizes (stat on hash.k2d) but no sha256 manifest is committed"
+     "note": "hash.k2d, taxo.k2d and opts.k2d (the runtime set) hashed in place at the RODA bucket (us-west-2); hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "SRA SRR062634 (human WGS reads), 10k / 100k / 1M-read ladder",
-     "tier": "durable-id",
-     "unpinned": "no sha256 committed; SRA accession only"
+     "note": "the ladder subsets SRR062634_1 from inputs/bwa-real/; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [],
@@ -16635,10 +16631,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes",
-    "SRA SRR062634 (human WGS reads), 10k / 100k / 1M-read ladder"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "\"lith has no lever\"; this page supports it",
@@ -16711,14 +16704,15 @@
    "dataset": [
     {
      "id": "s3://1000genomes/technical/reference/GRCh38_reference_genome (GRCh38_full_analysis_set_plus_decoy_hla BWA index + .alt)",
-     "note": "the copy route took the five BWA index files from the bucket's inputs/bwa-real/ and omitted the 476 KB .alt",
-     "tier": "roda",
-     "unpinned": "the lith route reads the public prefix in place; no sha256 is committed in this dir"
+     "note": "the RODA objects the lith route read in place were hashed there 2026-10-25, after the runs, and equal the inputs/bwa-real/ copies the copy route used",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "roda"
     },
     {
      "id": "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz",
-     "tier": "roda",
-     "unpinned": "read in place through lith (mount route) or copied from inputs/bwa-real/ (copy route); no sha256 committed"
+     "note": "the RODA objects were hashed in place 2026-10-25, after the runs, and equal the inputs/bwa-real/ copies",
+     "pins": "../bwa-real/pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [],
@@ -16759,10 +16753,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "s3://1000genomes/technical/reference/GRCh38_reference_genome (GRCh38_full_analysis_set_plus_decoy_hla BWA index + .alt)",
-    "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "spawn launch rather than task run, because --instance-type pins the box",
@@ -17231,8 +17222,9 @@
    "dataset": [
     {
      "id": "ENCODE ENCFF933NSJ.bam (treatment, 2,057,454,374 B) and ENCFF768XTH.bam (control, 3,365,735,271 B), s3://encode-public",
-     "tier": "roda",
-     "unpinned": "checked in-task against ENCODE's own published md5 (metadata API); no committed sha256 manifest (pins.sha256 covers only gen.sh and host.sh)"
+     "note": "ENCODE's published md5s (md5, not sha256), copied from stage-inputs.sh; checked in-task",
+     "pins": "datasets.md5",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -17414,9 +17406,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENCODE ENCFF933NSJ.bam (treatment, 2,057,454,374 B) and ENCFF768XTH.bam (control, 3,365,735,271 B), s3://encode-public"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "0.139.1's wrapper leaves under 1 KB of EC2's 16 KiB user data; gen.sh staged by sha256 instead of inline",
@@ -19436,8 +19426,9 @@
     },
     {
      "id": "SeSAMe ExperimentHub cache: the recipe's four blobs plus probeIDSignature (EH8553)",
-     "tier": "built",
-     "unpinned": "built on AWS by sesame-cache.sh (pinned), and task 2 checks all five blob sha256s, but no blob manifest is committed in this dir; hub_index.rds's pin differs from the recipe's"
+     "note": "copied from sesame-cache-real.blobs beside the tar in the bucket; task 2 checks the same five sha256s; hub_index.rds's pin differs from the recipe's",
+     "pins": "sesame-cache.sha256",
+     "tier": "built"
     }
    ],
    "owners": [
@@ -19540,9 +19531,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "SeSAMe ExperimentHub cache: the recipe's four blobs plus probeIDSignature (EH8553)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "carries the --disable-threading workaround; the x86 gap waits on bioconda publishing a working x86 preprocessCore",
@@ -23247,7 +23236,7 @@
     {
      "id": "NASA TMR naca0012_val_sa: Summary of CFD SA Results (seven codes)",
      "tier": "durable-id",
-     "unpinned": "a published web table; values embedded in su2-real, not a hashed file"
+     "unpinned": "a published web table; the seven codes' values are embedded in case.sh (as in su2-real), not a hashed file"
     }
    ],
    "owners": [
@@ -27607,8 +27596,9 @@
    "dataset": [
     {
      "id": "DESS66, Zenodo 10.5281/zenodo.5676284 v1.0.0, DESS66.zip",
-     "tier": "durable-id",
-     "unpinned": "dess66.sha256 sits beside the zip in the bucket and every run re-checks it, but no sha256 manifest is committed in this dir; the README prints Zenodo's md5 and a truncated sha256"
+     "note": "copied from dess66.sha256 beside the zips in the bucket; every run re-checks the zip it reads; 00-fetch checked Zenodo's md5",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -27695,9 +27685,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "DESS66, Zenodo 10.5281/zenodo.5676284 v1.0.0, DESS66.zip"
-   ]
+   "unpinned": []
   },
   "pymatgen-real": {
    "check": [
@@ -28112,8 +28100,9 @@
    "dataset": [
     {
      "id": "QM9, figshare collection 10.6084/m9.figshare.c.978904 (v5): dsgdb9nsd.xyz.tar.bz2, uncharacterized.txt, atomref.txt, validation.txt, readme.txt",
-     "tier": "durable-id",
-     "unpinned": "qm9.sha256 sits beside the files in the bucket, not committed here; 00-fetch checks each against figshare's published md5 and every run re-checks the two it reads; the README prints only truncated hashes"
+     "note": "copied from qm9.sha256 beside the files in the bucket; 00-fetch checked figshare's md5 and every run re-checks the two it reads",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -28229,9 +28218,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "QM9, figshare collection 10.6084/m9.figshare.c.978904 (v5): dsgdb9nsd.xyz.tar.bz2, uncharacterized.txt, atomref.txt, validation.txt, readme.txt"
-   ]
+   "unpinned": []
   },
   "pytorch-real": {
    "check": [
@@ -28320,8 +28307,9 @@
    "dataset": [
     {
      "id": "s3://fast-ai-imageclas/cifar10.tgz (CIFAR-10, AWS Open Data)",
-     "tier": "roda",
-     "unpinned": "the archive sha256 is a constant in stage-inputs.sh, verified before upload and re-verified in-task; the pins.sha256 it writes is staged to the bucket, not committed"
+     "note": "copied from stage-inputs.sh, verified before upload and re-verified in-task",
+     "pins": "pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -28402,9 +28390,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "s3://fast-ai-imageclas/cifar10.tgz (CIFAR-10, AWS Open Data)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "uxlfoundation/oneDNN: no SVE-128 backward-weights kernel; the cause of the training gap",
@@ -29067,8 +29053,9 @@
     {
      "from_recipe": "measurements/salmon-real",
      "id": "ENA ERR188026_{1,2}.fastq.gz (complete run); the 200,000-pair subset is its first 800,000 lines",
-     "tier": "durable-id",
-     "unpinned": "no sha256 committed; ENA accession only, staged under inputs/salmon-real"
+     "note": "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-real/); the subset is cut in-task",
+     "pins": "../kallisto-real/reads.md5",
+     "tier": "durable-id"
     },
     {
      "from_recipe": "kallisto",
@@ -29118,9 +29105,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENA ERR188026_{1,2}.fastq.gz (complete run); the 200,000-pair subset is its first 800,000 lines"
-   ]
+   "unpinned": []
   },
   "quantum-espresso-real": {
    "check": [
@@ -30147,9 +30132,9 @@
    "dataset": [
     {
      "id": "NYC TLC 2023 yellow-taxi trip records, 12 monthly Parquet files, https://d37ci6vzurychx.cloudfront.net/trip-data",
-     "note": "RODA lists s3://nyc-tlc but it returns 403 to signed requests (open-data-registry#1418), so the TLC's own CloudFront is the source",
-     "tier": "durable-id",
-     "unpinned": "no committed sha256 manifest; per-file sha256s as fetched on 2026-10-17 are constants in stage-inputs.sh, and a TLC re-issue fails staging"
+     "note": "per-file sha256s as fetched on 2026-10-17, copied from stage-inputs.sh; a TLC re-issue fails staging",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -30235,9 +30220,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "NYC TLC 2023 yellow-taxi trip records, 12 monthly Parquet files, https://d37ci6vzurychx.cloudfront.net/trip-data"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "s3://nyc-tlc returns 403; files come from the TLC's CloudFront instead",
@@ -30396,6 +30379,7 @@
      "from_recipe": "geo-ml",
      "id": "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)",
      "note": "read, not copied; README cites a truncated sha256 only",
+     "pins": "../geo-ml-real/pins.sha256",
      "tier": "versioned-release"
     },
     {
@@ -32071,8 +32055,9 @@
    "dataset": [
     {
      "id": "Bioconductor airway_1.30.0.tar.gz (GSE52778, Himes et al. 2014)",
-     "tier": "versioned-release",
-     "unpinned": "full sha256 is printed in the README's Pins and held in stage-inputs.sh; no committed manifest file"
+     "note": "copied from stage-inputs.sh and the README's Pins",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [
@@ -32161,9 +32146,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "Bioconductor airway_1.30.0.tar.gz (GSE52778, Himes et al. 2014)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "AMD leg launched with spawn 0.131.1 built from its tag; 0.139.1's wrapper leaves too little of the 16 KiB user data",
@@ -32557,14 +32540,15 @@
    "dataset": [
     {
      "id": "ENA ERR188026_{1,2}.fastq.gz (Geuvadis, complete run)",
-     "note": "the same reads as salmon-real and quant-depth",
-     "tier": "durable-id",
-     "unpinned": "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest committed"
+     "note": "ENA's fastq_md5 (md5, not sha256): the values this run checked on the box (results/align/pins.txt)",
+     "pins": "../kallisto-real/reads.md5",
+     "tier": "durable-id"
     },
     {
      "id": "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz",
-     "tier": "versioned-release",
-     "unpinned": "pinned by Ensembl release-116 cdna/CHECKSUMS sum, checked on the box (results/prepare/pins.txt); no sha256 manifest committed"
+     "note": "inputs/salmon-real/ensembl116_cdna.fa.gz; the run checked Ensembl's CHECKSUMS sum (results/prepare/pins.txt); the sha256 was hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "../salmon-real/pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "id": "RSEM reference ens116.{grp,ti,seq} and gene_map.tsv (rsem-prepare-reference, task 00)",
@@ -32725,10 +32709,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENA ERR188026_{1,2}.fastq.gz (Geuvadis, complete run)",
-    "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
-   ]
+   "unpinned": []
   },
   "salmon-real": {
    "check": [
@@ -32774,13 +32755,15 @@
    "dataset": [
     {
      "id": "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz",
-     "tier": "versioned-release",
-     "unpinned": "recipes/salmon/stage-inputs.sh fetches the release byte-for-byte but commits no sha256 for the real-workload copy"
+     "note": "inputs/salmon-real/ensembl116_cdna.fa.gz; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "id": "ENA ERR188026_{1,2}.fastq.gz (complete run)",
-     "tier": "durable-id",
-     "unpinned": "no sha256 committed; ENA accession only"
+     "note": "ENA's fastq_md5 (md5, not sha256) for this same object (inputs/salmon-real/), checked on the box by kallisto-real, rsem-real and transcript-assembly-real; salmon-real's own runs did not check it",
+     "pins": "../kallisto-real/reads.md5",
+     "tier": "durable-id"
     },
     {
      "from_recipe": "salmon",
@@ -32960,10 +32943,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz",
-    "ENA ERR188026_{1,2}.fastq.gz (complete run)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "0.139.1 leaves too little of EC2's 16 KiB user data for this inline script; x86 legs staged a sha256-checked task.sh",
@@ -33135,8 +33115,9 @@
    "dataset": [
     {
      "id": "CELLxGENE Census LTS 2025-01-30 h5ads/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad (Hao et al., Cell 2021, doi:10.1016/j.cell.2021.04.048)",
-     "tier": "roda",
-     "unpinned": "full sha256 printed in the README's Pins table and embedded in hao2021.task.json (written to pins.sha256 inside the task); no manifest committed in this dir"
+     "note": "copied from the README's Pins table and hao2021.task.json, which checks it in-task",
+     "pins": "pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -33224,9 +33205,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "CELLxGENE Census LTS 2025-01-30 h5ads/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad (Hao et al., Cell 2021, doi:10.1016/j.cell.2021.04.048)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB user data; the AMD leg staged a sha256-checked task.sh",
@@ -33367,8 +33346,9 @@
    "dataset": [
     {
      "id": "covtype.data.gz, figshare file 5976039 (sklearn 1.9.1 datasets/_covtype.py); UCI doi:10.24432/C50K5N",
-     "tier": "durable-id",
-     "unpinned": "checked against scikit-learn 1.9.1's own fetch_covtype sha256; the README prints it truncated and no manifest is committed (pins.sha256 is staged, not committed)"
+     "note": "scikit-learn 1.9.1 fetch_covtype's own sha256, copied from stage-inputs.sh; checked before upload",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [
@@ -33487,9 +33467,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "covtype.data.gz, figshare file 5976039 (sklearn 1.9.1 datasets/_covtype.py); UCI doi:10.24432/C50K5N"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "nearest existing issue (learning rates above 0.1); does not cover this divergence",
@@ -33622,8 +33600,9 @@
    "dataset": [
     {
      "id": "NOAA GHCN-Daily 3.35-upd-2026101517: s3://noaa-ghcn-pds/csv/by_year/2024.csv + ghcnd-stations.txt",
-     "tier": "roda",
-     "unpinned": "the sha256 (2024.csv 62a950b9..., ghcnd-stations.txt 428eabc9...) lives in stage-inputs.sh's data.sha256 heredoc, not a committed manifest file; NOAA rewrites the by-year file daily, so a re-stage after its next update fails its own check"
+     "note": "copied from stage-inputs.sh's data.sha256 heredoc; NOAA rewrites the by-year file daily, so a re-stage after its next update fails its own check",
+     "pins": "pins.sha256",
+     "tier": "roda"
     }
    ],
    "owners": [
@@ -33736,9 +33715,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "NOAA GHCN-Daily 3.35-upd-2026101517: s3://noaa-ghcn-pds/csv/by_year/2024.csv + ghcnd-stations.txt"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "AMD leg staged the resolved command as a sha256-checked task.sh: spawn 0.139.1's wrapper leaves too little of EC2's 16 KiB user data",
@@ -34080,7 +34057,8 @@
     {
      "from_recipe": "bwa-samtools",
      "id": "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz (HG00096), complete run",
-     "note": "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest",
+     "note": "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's",
+     "pins": "../bwa-real/pins.sha256",
      "tier": "roda"
     }
    ],
@@ -34279,8 +34257,9 @@
    "dataset": [
     {
      "id": "10x Genomics pbmc_10k_v3_filtered_feature_bc_matrix.tar.gz (Cell Ranger 3.0.0 release path)",
-     "tier": "versioned-release",
-     "unpinned": "the full sha256 lives in pbmc10k.task.json and stage-inputs.sh (verified before upload and in-task); no committed sha256 manifest, and the README prints it truncated"
+     "note": "copied from stage-inputs.sh and pbmc10k.task.json (verified before upload and in-task)",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [
@@ -34367,9 +34346,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "10x Genomics pbmc_10k_v3_filtered_feature_bc_matrix.tar.gz (Cell Ranger 3.0.0 release path)"
-   ],
+   "unpinned": [],
    "upstream": [
     {
      "note": "0.139.1's wrapper leaves no room in EC2's 16 KiB user data; the AMD leg staged its script as a sha256-checked file, inputs as one prefix, outputs as one directory",
@@ -34985,8 +34962,9 @@
    "dataset": [
     {
      "id": "STREAM official source stream.c from cs.virginia.edu, sha256 a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b",
-     "tier": "durable-id",
-     "unpinned": "the full sha256 is printed in the README and checked in-task (sha256sum -c), but no manifest file is committed"
+     "note": "copied from the README; checked in-task (sha256sum -c)",
+     "pins": "pins.sha256",
+     "tier": "durable-id"
     }
    ],
    "owners": [],
@@ -35053,9 +35031,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "STREAM official source stream.c from cs.virginia.edu, sha256 a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b"
-   ]
+   "unpinned": []
   },
   "single-cell-real": {
    "check": [
@@ -37104,7 +37080,8 @@
     {
      "from_recipe": "star",
      "id": "ENA ERR188026 (complete run, 15,800,127 reads)",
-     "note": "staged by make stage RECIPE=star",
+     "note": "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-real/)",
+     "pins": "../kallisto-real/reads.md5",
      "tier": "durable-id"
     }
    ],
@@ -38768,14 +38745,15 @@
    "dataset": [
     {
      "id": "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)",
-     "note": "same reads as salmon-real, star-real and rnaseq-counts-real",
-     "tier": "durable-id",
-     "unpinned": "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest"
+     "note": "ENA's fastq_md5 (md5, not sha256): the values this run checked on the box (results/align/pins.txt)",
+     "pins": "../kallisto-real/reads.md5",
+     "tier": "durable-id"
     },
     {
      "id": "Ensembl 116 Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz",
-     "tier": "versioned-release",
-     "unpinned": "checked against Ensembl release-116 CHECKSUMS (BSD sum, results/align/pins.txt); no sha256 manifest"
+     "note": "inputs/star-real/GRCh38.primary_assembly.fa.gz; the run checked Ensembl's CHECKSUMS sum (results/align/pins.txt); the sha256 was hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "id": "Ensembl 116 GRCh38.116.gtf.gz (646,577 transcripts)",
@@ -39182,10 +39160,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)",
-    "Ensembl 116 Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
-   ]
+   "unpinned": []
   },
   "tree-crosscheck": {
    "check": [
@@ -39272,9 +39247,9 @@
     {
      "from_recipe": "iqtree",
      "id": "Pfam 38.2 seed alignment PF26127.1 (12TM_Mok13), 114 taxa x 477 columns",
-     "note": "read by both IQ-TREE and RAxML-NG, so the cross-check is on identical bytes",
-     "tier": "versioned-release",
-     "unpinned": "staged by make stage RECIPE=iqtree; no sha256 in this dir"
+     "note": "inputs/iqtree/pfam38.2_seed_alignment.fa; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the same sha256 is in iqtree-real/pins.sha256 and checked in-task by recipes/iqtree",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     }
    ],
    "owners": [],
@@ -39348,9 +39323,7 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": [
-    "Pfam 38.2 seed alignment PF26127.1 (12TM_Mok13), 114 taxa x 477 columns"
-   ]
+   "unpinned": []
   },
   "variant-annotation-real": {
    "check": [
@@ -40870,9 +40843,9 @@
    "dataset": [
     {
      "id": "grimme-lab/GMTKN55 commit 8d485b37a1ca8837e395042671ca5ba4e0714691 (branch v1, the 2017 publication), gmtkn55-v1.tar.gz",
-     "note": "fetched on AWS by 00-fetch.task.json, checked to carry that commit id",
-     "tier": "versioned-release",
-     "unpinned": "no sha256 manifest committed in this dir; the archive's full sha256 is printed in the README's Pins table and checked in-task (results/*/sources.check: OK)"
+     "note": "copied from stage-inputs.sh and the README's Pins table; checked in-task (results/*/sources.check: OK)",
+     "pins": "pins.sha256",
+     "tier": "versioned-release"
     },
     {
      "id": "arXiv:2107.00299v2 (Christensen et al., OrbNet Denali), Table IV, GFN2-xTB column",
@@ -40972,7 +40945,6 @@
    "schema": 1,
    "status": "fail-reported",
    "unpinned": [
-    "grimme-lab/GMTKN55 commit 8d485b37a1ca8837e395042671ca5ba4e0714691 (branch v1, the 2017 publication), gmtkn55-v1.tar.gz",
     "arXiv:2107.00299v2 (Christensen et al., OrbNet Denali), Table IV, GFN2-xTB column"
    ],
    "upstream": [

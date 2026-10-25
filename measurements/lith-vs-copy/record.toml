@@ -6,13 +6,14 @@ result_unit = "one bwa mem alignment of SRR062634 (HG00096, 24.1M read pairs) ag
 [[dataset]]
 id = "s3://1000genomes/technical/reference/GRCh38_reference_genome (GRCh38_full_analysis_set_plus_decoy_hla BWA index + .alt)"
 tier = "roda"
-unpinned = "the lith route reads the public prefix in place; no sha256 is committed in this dir"
-note = "the copy route took the five BWA index files from the bucket's inputs/bwa-real/ and omitted the 476 KB .alt"
+pins = "../bwa-real/pins.sha256"
+note = "the RODA objects the lith route read in place were hashed there 2026-10-25, after the runs, and equal the inputs/bwa-real/ copies the copy route used"
 
 [[dataset]]
 id = "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
 tier = "roda"
-unpinned = "read in place through lith (mount route) or copied from inputs/bwa-real/ (copy route); no sha256 committed"
+pins = "../bwa-real/pins.sha256"
+note = "the RODA objects were hashed in place 2026-10-25, after the runs, and equal the inputs/bwa-real/ copies"
 
 [[run]]
 instance = "c8g.4xlarge"

@@ -5,9 +5,9 @@ result_unit = "one RAxML-NG ML search (13 starts) on Pfam 38.2 PF26127.1, 114 ta
 [[dataset]]
 id = "Pfam 38.2 seed alignment PF26127.1 (12TM_Mok13), 114 taxa x 477 columns"
 tier = "versioned-release"
+pins = "pins.sha256"
 from_recipe = "iqtree"
-unpinned = "staged by make stage RECIPE=iqtree; no sha256 in this dir"
-note = "read by both IQ-TREE and RAxML-NG, so the cross-check is on identical bytes"
+note = "inputs/iqtree/pfam38.2_seed_alignment.fa; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the same sha256 is in iqtree-real/pins.sha256 and checked in-task by recipes/iqtree"
 
 # --- RAxML-NG across four Graviton generations: same seed, --threads 8 ------------------
 # README prints $/search (0.0482 / 0.0375 / 0.0404 / 0.0303) but no $/hr, so no $ field is recorded.

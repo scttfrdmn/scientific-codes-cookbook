@@ -1,0 +1,4 @@
+# Hashed 2026-10-25 (UTC) on AWS (c8g.4xlarge, us-west-2), streaming each object where it lives (aws s3 cp - | sha256sum). This was AFTER the measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# Bucket copies under inputs/hmmer/ (recipes/hmmer/stage-inputs.sh); both match the truncated sha256s recipes/hmmer/README.md prints, and search.sh checks these same sha256s in-task, so the runs read these bytes. pins.sha256 beside this file pins the scripts and is checked in-task.
+2d82087b6c5c60d762cc767f98e8260b273134c215ab7efccf7440614a4e5dab  pfam38.2_A.hmm.gz
+c753ba28b98b750659e27a7f9e0ceb224e26a5c767ce676a219c0a20adae5259  ensembl116_pep_one_per_gene.fa.gz
