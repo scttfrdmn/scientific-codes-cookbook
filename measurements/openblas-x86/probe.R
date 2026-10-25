@@ -10,7 +10,7 @@ f("cpu_model", sub("^model name\\s*:\\s*", "",
 # Read the selected kernel through ctypes. Deliberately NOT via R's .Call: these are
 # plain C symbols returning char*, not registered R routines, so .Call on them dies.
 cat(paste(system(paste0("python3 -c \"",
-  "import ctypes,glob;so=sorted(glob.glob('/opt/conda/lib/libopenblas*.so*'));",
+  "import ctypes,glob,os;so=sorted(glob.glob(os.environ.get('CONDA_PREFIX','/opt/conda')+'/lib/libopenblas*.so*'));",
   "l=ctypes.CDLL(so[-1])\n",
   "for n in ('openblas_get_corename','openblas_get_config'):\n",
   "    g=getattr(l,n);g.restype=ctypes.c_char_p;print('%-26s %s'%(n,g().decode()))\"" ),

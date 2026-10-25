@@ -8,7 +8,7 @@ f("arch", R.version$arch)
 f("cpu_model", sub("^model name\\s*:\\s*", "",
     grep("model name|Model name", readLines("/proc/cpuinfo"), value = TRUE)[1]))
 cat(paste(system(paste0("python3 -c \"",
-  "import ctypes,glob;so=sorted(glob.glob('/opt/conda/lib/libopenblas*.so*'));",
+  "import ctypes,glob,os;so=sorted(glob.glob(os.environ.get('CONDA_PREFIX','/opt/conda')+'/lib/libopenblas*.so*'));",
   "l=ctypes.CDLL(so[-1])\n",
   "g=l.openblas_get_corename;g.restype=ctypes.c_char_p;print('%-26s %s'%('openblas_get_corename',g().decode()))\""),
   intern = TRUE), collapse = "\n"), "\n")

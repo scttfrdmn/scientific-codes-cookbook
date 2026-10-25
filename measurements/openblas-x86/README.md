@@ -5,8 +5,10 @@
 > move: bit-identical on all four.** That is a negative result, and it narrows the
 > [digest-doesn't-pin-numerics finding](../ambertools-real/README.md) rather than extending it.
 
-Same `linux/amd64` image digest on every x86 rung, so only the host microarchitecture differs.
-2 vCPU / 4 GiB each. The probe computes two things through OpenBLAS: a **fixed point** (dominant
+Same pinned bytes on every x86 rung, so only the host microarchitecture differs: conda-forge's
+linux-64 R 4.5.3 + OpenBLAS 0.3.34 ([`x86.linux-64.lock`](x86.linux-64.lock), 95 packages by sha256,
+installed offline into a pinned `mambaorg/micromamba` image). The c8g rung is the aarch.bio arm64
+image. 2 vCPU / 4 GiB each. The probe computes two things through OpenBLAS: a **fixed point** (dominant
 eigenvalue by power iteration, cross-checked against LAPACK's own eigendecomposition) and an
 attempted **path** (a logistic map at r = 3.9 applied between `dgemv` calls, so rounding should
 amplify).
@@ -63,6 +65,7 @@ biocontainers images are 20.4 and 21.10).
 
 ```sh
 B=$(make -s print-bucket)
+bash measurements/openblas-x86/stage.sh $B          # once: the x86 env's 95 packages, sha256-checked
 for f in c6i c6a c7i c7a c8g; do
   sed "s|\${COOKBOOK_BUCKET}|$B|g" measurements/openblas-x86/chaos-$f.task.json > /tmp/ch-$f.json
   spawn task run --spec /tmp/ch-$f.json --wait     # serially, per truffle#175
@@ -74,4 +77,7 @@ The probe reads the kernel with `ctypes` rather than R's `.Call`: `openblas_get_
 `.Call` on them kills the script — which is how the first batch of five rungs was lost.
 
 Raw per-rung output and the table as TSV are in [`results/`](results/); the probe scripts are
-[`probe.R`](probe.R) (fixed point) and [`chaos.R`](chaos.R) (attempted path).
+[`probe.R`](probe.R) (fixed point) and [`chaos.R`](chaos.R) (attempted path). The x86 rungs were
+re-run on 2026-10-25 from the conda-forge env and reproduced every line of `results/` byte for byte;
+the 2026-10-04 runs had used the `linux/amd64` entry of the aarch.bio image, whose 95 packages carry
+the same sha256s.
