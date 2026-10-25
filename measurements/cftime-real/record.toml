@@ -1,6 +1,24 @@
 # measurements/cftime-real/record.toml -- every CMIP6 time axis on AWS, three chips, integer = identical.
-schema = 1
+# Schema 2: billed is spawn's task Started -> Ended (README), matched to cookbook-cftime-real-decode-r4*.
+schema = 2
 result_unit = "the whole Pangeo CMIP6 archive's time axes decoded and checked (512,171 stores, 7,291,094,172 values)"
+
+[workload]
+size = { stores = 512171, variables = 983590, values = 7291094172 }
+note = "the time coordinate and bounds of every zarr store in s3://cmip6-pds, fetched once into 16 shards, decoded by 32 worker processes"
+
+[timing]
+wall = "decode.py's wall (decode_wall_s in timing.tsv); billed also covers staging the shards, Docker, the pull or x86 env install, and check.py"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "summary-identical"
+attribution = "same-version-other-build"
+attribution_note = "the climate env's arm64 image and its locked x86 twin, same versions (cftime 1.6.5, xarray 2026.9.0, numpy 2.5.3, python 3.14.8); c8i's 32 vCPUs are 16 cores x 2 hyperthreads"
+note = "AMD 1.21x faster than Graviton4 and 10% dearer per result; Intel 1.33x slower and 53% dearer"
 
 [[dataset]]
 id = "s3://cmip6-pds/pangeo-cmip6.csv.gz VersionId KCB936FiD1GjuGHQxrzBPr.RL.MsTp8U"
@@ -15,8 +33,11 @@ pins = "axes.sha256"
 note = "written once by 00-fetch; every chunk carries its source key, S3 VersionId and sha256, re-checked on read"
 
 [[run]]
+id = "fetch"
+task = "00-fetch"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
+data_path = "s3-native"
 date = "2026-10-20"
 date_source = "git"
 wall_s = 3060
@@ -24,6 +45,9 @@ results = "results/fetch.log"
 note = "00-fetch, run once to build the shards (51 min); the README prices it at $0.28 but prints no $/hr, so no $ field"
 
 [[run]]
+id = "decode-c8g"
+in = ["chip"]
+task = "01-decode"
 instance = "c8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -40,6 +64,9 @@ peak_gib = 13.0
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "decode-c8i"
+in = ["chip"]
+task = "01-decode"
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -56,6 +83,9 @@ peak_gib = 16.0
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "decode-c8a"
+in = ["chip"]
+task = "01-decode"
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

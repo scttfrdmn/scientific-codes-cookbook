@@ -1,6 +1,32 @@
 # measurements/bwa-mem2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = spawn's completion record (results/<chip>/<tool>/completion.json, to the second), not
+# launch-to-terminate as the README words it. avg cores is printed per mem run (3 values), so it is not authored.
+schema = 2
 result_unit = "one genome aligned (HG00096 low-coverage, 3 runs, 73,305,772 pairs)"
+
+[workload]
+size = { read_pairs = 73305772 }
+note = "one bwa / bwa-mem2 mem per 1000 Genomes run (SRR062634, SRR062635, SRR062641), each with its own read group, against the whole GRCh38_full_analysis_set_plus_decoy_hla with ALT contigs"
+
+[timing]
+wall = "the three mem invocations summed, index load included (align.sh's timings.tsv)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-bwa"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 build of the same bwa (quay.io/biocontainers); Intel's 16 vCPUs are 8 cores x 2 threads"
+
+[[series]]
+id = "chip-mem2"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "x86 builds dispatch to bwa-mem2.avx512bw (64 lanes of 8-bit SIMD); the arm64 build reports AVX mode at 16 lanes"
 
 [[dataset]]
 id = "1000 Genomes s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634,SRR062635,SRR062641 _{1,2}.filt.fastq.gz"
@@ -23,6 +49,8 @@ from_recipe = "bwa-mem2"
 note = "recipes/bwa-mem2 00-index tar; sha256 checked identical on all three chips"
 
 [[run]]
+id = "bwa-r8g"
+in = ["chip-bwa"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
@@ -36,10 +64,15 @@ compute_usd = 0.624
 billed_usd = 0.697
 peak_gib = 8.7
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "01-bwa"
 results = "results/arm64/bwa/"
 note = "bwa; wall = the three mem invocations summed, index load included"
 
 [[run]]
+id = "mem2-r8g"
+in = ["chip-mem2"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
@@ -53,10 +86,16 @@ compute_usd = 0.397
 billed_usd = 0.531
 peak_gib = 25.8
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-mem2"
+simd_path = "AVX"
 results = "results/arm64/mem2/"
 note = "bwa-mem2, bwa-mem2 kernel AVX (128-bit); wall = the three mem invocations summed, index load included"
 
 [[run]]
+id = "bwa-r8i"
+in = ["chip-bwa"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -70,10 +109,15 @@ compute_usd = 0.951
 billed_usd = 1.115
 peak_gib = 8.7
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "01-bwa"
 results = "results/x86_64/bwa/"
 note = "bwa; wall = the three mem invocations summed, index load included"
 
 [[run]]
+id = "mem2-r8i"
+in = ["chip-mem2"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -87,10 +131,16 @@ compute_usd = 0.465
 billed_usd = 0.674
 peak_gib = 25.7
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-mem2"
+simd_path = "avx512bw"
 results = "results/x86_64/mem2/"
 note = "bwa-mem2, bwa-mem2 kernel avx512bw; wall = the three mem invocations summed, index load included"
 
 [[run]]
+id = "bwa-r8a"
+in = ["chip-bwa"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -104,10 +154,15 @@ compute_usd = 0.707
 billed_usd = 0.866
 peak_gib = 8.71
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "01-bwa"
 results = "results/amd/bwa/"
 note = "bwa; wall = the three mem invocations summed, index load included"
 
 [[run]]
+id = "mem2-r8a"
+in = ["chip-mem2"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -121,6 +176,10 @@ compute_usd = 0.366
 billed_usd = 0.579
 peak_gib = 25.7
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-mem2"
+simd_path = "avx512bw"
 results = "results/amd/mem2/"
 note = "bwa-mem2, bwa-mem2 kernel avx512bw; wall = the three mem invocations summed, index load included"
 

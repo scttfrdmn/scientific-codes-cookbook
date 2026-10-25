@@ -1,6 +1,24 @@
 # measurements/mne-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's task window, as the README says (cookbook-mne-real-ds000117{,-x8664,-amd}-v2,
+# the second of the two rounds; only that round's figures are printed). avg_cores = times.txt avg_busy_cores.
+schema = 2
 result_unit = "the whole verified session: six runs preprocessed, plus ICA, evokeds, decoding with five nulls, both dipole fits and every check"
+
+[workload]
+size = { runs = 6, triggers = 887, channels = 306 }
+note = "one subject's six-run MEG session; ICA and decoding run on the concatenated session, so it does not split below a subject. Sized by memory (32.5 GiB ru_maxrss); decoding is half the wall and single-threaded"
+
+[timing]
+wall = "tool wall: real.py, timed in-task (results/*/times.txt tool_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size"]
+equal_work = "triggers"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the neuroimaging env's linux-64 twin; Graviton4's OpenBLAS is neoversev2, both x86 chips' Cooperlake"
 
 [[dataset]]
 id = "OpenNeuro ds000117 v2.0.0 sub-01 ses-meg, s3://openneuro.org (doi:10.18112/openneuro.ds000117.v2.0.0)"
@@ -9,6 +27,8 @@ pins = "data.sha256"
 note = "the RODA path is 'latest', so sources.tsv records each object's S3 VersionId and single-part ETag (md5); 00-pin.task.json checks them on AWS and writes data.sha256"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 date = "2026-10-18"
@@ -21,10 +41,13 @@ compute_usd = 0.0861
 billed_usd = 0.0969
 peak_gib = 32.5
 peak_kind = "rss"
+avg_cores = 1.93
 results = "results/arm64/"
 note = "peak is ru_maxrss (identical on all three chips), not the 5 s sampler"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
@@ -37,10 +60,13 @@ compute_usd = 0.1023
 billed_usd = 0.1121
 peak_gib = 32.5
 peak_kind = "rss"
+avg_cores = 1.83
 results = "results/x86_64/"
 note = "peak is ru_maxrss"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
@@ -53,6 +79,7 @@ compute_usd = 0.0643
 billed_usd = 0.0733
 peak_gib = 32.5
 peak_kind = "rss"
+avg_cores = 1.73
 results = "results/amd/"
 note = "peak is ru_maxrss"
 

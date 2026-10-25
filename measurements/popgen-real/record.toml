@@ -1,6 +1,24 @@
 # measurements/popgen-real/record.toml
-schema = 1
+# Schema 2: billed is spawn's completion window (README: "spawn's window"), matched exactly
+# (results/billed-windows.txt). avg_cores is footprint.txt's avg_busy_cores_tool.
+schema = 2
 result_unit = "both workloads over the whole genome with every check: 1000 Genomes Phase 3's 22 autosomes, and a 2.88 Gb Out-of-Africa coalescent genome for 3,336 haplotypes"
+
+[workload]
+size = { samples = 2504, snps = 77818345, haplotypes = 3336, bases = 2881033286 }
+note = "two workloads, one process per chromosome each, in one 16-process pool: the 22 Phase 3 autosome VCFs (15.5 GB gzipped), and an msprime Out-of-Africa genome of the same chromosome lengths"
+
+[timing]
+wall = "real.py, the task's tool wall"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "snps-eq-plink"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the popgen env's linux-64 twin, installed offline (same msprime 1.4.4, tskit 1.0.3, scikit-allel 1.3.13, numpy 2.5.4); Intel's 16 processes share 8 physical cores"
 
 [[dataset]]
 id = "RODA s3://1000genomes/release/20130502/ALL.chr{1..22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz + integrated_call_samples_v3.20130502.ALL.panel (doi:10.1038/nature15393)"
@@ -16,7 +34,10 @@ from_recipe = "measurements/plink-real"
 note = "pinned by sha256 in the spec"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
+avg_cores = 13.88
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
@@ -33,7 +54,10 @@ peak_kind = "rss"
 note = "peak is the largest single worker; the container cgroup peaked at 18.0 GiB"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
+avg_cores = 14.98
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
@@ -50,7 +74,10 @@ peak_kind = "rss"
 note = "16 processes on 8 physical cores; cgroup peak 20.8 GiB"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
+avg_cores = 14.12
 purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/host.txt"

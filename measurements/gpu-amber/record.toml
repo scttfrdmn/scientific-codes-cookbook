@@ -1,0 +1,191 @@
+# measurements/gpu-amber/record.toml -- written from scratch at schema 2 (#118), from README.md and
+# the committed results/ and cfg/ (S3 reads only, $0).
+# Amber 26 pmemd.cuda_SPFP from Scott's licensed source build: no redistributable image exists, so
+# the native rows carry image = "unrecorded" and say what ran in `build`. The README prints no price,
+# so no row carries usd_hr. Util plateau / mean / HBM peak are derived from the committed long-run
+# gpu_util.csv (the only phase with a series), never authored.
+# Dates: the S3 LastModified of each run's artifacts in the session's local time (PDT), as the
+# README dates them (2026-09-18).
+# NOT rows, because the schema needs a full instance name and no artifact records it: every L4 run
+# except the failed `g6` (whose cfg/amber_g6.yaml writes runs/amber/g6) -- that is g6-firm (the L4
+# cold / warm / long phases), g6n1, g6n2 and g6d -- and the A10G g5b (cfg/amber_g5.yaml writes
+# runs/amber/g5, not g5b). The README names the cards only. Their numbers live in the 'l4-firm-up',
+# 'ntwr-restart-writes' and 'failures' checks, so there is no card series (L4 vs L40S) here.
+# The p5 watches in cfg/ have no outcome in any artifact, so they are not rows.
+schema = 2
+result_unit = "one simulated nanosecond of an 18,310-atom TIP3P box (PME, 10 Å cut, 2 fs, SHAKE, Langevin 300 K)"
+throughput_unit = "ns/day"
+throughput_is_result = true
+
+[workload]
+size = { atoms = 18310, steps = 25000 }
+note = "tleap TIP3P box; the long phase overrides steps (250,000). Inputs inputs/amber/sys.prmtop and sys.rst7 in the private bucket, sha256 printed in the README"
+
+[timing]
+wall = "measured around the pmemd.cuda_SPFP call with date +%s.%N (the scripts' measured_wall_s / compute_wall_s); Amber's own Total wall time is in each note"
+
+[[dataset]]
+id = "tleap TIP3P water box, 18,310 atoms: inputs/amber/sys.prmtop + sys.rst7"
+tier = "built"
+unpinned = "built with tleap and not committed; the README prints both sha256 (sys.prmtop 1be2c133..., sys.rst7 6579ae10...), but no manifest file pins them"
+
+# --- L40S firm-up: results/g6e-firm (amber_firm.sh, cfg/amberbig_g6e_*.yaml: g6e.2xlarge) -------
+[[run]]
+id = "l40s-cold"
+instance = "g6e.2xlarge"
+purpose = "diagnostic"
+image = "unrecorded"
+build = "Amber 26 pmemd.cuda_SPFP, licensed source build in nvidia/cuda:12.8.1-devel, run natively on the DLAMI (no container; not redistributable)"
+launch = "launch"
+date = "2026-09-18"
+date_source = "run"
+variant = "cold: first run on a fresh instance, ~/.nv/ComputeCache absent"
+wall_s = 58.3
+throughput = 770.67
+phase_s = { setup = 34, source = "results/g6e-firm/smoke-check.txt (startup_s to first GPU activity)" }
+results = "results/g6e-firm/smoke-check.txt"
+gpu = { model = "NVIDIA L40S", count = 1, mem_mib = 46068, runtime = "native", offload = ["all"], offload_evidence_absent = "pmemd.cuda_SPFP is the CUDA engine; no mdout GPU-device lines were captured, only the 1 Hz utilisation (5 active samples, mean 88%)" }
+note = "Amber's own wall 14 s; 34 s before the GPU does anything (driver JIT of a binary with no native cubin for the card); peak mem 653 MB"
+
+[[run]]
+id = "l40s-warm"
+instance = "g6e.2xlarge"
+purpose = "diagnostic"
+image = "unrecorded"
+build = "Amber 26 pmemd.cuda_SPFP, licensed source build in nvidia/cuda:12.8.1-devel, run natively on the DLAMI (no container; not redistributable)"
+launch = "launch"
+date = "2026-09-18"
+date_source = "run"
+variant = "warm: second run on the same instance, ComputeCache 68K"
+wall_s = 6.2
+throughput = 762.24
+phase_s = { setup = 1, source = "results/g6e-firm/smoke-check.txt (startup_s to first GPU activity)" }
+results = "results/g6e-firm/smoke-check.txt"
+gpu = { model = "NVIDIA L40S", count = 1, mem_mib = 46068, runtime = "native", offload = ["all"], offload_evidence_absent = "pmemd.cuda_SPFP is the CUDA engine; no mdout GPU-device lines were captured, only the 1 Hz utilisation (6 active samples, mean 88%)" }
+note = "Amber's own wall 7 s; starts in 1 s; peak mem 653 MB"
+
+[[run]]
+id = "l40s-long"
+instance = "g6e.2xlarge"
+purpose = "primary"
+image = "unrecorded"
+build = "Amber 26 pmemd.cuda_SPFP, licensed source build in nvidia/cuda:12.8.1-devel, run natively on the DLAMI (no container; not redistributable)"
+launch = "launch"
+date = "2026-09-18"
+date_source = "run"
+size = { atoms = 18310, steps = 250000 }
+wall_s = 56.7
+throughput = 768.51
+results = "results/g6e-firm/smoke-check.txt"
+gpu = { model = "NVIDIA L40S", count = 1, mem_mib = 46068, runtime = "native", offload = ["all"], offload_evidence_absent = "pmemd.cuda_SPFP is the CUDA engine; no mdout GPU-device lines were captured, only the 1 Hz utilisation (57 active samples, mean 88%)", util_series = "results/g6e-firm/gpu_util.csv" }
+note = "Amber's own wall 56 s; every sample after the first at or above 86%; 653 / 46,068 MB = 1.42% of the card's memory"
+
+# --- the container attempt that failed: results/g6 (amber_measure.sh, cfg/amber_g6.yaml) --------
+[[run]]
+id = "l4-container-fail"
+instance = "g6.2xlarge"
+purpose = "diagnostic"
+image = "docker.io/nvidia/cuda@sha256:4b9ed5fa8361736996499f64ecebf25d4ec37ff56e4d11323ccde10aa36e0c43"
+build = "Amber 26 pmemd.cuda_SPFP licensed source build, run in the CUDA 12.8.1 devel image that built it (docker run --privileged --gpus all)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-18"
+date_source = "run"
+run_outcome = "failed"
+results = "results/g6"
+note = "NVIDIA L4; status: FAIL reason: pmemd-run, libemil.so: cannot open shared object file: the build's RPATH is absolute. No gpu table: pmemd never started"
+
+# --- checks --------------------------------------------------------------------------------------
+[[check]]
+id = "phases-complete"
+claim = "[`amber_firm.sh`](amber_firm.sh) runs three phases on one fresh instance"
+kind = "sentinel"
+bound = "rc=0 and an mdout ns/day per phase"
+observed = "status=OK; rc=0 on cold, warm and long, on the L4 and the L40S"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "jit-cache"
+claim = "`~/.nv/ComputeCache` is absent before the cold run and 68K after it."
+kind = "reported"
+bound = "—"
+observed = "68K after the cold run (L4 and L40S)"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "long-plateau"
+claim = "In the long runs every sample after the first is at or above 90% (L4) or 86% (L40S)."
+kind = "reported"
+bound = "—"
+observed = "L4 80 samples, mean 91% (peak 92); L40S 57 samples, mean 88% (peak 89)"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "hbm-fraction"
+claim = "On memory, 386 / 23,034 MB is **1.68%** of the L4, and 653 / 46,068 MB is **1.42%** of the L40S."
+kind = "reported"
+bound = "—"
+observed = "386 / 23034 MB = 1.68%; 653 / 46068 MB = 1.42%"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "l4-firm-up"
+claim = "Cold, warm, long — `results/g6-firm/` (L4)"
+kind = "reported"
+bound = "—"
+observed = "cold 556.24 ns/day, 56.8 / 16 s, 36 s to first GPU activity; warm 553.69, 8.3 / 8 s, 1 s; long (250,000 steps) 544.62, 79.8 / 80 s; 386 MB of 23,034; instance not recorded"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "ntwr-restart-writes"
+claim = "Both report `status: OK`. `g6n1` measured restart-file writes rather than the L4, and only the utilisation shows it."
+kind = "reported"
+bound = "—"
+observed = "g6n1 (ntwr -1) 32.04 ns/day, util 5.7 / 14%, compute wall 187.0 s; g6n2 (ntwr 25000) 561.25 ns/day, util 9.6 / 92%, compute wall 65.7 s (Amber's own 16 s)"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "failures"
+claim = "The failures on the way — kept as evidence"
+kind = "reported"
+bound = "—"
+observed = "g5b (A10G) missing-libs: libgfortran.so.5; g6 (L4) libemil.so: cannot open shared object file; g6d (L4) No space left on device, root volume 75G/75G"
+outcome = "reported"
+across_chips = "n/a"
+
+[[trap]]
+id = "amber-ntwr-negative-restart-every-step"
+scope = "method"
+symptom = "status: OK and 32.04 ns/day, GPU util mean 5.7% (max 14%); or, on a longer run, 'No space left on device' with the root volume at 75G/75G"
+blames = "the GPU, or Amber's speed on the card"
+cause = "ntwr = -1 writes a restart file every step, so the run measures restart-file writes rather than the card"
+fix = "ntwr = nstlim (one restart at the end): the committed md.in uses ntwr=25000, and g6n2 ran 561.25 ns/day"
+cost = "g6n1 and g6d (two L4 runs)"
+
+[[trap]]
+id = "amber-cuda-devel-image-cannot-run-pmemd"
+scope = "image"
+symptom = "missing-libs: libgfortran.so.5"
+blames = "the CUDA image or the card"
+cause = "the CUDA-devel image that built the binary does not run it (README): libgfortran.so.5 is not resolvable there"
+fix = "run natively on the DLAMI, installing libgfortran if ldconfig lacks it (amber_firm.sh)"
+
+[[trap]]
+id = "amber-absolute-rpath-libemil"
+scope = "tool"
+symptom = "libemil.so: cannot open shared object file: No such file or directory"
+blames = "the CUDA libraries or the container"
+cause = "the build's RPATH is absolute, so the relocated pmemd26 tree cannot find its own libs"
+fix = "export LD_LIBRARY_PATH=$W/pmemd26/lib before running (amber_firm.sh)"
+
+[[upstream]]
+ref = "spawn#601"
+role = "blocker"
+note = "spawn task run cannot provision a GPU AMI; every row is spawn launch on the DLAMI"

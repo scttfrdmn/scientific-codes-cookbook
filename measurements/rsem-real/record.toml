@@ -1,6 +1,25 @@
 # measurements/rsem-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: every billed figure is spawn's task window (results/billed-windows.txt); the quant rows'
+# 2452 / 3407 / 2052 s match it exactly although the README says "launch to terminate". Tasks 00 and
+# 01 carry billed_s only: no $/hr is printed for m8g.xlarge or m8g.8xlarge.
+schema = 2
 result_unit = "one sample (ERR188026, 15,800,127 read pairs) quantified by RSEM against all 465,769 Ensembl 116 transcripts and checked"
+
+[workload]
+size = { read_pairs = 15800127, transcripts = 465769 }
+note = "the RSEM reference (00) and the bowtie2 -k 200 SAM (01) are built once on Graviton4 and staged; 02-quant is the per-sample job, run on every chip"
+
+[timing]
+wall = "the row's tool step, timed in-script: rsem-prepare-reference (00), the bowtie2 -k 200 alignment (01, bowtie2-build not included), rsem-calculate-expression end to end (02)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "read-bookkeeping"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's RSEM on Graviton4 and bioconda's x86 build of the same package 1.3.3 on both x86 chips; Intel's 16 vCPU are 8 cores x 2 SMT"
 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (Geuvadis, complete run)"
@@ -33,6 +52,7 @@ note = "measurements/salmon-real output, staged by stage-inputs.sh for the Spear
 
 # --- shared inputs, once, Graviton4 ---------------------------------------------------
 [[run]]
+id = "prepare"
 instance = "m8g.xlarge"
 purpose = "primary"
 results = "results/prepare/"
@@ -40,9 +60,12 @@ host = "results/prepare/host.txt"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 19
-note = "task 00, rsem-prepare-reference; README prints $0.008 billed but no $/hr or billed seconds, so no $ on this row"
+billed_s = 157
+task = "00-prepare"
+note = "task 00, rsem-prepare-reference; README prints $0.008 billed (spawn's cost_estimate, 0.007829) but no $/hr, so no $ on this row; billed_s is the spawn window (results/billed-windows.txt)"
 
 [[run]]
+id = "align"
 instance = "m8g.8xlarge"
 purpose = "primary"
 results = "results/align/"
@@ -53,10 +76,17 @@ workers = 32
 wall_s = 1534
 peak_gib = 4.5
 peak_kind = "rss"
-note = "task 01: bowtie2-build 657 s at 4.5 GiB, then the -k 200 alignment 1534 s averaging 31.94 busy cores; README prints $0.920 billed (and bowtie2 $0.61 compute) but no $/hr, so no $ on this row"
+billed_s = 2306
+ranks = 1
+threads_per_rank = 32
+avg_cores = 31.94
+task = "01-bowtie2-align"
+note = "billed_s is the spawn window, bowtie2-build included (results/billed-windows.txt; cost_estimate 0.919940). Task 01: bowtie2-build 657 s at 4.5 GiB, then the -k 200 alignment 1534 s averaging 31.94 busy cores; README prints $0.920 billed (and bowtie2 $0.61 compute) but no $/hr, so no $ on this row"
 
 # --- 02-quant, 16 threads on a 4xlarge -----------------------------------------------------
 [[run]]
+id = "m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -71,9 +101,14 @@ compute_usd = 0.4488
 billed_usd = 0.4891
 peak_gib = 10.88
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-quant"
 note = "EM 1526 s (RSEM's 'Time Used for EM.cpp'); the rest is single-threaded SAM parsing. A second Graviton4 run (2230 s, earlier check script) gave the same sha256 for every output"
 
 [[run]]
+id = "m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -88,9 +123,14 @@ compute_usd = 0.7616
 billed_usd = 0.8013
 peak_gib = 10.88
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-quant"
 note = "EM 2572 s; bioconda x86 RSEM (package 1.3.3)"
 
 [[run]]
+id = "m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -105,6 +145,9 @@ compute_usd = 0.5164
 billed_usd = 0.555
 peak_gib = 10.88
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 16
+task = "02-quant"
 note = "EM 1457 s; bioconda x86 RSEM (package 1.3.3)"
 
 # --- checks: '## The identities, at scale, on all three chips' (observed on every chip) ---

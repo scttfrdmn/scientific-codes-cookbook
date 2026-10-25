@@ -1,6 +1,24 @@
 # measurements/geospatial-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = the EC2 window (CloudTrail, results/billed-windows.txt), as the README says
+# ("launch to terminate"). Peak = footprint.txt's peak_anon_gib, the README's "peak RSS".
+schema = 2
 result_unit = "one state-wide DEM prepared (Colorado GLO-30 mosaic, UTM warp, slope, hillshade) plus every check"
+
+[workload]
+size = { tiles = 28, pixels = 362880000 }
+note = "mosaic (gdalbuildvrt) -> bilinear warp to UTM 13N at 30 m (20,766 x 15,054 px) -> gdaldem slope -> gdaldem hillshade; the two gdaldem steps are single-threaded; about 2 minutes of every run is the numpy checks"
+
+[timing]
+wall = "real.py, the GDAL workload plus every check"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "near-lookup"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the geospatial-07484bd0bf42 linux-64 twin (GDAL 3.12.4, PROJ 9.8.1, numpy 2.5.2 on all three); Intel's 16 vCPU are 8 cores x 2 threads"
 
 [[dataset]]
 id = "Copernicus DEM GLO-30 Public, 28 COGs Copernicus_DSM_COG_10_N{37..40}_00_W{103..109}_00_DEM.tif, s3://copernicus-dem-30m/ (2022-05-09 objects)"
@@ -18,7 +36,11 @@ instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/results.json"
+id = "c8g"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-17"
 date_source = "git"
 wall_s = 158
@@ -27,13 +49,20 @@ usd_hr = 0.6381
 compute_usd = 0.028
 billed_usd = 0.0507
 peak_gib = 18.7
+peak_kind = "cgroup-anon-max"
+avg_cores = 2.91
+phase_s = { pull = 28, source = "README: the arm64 aarch.science image pull" }
 
 [[run]]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/results.json"
+id = "c8i"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-17"
 date_source = "git"
 wall_s = 166
@@ -42,13 +71,20 @@ usd_hr = 0.7497
 compute_usd = 0.0346
 billed_usd = 0.0596
 peak_gib = 18.7
+peak_kind = "cgroup-anon-max"
+avg_cores = 3.47
+phase_s = { pull = 3, source = "README: the micromamba image pull, before a 1-2 s offline env install" }
 
 [[run]]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/results.json"
+id = "c8a"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-17"
 date_source = "git"
 wall_s = 123
@@ -57,6 +93,9 @@ usd_hr = 0.8622
 compute_usd = 0.0295
 billed_usd = 0.0532
 peak_gib = 18.9
+peak_kind = "cgroup-anon-max"
+avg_cores = 3.34
+phase_s = { pull = 3, source = "README: the micromamba image pull, before a 1-2 s offline env install" }
 
 # checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'graviton4', 'intel', 'amd']
 [[check]]

@@ -2,8 +2,36 @@
 # The README prices two modes per chip ("L-INS-i --threadit 0 / threaded refinement"), each with
 # its own tool wall, so each chip has two run rows. Billed $/result is left out of every row: it is
 # tool wall + that chip's overhead, and the README gives the overhead only as a 34-47 s range.
-schema = 1
+# Schema 2: one task per chip ran all five alignments, so every row's billed basis is the shared
+# spawn window (results/billed-windows.txt: 1283 / 1405 / 1015 s, as the README prints).
+# peak_gib is the 5 s max of memory.stat anon (real.sh), the same on every row of a chip.
+schema = 2
 result_unit = "one L-INS-i alignment of the whole Pfam 38.2 PF01255.25 seed (919 sequences), in the row's refinement mode"
+
+[workload]
+size = { sequences = 919, residues = 207712 }
+note = "one task per chip aligns the family five times (L-INS-i --threadit 0 twice, threaded refinement twice, --auto once); a row is the mean of a mode's two runs"
+
+[timing]
+wall = "one mafft invocation, timed in-script (mean of the mode's two runs)"
+
+[[series]]
+id = "chip-linsi"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "linsi-reproducible"
+attribution = "same-version-other-build"
+attribution_note = "MAFFT 7.525: aarch.bio's arm64 build on Graviton4, bioconda's x86 build on Intel and AMD; Intel's 8 vCPU are 4 cores x 2 SMT"
+note = "--threadit 0: a serial refinement, 1.28-1.50 cores busy"
+
+[[series]]
+id = "chip-mt"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "none: threaded refinement follows a different path on every run (six runs, six alignments)"
+attribution = "same-version-other-build"
+attribution_note = "MAFFT 7.525: aarch.bio's arm64 build on Graviton4, bioconda's x86 build on Intel and AMD; Intel's 8 vCPU are 4 cores x 2 SMT"
+note = "threaded refinement: all 8 vCPU busy"
 
 [[dataset]]
 id = "Pfam 38.2 PF01255.25 (Prenyltransf) seed, gaps removed: pf01255.25_unaligned.fa"
@@ -19,6 +47,8 @@ pins = "pins.sha256"
 note = "the SP/TC reference; byte-identical to iqtree-real's pf01255.25_seed.fa once uppercased and . -> -"
 
 [[run]]
+id = "c8g-linsi"
+in = ["chip-linsi"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -30,9 +60,18 @@ wall_s = 484
 usd_hr = 0.3190
 compute_usd = 0.0428
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+avg_cores = 1.28
+billed_basis = "shared-window"
+variant = "--threadit 0"
 note = "L-INS-i --threadit 0, mean of two runs; README billed $/result 0.0470 left out (overhead not printed per chip). Task billed window for all five alignments 1,283 s"
 
 [[run]]
+id = "c8g-mt"
+in = ["chip-mt"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -44,9 +83,17 @@ wall_s = 131
 usd_hr = 0.3190
 compute_usd = 0.0116
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+billed_basis = "shared-window"
+variant = "threaded refinement"
 note = "L-INS-i threaded refinement, mean of two runs; README billed $/result 0.0158 left out"
 
 [[run]]
+id = "c8i-linsi"
+in = ["chip-linsi"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -58,9 +105,18 @@ wall_s = 468
 usd_hr = 0.3748
 compute_usd = 0.0488
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+avg_cores = 1.49
+billed_basis = "shared-window"
+variant = "--threadit 0"
 note = "L-INS-i --threadit 0; README billed $/result 0.0537 left out. Task billed window 1,405 s"
 
 [[run]]
+id = "c8i-mt"
+in = ["chip-mt"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -72,9 +128,17 @@ wall_s = 209
 usd_hr = 0.3748
 compute_usd = 0.0218
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+billed_basis = "shared-window"
+variant = "threaded refinement"
 note = "L-INS-i threaded refinement; README billed $/result 0.0267 left out"
 
 [[run]]
+id = "c8a-linsi"
+in = ["chip-linsi"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -86,9 +150,18 @@ wall_s = 374
 usd_hr = 0.4311
 compute_usd = 0.0447
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+avg_cores = 1.5
+billed_basis = "shared-window"
+variant = "--threadit 0"
 note = "L-INS-i --threadit 0; README billed $/result 0.0488 left out. Task billed window 1,015 s"
 
 [[run]]
+id = "c8a-mt"
+in = ["chip-mt"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -100,6 +173,12 @@ wall_s = 114
 usd_hr = 0.4311
 compute_usd = 0.0137
 peak_gib = 0.57
+ranks = 1
+threads_per_rank = 8
+peak_kind = "cgroup-anon-max"
+tmpfs_peak_gib = 0.07
+billed_basis = "shared-window"
+variant = "threaded refinement"
 note = "L-INS-i threaded refinement; README billed $/result 0.0178 left out"
 
 # --- checks: '## What held at scale, on all three chips' -------------------------------

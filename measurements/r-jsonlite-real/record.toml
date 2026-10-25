@@ -1,6 +1,26 @@
 # measurements/r-jsonlite-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = the EC2 window (CloudTrail RunInstances -> TerminateInstances, results/billed-windows.txt);
+# billed - wall is the README's "boot and staging" (144 / 122 / 134 s). workers = 8 forked mclapply workers
+# (processes, not threads), so no ranks/threads_per_rank.
+schema = 2
 result_unit = "the complete OpenAlex institutions entity (143,455 records, 2.28 GB of JSON Lines) parsed, round-tripped and checked"
+
+[workload]
+size = { records = 143455, files = 83 }
+note = "72 chunks of 2,000 records over 8 forked workers, then a single-threaded stream_in / stream_out / stream_in of the whole entity"
+
+[timing]
+wall = "real.R end to end (exit 0 in N s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "lossless-sha256"
+attribution = "same-version-other-build"
+attribution_note = "x86 installs jsonlite 2.0.0 / arrow 25.0.0 / R 4.5.3 from the env's locked linux-64 twin; Intel's 8 vCPUs are 4 cores x 2 SMT threads"
+note = "AMD 1.44x Graviton4 and 4% cheaper per result billed; Intel 13% slower and 31% dearer"
 
 [[dataset]]
 id = "OpenAlex snapshot released 2026-10-14, s3://openalex institutions entity (83 gzipped JSON Lines parts)"
@@ -9,6 +29,8 @@ pins = "institutions.sha256"
 note = "sha256 per part computed on AWS by hash.task.json and checked against OpenAlex's own manifest (record_count, content_length); OpenAlex replaces the snapshot quarterly, so a later release fails the pin"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/score-arm64-r8g2xl.tsv"
@@ -26,6 +48,8 @@ peak_kind = "vmhwm"
 note = "peak is the parent's VmHWM; cgroup memory.peak 31.94 GiB adds the workers and page cache"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/score-x86_64-r8i2xl.tsv"
@@ -42,6 +66,8 @@ peak_gib = 19.1
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/score-amd-r8a2xl.tsv"

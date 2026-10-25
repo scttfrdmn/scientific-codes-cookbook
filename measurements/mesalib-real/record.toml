@@ -1,6 +1,24 @@
 # measurements/mesalib-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window (cookbook-mesalib-real-{p4,x8664-p4,amd-p4}), as the
+# README's caveat says. The LP_NUM_THREADS 1/2/4/8 sweep runs inside each task, so it is not a series.
+schema = 2
 result_unit = "one complete verified run: three exact ID renders, the flood and its control, and 32 shaded 4K frames"
+
+[workload]
+size = { mosaic_side = 7201, shaded_frames = 32 }
+note = "103.7 M triangles of SRTM 1-arc-second DEM; three exact ID renders, a flood and its control, then 8 shaded 4K frames at each of 4 llvmpipe thread counts"
+
+[timing]
+wall = "the sum of real.sh's per-stage walls after the display-free backend probe (times.txt: prep, exact, shade-t1/2/4/8)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "aarch.science's viz image on Graviton4, its linux-64 lock twin (viz-0fe5dabecafa) on x86; llvmpipe runs 128-bit vectors on Graviton4, 256-bit on x86; the whole-run wall includes the thread sweep, where Graviton4's 1- and 2-thread rungs are 844 s of its 1,352"
 
 [[dataset]]
 id = "s3://elevation-tiles-prod/skadi/N4{5,6}/N4{5,6}E00{6,7}.hgt.gz (Terrain Tiles, SRTM 1-arc-second, four tiles)"
@@ -9,6 +27,8 @@ pins = "pins.sha256"
 note = "Payer: BucketOwner; real.sh and terrain.py are pinned in the same manifest"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -25,6 +45,8 @@ peak_kind = "rss"
 note = "billed is the task window (wrapper start to stage-out done), priced by spawn's cost_estimate; the whole-run wall includes the 1-8 thread sweep"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -40,6 +62,8 @@ peak_gib = 21.78
 peak_kind = "rss"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

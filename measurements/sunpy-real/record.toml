@@ -2,8 +2,25 @@
 # The README calls the Graviton4-vs-x86 residual differences "neither a fixed point nor a
 # trajectory" (libm roundings in a non-iterative chain), so the five residual checks carry no
 # across_chips value; the enum has no slot for that.
-schema = 1
+# Schema 2: billed = spawn's task window (results/<chip>/completion.json), as the README says.
+schema = 2
 result_unit = "the whole day, checked: all 343 AIA 171 Å maps of 2017-09-06 through the frame round trip, plus the derotated NOAA 12673 datacube"
+
+[workload]
+size = { files = 343 }
+note = "one AIA channel for one whole day at 4-minute cadence, 5000 x 5000 px per map; 16 single-threaded worker processes, one image each at a time; the per-pixel frame round trip is 83-85% of the CPU"
+
+[timing]
+wall = "real.py"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "datasum"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the astro-e2ee19affec3 linux-64 twin; Intel's 16 vCPUs are 8 SMT cores, so two workers share each core"
 
 [[dataset]]
 id = "s3://gov-nasa-hdrl-data1/sdac/sdo/aia/20170906/0171/, all 343 sdo_aia_h2_*_0171_v1.fits (NASA HelioCloud aia.lev2_hc, CC0)"
@@ -18,7 +35,12 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
+id = "m8g"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 330
 billed_s = 454
 usd_hr = 0.7181
@@ -35,7 +57,12 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "run"
+id = "m8i"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 722
 billed_s = 816
 usd_hr = 0.8467
@@ -52,7 +79,12 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "run"
+id = "m8a"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 501
 billed_s = 587
 usd_hr = 0.9738

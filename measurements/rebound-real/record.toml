@@ -1,5 +1,8 @@
 # measurements/rebound-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances) to within 1 s, as
+# the README says (results/billed-windows.txt). Each box runs two single-threaded REBOUND processes at
+# once (concurrent = 2): the nominal long run, and real.py then the shadow.
+schema = 2
 result_unit = "one 100-Myr nominal + shadow WHFast pair plus the DE440-span IAS15 checks"
 
 [[dataset]]
@@ -8,7 +11,34 @@ tier = "versioned-release"
 pins = "pins.sha256"
 note = "NAIF publishes no checksums; the sha256 recorded by 00-fetch on AWS is the pin, re-checked in-task (results/<chip>/staged.sha256)"
 
+[workload]
+size = { bodies = 10, simulated_myr = 100, checkpoints = 201 }
+note = "Sun + 9 barycentres from DE440; two 100-Myr WHFast runs (nominal + shadow) at dt = 4 d are 99% of the wall, each one single-threaded process; memory irrelevant"
+
+[timing]
+wall = "first integration to the last check (run.sh; the slower of the two cores' work)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "trajectory-bit-identical"
+attribution = "same-version-other-build"
+attribution_note = "the astro env: aarch.science's arm64 image, its astro-c7d877c02e6d linux-64 twin on both x86 chips; rebound 5.0.1 everywhere, FP contraction off; Intel's 4 vCPUs are 2 cores x 2 SMT"
+note = "one WHFast step costs 1.57 us on Graviton4, 0.98 on Intel, 0.94 on AMD; Intel cheapest per result"
+
+[[not_swept]]
+axis = "workers"
+reason = "Neither generation nor core count was swept, because each REBOUND process is single-threaded."
+
+[[not_swept]]
+axis = "generation"
+reason = "Neither generation nor core count was swept, because each REBOUND process is single-threaded."
+
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +46,9 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 wall_s = 14535
 billed_s = 14687
 usd_hr = 0.1595
@@ -24,6 +57,8 @@ billed_usd = 0.6508
 note = "two single-threaded REBOUND processes; peak RSS printed as 51 MB (ru_maxrss of real.py), left out because the unit is MB not GiB/MiB"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -31,6 +66,9 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 wall_s = 9053
 billed_s = 9170
 usd_hr = 0.1874
@@ -39,6 +77,8 @@ billed_usd = 0.4774
 note = "peak RSS printed as 54 MB"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -46,6 +86,9 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 wall_s = 8700
 billed_s = 8801
 usd_hr = 0.2155

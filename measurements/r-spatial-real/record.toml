@@ -1,7 +1,25 @@
 # measurements/r-spatial-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed "runs from EC2 launch to terminate" -- the CloudTrail window, to the second
+# (results/billed-windows.txt).
+schema = 2
 result_unit = "the whole workload plus every check: all 85,529 US census tracts measured, aggregated and joined, and Colorado's DEM summarised by its 1,447 tracts by two routes"
 trap_refs = ["geo-ml-terra-float32-decimetres"]   # owned by geo-ml-real, which measured it
+
+[workload]
+size = { tracts = 85529, counties = 3235, files = 56, colorado_tracts = 1447 }
+note = "vector leg over the whole national tract release, then a raster leg over Colorado's 14,400 x 25,200 px DEM; sized by memory (several 363 M-cell layers held at once), not cores"
+
+[timing]
+wall = "real.R's wall (wall.txt)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "zone-partition"
+attribution = "same-version-other-build"
+attribution_note = "aarch.science's r image on Graviton4, its r-d98eb9641259 linux-64 twin on x86 (R 4.5.3, sf 1.1.3, terra 1.9.50 on all three); Intel's 8 vCPU are 4 cores; the x86 route skips the 0.86 GB image pull"
 
 [[dataset]]
 id = "Census TIGER/Line 2024 TRACT/tl_2024_{56 FIPS}_tract.zip"
@@ -24,6 +42,8 @@ from_recipe = "measurements/geospatial-real"
 note = "read, not copied"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -39,6 +59,8 @@ peak_gib = 24.3
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -54,6 +76,8 @@ peak_gib = 27.1
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

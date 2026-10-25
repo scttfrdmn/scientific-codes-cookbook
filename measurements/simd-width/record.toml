@@ -1,8 +1,24 @@
 # measurements/simd-width/record.toml
 # A cross-recipe instrument: no results/ committed, nothing priced or timed in wall-clock, so the
 # run rows carry instance and date only; every number lives in the checks as printed.
-schema = 1
+# Schema 2: each row's throughput is its STREAM Triad at 16 threads (the README's t16 column), the
+# one per-row rate; the FP-kernel GFLOP/s stay in the checks. One image digest on every box.
+schema = 2
 result_unit = "one probe + STREAM thread sweep + four-build FP kernel comparison on one Graviton instance (nothing is priced per result)"
+throughput_unit = "GB/s"
+
+[workload]
+size = { stream_array_elements = 40000000 }
+note = "STREAM built -DSTREAM_ARRAY_SIZE=40000000 (305 MiB per array, 916 MiB total, past any LLC), swept over threads with OMP_PROC_BIND=close; a 32 KB L1-resident dot product built four ways, single-threaded, best of three"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image"]
+equal_work = "stream-validates"
+attribution = "same-binary"
+attribution_note = "the same aarchsci r image digest on every box, the kernels compiled in-task with fixed flags; one 4xlarge per generation, and c9g's slice may be specific to how a Graviton5 host is provisioned"
+note = "STREAM Triad at 16 threads: Graviton5 saturates early and declines (125 / 156 / 141 GB/s at 4 / 8 / 16 threads) while Graviton4 climbs to 337, though Graviton5 is 25% faster per core on compute"
 
 [[dataset]]
 id = "STREAM official source stream.c from cs.virginia.edu, sha256 a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b"
@@ -11,38 +27,50 @@ pins = "pins.sha256"
 note = "copied from the README; checked in-task (sha256sum -c)"
 
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-22"
 date_source = "git"
 threads_per_core = 1            # README: no SMT on any of them
+throughput = 171
 note = "probe, STREAM sweep and FP kernel (sv-c6g); no results committed"
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-22"
 date_source = "git"
 threads_per_core = 1
+throughput = 225
 note = "probe, STREAM sweep, FP kernel, disassembly"
 
 # The hpc7g.16xlarge (Graviton3E, us-east-1) run is not a [[run]] row: the schema's instance
 # pattern ^[a-z][0-9]+... rejects the "hpc7g" family name. Its numbers are in the checks below.
 
 [[run]]
+id = "gen-c8g"
+in = ["gen"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-09-22"
 date_source = "git"
 threads_per_core = 1
+throughput = 337
 note = "probe, STREAM sweep, FP kernel, disassembly, verify run"
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-09-22"
 date_source = "git"
 threads_per_core = 1
+throughput = 141
 note = "probe, STREAM sweep, FP kernel, disassembly; the 16-thread STREAM collapse reproduced in a second run"
 
 # --- in-task asserts ---------------------------------------------------------------------

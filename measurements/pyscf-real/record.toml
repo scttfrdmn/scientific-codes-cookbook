@@ -1,6 +1,25 @@
 # measurements/pyscf-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the README defines billed as "instance launch to stage-out": CloudTrail RunInstances ->
+# spawn's ended_at reproduces all four rows to within 2 s (results/billed-windows.txt), basis
+# ec2-to-spawn-end. ec2_s is the full EC2 window.
+schema = 2
 result_unit = "the whole stratum: all 783 characterized QM9 molecules with at most six heavy atoms, every check passed"
+
+[workload]
+size = { molecules = 783, ccsd_t_molecules = 175 }
+note = "one molecule per worker process, 16 workers, one BLAS thread each; B3LYP is 72-77% of the CPU, CCSD(T) dense BLAS"
+
+[timing]
+wall = "pyscf_run.py (psi4_run.py on the Psi4 row), tool_wall_s in footprint.txt"
+billed_basis = "ec2-to-spawn-end"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "scf-converges"
+attribution = "same-version-other-build"
+attribution_note = "pyscf 2.14.0 from the comp-chem env (aarch.science arm64; its linux-64 twin on x86); OpenBLAS neoversev2 on Graviton4, Cooperlake on both x86; Intel's 16 vCPUs are 8 cores x 2 threads"
 
 [[dataset]]
 id = "QM9, figshare collection 10.6084/m9.figshare.c.978904 (v5): dsgdb9nsd.xyz.tar.bz2, uncharacterized.txt, atomref.txt, validation.txt, readme.txt"
@@ -9,6 +28,8 @@ pins = "pins.sha256"
 note = "copied from qm9.sha256 beside the files in the bucket; 00-fetch checked figshare's md5 and every run re-checks the two it reads"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/pyscf/"
@@ -24,8 +45,14 @@ billed_usd = 0.685
 peak_gib = 2.83
 peak_kind = "rss"
 note = "peak is the largest single worker (ru_maxrss); cgroup memory.peak, counting page cache, was 41.8-44.4 GiB"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 3471
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/pyscf/"
@@ -40,8 +67,14 @@ compute_usd = 0.814
 billed_usd = 0.83
 peak_gib = 2.83
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 3586
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/pyscf/"
@@ -56,8 +89,13 @@ compute_usd = 0.495
 billed_usd = 0.511
 peak_gib = 2.83
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 1963
 
 [[run]]
+id = "psi4-g4"
 instance = "r8g.4xlarge"
 purpose = "diagnostic"
 image = "quay.io/aarchsci/dft@sha256:b356499318a2a257b475cbd2d35372d0e91c2fba2b35e9b5c2051596814bc049"
@@ -73,6 +111,12 @@ billed_usd = 0.516
 peak_gib = 2.33
 peak_kind = "rss"
 note = "Psi4 cross-check task (the psi4 recipe's dft image), 128 GiB for conventional MP2/CC scratch in the half-RAM /tmp; Graviton4 only, Psi4's x86 build does not import"
+workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 2027
+task = "02-psi4"
 
 # --- checks: "What held at scale, on all three chips"; observed = worst chip ------------
 [[check]]

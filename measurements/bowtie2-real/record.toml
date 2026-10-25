@@ -1,6 +1,43 @@
 # measurements/bowtie2-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: the generation/knee rows' billed is spawn's completion record; the two x86 legs'
+# printed billed is the EC2 window (CloudTrail), both in results/billed-windows.txt. The x86 legs
+# ran 2026-10-21 (completion records), not on the git date their rows carry.
+schema = 2
 result_unit = "one bowtie2 --local alignment of SRR062634 (24,148,993 read pairs) to GRCh38_full_analysis_set_plus_decoy_hla"
+
+[workload]
+size = { read_pairs = 24148993 }
+note = "embarrassingly parallel over reads against one shared index (bt2index.tar, built once by 00-build-index); SAM streamed through an awk counter, never written"
+
+[timing]
+wall = "bowtie2 --local piped to the in-task awk counter, timed in-script (date +%s around the pipe)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size"]
+equal_work = "primary-records"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "billed_usd" }
+note = "2.06x faster and 36.8% cheaper per result Graviton2 -> Graviton5; Graviton3 -> Graviton4 is nearly cost-neutral (1.15x, -5.7%)"
+
+[[series]]
+id = "knee"
+axis = "workers"
+held = ["image", "input", "family", "generation", "size"]
+equal_work = "primary-records"
+attribution = "same-binary"
+verdict = { shape = "no-knee", through = 64, on = "wall" }
+note = "4.00x on 4x the cores, 100.1% parallel efficiency; compute $ invariant ($0.1730-0.1737), billed $ rises only because ~84 s of fixed overhead is billed at the higher rate"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "primary-records"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run the recipe's pinned biocontainers bowtie2 2.5.5, and its default (not x86-64-v3) binary; c8i's 16 vCPUs are 8 cores with SMT, c8a's and c8g's 16 cores -- the likely reason, not separated by a measurement"
 
 [[dataset]]
 id = "s3://1000genomes/phase3/data/HG00096/sequence_read/SRR062634_{1,2}.filt.fastq.gz"
@@ -28,35 +65,49 @@ note = "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck"
 
 # --- generation sweep, 16 threads -----------------------------------------------------
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1536
 billed_s = 1667
 usd_hr = 0.544
 compute_usd = 0.2321
 billed_usd = 0.2519
+tmpfs_peak_gib = 11.6445
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1122
 billed_s = 1240
 usd_hr = 0.58
 compute_usd = 0.1808
 billed_usd = 0.1998
+tmpfs_peak_gib = 11.6445
 
 [[run]]
+id = "c8g-16"
+in = ["gen", "knee", "chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 977
 billed_s = 1063
@@ -65,58 +116,85 @@ compute_usd = 0.1732
 billed_usd = 0.1884
 peak_gib = 7.7734
 peak_kind = "rss"
+avg_cores = 15.95
+tmpfs_peak_gib = 11.6445
 note = "same row in the generation, cross-chip and knee tables. peak is the README peak RSS (the task samples cgroup memory.current)"
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.4xlarge"
 purpose = "generation-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 746
 billed_s = 824
 usd_hr = 0.6955
 compute_usd = 0.1441
 billed_usd = 0.1592
+tmpfs_peak_gib = 11.6445
 
 # --- the Graviton4 rung on Intel and AMD ----------------------------------------------
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 2
 wall_s = 1097
 billed_s = 1246
+billed_basis = "ec2"
 usd_hr = 0.7497
 compute_usd = 0.2285
 billed_usd = 0.2595
+avg_cores = 15.97
+tmpfs_peak_gib = 11.6445
+simd_path = "default build: '[WARNING] Failed to launch x86-64-v3 version, staying with default'"
 note = "ran bowtie2's default build: log prints '[WARNING] Failed to launch x86-64-v3 version, staying with default' (not investigated). Peak RSS 7,960-7,962 MiB across chips, per-chip value not printed"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-07"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 666
 billed_s = 761
+billed_basis = "ec2"
 usd_hr = 0.8622
 compute_usd = 0.1595
 billed_usd = 0.1823
+avg_cores = 15.96
+tmpfs_peak_gib = 11.6445
+simd_path = "default build: '[WARNING] Failed to launch x86-64-v3 version, staying with default'"
 note = "same x86-64-v3 fallback warning as c8i"
 
 # --- knee sweep, Graviton4 -------------------------------------------------------------
 [[run]]
+id = "knee-32"
+in = ["knee"]
 instance = "c8g.8xlarge"
 purpose = "core-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 490
 billed_s = 575
 usd_hr = 1.2762
@@ -124,13 +202,19 @@ compute_usd = 0.1737
 billed_usd = 0.2038
 peak_gib = 8.1553
 peak_kind = "rss"
+avg_cores = 31.87
+tmpfs_peak_gib = 11.6445
 
 [[run]]
+id = "knee-48"
+in = ["knee"]
 instance = "c8g.12xlarge"
 purpose = "core-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 48
+ranks = 1
+threads_per_rank = 48
 wall_s = 326
 billed_s = 409
 usd_hr = 1.9142
@@ -138,13 +222,19 @@ compute_usd = 0.1733
 billed_usd = 0.2175
 peak_gib = 8.5293
 peak_kind = "rss"
+avg_cores = 47.52
+tmpfs_peak_gib = 11.6445
 
 [[run]]
+id = "knee-64"
+in = ["knee"]
 instance = "c8g.16xlarge"
 purpose = "core-sweep"
 date = "2026-10-07"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 64
 wall_s = 244
 billed_s = 326
 usd_hr = 2.5523
@@ -152,6 +242,8 @@ compute_usd = 0.1730
 billed_usd = 0.2311
 peak_gib = 8.8965
 peak_kind = "rss"
+avg_cores = 63.44
+tmpfs_peak_gib = 11.6445
 
 # --- checks: the identity table, the in-task asserts, the bwa cross-check ---------------
 [[check]]

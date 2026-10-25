@@ -1,6 +1,25 @@
 # measurements/relion-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn window for Graviton4 and both Intel rows, but the EC2 window for the
+# AMD row (results/billed-windows.txt). workers = 9 counts MPI ranks on the 9 x 8 rows, so their
+# ranks/threads_per_rank are not authored (9 x 8 = 72 would contradict workers).
+schema = 2
 result_unit = "one complete gold-standard 3D auto-refinement (RELION 5.0 tutorial Refine3D/job019, 4,452 particles) run to convergence and post-processed"
+
+[workload]
+size = { particles = 4452, box = 256 }
+note = "Refine3D/job019 of the RELION 5.0 SPA tutorial, D2 beta-galactosidase at 1.2445 A/px, 16 iterations of auto-refinement to convergence, then relion_postprocess with the depositors' mask and MTF"
+
+[timing]
+wall = "relion_refine_mpi (refine_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "particles-conserved"
+attribution = "same-version-other-build"
+attribution_note = "RELION 5.1.0 from aarch.bio (arm64) vs bioconda (x86), default (non --cpu) path on both; c8i's 64 vCPU are 32 cores x 2 hyperthreads"
 
 [[dataset]]
 id = "MRC-LMB relion50_tutorial_precalculated_results.tar.gz (11,326,844,944 B, 2023-10-26; 24-movie subset of EMPIAR-10204)"
@@ -13,6 +32,8 @@ instance = "c8g.16xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "git"
+id = "c8g"
+in = ["chip"]
 workers = 9
 threads_per_core = 1
 wall_s = 444
@@ -22,6 +43,8 @@ compute_usd = 0.315
 billed_usd = 0.39
 peak_gib = 20.3
 peak_kind = "cgroup-memory.peak"
+avg_cores = 47.3
+bind = "--bind-to none"
 note = "9 MPI ranks x 8 threads; first of n = 3 (444, 444, 451 s). Prices from the AWS Price List API; spawn printed none"
 
 [[run]]
@@ -29,6 +52,8 @@ instance = "c8i.16xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "git"
+id = "c8i"
+in = ["chip"]
 workers = 9
 threads_per_core = 2
 wall_s = 648
@@ -38,6 +63,8 @@ compute_usd = 0.54
 billed_usd = 0.611
 peak_gib = 22.9
 peak_kind = "cgroup-memory.peak"
+avg_cores = 51.5
+bind = "--bind-to none"
 note = "9 x 8, default path; first of n = 2 (648, 651 s)"
 
 [[run]]
@@ -47,15 +74,21 @@ results = "results/amd/"
 spawn_version = "0.131.1"
 date = "2026-10-20"
 date_source = "git"
+id = "c8a"
+in = ["chip"]
 workers = 9
 threads_per_core = 1
 wall_s = 384
 billed_s = 521
+billed_basis = "ec2"
 usd_hr = 3.4486
 compute_usd = 0.368
 billed_usd = 0.499
 peak_gib = 24.2
 peak_kind = "cgroup-memory.peak"
+avg_cores = 48.22
+tmpfs_peak_gib = 2.91
+bind = "--bind-to none"
 note = "9 x 8, n = 1; spawn 0.131.1 built from its release tag because 0.139.1's wrapper overflows EC2 user data (spawn#1246); cost_limit lowered from $6.40 to $3.00"
 
 [[run]]
@@ -63,6 +96,8 @@ instance = "c8i.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"
 date_source = "git"
+id = "c8i-cpu-kernels"
+variant = "x86 --cpu vectorised kernels"
 workers = 9
 threads_per_core = 2
 wall_s = 751
@@ -72,6 +107,7 @@ compute_usd = 0.626
 billed_usd = 0.711
 peak_gib = 21.2
 peak_kind = "cgroup-memory.peak"
+bind = "--bind-to none"
 note = "x86 build's vectorised `--cpu` kernels: slower than the default path (751 s vs 648 s); arm64 has no --cpu"
 
 [[run]]
@@ -80,6 +116,8 @@ purpose = "core-sweep"
 date = "2026-10-20"
 date_source = "git"
 workers = 9
+ranks = 9
+threads_per_rank = 1
 note = "9 ranks x 1 thread, determinism.task.json: 2,439–2,480 s (a range over two runs; no per-run wall or price printed)"
 
 [[run]]
@@ -88,6 +126,8 @@ purpose = "core-sweep"
 date = "2026-10-20"
 date_source = "git"
 workers = 3
+ranks = 3
+threads_per_rank = 1
 note = "3 ranks x 1 thread, serial.task.json: 8,141–8,329 s (~$0.41); a range, no per-run wall or $/hr printed"
 
 # checks: the README's "What held at scale, on all three chips" rows (observed = Graviton4)

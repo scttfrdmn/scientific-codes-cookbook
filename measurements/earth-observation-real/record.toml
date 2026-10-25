@@ -1,7 +1,26 @@
 # measurements/earth-observation-real/record.toml -- r2, all three chips. Every run exits 1 on the
 # BOA-offset guard (one scene, Element84/earth-search#66), reported failing on purpose.
-schema = 1
+# Schema 2: billed is EC2 launch to terminate (README), reproduced from CloudTrail in
+# results/billed-windows.txt (286 / 290 / 281 s; the README prints 291 for Intel). Bands are read in place
+# over HTTPS into memory, never staged: data_path = s3-native.
+schema = 2
 result_unit = "one tile-year composited (Sentinel-2 L2A 11SKA, 2024: 153 scenes, 31.9 GB) plus every check"
+
+[workload]
+size = { scenes = 153, band_objects = 459 }
+note = "every 2024 Sentinel-2 L2A item of tile 11SKA: B04, B08, SCL per scene, 31.9 GB read in place, per-scene checks then a greenest-pixel composite; 16 worker processes"
+
+[timing]
+wall = "real.py wall: fetch, decode, checks, composite and both COGs"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "data_path", "generation"]
+equal_work = "composite-count-conserves"
+attribution = "same-version-other-build"
+attribution_note = "aarch.science earth-observation image on Graviton4; on x86 its linux-64 twin (261 packages installed offline), same rasterio 1.5.0 / GDAL 3.12.4 / numpy 2.5.2; Intel's 16 vCPU are 8 cores"
 
 [[dataset]]
 id = "s3://sentinel-cogs/sentinel-s2-l2a-cogs/11/S/KA/2024/ (B04, B08, SCL of 153 scenes)"
@@ -16,11 +35,14 @@ pins = "pins.sha256"
 note = "the reference (ESA's published percentages, raster:bands, boa_offset_applied); copied to the bucket S3-to-S3"
 
 [[run]]
+id = "eo-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 spawn_version = "0.142.0"
 date = "2026-10-24"
 workers = 16
+data_path = "s3-native"
 host = "results/arm64/host.txt"
 wall_s = 106.1
 billed_s = 286
@@ -33,11 +55,14 @@ results = "results/arm64"
 note = "exit 1: the offset guard fails on S2C_11SKA_20241206_1_L2A; every output written and staged"
 
 [[run]]
+id = "eo-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 spawn_version = "0.142.0"
 date = "2026-10-24"
 workers = 16
+data_path = "s3-native"
 host = "results/x86_64/host.txt"
 wall_s = 148.1
 billed_s = 291
@@ -50,11 +75,14 @@ results = "results/x86_64"
 note = "exit 1, same scene; 16 workers on 8 SMT cores"
 
 [[run]]
+id = "eo-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 spawn_version = "0.142.0"
 date = "2026-10-24"
 workers = 16
+data_path = "s3-native"
 host = "results/amd/host.txt"
 wall_s = 104.6
 billed_s = 281

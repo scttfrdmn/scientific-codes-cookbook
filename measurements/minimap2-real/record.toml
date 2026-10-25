@@ -1,6 +1,27 @@
 # measurements/minimap2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the task window is spawn's completion record (results/billed-windows.txt), and so is
+# the probe's 255 s (its $0.051 is the record's cost_estimate; no rate is printed, so no $ here).
+# genome.sh's avg_cores and peak_cgroup_gib sample the whole script (index, align, in-task awk
+# checks), not the align window, so they are not recorded as the align's.
+schema = 2
 result_unit = "one whole 30x HiFi genome aligned (NA12878 GIAB PacBio HiFi deposit, 9,080,816 reads, against GRCh38 no-alt)"
+
+[workload]
+size = { reads = 9080816, bases = 90474585135 }
+input_gib = 75
+note = "one index build, then 25 read chunks aligned in order (one per chromosome plus the rest), each chunk's SAM summarised, hashed and deleted before the next; staging, not memory, picks the family (tmpfs peak 95 GiB)"
+
+[timing]
+wall = "minimap2's align wall, summed over the 25 chunks (results.tsv minimap2_wall_s); the index build is a separate column"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "primaries-conserved"
+attribution = "same-version-other-build"
+attribution_note = "minimap2 2.31-r1302, aarch.bio arm64 vs bioconda x86; r8i's 32 vCPUs are 16 cores x 2 SMT; the billed column also carries in-task awk checks, which run BusyBox awk (~2x slower) in the x86 image"
 
 [[dataset]]
 id = "GRCh38_no_alt_analysis_set.fa (195 sequences of RODA 1000genomes GRCh38_full_analysis_set_plus_decoy_hla.fa)"
@@ -22,11 +43,16 @@ pins = "wg-pins.sha256"
 note = "cut by prep-genome.task.json into 25 FASTQ chunks + pbmm2 placement tables, all pinned; the source BAM's GIAB md5 was not re-checked (read over https, never stored)"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/results.tsv"
 workers = 32
+ranks = 1
+threads_per_rank = 32
+tmpfs_peak_gib = 95.08
 date = "2026-10-18"
 date_source = "git"
 wall_s = 2618
@@ -36,11 +62,16 @@ billed_usd = 2.095
 note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 25.8 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/results.tsv"
 workers = 32
+ranks = 1
+threads_per_rank = 32
+tmpfs_peak_gib = 95.08
 date = "2026-10-18"
 date_source = "git"
 wall_s = 2880
@@ -50,11 +81,16 @@ billed_usd = 3.119
 note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 26.0 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/results.tsv"
 workers = 32
+ranks = 1
+threads_per_rank = 32
+tmpfs_peak_gib = 95.08
 date = "2026-10-18"
 date_source = "git"
 wall_s = 1774
@@ -64,14 +100,20 @@ billed_usd = 2.532
 note = "wall_s is the align wall; README compute $/result is index + align at the hourly price, so it is left out (index wall is a separate column). Peak RSS printed as 26.1 GB (decimal GB, peak_mm2_rss_gb), not recorded as GiB"
 
 [[run]]
+id = "probe-chr20"
 instance = "m8g.4xlarge"
 purpose = "diagnostic"
 results = "results/arm64/probe-chr20-results.tsv"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+size = { reads = 217281 }
 wall_s = 169
-note = "align.task.json sizing probe: the recipe's chr20 reads against the whole genome; README prints $0.051 and peak RSS 19.7 GB but not the billed seconds"
+billed_s = 255
+note = "align.task.json sizing probe: the recipe's chr20 reads against the whole genome; README prints $0.051 and peak RSS 19.7 GB; billed_s is its spawn window (results/billed-windows.txt)"
+avg_cores = 13.15
 
 # checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'observed (identical on all three)']
 [[check]]

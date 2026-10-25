@@ -1,6 +1,24 @@
 # measurements/yoda-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: billed is the r7 completion records' windows (cookbook-yoda-real-real{,-x8664,-amd}-r7),
+# to the second. Layout: 8 worker processes with one BLAS/OpenMP thread each.
+schema = 2
 result_unit = "the fill pass: all 61,540,413 events of CMS record 12341 filled into five YODA objects in 247 jobs and merged"
+
+[workload]
+size = { events = 61540413, jobs = 247 }
+note = "247 jobs of 250,000 events, each filling its own five YODA objects, merged with +; then the 1,955 Rivet reference files read as a check (refs.py, not priced in compute)"
+
+[timing]
+wall = "the fill pass (fill.py: uproot reads, YODA fills, numpy checks), the README's compute $/result basis"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "fills-partition"
+attribution = "same-version-other-build"
+attribution_note = "YODA 2.1.4: aarch.science hep image on Graviton4, its linux-64 lock twin on both x86 chips; Intel's 8 vCPUs are 4 cores x 2; Intel's window is 2.2x the others because yodamerge took 404 s there (30.5 s Graviton4, 12.3 s AMD), cause not established"
 
 [[dataset]]
 id = "CMS Open Data record 12341, DoubleMuParked 2012 NanoAOD reduced on muons (doi:10.7483/OPENDATA.CMS.LVG5.QT81), Run2012BC_DoubleMuParked_Muons.root"
@@ -24,6 +42,8 @@ from_recipe = "root"
 # wall_s is the fill pass, which the README's compute $/result is computed from. billed_s is
 # spawn's task window (wrapper start to stage-out), which excludes instance boot.
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -31,6 +51,9 @@ host = "results/arm64/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 47.9
 billed_s = 390
 usd_hr = 0.359
@@ -41,6 +64,8 @@ peak_kind = "rss"
 note = "YODA's own fills 25.5 cpu-s; ref read 7.9 cpu-s. Peak is per fill worker (ru_maxrss); a reference-read worker peaks at 3.47 GiB, the container at 10.5 GiB (cgroup memory.peak)"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -48,6 +73,9 @@ host = "results/x86_64/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 91.0
 billed_s = 857
 usd_hr = 0.4234
@@ -58,6 +86,8 @@ peak_kind = "rss"
 note = "hep env linux-64 twin. YODA fills 34.2 cpu-s. Window is 2.2x the others because yodamerge took 404 s (30.5 s Graviton4, 12.3 s AMD), cause not established. Container peak 20.6 GiB"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -65,6 +95,9 @@ host = "results/amd/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 59.7
 billed_s = 351
 usd_hr = 0.4869

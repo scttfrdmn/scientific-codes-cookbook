@@ -1,6 +1,25 @@
 # measurements/imputation-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: each chip's billed_s is the sum of its three task boxes' EC2 launch -> terminate windows
+# (prep + beagle + mm4, results/billing.tsv; 647 + 227 + 227 = 1,101 s on Graviton4). No per-task
+# billed $ is printed, so the rows stay one aggregate per chip rather than task rows.
+schema = 2
 result_unit = "the whole verified chain for one 250-person cohort on 1000G Phase 3 chr20 (prep + panel build, Beagle, Minimac4, scoring)"
+
+[workload]
+size = { samples = 250, panel_samples = 2254, sites = 1653582, array_sites = 55178 }
+note = "three single-tool tasks on three boxes per chip (prep + panel build, Beagle, Minimac4 + score); the panel build is one-time and most of the timed wall"
+
+[timing]
+wall = "every timed step of the chain, summed over the three tasks (prep, compress, Beagle, Minimac4 impute, score)"
+billed_basis = "sum-of-tasks"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "input"]
+equal_work = "lockstep"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run bioconda's builds of the same Beagle and Minimac4 versions (Beagle on JDK 24.0.2 there, 25.0.2 on aarch.bio); Intel's 16 vCPU are 8 cores x 2 SMT"
 
 [[dataset]]
 id = "s3://1000genomes/release/20130502/ALL.chr20.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
@@ -18,14 +37,18 @@ id = "omni.chr20.sites.tsv (the Omni2.5 chr20 site list, built by 00-sites)"
 tier = "built"
 pins = "pins.sha256"
 
-# one row per chip; each is three 4xlarge boxes (prep, beagle, mm4), billed launch to terminate
+# one row per chip; each is three 4xlarge boxes (prep, beagle, mm4), billed launch to terminate, summed
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 638
 billed_s = 1101
@@ -37,12 +60,16 @@ peak_kind = "rss"
 note = "x3 boxes; Beagle 64 s, Minimac4 compress/impute 108/54 s, prep + score 374 + 38 s; peak is the Beagle JVM"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 2
 wall_s = 629
 billed_s = 1157
@@ -54,12 +81,16 @@ peak_kind = "rss"
 note = "x3 boxes; Beagle 89 s, Minimac4 compress/impute 99/53 s, prep + score 338 + 50 s"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 442
 billed_s = 845

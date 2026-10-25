@@ -1,0 +1,11 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The README's billed ("spawn's command window") is the spawn window, exact on all nine rows; ec2 not retrieved. The Graviton4 GATK4 row is cookbook-gatk4-call-chr20-r3, started 2026-09-26 (the record's date is the git date results landed); the x86 runs started 2026-10-13 UTC. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+cookbook-bcftools-chr20-giab	c8g.xlarge	-	0.159500	2026-09-30T16:31:31Z	2026-09-30T16:36:16Z	285	0.0126	-	-	-	-	-
+cookbook-freebayes-chr20	c8g.xlarge	-	0.159500	2026-09-30T16:32:09Z	2026-09-30T16:43:53Z	704	0.0312	-	-	-	-	-
+cookbook-gatk4-call-chr20-r3	c8g.xlarge	-	0.159500	2026-09-26T17:23:57Z	2026-09-26T19:36:59Z	7982	0.3536	-	-	-	-	-
+cookbook-bcftools-chr20-giab-x8664-20261012182414	c8i.xlarge	-	0.187400	2026-10-13T01:32:34Z	2026-10-13T01:37:22Z	288	0.0150	-	-	-	-	-
+cookbook-freebayes-chr20-x8664-20261012183848	c8i.xlarge	-	0.187400	2026-10-13T01:46:49Z	2026-10-13T01:55:48Z	539	0.0281	-	-	-	-	-
+cookbook-gatk4-call-chr20-x8664-20261012195752	c8i.xlarge	-	0.187400	2026-10-13T03:27:06Z	2026-10-13T03:49:10Z	1324	0.0689	-	-	-	-	-
+cookbook-bcftools-chr20-giab-amd-20261018150451	c8a.xlarge	-	0.215500	2026-10-18T22:06:31Z	2026-10-18T22:10:07Z	216	0.0129	-	-	-	-	-
+cookbook-freebayes-chr20-amd-20261018191459	c8a.xlarge	-	0.215500	2026-10-19T02:16:46Z	2026-10-19T02:23:40Z	414	0.0248	-	-	-	-	-
+cookbook-gatk4-call-chr20-amd-20261019001317	c8a.xlarge	-	0.215500	2026-10-19T07:31:31Z	2026-10-19T07:47:15Z	944	0.0565	-	-	-	-	-

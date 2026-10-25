@@ -1,6 +1,24 @@
 # measurements/pathology-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window (README: "spawn's completion window"; results/*/completion.json,
+# results/billed-windows.txt). Slides are fetched by each worker over public HTTPS, not by spawn's stage-in.
+schema = 2
 result_unit = "the whole cohort: all 160 annotated CAMELYON16 slides and every check"
+
+[workload]
+size = { slides = 160, blocks = 725548, patches = 10270461 }
+note = "32 single-threaded workers, one slide each, largest first; each fetches its slide into /tmp (100 GB budget), reads every tissue block through openslide and tifffile, deletes it"
+
+[timing]
+wall = "real.py, the task's tool wall"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "data_path"]
+equal_work = "decoded-rgb-crosschip"
+attribution = "same-version-other-build"
+attribution_note = "x86 chips run the pathology env's linux-64 twin (openslide 4.0.1, tifffile 2026.9.20, numpy 2.5.3); Intel's 32 vCPU are 16 cores x 2 threads"
 
 [[dataset]]
 id = "s3://camelyon-dataset/CAMELYON16/ (111 training + 49 test annotated slides, masks, XMLs, background_tissue/)"
@@ -9,7 +27,10 @@ pins = "slides.tsv"
 note = "read in place over public HTTPS; slides.tsv carries the publisher's md5 (checksums.md5) per image/mask/XML and the S3 single-part ETag per tissue mask, checked while each object streams; slides.tsv itself is sha256-pinned in pins.sha256 and rebuilt by make_slides.py from the recipe's pinned manifests"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.8xlarge"
+data_path = "s3-native"
 purpose = "primary"
 date = "2026-10-19"
 date_source = "run"
@@ -26,7 +47,10 @@ results = "results/arm64/"
 note = "peak is the largest single worker's ru_maxrss; the box's cgroup peak was 104–106 GiB, almost all slides in /tmp tmpfs"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.8xlarge"
+data_path = "s3-native"
 purpose = "cross-chip"
 date = "2026-10-19"
 date_source = "run"
@@ -43,7 +67,10 @@ results = "results/x86_64/"
 note = "32 workers on 16 cores x 2 threads"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.8xlarge"
+data_path = "s3-native"
 purpose = "cross-chip"
 date = "2026-10-19"
 date_source = "run"

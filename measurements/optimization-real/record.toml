@@ -1,6 +1,24 @@
 # measurements/optimization-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window of cookbook-optimization-real{,-x8664,-amd}-r3.
+# peak/avg_cores/tmpfs are times.txt's 5 s samples of cgroup memory.stat anon, cpu.stat and df /tmp.
+schema = 2
 result_unit = "the whole verified run: 273 Netlib LP solves (HiGHS, SCIP, CBC) and 480 MIPLIB 2017 benchmark MIP solves (HiGHS, SCIP at 300 s), with every check"
+
+[workload]
+size = { lp_solves = 273, mip_solves = 480 }
+note = "64 single-threaded solves at a time, largest file first; MIPs under a 300 s wall-clock limit, so the wall is set by the limit"
+
+[timing]
+wall = "driver.py, all solves (driver_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "layout"]
+equal_work = "mip-bracket"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the optimization env's linux-64 twin; Intel's 64 vCPU are 32 cores x 2 threads; which MIPs finish inside 300 s is a path quantity, so the chips did not finish the same set"
 
 [[dataset]]
 id = "COIN-OR Data-Netlib tag releases/1.2.11 (all 91 instances)"
@@ -19,6 +37,8 @@ pins = "pins.sha256"
 note = "benchmark.zip and netlib's readme have no version in their URL, so they are pinned by sha256 on first fetch; a second fetch 30 minutes later gave identical bytes"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.16xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -26,15 +46,23 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 1874
 billed_s = 1951
 usd_hr = 3.7702
 compute_usd = 1.963
 billed_usd = 2.043
 peak_gib = 115.4
+peak_kind = "cgroup-anon-max"
+avg_cores = 59.27
+tmpfs_peak_gib = 10.90
 note = "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.16xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -42,15 +70,23 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 1944
 billed_s = 1993
 usd_hr = 4.4454
 compute_usd = 2.401
 billed_usd = 2.461
 peak_gib = 111.7
+peak_kind = "cgroup-anon-max"
+avg_cores = 59.49
+tmpfs_peak_gib = 11.07
 note = "MIPs finished 73 + 66; billed $ / finished 0.01771"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.16xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -58,12 +94,18 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 1854
 billed_s = 1899
 usd_hr = 5.1124
 compute_usd = 2.633
 billed_usd = 2.697
 peak_gib = 120.2
+peak_kind = "cgroup-anon-max"
+avg_cores = 59.07
+tmpfs_peak_gib = 11.07
 note = "MIPs finished 85 + 71; billed $ / finished 0.01729"
 
 # checks: the README's "What held at scale, on all three chips" rows (bound = the rule column, observed = Graviton4)

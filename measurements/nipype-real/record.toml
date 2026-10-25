@@ -1,7 +1,27 @@
 # measurements/nipype-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+schema = 2
 result_unit = "one subject of the 123-subject Rockland DTI cohort through the 616-node workflow"
 results_per_run = 123
+
+# Schema 2: billed is the whole task A-E, spawn's completion record to the second
+# (nipypereal-cohort{,-x8664-r1,-amd-r1}: 553 / 581 / 488 s, 2026-10-19). avg_cores is phase A's
+# cgroup figure from results/<chip>/summary.txt.
+
+[workload]
+size = { subjects = 123, nodes = 616 }
+note = "per-subject fan-out under MultiProc at 16 processes, every node single-threaded; 1,107 edges, one JoinNode"
+
+[timing]
+wall = "phase A, the cohort under MultiProc (the timed workload); billed covers phases A-E and the checks"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "generation"]
+equal_work = "executed-graph"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's aarchsci neuroimaging arm64 digest on Graviton4; on x86 its env_x86_64 twin neuroimaging-add4ba1f213a (nipype 1.10.0, dipy 1.12.1); 16 vCPU on m8i are 8 cores x 2 hyperthreads"
 
 [[dataset]]
 id = "NFBS Rockland baseline DIFF_137_AP scans, 123 subjects, 492 files, 9.21 GB (RODA, via neuroimaging-real)"
@@ -17,6 +37,8 @@ from_recipe = "measurements/neuroimaging-real"
 note = "the bit-identity reference for masks and float32 FA/MD"
 
 [[run]]
+id = "cohort-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -31,9 +53,12 @@ compute_usd = 0.000347
 billed_usd = 0.000897
 peak_gib = 20.1
 peak_kind = "cgroup-memory.peak"
+avg_cores = 11.79
 note = "wall is phase A (the cohort); billed is the whole task A-E, including 232-245 s of checking re-runs"
 
 [[run]]
+id = "cohort-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -48,8 +73,11 @@ compute_usd = 0.000493
 billed_usd = 0.001111
 peak_gib = 20.8
 peak_kind = "cgroup-memory.peak"
+avg_cores = 12.97
 
 [[run]]
+id = "cohort-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -64,10 +92,13 @@ compute_usd = 0.000413
 billed_usd = 0.001073
 peak_gib = 19.8
 peak_kind = "cgroup-memory.peak"
+avg_cores = 11.12
 
 [[run]]
+id = "probe"
 instance = "m8g.4xlarge"
 purpose = "diagnostic"
+size = { subjects = 16 }
 date = "2026-10-19"
 date_source = "git"
 workers = 16

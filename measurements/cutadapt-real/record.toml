@@ -1,6 +1,24 @@
 # measurements/cutadapt-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the README's "task billed" is the EC2 window (CloudTrail RunInstances -> Terminate), to the
+# second on all three chips (results/billed-windows.txt); spawn's completion windows are 45-88 s shorter.
+schema = 2
 result_unit = "one task: both whole runs (ERR2984773 even, ERR2935805 log) trimmed and every read checked"
+
+[workload]
+size = { samples = 2 }
+note = "8,785,731 + 47,832,553 read pairs (2.65 + 9.66 Gbp) trimmed by the recipe command, then extra runs and check.py over every record; the task bill is mostly checks"
+
+[timing]
+wall = "per-sample cutadapt walls (main run, whole-second clock); the rows carry none, one task trims both"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "filters"
+attribution = "same-version-other-build"
+attribution_note = "cutadapt 5.2: aarch.bio's build on Graviton4, bioconda's on Intel and AMD; output identical on all three"
 
 [[dataset]]
 id = "ENA PRJEB29504 ERR2984773_{1,2}.fastq.gz (ZymoBIOMICS D6300 even, MiSeq 2x151, whole run)"
@@ -17,6 +35,8 @@ note = "RODA .sra -> FASTQ.gz, staged by measurements/metaphlan-real/stage-input
 # One task trims both samples. The README's compute $/result is per sample (even / log), each with
 # its own wall but no per-sample bill, so wall_s and compute_usd are left out and noted per row.
 [[run]]
+id = "trim-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -24,6 +44,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 billed_s = 1126
 usd_hr = 0.6381
 billed_usd = 0.1996
@@ -32,6 +54,8 @@ peak_kind = "rss"
 note = "walls 21 s even / 74 s log; compute $/result 0.0037 / 0.0131 (per sample, not per task)"
 
 [[run]]
+id = "trim-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -39,6 +63,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 billed_s = 1006
 usd_hr = 0.7497
 billed_usd = 0.2095
@@ -47,6 +73,8 @@ peak_kind = "rss"
 note = "walls 19 s even / 77 s log; compute $/result 0.0040 / 0.0160 (per sample, not per task)"
 
 [[run]]
+id = "trim-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -54,6 +82,8 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 billed_s = 941
 usd_hr = 0.8622
 billed_usd = 0.2254

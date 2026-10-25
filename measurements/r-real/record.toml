@@ -1,6 +1,26 @@
 # measurements/r-real/record.toml -- a year of NYC taxi trips in R, three chips, checked against DuckDB.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances, to within 1 s;
+# results/billed-windows.txt). wall is analysis.R's RSCRIPT_WALL_S. Threads are the packages'
+# defaults (data.table 4, arrow 8), so no ranks x threads layout is authored.
+schema = 2
 result_unit = "the 2023 NYC TLC yellow-taxi year read, aggregated three ways and regressed (38,310,226 trips)"
+
+[workload]
+size = { rows = 38310226, model_rows = 34184942, files = 12 }
+note = "12 monthly Parquet files (606 MiB) read into one data.table, three group-sum engines, then one lm() with a 34 M x 32 design matrix kept with its QR"
+
+[timing]
+wall = "the R session (analysis.R's RSCRIPT_WALL_S)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "rows"
+attribution = "same-version-other-build"
+attribution_note = "same R 4.5.3 package versions: aarch.science's r image on Graviton4, the linux-64 twin installed offline on x86; the x86 bills are lower because of that packaging (80 s image pull vs 2 s pull + 4 s install), not the chip; Intel's 8 vCPU are 4 cores x 2 threads"
+note = "AMD is fastest (1.19x Graviton4, 1.29x Intel); Graviton4 does the R work 1.09x faster than Intel and 22% cheaper"
 
 [[dataset]]
 id = "NYC TLC 2023 yellow-taxi trip records, 12 monthly Parquet files, https://d37ci6vzurychx.cloudfront.net/trip-data"
@@ -9,6 +29,8 @@ pins = "pins.sha256"
 note = "per-file sha256s as fetched on 2026-10-17, copied from stage-inputs.sh; a TLC re-issue fails staging"
 
 [[run]]
+id = "r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/results-arm64-r8g2xl.txt"
@@ -21,9 +43,12 @@ compute_usd = 0.0101
 billed_usd = 0.0376
 peak_gib = 31.66
 peak_kind = "rss"
+phase_s = { pull = 80 }
 note = "billed includes the 0.86 GB aarch.science r image pull (80 s); phases: read 4.8, lm() 15.3, crossprod+solve 17.5 s"
 
 [[run]]
+id = "r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/results-x86_64-r8i2xl.txt"
@@ -37,9 +62,12 @@ compute_usd = 0.013
 billed_usd = 0.0349
 peak_gib = 31.49
 peak_kind = "rss"
+phase_s = { pull = 2, stage_in = 10, setup = 4 }
 note = "x86 env twin installed offline (2 s pull, 10 s stage-in, 4 s install): the lower bill is packaging, not the chip"
 
 [[run]]
+id = "r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/results-amd-r8a2xl.txt"

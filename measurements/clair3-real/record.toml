@@ -1,6 +1,26 @@
 # measurements/clair3-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = spawn's completion record (results/<arch>/completion.json, launch to terminate as
+# the README calls it); peak = the container's cgroup memory.peak; tmpfs = df /tmp after the tool
+# (work files go to /var/tmp, so the staged 1.5 GB is the high-water mark).
+schema = 2
 result_unit = "the whole chromosome called: HG002 chr20 from 49x PacBio HiFi Revio"
+
+[workload]
+size = { reads = 191592, coverage = 49.2 }
+note = "one chromosome of one sample; Clair3 parallelises by contig and chunk inside run_clair3.sh"
+
+[timing]
+wall = "run_clair3.sh end to end: pileup calling, WhatsHap phasing, haplotagging, full-alignment calling and merge"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "calls-across-chips"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run bioconda's Clair3 2.0.3; both ship PyTorch 2.13.0, but arm64 runs SVE128 kernels over OpenBLAS (neoversev2) and x86 AVX512 kernels over MKL; Intel's 16 vCPU are 8 cores with SMT"
+note = "AMD is 2.0x Graviton4 and 24% cheaper per result billed; Intel is 1.5x Graviton4 at the same billed $/result"
 
 [[dataset]]
 id = "GIAB HG002_PacBio-HiFi-Revio_20231031_48x_GRCh38-GIABv3.bam, chr20 cut (191,592 reads, 49.2x)"
@@ -23,6 +43,8 @@ pins = "pins.sha256"
 note = "each also md5-checked against GIAB's GRCh38-genome-stratifications-md5s.txt at staging"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -30,6 +52,8 @@ host = "results/arm64/results.tsv"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 411
 billed_s = 513
 usd_hr = 0.6381
@@ -37,8 +61,11 @@ compute_usd = 0.0728
 billed_usd = 0.0909
 peak_gib = 13.7
 peak_kind = "cgroup-memory.peak"
+tmpfs_peak_gib = 1.5
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -46,6 +73,8 @@ host = "results/x86_64/results.tsv"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 274
 billed_s = 435
 usd_hr = 0.7497
@@ -53,8 +82,11 @@ compute_usd = 0.0571
 billed_usd = 0.0906
 peak_gib = 11.7
 peak_kind = "cgroup-memory.peak"
+tmpfs_peak_gib = 1.5
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -62,6 +94,8 @@ host = "results/amd/results.tsv"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 205
 billed_s = 290
 usd_hr = 0.8622
@@ -69,6 +103,7 @@ compute_usd = 0.0491
 billed_usd = 0.0695
 peak_gib = 13.2
 peak_kind = "cgroup-memory.peak"
+tmpfs_peak_gib = 1.5
 
 [[check]]
 id = "pins"

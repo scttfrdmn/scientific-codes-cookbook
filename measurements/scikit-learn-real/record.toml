@@ -1,7 +1,25 @@
 # measurements/scikit-learn-real/record.toml -- drafted by the #118 extraction, then authored.
-# No results/ committed for the three chip runs: every number is the README's.
-schema = 1
+# No run results committed for the three chip runs: every number is the README's, except the
+# billed windows (results/billed-windows.txt): billed is the EC2 window, CloudTrail RunInstances ->
+# Terminate ("launch to terminate"), to the second on all three chips. The AMD run was 2026-10-21.
+schema = 2
 result_unit = "one whole verified run: all 581,012 Covertype rows, logreg + HGB + RF fits with repeats, affine refits, the lbfgs cross-solver fit and the boosting diagnostic"
+
+[workload]
+size = { rows = 581012, features = 54, classes = 7 }
+note = "one task: an 80/20 split, then logreg + HGB + RF fits, a repeat of each ensemble, affine refits, the lbfgs cross-solver fit (the largest single item) and the l2=0 boosting diagnostic, all on 8 threads"
+
+[timing]
+wall = "the README's 'task compute': the whole real.py script"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "class-counts"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's geo-ml image on Graviton4, its linux-64 env twin (sklearn 1.9.1, numpy 2.5.4) on Intel and AMD; OpenBLAS neoversev2 vs Cooperlake"
 
 [[dataset]]
 id = "covtype.data.gz, figshare file 5976039 (sklearn 1.9.1 datasets/_covtype.py); UCI doi:10.24432/C50K5N"
@@ -12,11 +30,15 @@ note = "scikit-learn 1.9.1 fetch_covtype's own sha256, copied from stage-inputs.
 # Compound "fit wall: logreg / HGB / RF" and "compute $/fit" cells share one task and one bill,
 # so they are not split; wall_s is the README's "task compute" (the whole script).
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-17"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 1
 wall_s = 657
 billed_s = 826
@@ -27,11 +49,15 @@ peak_kind = "rss"
 note = "fit wall logreg / HGB / RF 49.0 / 85.6 / 10.6 s, compute $/fit 0.0043 / 0.0076 / 0.0009 (per fit, not per result)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-17"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 2
 wall_s = 693
 billed_s = 825
@@ -42,12 +68,16 @@ peak_kind = "rss"
 note = "fit wall 63.1 / 88.4 / 10.6 s, compute $/fit 0.0066 / 0.0092 / 0.0011"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-17"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 1
 wall_s = 465
 billed_s = 580
@@ -58,16 +88,20 @@ peak_kind = "rss"
 note = "fit wall 29.6 / 65.2 / 8.3 s, compute $/fit 0.0035 / 0.0078 / 0.0010; overhead (115 s) not comparable: spawn 0.139.1 overlaps Docker install with stage-in; command staged as a sha256-checked task.sh (spawn#1246)"
 
 [[run]]
+id = "hgb-repro"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
+task = "hgb-repro"
 date = "2026-10-17"
 date_source = "git"
 results = "hgb-repro/hgb-repro.log"
 note = "minimal HGB divergence reproduction (20,000 rows, 10 features) plus the full-data diagnostic re-run; instance resolved from hgb-repro.task.json (c8g, 8 cpu, 16 GiB); date is the dir's draft date, not this launch's"
 
 [[run]]
+id = "lgb-count"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
+task = "lgb-count"
 date = "2026-10-17"
 date_source = "git"
 results = "hgb-repro/lgb-count.log"

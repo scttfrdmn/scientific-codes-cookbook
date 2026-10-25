@@ -1,6 +1,29 @@
 # measurements/single-cell-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed_s per chip is the sum of the two task boxes' EC2 launch -> termination-initiated
+# windows (README; CloudTrail in results/billed-windows.txt). The rows stay one aggregate per chip:
+# no per-task billed $ is printed. tmpfs_peak_gib is task 2's (quant.txt peak_shmem_gib).
+schema = 2
 result_unit = "one whole 10x channel (10X_P5_13, 116,459,032 read pairs) from FASTQ to raw, knee and filtered matrices (2 tasks)"
+
+[workload]
+size = { read_pairs = 116459032, transcripts = 319954, genes = 36130 }
+note = "one whole 10x channel: task 1 piscem index + map-sc, task 2 alevin-fry raw / knee / filtered from the RAD file via S3; a cohort is this task fanned out once per channel"
+
+[timing]
+wall = "tool time summed over both tasks: piscem index + map, alevin-fry quant (raw + knee + filtered)"
+billed_basis = "sum-of-tasks"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "input"]
+equal_work = "across-chips"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs install bioconda's linux-64 piscem 0.23.0 h79c2db1_0 and alevin-fry 0.18.3 hd612981_0 offline from committed locks into the pinned micromamba image (no biocontainers 0.18.3 image); Intel's 16 vCPUs are 8 cores x 2 SMT"
+
+[[not_swept]]
+axis = "size"
+reason = "one 10x library, exactly as one comes off the sequencer; a cohort is this task fanned out once per channel, not a bigger single input"
 
 [[dataset]]
 id = "RODA s3://czb-tabula-muris-senis/10x/FASTQs/10X_P5_13/ (both lanes, R1+R2)"
@@ -23,12 +46,16 @@ tier = "roda"
 pins = "pins-quant.sha256"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
 date = "2026-10-17"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 115
 billed_s = 452
 usd_hr = 0.7181
@@ -36,9 +63,12 @@ compute_usd = 0.0229
 billed_usd = 0.0902
 peak_gib = 3.81
 peak_kind = "rss"
+tmpfs_peak_gib = 15.12
 note = "tool wall 115 s = index 35 + map 65 + quant 15; billed over both tasks; alevin-fry 0.18.3; task-2 tmpfs peak 15.1 GiB"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
@@ -46,6 +76,8 @@ results = "results/x86_64/"
 date = "2026-10-24"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 131
 billed_s = 392
 usd_hr = 0.8467
@@ -53,9 +85,12 @@ compute_usd = 0.0308
 billed_usd = 0.0922
 peak_gib = 3.44
 peak_kind = "rss"
+tmpfs_peak_gib = 12.28
 note = "bioconda linux-64 piscem 0.23.0 + alevin-fry 0.18.3 installed offline from envs-x86_64/bioconda-{piscem-0.23.0,alevin-fry-0.18.3}.linux-64.lock (no biocontainers 0.18.3 image, 2026-10-24); specs from x86-specs.py; 131 s = 39 + 75 + 17; billed = EC2 launch to termination-initiated, 226 + 166 s; Xeon 6975P-C, 2 threads per core; supersedes the 2026-10-13 alevin-fry 0.9.0 run (git history)"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
@@ -63,6 +98,8 @@ results = "results/amd/"
 date = "2026-10-24"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 85
 billed_s = 324
 usd_hr = 0.9738
@@ -70,6 +107,7 @@ compute_usd = 0.0230
 billed_usd = 0.0876
 peak_gib = 3.41
 peak_kind = "rss"
+tmpfs_peak_gib = 13.16
 note = "same locks and specs as the Intel row (x86-specs.py amd); 85 s = 29 + 44 + 12; billed 222 + 102 s; EPYC 9R45, 1 thread per core"
 
 # --- checks: '## What held at scale' (claim = identity: assertion; observed = README cell, Graviton4) ---

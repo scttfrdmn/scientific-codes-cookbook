@@ -1,5 +1,7 @@
 # measurements/datashader-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's task window (wrapper start to stage-out; results/<chip>/completion.json),
+# exact on all three.
+schema = 2
 result_unit = "the whole dataset rasterised (all 24 monthly 2009-2010 yellow-taxi files, 679,794,434 points)"
 
 [[dataset]]
@@ -8,12 +10,34 @@ tier = "durable-id"
 pins = "pins.sha256"
 note = "RODA's s3://nyc-tlc refuses every request (see r-real), so fetched on AWS by 00-fetch.task.json; rows.tsv holds bytes, rows and row groups per file"
 
+[workload]
+size = { files = 24, rows = 339897217, points = 679794434 }
+input_gib = 10.6
+note = "read_parquet + persist of every 2009-2010 trip, then Canvas.points at 4096x4096; reading the Parquet is 76-79% of the tool wall"
+
+[timing]
+wall = "read + persist + every aggregation (TOOL_WALL_S in results.json)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "generation"]
+equal_work = "rows-read"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the geo-ml-32594bd95edd linux-64 env twin of the same versions; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "AMD 1.24x faster than Graviton4, Intel 1.15x slower; Graviton4 cheapest on compute and billed"
+
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/arm64/host.txt"
 wall_s = 22.7
 billed_s = 165
@@ -25,11 +49,15 @@ peak_kind = "vmhwm"
 results = "results/arm64/"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/x86_64/host.txt"
 wall_s = 26.1
 billed_s = 160
@@ -41,11 +69,15 @@ peak_kind = "vmhwm"
 results = "results/x86_64/"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/amd/host.txt"
 wall_s = 18.3
 billed_s = 132

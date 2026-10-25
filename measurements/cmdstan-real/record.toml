@@ -1,6 +1,24 @@
 # measurements/cmdstan-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the README's billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances, to
+# within 1 s; results/billed-windows.txt). The runs are the a3/i3/d3 attempts, 2026-10-19 UTC.
+schema = 2
 result_unit = "the whole verified set: 48 compiles and 57 posteriordb posteriors sampled twice, plus every check"
+
+[workload]
+size = { posteriors = 57, models = 48 }
+note = "4 chains x (1000 warmup + 1000 draws) per posterior, each sampled twice; 4 worker processes run one chain at a time; diamonds alone sets the wall clock"
+
+[timing]
+wall = "real.py, the whole verified set (48 compiles + 114 samplings + checks)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "release-complete"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the bayes env's linux-64 twin; the draws are a path (24 of 57 byte-identical across builds), so part of AMD's 1.92x is a different path; Intel's 4 vCPU are 2 cores x 2 threads"
 
 [[dataset]]
 id = "posteriordb 1.1.0 (tag object 193fcfc, commit 299b77cf): 256 files for the 57 posteriors with reference draws"
@@ -15,7 +33,12 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "m8g"
+in = ["chip"]
 workers = 4
+ranks = 1
+threads_per_rank = 1
+concurrent = 4
 wall_s = 1494
 billed_s = 1606
 usd_hr = 0.1795
@@ -23,6 +46,8 @@ compute_usd = 0.0745
 billed_usd = 0.0801
 peak_gib = 6.87
 peak_kind = "cgroup-memory.peak"
+avg_cores = 3.95
+phase_s = { pull = 16, source = "README: the aarch.science bayes image pull" }
 note = "workers = 4 worker processes, one chain at a time each; largest single process 1.86-1.92 GiB ru_maxrss"
 
 [[run]]
@@ -32,7 +57,12 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "m8i"
+in = ["chip"]
 workers = 4
+ranks = 1
+threads_per_rank = 1
+concurrent = 4
 wall_s = 1900
 billed_s = 2031
 usd_hr = 0.2117
@@ -40,6 +70,7 @@ compute_usd = 0.1117
 billed_usd = 0.1194
 peak_gib = 8.77
 peak_kind = "cgroup-memory.peak"
+avg_cores = 3.93
 
 [[run]]
 instance = "m8a.xlarge"
@@ -48,7 +79,12 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "m8a"
+in = ["chip"]
 workers = 4
+ranks = 1
+threads_per_rank = 1
+concurrent = 4
 wall_s = 780
 billed_s = 881
 usd_hr = 0.2434
@@ -56,6 +92,7 @@ compute_usd = 0.0527
 billed_usd = 0.0596
 peak_gib = 8.91
 peak_kind = "cgroup-memory.peak"
+avg_cores = 3.93
 
 # --- checks: '## What held at scale' (asserted in-task by real.py; observed = Graviton4) ---
 [[check]]

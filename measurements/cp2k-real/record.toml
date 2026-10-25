@@ -1,6 +1,26 @@
 # measurements/cp2k-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = the EC2 window (CloudTrail RunInstances -> TerminateInstances, results/billed-windows.txt;
+# the README's "from instance launch to termination"). workers = 16 vCPU used by every job; the layout
+# varies between jobs inside one run (5 ref jobs at 16x1, H2O-64 at 16x1..1x16), so no ranks/threads per row.
+schema = 2
 result_unit = "the whole verified set: ten MD runs of 10 steps (five w64 QS_reference functionals + H2O-64 under five layouts)"
+
+[workload]
+size = { atoms = 192, steps = 10 }
+note = "ten independent jobs run back to back on one box: five 64-water QS_reference functionals plus H2O-64 under five MPI x OpenMP layouts"
+
+[timing]
+wall = "real.py end to end: all ten cp2k.psmp jobs, run in sequence"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "step0-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "x86 chips run the cp2k env's linux-64 twin (OpenBLAS Cooperlake kernel; Graviton4 neoversev2); Intel's 16 vCPU are 8 cores x 2 threads"
+note = "AMD 1.82x Graviton4 on the whole set and 25% cheaper per result; Intel ties Graviton4 (1.01x) and costs 18% more billed"
 
 [[dataset]]
 id = "cp2k/cp2k v2026.2 benchmarks/QS_reference/w64{PBE,SCAN,PBE0,GAPW,ccGRB}.inp + committed .ref"
@@ -14,6 +34,8 @@ tier = "versioned-release"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -27,8 +49,13 @@ compute_usd = 0.804
 billed_usd = 0.835
 peak_gib = 15.1
 peak_kind = "cgroup-memory.peak"
+workers = 16
+bind = "--bind-to none"
+avg_cores = 15.94
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -42,9 +69,14 @@ compute_usd = 0.958
 billed_usd = 0.984
 peak_gib = 18.9
 peak_kind = "cgroup-memory.peak"
+workers = 16
+bind = "--bind-to none"
+avg_cores = 15.94
 note = "peak includes page cache and the x86 env install"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -58,6 +90,9 @@ compute_usd = 0.600
 billed_usd = 0.628
 peak_gib = 18.9
 peak_kind = "cgroup-memory.peak"
+workers = 16
+bind = "--bind-to none"
+avg_cores = 15.89
 note = "peak includes page cache and the x86 env install"
 
 # --- in-task asserts (real.py), the README's "What held at scale" table ------------------

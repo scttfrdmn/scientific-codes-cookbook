@@ -1,6 +1,26 @@
 # measurements/psi4-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (README: "EC2 launch to termination"), CloudTrail RunInstances ->
+# Terminate, reproduced to the second on all three chips (results/billed-windows.txt). The Graviton4
+# run's completion record was overwritten by the AMD run, which reused task id real-r2.
+# avg_cores is footprint.txt's avg_cores_whole_task (the README's "box averages 12.0-13.6 busy cores").
+schema = 2
 result_unit = "the whole DESS66 set: all 66 dimers with every check passed (plus the 12 control jobs)"
+
+[workload]
+size = { dimers = 66, calculations = 78 }
+note = "the whole DESS66 set: 66 SAPT0/aVTZ + CP DF-HF/MP2/aVTZ dimer calculations, plus 6 rotated and 6 default-SAPT0 controls, each in its own Python process, four at a time"
+
+[timing]
+wall = "psi4_s66.py, all 78 jobs (jobs_wall_s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "all-finish"
+attribution = "same-version-other-build"
+attribution_note = "psi4 1.11 on all three, but conda-forge's linux-aarch64 build links OpenBLAS (neoversev2) and the x86 rows run psi4's own upstream image (py312, MKL), not the recipe's dft env twin, whose psi4 does not import"
 
 [[dataset]]
 id = "DESS66, Zenodo 10.5281/zenodo.5676284 v1.0.0, DESS66.zip"
@@ -9,12 +29,18 @@ pins = "pins.sha256"
 note = "copied from dess66.sha256 beside the zips in the bucket; every run re-checks the zip it reads; 00-fetch checked Zenodo's md5"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 4
+concurrent = 4
 wall_s = 7253
 billed_s = 7426
 usd_hr = 0.9426
@@ -22,9 +48,12 @@ compute_usd = 1.899
 billed_usd = 1.944
 peak_gib = 18.2
 peak_kind = "rss"
+avg_cores = 13.62
 note = "4 workers x 4 threads; peak is the largest single Psi4 ru_maxrss, the box's cgroup memory.peak was 96.1 GiB"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb169ab520904d1d1caacb1"
@@ -32,6 +61,10 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 4
+concurrent = 4
 wall_s = 4683
 billed_s = 4845
 usd_hr = 1.1114
@@ -39,9 +72,12 @@ compute_usd = 1.446
 billed_usd = 1.496
 peak_gib = 18.3
 peak_kind = "rss"
+avg_cores = 12.02
 note = "psi4's own upstream image, not the recipe's dft env twin (whose psi4 does not import); box memory.peak 92.6 GiB"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb169ab520904d1d1caacb1"
@@ -49,6 +85,10 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 4
+concurrent = 4
 wall_s = 3840
 billed_s = 4002
 usd_hr = 1.2781
@@ -56,6 +96,7 @@ compute_usd = 1.363
 billed_usd = 1.421
 peak_gib = 18.3
 peak_kind = "rss"
+avg_cores = 12.50
 note = "psi4's own upstream image; box memory.peak 93.3 GiB"
 
 # --- checks: "What held at scale, on all three chips" (observed = worst chip) ----------

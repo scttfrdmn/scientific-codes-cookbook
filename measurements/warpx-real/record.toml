@@ -1,6 +1,39 @@
 # measurements/warpx-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the printed billed ('launch to stage-out') is RunInstances -> spawn's ended_at, basis
+# ec2-to-spawn-end (results/billed-windows.txt). avg_cores from
+# each check.txt.
+schema = 2
+throughput_unit = "steps/s"
 result_unit = "the whole benchmark run: Turner et al. (2013) case 1, 128 cells, 512,000 steps (1,280 RF periods)"
+
+[workload]
+size = { steps = 512000, cells = 128, rf_periods = 1280, particles_per_cell = 512 }
+note = "electrostatic 1D PIC-MCC on one 128-cell grid (warpx_max_grid_size=128), so OpenMP has nothing to divide"
+
+[timing]
+wall = "WarpX alone, timed in-script (check.txt wall_s t1)"
+billed_basis = "ec2-to-spawn-end"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "input"]
+equal_work = "final-diag"
+attribution = "same-version-other-build"
+attribution_note = "WarpX 26.10 from aarch.science's pic env on arm64 and its linux-64 twin pic-bf42d7d6c3f2 on both x86 chips"
+
+[[series]]
+id = "threads"
+axis = "workers"
+held = ["image", "instance", "size"]
+equal_work = "thread-invariance"
+attribution = "same-binary"
+verdict = { shape = "flat", through = 16, on = "wall" }
+note = "64-period probe: the domain is one grid, so extra threads spin (4.9 cores busy at 16) and the wall rises 141 -> 152 s"
+
+[[not_swept]]
+axis = "size"
+reason = "it is the benchmark itself: Turner et al. defined the grid, particle count, time step and run length; a smaller run is WarpX's CI variant and a larger one is a different benchmark (cases 2-4, with no reference profile in WarpX's tree)"
 
 [[dataset]]
 id = "WarpX 26.10 Examples/Physics_applications/capacitive_discharge/{inputs_base_1d_picmi.py,analysis_1d.py} (Turner's 129-node case-1 profile, tolerance 0.065)"
@@ -13,6 +46,8 @@ tier = "versioned-release"
 pins = "inputs.sha256"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.large"
 purpose = "primary"
 results = "results/arm64/"
@@ -20,6 +55,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 1228
 billed_s = 1317
 usd_hr = 0.0798
@@ -27,8 +64,12 @@ compute_usd = 0.0272
 billed_usd = 0.0292
 peak_gib = 0.126
 peak_kind = "rss"
+throughput = 417
+avg_cores = 1.00
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.large"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -36,6 +77,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 1259
 billed_s = 1337
 usd_hr = 0.0937
@@ -43,8 +86,12 @@ compute_usd = 0.0328
 billed_usd = 0.0348
 peak_gib = 0.1328
 peak_kind = "rss"
+throughput = 407
+avg_cores = 1.00
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.large"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -52,6 +99,8 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 1031
 billed_s = 1101
 usd_hr = 0.1078
@@ -59,35 +108,55 @@ compute_usd = 0.0309
 billed_usd = 0.033
 peak_gib = 0.1328
 peak_kind = "rss"
+throughput = 497
+avg_cores = 1.00
 
 # --- sizing probe: 64 RF periods on c8g.4xlarge, OpenMP threads swept; not priced ---------
 [[run]]
+id = "probe-t1"
+in = ["threads"]
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 results = "results/probe/check.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+size = { steps = 25600, rf_periods = 64 }
+avg_cores = 1.00
 wall_s = 141
 note = "64-period probe; overstated the full run's rate 2.3x"
 
 [[run]]
+id = "probe-t4"
+in = ["threads"]
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 results = "results/probe/check.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
+size = { steps = 25600, rf_periods = 64 }
+avg_cores = 1.69
 wall_s = 144
 note = "64-period probe"
 
 [[run]]
+id = "probe-t16"
+in = ["threads"]
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 results = "results/probe/check.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+size = { steps = 25600, rf_periods = 64 }
+avg_cores = 4.91
 wall_s = 152
 note = "64-period probe; CPU use rose to 4.9 cores, spinning, not working"
 

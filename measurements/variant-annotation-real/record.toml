@@ -3,8 +3,29 @@
 # tool wall, billed and $/result (in each section header below) cannot sit in one run row; each
 # task is its own row carrying only what the README prints for it. The chain $ are consistent with
 # the step seconds at the two rates; they are left out because no single row can carry them.
-schema = 1
+# Schema 2: the task rows share attempt "r1" and carry task, so the chain is derived per chip. Each
+# row's billed_s is its task's EC2 window (CloudTrail, results/billed-windows.txt; the same instances
+# and launch/terminate as results/billing.tsv); the three sum to the README's chain billed within 1 s.
+# No per-task billed $ is printed, so the rows carry none and the chain $ stays in the section headers.
+schema = 2
 result_unit = "the whole verified chain (sites prep + bcftools csq, snpEff, VEP) on chromosomes 20-22, three instances"
+
+[workload]
+size = { records = 4044736 }
+note = "a three-task chain, one instance each, intermediate data through S3: bcftools sites prep + csq, snpEff, VEP --fork 16"
+
+[timing]
+wall = "per task, the tool's own step seconds from timings.tsv (only VEP's is printed as one number)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip-vep"
+axis = "chip"
+held = ["workers", "size", "generation"]
+equal_work = "vcf-text-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio images on Graviton4, bioconda's on Intel and AMD (VEP 116.2); Intel's 8 SMT cores (2 threads per core) run VEP's 16 forks"
+note = "the 03-vep task alone: AMD 1.75x Graviton4, Intel 1.23x"
 
 [[dataset]]
 id = "RODA s3://1000genomes/release/20130502/ALL.chr{20,21,22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
@@ -26,26 +47,39 @@ note = "fetched on a spawn host by 00-stage and checked there against Ensembl's 
 
 # --- c8g: chain tool wall / billed 1,541 s / 2,180 s, compute $/result 0.1657, billed $/result 0.2303 (three instances, two rates: not one row) ---
 [[run]]
+id = "csq-c8g"
+task = "01-csq"
+attempt = "r1"
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/arm64/csq/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 467
 usd_hr = 0.1595
+tmpfs_peak_gib = 1.0
 note = "task 01-csq: sites prep (bcftools) 301 s + bcftools csq 6 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
 
 [[run]]
+id = "snpeff-c8g"
+task = "02-snpeff"
+attempt = "r1"
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/arm64/snpeff/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 706
 usd_hr = 0.1595
 peak_gib = 1.00
 peak_kind = "vmhwm"
 note = "task 02-snpeff: snpEff build x2 34 s + snpEff ann 467 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
 
 [[run]]
+id = "vep-c8g"
+in = ["chip-vep"]
+task = "03-vep"
+attempt = "r1"
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/vep/"
@@ -53,31 +87,45 @@ date = "2026-10-19"
 date_source = "run"
 workers = 16
 wall_s = 729
+billed_s = 1006
 usd_hr = 0.6381
 note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
 
 # --- c8i: chain tool wall / billed 1,344 s / 2,362 s, compute $/result 0.1627, billed $/result 0.2707 (three instances, two rates: not one row) ---
 [[run]]
+id = "csq-c8i"
+task = "01-csq"
+attempt = "r1"
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/csq/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 467
 usd_hr = 0.1874
+tmpfs_peak_gib = 1.0
 note = "task 01-csq: sites prep (bcftools) 272 s + bcftools csq 7 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
 
 [[run]]
+id = "snpeff-c8i"
+task = "02-snpeff"
+attempt = "r1"
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/snpeff/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 949
 usd_hr = 0.1874
 peak_gib = 1.26
 peak_kind = "vmhwm"
 note = "task 02-snpeff: snpEff build x2 38 s + snpEff ann 433 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
 
 [[run]]
+id = "vep-c8i"
+in = ["chip-vep"]
+task = "03-vep"
+attempt = "r1"
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/vep/"
@@ -85,31 +133,45 @@ date = "2026-10-19"
 date_source = "run"
 workers = 16
 wall_s = 592
+billed_s = 946
 usd_hr = 0.7497
 note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
 
 # --- c8a: chain tool wall / billed 927 s / 1,745 s, compute $/result 0.1306, billed $/result 0.2196 (three instances, two rates: not one row) ---
 [[run]]
+id = "csq-c8a"
+task = "01-csq"
+attempt = "r1"
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/csq/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 341
 usd_hr = 0.2155
+tmpfs_peak_gib = 1.0
 note = "task 01-csq: sites prep (bcftools) 204 s + bcftools csq 5 s, single-threaded; per-task billed not printed (results/billing.tsv has launch/terminate)"
 
 [[run]]
+id = "snpeff-c8a"
+task = "02-snpeff"
+attempt = "r1"
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/snpeff/"
 date = "2026-10-19"
 date_source = "run"
+billed_s = 762
 usd_hr = 0.2155
 peak_gib = 1.19
 peak_kind = "vmhwm"
 note = "task 02-snpeff: snpEff build x2 30 s + snpEff ann 270 s, single-threaded; peak is the snpEff JVM, the chain's largest process"
 
 [[run]]
+id = "vep-c8a"
+in = ["chip-vep"]
+task = "03-vep"
+attempt = "r1"
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/vep/"
@@ -117,6 +179,7 @@ date = "2026-10-19"
 date_source = "run"
 workers = 16
 wall_s = 417
+billed_s = 641
 usd_hr = 0.8622
 note = "task 03-vep: VEP --fork 16; each fork peaked at ~150 MiB"
 

@@ -1,6 +1,26 @@
 # measurements/paraview-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt), the README's
+# "task window". wall is week.py's own timer (summary.tsv); real.sh's pvbatch_wall_s (times.txt) also
+# counts pvbatch start-up (1,622 / 2,175 / 910 s). peak is ru_maxrss. 8 threads = TBB, read back from VTK.
+schema = 2
 result_unit = "one week (168 hours) of hourly ERA5 3D temperature contoured, clipped, integrated and rendered"
+
+[workload]
+size = { hours = 168, points = 38414880 }
+note = "1440 x 721 x 37 points an hour, seven daily netCDF4 files (8.86 GB) staged to tmpfs; per hour: contour, feature edges, two scalar clips, four integrals and a frame"
+
+[timing]
+wall = "week.py's own wall (summary.tsv wall_s), 168 hours"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "contour-points"
+attribution = "same-version-other-build"
+attribution_note = "ParaView 6.1.1: aarch.science's viz image on Graviton4, its viz-c97c5af10411 linux-64 lock twin on x86; Intel's 8 vCPUs are 4 cores x 2 threads"
+note = "AMD 1.78x faster than Graviton4 and 24% cheaper per result; Graviton4 1.35x faster than Intel"
 
 [[dataset]]
 id = "s3://nsf-ncar-era5/e5.oper.an.pl/202301/e5.oper.an.pl.128_130_t.ll025sc.202301{01..07}00_*23.nc (RDA ds633.0)"
@@ -9,9 +29,13 @@ pins = "pins.sha256"
 note = "Payer: BucketOwner"
 
 [[run]]
+id = "m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-18"
@@ -25,9 +49,13 @@ peak_gib = 7.93
 peak_kind = "rss"
 
 [[run]]
+id = "m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-18"
@@ -41,9 +69,13 @@ peak_gib = 7.86
 peak_kind = "rss"
 
 [[run]]
+id = "m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-18"

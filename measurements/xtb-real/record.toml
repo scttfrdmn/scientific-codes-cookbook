@@ -1,6 +1,26 @@
 # measurements/xtb-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is "instance launch to terminate" (README), the EC2 window: CloudTrail gives
+# 169 / 164 / 105 s (results/billed-windows.txt). Each task exits 1 on the gradient checks by design;
+# the computation itself completed, so run_outcome stays completed. footprint.txt's avg_cores is over
+# the whole task (Intel 16.48 on 16 vCPU), not the tool window, so it is not recorded.
+schema = 2
 result_unit = "the whole of GMTKN55 with every check run: 14,340 xtb processes"
+
+[workload]
+size = { structures = 2462, reactions = 1505 }
+note = "14,340 single-threaded xtb processes, 16 at a time: a single point, the analytic gradient and four more single points per structure for the finite difference"
+
+[timing]
+wall = "run.sh from the first xtb process to the last check"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "whole-release"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's comp-chem image (xtb 6.7.1 build gfortran_hcd2ce30_5) on Graviton4, its linux-64 twin (gfortran_ha02e54d_5) on x86, which installs inside the task; Intel's 16 vCPU are 8 cores x 2 SMT"
 
 [[dataset]]
 id = "grimme-lab/GMTKN55 commit 8d485b37a1ca8837e395042671ca5ba4e0714691 (branch v1, the 2017 publication), gmtkn55-v1.tar.gz"
@@ -14,11 +34,16 @@ tier = "durable-id"
 unpinned = "published table values transcribed into xtb_run.py, not a hashed file"
 
 [[run]]
+id = "c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 host = "results/arm64/host.txt"
 wall_s = 19
 billed_s = 169
@@ -31,11 +56,16 @@ results = "results/arm64/"
 note = "peak is the largest single xtb process (ru_maxrss, C60ISO), 32 MiB; cgroup memory.peak 0.59 GiB. Task exits 1 on the gradient checks by design"
 
 [[run]]
+id = "c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 host = "results/x86_64/host.txt"
 wall_s = 24
 billed_s = 165
@@ -48,11 +78,16 @@ results = "results/x86_64/"
 note = "34 MiB ru_maxrss; cgroup memory.peak 3.3 GiB (env twin installs inside the task). 16 workers on 8 cores x 2 threads"
 
 [[run]]
+id = "c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 host = "results/amd/host.txt"
 wall_s = 14
 billed_s = 105

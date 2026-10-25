@@ -1,6 +1,38 @@
 # measurements/macs2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window (macs2real-gen-*; the x86 legs -x8664-q1 / -amd-q1).
+# The Graviton rungs ran 2026-10-08; their date is the git date results landed.
+schema = 2
 result_unit = "one genome-wide peak call of ENCODE CTCF ChIP-seq ENCFF933NSJ against control ENCFF768XTH (HCT116, GRCh38)"
+
+[workload]
+size = { treatment_bytes = 2057454374, control_bytes = 3365735271 }
+input_gib = 5.05
+note = "one genome-wide macs2 callpeak, -f BAM -g hs -q 0.05; single-threaded by construction"
+
+[timing]
+wall = "macs2 callpeak alone, timed in-script (macs2_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size"]
+equal_work = "peak-count"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "billed_usd" }
+note = "every generation is faster and cheaper per result; per-step speedup 1.44x, 1.32x, 1.26x"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "peak-count"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 build of the same MACS2 2.2.9.1 (quay.io/biocontainers); its OpenBLAS 0.3.27 picks Cooperlake on both x86 chips"
+
+[[not_swept]]
+axis = "workers"
+reason = "MACS2 is single-threaded, so there is no core knee to find -- the generation axis is the whole question here"
 
 [[dataset]]
 id = "ENCODE ENCFF933NSJ.bam (treatment, 2,057,454,374 B) and ENCFF768XTH.bam (control, 3,365,735,271 B), s3://encode-public"
@@ -10,59 +42,89 @@ note = "ENCODE's published md5s (md5, not sha256), copied from stage-inputs.sh; 
 
 # --- Graviton generation ladder: 4 vCPU / 32 GiB, same digest, same objects -------------
 [[run]]
+id = "gen-r6g"
+in = ["gen"]
 instance = "r6g.xlarge"
 purpose = "generation-sweep"
 date = "2026-10-20"
 date_source = "git"
 threads_per_core = 1
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 741
 billed_s = 865
 usd_hr = 0.2016
 compute_usd = 0.0415
 billed_usd = 0.0484
 note = "CPU part 0xd0c; avg_cores 1.01"
+avg_cores = 1.01
+tmpfs_peak_gib = 11.1416
 
 [[run]]
+id = "gen-r7g"
+in = ["gen"]
 instance = "r7g.xlarge"
 purpose = "generation-sweep"
 date = "2026-10-20"
 date_source = "git"
 threads_per_core = 1
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 514
 billed_s = 626
 usd_hr = 0.2142
 compute_usd = 0.0306
 billed_usd = 0.0372
 note = "CPU part 0xd40; avg_cores 1.01"
+avg_cores = 1.01
+tmpfs_peak_gib = 11.1416
 
 [[run]]
+id = "gen-r8g"
+in = ["gen", "chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "git"
 threads_per_core = 1
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 389
 billed_s = 487
 usd_hr = 0.2357
 compute_usd = 0.0255
 billed_usd = 0.0319
 note = "CPU part 0xd4f; avg_cores 1.01"
+avg_cores = 1.01
+tmpfs_peak_gib = 11.1416
 
 [[run]]
+id = "gen-r9g"
+in = ["gen"]
 instance = "r9g.xlarge"
 purpose = "generation-sweep"
 date = "2026-10-20"
 date_source = "git"
 threads_per_core = 1
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 309
 billed_s = 395
 usd_hr = 0.2569
 compute_usd = 0.0221
 billed_usd = 0.0282
 note = "CPU part 0xd84; avg_cores 1.00"
+avg_cores = 1.00
+tmpfs_peak_gib = 11.1416
 
 # --- same generation as Graviton4, x86 -----------------------------------------------
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -71,15 +133,23 @@ host = "results/host-x86_64.txt"
 threads_per_core = 2            # host file states thread siblings, not threads_per_core
 results = "results/host-x86_64.txt"
 spawn_version = "0.139.1"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 296
 billed_s = 386
 usd_hr = 0.2778
 compute_usd = 0.0228
 billed_usd = 0.0298
+peak_kind = "cgroup-memory.current-max"
 peak_gib = 7.4307
-note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,609 MiB); no peak_kind fits"
+note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,609 MiB)"
+avg_cores = 1.00
+tmpfs_peak_gib = 11.1416
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -88,24 +158,36 @@ host = "results/host-amd.txt"
 threads_per_core = 1
 results = "results/host-amd.txt"
 spawn_version = "0.139.1"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 225
 billed_s = 298
 usd_hr = 0.3195
 compute_usd = 0.0200
 billed_usd = 0.0264
+peak_kind = "cgroup-memory.current-max"
 peak_gib = 7.4170
-note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,595 MiB); no peak_kind fits"
+note = "peak is the cgroup memory.current high-water sampled at 1 Hz (7,595 MiB)"
+avg_cores = 1.00
+tmpfs_peak_gib = 11.1416
 
 # --- sizing instrument, not a recommendation ----------------------------------------
 [[run]]
+id = "clock-m8g"
 instance = "m8g.2xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"
 date_source = "git"
 threads_per_core = 1
+workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 389
 peak_gib = 7.6
 peak_kind = "rss"
+avg_cores = 1.01
+tmpfs_peak_gib = 11.1
 note = "clocking run before the sweep: tmpfs high-water 11.1 GiB against 5.05 GiB staged, which ruled out a 16 GiB box; unpriced in the README"
 
 # --- checks: gen.sh's in-task asserts, plus the reported identity ---------------------

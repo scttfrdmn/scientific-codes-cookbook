@@ -1,6 +1,27 @@
 # measurements/homer-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's Started -> Ended window (README); anon and /tmp peaks from results/<chip>/times.txt.
+schema = 2
 result_unit = "one whole peak set (44,217 ENCODE CTCF peaks) through all three findMotifsGenome.pl runs (genome, offset, vsoffset)"
+
+[workload]
+size = { peaks = 44217, known_motifs = 1049 }
+note = "one ENCODE peak set genome-wide against GRCh38: three findMotifsGenome.pl calls (genome, offset control, vsoffset) on the same bytes"
+
+[timing]
+wall = "the three findMotifsGenome.pl calls, timed in-script (genome + offset + vsoffset)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "input"]
+equal_work = "targets-scanned"
+attribution = "same-version-other-build"
+attribution_note = "HOMER 5.1: aarch.bio's image on Graviton4, bioconda's linux/amd64 image on Intel and AMD; Intel's 16 vCPUs are 8 cores x 2 SMT"
+
+[[not_swept]]
+axis = "workers"
+reason = "HOMER keeps about 6 cores busy, so a core sweep would find the knee well below 16; a smaller box is likely cheaper per result, but that is unmeasured: this run held the size fixed so that the chips are comparable"
 
 [[dataset]]
 id = "ENCODE ENCFF796WRU.bed.gz (CTCF ChIP-seq, GM12878, experiment ENCSR000DZN), s3://encode-public"
@@ -15,6 +36,8 @@ pins = "pins.sha256"
 from_recipe = "measurements/minimap2-real"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -22,6 +45,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1081
 billed_s = 1152
 usd_hr = 0.7181
@@ -29,9 +54,13 @@ compute_usd = 0.2156
 billed_usd = 0.2298
 peak_gib = 4.41
 peak_kind = "cgroup-memory.peak"
+anon_gib = 3.1611
+tmpfs_peak_gib = 5.1396
 note = "tool wall = genome 752 + offset 192 + vsoffset 137 s; 5.9 busy cores"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -39,6 +68,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1311
 billed_s = 1376
 usd_hr = 0.8467
@@ -46,8 +77,12 @@ compute_usd = 0.3083
 billed_usd = 0.3236
 peak_gib = 4.41
 peak_kind = "cgroup-memory.peak"
+anon_gib = 3.1650
+tmpfs_peak_gib = 5.1309
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -55,6 +90,8 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 984
 billed_s = 1040
 usd_hr = 0.9738
@@ -62,6 +99,8 @@ compute_usd = 0.2662
 billed_usd = 0.2813
 peak_gib = 4.41
 peak_kind = "cgroup-memory.peak"
+anon_gib = 3.1592
+tmpfs_peak_gib = 5.1953
 
 [[check]]
 id = "peaks-md5"

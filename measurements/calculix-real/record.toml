@@ -1,6 +1,23 @@
 # measurements/calculix-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's cost_estimate over the task window (results/*/completion.json, to the second).
+schema = 2
 result_unit = "the whole NAFEMS LE10 ladder: 11 solves (5 rungs x SPOOLES and ITERATIVE CHOLESKY, plus rung 8 at 1 thread)"
+
+[workload]
+size = { equations = 933248, elements = 73728, nodes = 315969, solves = 11 }
+note = "size is the finest rung (16); the ladder's 11 solves run serially in one task, each with 16 OpenMP threads"
+
+[timing]
+wall = "le10.py's wall: the whole ladder (times.tsv le10_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "spooles-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "CalculiX 2.23 from aarch.science's fem-cfd image on Graviton4, its linux-64 lock twin on x86; Intel's 16 vCPUs are 8 cores x 2 threads"
 
 [[dataset]]
 id = "NAFEMS LE10 thick plate, meshed by le10.py (5-rung C3D20R ladder to 933,248 equations)"
@@ -14,6 +31,8 @@ tier = "durable-id"
 unpinned = "a published reference value, not a file"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -21,6 +40,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 697
 billed_s = 788
 usd_hr = 0.7181
@@ -30,6 +51,8 @@ peak_gib = 39.4
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -37,6 +60,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 710
 billed_s = 767
 usd_hr = 0.8467
@@ -47,6 +72,8 @@ peak_kind = "cgroup-memory.peak"
 note = "x86 cgroup peak ~3 GiB higher because the installed env's page cache counts"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -54,6 +81,8 @@ host = "results/amd/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 458
 billed_s = 502
 usd_hr = 0.9738
@@ -63,6 +92,7 @@ peak_gib = 42.1
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "probe-r8g"
 instance = "r8g.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"

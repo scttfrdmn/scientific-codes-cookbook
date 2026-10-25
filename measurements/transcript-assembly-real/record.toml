@@ -1,6 +1,42 @@
 # measurements/transcript-assembly-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window -- the README calls it "launch to terminate", but every
+# printed billed second is the spawn window exactly and the EC2 windows are 44-105 s longer
+# (results/billed-windows.txt). One StringTie task per chip runs de novo and guided at -p 8 and -p 1:
+# its window sits on the de novo row (as v1 had it); the other rows in that task are shared-window.
+schema = 2
 result_unit = "one sample's assembly, checked: Geuvadis ERR188026 (15.8M pairs) through StringTie (de novo + guided) or gffcompare"
+
+[workload]
+size = { read_pairs = 15800127 }
+note = "one sample: HISAT2 --dta align and sort once on Graviton4 (tasks 00, 01), then StringTie de novo + guided (task 02) and gffcompare (task 03) per chip"
+
+[timing]
+wall = "each step's own wall (timed.py / timing.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-denovo"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "canonical-assemblies"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio StringTie 3.0.3 on Graviton4, bioconda's x86 build of the same version on Intel and AMD; m8i.2xlarge is four cores"
+
+[[series]]
+id = "chip-guided"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "canonical-assemblies"
+attribution = "same-version-other-build"
+attribution_note = "same box and task as the de novo rows; Intel's ordering flips by mode (beats Graviton4 de novo, loses guided), not explained by SMT"
+
+[[series]]
+id = "chip-gffcompare"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "gffcompare-rows"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio gffcompare 0.12.10 on Graviton4, bioconda's x86 build of the same version on Intel and AMD"
 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
@@ -31,6 +67,8 @@ pins = "inputs.sha256"
 
 # --- shared alignment and sort, Graviton4 only -------------------------------------------
 [[run]]
+id = "align"
+task = "00-hisat2-align"
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/align/"
@@ -38,9 +76,14 @@ host = "results/align/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
-note = "hisat2-build 520 s at 6.2 GiB and alignment 133 s at 4.5 GiB, $0.156 billed: two walls in one task and no billed seconds printed, so no wall or $ fields"
+ranks = 1
+threads_per_rank = 16
+billed_s = 782
+note = "hisat2-build 520 s at 6.2 GiB and alignment 133 s at 4.5 GiB, $0.156 billed: two walls in one task, so no wall field; billed_s is its spawn window (results/billed-windows.txt)"
 
 [[run]]
+id = "sort"
+task = "01-sort"
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/sort/"
@@ -48,11 +91,20 @@ threads_per_core = 1
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 55
-note = "sorting and junction extraction; $0.021 billed printed without billed seconds, so omitted"
+billed_s = 161
+note = "sorting and junction extraction; $0.021 billed; billed_s is its spawn window (results/billed-windows.txt)"
 
 # --- StringTie: one task per chip; the billed window covers all four assemblies and the checks
 [[run]]
+id = "denovo-m8g"
+in = ["chip-denovo"]
+task = "02-stringtie"
+variant = "de novo -p 8"
+ranks = 1
+threads_per_rank = 8
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/stringtie/"
@@ -70,6 +122,12 @@ peak_kind = "rss"
 note = "StringTie de novo -p 8"
 
 [[run]]
+id = "denovo-m8i"
+in = ["chip-denovo"]
+task = "02-stringtie"
+variant = "de novo -p 8"
+ranks = 1
+threads_per_rank = 8
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/stringtie/"
@@ -87,6 +145,12 @@ peak_kind = "rss"
 note = "StringTie de novo -p 8"
 
 [[run]]
+id = "denovo-m8a"
+in = ["chip-denovo"]
+task = "02-stringtie"
+variant = "de novo -p 8"
+ranks = 1
+threads_per_rank = 8
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/stringtie/"
@@ -104,6 +168,13 @@ peak_kind = "rss"
 note = "StringTie de novo -p 8"
 
 [[run]]
+id = "guided-m8g"
+in = ["chip-guided"]
+task = "02-stringtie"
+variant = "guided -p 8"
+ranks = 1
+threads_per_rank = 8
+billed_basis = "shared-window"
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/stringtie/"
@@ -119,6 +190,13 @@ peak_kind = "rss"
 note = "StringTie guided -p 8, same task and box as the de novo row (billed window shared, not repeated)"
 
 [[run]]
+id = "guided-m8i"
+in = ["chip-guided"]
+task = "02-stringtie"
+variant = "guided -p 8"
+ranks = 1
+threads_per_rank = 8
+billed_basis = "shared-window"
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/stringtie/"
@@ -134,6 +212,13 @@ peak_kind = "rss"
 note = "StringTie guided -p 8, same task and box as the de novo row"
 
 [[run]]
+id = "guided-m8a"
+in = ["chip-guided"]
+task = "02-stringtie"
+variant = "guided -p 8"
+ranks = 1
+threads_per_rank = 8
+billed_basis = "shared-window"
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/stringtie/"
@@ -149,6 +234,12 @@ peak_kind = "rss"
 note = "StringTie guided -p 8, same task and box as the de novo row"
 
 [[run]]
+id = "p1-m8g"
+task = "02-stringtie"
+variant = "de novo + guided -p 1"
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 instance = "m8g.2xlarge"
 purpose = "core-sweep"
 results = "results/arm64/stringtie/"
@@ -159,6 +250,12 @@ workers = 1
 note = "StringTie -p 1, same task: compound wall 60.0 / 122.8 s and peak 0.04 / 1.04 GiB (de novo / guided), no $; fields omitted"
 
 [[run]]
+id = "p1-m8i"
+task = "02-stringtie"
+variant = "de novo + guided -p 1"
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 instance = "m8i.2xlarge"
 purpose = "core-sweep"
 results = "results/x86_64/stringtie/"
@@ -169,6 +266,12 @@ workers = 1
 note = "StringTie -p 1, same task: compound wall 48.0 / 156.2 s (de novo / guided), no $; fields omitted"
 
 [[run]]
+id = "p1-m8a"
+task = "02-stringtie"
+variant = "de novo + guided -p 1"
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 instance = "m8a.2xlarge"
 purpose = "core-sweep"
 results = "results/amd/stringtie/"
@@ -180,6 +283,11 @@ note = "StringTie -p 1, same task: compound wall 34.6 / 77.2 s (de novo / guided
 
 # --- gffcompare: single-threaded, four comparisons per billed window ------------------------
 [[run]]
+id = "gffcompare-m8g"
+in = ["chip-gffcompare"]
+task = "03-gffcompare"
+ranks = 1
+threads_per_rank = 1
 instance = "m8g.xlarge"
 purpose = "primary"
 results = "results/arm64/gffcompare/"
@@ -196,6 +304,11 @@ billed_usd = 0.0121
 note = "gffcompare (de novo); peak printed as 6.3 GB container memory.peak incl. page cache (GB, not GiB), so peak_gib omitted"
 
 [[run]]
+id = "gffcompare-m8i"
+in = ["chip-gffcompare"]
+task = "03-gffcompare"
+ranks = 1
+threads_per_rank = 1
 instance = "m8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/gffcompare/"
@@ -212,6 +325,11 @@ billed_usd = 0.0239
 note = "gffcompare (de novo); 6.3 GB memory.peak, peak_gib omitted"
 
 [[run]]
+id = "gffcompare-m8a"
+in = ["chip-gffcompare"]
+task = "03-gffcompare"
+ranks = 1
+threads_per_rank = 1
 instance = "m8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/gffcompare/"

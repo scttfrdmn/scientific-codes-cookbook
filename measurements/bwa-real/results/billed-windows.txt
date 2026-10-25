@@ -1,0 +1,12 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The gen/knee rows' billed is the spawn window; the 2026-10-24 cross-chip rows' printed billed (946/1306/880 s) is the ec2 window, to within 1 s. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+bwareal-c6g-16t	c6g.4xlarge	-	0.544000	2026-09-25T19:31:44Z	2026-09-25T19:52:02Z	1218	0.1841	-	-	-	-	-
+bwareal-c7g-16t	c7g.4xlarge	-	0.580000	2026-09-25T19:31:49Z	2026-09-25T19:48:35Z	1006	0.1621	-	-	-	-	-
+bwareal-c8g-16t	c8g.4xlarge	-	0.638100	2026-09-25T19:31:45Z	2026-09-25T19:45:56Z	851	0.1508	-	-	-	-	-
+bwareal-c9g-16t	c9g.4xlarge	-	0.695500	2026-09-25T19:31:35Z	2026-09-25T19:42:58Z	683	0.1320	-	-	-	-	-
+bwareal-c8g-32t	c8g.8xlarge	-	1.276200	2026-09-25T19:32:27Z	2026-09-25T19:40:28Z	481	0.1705	-	-	-	-	-
+bwareal-c8g-48t	c8g.12xlarge	-	1.914200	2026-09-25T19:33:02Z	2026-09-25T19:38:57Z	355	0.1888	-	-	-	-	-
+bwareal-c8g-64t	c8g.16xlarge	-	2.552300	2026-09-25T19:33:16Z	2026-09-25T19:38:13Z	297	0.2106	-	-	-	-	-
+bwareal-c8g-16t-fix121	c8g.4xlarge	i-03dfff819a8e63727	0.638100	2026-10-24T16:48:38Z	2026-10-24T17:03:25Z	887	0.1572	2026-10-24T16:48:24Z	2026-10-24T17:04:10Z	946	2e1fd563-e0be-40c5-a90f-9d85aab19618	2738b7a2-86a4-4a0c-a088-4dc32d4b018e
+bwareal-c8g-16t-x8664-fix121	c8i.4xlarge	i-0606911a035b127a0	0.749700	2026-10-24T17:04:18Z	2026-10-24T17:24:57Z	1239	0.2580	2026-10-24T17:04:06Z	2026-10-24T17:25:51Z	1305	9eb505ba-d768-411b-841f-cce4b08ad3b0	851f0a52-1de3-4df6-9fd0-6a9201fc4a77
+bwareal-c8g-16t-amd-fix121	c8a.4xlarge	i-03a294ed3c37db8f6	0.862200	2026-10-24T17:25:38Z	2026-10-24T17:39:49Z	851	0.2038	2026-10-24T17:25:27Z	2026-10-24T17:40:08Z	881	73c4e5ce-ac17-47b4-8498-0424b9f8ef58	d0bc66b5-5cd4-44d8-9748-c4bc9821c604

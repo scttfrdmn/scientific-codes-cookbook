@@ -1,5 +1,8 @@
 # measurements/gfs-thickness-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is "launch to terminate" (README), the EC2 window; results/billed-windows.txt has
+# the CloudTrail windows (829 / 1007 / 821 s). peak_gib is the container's memory.peak (host.txt), the
+# second half of the README's "worker / container" cell; the per-worker RSS stays in the note.
+schema = 2
 result_unit = "the whole verified cycle: every check, on all 209 forecast hours of gfs.20251001/00 at 0.25°"
 
 [[dataset]]
@@ -8,8 +11,26 @@ tier = "roda"
 pins = "gfs-cycle.sha256"
 note = "source MD5s (single-part ETags) in gfs-cycle.md5; sha256s computed in-task after the MD5 check, identical on all three chips. Same cycle recipes/gfs-thickness reads at 1°"
 
-# --- peak RSS is a compound "worker / container" cell, so peak_gib is omitted ----------
+[workload]
+size = { files = 209, messages = 155240, columns = 1038240 }
+note = "one process per forecast hour, 32 at a time; 113.1 GB staged into tmpfs, about 60% of every bill is that copy"
+
+[timing]
+wall = "gfs.py's workload wall (all 209 hours, 32 processes), timed in-script"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "generation"]
+equal_work = "messages-vs-idx"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the climate env's locked x86 twin (same MetPy/cfgrib/eccodes/numpy versions); Intel's 32 vCPUs are 16 cores x 2 SMT running 32 single-threaded processes"
+
+# --- peak_gib = container memory.peak; the worker half of the README cell is in the note ---
 [[run]]
+id = "r8g"
+in = ["chip"]
 instance = "r8g.8xlarge"
 purpose = "primary"
 date = "2026-10-19"
@@ -22,9 +43,17 @@ usd_hr = 1.8851
 compute_usd = 0.0668
 billed_usd = 0.4341
 results = "results/arm64/"
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+peak_gib = 55.34
+peak_kind = "cgroup-memory.peak"
+phase_s = { stage_in = 477 }
 note = "README peak RSS cell '2.68 / 55.3 GiB' (worker / container; host.txt memory.peak_gib 55.34). Stage-in 477 s"
 
 [[run]]
+id = "r8i"
+in = ["chip"]
 instance = "r8i.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-19"
@@ -37,9 +66,17 @@ usd_hr = 2.2227
 compute_usd = 0.1374
 billed_usd = 0.6217
 results = "results/x86_64/"
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+peak_gib = 57.69
+peak_kind = "cgroup-memory.peak"
+phase_s = { stage_in = 645 }
 note = "README peak RSS cell '2.69 / 57.7 GiB' (worker / container). Stage-in 645 s; 32 processes on 16 cores x 2 SMT"
 
 [[run]]
+id = "r8a"
+in = ["chip"]
 instance = "r8a.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-19"
@@ -52,6 +89,12 @@ usd_hr = 2.5562
 compute_usd = 0.0881
 billed_usd = 0.5837
 results = "results/amd/"
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+peak_gib = 47.74
+peak_kind = "cgroup-memory.peak"
+phase_s = { stage_in = 515 }
 note = "README peak RSS cell '2.69 / 47.7 GiB' (worker / container). Stage-in 515 s"
 
 # --- checks: "What held at scale, on all three chips" ----------------------------------

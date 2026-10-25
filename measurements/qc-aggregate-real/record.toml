@@ -1,6 +1,22 @@
 # measurements/qc-aggregate-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+schema = 2
 result_unit = "the whole cohort QC'd and aggregated: eleven FASTQ files (446.0M reads), FastQC task plus MultiQC task, with every check"
+
+[workload]
+size = { files = 11, reads = 445999501 }
+note = "one fastqc -t 11 invocation over eleven whole files from seven runs and four assays (one thread per file, so the largest file sets the wall), then one multiqc over the eleven zips"
+
+[timing]
+wall = "FastQC rows: fastqc_wall_s, the one fastqc invocation; MultiQC rows: the multiqc command"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "outputs-crosschip"
+attribution = "same-version-other-build"
+attribution_note = "FastQC v0.12.1 under OpenJDK 25 (the arm64 image) vs OpenJDK 17 (bioconda's x86 image); Intel's 16 vCPU are 8 cores x 2 threads"
 
 [[dataset]]
 id = "1000 Genomes HG00096 SRR062634_{1,2}.filt.fastq.gz (s3://1000genomes)"
@@ -31,19 +47,31 @@ note = "also checked against ENA's published md5 (ena.md5)"
 
 # --- FastQC task (task 1). billed_usd omitted: the README's billed $/result is
 # (FastQC wall + overhead) x $/hr PLUS the whole MultiQC task's cost, which a single row
-# cannot carry. Printed billed $/result: 0.0695 / 0.0843 / 0.0724. ----------------------
+# cannot carry. Printed billed $/result: 0.0695 / 0.0843 / 0.0724.
+# Schema 2: the FastQC rows' wall + overhead is the spawn window MINUS the in-window verification
+# (overhead = window - the whole command), so no window reproduces it: billed_basis = "unattributed".
+# The windows themselves (482 / 477 / 361 s) are in results/billed-windows.txt. ---------------
 [[run]]
 instance = "m8g.4xlarge"
 purpose = "primary"
 date = "2026-10-18"
 date_source = "run"
+id = "fastqc-m8g"
+in = ["chip"]
+task = "fastqc"
 workers = 11
+ranks = 1
+threads_per_rank = 11
 host = "results/arm64/fastqc.host.txt"
 wall_s = 231
 overhead_s = 109
+billed_basis = "unattributed"
 usd_hr = 0.7181
 compute_usd = 0.0461
 peak_gib = 4.41
+peak_kind = "cgroup-anon-max"
+avg_cores = 6.27
+tmpfs_peak_gib = 21.33
 results = "results/arm64/"
 note = "README billed $/result 0.0695 = FastQC wall + overhead at $/hr plus the MultiQC task; peak is the container's anon memory over all eleven JVMs (not memory.peak); overhead excludes 95–135 s of verification inside the window"
 
@@ -52,13 +80,22 @@ instance = "m8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
+id = "fastqc-m8i"
+in = ["chip"]
+task = "fastqc"
 workers = 11
+ranks = 1
+threads_per_rank = 11
 host = "results/x86_64/fastqc.host.txt"
 wall_s = 220
 overhead_s = 128
+billed_basis = "unattributed"
 usd_hr = 0.8467
 compute_usd = 0.0518
 peak_gib = 3.95
+peak_kind = "cgroup-anon-max"
+avg_cores = 6.42
+tmpfs_peak_gib = 21.33
 results = "results/x86_64/"
 note = "README billed $/result 0.0843 includes the MultiQC task; peak is container anon memory"
 
@@ -67,13 +104,22 @@ instance = "m8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
+id = "fastqc-m8a"
+in = ["chip"]
+task = "fastqc"
 workers = 11
+ranks = 1
+threads_per_rank = 11
 host = "results/amd/fastqc.host.txt"
 wall_s = 165
 overhead_s = 96
+billed_basis = "unattributed"
 usd_hr = 0.9738
 compute_usd = 0.0447
 peak_gib = 4.22
+peak_kind = "cgroup-anon-max"
+avg_cores = 6.38
+tmpfs_peak_gib = 21.33
 results = "results/amd/"
 note = "README billed $/result 0.0724 includes the MultiQC task; peak is container anon memory"
 
@@ -83,8 +129,11 @@ instance = "c8g.large"
 purpose = "primary"
 date = "2026-10-18"
 date_source = "run"
+id = "multiqc-c8g"
+task = "multiqc"
 host = "results/arm64/multiqc.host.txt"
 wall_s = 2
+billed_s = 75
 results = "results/arm64/multiqc.smoke-check.txt"
 note = "MultiQC task; its cost is folded into the FastQC row's billed $/result"
 
@@ -93,8 +142,11 @@ instance = "c8i.large"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
+id = "multiqc-c8i"
+task = "multiqc"
 host = "results/x86_64/multiqc.host.txt"
 wall_s = 2
+billed_s = 95
 results = "results/x86_64/multiqc.smoke-check.txt"
 note = "MultiQC task"
 
@@ -103,8 +155,11 @@ instance = "c8a.large"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
+id = "multiqc-c8a"
+task = "multiqc"
 host = "results/amd/multiqc.host.txt"
 wall_s = 2
+billed_s = 60
 results = "results/amd/multiqc.smoke-check.txt"
 note = "MultiQC task"
 

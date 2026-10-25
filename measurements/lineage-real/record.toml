@@ -1,6 +1,35 @@
 # measurements/lineage-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: each row is one caller (task 01-nextclade / 02-pangolin) on one chip, its own result; billed
+# is the spawn completion window, exactly (results/billed-windows.txt), though the README says
+# "launch to terminate". Billed includes the 2,000-genome single-thread run and the checks.
+schema = 2
 result_unit = "100,000 designated genomes assigned and checked (one tool)"
+
+[workload]
+size = { genomes = 100000, lineages = 2977 }
+note = "100,000 INSDC genomes, each caller run once over the whole batch at 8 threads; pangolin's time is scorpio and UShER, not alignment"
+
+[timing]
+wall = "the caller's own run over the 100k genomes, timed in-script (results/<chip>/<tool>/timing.tsv)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-pangolin"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "cross-chip-identical"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's pangolin 4.4 on Graviton4, bioconda's x86 build on Intel and AMD; the builds ship different minimap2 (2.31 and 2.30); Intel's 8 vCPUs are 4 cores x 2 SMT"
+note = "AMD 2.4x Graviton4 and cheapest per result; Graviton4 and Intel tie"
+
+[[series]]
+id = "chip-nextclade"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "cross-chip-identical"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's Nextclade 3.22.0 on Graviton4, bioconda's x86 build on Intel and AMD; Intel's 8 vCPUs are 4 cores x 2 SMT"
+note = "AMD 1.45x Graviton4; Graviton4 1.3x faster than Intel and cheaper per result"
 
 [[dataset]]
 id = "cov-lineages/pango-designation v1.38 (commit 5d58f88) lineages.csv + pango_designation/alias_key.json"
@@ -26,20 +55,28 @@ from_recipe = "lineage"
 note = "copied from pins.sha256 beside the dataset in the bucket (inputs/lineage/, written by recipes/lineage/stage-inputs.sh)"
 
 [[run]]
+id = "choose"
+task = "00-choose"
 instance = "r8g.xlarge"
 purpose = "diagnostic"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 412
+billed_s = 491
 results = "results/choose/"
-note = "task 00, choosing the genomes, once; README prints billed $0.032 but no rate, so no $ fields"
+note = "task 00, choosing the genomes, once (cookbook-lineage-real-choose-r1-r2); README prints billed $0.032 but no rate, so no $ fields; the window is in results/billed-windows.txt"
 
 [[run]]
+id = "pangolin-m8g"
+in = ["chip-pangolin"]
+task = "02-pangolin"
 instance = "m8g.2xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/arm64/pangolin/host.txt"
 wall_s = 1515
 billed_s = 1727
@@ -52,11 +89,16 @@ results = "results/arm64/pangolin/"
 note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
 
 [[run]]
+id = "pangolin-m8i"
+in = ["chip-pangolin"]
+task = "02-pangolin"
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/x86_64/pangolin/host.txt"
 wall_s = 1495
 billed_s = 1692
@@ -69,11 +111,16 @@ results = "results/x86_64/pangolin/"
 note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
 
 [[run]]
+id = "pangolin-m8a"
+in = ["chip-pangolin"]
+task = "02-pangolin"
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/amd/pangolin/host.txt"
 wall_s = 628
 billed_s = 808
@@ -86,11 +133,16 @@ results = "results/amd/pangolin/"
 note = "pangolin, ru_maxrss of the largest process; billed includes the 2,000-genome single-thread run and the checks"
 
 [[run]]
+id = "nextclade-m8g"
+in = ["chip-nextclade"]
+task = "01-nextclade"
 instance = "m8g.2xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/arm64/nextclade/host.txt"
 wall_s = 297
 billed_s = 413
@@ -103,11 +155,16 @@ results = "results/arm64/nextclade/"
 note = "nextclade; billed includes the 2,000-genome single-thread run and the checks"
 
 [[run]]
+id = "nextclade-m8i"
+in = ["chip-nextclade"]
+task = "01-nextclade"
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/x86_64/nextclade/host.txt"
 wall_s = 391
 billed_s = 484
@@ -120,11 +177,16 @@ results = "results/x86_64/nextclade/"
 note = "nextclade; billed includes the 2,000-genome single-thread run and the checks"
 
 [[run]]
+id = "nextclade-m8a"
+in = ["chip-nextclade"]
+task = "01-nextclade"
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/amd/nextclade/host.txt"
 wall_s = 205
 billed_s = 289

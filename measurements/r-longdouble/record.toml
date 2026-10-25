@@ -1,8 +1,27 @@
 # measurements/r-longdouble/record.toml -- drafted by the #118 extraction, then authored.
 # A mechanism probe, not a sizing run: every row is diagnostic. The README prints billed $ per chip
-# ($0.711 / $0.040 / $0.032) but neither the billed seconds nor the $/hr, so no $ field is recorded.
-schema = 1
+# ($0.711 / $0.040 / $0.032) but neither the billed seconds nor the $/hr. Schema 2: billed_s is the spawn
+# window (results/billed-windows.txt, whose $ at spawn's rate reproduces the README's three figures);
+# no $/hr is printed in the README, so the rows still carry no $ field.
+schema = 2
 result_unit = "one run of probe.R: host facts, timings and agreement on a seeded 1,083 × 15,045 matrix"
+
+[workload]
+size = { rows = 1083, columns = 15045 }
+note = "one seeded matrix; probe.R times stats::cor, BLAS forms, sum/mean/colSums and a double BLAS control in one Rscript"
+
+[timing]
+wall = "the whole Rscript probe.R (rscript_exit ... wall_s in host.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "cor-digest"
+attribution = "other-version"
+attribution_note = "arm64 is aarch.bio R 4.5.3 with OpenBLAS 0.3.34, x86 bioconda R 4.5.2 with 0.3.30; the double BLAS control is what separates the arithmetic from the box"
+note = "the gap follows the accumulator type: R's long double is 113-bit quad on Graviton4, 64-bit x87 on Intel and AMD"
 
 [[dataset]]
 id = "seeded 1,083 × 15,045 rnorm matrix (set.seed(20261018)), the wgcna-real shape, built in-code by probe.R"
@@ -11,6 +30,8 @@ pins = "pins.sha256"
 note = "probe.R and run.sh pinned; no data staged"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
 results = "results/arm64/"
@@ -18,9 +39,12 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 wall_s = 7940
-note = "Rscript wall from host.txt; aarch.bio R 4.5.3, OpenBLAS 0.3.34. README billed $0.711 left out (no billed seconds or $/hr printed)"
+billed_s = 8023
+note = "Rscript wall from host.txt; aarch.bio R 4.5.3, OpenBLAS 0.3.34. README billed $0.711; billed_s is the spawn window, and with no $/hr printed there is no billed_usd"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "diagnostic"
 results = "results/x86_64/"
@@ -28,9 +52,12 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 wall_s = 305
+billed_s = 384
 note = "bioconda R 4.5.2, OpenBLAS 0.3.30. README billed $0.040 left out"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "diagnostic"
 results = "results/amd/"
@@ -38,6 +65,7 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 wall_s = 204
+billed_s = 267
 note = "bioconda R 4.5.2, OpenBLAS 0.3.30. README billed $0.032 left out"
 
 # --- the only in-task assert is the completion marker; everything else is printed -------

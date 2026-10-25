@@ -1,6 +1,24 @@
 # measurements/ase-phonopy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion-record window (cookbook-ase-phonopy-real-r2{,-x8664,-amd}-r2,
+# to the second). Run dates are the repo dates results/ landed; the completion records say 2026-10-19 UTC.
+schema = 2
 result_unit = "the complete calculation: both GPAW force sets (Si 64-atom and 16-atom supercells) plus the phonopy analysis of all four force sets"
+
+[workload]
+size = { supercell_atoms = 64, primitive_supercell_atoms = 16, force_sets = 4, scf_iterations = 42 }
+note = "two GPAW SCFs (64-atom conventional 2x2x2 and 16-atom primitive 2x2x2, one displacement each), then phonopy on four force sets; the 64-atom SCF is almost all of the cost"
+
+[timing]
+wall = "tool wall: GPAW plus phonopy, timed in-task (footprint.txt tool_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "layout"]
+equal_work = "cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the dft env's linux-64 twin (envs-x86_64/dft-5cb0d94e928d), same GPAW 25.7.0 / phonopy 4.4.0; Intel's 16 vCPUs are 8 cores x 2 threads, AMD's and Graviton4's 16 full cores"
 
 [[dataset]]
 id = "phonopy/phonopy v4.4.0 example/Si-QE/{phonopy_disp.yaml, supercell-001.out}, example/Si/{phonopy_disp.yaml, vasprun.xml}"
@@ -9,6 +27,8 @@ pins = "inputs.sha256"
 note = "upstream's committed displaced supercells plus the QE and VASP forces on the same bytes; re-checked in-task. GPAW's PAW setups come from the image"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +36,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 1078
 billed_s = 1174
 usd_hr = 0.6381
@@ -25,6 +47,8 @@ peak_gib = 10.8
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -32,6 +56,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 840
 billed_s = 894
 usd_hr = 0.7497
@@ -42,6 +68,8 @@ peak_kind = "cgroup-memory.peak"
 note = "x86 cgroup peak counts the page cache of the env installed at start; GPAW's own summed ru_maxrss is 11.8-12.1 GiB on all three"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -49,6 +77,8 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 439
 billed_s = 484
 usd_hr = 0.8622

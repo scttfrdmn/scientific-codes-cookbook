@@ -1,6 +1,34 @@
 # measurements/blast-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: every billed_s is a spawn completion-record window (cookbook-blast-real-{blast,diamond}-r3*);
+# the README calls it "launch to terminate", but it is the wrapper window, not CloudTrail's.
+schema = 2
 result_unit = "one whole verified search with its checks (all 20,525 reviewed human proteins vs all of SwissProt)"
+
+[workload]
+size = { sequences = 20525, db_sequences = 487728, db_residues = 186063409 }
+note = "every reviewed human SwissProt protein as a query against all of SwissProt, the database they were drawn from"
+
+[timing]
+wall = "blastp's (or diamond's search) wall, from the task's timing.txt"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "hits-tsv-crosschip"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's BLAST+ 2.16.0 on Graviton4, bioconda's x86 build of the same version on both x86 chips; Intel's 16 vCPU are 8 cores x 2 threads"
+note = "Graviton4 cheapest per result; AMD 2% slower at a 35% dearer hour, Intel 1.42x longer"
+
+[[series]]
+id = "chip-diamond"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "diamond-self"
+attribution = "same-version-other-build"
+attribution_note = "Graviton4's aarch.bio DIAMOND build gives different bytes with identical counts; Intel and AMD run the same x86 binary and are byte-identical"
+note = "the cross-code task: AMD 2.3x faster than Graviton4; boot is 44-62% of a DIAMOND bill"
 
 [[dataset]]
 id = "NCBI swissprot BLAST database, s3://ncbi-blast-databases snapshot 2026-10-10-01-05-01 (+ taxonomy4blast.sqlite3)"
@@ -15,6 +43,11 @@ purpose = "primary"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+id = "blast-c8g"
+in = ["chip"]
+task = "01-blast"
 host = "results/arm64/blast/host.txt"
 wall_s = 3783
 billed_s = 3882
@@ -31,6 +64,11 @@ purpose = "cross-chip"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+id = "blast-c8i"
+in = ["chip"]
+task = "01-blast"
 host = "results/x86_64/blast/host.txt"
 wall_s = 5385
 billed_s = 5499
@@ -47,6 +85,11 @@ purpose = "cross-chip"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+id = "blast-c8a"
+in = ["chip"]
+task = "01-blast"
 host = "results/amd/blast/host.txt"
 wall_s = 3861
 billed_s = 3954
@@ -63,6 +106,12 @@ instance = "c8g.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"
 date_source = "run"
+id = "diamond-c8g"
+in = ["chip-diamond"]
+task = "02-diamond"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/arm64/diamond/host.txt"
 wall_s = 73
 billed_s = 131
@@ -78,6 +127,12 @@ instance = "c8i.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"
 date_source = "run"
+id = "diamond-c8i"
+in = ["chip-diamond"]
+task = "02-diamond"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/x86_64/diamond/host.txt"
 wall_s = 64
 billed_s = 128
@@ -93,6 +148,12 @@ instance = "c8a.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"
 date_source = "run"
+id = "diamond-c8a"
+in = ["chip-diamond"]
+task = "02-diamond"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 host = "results/amd/diamond/host.txt"
 wall_s = 32
 billed_s = 85

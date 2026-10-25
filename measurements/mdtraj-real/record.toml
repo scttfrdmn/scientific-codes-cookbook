@@ -1,6 +1,25 @@
 # measurements/mdtraj-real/record.toml
-schema = 1
+# Schema 2: the printed billed (1172/1817/832 s) is the spawn completion record's window
+# (cookbook-mdtraj-real-r1{,-x8664,-amd}-r1a) to the second, although the README calls it
+# "EC2 launch to terminate". Layout: 30 single-threaded worker processes, one file each.
+schema = 2
 result_unit = "the whole dataset: all 60 FAST XTCs (120,060 frames) through every analysis and cross-check, plus the DHFR DCD"
+
+[workload]
+size = { files = 60, frames = 120060, atoms = 4682 }
+note = "one file per worker process, 60 files in two rounds of 30; Shrake-Rupley SASA is 93-95% of the worker-seconds; plus the 100-frame DHFR DCD (23,558 atoms)"
+
+[timing]
+wall = "real.py, start to finish"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "frames"
+attribution = "same-version-other-build"
+attribution_note = "MDTraj 1.11.2 / MDAnalysis 2.10.0: the aarch.science md image on arm64, its linux-64 twin on both x86 chips (numpy links MKL there); c8i's 32 vCPUs are 16 cores x 2, so 30 workers share cores pairwise"
 
 [[dataset]]
 id = "RODA s3://fah-public-data-covid19-cryptic-pockets/SARS-CoV-2/nsp5_monomer/ FAST_simulations/ (60 XTCs) + input_files/ (5 files)"
@@ -16,6 +35,8 @@ from_recipe = "measurements/openmm-mdanalysis-real"
 note = "JAC.prmtop from the sibling's pinned Amber20_Benchmark_Suite.tar.gz (same object, also in inputs.sha256)"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 results = "results/graviton4/"
@@ -23,6 +44,9 @@ host = "results/graviton4/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 30
+ranks = 1
+threads_per_rank = 1
+concurrent = 30
 wall_s = 1072
 billed_s = 1172
 usd_hr = 1.2762
@@ -32,6 +56,8 @@ peak_gib = 35.4
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 results = "results/intel/"
@@ -39,6 +65,9 @@ host = "results/intel/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 30
+ranks = 1
+threads_per_rank = 1
+concurrent = 30
 wall_s = 1759
 billed_s = 1817
 usd_hr = 1.4994
@@ -49,6 +78,8 @@ peak_kind = "cgroup-memory.peak"
 note = "30 workers on 16 cores x 2 hyperthreads share cores pairwise"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -56,6 +87,9 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 30
+ranks = 1
+threads_per_rank = 1
+concurrent = 30
 wall_s = 784
 billed_s = 832
 usd_hr = 1.7243

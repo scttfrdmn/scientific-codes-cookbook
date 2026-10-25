@@ -1,0 +1,8 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The ladder rows' billed (1456/926/704/559 s) is the spawn window; the x86 rows' printed billed (587/460 s) is the ec2 window (587 exact, 460 vs 461 s). Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+cookbook-freebayes-gen-c6g	c6g.xlarge	-	0.136000	2026-10-04T04:52:37Z	2026-10-04T05:16:53Z	1456	0.0550	-	-	-	-	-
+cookbook-freebayes-gen-c7g	c7g.xlarge	-	0.145000	2026-10-04T05:17:56Z	2026-10-04T05:33:22Z	926	0.0373	-	-	-	-	-
+cookbook-freebayes-chr20	c8g.xlarge	-	0.159500	2026-09-30T16:32:09Z	2026-09-30T16:43:53Z	704	0.0312	-	-	-	-	-
+cookbook-freebayes-gen-c9g	c9g.xlarge	-	0.173900	2026-10-04T05:34:16Z	2026-10-04T05:43:35Z	559	0.0270	-	-	-	-	-
+freebayes-chip-x8664-c1	c8i.xlarge	i-04c1d2446b7294fd1	0.187400	2026-10-21T06:05:50Z	2026-10-21T06:14:53Z	543	0.0283	2026-10-21T06:05:37Z	2026-10-21T06:15:24Z	587	b3453708-e530-4476-b667-c71ed442884f	91c97cf8-e96b-4b2f-91ac-aca5d3282d5c
+freebayes-chip-amd-c1	c8a.xlarge	i-08fb9a32f5c9d2838	0.215500	2026-10-21T06:15:15Z	2026-10-21T06:21:59Z	404	0.0242	2026-10-21T06:15:04Z	2026-10-21T06:22:45Z	461	40936b89-326e-4f48-9076-f89c34b9e2a6	d1aa89d6-0884-476f-812f-e8008595472c

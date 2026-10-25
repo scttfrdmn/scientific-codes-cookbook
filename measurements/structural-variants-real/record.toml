@@ -1,6 +1,33 @@
 # measurements/structural-variants-real/record.toml -- manta and delly on whole-genome HG002 30x, three chips.
-schema = 1
+# Schema 2: billed (690 ... 1,191 s) is spawn's completion window to the second
+# (results/<chip>/<caller>/completion.json, results/runs.txt "window"), although the README calls it
+# launch to terminate. manta and delly are separate results on the same box, told apart by task.
+schema = 2
 result_unit = "one whole genome called and checked by one caller"
+
+[workload]
+size = { depth = 30 }
+note = "HG002 whole genome, NHGRI's 60x novoalign BAM subsampled to 30x (59.6 GiB) plus hs37d5; scored against GIAB HG002 SV v0.6 Tier 1 (9,641 DEL + INS); staging, not the callers, sizes the box"
+
+[timing]
+wall = "the caller's own run (manta's runWorkflow.py / delly sr), after the inputs' sha256 check"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-manta"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "across-chips"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's manta on Graviton4, bioconda's on Intel and AMD; Intel's 32 vCPU are 16 cores x 2 threads"
+
+[[series]]
+id = "chip-delly"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "across-chips"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's delly on Graviton4, bioconda's on Intel and AMD; Intel's 32 vCPU are 16 cores x 2 threads"
 
 [[dataset]]
 id = "s3://giab NHGRI novoalign HG002.hs37d5.60x.1.bam (+ .bai), HG002 (NA24385), GRCh37 hs37d5"
@@ -30,6 +57,9 @@ tier = "versioned-release"
 pins = "pins.sha256"
 
 [[run]]
+id = "manta-r8g"
+in = ["chip-manta"]
+task = "01-manta"
 instance = "r8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/manta/"
@@ -37,6 +67,8 @@ host = "results/arm64/manta/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 230
 billed_s = 690
 usd_hr = 1.8851
@@ -47,6 +79,9 @@ peak_kind = "rss"
 note = "manta; peak is ru_maxrss over pyflow's tasks (cgroup memory.peak 3.4 GiB)"
 
 [[run]]
+id = "delly-r8g"
+in = ["chip-delly"]
+task = "02-delly"
 instance = "r8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/delly/"
@@ -54,6 +89,8 @@ host = "results/arm64/delly/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 1140
 billed_s = 1607
 usd_hr = 1.8851
@@ -64,6 +101,9 @@ peak_kind = "vmhwm"
 note = "delly sr -h 32"
 
 [[run]]
+id = "manta-r8i"
+in = ["chip-manta"]
+task = "01-manta"
 instance = "r8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/manta/"
@@ -71,6 +111,8 @@ host = "results/x86_64/manta/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 320
 billed_s = 714
 usd_hr = 2.2227
@@ -81,6 +123,9 @@ peak_kind = "rss"
 note = "manta; 16 cores x 2 threads"
 
 [[run]]
+id = "delly-r8i"
+in = ["chip-delly"]
+task = "02-delly"
 instance = "r8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/delly/"
@@ -88,6 +133,8 @@ host = "results/x86_64/delly/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 1160
 billed_s = 1552
 usd_hr = 2.2227
@@ -98,6 +145,9 @@ peak_kind = "vmhwm"
 note = "delly"
 
 [[run]]
+id = "manta-r8a"
+in = ["chip-manta"]
+task = "01-manta"
 instance = "r8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/manta/"
@@ -105,6 +155,8 @@ host = "results/amd/manta/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 199
 billed_s = 510
 usd_hr = 2.5562
@@ -115,6 +167,9 @@ peak_kind = "rss"
 note = "manta"
 
 [[run]]
+id = "delly-r8a"
+in = ["chip-delly"]
+task = "02-delly"
 instance = "r8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/delly/"
@@ -122,6 +177,8 @@ host = "results/amd/delly/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 890
 billed_s = 1191
 usd_hr = 2.5562

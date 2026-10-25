@@ -1,6 +1,25 @@
 # measurements/su2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> Terminate of cookbook-su2-real-r2-*,
+# results/billed-windows.txt), within 1 s of each printed figure.
+schema = 2
 result_unit = "the validation pair: NACA 0012 SA at alpha = 10 and 15 degrees, 897x257 C-grid, each converged from free stream"
+
+[workload]
+size = { points = 230336 }
+note = "two steady 2D RANS solves (2,393 and 2,036 iterations to RMS density < 1e-12), plus a regression case and a free-stream check"
+
+[timing]
+wall = "every SU2 solve in the task: the two angles, the 2 s regression case and the 20-39 s free-stream check"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "converged"
+attribution = "same-version-other-build"
+attribution_note = "SU2 8.5.0: aarch.science cfd-fv arm64 vs its linux-64 twin; c8i's 16 vCPUs are 8 cores x 2 hyperthreads"
+note = "Graviton4 1.98x faster than Intel and 1.51x faster than AMD; the iteration count is the same on all three, so the ratio is seconds per iteration"
 
 [[dataset]]
 id = "su2code/TestCases v8.5.0 (790c80e) rans/naca0012/n0012_897-257.su2"
@@ -32,8 +51,13 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+id = "c8g"
+in = ["chip"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 536
 billed_s = 647
+ec2_s = 647
 usd_hr = 0.6381
 compute_usd = 0.095
 billed_usd = 0.115
@@ -49,8 +73,13 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+id = "c8i"
+in = ["chip"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 1060
 billed_s = 1186
+ec2_s = 1186
 usd_hr = 0.7497
 compute_usd = 0.221
 billed_usd = 0.247
@@ -66,8 +95,13 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+id = "c8a"
+in = ["chip"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 810
 billed_s = 881
+ec2_s = 882
 usd_hr = 0.8622
 compute_usd = 0.194
 billed_usd = 0.211

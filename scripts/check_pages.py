@@ -709,7 +709,7 @@ def _printed(key, v, nums):
     (with the unit after it), memory in MiB."""
     fixed, sci, timed = nums
     vals = [(v, fixed)] + ([(v / 60, timed), (v / 3600, timed)] if key in ("wall_s", "billed_s", "overhead_s") else []) + \
-           ([(v * 1024, fixed)] if key == "peak_gib" else [])
+           ([(v * 1024, fixed)] if key.endswith("_gib") else [])
     for x, pool in vals:
         for d in range(0, 11):
             f = f"{x:.{d}f}"
@@ -762,7 +762,7 @@ def check_records(only=None):
         try:
             rec = tomllib.load(open(rpath, "rb"))
         except tomllib.TOMLDecodeError as e:
-            errors.append(f"measurements/{name}/record.toml: not TOML: {e}")
+            (errors if not only or name in only else warns).append(f"measurements/{name}/record.toml: not TOML: {e}")
             continue
         recs[name] = rec
         for t in rec.get("trap", []):
@@ -798,10 +798,16 @@ def check_records(only=None):
             for key in ("results", "host"):
                 if key in run and not os.path.exists(os.path.join(mdir, run[key])):
                     errors.append(f"{tag}: {key} path {run[key]} does not exist")
-            art = _numbers(_text_of(os.path.join(mdir, run["results"])) if "results" in run else "")
-            for key in ("wall_s", "billed_s", "overhead_s", "usd_hr", "compute_usd", "billed_usd", "peak_gib"):
-                if key in run and not (_printed(key, run[key], rnums) or _printed(key, run[key], art)):
-                    errors.append(f"{tag}: {key} = {run[key]} is printed in neither README.md nor {run.get('results', 'a cited results file')}")
+            # schema 2: billed windows retrieved from spawn's completion records live in one file per dir
+            art = _numbers((_text_of(os.path.join(mdir, run["results"])) if "results" in run else "") +
+                           "\n" + _text_of(os.path.join(mdir, "results", "billed-windows.txt")))
+            flat = [(k, run[k]) for k in RUN_NUMBERS if k in run] + \
+                   [(f"phase_s.{k}", x) for k, x in run.get("phase_s", {}).items() if k != "source"] + \
+                   [(f"gpu.{k}", run["gpu"][k]) for k in ("mem_mib", "hbm_peak_mib") if k in run.get("gpu", {})]
+            for key, x in flat:
+                k = "wall_s" if key in ("ec2_s",) or key.startswith("phase_s.") else key
+                if not (_printed(k, x, rnums) or _printed(k, x, art)):
+                    errors.append(f"{tag}: {key} = {x} is printed in neither README.md nor {run.get('results', 'a cited results file')}")
             # 3. a host file's facts are read, never re-authored
             if "host" in run and "threads_per_core" in run and \
                     host_facts(os.path.join(mdir, run["host"])).get("threads_per_core") is not None:
@@ -835,9 +841,115 @@ def check_records(only=None):
         listed = {re.sub(r"^.*/", "", u["ref"]) for u in rec.get("upstream", [])}
         for ref in sorted(_refs(open(os.path.join(mdir, "README.md"), encoding="utf-8").read()) - listed):
             errors.append(f"{rel}: README cites {ref}; the record has no upstream entry for it")
+        check_v2(rec, rel, mdir, rnums)
     for name, t in trap_refs:
         if t not in all_traps:
             errors.append(f"measurements/{name}/record.toml: trap_refs names '{t}', which no record owns")
+
+
+RUN_NUMBERS = ("wall_s", "billed_s", "overhead_s", "usd_hr", "compute_usd", "billed_usd", "peak_gib", "throughput",
+               "avg_cores", "peak_cores", "anon_gib", "tmpfs_peak_gib", "staged_gib", "ec2_s", "request_usd")
+HELD = {"image": lambda r: (r.get("image", "recipe"), r.get("arch", "").replace("amd", "x86_64"), r.get("build")),
+        "input": lambda r: [r.get("size"), r.get("staged_gib")],
+        "family": lambda r: re.match(r"[a-z]+\d+[a-z]*", r["instance"]).group(0),
+        "instance": lambda r: r["instance"], "size": lambda r: r.get("size"),
+        "workers": lambda r: r.get("workers"), "layout": lambda r: (r.get("ranks"), r.get("threads_per_rank")),
+        "data_path": lambda r: r["data_path"], "spawn_version": lambda r: r.get("spawn_version"),
+        "generation": lambda r: r.get("generation")}
+
+
+def check_v2(rec, rel, mdir, rnums):
+    """Schema 2 (#118 performance): the new fields agree with the rows they describe. Runs the
+    generator's own derivations, so what is checked is what record.json will say."""
+    from gen_catalog import chip_of, host_facts, derive_perf, axis_value, config_key, check_status
+    if rec.get("schema") != 2:
+        warns.append(f"{rel}: schema 1 -- performance fields not reviewed (#118 v2)")
+        return
+    e = json.loads(json.dumps(rec))
+    runs, checks = e["run"], {c["id"]: c for c in e["check"]}
+    for r in runs:
+        r.setdefault("purpose", "primary")
+        r.update(chip_of(r["instance"]))
+        if "host" in r:
+            r.update({k: v for k, v in host_facts(os.path.join(mdir, r["host"])).items() if k not in r})
+    derive_perf(e, mdir)
+    sids, rids = {s["id"] for s in e.get("series", [])}, [r["id"] for r in runs if "id" in r]
+    if len(rids) != len(set(rids)):
+        errors.append(f"{rel}: run ids repeat")
+    res = []
+
+    def printed(x, key=""):   # README first; all of results/ only when needed (it is the slow read)
+        if _printed(key, x, rnums):
+            return True
+        res or res.append(_numbers(_text_of(os.path.join(mdir, "results"))))
+        return _printed(key, x, res[0])
+    for i, r in enumerate(runs):
+        tag = f"{rel}: run[{i}] {r.get('id', r['instance'])}"
+        if all(k in r for k in ("workers", "ranks", "threads_per_rank")) and \
+                r["workers"] != r["ranks"] * r["threads_per_rank"] * r["concurrent"]:
+            errors.append(f"{tag}: workers {r['workers']} != ranks x threads_per_rank x concurrent")
+        if r.get("superseded_by") and r["superseded_by"] not in rids:
+            errors.append(f"{tag}: superseded_by '{r['superseded_by']}' names no row")
+        errors.extend(f"{tag}: in names unknown series '{s}'" for s in sorted(set(r.get("in", [])) - sids))
+        if any(k in r for k in ("billed_s", "overhead_s", "billed_usd")) and \
+                r.get("billed_basis") in (None, "unavailable", "shared-window"):
+            errors.append(f"{tag}: a billed figure with billed_basis {r.get('billed_basis')}")
+        if r.get("billed_basis") == "unattributed":
+            warns.append(f"{tag}: billed {r.get('billed_s', r.get('wall_s', 0) + r.get('overhead_s', 0))} s matches no completion record or CloudTrail window")
+        if r["run_outcome"] == "no-capacity" and any(k in r for k in ("wall_s", "compute_usd", "billed_usd")):
+            errors.append(f"{tag}: a no-capacity row carries a wall or a $")
+        if r.get("avg_cores", 0) > r.get("vcpus", 1e9) + 0.05:   # cgroup rounding, not a second core
+            errors.append(f"{tag}: avg_cores {r['avg_cores']} > {r['vcpus']} vCPUs")
+        errors.extend(f"{tag}: size.{k} = {x} is printed in neither README.md nor results/"
+                      for k, x in r.get("size", {}).items() if not printed(x))
+        g = r.get("gpu", {})
+        if "util_series" in g and not os.path.exists(os.path.join(mdir, g["util_series"])):
+            errors.append(f"{tag}: gpu.util_series {g['util_series']} does not exist")
+        if "util_plateau_pct" in g and not _printed("", g["util_plateau_pct"], rnums):   # derived, so the page may lag
+            warns.append(f"{tag}: the plateau derived from {g['util_series']} ({g['util_plateau_pct']}%) is not printed in README.md")
+        if g.get("mps_clients") and g["mps_clients"] != r["concurrent"]:
+            errors.append(f"{tag}: gpu.mps_clients != concurrent")
+        if "usd_per_result" in r and "compute_usd" in r and \
+                abs(r["usd_per_result"] - r["compute_usd"]) > max(0.01 * r["compute_usd"], 5e-5):
+            errors.append(f"{tag}: compute_usd {r['compute_usd']} != usd_hr / throughput = {r['usd_per_result']}")
+    seen = {}
+    for r in runs:
+        if r["run_outcome"] == "completed":
+            seen.setdefault(config_key(r), []).append(r)
+    for rows in seen.values():   # n is derived over identical configurations, so a repeat must say it is one
+        if len(rows) > 1 and len({x.get("attempt") for x in rows}) < len(rows):
+            errors.append(f"{rel}: {len(rows)} {rows[0]['instance']} rows share a configuration; mark the difference "
+                          f"(variant / task / size) or the repeat (distinct attempt)")
+    for t in e.get("results", []):
+        if "billed_usd" in t and not _printed("billed_usd", t["billed_usd"], rnums):
+            errors.append(f"{rel}: pipeline {t['attempt']} {t['arch']} totals ${t['billed_usd']} billed, which README.md never prints")
+    w = e.get("workload", {})
+    errors.extend(f"{rel}: workload {k} = {x} is printed in neither README.md nor results/"
+                  for k, x in list(w.get("size", {}).items()) + [(k, w[k]) for k in ("input_gib", "output_gib") if k in w]
+                  if not printed(x, k))
+    for s in e.get("series", []):
+        sid, mem = f"{rel}: series '{s['id']}'", [r for r in runs if s["id"] in r.get("in", []) and "superseded_by" not in r]
+        axes = [axis_value(r, s) for r in mem]
+        numeric = bool(axes) and all(isinstance(a, (int, float)) for a in axes)
+        if len(s["curve"]["points"]) < 2 or len(set(map(str, axes))) < 2:
+            errors.append(f"{sid} needs two completed members that differ on {s['axis']}")
+        errors.extend(f"{sid} holds {h}, but its members differ on it" for h in s.get("held", [])
+                      if len({json.dumps(HELD[h](r), sort_keys=True) for r in mem}) > 1)
+        c = checks.get(s["equal_work"])
+        if not s["equal_work"].startswith("none:") and (c is None or check_status(c) == "fail"):
+            errors.append(f"{sid}: equal_work '{s['equal_work']}' names no passing check")
+        elif c and s["axis"] in ("chip", "generation") and c.get("across_chips") == "path":
+            errors.append(f"{sid}: equal_work rests on '{c['id']}', a path quantity across chips")
+        vd = s.get("verdict", {})
+        if "through" in vd and not (vd["through"] == max(axes) if numeric else vd["through"] in axes):
+            errors.append(f"{sid}: verdict through {vd['through']} is not the top rung ({max(axes) if numeric else axes})")
+        if "at" in vd and vd["at"] not in axes:
+            errors.append(f"{sid}: verdict at {vd['at']} is not a rung")
+        if vd.get("shape") == "wall" and not any(r["run_outcome"] == "failed" and numeric and
+                                                 axis_value(r, s) > vd.get("at", 1e18) for r in mem):
+            errors.append(f"{sid}: a wall needs a failed member above verdict.at")
+    swept = {s["axis"] for s in e.get("series", [])}
+    errors.extend(f"{rel}: not_swept {n['axis']} is also swept" for n in e.get("not_swept", []) if n["axis"] in swept)
 
 
 def inventory():

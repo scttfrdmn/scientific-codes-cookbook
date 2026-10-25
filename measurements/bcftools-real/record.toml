@@ -1,6 +1,25 @@
 # measurements/bcftools-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> Terminate) on all three chips,
+# to within 1 s (results/billed-windows.txt). Dates are the git dates results/ landed; the runs
+# themselves were 2026-10-18 (arm64, Intel) and 2026-10-21 (AMD).
+schema = 2
 result_unit = "the whole verified run: chromosomes 20, 21 and 22 of 1000 Genomes Phase 3 (2,504 samples) normalised, annotated, filtered, concatenated and merged, with every check"
+
+[workload]
+size = { records = 4021926, samples = 2504 }
+note = "chromosomes 20, 21 and 22 of 1000 Genomes Phase 3 (775 MB of bgzipped VCF), one task running norm, fill-tags, stats, filter, annotate, concat and split/merge in sequence; streams, 16-19 MiB RSS"
+
+[timing]
+wall = "the README's 'task compute': run.sh's whole workload, every operation and check, excluding boot and staging"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "concat-roundtrip"
+attribution = "same-version-other-build"
+attribution_note = "bcftools 1.24 on both images, but they link different htslib builds (1.23.1 arm64, 1.24 x86), so a step timing is chip and htslib; the census column also runs GNU vs BusyBox awk. Intel vs AMD is the same image"
 
 [[dataset]]
 id = "RODA s3://1000genomes/release/20130502/ALL.chr{20,21,22}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz"
@@ -22,12 +41,16 @@ pins = "pins.sha256"
 note = "copied from stage-inputs.sh's pins.sha256 heredoc (with the source hs37d5.fa.gz); checked in-task"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 threads_per_core = 1
 wall_s = 3750
 billed_s = 3887
@@ -38,12 +61,16 @@ peak_gib = 0.01582
 peak_kind = "rss"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 threads_per_core = 2
 wall_s = 3553
 billed_s = 3646
@@ -54,6 +81,8 @@ peak_gib = 0.01787
 peak_kind = "rss"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -61,6 +90,8 @@ spawn_version = "0.139.1"
 date = "2026-10-20"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 threads_per_core = 1
 wall_s = 2997
 billed_s = 3101

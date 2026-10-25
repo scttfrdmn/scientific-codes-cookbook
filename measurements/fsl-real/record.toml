@@ -1,7 +1,25 @@
 # measurements/fsl-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: AMD's billed 2,321 s is its EC2 window (CloudTrail, exact); Graviton4's and Intel's are
+# 3 s over their spawn windows and match neither, so unattributed (results/billed-windows.txt).
+schema = 2
 result_unit = "one subject (T1w scan through robustfov, bet, flirt 6/12-DOF, fnirt)"
 results_per_run = 125
+
+[workload]
+size = { subjects = 125 }
+note = "per-subject fan-out: 16 subjects at a time, each FSL tool single-threaded; FNIRT is 80% of the work"
+
+[timing]
+wall = "the cohort wall (cohort_wall_s in summary.txt): all 125 subjects through the chain"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "subjects-complete"
+attribution = "same-version-other-build"
+attribution_note = "same lock-verified FSL versions from FSL's channel per architecture; Intel's 16 vCPU are 8 cores x 2 hyperthreads; the outputs split ARM build vs x86 build (paths), Intel and AMD identical"
 
 [[dataset]]
 id = "RODA s3://fcp-indi/data/Projects/RocklandSample/NFBS_Dataset.tar.gz (NFBS, Puccio et al. 2016, doi:10.1186/s13742-016-0150-5), 1,751,464,473 bytes"
@@ -10,39 +28,57 @@ pins = "pins.sha256"
 note = "the full sha256 copied from stage-inputs.sh (SHA=), which asserts it on the box before any compute"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 threads_per_core = 1            # no host file; README: lscpu 1 thread per core on c8g
 wall_s = 2332
 billed_s = 2403
+billed_basis = "unattributed"
+ec2_s = 2446
 usd_hr = 0.6381
 compute_usd = 0.00331
 billed_usd = 0.00341
 peak_gib = 15.9
 peak_kind = "cgroup-memory.peak"
+avg_cores = 15.17
 note = "peak includes the 5.5 GiB of /tmp the extracted cohort occupies"
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 threads_per_core = 2            # no host file; README: 8 cores x 2 hyperthreads on c8i
 wall_s = 3577
 billed_s = 3645
+billed_basis = "unattributed"
+ec2_s = 3705
 usd_hr = 0.7497
 compute_usd = 0.00596
 billed_usd = 0.00607
 peak_gib = 16.1
 peak_kind = "cgroup-memory.peak"
+avg_cores = 15.43
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -51,13 +87,18 @@ spawn_version = "0.139.1"
 date = "2026-10-21"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 2181
 billed_s = 2321
+ec2_s = 2321
 usd_hr = 0.8622
 compute_usd = 0.00418
 billed_usd = 0.00445
 peak_gib = 16.1
 peak_kind = "cgroup-memory.peak"
+avg_cores = 15.27
 note = "ran chip.task.json with its inline command moved byte for byte into a staged sha256-checked file (spawn#1063/#1246)"
 
 # --- checks: '## What held at scale, on all three chips' (observed = Graviton4) ---

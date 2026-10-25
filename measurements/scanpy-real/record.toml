@@ -1,6 +1,26 @@
 # measurements/scanpy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the README's billed ("from launch to the end of stage-out") reproduces as neither spawn's
+# window nor EC2's: it is RunInstances -> spawn ended_at + 2 s on all three (results/billed-windows.txt),
+# basis ec2-to-spawn-end, within the +-2 s rule. It covers r1 (the ladder) and the replicate as well as r2 (wall_s).
+schema = 2
 result_unit = "one standard Scanpy pipeline over all 161,764 Hao et al. 2021 PBMCs (r2, the standalone run)"
+
+[workload]
+size = { cells = 161764, genes = 20525 }
+note = "QC -> normalize_total -> log1p -> HVG -> scale -> PCA -> kNN -> Leiden -> Louvain -> UMAP -> rank_genes_groups in one process"
+
+[timing]
+wall = "r2: one standalone pipeline.py process that loads the data, runs every step and checks it"
+billed_basis = "ec2-to-spawn-end"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "hvg-list"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the linux-64 env twin with the same scanpy, anndata, leidenalg, igraph and umap versions; OpenBLAS neoversev2 vs Cooperlake; Intel's 8 vCPUs are 4 x 2; the AMD leg ran under spawn 0.139.1, so its billed overhead is not comparable"
+note = "Graviton4 1.28x Intel and 34% cheaper per result; AMD fastest (1.38x Graviton4) and ties Graviton4 per result"
 
 [[dataset]]
 id = "CELLxGENE Census LTS 2025-01-30 h5ads/ed5d841d-6346-47d4-ab2f-7119ad7e3a35.h5ad (Hao et al., Cell 2021, doi:10.1016/j.cell.2021.04.048)"
@@ -10,6 +30,8 @@ note = "copied from the README's Pins table and hao2021.task.json, which checks 
 
 # --- three chips, 8 threads, 2xlarge (64 GiB) --------------------------------------------
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 date = "2026-10-17"
@@ -26,6 +48,8 @@ results = "results/arm64/"
 note = "wall = r2; billed also covers the r1 ladder and the replicate. OpenBLAS neoversev2"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-17"
@@ -43,6 +67,8 @@ results = "results/x86_64/"
 note = "linux-64 env twin envs-x86_64/single-cell-957f8c9c38e0; billed includes the twin's install; OpenBLAS Cooperlake"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"

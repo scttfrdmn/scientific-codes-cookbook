@@ -1,6 +1,25 @@
 # measurements/diamond-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly, for every row (results/billed-windows.txt),
+# although the README describes billed as "launch to terminate". Wall = makedb + blastp.
+schema = 2
 result_unit = "one whole proteome searched and checked: makedb of UniRef50 plus blastp of 20,431 reviewed human proteins"
+
+[workload]
+size = { sequences = 20431, db_sequences = 38840027, db_letters = 12182780325 }
+note = "one database build (diamond makedb, about 2 min) then one blastp --very-sensitive search of the whole query set; sized by memory (blastp peaks at 16.6-17.0 GiB at the default block size)"
+
+[timing]
+wall = "tool wall = makedb + blastp, timed in search.sh (results/<chip>/timing.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "queries-aligned"
+attribution = "same-version-other-build"
+attribution_note = "DIAMOND 2.2.6: aarch.bio's build on Graviton4, bioconda's x86 build on both x86 chips; the arm64 .dmnd differs, and build and architecture cannot be separated; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "AMD 1.74x faster than Graviton4 and 20% cheaper per result; Intel costs 35% more than Graviton4"
 
 [[dataset]]
 id = "UniProt 2026_03 uniref50.fasta.gz"
@@ -20,6 +39,8 @@ pins = "pins.sha256"
 note = "UniProt's own UniRef50 cluster membership per human entry"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -27,6 +48,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 9480
 billed_s = 9975
 usd_hr = 0.6381
@@ -36,6 +59,8 @@ peak_gib = 16.6
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -43,6 +68,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 11005
 billed_s = 11489
 usd_hr = 0.7497
@@ -52,6 +79,8 @@ peak_gib = 17.0
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -59,6 +88,8 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 5492
 billed_s = 5902
 usd_hr = 0.8622
@@ -68,6 +99,7 @@ peak_gib = 17.0
 peak_kind = "vmhwm"
 
 [[run]]
+id = "run1-c8g"
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 results = "results/arm64-run1/"
@@ -75,7 +107,12 @@ host = "results/arm64-run1/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
-note = "first Graviton4 run: failed only on the cluster-mapping assertion; blastp 9,436 s (0.9% slower), byte-identical hit table, $1.79. README prints no tool wall or billed seconds for it, so no $ fields"
+ranks = 1
+threads_per_rank = 16
+billed_s = 10124
+usd_hr = 0.6381
+billed_usd = 1.7945
+note = "first Graviton4 run (cookbook-diamond-real-search-r1): failed only on the cluster-mapping assertion; blastp 9,436 s (0.9% slower), byte-identical hit table, $1.79 = its spawn window (results/billed-windows.txt). The README prints no tool wall for it"
 
 # --- checks: the README's "The identities, at scale, on all three chips" rows --------
 [[check]]

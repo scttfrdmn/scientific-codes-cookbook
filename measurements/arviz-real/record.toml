@@ -1,6 +1,24 @@
 # measurements/arviz-real/record.toml
-schema = 1
+# Schema 2: billed_s is spawn's completion record window (cookbook-arviz-real-pdb-g3 / -x8664-i1 /
+# -amd-a1, 2026-10-20, matched to the second). wall_s is the whole task; ArviZ's own time is in the notes.
+schema = 2
 result_unit = "the whole verified set: 57 posteriordb posteriors sampled, and both draw sets (reference and fresh) diagnosed and checked"
+
+[workload]
+size = { posteriors = 57, stan_models = 48 }
+note = "every posteriordb 1.1.0 posterior with a reference posterior; CmdStan compile+sample (4 chains x 1,000) is 93-95% of the task, ArviZ 3-4%"
+
+[timing]
+wall = "the whole task, timed in-script (CmdStan compile+sample, stansummary and both ArviZ parts)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "summary-equals-calls"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the bayes env's linux-64 twin; Intel's 4 vCPU are 2 cores x 2 threads; the fresh draws are a path (33 of 57 posteriors differ across chips)"
 
 [[dataset]]
 id = "posteriordb 1.1.0 (tag 1.1.0, commit 299b77cf): 57 posteriors with reference posteriors"
@@ -10,7 +28,11 @@ from_recipe = "measurements/cmdstan-real"
 note = "reuses cmdstan-real's staged copy in place (256 files, 32 MB, each checked against its git blob)"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "m8g.xlarge"
+workers = 4
+avg_cores = 2.57
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
@@ -26,7 +48,11 @@ peak_kind = "cgroup-memory.peak"
 note = "wall_s is the whole task (CmdStan compile+sample dominates); ArviZ's own time is 41.8 s"
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "m8i.xlarge"
+workers = 4
+avg_cores = 2.77
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
@@ -42,7 +68,11 @@ peak_kind = "cgroup-memory.peak"
 note = "the bayes env's linux-64 twin; ArviZ's own time 38.9 s"
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "m8a.xlarge"
+workers = 4
+avg_cores = 2.53
 purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/host.txt"

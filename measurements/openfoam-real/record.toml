@@ -4,8 +4,27 @@
 # resources (cpu 16, memory 32 GiB, families c8g -> c8i/c8a via spec_arch), ttl 4h,
 # cost_limit 1.5 are all derived. Overall status is derived too: any outcome "fail" makes the
 # record "fail-reported", never "pass".
-schema = 1
+# Schema 2: billed is the spawn completion window (cookbook-openfoam-real-r1-{r3,x8664-r3,amd-r3});
+# those records say state failed / exit 1 because the su2-cd15 assertion fails by design: the RUN
+# completed. avg_cores is times.txt's avg_busy_cores.
+schema = 2
 result_unit = "the validation pair: NACA 0012 SA at alpha = 10 and 15 degrees, 897x257 C-grid"
+
+[workload]
+size = { cells = 229376, iterations_per_angle = 20000 }
+note = "steady 2D RANS, two angles (10 and 15 degrees) solved one after the other, 16 MPI ranks on a hierarchical (4 4 1) partition"
+
+[timing]
+wall = "both angles' rhoSimpleFoam (both stages), solve_wall.txt"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "partition"
+attribution = "same-version-other-build"
+attribution_note = "opencfd/openfoam-default v2412, one manifest list's arm64 and amd64 entries; c8i's 16 vCPUs are 8 cores x 2 hyperthreads, so the 16 ranks share cores pairwise; pressure-solver iterations differ slightly (1.338M vs 1.363M at 10 degrees)"
 
 [[dataset]]
 id = "su2code/TestCases v8.5.0 n0012_897-257.su2"
@@ -20,6 +39,8 @@ tier = "durable-id"
 unpinned = "a published web table; the seven codes' values are embedded in case.sh (as in su2-real), not a hashed file"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 date = "2026-10-20"
 date_source = "git"
@@ -33,8 +54,13 @@ billed_usd = 0.721
 peak_gib = 1.08
 peak_kind = "cgroup-memory.peak"
 results = "results/arm64/"
+ranks = 16
+threads_per_rank = 1
+avg_cores = 15.94
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -49,8 +75,13 @@ billed_usd = 1.023
 peak_gib = 1.07
 peak_kind = "cgroup-memory.peak"
 results = "results/x86_64/"
+ranks = 16
+threads_per_rank = 1
+avg_cores = 15.96
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -65,6 +96,9 @@ billed_usd = 0.793
 peak_gib = 1.07
 peak_kind = "cgroup-memory.peak"
 results = "results/amd/"
+ranks = 16
+threads_per_rank = 1
+avg_cores = 15.95
 
 # --- checks: the README's "What held at scale" rows, verbatim claims ------------------
 [[check]]

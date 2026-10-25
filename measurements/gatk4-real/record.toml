@@ -1,6 +1,33 @@
 # measurements/gatk4-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed windows are spawn's completion records (README caveats; all five match to the second).
+schema = 2
 result_unit = "one HaplotypeCaller call set over the sweep interval chr20:1,000,000-3,000,000 (NA12878, ~33x)"
+
+[workload]
+size = { interval_mb = 2 }
+note = "one HaplotypeCaller call over chr20:1,000,000-3,000,000; the rate along chr20 varies ~50x with local complexity, so a per-Mb rate does not transfer"
+
+[timing]
+wall = "HaplotypeCaller alone"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "threads"
+axis = "workers"
+held = ["image", "instance", "size"]
+equal_work = "threads-invariant"
+attribution = "same-binary"
+attribution_note = "--native-pair-hmm-threads is inert on AArch64: the Intel GKL is x86-only, so PairHMM falls back to single-threaded Java"
+verdict = { shape = "flat", through = 8, on = "wall" }
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "workers", "size", "input"]
+equal_work = "generation-invariant"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "compute_usd" }
+note = "every step of the ladder is both faster and cheaper; Graviton5 1.95x Graviton2"
 
 [[dataset]]
 id = "NYGC 30x NA12878 CRAM, ENA ERR3239334"
@@ -29,33 +56,45 @@ note = "chr20.fa.fai and chr20.dict copied from recipes/gatk4/stage-inputs.sh; c
 
 # --- §1: threading canary, c8g.2xlarge, same interval -----------------------------------
 [[run]]
+id = "canary-1t"
+in = ["threads"]
 instance = "c8g.2xlarge"
 purpose = "core-sweep"
 results = "results/canary.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 77
 note = "--native-pair-hmm-threads 1; 4093 variants"
 
 [[run]]
+id = "canary-8t"
+in = ["threads"]
 instance = "c8g.2xlarge"
 purpose = "core-sweep"
 results = "results/canary.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 78
 note = "--native-pair-hmm-threads 8; 4093 variants, the flag is inert on AArch64"
 
 # --- §2: generation sweep, 4 vCPU / 8 GiB, one thread ----------------------------------
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.xlarge"
 purpose = "generation-sweep"
 results = "results/c6g-smoke-check.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 121
 billed_s = 225
 overhead_s = 104
@@ -64,12 +103,16 @@ compute_usd = 0.004572
 billed_usd = 0.008500
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.xlarge"
 purpose = "generation-sweep"
 results = "results/c7g-smoke-check.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 95
 billed_s = 175
 overhead_s = 80
@@ -78,12 +121,16 @@ compute_usd = 0.003826
 billed_usd = 0.007049
 
 [[run]]
+id = "gen-c8g"
+in = ["gen"]
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/c8g-smoke-check.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 79
 billed_s = 151
 overhead_s = 72
@@ -92,12 +139,16 @@ compute_usd = 0.003501
 billed_usd = 0.006691
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.xlarge"
 purpose = "generation-sweep"
 results = "results/c9g-smoke-check.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 62
 billed_s = 124
 overhead_s = 62
@@ -107,12 +158,16 @@ billed_usd = 0.005989
 
 # --- §3: whole chr20 ------------------------------------------------------------------
 [[run]]
+id = "whole-chr20"
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/wholechr20-smoke-check.txt"
 date = "2026-09-26"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+size = { interval_mb = 64 }
 wall_s = 7929
 billed_s = 7982
 overhead_s = 53

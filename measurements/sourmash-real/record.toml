@@ -1,7 +1,26 @@
 # measurements/sourmash-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window (README: "the completion record's window"), matched
+# to the second for cookbook-sourmash-real-gather{,-x8664,-amd}-<nonce>.
+schema = 2
 result_unit = "one sample (a whole Zymo run) sketched, gathered against GTDB R226, classified and checked"
 results_per_run = 2
+
+[workload]
+size = { reference_sketches = 143384 }
+input_gib = 12.2
+note = "two whole Zymo runs in one task, side by side (even 17,571,462 reads, log 95,665,106), each sketched, gathered against all of GTDB R226, classified and checked; per-file sketching is single-threaded and is the long pole"
+
+[timing]
+wall = "the task's tool wall: both samples' pipelines side by side, so the log run's sets it"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "greedy-replay"
+attribution = "same-version-other-build"
+attribution_note = "sourmash 4.9.4: aarch.bio's build (Python 3.14) on Graviton4, bioconda's (3.13) on Intel and AMD; every output byte-identical"
 
 [[dataset]]
 id = "ENA PRJEB29504 ERR2984773 + ERR2935805 (ZymoBIOMICS D6300 even / D6310 log), s3://sra-pub-run-odp"
@@ -22,6 +41,8 @@ tier = "durable-id"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -38,6 +59,8 @@ peak_kind = "rss"
 note = "one task runs both samples side by side; $/sample is the task cost halved. wall_s is the task tool wall"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -54,6 +77,8 @@ peak_kind = "rss"
 note = "one task runs both samples side by side; $/sample is the task cost halved. wall_s is the task tool wall"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

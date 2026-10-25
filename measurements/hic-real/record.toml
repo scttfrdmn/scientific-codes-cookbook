@@ -1,5 +1,9 @@
 # measurements/hic-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: one row per chip = both tasks (the README's result). Its billed is the SUM of the two
+# tasks' spawn windows (01-pairs + 02-cool, results/billed-windows.txt), exact on all three -- not
+# the "launch to terminate" the README's prose names. The basis is sum-of-tasks
+# (of spawn windows).
+schema = 2
 result_unit = "one complete 4DN Hi-C experiment set (4DNESLLA3R1V, two replicates) through both tasks, every check passed"
 
 [[dataset]]
@@ -14,7 +18,26 @@ tier = "roda"
 pins = "inputs.sha256"
 note = "the published-result cross-check targets"
 
+[workload]
+size = { pairs_rep1 = 89084119, pairs_rep2 = 82325899, contacts = 151438963, resolutions = 13 }
+note = "task 1 merges and filters both replicates (pairtools, eight single-threaded steps side by side); task 2 loads at 1 kb, zoomifies and balances (cooler)"
+
+[timing]
+wall = "pairtools (task 1's concurrent block) + cooler (cload + zoomify + three balance runs)"
+billed_basis = "sum-of-tasks"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["size", "workers", "generation"]
+equal_work = "published-matrix"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 builds of pairtools 1.1.3 and cooler 0.10.4; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "Graviton4 wins on cost, AMD on time (1.36x faster)"
+
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -32,6 +55,8 @@ peak_kind = "rss"
 note = "wall = pairtools 1,065 s + cooler 523 s; peak RSS is GNU sort's buffer under pairtools merge --memory 8G, a setting"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -47,6 +72,8 @@ peak_kind = "rss"
 note = "pairtools 1,071 s + cooler 502 s; the README prints no total tool time for Intel, so wall_s and its compute $/result (0.328) are left out"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

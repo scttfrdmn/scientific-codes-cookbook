@@ -1,6 +1,28 @@
 # measurements/quantum-espresso-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is launch to terminate (README), the CloudTrail window to the second on all three
+# chips and on the first Graviton4 run (results/billed-windows.txt).
+schema = 2
 result_unit = "one whole verified AUSURF112 run: two converged SCFs with forces (pw.x defaults and -nk 2) and the checks"
+
+[workload]
+size = { atoms = 112, bands = 800, electrons = 1232, kpoints = 2 }
+note = "the QE Foundation's pw.x benchmark, run to a converged SCF with forces twice per task: defaults and -nk 2"
+
+[timing]
+wall = "both pw.x runs (defaults + -nk 2), the task's tool_wall_s"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's dft image on Graviton4, its linux-64 twin on Intel and AMD; conda-forge OpenBLAS 0.3.34 selects neoversev2 on Graviton4 and Cooperlake on both x86 chips; Intel's 16 vCPU are 8 cores x 2 threads"
+
+[[not_swept]]
+axis = "size"
+reason = "AUSURF112 fits one 32 GiB node; the benchmark's other inputs either need many nodes (CNT10POR8, 1,532 atoms on 800 processes in its reference output) or, like GRIR443, are the same kind of run at larger scale"
 
 [[dataset]]
 id = "QEF/benchmarks @ eff15189: AUSURF112/ausurf.in + Au.pbe-nd-van.UPF"
@@ -9,6 +31,8 @@ pins = "inputs.sha256"
 note = "run.sh edits electron_maxstep 2 -> 100 and conv_thr = 1.d-8, recorded in each run's input-edits.diff"
 
 [[run]]
+id = "scf-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +40,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "run"             # pw-A.out: starts on 19Oct2026
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 6271
 billed_s = 6467
 usd_hr = 0.6381
@@ -26,6 +52,8 @@ peak_kind = "cgroup-memory.peak"
 note = "defaults SCF 2,941 s (27 iterations, $0.521); largest rank ru_maxrss 1.37-1.55 GiB across chips"
 
 [[run]]
+id = "scf-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -33,6 +61,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 3684
 billed_s = 3826
 usd_hr = 0.7497
@@ -43,6 +73,8 @@ peak_kind = "cgroup-memory.peak"
 note = "defaults SCF 1,784 s ($0.372); x86 cgroup peak includes the env install's page cache"
 
 [[run]]
+id = "scf-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -50,6 +82,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 1667
 billed_s = 1782
 usd_hr = 0.8622
@@ -60,12 +94,17 @@ peak_kind = "cgroup-memory.peak"
 note = "defaults SCF 795 s ($0.190)"
 
 [[run]]
+id = "first-c8g"
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
-note = "first Graviton4 run ($1.16): science passed, checks read an XML the benchmark never writes; same energies, forces and iteration counts, defaults SCF 2,941.9 s. README prints no task wall or billed seconds, so no $ fields"
+ranks = 16
+threads_per_rank = 1
+billed_s = 6527
+superseded_by = "scf-c8g"
+note = "first Graviton4 run ($1.16): science passed, checks read an XML the benchmark never writes; same energies, forces and iteration counts, defaults SCF 2,941.9 s. README prints no task wall or billed seconds; billed_s is its CloudTrail window (results/billed-windows.txt), whose $ at 0.6381/hr is the README's $1.16; no usd_hr on this row, so no billed_usd"
 
 # --- checks: the README's "What held at scale, on all three chips" rows (check.py) ----
 [[check]]

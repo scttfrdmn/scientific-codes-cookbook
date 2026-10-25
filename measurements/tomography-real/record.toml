@@ -1,6 +1,25 @@
 # measurements/tomography-real/record.toml -- TomoPy on a whole TOMCAT scan vs the depositors' own slices.
-schema = 1
+# Schema 2: the per-volume billed (TomoPy wall + 161-207 s of spawn overhead, checks excluded) is a
+# constructed figure that neither the spawn nor the EC2 window reproduces (results/billed-windows.txt).
+schema = 2
 result_unit = "one volume: all 2,160 slices of the BBii scan reconstructed (read, centre, normalise, gridrec); checks excluded"
+
+[workload]
+size = { slices = 2160, projections = 1501 }
+note = "one 2560 x 2160 x 1501 TOMCAT scan read into RAM, centre found once, gridrec on every detector row; the staged zips fill the tmpfs, which picks the box"
+
+[timing]
+wall = "the TomoPy pipeline (read, centre, normalise and -log, gridrec on all 2,160 rows); the checks are excluded"
+billed_basis = "unattributed"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "scan-shape"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's tomography image vs the env's linux-64 twin (same tomopy 1.15.3, astra 2.5.0, numpy, FFTW); Intel's 16 vCPU are 8 cores x 2 SMT"
+note = "Graviton4 cheapest per result, 23% under AMD and 42% under Intel billed; AMD's gridrec within 6%, Intel's 1.5x slower"
 
 [[dataset]]
 id = "Zenodo record 4912435 v1.0, doi:10.5281/zenodo.4912435: proj.zip (darks, flats, 1,501 projections)"
@@ -21,6 +40,12 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
+id = "r8g"
+in = ["chip"]
+workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 40
 wall_s = 279
 billed_s = 463
 usd_hr = 0.9426
@@ -35,6 +60,12 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
+id = "r8i"
+in = ["chip"]
+workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 40
 wall_s = 466
 billed_s = 673
 usd_hr = 1.1114
@@ -49,6 +80,12 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
+id = "r8a"
+in = ["chip"]
+workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 40
 wall_s = 282
 billed_s = 443
 usd_hr = 1.2781

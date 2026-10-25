@@ -1,6 +1,34 @@
 # measurements/polish-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: every billed figure is spawn's completion window (results/billed-windows.txt). Per chip,
+# 03-racon + 04-medaka share attempt r1, so the generator sums them to the README's "billed $ (both)"
+# (0.1068 / 0.1163 / 0.0984). The once-only draft and overlap carry their own task windows and no
+# attempt: they are shared by every chip, not part of one chip's polish.
+schema = 2
 result_unit = "one polish of the whole E. coli CFT073 Flye draft from ERR12813217 (racon or medaka; the README prices each step separately)"
+
+[workload]
+size = { reads = 397033, bases = 2544407444, genome_bp = 5236926 }
+note = "a whole R10.4.1 GridION run (486x) of one isolate; Flye drafts once on Graviton4, every chip then polishes the same draft from the same reads and overlaps"
+
+[timing]
+wall = "the tool's own wall in-task (flye / minimap2 / racon / medaka_consensus)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-racon"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "consensus-bytes"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's builds on Graviton4, bioconda's on Intel and AMD; Intel's 8 vCPUs are 4 cores with SMT"
+
+[[series]]
+id = "chip-medaka"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "consensus-bytes"
+attribution = "same-version-other-build"
+attribution_note = "torch runs OpenBLAS (neoversev2) on Graviton4 and MKL with AVX512 dispatch on both x86 chips; medaka gives PyTorch 2 intra-op threads at -t 8; Intel's 8 vCPUs are 4 cores with SMT"
 
 [[dataset]]
 id = "ENA ERR12813217 (PRJEB51164, E. coli CFT073 R10.4.1, Dorado 0.5.3 sup@v4.3.0), dumped from the AWS Open Data .sra"
@@ -25,6 +53,8 @@ pins = "pins.sha256"
 
 # --- done once, on Graviton4 ---------------------------------------------------------------
 [[run]]
+id = "draft"
+task = "01-draft"
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/graviton4-once/draft/"
@@ -32,13 +62,21 @@ host = "results/graviton4-once/draft/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
+billed_s = 1416
+billed_usd = 0.1412
+avg_cores = 4.08
 wall_s = 1343
 usd_hr = 0.3590
 compute_usd = 0.134
 peak_gib = 4.75
-note = "Flye draft, run once and shared by every chip's polish (its $ is the draft's, not a polish); billed $0.141 printed without billed seconds, so omitted"
+peak_kind = "rss"
+note = "Flye draft, run once and shared by every chip's polish (its $ is the draft's, not a polish); README prints billed $0.141, the task window is 1,416 s (results/billed-windows.txt)"
 
 [[run]]
+id = "overlap"
+task = "02-overlap"
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/graviton4-once/overlap/"
@@ -46,11 +84,18 @@ host = "results/graviton4-once/overlap/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
+billed_s = 103
 wall_s = 44
-note = "minimap2 overlaps, once; billed $0.010 printed without billed seconds, so omitted"
+note = "minimap2 overlaps, once; README prints billed $0.010 (the window $0.0103 is in results/billed-windows.txt); no usd_hr on this row, so billed_usd is left out"
 
 # --- racon, per chip -----------------------------------------------------------------------
 [[run]]
+id = "racon-m8g"
+in = ["chip-racon"]
+task = "03-racon"
+attempt = "r1"
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/racon/"
@@ -58,15 +103,22 @@ host = "results/arm64/racon/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 582
 billed_s = 652
+billed_usd = 0.0650
 usd_hr = 0.3590
 compute_usd = 0.0580
 peak_gib = 7.47
 peak_kind = "vmhwm"
-note = "README prints billed $ only for racon + medaka together (0.1068)"
+note = "README prints billed $ only for racon + medaka together (0.1068); this task's window $ is in results/billed-windows.txt"
 
 [[run]]
+id = "racon-m8i"
+in = ["chip-racon"]
+task = "03-racon"
+attempt = "r1"
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/racon/"
@@ -74,8 +126,11 @@ host = "results/x86_64/racon/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 523
 billed_s = 590
+billed_usd = 0.0694
 usd_hr = 0.4234
 compute_usd = 0.0615
 peak_gib = 7.45
@@ -83,6 +138,10 @@ peak_kind = "vmhwm"
 note = "billed $ printed only for racon + medaka together (0.1163)"
 
 [[run]]
+id = "racon-m8a"
+in = ["chip-racon"]
+task = "03-racon"
+attempt = "r1"
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/racon/"
@@ -90,8 +149,11 @@ host = "results/amd/racon/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 402
 billed_s = 447
+billed_usd = 0.0605
 usd_hr = 0.4869
 compute_usd = 0.0544
 peak_gib = 7.46
@@ -100,6 +162,10 @@ note = "billed $ printed only for racon + medaka together (0.0984)"
 
 # --- medaka, per chip (spawn records each as failed: score.py exits 1 on the racon claim) ----
 [[run]]
+id = "medaka-m8g"
+in = ["chip-medaka"]
+task = "04-medaka"
+attempt = "r1"
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/medaka/"
@@ -107,15 +173,23 @@ host = "results/arm64/medaka/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 317
 billed_s = 419
+billed_usd = 0.0418
+avg_cores = 4.11
 usd_hr = 0.3590
 compute_usd = 0.0316
 peak_gib = 7.77
 peak_kind = "rss"
-note = "ru_maxrss of the largest child; 4.11 busy CPUs"
+note = "ru_maxrss of the largest child"
 
 [[run]]
+id = "medaka-m8i"
+in = ["chip-medaka"]
+task = "04-medaka"
+attempt = "r1"
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/medaka/"
@@ -123,14 +197,22 @@ host = "results/x86_64/medaka/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 253
 billed_s = 399
+billed_usd = 0.0469
+avg_cores = 5.13
 usd_hr = 0.4234
 compute_usd = 0.0298
 peak_gib = 7.84
 peak_kind = "rss"
 
 [[run]]
+id = "medaka-m8a"
+in = ["chip-medaka"]
+task = "04-medaka"
+attempt = "r1"
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/medaka/"
@@ -138,8 +220,12 @@ host = "results/amd/medaka/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 191
 billed_s = 280
+billed_usd = 0.0379
+avg_cores = 4.08
 usd_hr = 0.4869
 compute_usd = 0.0258
 peak_gib = 8.26

@@ -1,6 +1,24 @@
 # measurements/kraken2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window (cookbook-kraken2-real-classify-{z1,x8664-z1,amd-z1},
+# 2026-10-19, to the second), as the README says. phase_s.setup is the index untar (times.txt untar_s).
+schema = 2
 result_unit = "both Zymo mock-community runs (ERR2984773 even + ERR2935805 log) classified in one task"
+
+[workload]
+size = { samples = 2, read_pairs_even = 8785731, read_pairs_log = 47832553 }
+note = "two samples classified one after the other in one task against one standard-8 index unpacked into the tmpfs; overhead is paid once per task"
+
+[timing]
+wall = "kraken2's wall, both samples (the sum of times.txt's per-sample wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "per-read-bytes"
+attribution = "same-version-other-build"
+attribution_note = "Kraken2 2.17.1: aarch.bio's build on Graviton4, bioconda's on x86; Intel's 8 vCPU is 4 cores x 2 threads"
 
 [[dataset]]
 id = "ENA PRJEB29504 ERR2984773 + ERR2935805 (ZymoBIOMICS D6300 even / D6310 log, Nicholls et al. 2019), whole runs"
@@ -21,6 +39,8 @@ tier = "durable-id"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 workers = 8
@@ -34,9 +54,14 @@ usd_hr = 0.4713
 billed_usd = 0.0546
 peak_gib = 7.93
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+phase_s = { setup = 58.2, source = "results/arm64/times.txt" }
 note = "compute $/result printed per sample only (even / log: 0.0055 / 0.0198), so no run-level compute_usd; wall_s is the tool wall of both"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 workers = 8
@@ -50,9 +75,14 @@ usd_hr = 0.5557
 billed_usd = 0.0642
 peak_gib = 7.97
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+phase_s = { setup = 61.5, source = "results/x86_64/times.txt" }
 note = "compute $/result printed per sample only (even / log: 0.0072 / 0.0250), so no run-level compute_usd; wall_s is the tool wall of both"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 workers = 8
@@ -66,6 +96,9 @@ usd_hr = 0.639
 billed_usd = 0.0591
 peak_gib = 7.93
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+phase_s = { setup = 49.1, source = "results/amd/times.txt" }
 note = "compute $/result printed per sample only (even / log: 0.0064 / 0.0229), so no run-level compute_usd; wall_s is the tool wall of both"
 
 # checks table in '## What held at scale, on all three chips': columns ['claim', 'why it must hold', 'even', 'log']

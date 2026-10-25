@@ -1,7 +1,25 @@
 # measurements/methylation-array-real/record.toml -- drafted by the #118 extraction, then authored.
 # Graviton4 only: Intel and AMD are a recorded gap (bioconda's x86 preprocessCore, below).
-schema = 1
+# Schema 2: the two tasks are one pipeline result (attempt a1); billed is the EC2 window, matched by
+# CloudTrail to within 1 s (results/billed-windows.txt). avg_cores / tmpfs_peak_gib from footprint.txt.
+schema = 2
 result_unit = "the whole GSE42861 cohort (689 arrays) through one task; the cohort needs both the minfi and the SeSAMe task (README total: 0.473 compute / 0.563 billed)"
+
+[workload]
+size = { samples = 689, probes = 485512 }
+note = "two single-tool tasks on the same staged IDATs: minfi (serial, memory-bound) then SeSAMe (16 MulticoreParam workers, then serial inferSex)"
+
+[timing]
+wall = "each task's tool wall (footprint.txt tool_wall_s)"
+billed_basis = "ec2"
+
+[[not_swept]]
+axis = "chip"
+reason = "Intel and AMD are a recorded gap: bioconda's x86 preprocessCore cannot start a thread"
+
+[[not_swept]]
+axis = "workers"
+reason = "minfi is serial and needs 52 GiB, so memory picks the box, not cores. For a bigger cohort, scale the RAM, not the cores."
 
 [[dataset]]
 id = "GEO GSE42861, GSE42861_RAW.tar (2015-11-04), 1,378 IDATs"
@@ -29,6 +47,8 @@ host = "results/arm64/minfi/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 1216
 billed_s = 1427
 usd_hr = 0.9426
@@ -37,6 +57,11 @@ billed_usd = 0.374
 peak_gib = 51.9
 peak_kind = "rss"
 note = "minfi task, single-threaded; read.metharray 398 s, preprocessFunnorm 726 s, dmpFinder 27 s"
+id = "minfi"
+task = "01-minfi"
+attempt = "a1"
+avg_cores = 1.01
+tmpfs_peak_gib = 8.07
 
 [[run]]
 instance = "m8g.4xlarge"
@@ -54,6 +79,11 @@ billed_usd = 0.189
 peak_gib = 30.9
 peak_kind = "rss"
 note = "SeSAMe task; openSesame under 16 MulticoreParam workers (288 s), inferSex serial (367 s)"
+id = "sesame"
+task = "02-sesame"
+attempt = "a1"
+avg_cores = 4.90
+tmpfs_peak_gib = 8.12
 
 [[run]]
 instance = "r8g.2xlarge"
@@ -61,6 +91,8 @@ purpose = "diagnostic"
 date = "2026-10-18"
 date_source = "git"
 note = "first minfi run on a 64 GiB r8g.2xlarge, killed (exit 137) at 54 GiB as funnorm started; not timed or priced"
+task = "01-minfi"
+run_outcome = "failed"
 
 [[run]]
 instance = "c8i.large"

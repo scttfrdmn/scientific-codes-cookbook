@@ -1,5 +1,8 @@
 # measurements/astropy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances), exactly, for
+# all three rows (results/billed-windows.txt). Dates are git dates; the runs' own are 2026-10-18
+# (arm64, Intel) and 2026-10-21 (AMD) UTC per the completion records.
+schema = 2
 result_unit = "one HEALPix order-4 pixel (808) cross-matched, Gaia DR3 x Pan-STARRS1, plus 100 PS1 skycells round-tripped through their WCS"
 
 [[dataset]]
@@ -18,7 +21,27 @@ id = "s3://stpubdata PS1 rings.v3.skycell.1749.000-099.stk.r.cmf (100 r-band sta
 tier = "roda"
 pins = "pins.sha256"
 
+[workload]
+size = { skycells = 100, files = 108 }
+input_gib = 7.4
+note = "one order-4 HEALPix pixel: Gaia DR3 x PS1 cross-match (about a minute) then a single-threaded wcslib pix->world->pix sweep over 100 skycells (89% of compute); sized by memory (tmpfs + 8.5 GiB Python peak)"
+
+[timing]
+wall = "the task total of real.py (cross-match + WCS sweep + the rest), timed in-script"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "search-around-sky"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run the recipe's astro-903b8d412bd4 env twin: the same versions as linux-64 builds; r8i vCPUs are SMT threads, r8a vCPUs full cores; the AMD leg ran under spawn 0.139.1 with its command staged as a file"
+note = "AMD fastest and cheapest per result; Graviton4 4% cheaper than Intel and 7% slower; n = 1 per chip"
+
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
 date = "2026-10-17"
@@ -33,6 +56,8 @@ peak_kind = "rss"
 note = "wall is the task total; cross-match 65.3 s, WCS sweep 767.3 s"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-17"
@@ -48,6 +73,8 @@ peak_kind = "rss"
 note = "wall is the task total; cross-match 52.0 s, WCS sweep 728.4 s"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"

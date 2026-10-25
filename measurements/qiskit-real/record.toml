@@ -1,5 +1,8 @@
 # measurements/qiskit-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: the README's billed is "EC2 launch to the task's end": CloudTrail RunInstances -> the spawn
+# completion record's ended_at, which reproduces all three to within 1 s (results/billed-windows.txt).
+# Basis ec2-to-spawn-end (spawn-task is 12-14 s shorter, ec2 34-59 s longer). avg_cores = the container cgroup's whole usage_usec / tool wall (run.sh).
+schema = 2
 result_unit = "the whole QASMBench suite (132 files) compiled to heavy-hex at optimization level 2 and checked"
 
 [[dataset]]
@@ -8,7 +11,26 @@ tier = "durable-id"
 pins = "qasmbench.sha256"
 note = "no release or DOI, so the commit is the pin; fetched on AWS and each file checked against the commit tree's git blob ids (qasmbench-357b942.gitblobs)"
 
+[workload]
+size = { files = 132, circuits = 123 }
+note = "one process per circuit, 8 at a time with one thread each; one circuit (bwt_n177's ~1,040 s compile) sets the wall; memory picks the family"
+
+[timing]
+wall = "real.py, timed in run.sh"
+billed_basis = "ec2-to-spawn-end"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "generation"]
+equal_work = "parsed-circuits"
+attribution = "same-version-other-build"
+attribution_note = "the quantum env: aarch.science arm64 on Graviton4, its linux-64 twin (quantum-0134d92cdcd5) on both x86 chips; qiskit 2.5.2, qiskit-aer 0.17.2 everywhere; Intel's 8 vCPUs are 4 cores x 2 SMT"
+note = "Graviton4 cheapest per suite billed; AMD fastest (1.20x Graviton4) but its hour costs 36% more"
+
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -23,9 +45,12 @@ compute_usd = 0.626
 billed_usd = 0.64
 peak_gib = 29.7
 peak_kind = "cgroup-memory.peak"
+avg_cores = 2.87
 note = "8 one-thread worker processes; peak_kind from footprint.txt (cgroup_peak_gib), the README says 'peak mem'"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -40,9 +65,12 @@ compute_usd = 0.725
 billed_usd = 0.735
 peak_gib = 31.3
 peak_kind = "cgroup-memory.peak"
+avg_cores = 2.96
 note = "quantum env linux-64 twin"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -57,9 +85,11 @@ compute_usd = 0.71
 billed_usd = 0.723
 peak_gib = 31.3
 peak_kind = "cgroup-memory.peak"
+avg_cores = 3.08
 note = "quantum env linux-64 twin"
 
 [[run]]
+id = "first-r8g-4xl"
 instance = "r8g.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"

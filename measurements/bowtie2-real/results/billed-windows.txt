@@ -1,0 +1,11 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The generation and knee rows' printed billed (1667/1240/1063/824/575/409/326 s) is the spawn window; the two 2026-10-21 x86 legs' printed billed (1246/761 s) is the ec2 window, exactly. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+bowtie2real-gen-c6g	c6g.4xlarge	-	0.544000	2026-10-08T02:25:21Z	2026-10-08T02:53:08Z	1667	0.2519	-	-	-	-	-
+bowtie2real-gen-c7g	c7g.4xlarge	-	0.580000	2026-10-08T02:54:05Z	2026-10-08T03:14:45Z	1240	0.1998	-	-	-	-	-
+bowtie2real-gen-c8g	c8g.4xlarge	-	0.638100	2026-10-08T03:15:35Z	2026-10-08T03:33:18Z	1063	0.1884	-	-	-	-	-
+bowtie2real-gen-c9g	c9g.4xlarge	-	0.695500	2026-10-08T03:34:18Z	2026-10-08T03:48:02Z	824	0.1592	-	-	-	-	-
+bowtie2real-knee-32	c8g.8xlarge	-	1.276200	2026-10-08T03:49:03Z	2026-10-08T03:58:38Z	575	0.2038	-	-	-	-	-
+bowtie2real-knee-48	c8g.12xlarge	-	1.914200	2026-10-08T03:59:28Z	2026-10-08T04:06:17Z	409	0.2175	-	-	-	-	-
+bowtie2real-knee-64	c8g.16xlarge	-	2.552300	2026-10-08T04:06:54Z	2026-10-08T04:12:20Z	326	0.2311	-	-	-	-	-
+bowtie2real-gen-c8g-x8664-1761000007	c8i.4xlarge	i-033cf0c9023f54534	0.749700	2026-10-21T05:42:24Z	2026-10-21T06:01:48Z	1164	0.2424	2026-10-21T05:42:12Z	2026-10-21T06:02:58Z	1246	5086a8c1-62be-43aa-bf54-9a2a1d4a8794	a93ed266-791a-4aeb-a418-13afaab4c7fe
+bowtie2real-gen-c8g-amd-1761000007	c8a.4xlarge	i-099a11714c98c5d86	0.862200	2026-10-21T05:46:12Z	2026-10-21T05:58:07Z	715	0.1712	2026-10-21T05:46:01Z	2026-10-21T05:58:42Z	761	6d2b6090-0521-447f-bde9-7c1cd7b5e1ce	1a2950e7-bc81-4dab-bf79-b4aa5e913a22

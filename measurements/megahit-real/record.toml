@@ -1,6 +1,36 @@
 # measurements/megahit-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt). The -t 16
+# rows are one task that assembles BOTH runs (size carries both); the -t 1 rows are the even run.
+# peak is ru_maxrss; avg_cores (-t 1 rows only) and tmpfs_peak_gib are assemble.sh's sampler
+# (times.txt / footprint.txt; tmpfs on the -t 16 rows is the log run's, the larger).
+schema = 2
 result_unit = "one metagenome assembly (one whole ZymoBIOMICS run)"
+
+[workload]
+size = { read_pairs = 8785731 }
+note = "the D6300 even run (MiSeq 2x151, 2.65 Gbp); the -t 16 rows also assemble the D6310 log run (47,832,553 pairs, 9.66 Gbp) in the same task"
+
+[timing]
+wall = "megahit's own wall (megahit_wall_s, == its 'ALL DONE. Time elapsed'); the -t 16 rows' wall is the sum of the two assemblies"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-t16"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "reads-in-library"
+attribution = "same-version-other-build"
+attribution_note = "MEGAHIT 1.2.9: aarch.bio's build on Graviton4, bioconda's on x86; the builds assemble slightly different contig sets (~2% of bases), and --no-hw-accel shows it is the build, not the POPCNT/BMI2 core; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "Graviton4 is the cheapest assembly at -t 16: AMD 1.23-1.29x faster but 5-10% dearer, Intel slower and 35-48% dearer"
+
+[[series]]
+id = "chip-t1"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "reads-in-library"
+attribution = "same-version-other-build"
+attribution_note = "as chip-t16; at -t 1 Intel == AMD byte-identical, arm64 differs (the build)"
+note = "at one thread the order flips: AMD 1.26x and Intel 1.11x faster than Graviton4, all within 7% on cost"
 
 [[dataset]]
 id = "ENA PRJEB29504 ERR2984773 (D6300 even, 8,785,731 pairs) and ERR2935805 (D6310 log, 47,832,553 pairs), FASTQ.gz from the RODA .sra"
@@ -16,6 +46,8 @@ note = "v2 references (2023) postdate the 2019 runs: same strains, re-sequenced"
 
 # --- -t 16, c8*.4xlarge: one task assembles both runs -----------------------------------
 [[run]]
+id = "t16-c8g"
+in = ["chip-t16"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -28,9 +60,15 @@ billed_s = 1083
 usd_hr = 0.6381
 peak_gib = 7.67
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 16
+size = { read_pairs = 8785731, log_read_pairs = 47832553 }
+tmpfs_peak_gib = 8.5308151
 note = "one task, two assemblies: even 343 s / log 641 s; README prints compute $/result 0.0608 / 0.1137 per assembly and billed $ 0.1920 for both, so neither fits a single per-assembly row and both are left out; peak is the log run's (even 2.10 GiB)"
 
 [[run]]
+id = "t16-c8i"
+in = ["chip-t16"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -43,9 +81,15 @@ billed_s = 1282
 usd_hr = 0.7497
 peak_gib = 7.67
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 16
+size = { read_pairs = 8785731, log_read_pairs = 47832553 }
+tmpfs_peak_gib = 8.5308342
 note = "even 394 s / log 810 s; README compute $/result 0.0821 / 0.1686, billed $ (both) 0.2670 -- left out, as for c8g; peak is the log run's (even 2.10 GiB)"
 
 [[run]]
+id = "t16-c8a"
+in = ["chip-t16"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -58,9 +102,14 @@ billed_s = 847
 usd_hr = 0.8622
 peak_gib = 7.67
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 16
+size = { read_pairs = 8785731, log_read_pairs = 47832553 }
+tmpfs_peak_gib = 8.5308304
 note = "even 266 s / log 520 s; README compute $/result 0.0638 / 0.1245, billed $ (both) 0.2029 -- left out, as for c8g; peak is the log run's (even 2.10 GiB)"
 
 [[run]]
+id = "t16-c8g-repeat"
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 results = "results/arm64-repeat/"
@@ -68,10 +117,15 @@ host = "results/arm64-repeat/ERR2984773/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+size = { read_pairs = 8785731, log_read_pairs = 47832553 }
 note = "second Graviton4 run of 01-assemble (determinism); timings repeated to 1-2%: 340 s even, 631 s log; not priced"
 
 # --- -t 1 on the even run, c8*.2xlarge -------------------------------------------------
 [[run]]
+id = "t1-c8g"
+in = ["chip-t1"]
 instance = "c8g.2xlarge"
 purpose = "core-sweep"
 results = "results/arm64-t1/"
@@ -86,8 +140,13 @@ compute_usd = 0.3484
 billed_usd = 0.3541
 peak_gib = 2.07
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 1
+avg_cores = 1.01
 
 [[run]]
+id = "t1-c8i"
+in = ["chip-t1"]
 instance = "c8i.2xlarge"
 purpose = "core-sweep"
 results = "results/x86_64-t1/"
@@ -102,8 +161,13 @@ compute_usd = 0.3672
 billed_usd = 0.3727
 peak_gib = 2.07
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 1
+avg_cores = 1.01
 
 [[run]]
+id = "t1-c8a"
+in = ["chip-t1"]
 instance = "c8a.2xlarge"
 purpose = "core-sweep"
 results = "results/amd-t1/"
@@ -118,6 +182,9 @@ compute_usd = 0.3733
 billed_usd = 0.3788
 peak_gib = 2.07
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 1
+avg_cores = 1.01
 
 # --- checks: '## What held at scale, on every assembly' (even / log columns) -------------
 [[check]]

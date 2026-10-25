@@ -1,8 +1,34 @@
 # measurements/proteomics-real/record.toml -- drafted by the #118 extraction, then authored.
 # Two tasks per chip (search, rescore): each run row is one task, and its $ is that task's share of
 # the result. README's per-experiment figures are the two rows summed (Graviton4 $0.0346 / $0.0624).
-schema = 1
+# Schema 2: the two tasks of a chip share attempt "r1" (the per-experiment total is derived from them).
+# Billed is the EC2 window (CloudTrail, results/billed-windows.txt), as the README says.
+schema = 2
 result_unit = "the whole six-run PXD083239 experiment, searched and rescored"
+
+[workload]
+size = { runs = 6, spectra = 582823, psms = 538544, fasta_entries = 26836 }
+note = "two tasks, one tool each, S3 between them: an 8-thread OpenMS search of all six runs, then Percolator on the six PINs; staging (tmpfs), not RSS, sizes the search box"
+
+[timing]
+wall = "tool wall: SimpleSearchEngine summed over six runs, or six seed-1 Percolator trainings (the task script, with every check, is in each row's note)"
+billed_basis = "ec2"
+
+[[series]]
+id = "search-chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size"]
+equal_work = "psm-accounting"
+attribution = "same-version-other-build"
+attribution_note = "openms 3.5.0: aarch.bio arm64 vs its bioconda x86 twin (BusyBox userland, which slows the non-search part of the task); 8i vCPUs are SMT threads, 8a and Graviton4 vCPUs whole cores"
+
+[[series]]
+id = "rescore-chip"
+axis = "chip"
+held = ["input", "size"]
+equal_work = "percolator-in-out"
+attribution = "same-version-other-build"
+attribution_note = "percolator 3.09.0: aarch.bio arm64 vs its bioconda x86 twin; the large box is 2 cores on AMD and 1 core with SMT on Intel"
 
 [[dataset]]
 id = "PRIDE PXD083239 (CC0): 6 mzML, 6 .pdResult, SwissProt_Human_01062026.fasta"
@@ -17,12 +43,18 @@ pins = "derived.sha256"
 note = "built by stage.py from the .pdResult files, joined to the mzML by PD's own retention time (all 168,552 land on exactly one spectrum)"
 
 [[run]]
+id = "search-c8g"
+in = ["search-chip"]
+task = "search"
+attempt = "r1"
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 378
 billed_s = 647
 usd_hr = 0.319
@@ -30,9 +62,14 @@ compute_usd = 0.0335
 billed_usd = 0.0573
 peak_gib = 2.4
 peak_kind = "rss"
+tmpfs_peak_gib = 4.9
 note = "search task (openms); task script 474 s; tmpfs high-water 4.9 GiB"
 
 [[run]]
+id = "rescore-c8g"
+in = ["rescore-chip"]
+task = "rescore"
+attempt = "r1"
 instance = "c8g.large"
 purpose = "primary"
 results = "results/arm64/"
@@ -48,12 +85,18 @@ peak_kind = "rss"
 note = "rescore task (percolator, defaults); task script 115 s"
 
 [[run]]
+id = "search-c8i"
+in = ["search-chip"]
+task = "search"
+attempt = "r1"
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 date = "2026-10-17"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 2            # no host file; README: an Intel 8i box shows 2
 wall_s = 338
 billed_s = 651
@@ -65,6 +108,10 @@ peak_kind = "rss"
 note = "search task; task script 504 s"
 
 [[run]]
+id = "rescore-c8i"
+in = ["rescore-chip"]
+task = "rescore"
+attempt = "r1"
 instance = "c8i.large"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -81,12 +128,18 @@ peak_kind = "rss"
 note = "rescore task; task script 138 s"
 
 [[run]]
+id = "search-c8a"
+in = ["search-chip"]
+task = "search"
+attempt = "r1"
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 date = "2026-10-21"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 1            # no host file; README: siblings == cpu cores on the AMD box
 wall_s = 276
 billed_s = 581
@@ -98,6 +151,10 @@ peak_kind = "rss"
 note = "search task; task script 411 s; no tmpfs figure (see trap proteomics-amd-df-reads-root-disk)"
 
 [[run]]
+id = "rescore-c8a"
+in = ["rescore-chip"]
+task = "rescore"
+attempt = "r1"
 instance = "c8a.large"
 purpose = "cross-chip"
 results = "results/amd/"

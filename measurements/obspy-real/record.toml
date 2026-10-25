@@ -1,6 +1,25 @@
 # measurements/obspy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed "runs from launch to termination" = the EC2 window (CloudTrail RunInstances ->
+# TerminateInstances, results/billed-windows.txt): 646 / 826 / 521 s against the printed 647 / 826 / 521.
+schema = 2
 result_unit = "the whole verified network-day: all 720 CI HH? channels for 2019-07-06 (Ridgecrest Mw 7.1), every check run"
+
+[workload]
+size = { channels = 720, stations = 239, samples = 6159279810, records = 19007870 }
+input_gib = 10.2
+note = "one network-day: 239 stations over a 16-process pool, one BLAS thread per process; the checks (superposition) cost more worker-seconds than the work"
+
+[timing]
+wall = "real.py wall (the whole pool plus TauP), timed in-script"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "nsamp-conservation"
+attribution = "same-version-other-build"
+attribution_note = "the geoscience env (arm64) and its linux-64 twin: same obspy 1.5.1, numpy 2.5.3, scipy 1.18.1, python 3.14.8; Intel's 16 vCPUs are 8 SMT cores; Intel and AMD byte-identical, so the arm64/x86 last-bit differences are the builds"
 
 [[dataset]]
 id = "s3://scedc-pds/continuous_waveforms/2019/2019_187/CI?????HH????2019187.ms (720 objects)"
@@ -15,6 +34,8 @@ pins = "day187.sha256"
 note = "StationXML files are living documents upstream: a re-stage failing the check means SCEDC re-issued metadata"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -28,8 +49,14 @@ usd_hr = 0.7181
 compute_usd = 0.0973
 billed_usd = 0.1291
 note = "peak RSS printed as compound 1.88 / 34.0 GiB (worker / box, box includes the 11 GB tmpfs input); peak_gib omitted"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 646
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -43,8 +70,14 @@ usd_hr = 0.8467
 compute_usd = 0.1674
 billed_usd = 0.1943
 note = "peak RSS printed as compound 1.89 / 34.0 GiB (worker / box); peak_gib omitted"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 826
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -58,6 +91,10 @@ usd_hr = 0.9738
 compute_usd = 0.1125
 billed_usd = 0.1409
 note = "peak RSS printed as compound 1.89 / 33.7 GiB (worker / box); peak_gib omitted"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+ec2_s = 521
 
 [[check]]
 id = "pins"

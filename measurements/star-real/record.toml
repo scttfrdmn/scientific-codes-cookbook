@@ -1,8 +1,43 @@
 # measurements/star-real/record.toml -- drafted by the #118 extraction, then authored.
 # Five data paths for one 28.6 GiB index on one m8g.8xlarge; wall_s = setup + align as the
 # README prints it, compute_usd = that at the box's rate (the cross-chip table's "$" figures).
-schema = 1
+# Schema 2: every row is a spawn launch (raw instance, scripts as --command). The copy -> tmpfs routes
+# are `aws s3 cp --recursive` at CLI defaults into /tmp tmpfs, the transfer spawn's stage-in does, so
+# data_path = stage-default. Each x86 box billed one EC2 window for all five aligns (shared-window;
+# CloudTrail in results/billed-windows.txt).
+schema = 2
 result_unit = "one alignment of ERR188026 (15.8M reads) against the published 28.6 GiB GRCh38 + Ensembl 116 index"
+
+[workload]
+size = { reads = 15800127, index_gib = 28.6 }
+note = "one alignment against an immutable 28.6 GiB index; the align is under a minute of real work, so the data path is most of the wall"
+
+[timing]
+wall = "setup + align as the README prints it, first read (page cache dropped before each align); steady-state rows are the align alone"
+
+[[series]]
+id = "first-read"
+axis = "data_path"
+held = ["image", "instance", "workers", "layout", "size"]
+equal_work = "reads-and-unique"
+attribution = "same-binary"
+note = "lith mount fastest on the first read (89 s), copy -> local EBS slowest (409 s); mapping 56-58 s in every route"
+
+[[series]]
+id = "steady-state"
+axis = "data_path"
+held = ["image", "instance", "workers", "layout", "size"]
+equal_work = "reads-and-unique"
+attribution = "same-binary"
+note = "the same box aligning another sample, page cache not dropped; EBS warm is fastest only while the cache survives, tmpfs cannot be evicted"
+
+[[series]]
+id = "chip-lith"
+axis = "chip"
+held = ["workers", "layout", "size", "data_path"]
+equal_work = "log-final-out"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 STAR 2.7.11b (the recipe's images_x86_64 pin) and lith 1.1.3's amd64 binary; Intel's 32 vCPUs are 16 cores x 2 threads; the Graviton4 row ran 2026-09-26, the x86 rows 2026-10-21"
 
 [[dataset]]
 id = "STAR 2.7.11b index, GRCh38 + Ensembl 116 (28.6 GiB, 16 files), s3://<bucket>/inputs/star-index-GRCh38-116"
@@ -19,6 +54,8 @@ note = "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-rea
 
 # --- Graviton4, first read (page cache dropped before each align), one m8g.8xlarge launch
 [[run]]
+id = "g4-lith"
+in = ["first-read", "chip-lith"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-09-26"
@@ -28,9 +65,15 @@ wall_s = 89
 usd_hr = 1.4362
 compute_usd = 0.036
 results = "results/four-data-paths.txt"
+launch = "launch"
+data_path = "lith"
+ranks = 1
+threads_per_rank = 32
 note = "lith mount (S3 in place): 0 s setup, 28 s load; date from STAR's 'Started job on Sep 26'"
 
 [[run]]
+id = "g4-tmpfs"
+in = ["first-read"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-09-26"
@@ -41,9 +84,17 @@ usd_hr = 1.4362
 compute_usd = 0.050
 peak_gib = 30
 results = "results/tmpfs-leg.txt"
+launch = "launch"
+data_path = "stage-default"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
+tmpfs_peak_gib = 29
 note = "copy -> tmpfs: 58 s copy + 68 s align, 9 s load; tmpfs 29 GiB + STAR 30 GiB peak, 0 OOM events"
 
 [[run]]
+id = "g4-efs"
+in = ["first-read"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-09-26"
@@ -52,9 +103,16 @@ workers = 32
 wall_s = 203
 usd_hr = 1.4362
 results = "results/four-data-paths.txt"
+launch = "launch"
+data_path = "efs"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
 note = "EFS (Elastic, hydrated from S3): 86 s setup, 57 s load; README prices no compute $ for this row. EFS also bills $1.72 to hydrate and $0.86 per read"
 
 [[run]]
+id = "g4-fsx"
+in = ["first-read"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-09-26"
@@ -63,9 +121,15 @@ workers = 32
 wall_s = 233
 usd_hr = 1.4362
 results = "results/four-data-paths.txt"
+launch = "launch"
+data_path = "fsx-lustre"
+ranks = 1
+threads_per_rank = 32
 note = "FSx Lustre (S3-linked, 1200 GB @ 125 MB/s/TiB): ~9 min to create, excluded; 174 s load at 168 MiB/s; no compute $ printed; $174.00/month floor"
 
 [[run]]
+id = "g4-ebs"
+in = ["first-read"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-09-26"
@@ -75,10 +139,17 @@ wall_s = 409
 usd_hr = 1.4362
 compute_usd = 0.163
 results = "results/copy-route.txt"
+launch = "launch"
+data_path = "ebs-copy"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
 note = "copy -> local EBS (gp3): 118 s copy + 291 s align, 231 s load at 127 MiB/s"
 
 # --- Graviton4, steady state: the same box aligning another sample (wall_s = the align column)
 [[run]]
+id = "g4-ebs-warm"
+in = ["steady-state"]
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-09-26"
@@ -87,9 +158,16 @@ workers = 32
 wall_s = 67
 usd_hr = 1.4362
 results = "results/warm-leg.txt"
+launch = "launch"
+data_path = "ebs-copy"
+ranks = 1
+threads_per_rank = 32
+wall_basis = "the align alone, page cache not dropped (steady state)"
 note = "steady state, local EBS with page cache warm: 7 s load"
 
 [[run]]
+id = "g4-tmpfs-warm"
+in = ["steady-state"]
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-09-26"
@@ -98,9 +176,16 @@ workers = 32
 wall_s = 68
 usd_hr = 1.4362
 results = "results/tmpfs-leg.txt"
+launch = "launch"
+data_path = "stage-default"
+ranks = 1
+threads_per_rank = 32
+wall_basis = "the align alone, page cache not dropped (steady state)"
 note = "steady state, tmpfs: 9 s load"
 
 [[run]]
+id = "g4-lith-warm"
+in = ["steady-state"]
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-09-26"
@@ -109,9 +194,16 @@ workers = 32
 wall_s = 98
 usd_hr = 1.4362
 results = "results/warm-leg.txt"
+launch = "launch"
+data_path = "lith"
+ranks = 1
+threads_per_rank = 32
+wall_basis = "the align alone, page cache not dropped (steady state)"
 note = "steady state, lith mount under cache pressure from the other routes: 36 s load"
 
 [[run]]
+id = "g4-efs-warm"
+in = ["steady-state"]
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-09-26"
@@ -120,9 +212,16 @@ workers = 32
 wall_s = 118
 usd_hr = 1.4362
 results = "results/warm-leg.txt"
+launch = "launch"
+data_path = "efs"
+ranks = 1
+threads_per_rank = 32
+wall_basis = "the align alone, page cache not dropped (steady state)"
 note = "steady state, EFS: 57 s load. The prose prices 'that align' at $0.047 for 117 s, the cold EFS align (four-data-paths.txt efs_cold_align_s 117); this warm row is 118 s, the same $0.047"
 
 [[run]]
+id = "g4-fsx-warm"
+in = ["steady-state"]
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-09-26"
@@ -131,10 +230,17 @@ workers = 32
 wall_s = 117
 usd_hr = 1.4362
 results = "results/warm-leg.txt"
+launch = "launch"
+data_path = "fsx-lustre"
+ranks = 1
+threads_per_rank = 32
+wall_basis = "the align alone, page cache not dropped (steady state)"
 note = "steady state, FSx Lustre hydrated: 58 s load"
 
 # --- Intel / AMD, 2026-10-21: mount, tmpfs, EBS on one launch per chip
 [[run]]
+id = "intel-lith"
+in = ["chip-lith"]
 instance = "m8i.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -145,9 +251,15 @@ wall_s = 83
 usd_hr = 1.6934
 compute_usd = 0.039
 results = "results/x86_64/four-data-paths.txt"
+launch = "launch"
+data_path = "lith"
+ranks = 1
+threads_per_rank = 32
+billed_basis = "shared-window"
 note = "lith mount, 23 s load; bioconda x86 STAR 2.7.11b, lith 1.1.3 amd64. The box billed one 1,327 s window ($0.624) for all five aligns"
 
 [[run]]
+id = "intel-tmpfs"
 instance = "m8i.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -156,9 +268,17 @@ workers = 32
 host = "results/x86_64/host.txt"
 usd_hr = 1.6934
 results = "results/x86_64/tmpfs-leg.txt"
+launch = "launch"
+data_path = "stage-default"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
+tmpfs_peak_gib = 29
+billed_basis = "shared-window"
 note = "copy -> tmpfs, printed as '62 + 73 s · $0.064' (compound cell, no single wall printed; seconds and $ left out); 11 s load"
 
 [[run]]
+id = "intel-ebs"
 instance = "m8i.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -167,9 +287,17 @@ workers = 32
 host = "results/x86_64/host.txt"
 usd_hr = 1.6934
 results = "results/x86_64/four-data-paths.txt"
+launch = "launch"
+data_path = "ebs-copy"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
+billed_basis = "shared-window"
 note = "copy -> local EBS, printed as '117 + 291 s · $0.192' (compound cell; seconds and $ left out); 230 s load"
 
 [[run]]
+id = "amd-lith"
+in = ["chip-lith"]
 instance = "m8a.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -180,9 +308,15 @@ wall_s = 79
 usd_hr = 1.9475
 compute_usd = 0.043
 results = "results/amd/four-data-paths.txt"
+launch = "launch"
+data_path = "lith"
+ranks = 1
+threads_per_rank = 32
+billed_basis = "shared-window"
 note = "lith mount, 25 s load. The box billed one 1,265 s window ($0.684) for all five aligns"
 
 [[run]]
+id = "amd-tmpfs"
 instance = "m8a.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -191,9 +325,17 @@ workers = 32
 host = "results/amd/host.txt"
 usd_hr = 1.9475
 results = "results/amd/tmpfs-leg.txt"
+launch = "launch"
+data_path = "stage-default"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
+tmpfs_peak_gib = 29
+billed_basis = "shared-window"
 note = "copy -> tmpfs, printed as '54 + 62 s · $0.063' (compound cell; seconds and $ left out); 8 s load; oom_events 0"
 
 [[run]]
+id = "amd-ebs"
 instance = "m8a.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-21"
@@ -202,6 +344,12 @@ workers = 32
 host = "results/amd/host.txt"
 usd_hr = 1.9475
 results = "results/amd/four-data-paths.txt"
+launch = "launch"
+data_path = "ebs-copy"
+ranks = 1
+threads_per_rank = 32
+staged_gib = 28.6
+billed_basis = "shared-window"
 note = "copy -> local EBS, printed as '117 + 285 s · $0.217' (compound cell; seconds and $ left out); 230 s load"
 
 # --- checks: the internal control (every route, every chip) and the cross-chip fixed point/path

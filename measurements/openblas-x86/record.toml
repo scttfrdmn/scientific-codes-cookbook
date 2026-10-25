@@ -1,10 +1,27 @@
 # measurements/openblas-x86/record.toml -- drafted by the #118 extraction, then authored.
 # A probe, not a workload: the README prices and times nothing, so the runs carry no $ and no seconds.
 # The input is synthetic (set.seed(20261004), a 200x200 symmetric matrix built in the probe), so no dataset.
-schema = 1
+# Schema 2: no wall or billed on any row, so no [timing]; the four x86 rungs are one free
+# instance comparison on the same bytes (the c8g rung is a different build, outside it).
+schema = 2
 result_unit = "one probe run on one instance (fixed-point and attempted-path quantities through OpenBLAS); not priced"
 
+[workload]
+size = { matrix_n = 200 }
+note = "power iteration through dgemv (fixed point) and a logistic map at r = 3.9 between dgemv calls (attempted path)"
+
+[[series]]
+id = "x86-kernels"
+axis = "instance"
+held = ["size", "spawn_version"]
+equal_work = "converged-eigenvalue"
+attribution = "same-binary"
+attribution_note = "same conda-forge linux-64 env (x86.linux-64.lock) in the same micromamba image; only the host microarchitecture, and so the OpenBLAS kernel, differs"
+note = "four kernels, one answer: bit-identical on all four on both quantities"
+
 [[run]]
+id = "c6i"
+in = ["x86-kernels"]
 instance = "c6i.large"
 purpose = "diagnostic"
 date = "2026-10-25"
@@ -15,6 +32,8 @@ results = "results/blas-c6i.txt"
 note = "OpenBLAS kernel SkylakeX; attempted-path probe in results/chaos-c6i.txt; conda-forge linux-64 env x86.linux-64.lock, byte-identical to the 2026-10-04 run on the aarch.bio amd64 image"
 
 [[run]]
+id = "c6a"
+in = ["x86-kernels"]
 instance = "c6a.large"
 purpose = "diagnostic"
 date = "2026-10-25"
@@ -25,6 +44,8 @@ results = "results/blas-c6a.txt"
 note = "OpenBLAS kernel Zen; attempted-path probe in results/chaos-c6a.txt; conda-forge linux-64 env x86.linux-64.lock, byte-identical to the 2026-10-04 run on the aarch.bio amd64 image"
 
 [[run]]
+id = "c7i"
+in = ["x86-kernels"]
 instance = "c7i.large"
 purpose = "diagnostic"
 date = "2026-10-25"
@@ -35,6 +56,8 @@ results = "results/blas-c7i.txt"
 note = "OpenBLAS kernel SapphireRapids; attempted-path probe in results/chaos-c7i.txt; conda-forge linux-64 env x86.linux-64.lock, byte-identical to the 2026-10-04 run on the aarch.bio amd64 image"
 
 [[run]]
+id = "c7a"
+in = ["x86-kernels"]
 instance = "c7a.large"
 purpose = "diagnostic"
 date = "2026-10-25"
@@ -45,6 +68,7 @@ results = "results/blas-c7a.txt"
 note = "OpenBLAS kernel Cooperlake (Zen 4); attempted-path probe in results/chaos-c7a.txt; conda-forge linux-64 env x86.linux-64.lock, byte-identical to the 2026-10-04 run on the aarch.bio amd64 image"
 
 [[run]]
+id = "c8g"
 instance = "c8g.large"
 purpose = "diagnostic"
 date = "2026-10-04"

@@ -1,6 +1,24 @@
 # measurements/imagecodecs-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion-record window, as the README says (results/*/completion.json).
+# 64 single-threaded worker processes, one slide each; slides are streamed from RODA by range GET.
+schema = 2
 result_unit = "the whole cohort: 160 annotated CAMELYON16 slides, 321 GB, every tile transcoded to JPEG XL and rebuilt"
+
+[workload]
+size = { slides = 160, tiles = 14352374, mask_tiles = 14352163, pyramid_levels = 1653 }
+note = "160 independent slides streamed in 32 MiB range GETs, largest first, one per worker; compute-bound (JPEG XL transcode is 42% of worker CPU time)"
+
+[timing]
+wall = "tool wall: real.py, timed in-task (results/*/times.txt tool_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "layout", "data_path"]
+equal_work = "decoded-rgb-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the pathology env's linux-64 twin with the same imagecodecs 2026.8.16, libjxl 0.12.0, libjpeg-turbo 3.2.0; Intel's 64 vCPU are 32 cores x 2 threads"
 
 [[dataset]]
 id = "RODA s3://camelyon-dataset/CAMELYON16/ (the 160 annotated slides and their LZW tumour masks)"
@@ -9,6 +27,8 @@ pins = "pins.sha256"
 note = "pins.sha256 pins the cohort manifest slides.tsv (measurements/pathology-real's, read from its staged copy), which carries the publisher's md5 for every image and mask; the md5s are checked over the streamed bytes in-task. Streamed in place, never copied"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.16xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +36,10 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
+data_path = "s3-native"
 wall_s = 2429
 billed_s = 2492
 usd_hr = 2.5523
@@ -25,6 +49,8 @@ peak_gib = 0.5166               # 529 MiB, largest single worker; box cgroup pea
 peak_kind = "rss"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.16xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -32,6 +58,10 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
+data_path = "s3-native"
 wall_s = 3187
 billed_s = 3237
 usd_hr = 2.9987
@@ -41,6 +71,8 @@ peak_gib = 0.5225               # 535 MiB
 peak_kind = "rss"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.16xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -48,6 +80,10 @@ host = "results/amd/host.txt"
 date = "2026-10-21"
 date_source = "run"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
+data_path = "s3-native"
 wall_s = 1940
 billed_s = 1979
 usd_hr = 3.4487

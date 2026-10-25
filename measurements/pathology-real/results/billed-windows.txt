@@ -1,0 +1,5 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The README defines billed as "spawn's completion window" (1544/2262/1379 s), the spawn window exactly. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+cookbook-pathology-real-camelyon16-r3	r8g.8xlarge	-	1.885100	2026-10-19T19:22:10Z	2026-10-19T19:47:54Z	1544	0.8085	-	-	-	-	-
+cookbook-pathology-real-camelyon16-x8664-r3	r8i.8xlarge	-	2.222700	2026-10-19T19:50:02Z	2026-10-19T20:27:44Z	2262	1.3966	-	-	-	-	-
+cookbook-pathology-real-camelyon16-amd-r3	r8a.8xlarge	-	2.556200	2026-10-19T20:29:27Z	2026-10-19T20:52:26Z	1379	0.9792	-	-	-	-	-

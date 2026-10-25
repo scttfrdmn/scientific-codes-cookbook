@@ -1,6 +1,24 @@
 # measurements/root-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's task window (cookbook-root-real-dimuon{,-x8664,-amd}-r2; results/*/completion.json).
+schema = 2
 result_unit = "one df102 dimuon analysis over the whole of CMS Open Data record 12341 (61,540,413 events), with every check"
+throughput_unit = "M events/s"
+
+[workload]
+size = { events = 61540413, muons = 149322456 }
+note = "one file, one multi-threaded RDataFrame event loop (EnableImplicitMT(8)) booking every result; the event loop is 10-16% of each billed window"
+
+[timing]
+wall = "ROOT's event loop (tool wall), not the task"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size"]
+equal_work = "root-values-crosschip"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the hep env's linux-64 lock twin (envs-x86_64/hep-4f0bac796086.linux-64.lock), same ROOT 6.40.04; Intel's 8 vCPU are 4 cores x 2 threads"
 
 [[dataset]]
 id = "CERN Open Data record 12341, Run2012BC_DoubleMuParked_Muons.root (doi:10.7483/OPENDATA.CMS.LVG5.QT81)"
@@ -9,11 +27,15 @@ pins = "pins.sha256"
 note = "fetched on AWS by 00-fetch.task.json into the bucket"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-18"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/arm64/host.txt"
 wall_s = 22.3
 billed_s = 187
@@ -21,15 +43,21 @@ usd_hr = 0.3190
 compute_usd = 0.0020
 billed_usd = 0.0166
 peak_gib = 2.74
+throughput = 2.75
+avg_cores = 7.11
 results = "results/arm64/"
 note = "wall is the event loop; peak is ROOT's (uproot check peaks at 3.0 GiB)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/x86_64/host.txt"
 wall_s = 27.2
 billed_s = 173
@@ -37,15 +65,21 @@ usd_hr = 0.3748
 compute_usd = 0.0028
 billed_usd = 0.0180
 peak_gib = 2.71
+throughput = 2.27
+avg_cores = 7.24
 results = "results/x86_64/"
 note = "8 vCPU = 4 cores x 2 threads"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 host = "results/amd/host.txt"
 wall_s = 14.3
 billed_s = 142
@@ -53,6 +87,8 @@ usd_hr = 0.4311
 compute_usd = 0.0017
 billed_usd = 0.0170
 peak_gib = 2.46
+throughput = 4.29
+avg_cores = 7.05
 results = "results/amd/"
 
 # --- checks: "What held at scale, on all three chips" ----------------------------------

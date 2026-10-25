@@ -1,6 +1,24 @@
 # measurements/humann-real/record.toml
-schema = 1
+# Schema 2: billed is spawn's completion window (each row matches its task's record to the second).
+# avg_cores is the README's "busy cores" = cpu_s / wall_s in results/<chip>/times.txt.
+schema = 2
 result_unit = "one whole sample: ERR2984773, 17.6M reads (8,785,731 pairs), profiled against the full HUMAnN 3.9 databases"
+
+[workload]
+size = { reads = 17571462, read_pairs = 8785731 }
+note = "one whole sample, one HUMAnN invocation, against the full ChocoPhlAn + UniRef90 databases (49.2 GiB unpacked) staged into tmpfs; the bowtie2-build index step and HUMAnN's Python steps are serial"
+
+[timing]
+wall = "humann's own wall (times.txt wall_s), mate-joining prep excluded"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "none: the translated tier differs with the diamond build (470 + 2,342 families on one side only), so arm64 and x86 did not compute the same thing; Intel and AMD match except 6 of 38,023 translated families"
+attribution = "other-version"
+attribution_note = "HUMAnN 3.9 on both, but aarch.bio's build bundles diamond 2.2.8 / bowtie2 2.5.5 and bioconda's diamond 2.0.15 / bowtie2 2.2.3; Intel vs AMD (same image) is the one like-for-like chip comparison"
 
 [[dataset]]
 id = "ENA ERR2984773 (PRJEB29504, ZymoBIOMICS D6300, Nicholls et al. 2019), ERR2984773_{1,2}.fastq.gz"
@@ -27,6 +45,8 @@ tier = "durable-id"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -34,6 +54,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 3785
 billed_s = 4284
 usd_hr = 0.9426
@@ -41,9 +63,12 @@ compute_usd = 0.9911
 billed_usd = 1.1217
 peak_gib = 16.7
 peak_kind = "rss"
+avg_cores = 8.1
 note = "aarch.bio build (diamond 2.2.8, bowtie2 2.5.5); launched under the original $6.00 / 10 h cap"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -51,6 +76,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 3758
 billed_s = 4336
 usd_hr = 1.1114
@@ -58,9 +85,12 @@ compute_usd = 1.1603
 billed_usd = 1.3386
 peak_gib = 16.5
 peak_kind = "rss"
+avg_cores = 9.6
 note = "bioconda build (diamond 2.0.15, bowtie2 2.2.3): compares builds as well as chips"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -68,6 +98,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 2602
 billed_s = 3071
 usd_hr = 1.2781
@@ -75,6 +107,7 @@ compute_usd = 0.9239
 billed_usd = 1.0903
 peak_gib = 16.5
 peak_kind = "rss"
+avg_cores = 8.4
 note = "same bioconda image as Intel: the one like-for-like chip comparison"
 
 # --- "What held at scale" (check.py, in-task, fails the task); observed = Graviton4 ----

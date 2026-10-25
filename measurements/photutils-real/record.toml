@@ -1,5 +1,7 @@
 # measurements/photutils-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the README's "EC2 launch to terminate" = the CloudTrail window
+# (results/billed-windows.txt): 1068 and 1427 exact, AMD 943 against the printed 942.
+schema = 2
 result_unit = "the whole PS1 projection cell 1749: 100 r-band deep stacks detected, deblended and measured (5,894,052 sources) with every check"
 
 [[dataset]]
@@ -14,9 +16,28 @@ tier = "roda"
 pins = "pins.sha256"
 from_recipe = "astropy"         # staged and pinned by measurements/astropy-real
 
+[workload]
+size = { images = 100, sources = 5894052 }
+note = "one process per image (multiprocessing, one thread each), 16 workers; deblend_sources is the workload (55% of CPU time on Graviton4)"
+
+[timing]
+wall = "real.py"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "size", "generation"]
+equal_work = "deblend-partition"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the astro-903b8d412bd4 linux-64 env twin; its astropy.convolution is 3x slower on both x86 chips, a build effect that cannot be separated from architecture. Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "Graviton4 cheapest per result (16% under AMD, 37% under Intel); AMD 9% faster"
+
 # peak_gib omitted: the README prints per-worker ru_maxrss (5.63 / 5.71 / 5.63 GiB x 16) and a
 # task cgroup memory.peak in GB (74.9 / 76.8 / 76.2), neither a single GiB task peak.
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -32,6 +53,8 @@ billed_usd = 0.2796
 note = "peak RSS 5.63 GiB per worker x 16; cgroup memory.peak 74.9 GB"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -47,6 +70,8 @@ billed_usd = 0.4405
 note = "peak RSS 5.71 GiB per worker x 16; cgroup memory.peak 76.8 GB"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

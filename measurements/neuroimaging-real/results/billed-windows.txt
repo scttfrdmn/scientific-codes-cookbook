@@ -1,0 +1,8 @@
+# Billed windows per task. The README's billed is spawn's wrapper start -> stage-out done, read from each task's command.log phase stamps (s3://spawn-results-942542972736-us-west-2/tasks/<task_id>/command.log); these tasks' completion records end at command exit, 3-6 s earlier (completion_window_s), and spawn's cost_estimate prices that shorter window. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	spawn_started_at	completion_ended_at	completion_window_s	stage_out_done_at	billed_window_s
+neuroreal-fsl-cohort	m8g.4xlarge	2026-10-18T05:44:20Z	2026-10-18T05:47:21Z	181	2026-10-18T05:47:26Z	186
+neuroreal-fsl-cohort-x8664-r1	m8i.4xlarge	2026-10-18T06:03:12Z	2026-10-18T06:06:47Z	215	2026-10-18T06:06:53Z	221
+neuroreal-fsl-cohort-amd-r1	m8a.4xlarge	2026-10-18T06:20:16Z	2026-10-18T06:22:36Z	140	2026-10-18T06:22:41Z	145
+neuroreal-dipy-cohort	m8g.4xlarge	2026-10-18T05:55:46Z	2026-10-18T06:01:23Z	337	2026-10-18T06:01:26Z	340
+neuroreal-dipy-cohort-x8664-r1	m8i.4xlarge	2026-10-18T06:12:40Z	2026-10-18T06:18:32Z	352	2026-10-18T06:18:35Z	355
+neuroreal-dipy-cohort-amd-r1	m8a.4xlarge	2026-10-18T06:24:18Z	2026-10-18T06:28:16Z	238	2026-10-18T06:28:19Z	241

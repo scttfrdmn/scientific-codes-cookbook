@@ -1,5 +1,7 @@
 # measurements/callers-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is "spawn's command window" (the completion record, results/billed-windows.txt),
+# exact on all nine rows. The three callers are told apart by `variant`; one chip series per caller.
+schema = 2
 result_unit = "one caller's whole-chr20 call set for NA12878 (GIAB HG001) at 36x"
 
 [[dataset]]
@@ -23,43 +25,85 @@ pins = "../gatk4-real/pins.sha256"
 from_recipe = "gatk4"
 note = "The sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
+[timing]
+wall = "the caller alone, as each task reports it"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-bcftools"
+axis = "chip"
+held = ["size", "generation"]
+equal_work = "three-way-bytes"
+attribution = "same-version-other-build"
+attribution_note = "bioconda's x86 build of bcftools 1.24; the htslib builds differ (127,617 calls against 127,616)"
+note = "bcftools costs about the same everywhere (0.0126-0.0150)"
+
+[[series]]
+id = "chip-freebayes"
+axis = "chip"
+held = ["size", "generation"]
+equal_work = "three-way-bytes"
+attribution = "same-version-other-build"
+attribution_note = "bioconda's x86 build of freebayes 1.3.10; QUAL differs in its last digits"
+note = "freebayes is 1.80x faster on AMD than on Graviton4"
+
+[[series]]
+id = "chip-gatk4"
+axis = "chip"
+held = ["size", "generation"]
+equal_work = "three-way-bytes"
+attribution = "same-version-other-build"
+attribution_note = "on x86 the Intel GKL loads native AVX-512 PairHMM and SmithWaterman; on arm64 it falls back to single-threaded Java -- a property of the build, not an ARM rate"
+note = "9.3x faster on AMD than on Graviton4, and 6.3x cheaper"
+
 [[run]]
+id = "bcftools-c8g"
+in = ["chip-bcftools"]
 instance = "c8g.xlarge"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
 wall_s = 228
 billed_s = 285
+variant = "bcftools mpileup+call"
 usd_hr = 0.1595
 billed_usd = 0.0126
 results = "results/bcftools-concordance.txt"
 note = "bcftools mpileup+call"
 
 [[run]]
+id = "freebayes-c8g"
+in = ["chip-freebayes"]
 instance = "c8g.xlarge"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
 wall_s = 644
 billed_s = 704
+variant = "freebayes"
 usd_hr = 0.1595
 billed_usd = 0.0312
 results = "results/freebayes-smoke-check.txt"
 note = "freebayes; billed 704 s and $0.0312 as in freebayes-real/results/ladder.tsv"
 
 [[run]]
+id = "gatk4-c8g"
+in = ["chip-gatk4"]
 instance = "c8g.xlarge"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
 wall_s = 7929
 billed_s = 7982
+variant = "GATK4 HaplotypeCaller"
 usd_hr = 0.1595
 billed_usd = 0.3537
 note = "GATK4 HaplotypeCaller, single-threaded Java PairHMM on arm64"
 
 # --- Intel c8i.xlarge: the recipes' own verifying runs, 2026-10-12 per the README
 [[run]]
+id = "bcftools-c8i"
+in = ["chip-bcftools"]
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-12"
@@ -67,11 +111,14 @@ date_source = "run"
 threads_per_core = 2
 wall_s = 223
 billed_s = 288
+variant = "bcftools mpileup+call"
 usd_hr = 0.1874
 billed_usd = 0.0150
 note = "bcftools"
 
 [[run]]
+id = "freebayes-c8i"
+in = ["chip-freebayes"]
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-12"
@@ -79,11 +126,14 @@ date_source = "run"
 threads_per_core = 2
 wall_s = 474
 billed_s = 539
+variant = "freebayes"
 usd_hr = 0.1874
 billed_usd = 0.0281
 note = "freebayes"
 
 [[run]]
+id = "gatk4-c8i"
+in = ["chip-gatk4"]
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-12"
@@ -91,12 +141,15 @@ date_source = "run"
 threads_per_core = 2
 wall_s = 1228
 billed_s = 1324
+variant = "GATK4 HaplotypeCaller"
 usd_hr = 0.1874
 billed_usd = 0.0689
 note = "GATK4 HaplotypeCaller, native AVX-512 GKL PairHMM"
 
 # --- AMD c8a.xlarge: 2026-10-18/19 per the README (per recipe last_verified_amd)
 [[run]]
+id = "bcftools-c8a"
+in = ["chip-bcftools"]
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
@@ -104,11 +157,14 @@ date_source = "run"
 threads_per_core = 1
 wall_s = 174
 billed_s = 216
+variant = "bcftools mpileup+call"
 usd_hr = 0.2155
 billed_usd = 0.0129
 note = "bcftools"
 
 [[run]]
+id = "freebayes-c8a"
+in = ["chip-freebayes"]
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
@@ -116,11 +172,14 @@ date_source = "run"
 threads_per_core = 1
 wall_s = 358
 billed_s = 414
+variant = "freebayes"
 usd_hr = 0.2155
 billed_usd = 0.0248
 note = "freebayes"
 
 [[run]]
+id = "gatk4-c8a"
+in = ["chip-gatk4"]
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 date = "2026-10-19"
@@ -128,6 +187,7 @@ date_source = "run"
 threads_per_core = 1
 wall_s = 849
 billed_s = 944
+variant = "GATK4 HaplotypeCaller"
 usd_hr = 0.2155
 billed_usd = 0.0565
 note = "GATK4 HaplotypeCaller"
