@@ -5,7 +5,8 @@ result_unit = "one complete pbmc_10k_v3 run: Scanpy leg + Seurat leg with FindAl
 [[dataset]]
 id = "10x Genomics pbmc_10k_v3_filtered_feature_bc_matrix.tar.gz (Cell Ranger 3.0.0 release path)"
 tier = "versioned-release"
-unpinned = "the full sha256 lives in pbmc10k.task.json and stage-inputs.sh (verified before upload and in-task); no committed sha256 manifest, and the README prints it truncated"
+pins = "pins.sha256"
+note = "copied from stage-inputs.sh and pbmc10k.task.json (verified before upload and in-task)"
 
 [[run]]
 instance = "m8g.xlarge"

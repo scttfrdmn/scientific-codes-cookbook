@@ -5,8 +5,9 @@ result_unit = "one whole-chr20 call: freebayes on NA12878 chr20 at 36x against G
 [[dataset]]
 id = "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)"
 tier = "built"
+pins = "../gatk4-real/pins.sha256"
 from_recipe = "freebayes"
-unpinned = "the ladder's tasks read the recipe's S3 object (inputs/gatk4/NA12878.chr20.30x.bam, 36.3x despite the name; sha256 0ad228c1... on recipes/freebayes) but did not re-check its sha256; the 385,371 variants match the recipe's run"
+note = "the ladder's tasks read inputs/gatk4/NA12878.chr20.30x.bam (36.3x despite the name) but did not re-check its sha256; the 385,371 variants match the recipe's run"
 
 # --- Graviton generation ladder: 4 vCPU, same digest, same staged objects -------------
 [[run]]

@@ -5,8 +5,9 @@ result_unit = "one depth comparison: kallisto vs salmon agreement at 200,000 and
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete run); the 200,000-pair subset is its first 800,000 lines"
 tier = "durable-id"
-unpinned = "no sha256 committed; ENA accession only, staged under inputs/salmon-real"
+pins = "../kallisto-real/reads.md5"
 from_recipe = "measurements/salmon-real"
+note = "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-real/); the subset is cut in-task"
 
 [[dataset]]
 id = "kallisto index of Ensembl 116 cDNA (kallisto.idx) and full-depth abundance.tsv"

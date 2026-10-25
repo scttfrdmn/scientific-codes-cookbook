@@ -5,13 +5,14 @@ result_unit = "one sample (ERR188026, 15,800,127 read pairs) quantified by RSEM 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (Geuvadis, complete run)"
 tier = "durable-id"
-unpinned = "pinned by ENA's fastq_md5, checked on the box (results/align/pins.txt); no sha256 manifest committed"
-note = "the same reads as salmon-real and quant-depth"
+pins = "../kallisto-real/reads.md5"
+note = "ENA's fastq_md5 (md5, not sha256): the values this run checked on the box (results/align/pins.txt)"
 
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
 tier = "versioned-release"
-unpinned = "pinned by Ensembl release-116 cdna/CHECKSUMS sum, checked on the box (results/prepare/pins.txt); no sha256 manifest committed"
+pins = "../salmon-real/pins.sha256"
+note = "inputs/salmon-real/ensembl116_cdna.fa.gz; the run checked Ensembl's CHECKSUMS sum (results/prepare/pins.txt); the sha256 was hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's"
 
 [[dataset]]
 id = "RSEM reference ens116.{grp,ti,seq} and gene_map.tsv (rsem-prepare-reference, task 00)"

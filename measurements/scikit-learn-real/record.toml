@@ -6,7 +6,8 @@ result_unit = "one whole verified run: all 581,012 Covertype rows, logreg + HGB 
 [[dataset]]
 id = "covtype.data.gz, figshare file 5976039 (sklearn 1.9.1 datasets/_covtype.py); UCI doi:10.24432/C50K5N"
 tier = "durable-id"
-unpinned = "checked against scikit-learn 1.9.1's own fetch_covtype sha256; the README prints it truncated and no manifest is committed (pins.sha256 is staged, not committed)"
+pins = "pins.sha256"
+note = "scikit-learn 1.9.1 fetch_covtype's own sha256, copied from stage-inputs.sh; checked before upload"
 
 # Compound "fit wall: logreg / HGB / RF" and "compute $/fit" cells share one task and one bill,
 # so they are not split; wall_s is the README's "task compute" (the whole script).

@@ -5,7 +5,8 @@ result_unit = "the whole stratum: all 783 characterized QM9 molecules with at mo
 [[dataset]]
 id = "QM9, figshare collection 10.6084/m9.figshare.c.978904 (v5): dsgdb9nsd.xyz.tar.bz2, uncharacterized.txt, atomref.txt, validation.txt, readme.txt"
 tier = "durable-id"
-unpinned = "qm9.sha256 sits beside the files in the bucket, not committed here; 00-fetch checks each against figshare's published md5 and every run re-checks the two it reads; the README prints only truncated hashes"
+pins = "pins.sha256"
+note = "copied from qm9.sha256 beside the files in the bucket; 00-fetch checked figshare's md5 and every run re-checks the two it reads"
 
 [[run]]
 instance = "m8g.4xlarge"

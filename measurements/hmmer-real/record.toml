@@ -5,14 +5,16 @@ result_unit = "one proteome annotated: all 30,134 Pfam-A 38.2 families against 2
 [[dataset]]
 id = "Pfam releases/Pfam38.2/Pfam-A.hmm.gz"
 tier = "versioned-release"
+pins = "datasets.sha256"
 from_recipe = "hmmer"
-unpinned = "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+note = "inputs/hmmer/; search.sh checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged"
 
 [[dataset]]
 id = "Ensembl release-116 human pep.all, filtered to one protein per gene"
 tier = "versioned-release"
+pins = "datasets.sha256"
 from_recipe = "hmmer"
-unpinned = "no sha256 manifest committed; recipes/hmmer prints a truncated sha256 in prose"
+note = "inputs/hmmer/; search.sh checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged"
 
 [[run]]
 instance = "c6g.2xlarge"

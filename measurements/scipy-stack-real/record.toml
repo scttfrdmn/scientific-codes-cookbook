@@ -5,7 +5,8 @@ result_unit = "one full pass over GHCN-Daily 2024: pandas aggregation, NumPy cro
 [[dataset]]
 id = "NOAA GHCN-Daily 3.35-upd-2026101517: s3://noaa-ghcn-pds/csv/by_year/2024.csv + ghcnd-stations.txt"
 tier = "roda"
-unpinned = "the sha256 (2024.csv 62a950b9..., ghcnd-stations.txt 428eabc9...) lives in stage-inputs.sh's data.sha256 heredoc, not a committed manifest file; NOAA rewrites the by-year file daily, so a re-stage after its next update fails its own check"
+pins = "pins.sha256"
+note = "copied from stage-inputs.sh's data.sha256 heredoc; NOAA rewrites the by-year file daily, so a re-stage after its next update fails its own check"
 
 [[run]]
 instance = "m8g.2xlarge"

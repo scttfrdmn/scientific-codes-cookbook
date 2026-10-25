@@ -18,7 +18,8 @@ note = "GEO regenerates the series matrix, so its bytes are not a pin; the deriv
 [[dataset]]
 id = "SeSAMe ExperimentHub cache: the recipe's four blobs plus probeIDSignature (EH8553)"
 tier = "built"
-unpinned = "built on AWS by sesame-cache.sh (pinned), and task 2 checks all five blob sha256s, but no blob manifest is committed in this dir; hub_index.rds's pin differs from the recipe's"
+pins = "sesame-cache.sha256"
+note = "copied from sesame-cache-real.blobs beside the tar in the bucket; task 2 checks the same five sha256s; hub_index.rds's pin differs from the recipe's"
 
 [[run]]
 instance = "r8g.4xlarge"

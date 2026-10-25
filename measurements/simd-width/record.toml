@@ -7,7 +7,8 @@ result_unit = "one probe + STREAM thread sweep + four-build FP kernel comparison
 [[dataset]]
 id = "STREAM official source stream.c from cs.virginia.edu, sha256 a52bae5e175bea3f7832112af9c085adab47117f7d2ce219165379849231692b"
 tier = "durable-id"
-unpinned = "the full sha256 is printed in the README and checked in-task (sha256sum -c), but no manifest file is committed"
+pins = "pins.sha256"
+note = "copied from the README; checked in-task (sha256sum -c)"
 
 [[run]]
 instance = "c6g.4xlarge"

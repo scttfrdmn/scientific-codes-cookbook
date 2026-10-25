@@ -1,0 +1,13 @@
+# Hashed 2026-10-25 (UTC) on AWS (c8g.4xlarge, us-west-2), streaming each object where it lives (aws s3 cp - | sha256sum). This was AFTER the measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# Bucket copies under inputs/bwa-real/. The same day the RODA originals under s3://1000genomes (technical/reference/GRCh38_reference_genome/, phase3/data/HG00096/sequence_read/) were hashed in place and are identical for every file below except the .fa, which was not hashed at RODA.
+# Earlier hashes of the same objects agree: .alt/.amb/.ann/.bwt/.pac/.sa in bwa-mem2-real's run results (results/*/bwa/results.tsv); both read files in qc-aggregate-real/inputs.sha256 and fastp-real's run smoke checks.
+3b103f4742abfd54938fb0333e19ad067635c8eb86f1dbf0ce44b165c4292b50  GRCh38_full_analysis_set_plus_decoy_hla.fa
+d9254da07b8030e26129dc29d9d02b9c30a360b233a367ce041691c00407d510  GRCh38_full_analysis_set_plus_decoy_hla.fa.alt
+4199db9e913e372b2dae4ac17723def657f696daf71024b66f6b695947918c77  GRCh38_full_analysis_set_plus_decoy_hla.fa.amb
+5d2ec9f4f72b755f1dafd06f320e18959de4da49cceaefd2df8e7f2b34dd323d  GRCh38_full_analysis_set_plus_decoy_hla.fa.ann
+a01ecc6bfae7abcf3542f68314da843d5594f8b8cf3eb7799371ac3e99231754  GRCh38_full_analysis_set_plus_decoy_hla.fa.bwt
+f361f004bdae5ca68d632458b01a3848d02834ac7176f378e177344d148a6a6d  GRCh38_full_analysis_set_plus_decoy_hla.fa.fai
+5dd6629f95e9765a19821fd1ffc3e883e5af177527a220a6b72a4e5e492114dc  GRCh38_full_analysis_set_plus_decoy_hla.fa.pac
+b87d29d937b58dfde9943d8300ab0f9490bae5ba4ddc54726da023aeebd48da4  GRCh38_full_analysis_set_plus_decoy_hla.fa.sa
+01b9c92fe5d197a7d5131b4778fce91ed86980a7ebb587048106534fd4b35756  SRR062634_1.filt.fastq.gz
+ec1bc2843e57db021c8ddaf6bb0f6470a84d33de6d7a9f8701a59a26a8aea288  SRR062634_2.filt.fastq.gz

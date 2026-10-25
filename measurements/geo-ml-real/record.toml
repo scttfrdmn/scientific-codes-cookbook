@@ -12,7 +12,8 @@ note = "staged by r-spatial-real; read, not copied"
 [[dataset]]
 id = "Census TIGER 2024 tl_2024_us_county.zip (inputs/geo-ml/tiger.zip)"
 tier = "versioned-release"
-unpinned = "the full sha256 lives in recipes/geo-ml/stage-inputs.sh, which writes pins.sha256 at stage time; no manifest is committed and the README prints only a truncated hash"
+pins = "pins.sha256"
+note = "copied from recipes/geo-ml/stage-inputs.sh, which checks it at stage time"
 
 [[dataset]]
 id = "Copernicus GLO-30 DEM, 28 COGs over Colorado (inputs/geospatial-real/)"
