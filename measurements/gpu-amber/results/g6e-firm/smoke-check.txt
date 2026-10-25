@@ -1,0 +1,75 @@
+AMBER FIRM-UP on NVIDIA L40S (hbm_total_MB=46068)  status=OK 
+purpose: cold-vs-warm startup (CUDA JIT cache = what an AMI would bake) + long-run plateau
+(no JIT cache yet — cold)
+[coldA] steps=25000 rc=0 measured_wall_s=58.3 amber_wall_s=14 ns_per_day=770.67
+      startup_s(to first GPU activity)=34  active=[5 samples, mean 88%]  peak=89%  peak_mem_MB=653
+--- JIT cache after first run ---
+68K	/home/ec2-user/.nv/ComputeCache
+[warmB] steps=25000 rc=0 measured_wall_s=6.2 amber_wall_s=7 ns_per_day=762.24
+      startup_s(to first GPU activity)=1  active=[6 samples, mean 88%]  peak=88%  peak_mem_MB=653
+[longC] steps=250000 rc=0 measured_wall_s=56.7 amber_wall_s=56 ns_per_day=768.51
+      startup_s(to first GPU activity)=0  active=[57 samples, mean 88%]  peak=89%  peak_mem_MB=653
+--- full util series, long run (util%,mem_MB @1Hz) ---
+83, 0
+88, 653
+86, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+87, 653
+88, 653
+89, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+89, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+88, 653
+--- amber timing (long) ---
+|         ns/day =     768.51   seconds/ns =     112.42
+|         ns/day =     768.51   seconds/ns =     112.42
+|  Total wall time:          56    seconds     0.02 hours
+--- disk ---
+/dev/nvme1n1p1   75G   53G   23G  71% /

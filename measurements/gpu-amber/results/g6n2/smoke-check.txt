@@ -1,0 +1,81 @@
+status: OK  reason: 
+code: Amber26 pmemd.cuda_SPFP (LICENSED — built once from Scott's copy; private bucket; NOT redistributable)
+mechanism: spawn launch + NATIVE host run on DLAMI (no container — avoids a 20GB CUDA-devel image pull)
+gpu: NVIDIA L4  hbm_total_MB: 23034
+system: 18310 atoms (tleap TIP3P ~6.1nm box), 25000 steps, dt=2fs, PME, cut=10A, SHAKE, Langevin 300K
+ns_per_day: 561.25   compute_wall_s: 65.7
+gpu_compute_util_pct: mean=9.6 max=92 over 66 samples
+gpu_mem_used_MB: 386 of 23034 => HBM_util_pct: 1.68
+--- util time series (util%,mem_MB @1Hz) ---
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 0
+0, 1
+0, 194
+0, 292
+0, 292
+0, 296
+0, 296
+0, 296
+0, 304
+0, 386
+90, 386
+91, 386
+90, 386
+92, 386
+90, 386
+92, 386
+90, 386
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+0, 238
+--- mdout timing ---
+|         ns/day =     561.25   seconds/ns =     153.94
+|         ns/day =     561.25   seconds/ns =     153.94
+|  Total wall time:          16    seconds     0.00 hours
+--- pmemd.log tail ---
+Note: The following floating-point exceptions are signalling: IEEE_UNDERFLOW_FLAG IEEE_DENORMAL

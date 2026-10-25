@@ -1,0 +1,23 @@
+status: OK  reason: 
+arch: x86_64  gmx_version: 2026.3-conda_forge
+system_atoms: NA
+cpu_run: -nb cpu -ntmpi 1 -ntomp 8 (25000 steps)
+wall_s: 77.020  ns_per_day: 56.092  core_pct: 800.0
+--- md.log perf tail ---
+	M E G A - F L O P S   A C C O U N T I N G
+               Core t (s)   Wall t (s)        (%)
+       Time:      616.157       77.020      800.0
+Performance:       56.092        0.428        3.081            6.845 
+--- mdrun.log tail ---
+starting mdrun 'water in water'
+25000 steps,     50.0 ps.
+
+Writing final coordinates.
+
+               Core t (s)   Wall t (s)        (%)
+       Time:      616.157       77.020      800.0
+                 (ns/day)    (hour/ns)    (ms/step)  (Matom*steps/s) 
+Performance:       56.092        0.428        3.081            6.845 
+
+GROMACS reminds you: "Being Great is Not So Good" (Red Hot Chili Peppers)
+

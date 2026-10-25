@@ -1,0 +1,77 @@
+status: OK  reason: 
+gpu: NVIDIA A10G
+gpus_in_container: GPU 0: NVIDIA A10G (UUID: GPU-39003881-18a0-79ff-f7dd-aa734b6374ef)
+mechanism: spawn launch + docker run --gpus all (NOT the recipe path; task-run GPU gap = spawn#601)
+run: RUN1 -nb gpu -ntomp 8 (PME on CPU, no offload flags)
+system_atoms:   gpu_path_loglines: 2 (>=1 => GPU)  compute_only_wall_s: 21.1
+gpu_util_pct: max=77 mean=33.9 over 22 samples
+--- gpu_util.csv (time series, 1Hz: util%,mem_MB) ---
+0, 0
+3, 269
+0, 269
+12, 285
+5, 285
+14, 285
+4, 285
+77, 285
+0, 287
+8, 287
+0, 287
+55, 287
+47, 287
+22, 287
+67, 287
+60, 287
+68, 287
+61, 287
+56, 287
+65, 287
+63, 287
+59, 216
+--- mdrun.log tail ---
+Executable:   /usr/local/gromacs/avx2_256/bin/gmx
+Data prefix:  /usr/local/gromacs/avx2_256
+Working dir:  /work
+Command line:
+  gmx mdrun -s bench.tpr -nb gpu -ntmpi 1 -ntomp 8 -g md.log
+
+Reading file bench.tpr, VERSION 2023.2-dev-20230712-a3d6917-dirty-unknown (single precision)
+Changing nstlist from 10 to 100, rlist from 1 to 1.165
+
+1 GPU selected for this run.
+Mapping of GPU IDs to the 2 GPU tasks in the 1 rank on this node:
+  PP:0,PME:0
+PP tasks will do (non-perturbed) short-ranged interactions on the GPU
+PP task will update and constrain coordinates on the GPU
+PME tasks will do all aspects on the GPU
+Using 1 MPI thread
+Using 8 OpenMP threads 
+
+starting mdrun 'water in water'
+50000 steps,    100.0 ps.
+
+Writing final coordinates.
+
+               Core t (s)   Wall t (s)        (%)
+       Time:      148.365       18.548      799.9
+                 (ns/day)    (hour/ns)
+Performance:      465.827        0.052
+
+GROMACS reminds you: "Performance and power are great targets for tuning, but really you want to tune for money!" (Erik Lindahl)
+
+--- grompp.log tail ---
+
+Note that mdrun will redetermine rlist based on the actual pair-list setup
+Calculating fourier grid dimensions for X Y Z
+Using a fourier grid of 52x52x52, spacing 0.115 0.115 0.115
+
+Estimate for the relative computational load of the PME mesh part: 0.27
+
+This run will generate roughly 2 Mb of data
+--- solv.log tail ---
+
+Back Off! I just backed up topol.top to ./#topol.top.1#
+
+GROMACS reminds you: "To dissimulate is to feign not to have what one has. To simulate is to feign to have what one hasn't." (Jean Baudrillard)
+
+Adding line for 7029 solvent molecules with resname (SOL) to topology file (topol.top)

@@ -1,0 +1,28 @@
+instance_type: g6.2xlarge
+region: us-east-1
+ami: ami-041c64b236b082fe4
+ttl: 18m
+cost_limit: 0.30
+on_complete: terminate
+completion_file: /tmp/SPAWN_COMPLETE
+iam_policy: [s3:ReadOnly, s3:WriteOnly]
+command: |
+  B=cookbook-942542972736-us-west-2
+  R=s3://cookbook-942542972736-us-west-2/runs/amber/g6
+  IMG=nvidia/cuda@sha256:4b9ed5fa8361736996499f64ecebf25d4ec37ff56e4d11323ccde10aa36e0c43
+  if ! nvidia-smi -L >/tmp/nv.txt 2>&1; then
+    echo "ABORT no host GPU: $(cat /tmp/nv.txt)" > /tmp/smoke-check.txt
+    aws s3 cp /tmp/smoke-check.txt $R/smoke-check.txt --region us-west-2 || true; touch /tmp/SPAWN_COMPLETE; exit 0
+  fi
+  {
+    nvidia-smi -L 2>&1
+    sudo systemctl start docker 2>&1 || true
+    aws s3 cp s3://$B/inputs/amber/pmemd26-cuda.tar.gz /tmp/ --region us-west-2 2>&1 | tail -1
+    tar xzf /tmp/pmemd26-cuda.tar.gz -C /tmp && echo UNTAR_OK || echo UNTAR_FAIL
+    for f in sys.prmtop sys.rst7 md.in amber_measure.sh; do aws s3 cp s3://$B/inputs/amber/$f /tmp/$f --region us-west-2 >/dev/null 2>&1; done
+    ls -la /tmp/pmemd26/bin/pmemd.cuda 2>&1
+    sudo docker run --privileged --gpus all -e NVIDIA_VISIBLE_DEVICES=all -e NVIDIA_DRIVER_CAPABILITIES=all       --rm -v /tmp:/work $IMG bash /work/amber_measure.sh 2>&1
+  } > /tmp/host.log 2>&1
+  aws s3 cp /tmp/host.log $R/host.log --region us-west-2 2>&1 || true
+  aws s3 cp /tmp/smoke-check.txt $R/smoke-check.txt --region us-west-2 2>&1 || true
+  touch /tmp/SPAWN_COMPLETE

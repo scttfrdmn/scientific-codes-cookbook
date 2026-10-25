@@ -1,0 +1,196 @@
+RUN2 offload-stage contribution (25000 steps each; --privileged; A10G g5.2xlarge)
+preflight: OK  gpus_in_container: GPU 0: NVIDIA A10G (UUID: GPU-556b9004-d809-0f42-3eb5-c37ef0eeb851)
+gpu: NVIDIA A10G
+CFG allgpu rc=0 flags=[-nb gpu -pme gpu -update gpu] wall_s=15.037 ns_per_day=287.294 gpu_util_max=74 mean=24.4 samples=19 
+CFG pmecpu rc=0 flags=[-nb gpu -pme cpu -update gpu] wall_s=38.576 ns_per_day=111.991 gpu_util_max=53 mean=11.5 samples=40 
+CFG updcpu rc=0 flags=[-nb gpu -pme gpu -update cpu] wall_s=17.629 ns_per_day=245.067 gpu_util_max=45 mean=26.9 samples=19 
+CFG allcpu rc=0 flags=[-nb cpu] wall_s=97.366 ns_per_day=44.371 gpu_util_max=29 mean=0.3 samples=98 
+--- allgpu assignment (md.log) ---
+1 GPU selected for this run.
+  PP:0,PME:0
+PP tasks will do (non-perturbed) short-ranged interactions on the GPU
+PP task will update and constrain coordinates on the GPU
+PME tasks will do all aspects on the GPU
+Will do PME sum in reciprocal space for electrostatic interactions.
+Updating coordinates on the GPU.
+--- util series per config (util%,mem_MB @1Hz) ---
+[allgpu]
+0, 0
+3, 269
+0, 269
+28, 285
+18, 285
+5, 285
+23, 285
+6, 285
+17, 285
+0, 287
+0, 287
+46, 287
+17, 287
+49, 287
+74, 287
+15, 287
+42, 287
+67, 287
+53, 1
+[pmecpu]
+53, 0
+13, 273
+8, 273
+8, 273
+7, 273
+9, 273
+2, 273
+0, 273
+0, 275
+0, 275
+11, 275
+12, 275
+10, 275
+8, 275
+17, 275
+13, 275
+10, 275
+12, 275
+12, 275
+11, 275
+11, 275
+11, 275
+12, 275
+10, 275
+12, 275
+10, 275
+10, 275
+11, 275
+14, 275
+15, 275
+12, 275
+11, 275
+12, 275
+10, 275
+24, 275
+10, 275
+11, 275
+12, 275
+11, 275
+14, 275
+[updcpu]
+4, 1
+26, 285
+25, 285
+28, 285
+18, 285
+24, 285
+23, 285
+25, 287
+29, 287
+40, 287
+28, 287
+24, 287
+33, 287
+32, 287
+28, 287
+45, 287
+34, 287
+19, 287
+26, 287
+[allcpu]
+29, 0
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
+0, 3
