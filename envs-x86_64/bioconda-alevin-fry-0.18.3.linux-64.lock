@@ -1,0 +1,17 @@
+# x86_64 twin of the aarch.bio image quay.io/aarchbio/alevin-fry@sha256:1c5b8393d66e... (bioconda alevin-fry=0.18.3), for measurements/single-cell-real
+# quay.io/biocontainers had no alevin-fry 0.18.3 image on 2026-10-24 (newest 0.18.2), so the x86 route
+#   installs bioconda's own linux-64 build offline from this lock (the aarch.science twin mechanism)
+# solved for linux-64 (conda-forge + bioconda), every package pinned to the arm64 image's version AND build number,
+#   read from that image's /opt/conda/conda-meta
+# 5 packages; 5 of 5 arm64 versions identical, 5 of 5 build numbers identical
+# arm64 _openmp_mutex 4.5 20_gnu -> linux-64 4.5 20_gnu
+# arm64 alevin-fry 0.18.3 h6789a04_0 -> linux-64 0.18.3 hd612981_0
+# arm64 libgcc 16.2.0 h205dda4_7 -> linux-64 16.2.0 ha9f2e26_7
+# arm64 libgomp 16.2.0 h8acb6b2_7 -> linux-64 16.2.0 he0feb66_7
+# arm64 libstdcxx 16.2.0 hef695bb_7 -> linux-64 16.2.0 h934c35e_7
+@EXPLICIT
+https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda#1dd3fffd892081df9726d7eb7e0dea6198962ba775bd88842135a4ddb4deb3c9
+https://conda.anaconda.org/bioconda/linux-64/alevin-fry-0.18.3-hd612981_0.conda#f99d828aecd7b90480e48869f1d9f392c9880fa69579ae31f51439d3d203c5d2
+https://conda.anaconda.org/conda-forge/linux-64/libgcc-16.2.0-ha9f2e26_7.conda#e031634c3a928f9594eba868bc46ef5230d6571a364a0c63215b06c4563bfcea
+https://conda.anaconda.org/conda-forge/linux-64/libgomp-16.2.0-he0feb66_7.conda#92a0bb350c7be6a4eedcb4e111c60aefd176018e6b1c009a6e025dbe9bbcd758
+https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-16.2.0-h934c35e_7.conda#fa7018298629fc429971fffd6ecba3d27a7b02e4e890d6a93ea01ffebe8cb745

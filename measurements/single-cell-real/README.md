@@ -1,8 +1,8 @@
-# piscem + alevin-fry on a real workload — one whole 10x channel, Graviton4 and x86
+# piscem + alevin-fry on a real workload — one whole 10x channel, on three chips
 
 > **A whole 10x channel — 116 million reads — goes from FASTQ to a filtered matrix in under
-> 2 minutes of tool time on Graviton4.** At this size the bill is mostly boot, Docker and staging:
-> about 75% of it is not piscem or alevin-fry.
+> 2.5 minutes of tool time on Graviton4, Intel and AMD, with identical matrices on all three.**
+> At this size the bill is mostly boot, Docker and staging: 67–75% of it is not piscem or alevin-fry.
 
 Workload: **one complete Tabula Muris Senis droplet channel**, `10X_P5_13` (1-month male mouse
 lung, Chromium 3′ v2, both lanes): **116,459,032 read pairs**, 8.19 GB of R1+R2, mapped against
@@ -19,54 +19,69 @@ for s in 01-map 02-quant; do
   sed "s|\${COOKBOOK_BUCKET}|$COOKBOOK_BUCKET|g" $s.task.json > /tmp/$s.json
   spawn task run --spec /tmp/$s.json --wait
 done
+# x86, from the same two specs: x86_64 (Intel m8i) or amd (AMD m8a)
+bash ../../scripts/stage_env_x86.sh bioconda-piscem-0.23.0 "$COOKBOOK_BUCKET"
+bash ../../scripts/stage_env_x86.sh bioconda-alevin-fry-0.18.3 "$COOKBOOK_BUCKET"
+for s in $(python3 x86-specs.py x86_64 "$COOKBOOK_BUCKET" "$(date +%s)" --cost-limit 0.25); do
+  spawn task run --spec "$s" --wait
+done
 ```
 
-There is no x86 run at the current pins: `quay.io/biocontainers` has no alevin-fry 0.18.3 image
-yet, so the recipe records `gap_x86_64` and `spec_arch.py` refuses to resolve one. **AMD inherits
-the gap** — it runs the same x86 pins — so there is no AMD row either (re-checked 2026-10-20: the
-newest biocontainers tag is still `0.18.2--hd612981_0`). Both legs un-defer when 0.18.3 lands there.
+**The x86 route is an exception to the sourcing rule, stated plainly:** `quay.io/biocontainers`
+had no alevin-fry 0.18.3 image on 2026-10-24 (its newest tag is `0.18.2--hd612981_0`), so the x86
+legs install **bioconda's own linux-64 builds** offline from committed locks,
+[`bioconda-piscem-0.23.0`](../../envs-x86_64/bioconda-piscem-0.23.0.linux-64.lock) and
+[`bioconda-alevin-fry-0.18.3`](../../envs-x86_64/bioconda-alevin-fry-0.18.3.linux-64.lock), into
+the pinned micromamba image the aarch.science twins use. Each lock is the arm64 image's own package
+set, read from its `conda-meta`: 7 and 5 packages, every version and build number the same (piscem
+`h79c2db1_0`, alevin-fry `hd612981_0`), URL + sha256 per package. Still one tool per task.
+[`x86-specs.py`](x86-specs.py) does the rewrite, because `scripts/spec_arch.py`'s env route covers
+aarch.science images only. The recipe's own fixture still records `gap_x86_64`.
 
 Task 1 (piscem) verifies every staged byte against `pins-map.sha256`, indexes the cDNA and runs
 `map-sc -g "1{b[16]u[10]x:}2{r:}"`. Task 2 (alevin-fry) builds three matrices from that RAD
 file. **raw** comes from the 10x v2 permit list at the default `--min-reads 10`. **knee**
 comes from `--knee-distance`. **filtered** takes the knee's cells, quantified from the *raw*
 collation with `--quant-subset`, which is Cell Ranger's raw→filtered shape. Scripts:
-[`map.sh`](map.sh), [`quant.sh`](quant.sh). Both are staged as pinned files.
+[`map.sh`](map.sh), [`quant.sh`](quant.sh). Both are staged as pinned files, the same bytes on
+every chip.
 
 ## Results
 
-16 threads on `m8g.4xlarge`, piscem 0.23.0 and alevin-fry 0.18.3 (2026-10-17):
+16 threads on a 4xlarge, piscem 0.23.0 and alevin-fry 0.18.3 on every chip (Graviton4 2026-10-17,
+Intel and AMD 2026-10-24):
 
 | chip | instance | tool wall (index + map + quant) | billed (2 tasks) | peak RSS | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|
-| **Graviton4** | `m8g.4xlarge` | **115 s** (35 + 65 + 15) | 452 s | 3.81 GiB | 0.7181 | **0.0229** | **0.0902** |
-| Intel (8th gen), alevin-fry **0.9.0** | `m8i.4xlarge` | 149 s (39 + 79 + 31) | 455 s | 3.56 GiB | 0.8467 | 0.0350 | 0.1070 |
+| **Graviton4** | `m8g.4xlarge` | 115 s (35 + 65 + 15) | 452 s | 3.81 GiB | 0.7181 | **0.0229** | 0.0902 |
+| Intel (Xeon 6975P-C) | `m8i.4xlarge` | 131 s (39 + 75 + 17) | 392 s | 3.44 GiB | 0.8467 | 0.0308 | 0.0922 |
+| AMD (EPYC 9R45) | `m8a.4xlarge` | **85 s** (29 + 44 + 12) | 324 s | 3.41 GiB | 0.9738 | 0.0230 | **0.0876** |
 
-- **The Intel row is the 2026-10-13 run on alevin-fry 0.9.0 and was not re-run.** bioconda's
-  x86 image of 0.18.3 does not exist yet. Its mapping phases are unchanged by the repin (piscem
-  is the same pin), so Graviton4 mapping faster (65 s against 79 s) still stands. The quant
-  column does not compare.
+- **AMD is fastest; Graviton4 and AMD tie on compute cost.** AMD's 16 vCPUs are 16 full cores
+  (`lscpu`: 1 thread per core), Intel's are 8 cores × 2 SMT threads. piscem maps in 44 s on AMD,
+  65 s on Graviton4 and 75 s on Intel. AMD's speed cancels its 36% higher hourly price: compute
+  $/result 0.0230 against Graviton4's 0.0229. Intel costs a third more per result.
 - **alevin-fry 0.18.3 quantifies in 15 s where 0.9.0 took 35 s** on the same Graviton4 box and
-  the same RAD bytes. Its peak process memory is 1.30 GiB against 2.53 GiB. The earlier
-  measurement in this directory (2026-10-13, 0.9.0) is in git history.
-- **Three-quarters of the bill is overhead (75%).** From spawn's phase markers: each task spends
-  about 14 s booting, 32 s installing Docker and 3–5 s pulling the image. The 8.3 GB of FASTQ
-  stages in in 22 s. The in-task pin and identity checks take 28–30 s, and the box then idles
-  55–75 s before the self-termination tick. That overhead
-  is flat per task, so **per-sample cost falls as you put more channels on one box**. More cores
-  would buy almost nothing.
+  RAD bytes (Intel: 17 s against 31 s), at half the peak memory (1.30 GiB against 2.53 GiB).
+- **The billed column does not rank the chips.** It is EC2 launch to termination-initiated, and
+  the self-termination tick alone moves it by about a minute per task (boxes idled 23–76 s
+  after stage-out). The spread across chips is inside that noise.
+- **Most of the bill is overhead: 75% on Graviton4, 67% on Intel, 74% on AMD.** From spawn's
+  phase markers: each task spends about 11–14 s booting, 30–44 s installing Docker and 2–5 s
+  pulling the image. The 8.3 GB of FASTQ stages in in 17–22 s, and the x86 env installs from
+  its staged packages in under a second. That overhead is flat per task, so **per-sample cost
+  falls as you put more channels on one box**. More cores would buy almost nothing.
 - **The tool's memory is small, and staging sets the box size.** Peak process memory is
-  3.8 GiB (the index build). But the task-2 tmpfs holds the 6.1 GB RAD plus collated RAD and
-  matrices, 15.1 GiB at peak, so 64 GiB (32 GiB of `/tmp`) is what fits. This is
+  3.4–3.8 GiB (the index build). But the task-2 tmpfs holds the 6.1 GB RAD plus collated RAD and
+  matrices, 12.3–15.1 GiB at peak, so 64 GiB (32 GiB of `/tmp`) is what fits. This is
   [the staging-footprint rule](../../patterns/sizing.md).
-- n = 1. piscem's phases reproduced the 0.9.0-era run to within 2 s (build 35 vs 37, map 65 vs
-  66). **These timings are not compute cost.**
+- n = 1 per chip. Everything asserted below is deterministic and came out identical on all three,
+  which is what makes one run per cell defensible. **These timings are not compute cost.**
 
 ## What held at scale
 
-Observed is Graviton4 on alevin-fry 0.18.3. Intel's 0.9.0 run (`results/x86_64/quant.txt`) passed
-every row except three it predates and never ran: piscem's unmapped file, unmapped reads reaching
-`CorrectedReads`, and `MappingRate`. Its knee run quantified 72,054,428 records (below).
+Every row passed on all three chips with the same value. Observed is Graviton4; Intel's and AMD's
+`quant.txt` and `map.txt` differ from it only in wall times, memory samples and the `arch` label.
 
 | identity | assertion | observed (Graviton4) |
 |---|---|---|
@@ -80,7 +95,8 @@ every row except three it predates and never ran: piscem's unmapped file, unmapp
 | per-cell totals | every cell's matrix row sum == its `DeduplicatedReads`, and nnz == `NumGenesExpressed` | **0 mismatches** in 130,375 + 1,814 + 1,814 cells |
 | matrix total | Σ matrix == Σ `DeduplicatedReads` | raw **11,111,743**, filtered **9,043,752** |
 | raw → filtered | every (cell, gene, count) in the filtered matrix is the raw matrix's, and every knee cell is in raw | **identical**, 1,814 of 1,814 |
-| across the repin | sha256 of the sorted (cell, gene, count) triples | raw and filtered **identical** to 0.9.0's on both chips; knee differs (below) |
+| across chips | sha256 of the sorted (cell, gene, count) triples, Graviton4 vs Intel vs AMD | raw `903afd73…`, knee `159a2235…`, filtered `fff33213…`: **identical** on all three |
+| across the repin | the same hashes against alevin-fry 0.9.0's (2026-10-13, Graviton4 and Intel) | raw and filtered **identical**; knee differs (below) |
 
 Observed, not asserted:
 
@@ -89,6 +105,8 @@ Observed, not asserted:
   UMIs against 9,136,033. alevin-fry 0.18.0 replaced barcode correction with a deterministic
   `unique` policy (its release notes), and knee mode corrects against only 1,814 barcodes, which is
   where a policy change shows. The raw and filtered runs correct against the 10x permit list.
+  On 0.18.3 the knee run is the same on all three chips (72,049,675 records, triples
+  `159a2235…`), so the 0.9.0 Intel run's different knee was the version, not the chip.
 - **Exact-barcode unmapped reads are a floor, not the answer.** 27,796,930 of the 28,439,087
   unmapped reads credited to raw cells carry the cell's own barcode, and correction supplies the
   rest. The 2,250 reads that are neither mapped nor in the unmapped file presumably have an
@@ -101,9 +119,13 @@ Observed, not asserted:
   All 1,814 cells have more UMIs in the knee run (9,134,357 against 9,043,752). In knee mode,
   barcodes are corrected against just 1,814 cells, so more one-edit neighbours resolve
   uniquely. Both counts are correct for their own policy; pick one and say which.
-- **The RAD files differ in bytes across chips (0.9.0-era runs), but their content is the same.**
-  `map.rad` is 6,273,069,410 bytes on both chips, and the record order follows thread scheduling.
-  The matrices still hashed identically. Mapping order is a path; the counts are a fixed point.
+- **piscem's output bytes differ across chips; their content does not.** `map.rad` is
+  6,273,069,410 bytes on all three, but its S3 ETags differ between Intel and AMD at the same part
+  count (1,197), because record order follows thread scheduling. `unmapped_bc_count.bin` is
+  17,778,267 bytes on both x86 boxes and 17,778,579 on Graviton4, 39 more 8-byte records, since
+  threads flush partial per-barcode counts. All three decode to the same 809,126 barcodes and
+  29,906,218 reads, and the matrices hash identically. Byte order and record splits are a path;
+  the counts are a fixed point.
 
 ## `CorrectedReads` / `MappingRate`: wrong under alevin-fry 0.9.0, checked now
 
@@ -130,9 +152,10 @@ planted unmapped reads, and 0.9.0 fails that on AWS too.
 | reference | Ensembl release 116 `Mus_musculus.GRCm39.cdna.all.fa.gz`, `6084ad63…` |
 | permit list | `737K-august-2016.txt` from `10XGenomics/supernova@b82c3d8e`, `b0dda4b1…` (737,280 barcodes) |
 | published cells | `tabula-muris-senis-full-metadata.csv` (RODA), `aa7e2d1b…` |
-| images | the recipe's own: piscem 0.23.0 and alevin-fry 0.18.3 (`quay.io/aarchbio/*`). The x86 results are bioconda's piscem 0.23.0 and alevin-fry 0.9.0 |
+| images (arm64) | the recipe's own: piscem 0.23.0 and alevin-fry 0.18.3 (`quay.io/aarchbio/*`) |
+| x86 (Intel, AMD) | bioconda's linux-64 piscem 0.23.0 `h79c2db1_0` and alevin-fry 0.18.3 `hd612981_0` with their arm64 images' runtime deps, from [`envs-x86_64/bioconda-*.linux-64.lock`](../../envs-x86_64/) (URL + sha256), installed offline into `mambaorg/micromamba@sha256:9a2239d0…` (amd64) |
 
-Results: [`results/arm64/`](results/arm64/) (alevin-fry 0.18.3, 2026-10-17) and
-[`results/x86_64/`](results/x86_64/) (alevin-fry 0.9.0, 2026-10-13). They hold `map.txt` and
-`quant.txt` (every number above) plus the tools' own logs, and the arm64 `fry-logs.tgz` holds each
-run's `featureDump.txt`.
+Results: [`results/arm64/`](results/arm64/) (2026-10-17), [`results/x86_64/`](results/x86_64/)
+and [`results/amd/`](results/amd/) (2026-10-24), all on alevin-fry 0.18.3. They hold `map.txt` and
+`quant.txt` (every number above) plus the tools' own logs, and each `fry-logs.tgz` holds every
+run's `featureDump.txt`. The superseded Intel 0.9.0 run (2026-10-13) is in git history.

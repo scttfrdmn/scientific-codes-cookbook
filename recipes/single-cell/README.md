@@ -4,7 +4,7 @@ tool_version: "piscem 0.23.0 / alevin-fry 0.18.3"
 images:
   - quay.io/aarchbio/piscem@sha256:40c8a261dc5d152a1aa9c5db58aa14287a56580f42a483cc1ffec9c5b6e21603
   - quay.io/aarchbio/alevin-fry@sha256:1c5b8393d66e206e44cdaa928b63ffed2b798a323a5c04b3bed1349a216aeb6d
-gap_x86_64: bioconda publishes alevin-fry 0.18.3 for linux-64 (hd612981_0, 2026-09-14) but quay.io/biocontainers has no 0.18.3 image (newest 0.18.2, checked 2026-10-17); the x86 pins were piscem 0.23.0 7eb9f7cd and alevin-fry 0.9.0 2b3e3aa6, verified 2026-10-13 before the repin, and 0.9.0 misreads piscem 0.23.0's unmapped-barcode file
+gap_x86_64: bioconda publishes alevin-fry 0.18.3 for linux-64 (hd612981_0, 2026-09-14) but quay.io/biocontainers has no 0.18.3 image (newest 0.18.2, checked 2026-10-24); the x86 pins were piscem 0.23.0 7eb9f7cd and alevin-fry 0.9.0 2b3e3aa6, verified 2026-10-13 before the repin, and 0.9.0 misreads piscem 0.23.0's unmapped-barcode file
 spawn_version: 0.131.0
 last_verified: 2026-10-17
 ---
@@ -20,7 +20,6 @@ piscem maps single-cell reads and alevin-fry turns them into a cell × gene coun
 for s in $(make -s spec RECIPE=single-cell); do spawn task run --spec "$s" --wait; done
 piscem build -s txome.fa -k 31 -m 19 -o idx
 piscem map-sc -i idx -g "1{b[16]u[12]x:}2{r:}" -1 R1.fastq -2 R2.fastq -o rad
-
 alevin-fry generate-permit-list -d fw -i rad -o qd --unfiltered-pl barcodes.txt --min-reads 1
 alevin-fry collate -i qd -r rad
 alevin-fry quant   -i qd -o res -m t2g.tsv -r cr-like
@@ -43,9 +42,11 @@ Two tasks: piscem builds the fixture, indexes it and maps to a RAD file, then al
 
 | chip | instance | tool wall | billed (2 tasks) | peak RSS | **billed $/sample** |
 |---|---|---|---|---|---|
-| **Graviton4** | `m8g.4xlarge` | **115 s** | 452 s | 3.8 GiB | **0.090** |
+| **Graviton4** | `m8g.4xlarge` | 115 s | 452 s | 3.8 GiB | 0.090 |
+| Intel | `m8i.4xlarge` | 131 s | 392 s | 3.4 GiB | 0.092 |
+| AMD | `m8a.4xlarge` | **85 s** | 324 s | 3.4 GiB | **0.088** |
 
-Every per-cell, raw→filtered and unmapped-read identity holds at 1,814 cells. Three-quarters of the bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (the RAD plus its collation), not for the tools. There is no x86 row, Intel or AMD, at these pins: bioconda has no x86 image of alevin-fry 0.18.3 yet (below). Pinned to 0.9.0 before 2026-10-17, this recipe's featureDump `CorrectedReads` and `MappingRate` were garbage ([why](../../measurements/single-cell-real/README.md#correctedreads--mappingrate-wrong-under-alevin-fry-090-checked-now)).
+Every per-cell, raw→filtered and unmapped-read identity holds at 1,814 cells, and the three matrices hash identically on all three chips. Two-thirds to three-quarters of the bill is boot and staging, so put several channels on one box. The 64 GiB is for `/tmp` (the RAD plus its collation), not for the tools. The x86 rows install bioconda's linux-64 builds from committed locks, because biocontainers has no alevin-fry 0.18.3 image yet (below). Pinned to 0.9.0 before 2026-10-17, this recipe's featureDump `CorrectedReads` and `MappingRate` were garbage ([why](../../measurements/single-cell-real/README.md#correctedreads--mappingrate-wrong-under-alevin-fry-090-checked-now)).
 
 <details>
 <summary>As shipped: exact matrix recovery, a conservation identity, the silent cell-drop, why piscem and not salmon, pins</summary>
@@ -91,9 +92,13 @@ Also: spawn's task shell does not inherit the image's `PATH`, so `/opt/conda/bin
 
 ### On x86_64
 
-**Not currently runnable.** bioconda has alevin-fry 0.18.3 for linux-64, but `quay.io/biocontainers`
-has no 0.18.3 image (its newest is 0.18.2), and an x86 pin has to be the same version. Until that
-image exists the frontmatter records `gap_x86_64`.
+**This fixture has no x86 route yet.** bioconda has alevin-fry 0.18.3 for linux-64, but
+`quay.io/biocontainers` has no 0.18.3 image (its newest is 0.18.2), and an x86 pin has to be the
+same version. Until that image exists the frontmatter records `gap_x86_64`. The
+[real workload](../../measurements/single-cell-real/README.md) does run on Intel and AMD, by
+installing bioconda's own linux-64 piscem and alevin-fry offline from committed locks
+(`envs-x86_64/bioconda-*.linux-64.lock`, the arm64 images' exact package sets). That is a
+measurement-only exception, not this spec.
 
 Before the repin, the same two tasks ran on `c8i` from bioconda's piscem 0.23.0 (`7eb9f7cd…`) and
 alevin-fry 0.9.0 (`2b3e3aa6…`) on 2026-10-13. The matrix and every assertion matched arm64. That run

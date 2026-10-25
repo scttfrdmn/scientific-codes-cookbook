@@ -1,0 +1,72 @@
+inputs_sha256	all 2 match pins-quant.sha256
+label	x86_64
+arch	x86_64
+nproc	16
+threads	16
+alevin_fry_version	alevin-fry 0.18.3 
+raw_wall_s	5
+knee_wall_s	6
+filt_wall_s	1
+fry_wall_s	12
+peak_anon_gib	1.21
+peak_shmem_gib	13.16
+avg_cores	10.56
+res_raw_cells	130375
+res_raw_mtx_header	130375 36130 5151420
+res_raw_umis_matrix	11111743
+res_raw_umis_featuredump	11111743
+res_raw_mapped_reads	81682721
+res_raw_corrected_reads	110121808
+res_raw_cells_rowsum_ne_dedup	0
+res_raw_cells_nnz_ne_genes	0
+res_raw_triples_sha256	903afd73d7adb792ab2e79df5a5e7af97f4a3afab6b4435e05c74d5aef23db9d
+res_knee_cells	1814
+res_knee_mtx_header	1814 36130 3454836
+res_knee_umis_matrix	9134357
+res_knee_umis_featuredump	9134357
+res_knee_mapped_reads	72049675
+res_knee_corrected_reads	98784949
+res_knee_cells_rowsum_ne_dedup	0
+res_knee_cells_nnz_ne_genes	0
+res_knee_triples_sha256	159a2235783135a296ec784a434c5a405b8086b87661f57c13407c5079612cd0
+res_filt_cells	1814
+res_filt_mtx_header	1814 36130 3432749
+res_filt_umis_matrix	9043752
+res_filt_umis_featuredump	9043752
+res_filt_mapped_reads	71318584
+res_filt_corrected_reads	97760796
+res_filt_cells_rowsum_ne_dedup	0
+res_filt_cells_nnz_ne_genes	0
+res_filt_triples_sha256	fff33213b0f3a1588c003d55cd90d69986ef46792cdda10049e87b011e60a2b9
+unmapped_bin_header	1 1 3
+unmapped_bin_barcodes	809126
+unmapped_bin_reads	29906218
+res_raw_unmapped_in_corrected	28439087
+res_raw_unmapped_exact_barcode	27796930
+res_raw_cells_corrected_ge_exact	130375 of 130375
+res_raw_cells_mappingrate_consistent	130375 of 130375
+res_knee_unmapped_in_corrected	26735274
+res_knee_unmapped_exact_barcode	25836144
+res_knee_cells_corrected_ge_exact	1814 of 1814
+res_knee_cells_mappingrate_consistent	1814 of 1814
+res_filt_unmapped_in_corrected	26442212
+res_filt_unmapped_exact_barcode	25836144
+res_filt_cells_corrected_ge_exact	1814 of 1814
+res_filt_cells_mappingrate_consistent	1814 of 1814
+piscem_records	86550564
+gpl_observed_raw	86550564
+gpl_observed_knee	86550564
+quant_raw_records	81682721
+quant_knee_records	72049675
+quant_filt_records	71318584
+gpl_orientation_consistent	83780608
+knee_cells	1814
+knee_cells_on_whitelist_and_in_raw	1814
+filt_umis_frac_of_raw	0.8139
+filt_equals_raw_rows	yes (every (cell,gene,count) of the filtered matrix is the raw matrix's)
+knee_vs_filt	cells 1814: equal 0, knee higher 1814, knee lower 0; UMIs filt 9043752 knee 9134357
+published_cells	1078
+published_cells_in_our_knee_set	1078
+spearman_umis_vs_published	0.9266
+checks_failed	0
+QUANT_OK	per-cell totals, matrix totals, and raw->filtered identities all exact

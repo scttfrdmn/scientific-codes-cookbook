@@ -41,18 +41,36 @@ note = "tool wall 115 s = index 35 + map 65 + quant 15; billed over both tasks; 
 [[run]]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
+image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
 results = "results/x86_64/"
-date = "2026-10-13"
+date = "2026-10-24"
 date_source = "run"
 workers = 16
-wall_s = 149
-billed_s = 455
+wall_s = 131
+billed_s = 392
 usd_hr = 0.8467
-compute_usd = 0.035
-billed_usd = 0.107
-peak_gib = 3.56
+compute_usd = 0.0308
+billed_usd = 0.0922
+peak_gib = 3.44
 peak_kind = "rss"
-note = "NOT the recipe's pin: bioconda piscem 0.23.0 + alevin-fry 0.9.0 (no biocontainers 0.18.3 image; digest not printed in the README, so image is left unset); 149 s = 39 + 79 + 31; the quant column does not compare"
+note = "bioconda linux-64 piscem 0.23.0 + alevin-fry 0.18.3 installed offline from envs-x86_64/bioconda-{piscem-0.23.0,alevin-fry-0.18.3}.linux-64.lock (no biocontainers 0.18.3 image, 2026-10-24); specs from x86-specs.py; 131 s = 39 + 75 + 17; billed = EC2 launch to termination-initiated, 226 + 166 s; Xeon 6975P-C, 2 threads per core; supersedes the 2026-10-13 alevin-fry 0.9.0 run (git history)"
+
+[[run]]
+instance = "m8a.4xlarge"
+purpose = "cross-chip"
+image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
+results = "results/amd/"
+date = "2026-10-24"
+date_source = "run"
+workers = 16
+wall_s = 85
+billed_s = 324
+usd_hr = 0.9738
+compute_usd = 0.0230
+billed_usd = 0.0876
+peak_gib = 3.41
+peak_kind = "rss"
+note = "same locks and specs as the Intel row (x86-specs.py amd); 85 s = 29 + 44 + 12; billed 222 + 102 s; EPYC 9R45, 1 thread per core"
 
 # --- checks: '## What held at scale' (claim = identity: assertion; observed = README cell, Graviton4) ---
 [[check]]
@@ -77,6 +95,7 @@ claim = "collation → quant: records quantified == Σ featureDump `MappedReads`
 kind = "conservation"
 observed = "**81,682,721 / 72,049,675 / 71,318,584**, exact"
 outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "read-funnel"
@@ -84,27 +103,31 @@ claim = "the read funnel only narrows: mapped ≥ orientation-consistent ≥ raw
 kind = "identity"
 observed = "86.55 M ≥ 83.78 M ≥ 81.68 M ≥ 71.32 M"
 outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "unmapped-file"
 claim = "piscem's unmapped file: header `1 1 3`, whole `(u32, u32)` records; mapped + unmapped ≤ reads"
 kind = "identity"
 observed = "86,550,564 + **29,906,218** ≤ 116,459,032 (809,126 barcodes)"
-outcome = { arm64 = "pass", x86_64 = "not-run" }   # results/x86_64/quant.txt (0.9.0) has no unmapped_bin lines
+outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "unmapped-in-corrected"
 claim = "unmapped reads reach `CorrectedReads`: per cell, `CorrectedReads − MappedReads` ≥ unmapped reads on that exact barcode; Σ over cells ≤ the file's total"
 kind = "conservation"
 observed = "**0 failures** in 130,375 + 1,814 + 1,814 cells; Σ 28,439,087 / 26,735,274 / 26,442,212 ≤ 29,906,218"
-outcome = { arm64 = "pass", x86_64 = "not-run" }   # the x86 run predates the check; its CorrectedReads is labelled UNRELIABLE
+outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "mapping-rate"
 claim = "`MappingRate` == `MappedReads / CorrectedReads` per cell (within 1e-6)"
 kind = "identity"
 observed = "**all cells**, all three runs"
-outcome = { arm64 = "pass", x86_64 = "not-run" }
+outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "per-cell-totals"
@@ -112,6 +135,7 @@ claim = "per-cell totals: every cell's matrix row sum == its `DeduplicatedReads`
 kind = "conservation"
 observed = "**0 mismatches** in 130,375 + 1,814 + 1,814 cells"
 outcome = "pass"
+across_chips = "identical"
 
 [[check]]
 id = "matrix-total"
@@ -130,20 +154,28 @@ outcome = "pass"
 across_chips = "identical"
 
 [[check]]
-id = "across-repin"
-claim = "across the repin: sha256 of the sorted (cell, gene, count) triples"
+id = "across-chips"
+claim = "across chips: sha256 of the sorted (cell, gene, count) triples, Graviton4 vs Intel vs AMD"
 kind = "identity"
-observed = "raw and filtered **identical** to 0.9.0's on both chips; knee differs (below)"
+observed = "raw `903afd73…`, knee `159a2235…`, filtered `fff33213…`: **identical** on all three"
 outcome = "pass"
 across_chips = "identical"
+
+[[check]]
+id = "across-repin"
+claim = "across the repin: the same hashes against alevin-fry 0.9.0's (2026-10-13, Graviton4 and Intel)"
+kind = "identity"
+observed = "raw and filtered **identical**; knee differs (below)"
+outcome = "pass"
 
 # --- observed, not asserted ---
 [[check]]
 id = "knee-moved-with-repin"
 claim = "The knee matrix moved with the repin; raw and filtered did not"
 kind = "reported"
-observed = "72,049,675 records against 0.9.0's 72,054,428; 9,134,357 UMIs against 9,136,033"
+observed = "72,049,675 records against 0.9.0's 72,054,428; 9,134,357 UMIs against 9,136,033; on 0.18.3 identical on all three chips"
 outcome = "reported"
+across_chips = "identical"
 
 [[check]]
 id = "published-cells"
@@ -151,6 +183,7 @@ claim = "All 1,078 published cells are among the 1,814 the knee kept; per-cell U
 kind = "reported"
 observed = "Spearman 0.927"
 outcome = "reported"
+across_chips = "identical"
 
 [[check]]
 id = "filtered-umi-share"
@@ -158,15 +191,16 @@ claim = "The filtered cells hold the raw matrix's UMIs"
 kind = "reported"
 observed = "81.4%"
 outcome = "reported"
+across_chips = "identical"
 
 [[check]]
 id = "rad-bytes"
-claim = "The RAD files differ in bytes across chips (0.9.0-era runs), but their content is the same"
+claim = "piscem's output bytes differ across chips; their content does not"
 kind = "reported"
-observed = "`map.rad` is 6,273,069,410 bytes on both chips"
+observed = "`map.rad` 6,273,069,410 bytes on all three, ETags differ (Intel vs AMD, 1,197 parts each); `unmapped_bc_count.bin` 17,778,267 bytes on x86, 17,778,579 on Graviton4, all decoding to 809,126 barcodes / 29,906,218 reads"
 outcome = "reported"
 across_chips = "path"
-across_chips_evidence = "map.rad 6,273,069,410 bytes on both chips, record order follows thread scheduling; the matrices still hashed identically"
+across_chips_evidence = "record order and per-thread record splits follow scheduling; the decoded counts and all three matrix hashes are identical"
 
 [[trap]]
 id = "single-cell-alevin-fry-090-unmapped-format"

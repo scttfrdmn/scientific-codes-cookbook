@@ -35072,6 +35072,7 @@
      "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "collation → quant: records quantified == Σ featureDump `MappedReads` (raw, knee, filtered)",
      "id": "collation-to-quant",
      "kind": "conservation",
@@ -35079,6 +35080,7 @@
      "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "the read funnel only narrows: mapped ≥ orientation-consistent ≥ raw ≥ filtered",
      "id": "read-funnel",
      "kind": "identity",
@@ -35086,36 +35088,31 @@
      "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "piscem's unmapped file: header `1 1 3`, whole `(u32, u32)` records; mapped + unmapped ≤ reads",
      "id": "unmapped-file",
      "kind": "identity",
      "observed": "86,550,564 + **29,906,218** ≤ 116,459,032 (809,126 barcodes)",
-     "outcome": {
-      "arm64": "pass",
-      "x86_64": "not-run"
-     }
+     "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "unmapped reads reach `CorrectedReads`: per cell, `CorrectedReads − MappedReads` ≥ unmapped reads on that exact barcode; Σ over cells ≤ the file's total",
      "id": "unmapped-in-corrected",
      "kind": "conservation",
      "observed": "**0 failures** in 130,375 + 1,814 + 1,814 cells; Σ 28,439,087 / 26,735,274 / 26,442,212 ≤ 29,906,218",
-     "outcome": {
-      "arm64": "pass",
-      "x86_64": "not-run"
-     }
+     "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "`MappingRate` == `MappedReads / CorrectedReads` per cell (within 1e-6)",
      "id": "mapping-rate",
      "kind": "identity",
      "observed": "**all cells**, all three runs",
-     "outcome": {
-      "arm64": "pass",
-      "x86_64": "not-run"
-     }
+     "outcome": "pass"
     },
     {
+     "across_chips": "identical",
      "claim": "per-cell totals: every cell's matrix row sum == its `DeduplicatedReads`, and nnz == `NumGenesExpressed`",
      "id": "per-cell-totals",
      "kind": "conservation",
@@ -35140,20 +35137,29 @@
     },
     {
      "across_chips": "identical",
-     "claim": "across the repin: sha256 of the sorted (cell, gene, count) triples",
-     "id": "across-repin",
+     "claim": "across chips: sha256 of the sorted (cell, gene, count) triples, Graviton4 vs Intel vs AMD",
+     "id": "across-chips",
      "kind": "identity",
-     "observed": "raw and filtered **identical** to 0.9.0's on both chips; knee differs (below)",
+     "observed": "raw `903afd73…`, knee `159a2235…`, filtered `fff33213…`: **identical** on all three",
      "outcome": "pass"
     },
     {
+     "claim": "across the repin: the same hashes against alevin-fry 0.9.0's (2026-10-13, Graviton4 and Intel)",
+     "id": "across-repin",
+     "kind": "identity",
+     "observed": "raw and filtered **identical**; knee differs (below)",
+     "outcome": "pass"
+    },
+    {
+     "across_chips": "identical",
      "claim": "The knee matrix moved with the repin; raw and filtered did not",
      "id": "knee-moved-with-repin",
      "kind": "reported",
-     "observed": "72,049,675 records against 0.9.0's 72,054,428; 9,134,357 UMIs against 9,136,033",
+     "observed": "72,049,675 records against 0.9.0's 72,054,428; 9,134,357 UMIs against 9,136,033; on 0.18.3 identical on all three chips",
      "outcome": "reported"
     },
     {
+     "across_chips": "identical",
      "claim": "All 1,078 published cells are among the 1,814 the knee kept; per-cell UMI totals vs the atlas's n_counts",
      "id": "published-cells",
      "kind": "reported",
@@ -35161,6 +35167,7 @@
      "outcome": "reported"
     },
     {
+     "across_chips": "identical",
      "claim": "The filtered cells hold the raw matrix's UMIs",
      "id": "filtered-umi-share",
      "kind": "reported",
@@ -35169,11 +35176,11 @@
     },
     {
      "across_chips": "path",
-     "across_chips_evidence": "map.rad 6,273,069,410 bytes on both chips, record order follows thread scheduling; the matrices still hashed identically",
-     "claim": "The RAD files differ in bytes across chips (0.9.0-era runs), but their content is the same",
+     "across_chips_evidence": "record order and per-thread record splits follow scheduling; the decoded counts and all three matrix hashes are identical",
+     "claim": "piscem's output bytes differ across chips; their content does not",
      "id": "rad-bytes",
      "kind": "reported",
-     "observed": "`map.rad` is 6,273,069,410 bytes on both chips",
+     "observed": "`map.rad` 6,273,069,410 bytes on all three, ETags differ (Intel vs AMD, 1,197 parts each); `unmapped_bc_count.bin` 17,778,267 bytes on x86, 17,778,579 on Graviton4, all decoding to 809,126 barcodes / 29,906,218 reads",
      "outcome": "reported"
     }
    ],
@@ -35235,23 +35242,44 @@
     },
     {
      "arch": "x86_64",
-     "billed_s": 455,
-     "billed_usd": 0.107,
-     "compute_usd": 0.035,
-     "date": "2026-10-13",
+     "billed_s": 392,
+     "billed_usd": 0.0922,
+     "compute_usd": 0.0308,
+     "date": "2026-10-24",
      "date_source": "run",
      "generation": 8,
-     "image": "recipe",
+     "image": "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72",
      "instance": "m8i.4xlarge",
-     "note": "NOT the recipe's pin: bioconda piscem 0.23.0 + alevin-fry 0.9.0 (no biocontainers 0.18.3 image; digest not printed in the README, so image is left unset); 149 s = 39 + 79 + 31; the quant column does not compare",
-     "peak_gib": 3.56,
+     "note": "bioconda linux-64 piscem 0.23.0 + alevin-fry 0.18.3 installed offline from envs-x86_64/bioconda-{piscem-0.23.0,alevin-fry-0.18.3}.linux-64.lock (no biocontainers 0.18.3 image, 2026-10-24); specs from x86-specs.py; 131 s = 39 + 75 + 17; billed = EC2 launch to termination-initiated, 226 + 166 s; Xeon 6975P-C, 2 threads per core; supersedes the 2026-10-13 alevin-fry 0.9.0 run (git history)",
+     "peak_gib": 3.44,
      "peak_kind": "rss",
      "purpose": "cross-chip",
      "region": "us-west-2",
      "results": "results/x86_64/",
      "usd_hr": 0.8467,
      "vendor": "Intel",
-     "wall_s": 149,
+     "wall_s": 131,
+     "workers": 16
+    },
+    {
+     "arch": "amd",
+     "billed_s": 324,
+     "billed_usd": 0.0876,
+     "compute_usd": 0.023,
+     "date": "2026-10-24",
+     "date_source": "run",
+     "generation": 8,
+     "image": "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72",
+     "instance": "m8a.4xlarge",
+     "note": "same locks and specs as the Intel row (x86-specs.py amd); 85 s = 29 + 44 + 12; billed 222 + 102 s; EPYC 9R45, 1 thread per core",
+     "peak_gib": 3.41,
+     "peak_kind": "rss",
+     "purpose": "cross-chip",
+     "region": "us-west-2",
+     "results": "results/amd/",
+     "usd_hr": 0.9738,
+     "vendor": "AMD",
+     "wall_s": 85,
      "workers": 16
     }
    ],
@@ -48255,7 +48283,7 @@
   },
   "single-cell": {
    "gap": {
-    "x86_64": "bioconda publishes alevin-fry 0.18.3 for linux-64 (hd612981_0, 2026-09-14) but quay.io/biocontainers has no 0.18.3 image (newest 0.18.2, checked 2026-10-17); the x86 pins were piscem 0.23.0 7eb9f7cd and alevin-fry 0.9.0 2b3e3aa6, verified 2026-10-13 before the repin, and 0.9.0 misreads piscem 0.23.0's unmapped-barcode file"
+    "x86_64": "bioconda publishes alevin-fry 0.18.3 for linux-64 (hd612981_0, 2026-09-14) but quay.io/biocontainers has no 0.18.3 image (newest 0.18.2, checked 2026-10-24); the x86 pins were piscem 0.23.0 7eb9f7cd and alevin-fry 0.9.0 2b3e3aa6, verified 2026-10-13 before the repin, and 0.9.0 misreads piscem 0.23.0's unmapped-barcode file"
    },
    "inputs": "stage",
    "last_updated": "2026-10-20",

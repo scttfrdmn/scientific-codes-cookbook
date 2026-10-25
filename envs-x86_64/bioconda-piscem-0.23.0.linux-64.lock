@@ -1,0 +1,22 @@
+# x86_64 twin of the aarch.bio image quay.io/aarchbio/piscem@sha256:40c8a261dc5d... (bioconda piscem=0.23.0), for measurements/single-cell-real
+# quay.io/biocontainers had no alevin-fry 0.18.3 image on 2026-10-24 (newest 0.18.2), so the x86 route installs
+#   bioconda's own linux-64 builds offline from committed locks (the aarch.science twin mechanism); piscem takes the
+#   same route so both tasks run the arm64 image's exact package set
+# solved for linux-64 (conda-forge + bioconda), every package pinned to the arm64 image's version AND build number,
+#   read from that image's /opt/conda/conda-meta
+# 7 packages; 7 of 7 arm64 versions identical, 7 of 7 build numbers identical
+# arm64 _openmp_mutex 4.5 20_gnu -> linux-64 4.5 20_gnu
+# arm64 bzip2 1.0.8 h4777abc_10 -> linux-64 1.0.8 hda65f42_10
+# arm64 libgcc 16.2.0 h205dda4_5 -> linux-64 16.2.0 ha9f2e26_5
+# arm64 libgomp 16.2.0 h8acb6b2_5 -> linux-64 16.2.0 he0feb66_5
+# arm64 libjemalloc 5.3.1 hfae3067_0 -> linux-64 5.3.1 hecca717_0
+# arm64 libstdcxx 16.2.0 hef695bb_5 -> linux-64 16.2.0 h934c35e_5
+# arm64 piscem 0.23.0 h09c244b_0 -> linux-64 0.23.0 h79c2db1_0
+@EXPLICIT
+https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda#1dd3fffd892081df9726d7eb7e0dea6198962ba775bd88842135a4ddb4deb3c9
+https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_10.conda#1a0d382c515ebf55f8ee1f38c8b81bc95af5c2acc42ad53b66bc5df932032f96
+https://conda.anaconda.org/conda-forge/linux-64/libgcc-16.2.0-ha9f2e26_5.conda#33d1b5d57c5a55a474330c5ec41fe7001a5aa600d9639389e8ce5edafae216a4
+https://conda.anaconda.org/conda-forge/linux-64/libgomp-16.2.0-he0feb66_5.conda#224a5a09e258a1a257089a9af310e9336e1d36834959718a9fab8679742dd822
+https://conda.anaconda.org/conda-forge/linux-64/libjemalloc-5.3.1-hecca717_0.conda#9e78408138551505e8ca0fe17e2d650a7feb7bb77451302a9820ae9a19e9cb79
+https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-16.2.0-h934c35e_5.conda#38cadde30fad8f7c101f9eec79f60bf03fc99310c7195d23f8b30832516d666f
+https://conda.anaconda.org/bioconda/linux-64/piscem-0.23.0-h79c2db1_0.conda#cab5465cf5b2123066f34885fd5fb1583b8531bfc4bf28aff6c56ae5204e2d3f
