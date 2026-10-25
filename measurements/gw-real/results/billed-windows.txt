@@ -1,0 +1,24 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at); spawn_cost_estimate is that record's cost_estimate. instance is the completion record's instance_type where it carries one (every task from 2026-10-21 on), else record.toml's row for that task (the three r1 tasks), else '-'; usd_hr is record.toml's rate, given only where the README prices the row. Every billed figure the README prints equals the spawn window to the second (4,476 / 4,636 / 3,543; 227, 4,466, 8,047, 8,789, 8,471, 1,941; re-runs 217, 4,467, 8,117), so the basis is spawn-task. exit 1 on a PE task is the failing 5-SE quantile test, by design. CloudTrail not looked up. Every gw-real task under the spawn results prefix is listed, including attempts and probes the README does not mention. Retrieved 2026-10-25 (#118 v2).
+task_id	instance	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_cost_estimate	state	exit_code	row
+cookbook-gw-real-r1-r1	c8g.16xlarge	2.552400	2026-10-20T04:20:23Z	2026-10-20T05:34:59Z	4476	3.1734	failed	1	r1 Graviton4 (exit 1 = the quantile test)
+cookbook-gw-real-r1-x8664-r1	c8i.16xlarge	2.998700	2026-10-20T05:38:33Z	2026-10-20T06:55:49Z	4636	3.8617	failed	1	r1 Intel
+cookbook-gw-real-r1-amd-r1	c8a.16xlarge	3.448600	2026-10-20T05:37:38Z	2026-10-20T06:36:41Z	3543	3.3940	failed	1	r1 AMD
+cookbook-gw-real-arm-calibration-a1	c8g.16xlarge	2.552400	2026-10-21T05:44:05Z	2026-10-21T05:48:02Z	237	0.1680	failed	1	arm 1, first attempt: not in the README
+cookbook-gw-real-arm-calibration-a2	c8g.16xlarge	2.552400	2026-10-21T05:50:16Z	2026-10-21T05:54:03Z	227	0.1609	completed	0	arm 1 (README 227 s, $0.16)
+cookbook-gw-real-arm-naccept120-a1	c8g.16xlarge	2.552400	2026-10-21T05:55:22Z	2026-10-21T07:09:48Z	4466	3.1663	failed	1	arm 2
+cookbook-gw-real-naccept-probe-p1	c8g.xlarge	-	2026-10-21T07:13:40Z	2026-10-21T07:17:21Z	221	0.0098	completed	0	naccept probe, first attempt on c8g.xlarge: not in the README
+cookbook-gw-real-naccept-probe-p2	c8g.16xlarge	-	2026-10-21T07:19:24Z	2026-10-21T07:25:03Z	339	0.2403	completed	0	naccept probe: results/naccept-probe/ (probe.log 07:20-07:23); not priced in the README
+cookbook-gw-real-walks-probe-w1	c8g.16xlarge	2.552400	2026-10-21T07:27:06Z	2026-10-21T07:59:27Z	1941	1.3761	completed	0	walk probe
+cookbook-gw-real-arm-maxmcmc10k-maxmcmc10k	c8g.16xlarge	2.552400	2026-10-24T16:44:57Z	2026-10-24T18:59:04Z	8047	5.7051	failed	1	arm 3
+cookbook-gw-real-arm-nlive1000-r1	c8g.16xlarge	2.552400	2026-10-25T01:46:03Z	2026-10-25T04:12:32Z	8789	6.2312	failed	1	arm 4
+cookbook-gw-real-arm-calibration-rv1024	c8g.16xlarge	2.552400	2026-10-25T05:04:32Z	2026-10-25T05:08:09Z	217	0.1538	completed	0	arm 1 re-run (README 217 s, $0.15)
+cookbook-gw-real-arm-naccept120-rv1024	c8g.16xlarge	2.552400	2026-10-25T05:09:12Z	2026-10-25T06:23:39Z	4467	3.1670	failed	1	arm 2 re-run
+cookbook-gw-real-arm-maxmcmc10k-rv1024	c8g.16xlarge	2.552400	2026-10-25T06:24:46Z	2026-10-25T08:40:03Z	8117	5.7548	failed	1	arm 3 re-run
+cookbook-gw-real-arm-nlive1000-seed2-rv1024	c8g.16xlarge	2.552400	2026-10-25T08:40:54Z	2026-10-25T11:02:05Z	8471	6.0058	failed	1	arm 4b
+cookbook-gw-real-fetch-f1	-	-	2026-10-19T23:40:14Z	2026-10-19T23:44:03Z	229	0.0057	completed	0	00-fetch
+cookbook-gw-real-probe-p1	-	-	2026-10-19T23:51:42Z	2026-10-19T23:53:09Z	87	0.0043	failed	1	pre-r1 probe: not in the README
+cookbook-gw-real-probe-p2	-	-	2026-10-19T23:54:54Z	2026-10-20T00:04:14Z	560	0.0279	completed	0	pre-r1 probe: not in the README
+cookbook-gw-real-p3-p3	-	-	2026-10-20T00:08:17Z	2026-10-20T02:29:36Z	8479	-	failed	-1	pre-r1 probe, terminal_reason cost_limit_exceeded, no cost_estimate: not in the README
+cookbook-gw-real-p4-p4	-	-	2026-10-20T02:33:36Z	2026-10-20T04:11:36Z	5880	1.0422	failed	1	pre-r1 probe: not in the README
+cookbook-gw-real-debug1	-	-	2026-10-20T04:04:51Z	2026-10-20T04:07:18Z	147	0.0037	completed	0	pre-r1 debug task: not in the README
+cookbook-gw-real-debug2	-	-	2026-10-20T04:15:52Z	2026-10-20T04:18:39Z	167	0.0042	completed	0	pre-r1 debug task: not in the README

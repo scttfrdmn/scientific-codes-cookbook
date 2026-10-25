@@ -4,8 +4,66 @@
 # The 5-SE quantile test is asserted and fails on every chip (and every arm); left failing on
 # purpose, so status derives as fail-reported. Dates are the git dates results/ landed.
 # Diagnostic rows' "task time" in the README is the billed window; wall_s is phases.txt's.
-schema = 1
+# Schema 2: billed_s is spawn's completion-record window on every row (results/billed-windows.txt,
+# equal to the README's figures to the second). Layout: 64 single-threaded multiprocessing workers
+# serving one dynesty sampler (one BLAS thread each), recorded as ranks 1 x threads 1 x concurrent 64,
+# obspy-real's convention for a process pool. The sampler arms are series on axis "size", with the
+# varied sampler setting as size_key (nlive / naccept / maxmcmc are in workload.size): the schema has
+# no sampler-setting axis, and a size axis is the only numeric one that is not the box. Their
+# verdict "flat" is on the ANSWER (mean tail mass against the published 0.05), not on wall or $,
+# which roughly double with the setting; verdict.on has no value for that, so it is left unset.
+# Repeats carry attempt = the spawn task-id nonce; arm 4b (sampler seed 20261024) is recorded as a
+# second attempt of the nlive=1000 configuration, which is how the README uses it (two seeds,
+# run-to-run SD), so n = 2 there. phase_s.tool is phases.txt's (search + PE on the chip rows).
+schema = 2
 result_unit = "one event: GW150914 searched over the GWOSC hour and fully characterised (15-parameter PE with calibration)"
+
+[workload]
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+note = "PyCBC search over 4,096 s of H1 and L1 strain (946-template bank), then Bilby/dynesty PE: IMRPhenomXPHM, 15 BBH parameters, calibration marginalised over 250 response curves, acceptance-walk, 64 pool processes, seeded"
+
+[timing]
+wall = "chip rows: search + PE, each timed in run.sh (phases.txt search_wall_s + pe_wall_s); arm rows: arms.sh's whole wall (phases.txt wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "none: the sampler is a path (check sampler-path), 20.46M likelihood calls on Graviton4 against 20.12M on x86 from the same seed; the data and likelihood are the same on every chip (noise-evidence identical)"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the gw env's locked linux-64 twin (envs-x86_64/gw-ab3a5857bd21), same versions; Intel's 64 vCPUs are 32 cores x 2 threads; Intel == AMD in every output (one build), so two independent sampler paths, not three"
+note = "Graviton4 cheapest at $3.17 billed; AMD fastest (3,543 s billed) at $3.39; Intel $3.86"
+
+[[series]]
+id = "naccept"
+axis = "size"
+size_key = "naccept"
+held = ["image", "instance", "workers", "layout", "data_path", "generation"]
+equal_work = "none: an arm changes a sampler setting, so the work is not held; data, priors, likelihood and seed are r1's"
+attribution = "same-binary"
+verdict = { shape = "flat", through = 120 }
+note = "flat on the answer: raising naccept 60 -> 120 changes nothing, because every walk is already capped at maxmcmc=5000 (20.53M calls against r1's 20.46M, same time; mean tail mass 0.0369, in the spread at r1's settings). The re-run on the new arms.py pin reproduced 20,534,663 calls and quantiles.tsv exactly"
+
+[[series]]
+id = "maxmcmc"
+axis = "size"
+size_key = "maxmcmc"
+held = ["image", "instance", "workers", "layout", "data_path", "generation"]
+equal_work = "none: an arm changes a sampler setting, so the work is not held (39.12M calls, 1.91x r1); data, priors, likelihood and seed are r1's"
+attribution = "same-binary"
+verdict = { shape = "flat", through = 10000 }
+note = "flat on the answer: doubling the walk cap doubles the accepted steps per chain and the tails do not move (mean tail mass 0.0396, inside the 0.037-0.040 of the three runs at r1's settings, against the published 0.05). The re-run reproduced quantiles.tsv and walks.tsv exactly"
+
+[[series]]
+id = "nlive"
+axis = "size"
+size_key = "nlive"
+held = ["image", "instance", "workers", "layout", "data_path", "generation"]
+equal_work = "none: an arm changes a sampler setting, so the work is not held (40.06M and 39.51M calls); data, priors and likelihood are r1's"
+attribution = "same-binary"
+verdict = { shape = "flat", through = 1000 }
+note = "flat on the answer, at the precision the runs give: two seeds at nlive=1000 give mean tail mass 0.0422 and 0.0400 (mean 0.0411) against 0.0385 for the three runs at r1's settings, a shift of 0.0026 +- 0.0015 (1.7 SE), not established, and 0.009 short of 0.05 either way. The tails are not shown to move under 2x chains or 2x nlive, over two seeds"
 
 [[dataset]]
 id = "GWOSC O1 strain, event GW150914-v4: H-H1_LOSC_16_V1 / L-L1_LOSC_16_V1-1126256640-4096 (PE) and the _4_V1 4 kHz files (search)"
@@ -20,11 +78,16 @@ pins = "inputs.sha256"
 note = "the published posterior, config, PSDs and ln_noise_evidence; checked against Zenodo's md5 at fetch"
 
 [[run]]
+id = "r1-graviton4"
+in = ["chip", "naccept", "maxmcmc", "nlive"]
 instance = "c8g.16xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm64/host.txt"
 wall_s = 4409
 billed_s = 4476
@@ -33,15 +96,23 @@ compute_usd = 3.13
 billed_usd = 3.17
 peak_gib = 32.2
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 4409, source = "results/arm64/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "r1"
 results = "results/arm64/"
-note = "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB"
+note = "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB; spawn task cookbook-gw-real-r1-r1"
 
 [[run]]
+id = "r1-intel"
+in = ["chip"]
 instance = "c8i.16xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/x86_64/host.txt"
 wall_s = 4585
 billed_s = 4636
@@ -50,15 +121,23 @@ compute_usd = 3.82
 billed_usd = 3.86
 peak_gib = 35.8
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 4585, source = "results/x86_64/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "r1"
 results = "results/x86_64/"
-note = "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads"
+note = "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads; search 88 s + PE 4,497 s; spawn task cookbook-gw-real-r1-x8664-r1"
 
 [[run]]
+id = "r1-amd"
+in = ["chip"]
 instance = "c8a.16xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/amd/host.txt"
 wall_s = 3498
 billed_s = 3543
@@ -67,15 +146,22 @@ compute_usd = 3.35
 billed_usd = 3.39
 peak_gib = 33.5
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 3498, source = "results/amd/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "r1"
 results = "results/amd/"
-note = "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path"
+note = "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path; search 52 s + PE 3,446 s; spawn task cookbook-gw-real-r1-amd-r1"
 
 [[run]]
+id = "arm-calibration"
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-21"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm-calibration/host.txt"
 wall_s = 150
 billed_s = 227
@@ -83,15 +169,23 @@ usd_hr = 2.5524
 billed_usd = 0.16
 peak_gib = 2.31
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 150, source = "results/arm-calibration/phases.txt" }
+variant = "arm 1: importance reweighting of r1's samples from 250 to 1,000 and 4,000 calibration curves"
+attempt = "a2"
 results = "results/arm-calibration/"
-note = "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails"
+note = "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails; spawn task cookbook-gw-real-arm-calibration-a2 (an earlier a1, 237 s, failed and is not in the README)"
 
 [[run]]
+id = "arm-naccept120"
+in = ["naccept"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-21"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm-naccept120/host.txt"
 wall_s = 4390
 billed_s = 4466
@@ -99,15 +193,23 @@ usd_hr = 2.5524
 billed_usd = 3.17
 peak_gib = 7.29
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 4390, source = "results/arm-naccept120/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 120, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "a1"
 results = "results/arm-naccept120/"
-note = "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails"
+note = "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails; spawn task cookbook-gw-real-arm-naccept120-a1"
 
 [[run]]
+id = "arm-maxmcmc10k"
+in = ["maxmcmc"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-24"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm-maxmcmc10k/host.txt"
 wall_s = 7952
 billed_s = 8047
@@ -115,15 +217,23 @@ usd_hr = 2.5524
 billed_usd = 5.71
 peak_gib = 8.45
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 7952, source = "results/arm-maxmcmc10k/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 10000, calibration_curves = 250 }
+attempt = "maxmcmc10k"
 results = "results/arm-maxmcmc10k/"
-note = "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails"
+note = "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails; spawn task cookbook-gw-real-arm-maxmcmc10k-maxmcmc10k"
 
 [[run]]
+id = "arm-nlive1000"
+in = ["nlive"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-24"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm-nlive1000/host.txt"
 wall_s = 8711
 billed_s = 8789
@@ -131,15 +241,23 @@ usd_hr = 2.5524
 billed_usd = 6.23
 peak_gib = 7.14
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 8711, source = "results/arm-nlive1000/phases.txt" }
+size = { events = 1, nlive = 1000, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "r1"
 results = "results/arm-nlive1000/"
-note = "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails"
+note = "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000, sampler seed 20261019; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-r1 (completion record 2026-10-25T01:46Z-04:12Z UTC)"
 
 [[run]]
+id = "arm-nlive1000-seed2"
+in = ["nlive"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-25"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/arm-nlive1000-seed2/host.txt"
 wall_s = 8401
 billed_s = 8471
@@ -147,15 +265,22 @@ usd_hr = 2.5524
 billed_usd = 6.01
 peak_gib = 7.24
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 8401, source = "results/arm-nlive1000-seed2/phases.txt" }
+size = { events = 1, nlive = 1000, naccept = 60, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "rv1024"
 results = "results/arm-nlive1000-seed2/"
-note = "arm 4b, sampler: arm 4 with the sampler seed 20261019 -> 20261024; 39.51M calls, 96% of walks at the cap, mean tail mass 0.0400 vs published 0.05 (arm 4: 0.0422); max |z| 16.25, 21 of 51 past 5 SE, fails"
+note = "arm 4b, sampler: arm 4 with the sampler seed 20261019 -> 20261024, a second attempt of the nlive=1000 configuration; 39.51M calls, 96% of walks at the cap, mean tail mass 0.0400 vs published 0.05 (arm 4: 0.0422); max |z| 16.25, 21 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-seed2-rv1024"
 
 [[run]]
+id = "reverify-arm-calibration"
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-25"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/reverify/arm-calibration/host.txt"
 wall_s = 147
 billed_s = 217
@@ -163,15 +288,23 @@ usd_hr = 2.5524
 billed_usd = 0.15
 peak_gib = 2.30
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 147, source = "results/reverify/arm-calibration/phases.txt" }
+variant = "arm 1: importance reweighting of r1's samples from 250 to 1,000 and 4,000 calibration curves"
+attempt = "rv1024"
 results = "results/reverify/arm-calibration/"
-note = "arm 1 re-run on the new arms.py pin: quantiles_reweighted.tsv identical, lnL.npz byte-identical; exact"
+note = "arm 1 re-run on the new arms.py pin: quantiles_reweighted.tsv identical, lnL.npz byte-identical; exact; spawn task cookbook-gw-real-arm-calibration-rv1024"
 
 [[run]]
+id = "reverify-arm-naccept120"
+in = ["naccept"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-25"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/reverify/arm-naccept120/host.txt"
 wall_s = 4401
 billed_s = 4467
@@ -179,15 +312,23 @@ usd_hr = 2.5524
 billed_usd = 3.17
 peak_gib = 7.09
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 4401, source = "results/reverify/arm-naccept120/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 120, maxmcmc = 5000, calibration_curves = 250 }
+attempt = "rv1024"
 results = "results/reverify/arm-naccept120/"
-note = "arm 2 re-run on the new arms.py pin: 20,534,663 calls and quantiles.tsv identical; exact"
+note = "arm 2 re-run on the new arms.py pin: 20,534,663 calls and quantiles.tsv identical; exact; spawn task cookbook-gw-real-arm-naccept120-rv1024"
 
 [[run]]
+id = "reverify-arm-maxmcmc10k"
+in = ["maxmcmc"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-25"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 host = "results/reverify/arm-maxmcmc10k/host.txt"
 wall_s = 8037
 billed_s = 8117
@@ -195,28 +336,40 @@ usd_hr = 2.5524
 billed_usd = 5.75
 peak_gib = 8.51
 peak_kind = "cgroup-memory.peak"
+phase_s = { tool = 8037, source = "results/reverify/arm-maxmcmc10k/phases.txt" }
+size = { events = 1, nlive = 500, naccept = 60, maxmcmc = 10000, calibration_curves = 250 }
+attempt = "rv1024"
 results = "results/reverify/arm-maxmcmc10k/"
-note = "arm 3 re-run on the new arms.py pin: quantiles.tsv and walks.tsv identical; exact"
+note = "arm 3 re-run on the new arms.py pin: quantiles.tsv and walks.tsv identical; exact; spawn task cookbook-gw-real-arm-maxmcmc10k-rv1024"
 
 [[run]]
+id = "walks-probe"
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-21"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 billed_s = 1941
 usd_hr = 2.5524
 billed_usd = 1.38
+variant = "walk probe: r1 settings stopped at iteration 8,769, bilby's walk tuner recorded"
+attempt = "w1"
 results = "results/walks-probe/"
-note = "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test"
+note = "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test; spawn task cookbook-gw-real-walks-probe-w1"
 
 [[run]]
+id = "naccept-probe"
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-21"
 date_source = "git"
+variant = "naccept probe: Gaussian likelihoods (6-D serial and 4-pool, 14-D at 64 processes), not the GW likelihood"
+attempt = "p2"
 results = "results/naccept-probe/"
-note = "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README"
+note = "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README; spawn task cookbook-gw-real-naccept-probe-p2 (window in results/billed-windows.txt)"
 
 # --- checks: "What held at scale, on all three chips" -------------------------------------
 [[check]]
