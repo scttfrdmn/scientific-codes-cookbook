@@ -37,32 +37,32 @@ note = "Graviton4 cheapest at $3.17 billed; AMD fastest (3,543 s billed) at $3.3
 
 [[series]]
 id = "naccept"
-axis = "size"
+axis = "parameter"
 size_key = "naccept"
 held = ["image", "instance", "workers", "layout", "data_path", "generation"]
 equal_work = "none: an arm changes a sampler setting, so the work is not held; data, priors, likelihood and seed are r1's"
 attribution = "same-binary"
-verdict = { shape = "flat", through = 120 }
+verdict = { shape = "flat", through = 120, on = "answer" }
 note = "flat on the answer: raising naccept 60 -> 120 changes nothing, because every walk is already capped at maxmcmc=5000 (20.53M calls against r1's 20.46M, same time; mean tail mass 0.0369, in the spread at r1's settings). The re-run on the new arms.py pin reproduced 20,534,663 calls and quantiles.tsv exactly"
 
 [[series]]
 id = "maxmcmc"
-axis = "size"
+axis = "parameter"
 size_key = "maxmcmc"
 held = ["image", "instance", "workers", "layout", "data_path", "generation"]
 equal_work = "none: an arm changes a sampler setting, so the work is not held (39.12M calls, 1.91x r1); data, priors, likelihood and seed are r1's"
 attribution = "same-binary"
-verdict = { shape = "flat", through = 10000 }
+verdict = { shape = "flat", through = 10000, on = "answer" }
 note = "flat on the answer: doubling the walk cap doubles the accepted steps per chain and the tails do not move (mean tail mass 0.0396, inside the 0.037-0.040 of the three runs at r1's settings, against the published 0.05). The re-run reproduced quantiles.tsv and walks.tsv exactly"
 
 [[series]]
 id = "nlive"
-axis = "size"
+axis = "parameter"
 size_key = "nlive"
 held = ["image", "instance", "workers", "layout", "data_path", "generation"]
 equal_work = "none: an arm changes a sampler setting, so the work is not held (40.06M and 39.51M calls); data, priors and likelihood are r1's"
 attribution = "same-binary"
-verdict = { shape = "flat", through = 1000 }
+verdict = { shape = "flat", through = 1000, on = "answer" }
 note = "flat on the answer, at the precision the runs give: two seeds at nlive=1000 give mean tail mass 0.0422 and 0.0400 (mean 0.0411) against 0.0385 for the three runs at r1's settings, a shift of 0.0026 +- 0.0015 (1.7 SE), not established, and 0.009 short of 0.05 either way. The tails are not shown to move under 2x chains or 2x nlive, over two seeds"
 
 [[dataset]]

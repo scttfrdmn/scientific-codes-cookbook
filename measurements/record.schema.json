@@ -565,6 +565,7 @@
               "generation",
               "chip",
               "size",
+              "parameter",
               "layout",
               "data_path",
               "concurrent",
@@ -663,9 +664,11 @@
                   "throughput",
                   "wall",
                   "compute_usd",
-                  "billed_usd"
+                  "billed_usd",
+                  "answer"
                 ],
-                "default": "throughput"
+                "default": "throughput",
+                "description": "answer: the verdict is about the result (e.g. a posterior statistic), not time or cost"
               }
             }
           },
@@ -692,6 +695,7 @@
               "generation",
               "chip",
               "size",
+              "parameter",
               "layout",
               "data_path",
               "concurrent",

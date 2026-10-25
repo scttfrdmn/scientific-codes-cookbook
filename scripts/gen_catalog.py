@@ -237,7 +237,7 @@ SERIES_AXIS = {"workers": lambda r: r.get("workers"), "generation": lambda r: r.
 
 
 def axis_value(r, s):
-    return (r.get("size") or {}).get(s.get("size_key", "")) if s["axis"] == "size" else SERIES_AXIS[s["axis"]](r)
+    return (r.get("size") or {}).get(s.get("size_key", "")) if s["axis"] in ("size", "parameter") else SERIES_AXIS[s["axis"]](r)
 
 
 def config_key(r):
@@ -276,6 +276,8 @@ def curve(e, s):
         pts.sort(key=lambda p: str(p["axis"]))
     out = {"points": pts}
     for col in ("billed_usd", "compute_usd"):
+        if s["axis"] == "parameter":
+            break                                   # a method setting changes the work, so a cheapest rung means nothing
         if len(pts) > 1 and all(col in p for p in pts):
             out["cost_knee"] = {"on": col, "at": min(pts, key=lambda p: p[col])["axis"]}
             break
