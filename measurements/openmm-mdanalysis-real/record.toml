@@ -217,7 +217,7 @@ scope = "tool"
 symptom = "sander's VDWAALS for STMV is 21,605 kcal/mol higher than OpenMM's (5.6% of the LJ energy); JAC agrees"
 blames = "OpenMM or the force field"
 cause = "sander's vdwmeth=1 correction wraps each n_i·n_j to a signed 32-bit integer; it overflows for a type with more than 46,340 atoms (STMV has 300,053 water oxygens)"
-fix = "vdwmeth=0 on both sides for the cross-check; affects any sander vdwmeth=1 run on more than 46,340 waters (~140,000 atoms of TIP3P); pmemd not tested"
+fix = "vdwmeth=0 on both sides for the cross-check; affects any sander vdwmeth=1 run on more than 46,340 waters (~140,000 atoms of TIP3P); pmemd also affected per Amber-MD/AmberClassic#6 (fixed in msander and cpptraj 7.12.0, not yet sander/pmemd)"
 
 [[trap]]
 id = "openmm-mdanalysis-coulomb-constant"
@@ -239,3 +239,8 @@ scope = "tool"
 symptom = "getPMEParametersInContext raised std::bad_cast (arm64)"
 cause = "not diagnosed; seen on the arm64 build"
 fix = "take OpenMM's default PME parameters from its documented formulas"
+
+[[upstream]]
+ref = "Amber-MD/AmberClassic#6"
+role = "cited"
+note = "the same int32 overflow, reported independently; fixed in msander and cpptraj 7.12.0, not yet in sander or pmemd"

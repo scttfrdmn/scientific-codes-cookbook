@@ -133,7 +133,7 @@ Every recipe here runs one tool on an AWS box, verified, self-terminating — **
 
 | Recipe | What it does | Env | Inputs | Updated | Verified | x86_64 | AMD |
 |---|---|---|---|---|---|---|---|
-| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-23 | 2026-10-23 | 2026-10-23 | 2026-10-23 |
+| [earth-observation](../recipes/earth-observation/README.md) | Reads a real Sentinel-2 tile (120.6M pixels at 10 m, 30.1M at 20 m) and reproduces the depositors' published class percentages from the pixels. For anyone doing raster EO analysis on ARM. | earth-observation | stage | 2026-10-24 | 2026-10-23 | 2026-10-23 | 2026-10-23 |
 | [eo-stac](../recipes/eo-stac/README.md) | Loads the same pinned Sentinel-2 STAC item with both libraries on Graviton4 and checks they return the same pixels. For anyone building STAC pipelines on ARM. | earth-observation | stage | 2026-10-20 | 2026-10-10 | 2026-10-17 | 2026-10-18 |
 
 ## fem-cfd

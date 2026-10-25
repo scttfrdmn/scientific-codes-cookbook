@@ -126,8 +126,10 @@ gives **−3595.1791**, matching sander to every printed digit.
 The overflow needs a type with more than 46,340 atoms (√2³¹). STMV has 300,053 water oxygens; JAC's
 largest LJ-bearing type has 7,023. The same −3595.1791 appears on all three chips, so it is in the
 code, not the build. Any sander run with `vdwmeth=1` (the default) on a box of more than 46,340
-waters — about 140,000 atoms of TIP3P — is affected. pmemd, the production engine, was not
-tested. This measurement asserts its cross-check with the correction off on both sides, and
+waters — about 140,000 atoms of TIP3P — is affected. It is
+`nvdwclas(i)*nvdwclas(j)` in default integers (`sander/ew_setup.F90:2289`, AmberTools 26).
+Upstream reports pmemd gives the same wrong number, and the fix is in msander and cpptraj 7.12.0 but
+not yet in sander or pmemd ([AmberClassic#6](https://github.com/Amber-MD/AmberClassic/issues/6)). This measurement asserts its cross-check with the correction off on both sides, and
 reports sander's value rather than asserting it.
 
 ## Fixed point or path

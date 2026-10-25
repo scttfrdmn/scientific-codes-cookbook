@@ -23287,7 +23287,14 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": []
+   "unpinned": [],
+   "upstream": [
+    {
+     "note": "the same int32 overflow, reported independently; fixed in msander and cpptraj 7.12.0, not yet in sander or pmemd",
+     "ref": "Amber-MD/AmberClassic#6",
+     "role": "cited"
+    }
+   ]
   },
   "optimization-real": {
    "check": [
@@ -30410,7 +30417,14 @@
    ],
    "schema": 1,
    "status": "pass",
-   "unpinned": []
+   "unpinned": [],
+   "upstream": [
+    {
+     "note": "TBE written as FBP/100 on the --support path",
+     "ref": "amkozlov/raxml-ng#236",
+     "role": "filed"
+    }
+   ]
   },
   "rdkit-real": {
    "check": [
@@ -43128,7 +43142,7 @@
   "earth-observation": {
    "env": "earth-observation",
    "inputs": "stage",
-   "last_updated": "2026-10-23",
+   "last_updated": "2026-10-24",
    "last_verified": {
     "amd": "2026-10-23",
     "arm64": "2026-10-23",
@@ -50406,7 +50420,7 @@
   {
    "blames": "OpenMM or the force field",
    "cause": "sander's vdwmeth=1 correction wraps each n_i·n_j to a signed 32-bit integer; it overflows for a type with more than 46,340 atoms (STMV has 300,053 water oxygens)",
-   "fix": "vdwmeth=0 on both sides for the cross-check; affects any sander vdwmeth=1 run on more than 46,340 waters (~140,000 atoms of TIP3P); pmemd not tested",
+   "fix": "vdwmeth=0 on both sides for the cross-check; affects any sander vdwmeth=1 run on more than 46,340 waters (~140,000 atoms of TIP3P); pmemd also affected per Amber-MD/AmberClassic#6 (fixed in msander and cpptraj 7.12.0, not yet sander/pmemd)",
    "id": "openmm-mdanalysis-sander-vdwcorr-int32",
    "owner": "measurements/openmm-mdanalysis-real",
    "scope": "tool",
@@ -51015,7 +51029,7 @@
   },
   {
    "blames": "nothing: the in-task TBE ≥ FBP check passes on this output and cannot catch it",
-   "cause": "1.2.2 passed the reference splits' TBE to its split table, while 2.0.2 passes the replicate's splits",
+   "cause": "on the --support path 2.0.2 never computes TBE: command_support passes the replicates' plain split counts to draw_bootstrap_support, which copies them for every metric (main.cpp:2800, :2626; from 995e191), so TBE prints as FBP/100; amkozlov/raxml-ng#236",
    "fix": "compute TBE another way until it is fixed",
    "id": "raxml-ng-tbe-is-fbp",
    "owner": "measurements/raxml-ng-real",
@@ -51753,6 +51767,16 @@
  ],
  "upstream": [
   {
+   "ref": "Amber-MD/AmberClassic#6",
+   "uses": [
+    {
+     "measurement": "measurements/openmm-mdanalysis-real",
+     "note": "the same int32 overflow, reported independently; fixed in msander and cpptraj 7.12.0, not yet in sander or pmemd",
+     "role": "cited"
+    }
+   ]
+  },
+  {
    "ref": "ArchR#2334",
    "uses": [
     {
@@ -51769,6 +51793,16 @@
      "measurement": "measurements/earth-observation-real",
      "note": "boa_offset_applied false on an item whose DNs are already offset; our S2C_11SKA_20241206_1 case is added there. The cause of the failing guard.",
      "role": "cited"
+    }
+   ]
+  },
+  {
+   "ref": "amkozlov/raxml-ng#236",
+   "uses": [
+    {
+     "measurement": "measurements/raxml-ng-real",
+     "note": "TBE written as FBP/100 on the --support path",
+     "role": "filed"
     }
    ]
   },

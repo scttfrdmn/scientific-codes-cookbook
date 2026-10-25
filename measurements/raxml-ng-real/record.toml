@@ -205,5 +205,10 @@ id = "raxml-ng-tbe-is-fbp"
 scope = "tool"
 symptom = "RAxML-NG 2.0.2 writes FBP ÷ 100 into supportTBE for every branch, on every chip, with --bs-metric tbe alone too"
 blames = "nothing: the in-task TBE ≥ FBP check passes on this output and cannot catch it"
-cause = "1.2.2 passed the reference splits' TBE to its split table, while 2.0.2 passes the replicate's splits"
+cause = "on the --support path 2.0.2 never computes TBE: command_support passes the replicates' plain split counts to draw_bootstrap_support, which copies them for every metric (main.cpp:2800, :2626; from 995e191), so TBE prints as FBP/100; amkozlov/raxml-ng#236"
 fix = "compute TBE another way until it is fixed"
+
+[[upstream]]
+ref = "amkozlov/raxml-ng#236"
+role = "filed"
+note = "TBE written as FBP/100 on the --support path"

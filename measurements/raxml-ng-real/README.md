@@ -104,9 +104,11 @@ flat there.
 branch, on every chip, with `--bs-metric tbe` alone too. Recomputing the transfer bootstrap from the
 replicate trees here gives values up to 0.97 higher. It matches on the 275 cherries, where TBE and
 FBP coincide by definition, and that is the check that the recomputation is right. The in-task
-`TBE ≥ FBP` check passes on this output and cannot catch it. 1.2.2 passed the reference splits'
-TBE to its split table, while 2.0.2 passes the replicate's splits. Until that is fixed, compute TBE
-another way.
+`TBE ≥ FBP` check passes on this output and cannot catch it. On this `--support` path 2.0.2 never computes
+TBE: `command_support` hands `draw_bootstrap_support` the replicates' plain split counts, which it
+copies for every metric (`main.cpp:2800`, `:2626`; from `995e191`), so TBE prints as FBP ÷ 100.
+Until [amkozlov/raxml-ng#236](https://github.com/amkozlov/raxml-ng/issues/236) is fixed, compute
+TBE another way.
 
 ## Across chips: what is a fixed point and what is a path
 
