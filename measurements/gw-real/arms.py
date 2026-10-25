@@ -4,7 +4,8 @@
     arms.py sampler <naccept> <data dir> <out dir> <npool> <nlive> [maxmcmc]
         pe.py, byte for byte, with only dynesty's naccept (60 in r1), the acceptance-walk cap
         maxmcmc (bilby's default 5000 in r1) or the live-point count nlive (500 in r1, pe.py's own
-        argument) changed. Every walk bilby's tuner sets is written to
+        argument) changed; GW_SAMPLER_SEED in the environment replaces the sampler's seed (r1's
+        20261019) after the likelihood is built, leaving its calibration curves r1's. Every walk bilby's tuner sets is written to
         walks.tsv, and a running cap-hit summary is printed, so it survives a kill in command.log.
     arms.py calibration <r1 result.hdf5> <r1 quantiles.tsv> <data dir> <out dir> <npool> <curves...>
         r1's own nested samples and posterior, importance-reweighted from its 250-curve calibration
@@ -26,12 +27,20 @@ if MODE == "sampler":
     from bilby.core.sampler import dynesty3_utils
     NACCEPT = int(sys.argv[2])
     MAXMCMC = int(sys.argv[7]) if len(sys.argv) > 7 else None
+    SAMPLER_SEED = int(os.environ["GW_SAMPLER_SEED"]) if os.environ.get("GW_SAMPLER_SEED") else None
     _run = bilby.run_sampler
 
     def run_sampler(*a, **kw):
         print("arms: naccept %s -> %d" % (kw.get("naccept"), NACCEPT), flush=True)
         print("arms: nlive %s" % kw.get("nlive"), flush=True)
         kw["naccept"] = NACCEPT
+        if SAMPLER_SEED is not None:
+            # only the sampler's randomness: the 250 calibration curves were drawn from pe.py's seed
+            # when the likelihood was built, before this call, so the likelihood is r1's
+            print("arms: sampler seed %d -> %d" % (SEED, SAMPLER_SEED), flush=True)
+            bilby.core.utils.random.seed(SAMPLER_SEED)
+            np.random.seed(SAMPLER_SEED)
+            kw["rstate"] = np.random.default_rng(SAMPLER_SEED)
         if MAXMCMC is not None:
             print("arms: maxmcmc %s -> %d" % (kw.get("maxmcmc", "default 5000"), MAXMCMC), flush=True)
             kw["maxmcmc"] = MAXMCMC
@@ -71,6 +80,8 @@ if MODE == "sampler":
         WLOG.close()
         with open(os.path.join(sys.argv[2], "score.tsv"), "a") as fh:
             fh.write("naccept\t%d\n" % NACCEPT)
+            if SAMPLER_SEED is not None:
+                fh.write("sampler_seed\t%d\n" % SAMPLER_SEED)
             if MAXMCMC is not None:
                 fh.write("maxmcmc\t%d\n" % MAXMCMC)
                 fh.write("walk_cap_seen_by_tuner\t%s\n" % ",".join(str(c) for c in sorted(W["cap"])))

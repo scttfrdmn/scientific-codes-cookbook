@@ -1,0 +1,422 @@
+bilby_version	2.8.2
+dynesty_version	3.1.0
+lal_version	7.6.1
+lalsimulation_version	6.1.0
+pycbc_version	2.10.0
+numpy_version	2.3.5
+gwpy_version	4.1.0
+08:42 bilby INFO    : Waveform generator instantiated: WaveformGenerator(duration=4.0, sampling_frequency=2048.0, start_time=1126259460.3909912, frequency_domain_source_model=gwreal.source, time_domain_source_model=None, parameter_conversion=bilby.gw.conversion.convert_to_lal_binary_black_hole_parameters, waveform_arguments={'waveform_approximant': 'IMRPhenomXPHM', 'reference_frequency': 20.0, 'minimum_frequency': 20.0, 'maximum_frequency': 896.0, 'catch_waveform_errors': True, 'pn_spin_order': -1, 'pn_tidal_order': -1, 'pn_phase_order': -1, 'pn_amplitude_order': 1})
+08:42 bilby INFO    : Distance marginalisation file /tmp/work/TD.npz does not exist
+08:42 bilby INFO    : Building lookup table for distance marginalisation.
+  0%|          | 0/400 [00:00<?, ?it/s]  0%|          | 1/400 [00:00<01:03,  6.31it/s]  0%|          | 2/400 [00:00<01:02,  6.32it/s]  1%|          | 3/400 [00:00<01:02,  6.33it/s]  1%|          | 4/400 [00:00<01:02,  6.33it/s]  1%|▏         | 5/400 [00:00<01:02,  6.33it/s]  2%|▏         | 6/400 [00:00<01:02,  6.33it/s]  2%|▏         | 7/400 [00:01<01:02,  6.33it/s]  2%|▏         | 8/400 [00:01<01:01,  6.34it/s]  2%|▏         | 9/400 [00:01<01:01,  6.33it/s]  2%|▎         | 10/400 [00:01<01:01,  6.33it/s]  3%|▎         | 11/400 [00:01<01:01,  6.33it/s]  3%|▎         | 12/400 [00:01<01:01,  6.33it/s]  3%|▎         | 13/400 [00:02<01:01,  6.33it/s]  4%|▎         | 14/400 [00:02<01:00,  6.33it/s]  4%|▍         | 15/400 [00:02<01:00,  6.33it/s]  4%|▍         | 16/400 [00:02<01:00,  6.33it/s]  4%|▍         | 17/400 [00:02<01:00,  6.33it/s]  4%|▍         | 18/400 [00:02<01:00,  6.33it/s]  5%|▍         | 19/400 [00:03<01:00,  6.33it/s]  5%|▌         | 20/400 [00:03<00:59,  6.33it/s]  5%|▌         | 21/400 [00:03<00:59,  6.33it/s]  6%|▌         | 22/400 [00:03<00:59,  6.33it/s]  6%|▌         | 23/400 [00:03<00:59,  6.33it/s]  6%|▌         | 24/400 [00:03<00:59,  6.34it/s]  6%|▋         | 25/400 [00:03<00:59,  6.34it/s]  6%|▋         | 26/400 [00:04<00:59,  6.33it/s]  7%|▋         | 27/400 [00:04<00:58,  6.33it/s]  7%|▋         | 28/400 [00:04<00:58,  6.33it/s]  7%|▋         | 29/400 [00:04<00:58,  6.33it/s]  8%|▊         | 30/400 [00:04<00:58,  6.33it/s]  8%|▊         | 31/400 [00:04<00:58,  6.33it/s]  8%|▊         | 32/400 [00:05<00:58,  6.33it/s]  8%|▊         | 33/400 [00:05<00:57,  6.33it/s]  8%|▊         | 34/400 [00:05<00:57,  6.33it/s]  9%|▉         | 35/400 [00:05<00:57,  6.33it/s]  9%|▉         | 36/400 [00:05<00:57,  6.33it/s]  9%|▉         | 37/400 [00:05<00:57,  6.34it/s] 10%|▉         | 38/400 [00:06<00:57,  6.34it/s] 10%|▉         | 39/400 [00:06<00:56,  6.34it/s] 10%|█         | 40/400 [00:06<00:56,  6.33it/s] 10%|█         | 41/400 [00:06<00:56,  6.34it/s] 10%|█         | 42/400 [00:06<00:56,  6.33it/s] 11%|█         | 43/400 [00:06<00:56,  6.33it/s] 11%|█         | 44/400 [00:06<00:56,  6.33it/s] 11%|█▏        | 45/400 [00:07<00:56,  6.33it/s] 12%|█▏        | 46/400 [00:07<00:55,  6.33it/s] 12%|█▏        | 47/400 [00:07<00:55,  6.33it/s] 12%|█▏        | 48/400 [00:07<00:55,  6.33it/s] 12%|█▏        | 49/400 [00:07<00:55,  6.33it/s] 12%|█▎        | 50/400 [00:07<00:55,  6.34it/s] 13%|█▎        | 51/400 [00:08<00:55,  6.34it/s] 13%|█▎        | 52/400 [00:08<00:54,  6.34it/s] 13%|█▎        | 53/400 [00:08<00:54,  6.34it/s] 14%|█▎        | 54/400 [00:08<00:54,  6.34it/s] 14%|█▍        | 55/400 [00:08<00:54,  6.34it/s] 14%|█▍        | 56/400 [00:08<00:54,  6.34it/s] 14%|█▍        | 57/400 [00:08<00:54,  6.34it/s] 14%|█▍        | 58/400 [00:09<00:53,  6.34it/s] 15%|█▍        | 59/400 [00:09<00:53,  6.34it/s] 15%|█▌        | 60/400 [00:09<00:53,  6.35it/s] 15%|█▌        | 61/400 [00:09<00:53,  6.34it/s] 16%|█▌        | 62/400 [00:09<00:53,  6.34it/s] 16%|█▌        | 63/400 [00:09<00:53,  6.35it/s] 16%|█▌        | 64/400 [00:10<00:52,  6.34it/s] 16%|█▋        | 65/400 [00:10<00:52,  6.34it/s] 16%|█▋        | 66/400 [00:10<00:52,  6.35it/s] 17%|█▋        | 67/400 [00:10<00:52,  6.35it/s] 17%|█▋        | 68/400 [00:10<00:52,  6.34it/s] 17%|█▋        | 69/400 [00:10<00:52,  6.35it/s] 18%|█▊        | 70/400 [00:11<00:51,  6.35it/s] 18%|█▊        | 71/400 [00:11<00:51,  6.35it/s] 18%|█▊        | 72/400 [00:11<00:51,  6.35it/s] 18%|█▊        | 73/400 [00:11<00:51,  6.35it/s] 18%|█▊        | 74/400 [00:11<00:51,  6.35it/s] 19%|█▉        | 75/400 [00:11<00:51,  6.35it/s] 19%|█▉        | 76/400 [00:11<00:51,  6.35it/s] 19%|█▉        | 77/400 [00:12<00:50,  6.35it/s] 20%|█▉        | 78/400 [00:12<00:50,  6.35it/s] 20%|█▉        | 79/400 [00:12<00:50,  6.35it/s] 20%|██        | 80/400 [00:12<00:50,  6.35it/s] 20%|██        | 81/400 [00:12<00:50,  6.35it/s] 20%|██        | 82/400 [00:12<00:50,  6.35it/s] 21%|██        | 83/400 [00:13<00:49,  6.35it/s] 21%|██        | 84/400 [00:13<00:49,  6.36it/s] 21%|██▏       | 85/400 [00:13<00:49,  6.36it/s] 22%|██▏       | 86/400 [00:13<00:49,  6.36it/s] 22%|██▏       | 87/400 [00:13<00:49,  6.36it/s] 22%|██▏       | 88/400 [00:13<00:49,  6.36it/s] 22%|██▏       | 89/400 [00:14<00:48,  6.36it/s] 22%|██▎       | 90/400 [00:14<00:48,  6.37it/s] 23%|██▎       | 91/400 [00:14<00:48,  6.37it/s] 23%|██▎       | 92/400 [00:14<00:48,  6.37it/s] 23%|██▎       | 93/400 [00:14<00:48,  6.37it/s] 24%|██▎       | 94/400 [00:14<00:48,  6.37it/s] 24%|██▍       | 95/400 [00:14<00:47,  6.37it/s] 24%|██▍       | 96/400 [00:15<00:47,  6.37it/s] 24%|██▍       | 97/400 [00:15<00:47,  6.37it/s] 24%|██▍       | 98/400 [00:15<00:47,  6.37it/s] 25%|██▍       | 99/400 [00:15<00:47,  6.37it/s] 25%|██▌       | 100/400 [00:15<00:47,  6.37it/s] 25%|██▌       | 101/400 [00:15<00:46,  6.37it/s] 26%|██▌       | 102/400 [00:16<00:46,  6.38it/s] 26%|██▌       | 103/400 [00:16<00:46,  6.37it/s] 26%|██▌       | 104/400 [00:16<00:46,  6.37it/s] 26%|██▋       | 105/400 [00:16<00:46,  6.38it/s] 26%|██▋       | 106/400 [00:16<00:46,  6.38it/s] 27%|██▋       | 107/400 [00:16<00:45,  6.38it/s] 27%|██▋       | 108/400 [00:17<00:45,  6.38it/s] 27%|██▋       | 109/400 [00:17<00:45,  6.38it/s] 28%|██▊       | 110/400 [00:17<00:45,  6.38it/s] 28%|██▊       | 111/400 [00:17<00:45,  6.38it/s] 28%|██▊       | 112/400 [00:17<00:45,  6.38it/s] 28%|██▊       | 113/400 [00:17<00:45,  6.38it/s] 28%|██▊       | 114/400 [00:17<00:44,  6.38it/s] 29%|██▉       | 115/400 [00:18<00:44,  6.38it/s] 29%|██▉       | 116/400 [00:18<00:44,  6.38it/s] 29%|██▉       | 117/400 [00:18<00:44,  6.38it/s] 30%|██▉       | 118/400 [00:18<00:44,  6.38it/s] 30%|██▉       | 119/400 [00:18<00:44,  6.38it/s] 30%|███       | 120/400 [00:18<00:43,  6.38it/s] 30%|███       | 121/400 [00:19<00:43,  6.39it/s] 30%|███       | 122/400 [00:19<00:43,  6.39it/s] 31%|███       | 123/400 [00:19<00:43,  6.38it/s] 31%|███       | 124/400 [00:19<00:43,  6.38it/s] 31%|███▏      | 125/400 [00:19<00:43,  6.38it/s] 32%|███▏      | 126/400 [00:19<00:42,  6.38it/s] 32%|███▏      | 127/400 [00:19<00:42,  6.38it/s] 32%|███▏      | 128/400 [00:20<00:42,  6.38it/s] 32%|███▏      | 129/400 [00:20<00:42,  6.38it/s] 32%|███▎      | 130/400 [00:20<00:42,  6.38it/s] 33%|███▎      | 131/400 [00:20<00:42,  6.38it/s] 33%|███▎      | 132/400 [00:20<00:42,  6.38it/s] 33%|███▎      | 133/400 [00:20<00:41,  6.37it/s] 34%|███▎      | 134/400 [00:21<00:41,  6.37it/s] 34%|███▍      | 135/400 [00:21<00:41,  6.37it/s] 34%|███▍      | 136/400 [00:21<00:41,  6.37it/s] 34%|███▍      | 137/400 [00:21<00:41,  6.37it/s] 34%|███▍      | 138/400 [00:21<00:41,  6.37it/s] 35%|███▍      | 139/400 [00:21<00:40,  6.37it/s] 35%|███▌      | 140/400 [00:22<00:40,  6.36it/s] 35%|███▌      | 141/400 [00:22<00:40,  6.37it/s] 36%|███▌      | 142/400 [00:22<00:40,  6.37it/s] 36%|███▌      | 143/400 [00:22<00:40,  6.36it/s] 36%|███▌      | 144/400 [00:22<00:40,  6.36it/s] 36%|███▋      | 145/400 [00:22<00:40,  6.36it/s] 36%|███▋      | 146/400 [00:22<00:39,  6.36it/s] 37%|███▋      | 147/400 [00:23<00:39,  6.36it/s] 37%|███▋      | 148/400 [00:23<00:39,  6.36it/s] 37%|███▋      | 149/400 [00:23<00:39,  6.36it/s] 38%|███▊      | 150/400 [00:23<00:39,  6.36it/s] 38%|███▊      | 151/400 [00:23<00:39,  6.35it/s] 38%|███▊      | 152/400 [00:23<00:39,  6.35it/s] 38%|███▊      | 153/400 [00:24<00:38,  6.35it/s] 38%|███▊      | 154/400 [00:24<00:38,  6.35it/s] 39%|███▉      | 155/400 [00:24<00:38,  6.35it/s] 39%|███▉      | 156/400 [00:24<00:38,  6.35it/s] 39%|███▉      | 157/400 [00:24<00:38,  6.34it/s] 40%|███▉      | 158/400 [00:24<00:38,  6.34it/s] 40%|███▉      | 159/400 [00:25<00:38,  6.33it/s] 40%|████      | 160/400 [00:25<00:37,  6.33it/s] 40%|████      | 161/400 [00:25<00:37,  6.33it/s] 40%|████      | 162/400 [00:25<00:37,  6.33it/s] 41%|████      | 163/400 [00:25<00:37,  6.32it/s] 41%|████      | 164/400 [00:25<00:37,  6.32it/s] 41%|████▏     | 165/400 [00:25<00:37,  6.32it/s] 42%|████▏     | 166/400 [00:26<00:37,  6.31it/s] 42%|████▏     | 167/400 [00:26<00:36,  6.30it/s] 42%|████▏     | 168/400 [00:26<00:36,  6.30it/s] 42%|████▏     | 169/400 [00:26<00:36,  6.30it/s] 42%|████▎     | 170/400 [00:26<00:36,  6.29it/s] 43%|████▎     | 171/400 [00:26<00:36,  6.29it/s] 43%|████▎     | 172/400 [00:27<00:36,  6.28it/s] 43%|████▎     | 173/400 [00:27<00:36,  6.27it/s] 44%|████▎     | 174/400 [00:27<00:36,  6.27it/s] 44%|████▍     | 175/400 [00:27<00:35,  6.27it/s] 44%|████▍     | 176/400 [00:27<00:35,  6.25it/s] 44%|████▍     | 177/400 [00:27<00:35,  6.24it/s] 44%|████▍     | 178/400 [00:28<00:35,  6.23it/s] 45%|████▍     | 179/400 [00:28<00:35,  6.22it/s] 45%|████▌     | 180/400 [00:28<00:35,  6.21it/s] 45%|████▌     | 181/400 [00:28<00:35,  6.20it/s] 46%|████▌     | 182/400 [00:28<00:35,  6.19it/s] 46%|████▌     | 183/400 [00:28<00:35,  6.18it/s] 46%|████▌     | 184/400 [00:29<00:35,  6.17it/s] 46%|████▋     | 185/400 [00:29<00:34,  6.15it/s] 46%|████▋     | 186/400 [00:29<00:34,  6.14it/s] 47%|████▋     | 187/400 [00:29<00:34,  6.13it/s] 47%|████▋     | 188/400 [00:29<00:34,  6.12it/s] 47%|████▋     | 189/400 [00:29<00:34,  6.10it/s] 48%|████▊     | 190/400 [00:30<00:34,  6.08it/s] 48%|████▊     | 191/400 [00:30<00:34,  6.07it/s] 48%|████▊     | 192/400 [00:30<00:34,  6.06it/s] 48%|████▊     | 193/400 [00:30<00:34,  6.04it/s] 48%|████▊     | 194/400 [00:30<00:34,  6.02it/s] 49%|████▉     | 195/400 [00:30<00:34,  6.00it/s] 49%|████▉     | 196/400 [00:31<00:34,  5.98it/s] 49%|████▉     | 197/400 [00:31<00:34,  5.96it/s] 50%|████▉     | 198/400 [00:31<00:33,  5.95it/s] 50%|████▉     | 199/400 [00:31<00:33,  5.92it/s] 50%|█████     | 200/400 [00:31<00:33,  5.90it/s] 50%|█████     | 201/400 [00:31<00:33,  5.88it/s] 50%|█████     | 202/400 [00:32<00:33,  5.86it/s] 51%|█████     | 203/400 [00:32<00:33,  5.83it/s] 51%|█████     | 204/400 [00:32<00:33,  5.81it/s] 51%|█████▏    | 205/400 [00:32<00:33,  5.79it/s] 52%|█████▏    | 206/400 [00:32<00:33,  5.77it/s] 52%|█████▏    | 207/400 [00:32<00:33,  5.74it/s] 52%|█████▏    | 208/400 [00:33<00:33,  5.72it/s] 52%|█████▏    | 209/400 [00:33<00:33,  5.69it/s] 52%|█████▎    | 210/400 [00:33<00:33,  5.66it/s] 53%|█████▎    | 211/400 [00:33<00:33,  5.64it/s] 53%|█████▎    | 212/400 [00:33<00:33,  5.61it/s] 53%|█████▎    | 213/400 [00:33<00:33,  5.58it/s] 54%|█████▎    | 214/400 [00:34<00:33,  5.55it/s] 54%|█████▍    | 215/400 [00:34<00:33,  5.52it/s] 54%|█████▍    | 216/400 [00:34<00:33,  5.50it/s] 54%|█████▍    | 217/400 [00:34<00:33,  5.46it/s] 55%|█████▍    | 218/400 [00:34<00:33,  5.43it/s] 55%|█████▍    | 219/400 [00:35<00:33,  5.39it/s] 55%|█████▌    | 220/400 [00:35<00:33,  5.36it/s] 55%|█████▌    | 221/400 [00:35<00:33,  5.33it/s] 56%|█████▌    | 222/400 [00:35<00:33,  5.31it/s] 56%|█████▌    | 223/400 [00:35<00:33,  5.28it/s] 56%|█████▌    | 224/400 [00:36<00:33,  5.26it/s] 56%|█████▋    | 225/400 [00:36<00:33,  5.24it/s] 56%|█████▋    | 226/400 [00:36<00:33,  5.23it/s] 57%|█████▋    | 227/400 [00:36<00:33,  5.23it/s] 57%|█████▋    | 228/400 [00:36<00:32,  5.22it/s] 57%|█████▋    | 229/400 [00:37<00:32,  5.21it/s] 57%|█████▊    | 230/400 [00:37<00:32,  5.21it/s] 58%|█████▊    | 231/400 [00:37<00:32,  5.20it/s] 58%|█████▊    | 232/400 [00:37<00:32,  5.19it/s] 58%|█████▊    | 233/400 [00:37<00:32,  5.19it/s] 58%|█████▊    | 234/400 [00:37<00:32,  5.18it/s] 59%|█████▉    | 235/400 [00:38<00:31,  5.18it/s] 59%|█████▉    | 236/400 [00:38<00:31,  5.17it/s] 59%|█████▉    | 237/400 [00:38<00:31,  5.17it/s] 60%|█████▉    | 238/400 [00:38<00:31,  5.16it/s] 60%|█████▉    | 239/400 [00:38<00:31,  5.16it/s] 60%|██████    | 240/400 [00:39<00:31,  5.15it/s] 60%|██████    | 241/400 [00:39<00:30,  5.15it/s] 60%|██████    | 242/400 [00:39<00:30,  5.14it/s] 61%|██████    | 243/400 [00:39<00:30,  5.14it/s] 61%|██████    | 244/400 [00:39<00:30,  5.13it/s] 61%|██████▏   | 245/400 [00:40<00:30,  5.13it/s] 62%|██████▏   | 246/400 [00:40<00:30,  5.13it/s] 62%|██████▏   | 247/400 [00:40<00:29,  5.12it/s] 62%|██████▏   | 248/400 [00:40<00:29,  5.12it/s] 62%|██████▏   | 249/400 [00:40<00:29,  5.12it/s] 62%|██████▎   | 250/400 [00:41<00:29,  5.11it/s] 63%|██████▎   | 251/400 [00:41<00:29,  5.11it/s] 63%|██████▎   | 252/400 [00:41<00:28,  5.10it/s] 63%|██████▎   | 253/400 [00:41<00:28,  5.10it/s] 64%|██████▎   | 254/400 [00:41<00:28,  5.10it/s] 64%|██████▍   | 255/400 [00:42<00:28,  5.10it/s] 64%|██████▍   | 256/400 [00:42<00:28,  5.10it/s] 64%|██████▍   | 257/400 [00:42<00:28,  5.10it/s] 64%|██████▍   | 258/400 [00:42<00:27,  5.10it/s] 65%|██████▍   | 259/400 [00:42<00:27,  5.10it/s] 65%|██████▌   | 260/400 [00:43<00:27,  5.09it/s] 65%|██████▌   | 261/400 [00:43<00:27,  5.09it/s] 66%|██████▌   | 262/400 [00:43<00:27,  5.09it/s] 66%|██████▌   | 263/400 [00:43<00:26,  5.09it/s] 66%|██████▌   | 264/400 [00:43<00:26,  5.09it/s] 66%|██████▋   | 265/400 [00:44<00:26,  5.09it/s] 66%|██████▋   | 266/400 [00:44<00:26,  5.09it/s] 67%|██████▋   | 267/400 [00:44<00:26,  5.09it/s] 67%|██████▋   | 268/400 [00:44<00:25,  5.09it/s] 67%|██████▋   | 269/400 [00:44<00:25,  5.09it/s] 68%|██████▊   | 270/400 [00:45<00:25,  5.09it/s] 68%|██████▊   | 271/400 [00:45<00:25,  5.09it/s] 68%|██████▊   | 272/400 [00:45<00:25,  5.09it/s] 68%|██████▊   | 273/400 [00:45<00:24,  5.09it/s] 68%|██████▊   | 274/400 [00:45<00:24,  5.09it/s] 69%|██████▉   | 275/400 [00:45<00:24,  5.09it/s] 69%|██████▉   | 276/400 [00:46<00:24,  5.09it/s] 69%|██████▉   | 277/400 [00:46<00:24,  5.09it/s] 70%|██████▉   | 278/400 [00:46<00:23,  5.09it/s] 70%|██████▉   | 279/400 [00:46<00:23,  5.09it/s] 70%|███████   | 280/400 [00:46<00:23,  5.09it/s] 70%|███████   | 281/400 [00:47<00:23,  5.08it/s] 70%|███████   | 282/400 [00:47<00:23,  5.09it/s] 71%|███████   | 283/400 [00:47<00:23,  5.08it/s] 71%|███████   | 284/400 [00:47<00:22,  5.08it/s] 71%|███████▏  | 285/400 [00:47<00:22,  5.08it/s] 72%|███████▏  | 286/400 [00:48<00:22,  5.08it/s] 72%|███████▏  | 287/400 [00:48<00:22,  5.08it/s] 72%|███████▏  | 288/400 [00:48<00:22,  5.08it/s] 72%|███████▏  | 289/400 [00:48<00:21,  5.08it/s] 72%|███████▎  | 290/400 [00:48<00:21,  5.08it/s] 73%|███████▎  | 291/400 [00:49<00:21,  5.08it/s] 73%|███████▎  | 292/400 [00:49<00:21,  5.08it/s] 73%|███████▎  | 293/400 [00:49<00:21,  5.09it/s] 74%|███████▎  | 294/400 [00:49<00:20,  5.09it/s] 74%|███████▍  | 295/400 [00:49<00:20,  5.09it/s] 74%|███████▍  | 296/400 [00:50<00:20,  5.08it/s] 74%|███████▍  | 297/400 [00:50<00:20,  5.08it/s] 74%|███████▍  | 298/400 [00:50<00:20,  5.08it/s] 75%|███████▍  | 299/400 [00:50<00:19,  5.08it/s] 75%|███████▌  | 300/400 [00:50<00:19,  5.09it/s] 75%|███████▌  | 301/400 [00:51<00:19,  5.08it/s] 76%|███████▌  | 302/400 [00:51<00:19,  5.08it/s] 76%|███████▌  | 303/400 [00:51<00:19,  5.09it/s] 76%|███████▌  | 304/400 [00:51<00:18,  5.08it/s] 76%|███████▋  | 305/400 [00:51<00:18,  5.08it/s] 76%|███████▋  | 306/400 [00:52<00:18,  5.08it/s] 77%|███████▋  | 307/400 [00:52<00:18,  5.08it/s] 77%|███████▋  | 308/400 [00:52<00:18,  5.08it/s] 77%|███████▋  | 309/400 [00:52<00:17,  5.08it/s] 78%|███████▊  | 310/400 [00:52<00:17,  5.09it/s] 78%|███████▊  | 311/400 [00:53<00:17,  5.08it/s] 78%|███████▊  | 312/400 [00:53<00:17,  5.09it/s] 78%|███████▊  | 313/400 [00:53<00:17,  5.09it/s] 78%|███████▊  | 314/400 [00:53<00:16,  5.08it/s] 79%|███████▉  | 315/400 [00:53<00:16,  5.09it/s] 79%|███████▉  | 316/400 [00:54<00:16,  5.09it/s] 79%|███████▉  | 317/400 [00:54<00:16,  5.09it/s] 80%|███████▉  | 318/400 [00:54<00:16,  5.09it/s] 80%|███████▉  | 319/400 [00:54<00:15,  5.09it/s] 80%|████████  | 320/400 [00:54<00:15,  5.09it/s] 80%|████████  | 321/400 [00:55<00:15,  5.09it/s] 80%|████████  | 322/400 [00:55<00:15,  5.09it/s] 81%|████████  | 323/400 [00:55<00:15,  5.09it/s] 81%|████████  | 324/400 [00:55<00:14,  5.09it/s] 81%|████████▏ | 325/400 [00:55<00:14,  5.09it/s] 82%|████████▏ | 326/400 [00:56<00:14,  5.09it/s] 82%|████████▏ | 327/400 [00:56<00:14,  5.09it/s] 82%|████████▏ | 328/400 [00:56<00:14,  5.09it/s] 82%|████████▏ | 329/400 [00:56<00:13,  5.09it/s] 82%|████████▎ | 330/400 [00:56<00:13,  5.09it/s] 83%|████████▎ | 331/400 [00:57<00:13,  5.09it/s] 83%|████████▎ | 332/400 [00:57<00:13,  5.09it/s] 83%|████████▎ | 333/400 [00:57<00:13,  5.09it/s] 84%|████████▎ | 334/400 [00:57<00:12,  5.09it/s] 84%|████████▍ | 335/400 [00:57<00:12,  5.09it/s] 84%|████████▍ | 336/400 [00:57<00:12,  5.09it/s] 84%|████████▍ | 337/400 [00:58<00:12,  5.09it/s] 84%|████████▍ | 338/400 [00:58<00:12,  5.09it/s] 85%|████████▍ | 339/400 [00:58<00:11,  5.09it/s] 85%|████████▌ | 340/400 [00:58<00:11,  5.09it/s] 85%|████████▌ | 341/400 [00:58<00:11,  5.09it/s] 86%|████████▌ | 342/400 [00:59<00:11,  5.09it/s] 86%|████████▌ | 343/400 [00:59<00:11,  5.09it/s] 86%|████████▌ | 344/400 [00:59<00:11,  5.09it/s] 86%|████████▋ | 345/400 [00:59<00:10,  5.09it/s] 86%|████████▋ | 346/400 [00:59<00:10,  5.09it/s] 87%|████████▋ | 347/400 [01:00<00:10,  5.09it/s] 87%|████████▋ | 348/400 [01:00<00:10,  5.09it/s] 87%|████████▋ | 349/400 [01:00<00:10,  5.09it/s] 88%|████████▊ | 350/400 [01:00<00:09,  5.08it/s] 88%|████████▊ | 351/400 [01:00<00:09,  5.09it/s] 88%|████████▊ | 352/400 [01:01<00:09,  5.09it/s] 88%|████████▊ | 353/400 [01:01<00:09,  5.08it/s] 88%|████████▊ | 354/400 [01:01<00:09,  5.09it/s] 89%|████████▉ | 355/400 [01:01<00:08,  5.09it/s] 89%|████████▉ | 356/400 [01:01<00:08,  5.09it/s] 89%|████████▉ | 357/400 [01:02<00:08,  5.09it/s] 90%|████████▉ | 358/400 [01:02<00:08,  5.09it/s] 90%|████████▉ | 359/400 [01:02<00:08,  5.09it/s] 90%|█████████ | 360/400 [01:02<00:07,  5.09it/s] 90%|█████████ | 361/400 [01:02<00:07,  5.09it/s] 90%|█████████ | 362/400 [01:03<00:07,  5.09it/s] 91%|█████████ | 363/400 [01:03<00:07,  5.09it/s] 91%|█████████ | 364/400 [01:03<00:07,  5.09it/s] 91%|█████████▏| 365/400 [01:03<00:06,  5.09it/s] 92%|█████████▏| 366/400 [01:03<00:06,  5.09it/s] 92%|█████████▏| 367/400 [01:04<00:06,  5.09it/s] 92%|█████████▏| 368/400 [01:04<00:06,  5.09it/s] 92%|█████████▏| 369/400 [01:04<00:06,  5.09it/s] 92%|█████████▎| 370/400 [01:04<00:05,  5.09it/s] 93%|█████████▎| 371/400 [01:04<00:05,  5.09it/s] 93%|█████████▎| 372/400 [01:05<00:05,  5.09it/s] 93%|█████████▎| 373/400 [01:05<00:05,  5.09it/s] 94%|█████████▎| 374/400 [01:05<00:05,  5.09it/s] 94%|█████████▍| 375/400 [01:05<00:04,  5.09it/s] 94%|█████████▍| 376/400 [01:05<00:04,  5.09it/s] 94%|█████████▍| 377/400 [01:06<00:04,  5.09it/s] 94%|█████████▍| 378/400 [01:06<00:04,  5.09it/s] 95%|█████████▍| 379/400 [01:06<00:04,  5.09it/s] 95%|█████████▌| 380/400 [01:06<00:03,  5.09it/s] 95%|█████████▌| 381/400 [01:06<00:03,  5.09it/s] 96%|█████████▌| 382/400 [01:07<00:03,  5.09it/s] 96%|█████████▌| 383/400 [01:07<00:03,  5.09it/s] 96%|█████████▌| 384/400 [01:07<00:03,  5.09it/s] 96%|█████████▋| 385/400 [01:07<00:02,  5.09it/s] 96%|█████████▋| 386/400 [01:07<00:02,  5.09it/s] 97%|█████████▋| 387/400 [01:08<00:02,  5.09it/s] 97%|█████████▋| 388/400 [01:08<00:02,  5.09it/s] 97%|█████████▋| 389/400 [01:08<00:02,  5.09it/s] 98%|█████████▊| 390/400 [01:08<00:01,  5.09it/s] 98%|█████████▊| 391/400 [01:08<00:01,  5.09it/s] 98%|█████████▊| 392/400 [01:09<00:01,  5.09it/s] 98%|█████████▊| 393/400 [01:09<00:01,  5.09it/s] 98%|█████████▊| 394/400 [01:09<00:01,  5.09it/s] 99%|█████████▉| 395/400 [01:09<00:00,  5.09it/s] 99%|█████████▉| 396/400 [01:09<00:00,  5.09it/s] 99%|█████████▉| 397/400 [01:09<00:00,  5.08it/s]100%|█████████▉| 398/400 [01:10<00:00,  5.08it/s]100%|█████████▉| 399/400 [01:10<00:00,  5.09it/s]100%|██████████| 400/400 [01:10<00:00,  5.08it/s]100%|██████████| 400/400 [01:10<00:00,  5.67it/s]
+tukey_window_factor	0.874893
+ln_noise_evidence_bilby2_normalisation	-6376.3228
+noise_ratio_bilby2_over_release	0.874893 (window factor 0.874893)
+ln_noise_evidence_ours	-7288.1157
+ok    noise log-likelihood -7288.1157 == published ln_noise_evidence -7288.12 (to its 2 printed decimals)
+ok    time-marginalised reference time is the segment start
+lnL_maxL_with_lalsim_6.1.0_defaults_minus_published	-0.0037
+lnL_ours_minus_published_500_samples	median -4.296e-03 max|.| 4.130e-02
+lnL_ms_per_call_serial	6.62
+free_parameters	54
+ok    marginalised lnL at 500 published samples (incl. the max-L one) == published, max |diff| 4.13e-02 < 0.05
+H1_mf_snr_published_real_column	21.221089
+H1_mf_snr_bilby	21.221077-2.052640j (|.| 21.320118)
+H1_mf_snr_pycbc	21.221077-2.052640j
+H1_mf_snr_published	21.221089-2.052543j (|.| 21.320121)
+ok    H1: PyCBC matched-filter SNR == bilby's at the published max-L sample, rel 0.0e+00
+ok    H1: bilby's SNR == the published one at that sample, rel 4.6e-06 < 1e-3
+H1_mf_snr_bilby2_normalisation	|.| 19.941927 (ratio 0.935357, sqrt(window factor) 0.935357)
+L1_mf_snr_published_real_column	15.167442
+L1_mf_snr_bilby	15.168211-1.696516j (|.| 15.262791)
+L1_mf_snr_pycbc	15.168211-1.696516j
+L1_mf_snr_published	15.167442-1.703444j (|.| 15.262799)
+ok    L1: PyCBC matched-filter SNR == bilby's at the published max-L sample, rel 2.3e-16
+ok    L1: bilby's SNR == the published one at that sample, rel 4.6e-04 < 1e-3
+L1_mf_snr_bilby2_normalisation	|.| 14.276162 (ratio 0.935357, sqrt(window factor) 0.935357)
+calibration_response_curves	250
+nlive	1000
+npool	64
+08:43 bilby INFO    : Waveform generator instantiated: WaveformGenerator(duration=4.0, sampling_frequency=2048.0, start_time=1126259460.3909912, frequency_domain_source_model=gwreal.source, time_domain_source_model=None, parameter_conversion=bilby.gw.conversion.convert_to_lal_binary_black_hole_parameters, waveform_arguments={'waveform_approximant': 'IMRPhenomXPHM', 'reference_frequency': 20.0, 'minimum_frequency': 20.0, 'maximum_frequency': 896.0, 'catch_waveform_errors': True, 'pn_spin_order': -1, 'pn_tidal_order': -1, 'pn_phase_order': -1, 'pn_amplitude_order': 1})
+08:43 bilby INFO    : Loaded distance marginalisation lookup table from /tmp/work/TD.npz.
+08:43 bilby WARNING : Calibration envelope correction type is not specified. Assuming this correction maps calibrated data to theoretical strain. If this is correct, this should be explicitly specified via CalibrationPriorDict.from_envelope_file(..., correction_type='data'). The other possibility is correction_type='template', which maps theoretical strain to calibrated data.
+08:43 bilby INFO    : Writing calibration draws to /tmp/work/H1_calibration.h5
+08:43 bilby WARNING : Calibration envelope correction type is not specified. Assuming this correction maps calibrated data to theoretical strain. If this is correct, this should be explicitly specified via CalibrationPriorDict.from_envelope_file(..., correction_type='data'). The other possibility is correction_type='template', which maps theoretical strain to calibrated data.
+08:43 bilby INFO    : Writing calibration draws to /tmp/work/L1_calibration.h5
+sampled_parameters	15
+arms: naccept 60 -> 60
+arms: nlive 1000
+arms: sampler seed 20261019 -> 20261024
+arms: maxmcmc default 5000 -> 5000
+08:43 bilby INFO    : Running for label 'GW150914', output will be saved to '/tmp/work'
+08:43 bilby INFO    : Using lal version 7.6.1
+08:43 bilby INFO    : Using lal git version Branch: None;Tag: lal-v7.6.1;Id: 31af23159ed7c6557180f58ad3f39a06e5a08731;;Builder: Adam Mercer <adam.mercer@ligo.org>;Repository status: CLEAN: All modifications committed
+08:43 bilby INFO    : Using lalsimulation version 6.1.0
+08:43 bilby INFO    : Using lalsimulation git version Branch: None;Tag: lalsimulation-v6.1.0;Id: 8041734408377ca999821f7e372e2a02e9226e6b;;Builder: Adam Mercer <adam.mercer@ligo.org>;Repository status: CLEAN: All modifications committed
+08:43 bilby INFO    : Analysis priors:
+08:43 bilby INFO    : a_1=Uniform(minimum=0, maximum=0.99, name='a_1', latex_label='$a_1$', unit=None, boundary=None)
+08:43 bilby INFO    : a_2=Uniform(minimum=0, maximum=0.99, name='a_2', latex_label='$a_2$', unit=None, boundary=None)
+08:43 bilby INFO    : azimuth=Uniform(minimum=0, maximum=6.283185307179586, name=None, latex_label='$\\\\epsilon$', unit=None, boundary='periodic')
+08:43 bilby INFO    : chirp_mass=bilby.gw.prior.UniformInComponentsChirpMass(minimum=21.418182160215295, maximum=41.97447913941358, name='chirp_mass', latex_label='$\\\\mathcal{M}$', unit='$M_{\\\\odot}$', boundary=None)
+08:43 bilby INFO    : geocent_time=Uniform(minimum=1126259462.2910001, maximum=1126259462.491, name='geocent_time', latex_label='$t_c$', unit='$s$', boundary=None)
+08:43 bilby INFO    : mass_ratio=bilby.gw.prior.UniformInComponentsMassRatio(minimum=0.05, maximum=1.0, name='mass_ratio', latex_label='$q$', unit=None, boundary=None, equal_mass=False)
+08:43 bilby INFO    : phase=Uniform(minimum=0, maximum=6.283185307179586, name='phase', latex_label='$\\\\phi$', unit=None, boundary='periodic')
+08:43 bilby INFO    : phi_12=Uniform(minimum=0, maximum=6.283185307179586, name='phi_12', latex_label='$\\\\Delta\\\\phi$', unit=None, boundary='periodic')
+08:43 bilby INFO    : phi_jl=Uniform(minimum=0, maximum=6.283185307179586, name='phi_jl', latex_label='$\\\\phi_{JL}$', unit=None, boundary='periodic')
+08:43 bilby INFO    : psi=Uniform(minimum=0, maximum=3.141592653589793, name='psi', latex_label='$\\\\psi$', unit=None, boundary='periodic')
+08:43 bilby INFO    : theta_jn=Sine(minimum=0, maximum=3.141592653589793, name='theta_jn', latex_label='$\\\\theta_{JN}$', unit=None, boundary=None)
+08:43 bilby INFO    : tilt_1=Sine(minimum=0, maximum=3.141592653589793, name='tilt_1', latex_label='$\\\\theta_1$', unit=None, boundary=None)
+08:43 bilby INFO    : tilt_2=Sine(minimum=0, maximum=3.141592653589793, name='tilt_2', latex_label='$\\\\theta_2$', unit=None, boundary=None)
+08:43 bilby INFO    : zenith=Sine(minimum=0, maximum=3.141592653589793, name=None, latex_label='$\\\\kappa$', unit=None, boundary=None)
+08:43 bilby INFO    : mass_1=Constraint(minimum=1, maximum=1000, name='mass_1', latex_label='$m_1$', unit=None)
+08:43 bilby INFO    : mass_2=Constraint(minimum=1, maximum=1000, name='mass_2', latex_label='$m_2$', unit=None)
+08:43 bilby INFO    : luminosity_distance=7937.005262486662
+08:43 bilby INFO    : recalib_H1_amplitude_0=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_1=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_2=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_3=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_4=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_5=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_6=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_7=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_8=0.0
+08:43 bilby INFO    : recalib_H1_amplitude_9=0.0
+08:43 bilby INFO    : recalib_H1_frequency_0=0.0
+08:43 bilby INFO    : recalib_H1_frequency_1=0.0
+08:43 bilby INFO    : recalib_H1_frequency_2=0.0
+08:43 bilby INFO    : recalib_H1_frequency_3=0.0
+08:43 bilby INFO    : recalib_H1_frequency_4=0.0
+08:43 bilby INFO    : recalib_H1_frequency_5=0.0
+08:43 bilby INFO    : recalib_H1_frequency_6=0.0
+08:43 bilby INFO    : recalib_H1_frequency_7=0.0
+08:43 bilby INFO    : recalib_H1_frequency_8=0.0
+08:43 bilby INFO    : recalib_H1_frequency_9=0.0
+08:43 bilby INFO    : recalib_H1_phase_0=0.0
+08:43 bilby INFO    : recalib_H1_phase_1=0.0
+08:43 bilby INFO    : recalib_H1_phase_2=0.0
+08:43 bilby INFO    : recalib_H1_phase_3=0.0
+08:43 bilby INFO    : recalib_H1_phase_4=0.0
+08:43 bilby INFO    : recalib_H1_phase_5=0.0
+08:43 bilby INFO    : recalib_H1_phase_6=0.0
+08:43 bilby INFO    : recalib_H1_phase_7=0.0
+08:43 bilby INFO    : recalib_H1_phase_8=0.0
+08:43 bilby INFO    : recalib_H1_phase_9=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_0=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_1=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_2=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_3=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_4=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_5=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_6=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_7=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_8=0.0
+08:43 bilby INFO    : recalib_L1_amplitude_9=0.0
+08:43 bilby INFO    : recalib_L1_frequency_0=0.0
+08:43 bilby INFO    : recalib_L1_frequency_1=0.0
+08:43 bilby INFO    : recalib_L1_frequency_2=0.0
+08:43 bilby INFO    : recalib_L1_frequency_3=0.0
+08:43 bilby INFO    : recalib_L1_frequency_4=0.0
+08:43 bilby INFO    : recalib_L1_frequency_5=0.0
+08:43 bilby INFO    : recalib_L1_frequency_6=0.0
+08:43 bilby INFO    : recalib_L1_frequency_7=0.0
+08:43 bilby INFO    : recalib_L1_frequency_8=0.0
+08:43 bilby INFO    : recalib_L1_frequency_9=0.0
+08:43 bilby INFO    : recalib_L1_phase_0=0.0
+08:43 bilby INFO    : recalib_L1_phase_1=0.0
+08:43 bilby INFO    : recalib_L1_phase_2=0.0
+08:43 bilby INFO    : recalib_L1_phase_3=0.0
+08:43 bilby INFO    : recalib_L1_phase_4=0.0
+08:43 bilby INFO    : recalib_L1_phase_5=0.0
+08:43 bilby INFO    : recalib_L1_phase_6=0.0
+08:43 bilby INFO    : recalib_L1_phase_7=0.0
+08:43 bilby INFO    : recalib_L1_phase_8=0.0
+08:43 bilby INFO    : recalib_L1_phase_9=0.0
+08:43 bilby INFO    : Analysis likelihood class: <class 'bilby.gw.likelihood.base.GravitationalWaveTransient'>
+08:43 bilby INFO    : Analysis likelihood noise evidence: -7288.11569484202
+08:43 bilby INFO    : Single likelihood evaluation took 6.611e-03 s
+08:43 bilby INFO    : Using sampler Dynesty with kwargs {'nlive': 1000, 'bound': 'live', 'sample': 'acceptance-walk', 'periodic': None, 'reflective': None, 'update_interval': 600, 'first_update': None, 'rstate': Generator(PCG64) at 0xFFFF8C184BA0, 'queue_size': 64, 'pool': None, 'use_pool': None, 'live_points': None, 'logl_args': None, 'logl_kwargs': None, 'ptform_args': None, 'ptform_kwargs': None, 'enlarge': None, 'bootstrap': None, 'walks': 100, 'facc': 0.2, 'slices': None, 'ncdim': None, 'blob': False, 'save_evaluation_history': False, 'history_filename': None, 'maxiter': None, 'maxcall': None, 'dlogz': 0.1, 'logl_max': inf, 'add_live': True, 'print_progress': True, 'print_func': <bound method Dynesty._print_func of <bilby.core.sampler.dynesty.Dynesty object at 0xffff7ad3d940>>, 'save_bounds': False, 'checkpoint_file': None, 'checkpoint_every': 60, 'resume': False, 'seed': None}
+08:43 bilby INFO    : Global meta data was removed from the result object for compatibility. Use the `BILBY_INCLUDE_GLOBAL_METADATA` environment variable to include it. This behaviour will be removed in a future release. For more details see: https://bilby-dev.github.io/bilby/faq.html#global-meta-data
+08:43 bilby INFO    : Checkpoint every check_point_delta_t = 600s
+08:43 bilby INFO    : Using dynesty version 3.1.0
+08:43 bilby INFO    : Setting up multiproccesing pool with 64 processes
+08:43 bilby INFO    : Resume file /tmp/work/GW150914_resume.pickle does not exist.
+08:43 bilby INFO    : Generating initial points from the prior
+08:43 bilby INFO    : Using the bilby-implemented ensemble rwalk sampling method with an average of 60 accepted steps up to chain length 5000.
+walks	tune 250	set 5000	cap 5000	cap-hit last 250 0.744	all 0.744
+3907it [0:00:53 bound:5 nc:1008 ncall:2.1e+05 eff:1.8% logz-ratio=5.39+/-0.07 dlogz:194>0.1]
+walks	tune 500	set 4385	cap 5000	cap-hit last 250 1.000	all 0.872
+walks	tune 750	set 3665	cap 5000	cap-hit last 250 0.048	all 0.597
+4470it [0:01:58 bound:14 nc:873 ncall:6.6e+05 eff:0.7% logz-ratio=12.90+/-0.08 dlogz:186>0.1]
+walks	tune 1000	set 4123	cap 5000	cap-hit last 250 0.000	all 0.448
+walks	tune 1250	set 4565	cap 5000	cap-hit last 250 0.000	all 0.358
+4962it [0:03:01 bound:22 nc:991 ncall:1.1e+06 eff:0.5% logz-ratio=21.87+/-0.08 dlogz:195>0.1]
+walks	tune 1500	set 5000	cap 5000	cap-hit last 250 0.112	all 0.317
+walks	tune 1750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.415
+5391it [0:04:06 bound:29 nc:976 ncall:1.5e+06 eff:0.4% logz-ratio=30.75+/-0.09 dlogz:186>0.1]
+walks	tune 2000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.488
+5825it [0:05:13 bound:36 nc:609 ncall:1.9e+06 eff:0.3% logz-ratio=41.18+/-0.09 dlogz:188>0.1]
+walks	tune 2250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.545
+walks	tune 2500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.590
+6200it [0:06:15 bound:42 nc:826 ncall:2.2e+06 eff:0.3% logz-ratio=50.27+/-0.09 dlogz:178>0.1]
+walks	tune 2750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.628
+walks	tune 3000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.659
+6571it [0:07:17 bound:48 nc:947 ncall:2.6e+06 eff:0.3% logz-ratio=60.01+/-0.09 dlogz:170>0.1]
+walks	tune 3250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.685
+6941it [0:08:24 bound:54 nc:621 ncall:3.0e+06 eff:0.2% logz-ratio=69.91+/-0.10 dlogz:179>0.1]
+walks	tune 3500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.707
+walks	tune 3750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.727
+7318it [0:09:37 bound:60 nc:1040 ncall:3.3e+06 eff:0.2% logz-ratio=80.05+/-0.10 dlogz:169>0.1]
+walks	tune 4000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.744
+7698it [0:10:43 bound:66 nc:725 ncall:3.7e+06 eff:0.2% logz-ratio=91.32+/-0.10 dlogz:157>0.1]
+walks	tune 4250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.759
+walks	tune 4500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.772
+8073it [0:11:55 bound:72 nc:864 ncall:4.1e+06 eff:0.2% logz-ratio=103.33+/-0.10 dlogz:163>0.1]
+walks	tune 4750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.784
+8386it [0:12:55 bound:77 nc:2091 ncall:4.4e+06 eff:0.2% logz-ratio=113.52+/-0.10 dlogz:174>0.1]
+walks	tune 5000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.795
+8696it [0:13:56 bound:82 nc:905 ncall:4.8e+06 eff:0.2% logz-ratio=124.72+/-0.11 dlogz:162>0.1]
+walks	tune 5250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.805
+walks	tune 5500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.814
+9003it [0:14:59 bound:87 nc:1466 ncall:5.1e+06 eff:0.2% logz-ratio=135.65+/-0.11 dlogz:151>0.1]
+walks	tune 5750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.822
+9313it [0:16:05 bound:92 nc:1098 ncall:5.5e+06 eff:0.2% logz-ratio=146.59+/-0.11 dlogz:148>0.1]
+walks	tune 6000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.829
+9624it [0:17:13 bound:97 nc:1392 ncall:5.9e+06 eff:0.2% logz-ratio=157.41+/-0.11 dlogz:137>0.1]
+walks	tune 6250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.836
+9935it [0:18:22 bound:102 nc:1315 ncall:6.2e+06 eff:0.2% logz-ratio=168.14+/-0.11 dlogz:126>0.1]
+walks	tune 6500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.842
+walks	tune 6750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.848
+10246it [0:19:32 bound:107 nc:1405 ncall:6.6e+06 eff:0.2% logz-ratio=176.95+/-0.11 dlogz:117>0.1]
+walks	tune 7000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.854
+10557it [0:20:45 bound:112 nc:1092 ncall:7.0e+06 eff:0.2% logz-ratio=185.53+/-0.11 dlogz:108>0.1]
+walks	tune 7250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.859
+10869it [0:21:56 bound:117 nc:1300 ncall:7.4e+06 eff:0.1% logz-ratio=194.22+/-0.11 dlogz:101>0.1]
+walks	tune 7500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.863
+11113it [0:23:00 bound:121 nc:1447 ncall:7.7e+06 eff:0.1% logz-ratio=200.98+/-0.12 dlogz:100>0.1]
+walks	tune 7750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.868
+11362it [0:24:02 bound:125 nc:1409 ncall:8.0e+06 eff:0.1% logz-ratio=207.29+/-0.12 dlogz:93.9>0.1]
+walks	tune 8000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.872
+11612it [0:25:04 bound:129 nc:1335 ncall:8.3e+06 eff:0.1% logz-ratio=213.12+/-0.12 dlogz:87.8>0.1]
+walks	tune 8250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.876
+11866it [0:26:08 bound:133 nc:1560 ncall:8.7e+06 eff:0.1% logz-ratio=218.29+/-0.12 dlogz:85.2>0.1]
+walks	tune 8500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.880
+12116it [0:27:17 bound:137 nc:1385 ncall:9.0e+06 eff:0.1% logz-ratio=223.42+/-0.12 dlogz:85.9>0.1]
+walks	tune 8750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.883
+12360it [0:28:24 bound:141 nc:756 ncall:9.3e+06 eff:0.1% logz-ratio=228.27+/-0.12 dlogz:80.8>0.1]
+walks	tune 9000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.886
+12608it [0:29:31 bound:145 nc:1649 ncall:9.6e+06 eff:0.1% logz-ratio=233.06+/-0.12 dlogz:75.8>0.1]
+walks	tune 9250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.889
+12852it [0:30:35 bound:149 nc:1315 ncall:1.0e+07 eff:0.1% logz-ratio=237.37+/-0.12 dlogz:71.2>0.1]
+walks	tune 9500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.892
+13096it [0:31:44 bound:153 nc:2659 ncall:1.0e+07 eff:0.1% logz-ratio=241.58+/-0.12 dlogz:66.8>0.1]
+walks	tune 9750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.895
+13347it [0:32:54 bound:157 nc:1044 ncall:1.1e+07 eff:0.1% logz-ratio=245.32+/-0.12 dlogz:62.8>0.1]
+walks	tune 10000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.898
+13599it [0:34:03 bound:161 nc:1481 ncall:1.1e+07 eff:0.1% logz-ratio=249.20+/-0.12 dlogz:58.7>0.1]
+walks	tune 10250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.900
+13847it [0:35:11 bound:165 nc:1375 ncall:1.1e+07 eff:0.1% logz-ratio=252.85+/-0.12 dlogz:54.8>0.1]
+walks	tune 10500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.902
+walks	tune 10750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.905
+14093it [0:36:22 bound:169 nc:1108 ncall:1.2e+07 eff:0.1% logz-ratio=256.20+/-0.12 dlogz:51.2>0.1]
+walks	tune 11000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.907
+14342it [0:37:34 bound:173 nc:1186 ncall:1.2e+07 eff:0.1% logz-ratio=259.40+/-0.13 dlogz:47.7>0.1]
+walks	tune 11250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.909
+14586it [0:38:44 bound:177 nc:1165 ncall:1.2e+07 eff:0.1% logz-ratio=262.70+/-0.13 dlogz:44.2>0.1]
+walks	tune 11500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.911
+14835it [0:39:54 bound:181 nc:1895 ncall:1.3e+07 eff:0.1% logz-ratio=265.41+/-0.13 dlogz:43.3>0.1]
+walks	tune 11750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.913
+15086it [0:41:04 bound:185 nc:1479 ncall:1.3e+07 eff:0.1% logz-ratio=267.88+/-0.13 dlogz:40.5>0.1]
+walks	tune 12000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.915
+15336it [0:42:16 bound:189 nc:1733 ncall:1.3e+07 eff:0.1% logz-ratio=270.54+/-0.13 dlogz:37.6>0.1]
+walks	tune 12250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.916
+15581it [0:43:32 bound:193 nc:1248 ncall:1.4e+07 eff:0.1% logz-ratio=273.00+/-0.13 dlogz:34.9>0.1]
+walks	tune 12500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.918
+15831it [0:44:42 bound:197 nc:1060 ncall:1.4e+07 eff:0.1% logz-ratio=275.29+/-0.13 dlogz:32.4>0.1]
+walks	tune 12750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.920
+16081it [0:45:54 bound:201 nc:1000 ncall:1.4e+07 eff:0.1% logz-ratio=277.55+/-0.13 dlogz:29.9>0.1]
+walks	tune 13000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.921
+16331it [0:47:03 bound:205 nc:1210 ncall:1.5e+07 eff:0.1% logz-ratio=279.40+/-0.13 dlogz:28.6>0.1]
+walks	tune 13250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.923
+16576it [0:48:13 bound:209 nc:1820 ncall:1.5e+07 eff:0.1% logz-ratio=281.13+/-0.13 dlogz:26.6>0.1]
+walks	tune 13500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.924
+16823it [0:49:25 bound:213 nc:908 ncall:1.5e+07 eff:0.1% logz-ratio=282.77+/-0.13 dlogz:27.5>0.1]
+walks	tune 13750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.926
+17072it [0:50:35 bound:217 nc:2432 ncall:1.6e+07 eff:0.1% logz-ratio=284.42+/-0.13 dlogz:25.6>0.1]
+walks	tune 14000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.927
+17321it [0:51:45 bound:221 nc:916 ncall:1.6e+07 eff:0.1% logz-ratio=285.89+/-0.13 dlogz:23.9>0.1]
+walks	tune 14250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.928
+17570it [0:52:58 bound:225 nc:1229 ncall:1.6e+07 eff:0.1% logz-ratio=287.22+/-0.13 dlogz:22.3>0.1]
+walks	tune 14500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.929
+17816it [0:54:09 bound:229 nc:1849 ncall:1.7e+07 eff:0.1% logz-ratio=288.52+/-0.14 dlogz:20.8>0.1]
+walks	tune 14750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.931
+18064it [0:55:17 bound:233 nc:1598 ncall:1.7e+07 eff:0.1% logz-ratio=289.72+/-0.14 dlogz:19.3>0.1]
+walks	tune 15000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.932
+18310it [0:56:32 bound:237 nc:548 ncall:1.7e+07 eff:0.1% logz-ratio=290.82+/-0.14 dlogz:21>0.1]
+walks	tune 15250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.933
+18555it [0:57:42 bound:241 nc:1070 ncall:1.8e+07 eff:0.1% logz-ratio=291.78+/-0.14 dlogz:19.8>0.1]
+walks	tune 15500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.934
+18803it [0:58:56 bound:245 nc:1132 ncall:1.8e+07 eff:0.1% logz-ratio=292.67+/-0.14 dlogz:18.7>0.1]
+walks	tune 15750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.935
+19057it [1:00:11 bound:249 nc:1277 ncall:1.8e+07 eff:0.1% logz-ratio=293.58+/-0.14 dlogz:17.5>0.1]
+walks	tune 16000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.936
+19308it [1:01:23 bound:253 nc:1661 ncall:1.9e+07 eff:0.1% logz-ratio=294.41+/-0.14 dlogz:16.4>0.1]
+walks	tune 16250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.937
+19553it [1:02:37 bound:257 nc:1106 ncall:1.9e+07 eff:0.1% logz-ratio=295.14+/-0.14 dlogz:15.5>0.1]
+walks	tune 16500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.938
+19806it [1:03:50 bound:261 nc:1317 ncall:1.9e+07 eff:0.1% logz-ratio=295.82+/-0.14 dlogz:14.5>0.1]
+walks	tune 16750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.939
+19994it [1:04:51 bound:264 nc:3148 ncall:2.0e+07 eff:0.1% logz-ratio=296.29+/-0.14 dlogz:13.9>0.1]
+walks	tune 17000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.940
+20238it [1:06:11 bound:268 nc:1563 ncall:2.0e+07 eff:0.1% logz-ratio=296.87+/-0.14 dlogz:13.1>0.1]
+walks	tune 17250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.941
+20484it [1:07:29 bound:272 nc:1325 ncall:2.0e+07 eff:0.1% logz-ratio=297.41+/-0.14 dlogz:12.3>0.1]
+walks	tune 17500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.941
+20733it [1:08:45 bound:276 nc:1585 ncall:2.1e+07 eff:0.1% logz-ratio=297.94+/-0.14 dlogz:11.5>0.1]
+walks	tune 17750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.942
+20982it [1:10:05 bound:280 nc:1425 ncall:2.1e+07 eff:0.1% logz-ratio=298.45+/-0.14 dlogz:10.7>0.1]
+walks	tune 18000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.943
+21166it [1:11:08 bound:283 nc:1427 ncall:2.1e+07 eff:0.1% logz-ratio=298.81+/-0.14 dlogz:10.2>0.1]
+21345it [1:12:11 bound:286 nc:1699 ncall:2.2e+07 eff:0.1% logz-ratio=299.13+/-0.14 dlogz:9.68>0.1]
+walks	tune 18250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.944
+21535it [1:13:17 bound:289 nc:1815 ncall:2.2e+07 eff:0.1% logz-ratio=299.46+/-0.14 dlogz:9.16>0.1]
+walks	tune 18500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.945
+21721it [1:14:25 bound:292 nc:1793 ncall:2.2e+07 eff:0.1% logz-ratio=299.78+/-0.14 dlogz:8.66>0.1]
+walks	tune 18750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.945
+21910it [1:15:33 bound:295 nc:1396 ncall:2.3e+07 eff:0.1% logz-ratio=300.07+/-0.14 dlogz:8.18>0.1]
+walks	tune 19000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.946
+22098it [1:16:39 bound:298 nc:829 ncall:2.3e+07 eff:0.1% logz-ratio=300.34+/-0.14 dlogz:7.72>0.1]
+22284it [1:17:46 bound:301 nc:1611 ncall:2.3e+07 eff:0.1% logz-ratio=300.60+/-0.15 dlogz:7.64>0.1]
+walks	tune 19250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.947
+22473it [1:18:54 bound:304 nc:1854 ncall:2.3e+07 eff:0.1% logz-ratio=300.84+/-0.15 dlogz:7.21>0.1]
+walks	tune 19500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.947
+22661it [1:20:03 bound:307 nc:1710 ncall:2.4e+07 eff:0.1% logz-ratio=301.07+/-0.15 dlogz:6.79>0.1]
+walks	tune 19750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.948
+22849it [1:21:15 bound:310 nc:1207 ncall:2.4e+07 eff:0.1% logz-ratio=301.29+/-0.15 dlogz:6.39>0.1]
+23039it [1:22:25 bound:313 nc:1451 ncall:2.4e+07 eff:0.1% logz-ratio=301.50+/-0.15 dlogz:5.99>0.1]
+walks	tune 20000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.949
+23222it [1:23:35 bound:316 nc:1903 ncall:2.5e+07 eff:0.1% logz-ratio=301.68+/-0.15 dlogz:5.62>0.1]
+walks	tune 20250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.949
+23409it [1:24:48 bound:319 nc:2138 ncall:2.5e+07 eff:0.1% logz-ratio=301.86+/-0.15 dlogz:5.45>0.1]
+walks	tune 20500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.950
+23598it [1:26:03 bound:322 nc:2243 ncall:2.5e+07 eff:0.1% logz-ratio=302.03+/-0.15 dlogz:5.09>0.1]
+23784it [1:27:15 bound:325 nc:2013 ncall:2.6e+07 eff:0.1% logz-ratio=302.18+/-0.15 dlogz:4.76>0.1]
+walks	tune 20750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.951
+23972it [1:28:28 bound:328 nc:1412 ncall:2.6e+07 eff:0.1% logz-ratio=302.33+/-0.15 dlogz:4.43>0.1]
+walks	tune 21000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.951
+24157it [1:29:43 bound:331 nc:5101 ncall:2.6e+07 eff:0.1% logz-ratio=302.46+/-0.15 dlogz:4.11>0.1]
+walks	tune 21250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.952
+24345it [1:30:53 bound:334 nc:1621 ncall:2.7e+07 eff:0.1% logz-ratio=302.59+/-0.15 dlogz:4.29>0.1]
+walks	tune 21500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.952
+24534it [1:32:06 bound:337 nc:2015 ncall:2.7e+07 eff:0.1% logz-ratio=302.71+/-0.15 dlogz:3.99>0.1]
+24721it [1:33:19 bound:340 nc:1792 ncall:2.7e+07 eff:0.1% logz-ratio=302.82+/-0.15 dlogz:4.17>0.1]
+walks	tune 21750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.953
+24908it [1:34:35 bound:343 nc:2838 ncall:2.8e+07 eff:0.1% logz-ratio=302.92+/-0.15 dlogz:3.89>0.1]
+walks	tune 22000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.953
+25095it [1:35:55 bound:346 nc:1950 ncall:2.8e+07 eff:0.1% logz-ratio=303.01+/-0.15 dlogz:3.62>0.1]
+walks	tune 22250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.954
+25277it [1:37:13 bound:349 nc:901 ncall:2.8e+07 eff:0.1% logz-ratio=303.09+/-0.15 dlogz:3.36>0.1]
+25460it [1:38:33 bound:352 nc:1718 ncall:2.9e+07 eff:0.1% logz-ratio=303.16+/-0.15 dlogz:3.12>0.1]
+walks	tune 22500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.954
+25647it [1:39:49 bound:355 nc:748 ncall:2.9e+07 eff:0.1% logz-ratio=303.23+/-0.15 dlogz:2.87>0.1]
+walks	tune 22750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.955
+25833it [1:41:10 bound:358 nc:1828 ncall:2.9e+07 eff:0.1% logz-ratio=303.30+/-0.15 dlogz:2.63>0.1]
+walks	tune 23000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.955
+26019it [1:42:24 bound:361 nc:1396 ncall:3.0e+07 eff:0.1% logz-ratio=303.36+/-0.15 dlogz:2.41>0.1]
+26205it [1:43:40 bound:364 nc:2165 ncall:3.0e+07 eff:0.1% logz-ratio=303.41+/-0.15 dlogz:2.19>0.1]
+walks	tune 23250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.956
+26388it [1:44:55 bound:367 nc:1676 ncall:3.0e+07 eff:0.1% logz-ratio=303.46+/-0.15 dlogz:1.99>0.1]
+walks	tune 23500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.956
+26575it [1:46:13 bound:370 nc:860 ncall:3.1e+07 eff:0.1% logz-ratio=303.51+/-0.15 dlogz:1.79>0.1]
+walks	tune 23750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.957
+26764it [1:47:25 bound:373 nc:1715 ncall:3.1e+07 eff:0.1% logz-ratio=303.55+/-0.15 dlogz:1.6>0.1]
+walks	tune 24000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.957
+26947it [1:48:42 bound:376 nc:1039 ncall:3.1e+07 eff:0.1% logz-ratio=303.59+/-0.15 dlogz:1.43>0.1]
+27136it [1:49:59 bound:379 nc:1620 ncall:3.2e+07 eff:0.1% logz-ratio=303.63+/-0.15 dlogz:1.26>0.1]
+walks	tune 24250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.958
+27323it [1:51:18 bound:382 nc:2438 ncall:3.2e+07 eff:0.1% logz-ratio=303.66+/-0.15 dlogz:1.11>0.1]
+walks	tune 24500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.958
+27507it [1:52:36 bound:385 nc:1783 ncall:3.2e+07 eff:0.1% logz-ratio=303.69+/-0.15 dlogz:0.973>0.1]
+walks	tune 24750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.959
+27693it [1:53:56 bound:388 nc:2024 ncall:3.3e+07 eff:0.1% logz-ratio=303.71+/-0.15 dlogz:0.925>0.1]
+27880it [1:55:16 bound:391 nc:2039 ncall:3.3e+07 eff:0.1% logz-ratio=303.74+/-0.15 dlogz:0.803>0.1]
+walks	tune 25000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.959
+28065it [1:56:36 bound:394 nc:1529 ncall:3.4e+07 eff:0.1% logz-ratio=303.76+/-0.15 dlogz:0.705>0.1]
+walks	tune 25250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.959
+28255it [1:57:56 bound:397 nc:1504 ncall:3.4e+07 eff:0.1% logz-ratio=303.78+/-0.15 dlogz:0.605>0.1]
+walks	tune 25500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.960
+28440it [1:59:14 bound:400 nc:1997 ncall:3.4e+07 eff:0.1% logz-ratio=303.80+/-0.15 dlogz:0.677>0.1]
+28627it [2:00:35 bound:403 nc:1669 ncall:3.5e+07 eff:0.1% logz-ratio=303.81+/-0.15 dlogz:0.583>0.1]
+walks	tune 25750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.960
+28812it [2:01:59 bound:406 nc:2147 ncall:3.5e+07 eff:0.1% logz-ratio=303.82+/-0.15 dlogz:0.5>0.1]
+walks	tune 26000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.961
+28996it [2:03:26 bound:409 nc:1922 ncall:3.5e+07 eff:0.1% logz-ratio=303.83+/-0.15 dlogz:0.428>0.1]
+walks	tune 26250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.961
+29179it [2:04:51 bound:412 nc:1952 ncall:3.6e+07 eff:0.1% logz-ratio=303.85+/-0.15 dlogz:0.365>0.1]
+29364it [2:06:18 bound:415 nc:1295 ncall:3.6e+07 eff:0.1% logz-ratio=303.85+/-0.15 dlogz:0.309>0.1]
+walks	tune 26500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.961
+29550it [2:07:45 bound:418 nc:2634 ncall:3.7e+07 eff:0.1% logz-ratio=303.86+/-0.15 dlogz:0.261>0.1]
+walks	tune 26750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.962
+29732it [2:09:10 bound:421 nc:1760 ncall:3.7e+07 eff:0.1% logz-ratio=303.87+/-0.15 dlogz:0.221>0.1]
+walks	tune 27000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.962
+29917it [2:10:37 bound:424 nc:2281 ncall:3.7e+07 eff:0.1% logz-ratio=303.88+/-0.15 dlogz:0.185>0.1]
+walks	tune 27250	set 5000	cap 5000	cap-hit last 250 1.000	all 0.962
+30100it [2:12:05 bound:427 nc:1255 ncall:3.8e+07 eff:0.1% logz-ratio=303.88+/-0.15 dlogz:0.156>0.1]
+30284it [2:13:30 bound:430 nc:1748 ncall:3.8e+07 eff:0.1% logz-ratio=303.89+/-0.15 dlogz:0.14>0.1]
+walks	tune 27500	set 5000	cap 5000	cap-hit last 250 1.000	all 0.963
+30472it [2:15:00 bound:433 nc:1753 ncall:3.9e+07 eff:0.1% logz-ratio=303.89+/-0.15 dlogz:0.131>0.1]
+walks	tune 27750	set 5000	cap 5000	cap-hit last 250 1.000	all 0.963
+30659it [2:16:28 bound:436 nc:2453 ncall:3.9e+07 eff:0.1% logz-ratio=303.90+/-0.15 dlogz:0.119>0.1]
+walks	tune 28000	set 5000	cap 5000	cap-hit last 250 1.000	all 0.963
+11:01 bilby INFO    : Starting to close worker pool.
+11:01 bilby INFO    : Finished closing worker pool.
+11:01 bilby INFO    : Rejection sampling nested samples to obtain 5380 posterior samples
+11:01 bilby INFO    : Sampling time: 2:17:27.059062
+11:01 bilby INFO    : Computing per-detector log likelihoods.
+11:01 bilby INFO    : Using a pool with size 64 for nsamples=5380
+  0%|          | 0/5380 [00:00<?, ?it/s]  1%|▏         | 80/5380 [00:00<00:06, 782.85it/s]  4%|▎         | 190/5380 [00:00<00:05, 931.95it/s]  6%|▌         | 300/5380 [00:00<00:05, 982.37it/s]  8%|▊         | 410/5380 [00:00<00:04, 1009.87it/s] 10%|▉         | 520/5380 [00:00<00:04, 1022.36it/s] 12%|█▏        | 630/5380 [00:00<00:04, 1031.46it/s] 14%|█▍        | 740/5380 [00:00<00:04, 1039.23it/s] 16%|█▌        | 850/5380 [00:00<00:04, 1037.62it/s] 18%|█▊        | 960/5380 [00:00<00:04, 1042.27it/s] 20%|█▉        | 1070/5380 [00:01<00:04, 1044.67it/s] 22%|██▏       | 1180/5380 [00:01<00:04, 1046.21it/s] 24%|██▍       | 1290/5380 [00:01<00:03, 1049.66it/s] 26%|██▌       | 1400/5380 [00:01<00:03, 1051.17it/s] 28%|██▊       | 1510/5380 [00:01<00:03, 1049.61it/s] 30%|███       | 1620/5380 [00:01<00:03, 1049.54it/s] 32%|███▏      | 1730/5380 [00:01<00:03, 1050.45it/s] 34%|███▍      | 1840/5380 [00:01<00:03, 1050.66it/s] 36%|███▌      | 1950/5380 [00:01<00:03, 1052.23it/s] 38%|███▊      | 2060/5380 [00:02<00:04, 804.93it/s]  40%|████      | 2170/5380 [00:02<00:03, 864.91it/s] 42%|████▏     | 2280/5380 [00:02<00:03, 914.40it/s] 44%|████▍     | 2390/5380 [00:02<00:03, 952.95it/s] 46%|████▋     | 2500/5380 [00:02<00:02, 980.39it/s] 49%|████▊     | 2610/5380 [00:02<00:02, 1000.37it/s] 51%|█████     | 2720/5380 [00:02<00:02, 1016.65it/s] 53%|█████▎    | 2830/5380 [00:02<00:02, 1027.16it/s] 55%|█████▍    | 2940/5380 [00:02<00:02, 1037.40it/s] 57%|█████▋    | 3050/5380 [00:03<00:02, 1043.41it/s] 59%|█████▊    | 3160/5380 [00:03<00:02, 1046.85it/s] 61%|██████    | 3270/5380 [00:03<00:02, 1048.25it/s] 63%|██████▎   | 3380/5380 [00:03<00:01, 1051.02it/s] 65%|██████▍   | 3490/5380 [00:03<00:01, 1052.19it/s] 67%|██████▋   | 3600/5380 [00:03<00:01, 1053.52it/s] 69%|██████▉   | 3710/5380 [00:03<00:01, 1053.58it/s] 71%|███████   | 3820/5380 [00:03<00:01, 1054.57it/s] 73%|███████▎  | 3930/5380 [00:03<00:01, 1054.29it/s] 75%|███████▌  | 4040/5380 [00:03<00:01, 1055.16it/s] 77%|███████▋  | 4150/5380 [00:04<00:01, 1055.80it/s] 79%|███████▉  | 4260/5380 [00:04<00:01, 1056.34it/s] 81%|████████  | 4370/5380 [00:04<00:00, 1058.06it/s] 83%|████████▎ | 4480/5380 [00:04<00:00, 1057.68it/s] 85%|████████▌ | 4590/5380 [00:04<00:00, 1057.30it/s] 87%|████████▋ | 4700/5380 [00:04<00:00, 1056.96it/s] 89%|████████▉ | 4810/5380 [00:04<00:00, 1056.65it/s] 91%|█████████▏| 4920/5380 [00:04<00:00, 1055.96it/s] 93%|█████████▎| 5030/5380 [00:04<00:00, 1055.58it/s] 96%|█████████▌| 5140/5380 [00:05<00:00, 1054.33it/s] 98%|█████████▊| 5250/5380 [00:05<00:00, 1053.18it/s]100%|█████████▉| 5360/5380 [00:05<00:00, 1051.49it/s]100%|██████████| 5380/5380 [00:05<00:00, 1025.88it/s]
+11:01 bilby INFO    : Reconstructing marginalised parameters.
+11:01 bilby INFO    : Using a pool with size 64 for nsamples=5380
+  0%|          | 0/5380 [00:00<?, ?it/s]  1%|          | 40/5380 [00:00<00:16, 326.45it/s]  1%|▏         | 80/5380 [00:00<00:14, 363.62it/s]  3%|▎         | 150/5380 [00:00<00:10, 485.77it/s]  4%|▍         | 220/5380 [00:00<00:09, 543.00it/s]  5%|▌         | 290/5380 [00:00<00:08, 575.16it/s]  7%|▋         | 360/5380 [00:00<00:08, 595.83it/s]  8%|▊         | 430/5380 [00:00<00:08, 609.21it/s]  9%|▉         | 500/5380 [00:00<00:07, 618.03it/s] 11%|█         | 570/5380 [00:00<00:07, 623.74it/s] 12%|█▏        | 640/5380 [00:01<00:07, 627.12it/s] 13%|█▎        | 710/5380 [00:01<00:07, 629.20it/s] 14%|█▍        | 780/5380 [00:01<00:07, 630.81it/s] 16%|█▌        | 850/5380 [00:01<00:07, 631.68it/s] 17%|█▋        | 920/5380 [00:01<00:07, 631.90it/s] 18%|█▊        | 990/5380 [00:01<00:06, 632.63it/s] 20%|█▉        | 1060/5380 [00:01<00:06, 632.21it/s] 21%|██        | 1130/5380 [00:01<00:06, 632.31it/s] 22%|██▏       | 1200/5380 [00:01<00:06, 632.37it/s] 24%|██▎       | 1270/5380 [00:02<00:06, 631.88it/s] 25%|██▍       | 1340/5380 [00:02<00:06, 631.96it/s] 26%|██▌       | 1410/5380 [00:02<00:06, 631.62it/s] 28%|██▊       | 1480/5380 [00:02<00:06, 631.05it/s] 29%|██▉       | 1550/5380 [00:02<00:06, 630.53it/s] 30%|███       | 1620/5380 [00:02<00:05, 630.23it/s] 31%|███▏      | 1690/5380 [00:02<00:05, 629.24it/s] 33%|███▎      | 1760/5380 [00:02<00:05, 627.66it/s] 34%|███▍      | 1830/5380 [00:02<00:05, 626.45it/s] 35%|███▌      | 1900/5380 [00:03<00:05, 625.70it/s] 37%|███▋      | 1970/5380 [00:03<00:05, 624.74it/s] 38%|███▊      | 2040/5380 [00:03<00:05, 624.29it/s] 39%|███▉      | 2110/5380 [00:03<00:05, 624.08it/s] 41%|████      | 2180/5380 [00:03<00:05, 624.12it/s] 42%|████▏     | 2250/5380 [00:03<00:05, 624.07it/s] 43%|████▎     | 2320/5380 [00:03<00:04, 624.33it/s] 44%|████▍     | 2390/5380 [00:03<00:04, 625.36it/s] 46%|████▌     | 2460/5380 [00:04<00:04, 625.20it/s] 47%|████▋     | 2530/5380 [00:04<00:04, 625.04it/s] 48%|████▊     | 2600/5380 [00:04<00:04, 625.30it/s] 50%|████▉     | 2670/5380 [00:04<00:04, 625.97it/s] 51%|█████     | 2740/5380 [00:04<00:04, 625.47it/s] 52%|█████▏    | 2810/5380 [00:04<00:04, 625.13it/s] 54%|█████▎    | 2880/5380 [00:04<00:04, 624.74it/s] 55%|█████▍    | 2950/5380 [00:04<00:03, 624.47it/s] 56%|█████▌    | 3020/5380 [00:04<00:03, 623.96it/s] 57%|█████▋    | 3090/5380 [00:05<00:03, 623.81it/s] 59%|█████▊    | 3160/5380 [00:05<00:03, 624.13it/s] 60%|██████    | 3230/5380 [00:05<00:03, 624.22it/s] 61%|██████▏   | 3300/5380 [00:05<00:03, 623.76it/s] 63%|██████▎   | 3370/5380 [00:05<00:03, 622.87it/s] 64%|██████▍   | 3440/5380 [00:05<00:03, 622.56it/s] 65%|██████▌   | 3510/5380 [00:05<00:03, 621.72it/s] 67%|██████▋   | 3580/5380 [00:05<00:02, 621.26it/s] 68%|██████▊   | 3650/5380 [00:05<00:02, 621.12it/s] 69%|██████▉   | 3720/5380 [00:06<00:02, 620.71it/s] 70%|███████   | 3790/5380 [00:06<00:02, 620.33it/s] 72%|███████▏  | 3860/5380 [00:06<00:02, 619.89it/s] 73%|███████▎  | 3930/5380 [00:06<00:02, 617.84it/s] 74%|███████▍  | 4000/5380 [00:06<00:02, 617.93it/s] 76%|███████▌  | 4070/5380 [00:06<00:02, 617.96it/s] 77%|███████▋  | 4140/5380 [00:06<00:02, 617.67it/s] 78%|███████▊  | 4210/5380 [00:06<00:01, 617.72it/s] 80%|███████▉  | 4280/5380 [00:06<00:01, 618.24it/s] 81%|████████  | 4350/5380 [00:07<00:01, 618.31it/s] 82%|████████▏ | 4420/5380 [00:07<00:01, 617.31it/s] 83%|████████▎ | 4490/5380 [00:07<00:01, 617.17it/s] 85%|████████▍ | 4560/5380 [00:07<00:01, 616.38it/s] 86%|████████▌ | 4630/5380 [00:07<00:01, 616.82it/s] 87%|████████▋ | 4700/5380 [00:07<00:01, 617.06it/s] 89%|████████▊ | 4770/5380 [00:07<00:00, 616.60it/s] 90%|████████▉ | 4840/5380 [00:07<00:00, 615.54it/s] 91%|█████████▏| 4910/5380 [00:07<00:00, 614.69it/s] 93%|█████████▎| 4980/5380 [00:08<00:00, 613.25it/s] 94%|█████████▍| 5050/5380 [00:08<00:00, 612.72it/s] 95%|█████████▌| 5120/5380 [00:08<00:00, 612.82it/s] 96%|█████████▋| 5190/5380 [00:08<00:00, 611.84it/s] 98%|█████████▊| 5260/5380 [00:08<00:00, 611.55it/s] 99%|█████████▉| 5330/5380 [00:08<00:00, 611.05it/s]100%|██████████| 5380/5380 [00:08<00:00, 616.66it/s]
+11:01 bilby INFO    : Generating sky frame parameters.
+  0%|          | 0/5380 [00:00<?, ?it/s] 12%|█▏        | 671/5380 [00:00<00:00, 6705.74it/s] 25%|██▍       | 1342/5380 [00:00<00:00, 6634.69it/s] 38%|███▊      | 2018/5380 [00:00<00:00, 6687.30it/s] 50%|█████     | 2695/5380 [00:00<00:00, 6716.64it/s] 63%|██████▎   | 3372/5380 [00:00<00:00, 6735.41it/s] 75%|███████▌  | 4049/5380 [00:00<00:00, 6746.95it/s] 88%|████████▊ | 4727/5380 [00:00<00:00, 6756.72it/s]100%|██████████| 5380/5380 [00:00<00:00, 6736.77it/s]
+11:01 bilby INFO    : Computing SNRs for every sample.
+11:01 bilby INFO    : Using a pool with size 64 for nsamples=5380
+  0%|          | 0/5380 [00:00<?, ?it/s] 27%|██▋       | 1474/5380 [00:00<00:00, 10521.63it/s] 54%|█████▎    | 2882/5380 [00:00<00:00, 10711.41it/s] 80%|███████▉  | 4290/5380 [00:00<00:00, 10897.72it/s]100%|██████████| 5380/5380 [00:00<00:00, 11837.63it/s]
+11:01 bilby INFO    : Summary of results:
+nsamples: 5380
+ln_noise_evidence: -7288.116
+ln_evidence: -6984.186 +/-  0.184
+ln_bayes_factor: 303.929 +/-  0.184
+
+ln_bayes_factor	303.929 +- 0.184
+posterior_samples	5380
+n_likelihood_evaluations	39513746
+ok    ln BF 303.93 vs published 303.45: 2.08 combined sigma (< 5)
+kish_ess	7655
+bootstrap_se_over_kish_binomial_median	0.985
+  chirp_mass           F(ref q05,q50,q95) = [0.0279 0.471  0.9584]   z = [-11.23  -4.62   3.12]
+  mass_ratio           F(ref q05,q50,q95) = [0.033  0.4582 0.9495]   z = [-7.84 -7.01 -0.18]
+  mass_1               F(ref q05,q50,q95) = [0.0428 0.5378 0.9626]   z = [-2.81  6.02  6.  ]
+  mass_2               F(ref q05,q50,q95) = [0.0325 0.459  0.9556]   z = [-8.62 -6.82  2.25]
+  chi_eff              F(ref q05,q50,q95) = [0.0336 0.4766 0.9571]   z = [-7.78 -3.91  2.4 ]
+  chi_p                F(ref q05,q50,q95) = [0.0499 0.5268 0.955 ]   z = [-0.05  4.02  2.16]
+  a_1                  F(ref q05,q50,q95) = [0.0548 0.543  0.9605]   z = [1.61 7.23 4.58]
+  a_2                  F(ref q05,q50,q95) = [0.0525 0.5136 0.959 ]   z = [0.96 2.28 3.6 ]
+  cos_tilt_1           F(ref q05,q50,q95) = [0.0432 0.4854 0.9428]   z = [-2.5  -2.44 -2.19]
+  cos_tilt_2           F(ref q05,q50,q95) = [0.039  0.4862 0.9522]   z = [-4.22 -2.19  0.79]
+  theta_jn             F(ref q05,q50,q95) = [0.023  0.4466 0.9444]   z = [-16.25  -8.71  -1.89]
+  azimuth              F(ref q05,q50,q95) = [0.0275 0.5002 0.9646]   z = [-12.06   0.04   6.41]
+  zenith               F(ref q05,q50,q95) = [0.0384 0.5159 0.9692]   z = [-4.61  2.47  9.36]
+  geocent_time         F(ref q05,q50,q95) = [0.0329 0.5005 0.9656]   z = [-8.94  0.08  7.37]
+  luminosity_distance  F(ref q05,q50,q95) = [0.0296 0.4342 0.9491]   z = [-6.59 -9.24 -0.3 ]
+  ra                   F(ref q05,q50,q95) = [0.0362 0.4941 0.9723]   z = [-4.43 -0.84  7.19]
+  dec                  F(ref q05,q50,q95) = [0.0548 0.5442 0.9732]   z = [1.56 6.21 7.49]
+FAIL  every published quantile (51 tests) within 5 SE of ours: max |z| 16.25
+median_chirp_mass	ours 30.5169 published 30.4358
+median_mass_ratio	ours 0.8611 published 0.8454
+median_chi_eff	ours -0.0492 published -0.0547
+median_luminosity_distance	ours 477.7804 published 463.0273
+median_theta_jn	ours 2.7261 published 2.6989
+maxrss_gib_main	0.97
+maxrss_gib_largest_worker	0.97
+PE FAILED: 1 checks
