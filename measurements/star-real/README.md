@@ -90,7 +90,7 @@ stubborn 57 s load, identical cold, warm, and under cache pressure. But Elastic 
 - hydrating the index: 28.6 GiB × $0.06 = **$1.72**, once
 - **every alignment that reads it: 28.6 GiB × $0.03 = $0.86**
 
-That align costs **$0.047** of compute (117 s of an m8g.8xlarge). The data charge is **18× the
+That align costs **$0.047** of compute (117 s of an m8g.8xlarge, the cold EFS align). The data charge is **18× the
 compute cost of the work it serves**, on every sample, forever. Bursting mode avoids the per-GiB
 charge but scales baseline throughput with *stored* bytes — ~1.4 MB/s for a 28.6 GiB filesystem
 — so it isn't an option here. There is no cheap EFS configuration for this shape.

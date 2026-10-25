@@ -62,9 +62,13 @@ collation with `--quant-subset`, which is Cell Ranger's raw→filtered shape. Sc
 - n = 1. piscem's phases reproduced the 0.9.0-era run to within 2 s (build 35 vs 37, map 65 vs
   66). **These timings are not compute cost.**
 
-## What held at scale, on both chips
+## What held at scale
 
-| identity | assertion | observed (both chips) |
+Observed is Graviton4 on alevin-fry 0.18.3. Intel's 0.9.0 run (`results/x86_64/quant.txt`) passed
+every row except three it predates and never ran: piscem's unmapped file, unmapped reads reaching
+`CorrectedReads`, and `MappingRate`. Its knee run quantified 72,054,428 records (below).
+
+| identity | assertion | observed (Graviton4) |
 |---|---|---|
 | input fully read | piscem `num_reads` == FASTQ records (R1 == R2) | **116,459,032** == 116,459,032 |
 | records cross the tool boundary | alevin-fry `observed` == piscem `num_mapped` | **86,550,564** == 86,550,564 |

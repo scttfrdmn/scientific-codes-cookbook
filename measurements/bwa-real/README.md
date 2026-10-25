@@ -162,7 +162,8 @@ ALT-aware, the same boxes, `-t 16`, SAM to disk) is a second clean run per chip:
   keep the in-flight counter, which the Graviton4 re-run shows cost nothing there.
 
 The task script is staged and pinned by sha256 (`align.sh`, `inputs/bwa-real/align.sh`), because
-spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form (spawn#1246).
+spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form (spawn#1063,
+which `gen-c8g`'s comment cites; the root cause is spawn#1246).
 `gen-c8g` carries `disk_gib: 40` for the SAM. Spend for the three re-run legs: $0.65 billed.
 
 ## Caveats

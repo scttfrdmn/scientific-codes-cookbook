@@ -31,7 +31,7 @@ freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 | caller | wall | $/result | SNV precision (`QUAL≥30`) | SNV recall (unfiltered) |
 |---|---|---|---|---|
 | [bcftools](../bcftools/README.md) | 228 s | 0.0126 | 0.99525 | **0.99491** |
-| **freebayes** | 644 s | 0.0310 | **0.99695** | 0.95953 |
+| **freebayes** | 644 s | 0.0312 | **0.99695** | 0.95953 |
 | [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99000 | **0.99545** |
 
 **Most precise once filtered, least sensitive** — ~4% fewer truth SNVs at defaults, real rather than a threshold artifact (recall is 0.95953 even unfiltered). Pick it when precision beats sensitivity, or for pooled samples, which is what it is for ([full three-way](../../measurements/callers-real/README.md)).

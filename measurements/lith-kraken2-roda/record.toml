@@ -25,7 +25,7 @@ wall_s = 510
 usd_hr = 2.3514
 compute_usd = 0.3331
 results = "results/kraken2-cost-ladder.txt"
-note = "wall_s is the 1M rung's task wall (1m_wall_s); the README's 'kraken2 wall' column prints kraken2's own 483.2 s, but its compute $ 0.3331 is priced on the 510 s rung wall. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads"
+note = "wall_s is the 1M rung's wall (1m_wall_s), on which compute $ 0.3331 is priced; kraken2's own processing time is 483.2 s. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads"
 
 [[run]]
 instance = "r8gd.8xlarge"

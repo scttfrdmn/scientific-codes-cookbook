@@ -1,11 +1,12 @@
 # Bayesian variant calling is the catalog's biggest generational gain — and the only even one
 
-> **freebayes on whole chr20 at 30× is 2.65× faster on Graviton5 than Graviton2**, the largest gain
+> **freebayes on whole chr20 at 36× is 2.65× faster on Graviton5 than Graviton2**, the largest gain
 > measured here. More interesting than the headline: the per-step gains are **1.59×, 1.32×, 1.27×**
 > — no weak step. Every other long ladder in this catalog stalls at Graviton3→4, and this one does
 > not, which breaks a generalisation that had been forming.
 
-freebayes 1.3.10, NA12878 chr20 at 30× (`NA12878.chr20.30x.bam`) against chr20 of GRCh38,
+freebayes 1.3.10, NA12878 chr20 at 36× (`NA12878.chr20.30x.bam`, named for the published 30x CRAM it
+is cut from: 36.3× mean depth, the recipe's BAM) against chr20 of GRCh38,
 4 vCPU on every rung, same image digest, same staged input objects.
 
 | generation | instance | calling | billed | $/hr | **compute $** | billed $ | variants |

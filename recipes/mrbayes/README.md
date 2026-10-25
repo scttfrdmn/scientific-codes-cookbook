@@ -46,7 +46,7 @@ mcmcp ngen=100000 samplefreq=100 nchains=4 nruns=2 stoprule=yes stopval=0.01;  m
 
 | chip | instance | wall | $/hr | compute $ | **billed $/result** |
 |---|---|---|---|---|---|
-| Graviton4 | `c8g.2xlarge` | 6,528 s | 0.3190 | 0.5785 | 0.5892 |
+| Graviton4 | `c8g.2xlarge` | 6,528 s | 0.3190 | 0.5785 | 0.5891 |
 | Xeon 6975P-C | `c8i.2xlarge` | 6,101 s | 0.3748 | 0.6352 | 0.6508 |
 | **EPYC 9R45** | `c8a.2xlarge` | **1,765 s** | 0.4311 | **0.2113** | **0.2195** |
 

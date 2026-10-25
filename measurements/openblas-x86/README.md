@@ -1,4 +1,4 @@
-# x86 picks five different BLAS kernels and computes the same answer on all of them
+# x86 picks four different BLAS kernels and computes the same answer on all of them
 
 > **x86 kernel dispatch is as varied as arm64's — four microarchitectures, four different
 > OpenBLAS kernels, including AMD Zen 4 running an *Intel-named* one. And the numbers do not
@@ -17,7 +17,7 @@ amplify).
 | `c6a.large` | EPYC 7R13 (Zen 3) | **`Zen`** | −4.026552552113374e+01 | −2.405351530260683e-01 |
 | `c7i.large` | Xeon Platinum 8488C (Sapphire Rapids) | **`SapphireRapids`** | −4.026552552113374e+01 | −2.405351530260683e-01 |
 | `c7a.large` | EPYC 9R14 (Zen 4) | **`Cooperlake`** | −4.026552552113374e+01 | −2.405351530260683e-01 |
-| `c8g.large` | Graviton4 (Neoverse V2) | `neoversev2` | −4.026552552113374e+01 | −2.405351530260**680**e-01 |
+| `c8g.large` | Graviton4 (Neoverse V2) | `neoversev2` | −4.026552552113**372**e+01 | −2.405351530260**680**e-01 |
 | laptop | Apple M-series | `neoversen1` | −4.026552552113**377**e+01 | −2.405351530260**677**e-01 |
 
 ## Two things worth keeping
@@ -40,8 +40,9 @@ It **does not** overturn the ambertools result, because that one is a controlled
 trajectory flipped to the Graviton2/laptop group exactly. Nothing but kernel selection can explain
 that.
 
-What it does say is that kernel dispatch is **not** uniformly dangerous. A 200×200 `dgemv` is
-bit-identical across five kernels, so the risk is specific to particular routines and problem
+What it does say is that kernel dispatch is **not** uniformly dangerous. A 200×200 `dgemv`
+power iteration's summed norms (`8.051856366500675e+05`) are bit-identical across five kernels,
+arm64's `neoversev2` included, so the risk is specific to particular routines and problem
 sizes — large blocked GEMM, where the dispatcher actually reaches kernel-specific code — rather
 than to "anything that touches a BLAS". That is a narrowing, and a reassuring one: it means the
 [standing rule](../../CLAUDE.md)'s fixed-point-versus-path line needs a third condition, *and the

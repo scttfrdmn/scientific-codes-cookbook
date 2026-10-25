@@ -15,7 +15,7 @@ Every caller ran on `c8g.xlarge`, 4 vCPU / 8 GiB, and again on `c8i.xlarge` and 
 | caller | model | wall | variants called | billed | **$/result** |
 |---|---|---|---|---|---|
 | **bcftools** `mpileup`+`call` | pileup | **228 s** | 127,616 | 285 s | **0.0126** |
-| freebayes | haplotype | 644 s | 385,371 | ~700 s | 0.0310 |
+| freebayes | haplotype | 644 s | 385,371 | 704 s | 0.0312 |
 | GATK4 HaplotypeCaller | local re-assembly | **7,929 s** | 131,730 | 7,982 s | **0.3537** |
 
 **On Graviton4, GATK is 34.8× slower and 28× more expensive per result than bcftools on identical bytes.**
@@ -62,7 +62,7 @@ fixed point here and the per-record annotations are a path.
 | caller | Graviton4 wall / billed | **$/result** | Intel wall / billed | **$/result** | AMD wall / billed | **$/result** |
 |---|---|---|---|---|---|---|
 | bcftools | 228 / 285 s | 0.0126 | 223 / 288 s | 0.0150 | **174 / 216 s** | 0.0129 |
-| freebayes | 644 / 704 s | 0.0310 | 474 / 539 s | 0.0281 | **358 / 414 s** | **0.0248** |
+| freebayes | 644 / 704 s | 0.0312 | 474 / 539 s | 0.0281 | **358 / 414 s** | **0.0248** |
 | GATK4 | 7,929 / 7,982 s | 0.3537 | 1,228 / 1,324 s | 0.0689 | **849 / 944 s** | **0.0565** |
 
 $/hr: `c8g.xlarge` 0.1595, `c8i.xlarge` 0.1874, `c8a.xlarge` 0.2155. Billed is spawn's command

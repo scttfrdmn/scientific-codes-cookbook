@@ -1,7 +1,7 @@
 # deepTools bamCoverage — an exact conservation identity against samtools, and why it took three tries
 
 > **`bamCoverage --binSize 1 --normalizeUsing None` reproduces samtools' aligned-base count exactly
-> — 2,998,490,520 on both sides, zero difference, no tolerance.** Getting there required two
+> — 2,998,490,520 on both sides, zero difference.** The check allows ±1 base. Getting there required two
 > accounting corrections, and each near-miss had an exact cause rather than a tolerance to widen.
 >
 > The identity and every output byte hold on Graviton4, Intel and AMD alike.

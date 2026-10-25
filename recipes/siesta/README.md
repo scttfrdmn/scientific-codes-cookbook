@@ -57,7 +57,7 @@ Graviton2→5 is **1.86× faster** — the *smallest* gain of the four physics c
 | reference total energy | **exactly −214.377236 eV** (SIESTA's committed 5.4.2 value) | **−214.377236** |
 | MPI ranks | == launched (`Running on N nodes`) | **2** |
 | SCF converged | `SCF cycle converged` present, every scan point | **yes, 8/8** |
-| a₀ | 5.35–5.46 Å (LDA literature band for Si) | **5.4042 Å** |
+| a₀ | 5.35–5.46 Å (Si's 5.37–5.44 Å LDA literature band, ± 0.02) | **5.4042 Å** |
 | **a₀ vs GPAW** | **< 0.03 Å** | **0.0097 Å** |
 
 Two genuinely independent checks in one run. The first is a **published-number reproduction**: the

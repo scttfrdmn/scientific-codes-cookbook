@@ -46,7 +46,7 @@ Graviton4, bioconda's on the other two. Both images ship `mb-mpi` (Open MPI 4.1.
 
 | chip | instance | generations | tool wall | billed | peak RSS | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|---|
-| Graviton4 | `c8g.2xlarge` | 560,000 | 6,528 s | 6,648 s | 0.48 GiB | 0.3190 | 0.5785 | 0.5892 |
+| Graviton4 | `c8g.2xlarge` | 560,000 | 6,528 s | 6,648 s | 0.48 GiB | 0.3190 | 0.5785 | 0.5891 |
 | Xeon 6975P-C | `c8i.2xlarge` | 560,000 | 6,101 s | 6,250 s | 0.48 GiB | 0.3748 | 0.6352 | 0.6508 |
 | **EPYC 9R45** | `c8a.2xlarge` | 560,000 | **1,765 s** | **1,833 s** | 0.48 GiB | 0.4311 | **0.2113** | **0.2195** |
 

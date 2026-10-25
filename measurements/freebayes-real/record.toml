@@ -1,12 +1,12 @@
 # measurements/freebayes-real/record.toml
 schema = 1
-result_unit = "one whole-chr20 call: freebayes on NA12878 chr20 at 30x against GRCh38 chr20"
+result_unit = "one whole-chr20 call: freebayes on NA12878 chr20 at 36x against GRCh38 chr20"
 
 [[dataset]]
 id = "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)"
 tier = "built"
 from_recipe = "freebayes"
-unpinned = "the README commits no sha256 for the 30x BAM it used (the recipe page now pins a 36x BAM instead)"
+unpinned = "the ladder's tasks read the recipe's S3 object (inputs/gatk4/NA12878.chr20.30x.bam, 36.3x despite the name; sha256 0ad228c1... on recipes/freebayes) but did not re-check its sha256; the 385,371 variants match the recipe's run"
 
 # --- Graviton generation ladder: 4 vCPU, same digest, same staged objects -------------
 [[run]]

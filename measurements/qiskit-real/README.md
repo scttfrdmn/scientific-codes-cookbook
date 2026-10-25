@@ -138,7 +138,7 @@ itself is a **path**:
   123 compiled circuits on Intel and on AMD against Graviton4. The routed layout and SWAP choices
   are the same search.
 - **The single-qubit layer follows the floating point.** The exact compiled QASM is byte-identical
-  on 55 of 123 (Intel vs Graviton4). On 30 more, only the last bits of angles differ. On 33, the
+  on 55 of 123 (Intel vs Graviton4). On 35 more, only the last bits of angles differ. On 33, the
   gate sequence differs: 26 have a different total gate count, by up to 0.9% (`gcm_h6`;
   `bwt_n177` is 53,189,206 vs 53,369,759). A last-bit difference decides whether a rotation counts as the identity, and the
   1q optimiser takes a different branch. AMD differs from Graviton4 on the same 68 circuits, and is byte-identical to Intel on 120 of

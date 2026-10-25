@@ -228,12 +228,14 @@ Human WGS reads (`SRR062634`) against the full 1.1 TiB RefSeq-Complete DB on loc
 `r8gd.8xlarge`, 32 threads. kraken2's own reported rate, and a read-count ladder so a kill
 costs the largest rung rather than all of them:
 
-| reads | kraken2 wall | its rate | classified | compute $ |
-|---|---|---|---|---|
-| 10,000 | 21.9 s | 27.4 Kseq/min | 98.64% | $0.0268 |
-| 100,000 | 70.4 s | 85.3 Kseq/min | 99.29% | $0.0529 |
-| **1,000,000** | **483.2 s** | **124.2 Kseq/min** | **99.30%** | **$0.3331** |
-| 100,000 (repeat) | 71.2 s | 84.2 Kseq/min | 99.29% | $0.0529 |
+| reads | kraken2 wall | its rate | classified | rung wall | compute $ |
+|---|---|---|---|---|---|
+| 10,000 | 21.9 s | 27.4 Kseq/min | 98.64% | 41 s | $0.0268 |
+| 100,000 | 70.4 s | 85.3 Kseq/min | 99.29% | 81 s | $0.0529 |
+| **1,000,000** | **483.2 s** | **124.2 Kseq/min** | **99.30%** | **510 s** | **$0.3331** |
+| 100,000 (repeat) | 71.2 s | 84.2 Kseq/min | 99.29% | 81 s | $0.0529 |
+
+Compute $ is the rung's wall at $2.3514/hr; kraken2's own wall is the part it reports processing.
 
 Fitting the extremes: **≈17 s fixed + 466 s per million reads**, i.e. a marginal rate of
 **~129,000 reads/min**. The rate quadruples from 10k to 1M purely because that fixed 17 s of
@@ -446,7 +448,7 @@ The forward question: not which existing option is least bad, but what is reacha
 is fixed. Every input below is measured on this page.
 
 **The ceiling is kraken2's own compute floor, 27× away.** Warm, it does 100k reads in 1.77 s, so
-1M reads is **17.7 s of compute** against the **483.2 s** actually observed — $0.0116 vs $0.3331,
+1M reads is **17.7 s of compute** against the **483.2 s** actually observed — $0.0116 vs $0.3331 for the 510 s rung,
 **29× cheaper**.
 
 **The obvious refactor does not get there, which is the useful negative result.** Replacing `mmap`

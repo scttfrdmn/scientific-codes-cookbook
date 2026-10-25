@@ -26,13 +26,13 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
-wall_s = 1872
+wall_s = 1874
 billed_s = 1951
 usd_hr = 3.7702
-compute_usd = 1.961
+compute_usd = 1.963
 billed_usd = 2.043
 peak_gib = 115.4
-note = "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371; times.txt prints driver_wall_s 1874"
+note = "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371"
 
 [[run]]
 instance = "r8i.16xlarge"
@@ -42,13 +42,13 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
-wall_s = 1941
+wall_s = 1944
 billed_s = 1993
 usd_hr = 4.4454
-compute_usd = 2.397
+compute_usd = 2.401
 billed_usd = 2.461
 peak_gib = 111.7
-note = "MIPs finished 73 + 66; billed $ / finished 0.01771; times.txt prints driver_wall_s 1944"
+note = "MIPs finished 73 + 66; billed $ / finished 0.01771"
 
 [[run]]
 instance = "r8a.16xlarge"
@@ -58,13 +58,13 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
-wall_s = 1852
+wall_s = 1854
 billed_s = 1899
 usd_hr = 5.1124
-compute_usd = 2.63
+compute_usd = 2.633
 billed_usd = 2.697
 peak_gib = 120.2
-note = "MIPs finished 85 + 71; billed $ / finished 0.01729; times.txt prints driver_wall_s 1854"
+note = "MIPs finished 85 + 71; billed $ / finished 0.01729"
 
 # checks: the README's "What held at scale, on all three chips" rows (bound = the rule column, observed = Graviton4)
 [[check]]

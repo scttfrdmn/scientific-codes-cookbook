@@ -31,7 +31,7 @@ bcftools mpileup -f chr20.fa -r chr20 NA12878.chr20.30x.bam -Ou \
 | caller | wall | $/result | SNV F1 | indel recall |
 |---|---|---|---|---|
 | **bcftools** | **228 s** | **0.0126** | **0.99395** | 0.97077 |
-| freebayes | 644 s | 0.0310 | 0.97570 | 0.92146 |
+| freebayes | 644 s | 0.0312 | 0.97570 | 0.92146 |
 | [GATK4](../gatk4/README.md) | 7,929 s | 0.3537 | 0.99272 | **0.99372** |
 
 **SNV-driven work: bcftools first** — GATK's accuracy band for 1/28th the money. **Indels: GATK**, the one place re-assembly clearly wins ([full three-way](../../measurements/callers-real/README.md)).

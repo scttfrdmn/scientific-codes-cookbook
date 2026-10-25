@@ -3748,6 +3748,11 @@
      "note": "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form",
      "ref": "spawn#1246",
      "role": "workaround"
+    },
+    {
+     "note": "gen-c8g.task.json's comment cites it: a spec over the 16 KiB user-data limit passes --dry-run, then RunInstances fails; spawn#1246 is the bootstrap-size cause",
+     "ref": "spawn#1063",
+     "role": "cited"
     }
    ]
   },
@@ -4069,13 +4074,14 @@
     {
      "arch": "arm64",
      "billed_s": 704,
+     "billed_usd": 0.0312,
      "chip": "Graviton4",
      "date": "2026-09-30",
      "date_source": "git",
      "generation": 8,
      "image": "recipe",
      "instance": "c8g.xlarge",
-     "note": "freebayes. billed_usd left out: README prints $0.0310 (and '~700 s' billed in the first table), but 704 s x $0.1595/hr = $0.0312",
+     "note": "freebayes; billed 704 s and $0.0312 as in freebayes-real/results/ladder.tsv",
      "purpose": "primary",
      "region": "us-west-2",
      "results": "results/freebayes-smoke-check.txt",
@@ -7006,7 +7012,7 @@
    "check": [
     {
      "across_chips": "identical",
-     "bound": "exact",
+     "bound": "|difference| <= 1 base (coverage-identity.sh)",
      "claim": "bamCoverage integral, binSize 1 == M bases (reference-aligned)",
      "id": "coverage-integral-w1",
      "kind": "conservation",
@@ -7216,7 +7222,7 @@
     {
      "across_chips": "identical",
      "across_chips_evidence": "a0_Ang 5.4042 on c6g, c7g, c8g and c9g",
-     "bound": "5.37–5.44 Å",
+     "bound": "5.35–5.46 Å as asserted (the 5.37–5.44 Å literature band ± 0.02)",
      "claim": "Both land inside the LDA literature band for Si (5.37–5.44 Å) -- SIESTA",
      "id": "siesta-lda-band",
      "kind": "band",
@@ -7224,7 +7230,7 @@
      "outcome": "pass"
     },
     {
-     "bound": "5.37–5.44 Å",
+     "bound": "5.35–5.46 Å as asserted (the 5.37–5.44 Å literature band ± 0.02)",
      "claim": "Both land inside the LDA literature band for Si (5.37–5.44 Å) -- GPAW",
      "id": "gpaw-lda-band",
      "kind": "band",
@@ -8894,7 +8900,7 @@
       "quay.io/aarchbio/flye@sha256:d87ccd4e29f2995e6bbcea9f72e90f575897a5489b472111695320bd8528dc12"
      ],
      "instance": "c8g.2xlarge",
-     "note": "recipes/flye's table prints 306 s for this rung, the results file 312 s",
+     "note": "the recipe's run under the exact assertions; recipes/flye's table prints 306 s, from the sweep rung (band assertions) whose output was not kept",
      "pin_current": true,
      "purpose": "primary",
      "region": "us-west-2",
@@ -9265,14 +9271,14 @@
      "from_recipe": "freebayes",
      "id": "NA12878.chr20.30x.bam + chr20 of GRCh38 (staged by make stage RECIPE=freebayes)",
      "tier": "built",
-     "unpinned": "the README commits no sha256 for the 30x BAM it used (the recipe page now pins a 36x BAM instead)"
+     "unpinned": "the ladder's tasks read the recipe's S3 object (inputs/gatk4/NA12878.chr20.30x.bam, 36.3x despite the name; sha256 0ad228c1... on recipes/freebayes) but did not re-check its sha256; the 385,371 variants match the recipe's run"
     }
    ],
    "owners": [
     "freebayes"
    ],
    "path": "measurements/freebayes-real/record.toml",
-   "result_unit": "one whole-chr20 call: freebayes on NA12878 chr20 at 30x against GRCh38 chr20",
+   "result_unit": "one whole-chr20 call: freebayes on NA12878 chr20 at 36x against GRCh38 chr20",
    "results_per_run": 1,
    "run": [
     {
@@ -10816,7 +10822,7 @@
       "quay.io/aarchsci/climate@sha256:53ce76bc2a96d4dded744df2f3eccc040e4fa53ece7faa225eaa36eee64e8428"
      ],
      "instance": "r8g.8xlarge",
-     "note": "README peak RSS cell '2.68 / 56.1 GiB' (worker / container); host.txt prints memory.peak_gib 55.34, not 56.1. Stage-in 477 s",
+     "note": "README peak RSS cell '2.68 / 55.3 GiB' (worker / container; host.txt memory.peak_gib 55.34). Stage-in 477 s",
      "openblas_corename": "neoversev2",
      "pin_current": true,
      "purpose": "primary",
@@ -16163,7 +16169,7 @@
      "generation": 8,
      "image": "recipe",
      "instance": "r8gd.8xlarge",
-     "note": "wall_s is the 1M rung's task wall (1m_wall_s); the README's 'kraken2 wall' column prints kraken2's own 483.2 s, but its compute $ 0.3331 is priced on the 510 s rung wall. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads",
+     "note": "wall_s is the 1M rung's wall (1m_wall_s), on which compute $ 0.3331 is priced; kraken2's own processing time is 483.2 s. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads",
      "purpose": "primary",
      "region": "us-west-2",
      "results": "results/kraken2-cost-ladder.txt",
@@ -20177,7 +20183,7 @@
     {
      "arch": "arm64",
      "billed_s": 6648,
-     "billed_usd": 0.5892,
+     "billed_usd": 0.5891,
      "chip": "Graviton4",
      "compute_usd": 0.5785,
      "date": "2026-10-20",
@@ -22664,7 +22670,7 @@
     },
     {
      "across_chips": "fixed-point",
-     "across_chips_evidence": "−4.026552552113374e+01 on all four x86 rungs (four kernels); README prints …374 for c8g.large too, but results/blas-c8g.txt has −4.026552552113372e+01; Apple laptop (neoversen1) …377",
+     "across_chips_evidence": "−4.026552552113374e+01 on all four x86 rungs (four kernels); −4.026552552113372e+01 on c8g.large (neoversev2, results/blas-c8g.txt); Apple laptop (neoversen1) …377",
      "claim": "converged eigenvalue (dominant eigenvalue by power iteration through dgemv)",
      "id": "converged-eigenvalue",
      "kind": "reported",
@@ -23469,7 +23475,7 @@
      "billed_s": 1951,
      "billed_usd": 2.043,
      "chip": "Graviton4",
-     "compute_usd": 1.961,
+     "compute_usd": 1.963,
      "cpu_part": "0xd4f",
      "date": "2026-10-18",
      "date_source": "git",
@@ -23480,7 +23486,7 @@
       "quay.io/aarchsci/optimization@sha256:460d6029d7cf5f30aa45e41312754b8724c284a34d4bb864d4f18820bd8837d4"
      ],
      "instance": "r8g.16xlarge",
-     "note": "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371; times.txt prints driver_wall_s 1874",
+     "note": "64 single-threaded solves at a time; peak is the box's anonymous memory; MIPs finished in 300 s 79 + 70; billed $ / finished 0.01371",
      "openblas_corename": "neoversev2",
      "peak_gib": 115.4,
      "pin_current": true,
@@ -23490,14 +23496,14 @@
      "threads_per_core": 1,
      "usd_hr": 3.7702,
      "vendor": "AWS",
-     "wall_s": 1872,
+     "wall_s": 1874,
      "workers": 64
     },
     {
      "arch": "x86_64",
      "billed_s": 1993,
      "billed_usd": 2.461,
-     "compute_usd": 2.397,
+     "compute_usd": 2.401,
      "cpu_model": "Intel(R) Xeon(R) 6975P-C",
      "date": "2026-10-18",
      "date_source": "git",
@@ -23506,7 +23512,7 @@
      "image": "recipe",
      "image_resolved": "envs-x86_64/optimization-05f6d9c11f8d.linux-64.lock",
      "instance": "r8i.16xlarge",
-     "note": "MIPs finished 73 + 66; billed $ / finished 0.01771; times.txt prints driver_wall_s 1944",
+     "note": "MIPs finished 73 + 66; billed $ / finished 0.01771",
      "openblas_corename": "Cooperlake",
      "peak_gib": 111.7,
      "pin_current": true,
@@ -23516,14 +23522,14 @@
      "threads_per_core": 2,
      "usd_hr": 4.4454,
      "vendor": "Intel",
-     "wall_s": 1941,
+     "wall_s": 1944,
      "workers": 64
     },
     {
      "arch": "amd",
      "billed_s": 1899,
      "billed_usd": 2.697,
-     "compute_usd": 2.63,
+     "compute_usd": 2.633,
      "cpu_model": "AMD EPYC 9R45",
      "date": "2026-10-18",
      "date_source": "git",
@@ -23532,7 +23538,7 @@
      "image": "recipe",
      "image_resolved": "envs-x86_64/optimization-05f6d9c11f8d.linux-64.lock",
      "instance": "r8a.16xlarge",
-     "note": "MIPs finished 85 + 71; billed $ / finished 0.01729; times.txt prints driver_wall_s 1854",
+     "note": "MIPs finished 85 + 71; billed $ / finished 0.01729",
      "openblas_corename": "Cooperlake",
      "peak_gib": 120.2,
      "pin_current": true,
@@ -23542,7 +23548,7 @@
      "threads_per_core": 1,
      "usd_hr": 5.1124,
      "vendor": "AMD",
-     "wall_s": 1852,
+     "wall_s": 1854,
      "workers": 64
     }
    ],
@@ -28557,7 +28563,7 @@
     },
     {
      "across_chips": "path",
-     "across_chips_evidence": "gate sequence differs on 33 of 123; bwt_n177 is 53,189,206 vs 53,369,759 gates; AMD byte-identical to Intel on 120 of 123",
+     "across_chips_evidence": "differs on 68 of 123 (crosschip.txt): angles only on 35, gate sequence on 33; bwt_n177 is 53,189,206 vs 53,369,759 gates; AMD byte-identical to Intel on 120 of 123",
      "claim": "The exact compiled QASM is byte-identical on 55 of 123 (Intel vs Graviton4).",
      "id": "compiled-qasm",
      "kind": "reported",
@@ -31812,6 +31818,7 @@
      "arch": "amd",
      "billed_s": 321,
      "billed_usd": 0.0096,
+     "compute_usd": 0.00047,
      "cpu_model": "AMD EPYC 9R45",
      "date": "2026-10-20",
      "date_source": "git",
@@ -31823,7 +31830,7 @@
       "quay.io/biocontainers/bioconductor-edger@sha256:6b2154b169512344d163ea5c9d5d5293fb4cbb67ea22ffa0e3d4aa8a8c0dde84"
      ],
      "instance": "c8a.large",
-     "note": "tool wall is DESeq2 + limma/edgeR, billed is both tasks; peak RSS printed as 1.07 GB (unit GB, not converted to GiB). README prints compute $/study 0.00047, but 15.5 s x $0.1078/hr = 0.00046; left out",
+     "note": "tool wall is DESeq2 + limma/edgeR (12.89 + 2.65 s in the report tsvs, printed rounded as 15.5), billed is both tasks; peak RSS printed as 1.07 GB (unit GB, not converted to GiB)",
      "pin_current": true,
      "purpose": "cross-chip",
      "region": "us-west-2",
@@ -31831,7 +31838,7 @@
      "spawn_version": "0.131.1",
      "usd_hr": 0.1078,
      "vendor": "AMD",
-     "wall_s": 15.5,
+     "wall_s": 15.54,
      "workers": 1
     }
    ],
@@ -36946,7 +36953,7 @@
       "quay.io/aarchbio/star@sha256:90331f64bd73eadaefbebc8d4aecfed3ebed1a7e40b761041acbbcf53b3e13ae"
      ],
      "instance": "m8g.8xlarge",
-     "note": "steady state, EFS: 57 s load. compute $ left out: the prose prices 'that align' at $0.047 for 117 s, but the EFS row prints 118 s (117 s is the FSx row)",
+     "note": "steady state, EFS: 57 s load. The prose prices 'that align' at $0.047 for 117 s, the cold EFS align (four-data-paths.txt efs_cold_align_s 117); this warm row is 118 s, the same $0.047",
      "pin_current": true,
      "purpose": "diagnostic",
      "region": "us-west-2",
@@ -37620,7 +37627,7 @@
    "dataset": [
     {
      "id": "su2code/TestCases v8.5.0 (790c80e) rans/naca0012/n0012_897-257.su2",
-     "note": "fetched on AWS by 00-fetch and kept only if equal to its git blob (manifest.tsv). README's Pins table prints the grid's sha256 as `2588fe11…d68d15`; pins.sha256's grid line ends …151337e (d68d15 is the end of n0012_225-65.su2's hash)",
+     "note": "fetched on AWS by 00-fetch and kept only if equal to its git blob (manifest.tsv)",
      "pins": "pins.sha256",
      "tier": "versioned-release"
     },
@@ -51989,6 +51996,11 @@
   {
    "ref": "spawn#1063",
    "uses": [
+    {
+     "measurement": "measurements/bwa-real",
+     "note": "gen-c8g.task.json's comment cites it: a spec over the 16 KiB user-data limit passes --dry-run, then RunInstances fails; spawn#1246 is the bootstrap-size cause",
+     "role": "cited"
+    },
     {
      "measurement": "measurements/fastp-real",
      "note": "x86 specs exceed EC2's 16 KiB user data on 0.139.1; inline command moved into a staged sha256-checked file",

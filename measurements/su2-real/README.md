@@ -131,7 +131,7 @@ solution (RMS ρ ≈ 1e-12), i.e. the bits of the build that wrote them. So resi
 
 | | |
 |---|---|
-| grid | `TestCases/rans/naca0012/n0012_897-257.su2` @ su2code/TestCases v8.5.0 (`790c80e`), sha256 `2588fe11…d68d15` |
+| grid | `TestCases/rans/naca0012/n0012_897-257.su2` @ su2code/TestCases v8.5.0 (`790c80e`), sha256 `2588fe11…151337e` |
 | regression | `n0012_225-65.su2` (`20dfc968…`) and `solution_flow_sa.dat` (`3e665e2d…`) @ the same commit |
 | config | `TestCases/rans/naca0012/turb_NACA0012_sa.cfg` @ su2code/SU2 v8.5.0 (`12eb826`), sha256 `fc88ad7b…` |
 | reference | TMR's "Summary of CFD SA Results" table, embedded in `real.py` with its URL; regression `test_vals` from `TestCases/parallel_regression.py` @ v8.5.0 |

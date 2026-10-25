@@ -61,9 +61,9 @@ same staged bytes:
 
 | chip | instance | tool wall | billed | peak RSS | $/hr | compute $/result | billed $/result | MIPs finished in 300 s | billed $ / finished |
 |---|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `r8g.16xlarge` | 1,872 s | 1,951 s | 115.4 GiB | 3.7702 | 1.961 | 2.043 | 79 + 70 | **0.01371** |
-| Xeon 6975P-C | `r8i.16xlarge` | 1,941 s | 1,993 s | 111.7 GiB | 4.4454 | 2.397 | 2.461 | 73 + 66 | 0.01771 |
-| EPYC 9R45 | `r8a.16xlarge` | 1,852 s | 1,899 s | 120.2 GiB | 5.1124 | 2.630 | 2.697 | **85 + 71** | 0.01729 |
+| Graviton4 | `r8g.16xlarge` | 1,874 s | 1,951 s | 115.4 GiB | 3.7702 | 1.963 | 2.043 | 79 + 70 | **0.01371** |
+| Xeon 6975P-C | `r8i.16xlarge` | 1,944 s | 1,993 s | 111.7 GiB | 4.4454 | 2.401 | 2.461 | 73 + 66 | 0.01771 |
+| EPYC 9R45 | `r8a.16xlarge` | 1,854 s | 1,899 s | 120.2 GiB | 5.1124 | 2.633 | 2.697 | **85 + 71** | 0.01729 |
 
 A result is the whole verified run: 273 LP solves and 480 MIP solves, with every check below.
 Finished counts are HiGHS + SCIP: optimal, or infeasibility proved. Peak RSS is the box's anonymous

@@ -54,7 +54,7 @@ peak_gib = 3.56
 peak_kind = "rss"
 note = "NOT the recipe's pin: bioconda piscem 0.23.0 + alevin-fry 0.9.0 (no biocontainers 0.18.3 image; digest not printed in the README, so image is left unset); 149 s = 39 + 79 + 31; the quant column does not compare"
 
-# --- checks: '## What held at scale, on both chips' (claim = identity: assertion; observed = README cell) ---
+# --- checks: '## What held at scale' (claim = identity: assertion; observed = README cell, Graviton4) ---
 [[check]]
 id = "input-fully-read"
 claim = "input fully read: piscem `num_reads` == FASTQ records (R1 == R2)"
@@ -90,7 +90,7 @@ id = "unmapped-file"
 claim = "piscem's unmapped file: header `1 1 3`, whole `(u32, u32)` records; mapped + unmapped ≤ reads"
 kind = "identity"
 observed = "86,550,564 + **29,906,218** ≤ 116,459,032 (809,126 barcodes)"
-outcome = { arm64 = "pass", x86_64 = "not-run" }   # README column says 'both chips'; results/x86_64/quant.txt (0.9.0) has no unmapped_bin lines
+outcome = { arm64 = "pass", x86_64 = "not-run" }   # results/x86_64/quant.txt (0.9.0) has no unmapped_bin lines
 
 [[check]]
 id = "unmapped-in-corrected"

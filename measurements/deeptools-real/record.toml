@@ -85,7 +85,7 @@ note = "task 03: bamCoverage 20 s + 12 s; compute $/result 0.0087 over both, omi
 id = "coverage-integral-w1"
 claim = "bamCoverage integral, binSize 1 == M bases (reference-aligned)"
 kind = "conservation"
-bound = "exact"
+bound = "|difference| <= 1 base (coverage-identity.sh)"
 observed = "2,998,490,520; difference 0"
 outcome = "pass"
 across_chips = "identical"

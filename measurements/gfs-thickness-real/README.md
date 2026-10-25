@@ -40,7 +40,7 @@ dz = mpcalc.thickness_hydrostatic(p, T, mixing_ratio=w)          # (721, 1440)
 
 | chip | instance | cores × threads | gfs.py wall | $/hr | compute $/result | stage-in | billed | **billed $/result** | peak RSS (worker / container) |
 |---|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `r8g.8xlarge` | 32 × 1 | 127.6 s | 1.8851 | **0.0668** | 477 s | 829 s | **0.4341** | 2.68 / 56.1 GiB |
+| Graviton4 | `r8g.8xlarge` | 32 × 1 | 127.6 s | 1.8851 | **0.0668** | 477 s | 829 s | **0.4341** | 2.68 / 55.3 GiB |
 | Xeon 6975P-C | `r8i.8xlarge` | 16 × 2 | 222.5 s | 2.2227 | 0.1374 | 645 s | 1007 s | 0.6217 | 2.69 / 57.7 GiB |
 | EPYC 9R45 | `r8a.8xlarge` | 32 × 1 | **124.1 s** | 2.5562 | 0.0881 | 515 s | **822 s** | 0.5837 | 2.69 / 47.7 GiB |
 

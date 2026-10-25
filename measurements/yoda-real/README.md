@@ -53,8 +53,9 @@ chips.
 | EPYC 9R45 | `m8a.2xlarge` | 59.7 s (**16.4 cpu-s**) | **5.7 cpu-s** | 351 s | 1.30 GiB | 0.4869 | 0.0081 | 0.0475 |
 
 - **The fill pass is the result**: uproot reading 61.5 M events, building the values, filling five
-  objects in 8 workers, plus the numpy references. YODA's own fills are the bracketed cpu-s: 16.0 M
-  fills per cpu-s on Graviton4, 12.0 M on Intel, 24.9 M on AMD. AMD fills fastest but its pass is
+  objects in 8 workers, plus the numpy references. Compute $/result prices this pass alone;
+  `results/compare.txt`'s compute $ also counts the reference read, which is a check. YODA's own
+  fills are the bracketed cpu-s: 16.0 M fills per cpu-s on Graviton4, 12.0 M on Intel, 24.9 M on AMD. AMD fills fastest but its pass is
   slower than Graviton4's, because worker start-up and reading dominate a 60 s pass. Intel's 8 vCPUs
   are 4 cores × 2 threads; Graviton4's and AMD's are 8 cores (`lscpu`, `results/*/host.txt`).
 - **Intel's window is 2.2× the others' because of `yodamerge`, not filling.** Merging the 247 job files

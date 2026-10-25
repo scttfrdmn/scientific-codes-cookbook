@@ -273,3 +273,8 @@ across_chips = "n/a"
 ref = "spawn#1246"
 role = "workaround"
 note = "align.sh is staged and pinned by sha256 because spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form"
+
+[[upstream]]
+ref = "spawn#1063"
+role = "cited"
+note = "gen-c8g.task.json's comment cites it: a spec over the 16 KiB user-data limit passes --dry-run, then RunInstances fails; spawn#1246 is the bootstrap-size cause"

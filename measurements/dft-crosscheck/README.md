@@ -14,7 +14,7 @@ fit applied to both scans.
 | | | **difference** | **0.0097 Å (0.18%)** |
 
 Both land inside the LDA literature band for Si (5.37–5.44 Å; LDA underbinds relative to the 5.431 Å
-experimental value, as expected).
+experimental value, as expected). The specs assert that band widened by 0.02 Å each side, 5.35–5.46 Å.
 
 ## Why total energies are not compared
 
