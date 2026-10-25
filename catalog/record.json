@@ -24753,344 +24753,879 @@
    "run": [
     {
      "arch": "arm64",
+     "attempt": "r1",
+     "billed_basis": "spawn-task",
      "billed_s": 4476,
      "billed_usd": 3.17,
      "chip": "Graviton4",
      "compute_usd": 3.13,
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-20",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm64/host.txt",
+     "id": "r1-graviton4",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "chip",
+      "naccept",
+      "maxmcmc",
+      "nlive"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB",
+     "n": 1,
+     "note": "r1; search 58 s + PE 4,351 s; largest single process 0.97 GiB; spawn task cookbook-gw-real-r1-r1",
      "openblas_corename": "neoversev2",
      "peak_gib": 32.2,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm64/phases.txt",
+      "tool": 4409
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "primary",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm64/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 4409,
      "workers": 64
     },
     {
      "arch": "x86_64",
+     "attempt": "r1",
+     "billed_basis": "spawn-task",
      "billed_s": 4636,
      "billed_usd": 3.86,
      "compute_usd": 3.82,
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-20",
      "date_source": "git",
      "generation": 8,
      "host": "results/x86_64/host.txt",
+     "id": "r1-intel",
      "image": "recipe",
      "image_resolved": "envs-x86_64/gw-ab3a5857bd21.linux-64.lock",
+     "in": [
+      "chip"
+     ],
      "instance": "c8i.16xlarge",
-     "note": "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads",
+     "n": 1,
+     "note": "env twin envs-x86_64/gw-ab3a5857bd21; 64 workers on 32 cores x 2 threads; search 88 s + PE 4,497 s; spawn task cookbook-gw-real-r1-x8664-r1",
      "openblas_corename": "Cooperlake",
      "peak_gib": 35.8,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/x86_64/phases.txt",
+      "tool": 4585
+     },
+     "physical_cores": 32,
      "pin_current": true,
      "purpose": "cross-chip",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/x86_64/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 500
+     },
      "threads_per_core": 2,
+     "threads_per_rank": 1,
      "usd_hr": 2.9987,
+     "vcpus": 64,
      "vendor": "Intel",
      "wall_s": 4585,
      "workers": 64
     },
     {
      "arch": "amd",
+     "attempt": "r1",
+     "billed_basis": "spawn-task",
      "billed_s": 3543,
      "billed_usd": 3.39,
      "compute_usd": 3.35,
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-20",
      "date_source": "git",
      "generation": 8,
      "host": "results/amd/host.txt",
+     "id": "r1-amd",
      "image": "recipe",
      "image_resolved": "envs-x86_64/gw-ab3a5857bd21.linux-64.lock",
+     "in": [
+      "chip"
+     ],
      "instance": "c8a.16xlarge",
-     "note": "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path",
+     "n": 1,
+     "note": "same twin as Intel; every output identical to Intel's (one build), so not an independent sampler path; search 52 s + PE 3,446 s; spawn task cookbook-gw-real-r1-amd-r1",
      "openblas_corename": "Cooperlake",
      "peak_gib": 33.5,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/amd/phases.txt",
+      "tool": 3498
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "cross-chip",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/amd/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 3.4486,
+     "vcpus": 64,
      "vendor": "AMD",
      "wall_s": 3498,
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "a2",
+     "billed_basis": "spawn-task",
      "billed_s": 227,
      "billed_usd": 0.16,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-21",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm-calibration/host.txt",
+     "id": "arm-calibration",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
      "instance": "c8g.16xlarge",
-     "note": "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails",
+     "n": 2,
+     "note": "arm 1, calibration: r1's own samples importance-reweighted from 250 to 1,000 and 4,000 curves; max |z| 8.39, 8.53 (Kish SE), fails; spawn task cookbook-gw-real-arm-calibration-a2 (an earlier a1, 237 s, failed and is not in the README)",
      "peak_gib": 2.31,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm-calibration/phases.txt",
+      "tool": 150
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm-calibration/",
+     "run_outcome": "completed",
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "variant": "arm 1: importance reweighting of r1's samples from 250 to 1,000 and 4,000 calibration curves",
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 150,
+     "wall_spread": [
+      147,
+      150
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "a1",
+     "billed_basis": "spawn-task",
      "billed_s": 4466,
      "billed_usd": 3.17,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-21",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm-naccept120/host.txt",
+     "id": "arm-naccept120",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "naccept"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails",
+     "n": 2,
+     "note": "arm 2, sampler: naccept 60 -> 120; 20.53M calls vs r1's 20.46M (walks already capped at maxmcmc); max |z| 16.15, fails; spawn task cookbook-gw-real-arm-naccept120-a1",
      "peak_gib": 7.29,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm-naccept120/phases.txt",
+      "tool": 4390
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm-naccept120/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 120,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 4390,
+     "wall_spread": [
+      4390,
+      4401
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "maxmcmc10k",
+     "billed_basis": "spawn-task",
      "billed_s": 8047,
      "billed_usd": 5.71,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-24",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm-maxmcmc10k/host.txt",
+     "id": "arm-maxmcmc10k",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "maxmcmc"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails",
+     "n": 2,
+     "note": "arm 3, sampler: maxmcmc 5,000 -> 10,000; 39.12M calls (1.91x r1), mean tail mass 0.0396 vs published 0.05; max |z| 14.45, fails; spawn task cookbook-gw-real-arm-maxmcmc10k-maxmcmc10k",
      "peak_gib": 8.45,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm-maxmcmc10k/phases.txt",
+      "tool": 7952
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm-maxmcmc10k/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 10000,
+      "naccept": 60,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 7952,
+     "wall_spread": [
+      7952,
+      8037
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "r1",
+     "billed_basis": "spawn-task",
      "billed_s": 8789,
      "billed_usd": 6.23,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-24",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm-nlive1000/host.txt",
+     "id": "arm-nlive1000",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "nlive"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails",
+     "n": 2,
+     "note": "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000, sampler seed 20261019; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-r1 (completion record 2026-10-25T01:46Z-04:12Z UTC)",
      "peak_gib": 7.14,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm-nlive1000/phases.txt",
+      "tool": 8711
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm-nlive1000/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 1000
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 8711,
+     "wall_spread": [
+      8401,
+      8711
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "rv1024",
+     "billed_basis": "spawn-task",
      "billed_s": 8471,
      "billed_usd": 6.01,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-25",
      "date_source": "git",
      "generation": 8,
      "host": "results/arm-nlive1000-seed2/host.txt",
+     "id": "arm-nlive1000-seed2",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "nlive"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 4b, sampler: arm 4 with the sampler seed 20261019 -> 20261024; 39.51M calls, 96% of walks at the cap, mean tail mass 0.0400 vs published 0.05 (arm 4: 0.0422); max |z| 16.25, 21 of 51 past 5 SE, fails",
+     "n": 2,
+     "note": "arm 4b, sampler: arm 4 with the sampler seed 20261019 -> 20261024, a second attempt of the nlive=1000 configuration; 39.51M calls, 96% of walks at the cap, mean tail mass 0.0400 vs published 0.05 (arm 4: 0.0422); max |z| 16.25, 21 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-seed2-rv1024",
      "peak_gib": 7.24,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/arm-nlive1000-seed2/phases.txt",
+      "tool": 8401
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/arm-nlive1000-seed2/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 1000
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 8401,
+     "wall_spread": [
+      8401,
+      8711
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "rv1024",
+     "billed_basis": "spawn-task",
      "billed_s": 217,
      "billed_usd": 0.15,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-25",
      "date_source": "git",
      "generation": 8,
      "host": "results/reverify/arm-calibration/host.txt",
+     "id": "reverify-arm-calibration",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
      "instance": "c8g.16xlarge",
-     "note": "arm 1 re-run on the new arms.py pin: quantiles_reweighted.tsv identical, lnL.npz byte-identical; exact",
+     "n": 2,
+     "note": "arm 1 re-run on the new arms.py pin: quantiles_reweighted.tsv identical, lnL.npz byte-identical; exact; spawn task cookbook-gw-real-arm-calibration-rv1024",
      "peak_gib": 2.3,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/reverify/arm-calibration/phases.txt",
+      "tool": 147
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/reverify/arm-calibration/",
+     "run_outcome": "completed",
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "variant": "arm 1: importance reweighting of r1's samples from 250 to 1,000 and 4,000 calibration curves",
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 147,
+     "wall_spread": [
+      147,
+      150
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "rv1024",
+     "billed_basis": "spawn-task",
      "billed_s": 4467,
      "billed_usd": 3.17,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-25",
      "date_source": "git",
      "generation": 8,
      "host": "results/reverify/arm-naccept120/host.txt",
+     "id": "reverify-arm-naccept120",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "naccept"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 2 re-run on the new arms.py pin: 20,534,663 calls and quantiles.tsv identical; exact",
+     "n": 2,
+     "note": "arm 2 re-run on the new arms.py pin: 20,534,663 calls and quantiles.tsv identical; exact; spawn task cookbook-gw-real-arm-naccept120-rv1024",
      "peak_gib": 7.09,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/reverify/arm-naccept120/phases.txt",
+      "tool": 4401
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/reverify/arm-naccept120/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 120,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 4401,
+     "wall_spread": [
+      4390,
+      4401
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "rv1024",
+     "billed_basis": "spawn-task",
      "billed_s": 8117,
      "billed_usd": 5.75,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-25",
      "date_source": "git",
      "generation": 8,
      "host": "results/reverify/arm-maxmcmc10k/host.txt",
+     "id": "reverify-arm-maxmcmc10k",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
+     "in": [
+      "maxmcmc"
+     ],
      "instance": "c8g.16xlarge",
-     "note": "arm 3 re-run on the new arms.py pin: quantiles.tsv and walks.tsv identical; exact",
+     "n": 2,
+     "note": "arm 3 re-run on the new arms.py pin: quantiles.tsv and walks.tsv identical; exact; spawn task cookbook-gw-real-arm-maxmcmc10k-rv1024",
      "peak_gib": 8.51,
      "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/reverify/arm-maxmcmc10k/phases.txt",
+      "tool": 8037
+     },
+     "physical_cores": 64,
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/reverify/arm-maxmcmc10k/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 10000,
+      "naccept": 60,
+      "nlive": 500
+     },
      "threads_per_core": 1,
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "vcpus": 64,
      "vendor": "AWS",
      "wall_s": 8037,
+     "wall_spread": [
+      7952,
+      8037
+     ],
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "w1",
+     "billed_basis": "spawn-task",
      "billed_s": 1941,
      "billed_usd": 1.38,
      "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
      "date": "2026-10-21",
      "date_source": "git",
      "generation": 8,
+     "id": "walks-probe",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
      "instance": "c8g.16xlarge",
-     "note": "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test",
+     "n": 1,
+     "note": "walk probe: r1 settings to iteration 8,769 with bilby's walk tuner recorded (walks.tsv); no quantile test; spawn task cookbook-gw-real-walks-probe-w1",
      "pin_current": true,
      "purpose": "diagnostic",
+     "ranks": 1,
      "region": "us-west-2",
      "results": "results/walks-probe/",
+     "run_outcome": "completed",
+     "threads_per_rank": 1,
      "usd_hr": 2.5524,
+     "variant": "walk probe: r1 settings stopped at iteration 8,769, bilby's walk tuner recorded",
+     "vcpus": 64,
      "vendor": "AWS",
      "workers": 64
     },
     {
      "arch": "arm64",
+     "attempt": "p2",
      "chip": "Graviton4",
+     "concurrent": 1,
+     "data_path": "stage-default",
      "date": "2026-10-21",
      "date_source": "git",
      "generation": 8,
+     "id": "naccept-probe",
      "image": "recipe",
      "image_resolved": [
       "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
      ],
      "instance": "c8g.16xlarge",
-     "note": "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README",
+     "n": 1,
+     "note": "naccept probe: a 14-D Gaussian at the same nlive, pool and sampler doubles its calls when naccept doubles (4.74M -> 9.44M); not priced in the README; spawn task cookbook-gw-real-naccept-probe-p2 (window in results/billed-windows.txt)",
      "pin_current": true,
      "purpose": "diagnostic",
      "region": "us-west-2",
      "results": "results/naccept-probe/",
+     "run_outcome": "completed",
+     "variant": "naccept probe: Gaussian likelihoods (6-D serial and 4-pool, 14-D at 64 processes), not the GW likelihood",
+     "vcpus": 64,
      "vendor": "AWS"
     }
    ],
-   "schema": 1,
+   "schema": 2,
+   "series": [
+    {
+     "attribution": "same-version-other-build",
+     "attribution_note": "x86 runs the gw env's locked linux-64 twin (envs-x86_64/gw-ab3a5857bd21), same versions; Intel's 64 vCPUs are 32 cores x 2 threads; Intel == AMD in every output (one build), so two independent sampler paths, not three",
+     "axis": "chip",
+     "curve": {
+      "cost_knee": {
+       "at": "AWS Graviton4",
+       "on": "billed_usd"
+      },
+      "points": [
+       {
+        "axis": "AMD",
+        "billed_usd": 3.39,
+        "compute_usd": 3.35,
+        "id": "r1-amd",
+        "instance": "c8a.16xlarge",
+        "n": 1,
+        "wall_s": 3498
+       },
+       {
+        "axis": "AWS Graviton4",
+        "billed_usd": 3.17,
+        "compute_usd": 3.13,
+        "id": "r1-graviton4",
+        "instance": "c8g.16xlarge",
+        "n": 1,
+        "wall_s": 4409
+       },
+       {
+        "axis": "Intel",
+        "billed_usd": 3.86,
+        "compute_usd": 3.82,
+        "id": "r1-intel",
+        "instance": "c8i.16xlarge",
+        "n": 1,
+        "wall_s": 4585
+       }
+      ]
+     },
+     "equal_work": "none: the sampler is a path (check sampler-path), 20.46M likelihood calls on Graviton4 against 20.12M on x86 from the same seed; the data and likelihood are the same on every chip (noise-evidence identical)",
+     "held": [
+      "input",
+      "workers",
+      "layout",
+      "size",
+      "generation"
+     ],
+     "id": "chip",
+     "note": "Graviton4 cheapest at $3.17 billed; AMD fastest (3,543 s billed) at $3.39; Intel $3.86"
+    },
+    {
+     "attribution": "same-binary",
+     "axis": "size",
+     "curve": {
+      "cost_knee": {
+       "at": 60,
+       "on": "billed_usd"
+      },
+      "points": [
+       {
+        "axis": 60,
+        "billed_usd": 3.17,
+        "compute_usd": 3.13,
+        "id": "r1-graviton4",
+        "instance": "c8g.16xlarge",
+        "n": 1,
+        "speedup": 1.0,
+        "wall_s": 4409
+       },
+       {
+        "axis": 120,
+        "billed_usd": 3.17,
+        "id": "arm-naccept120",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 1.004,
+        "wall_s": 4390
+       },
+       {
+        "axis": 120,
+        "billed_usd": 3.17,
+        "id": "reverify-arm-naccept120",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 1.002,
+        "wall_s": 4401
+       }
+      ]
+     },
+     "equal_work": "none: an arm changes a sampler setting, so the work is not held; data, priors, likelihood and seed are r1's",
+     "held": [
+      "image",
+      "instance",
+      "workers",
+      "layout",
+      "data_path",
+      "generation"
+     ],
+     "id": "naccept",
+     "note": "flat on the answer: raising naccept 60 -> 120 changes nothing, because every walk is already capped at maxmcmc=5000 (20.53M calls against r1's 20.46M, same time; mean tail mass 0.0369, in the spread at r1's settings). The re-run on the new arms.py pin reproduced 20,534,663 calls and quantiles.tsv exactly",
+     "size_key": "naccept",
+     "verdict": {
+      "shape": "flat",
+      "through": 120
+     }
+    },
+    {
+     "attribution": "same-binary",
+     "axis": "size",
+     "curve": {
+      "cost_knee": {
+       "at": 5000,
+       "on": "billed_usd"
+      },
+      "points": [
+       {
+        "axis": 5000,
+        "billed_usd": 3.17,
+        "compute_usd": 3.13,
+        "id": "r1-graviton4",
+        "instance": "c8g.16xlarge",
+        "n": 1,
+        "speedup": 1.0,
+        "wall_s": 4409
+       },
+       {
+        "axis": 10000,
+        "billed_usd": 5.71,
+        "id": "arm-maxmcmc10k",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 0.554,
+        "wall_s": 7952
+       },
+       {
+        "axis": 10000,
+        "billed_usd": 5.75,
+        "id": "reverify-arm-maxmcmc10k",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 0.549,
+        "wall_s": 8037
+       }
+      ]
+     },
+     "equal_work": "none: an arm changes a sampler setting, so the work is not held (39.12M calls, 1.91x r1); data, priors, likelihood and seed are r1's",
+     "held": [
+      "image",
+      "instance",
+      "workers",
+      "layout",
+      "data_path",
+      "generation"
+     ],
+     "id": "maxmcmc",
+     "note": "flat on the answer: doubling the walk cap doubles the accepted steps per chain and the tails do not move (mean tail mass 0.0396, inside the 0.037-0.040 of the three runs at r1's settings, against the published 0.05). The re-run reproduced quantiles.tsv and walks.tsv exactly",
+     "size_key": "maxmcmc",
+     "verdict": {
+      "shape": "flat",
+      "through": 10000
+     }
+    },
+    {
+     "attribution": "same-binary",
+     "axis": "size",
+     "curve": {
+      "cost_knee": {
+       "at": 500,
+       "on": "billed_usd"
+      },
+      "points": [
+       {
+        "axis": 500,
+        "billed_usd": 3.17,
+        "compute_usd": 3.13,
+        "id": "r1-graviton4",
+        "instance": "c8g.16xlarge",
+        "n": 1,
+        "speedup": 1.0,
+        "wall_s": 4409
+       },
+       {
+        "axis": 1000,
+        "billed_usd": 6.23,
+        "id": "arm-nlive1000",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 0.506,
+        "wall_s": 8711
+       },
+       {
+        "axis": 1000,
+        "billed_usd": 6.01,
+        "id": "arm-nlive1000-seed2",
+        "instance": "c8g.16xlarge",
+        "n": 2,
+        "speedup": 0.525,
+        "wall_s": 8401
+       }
+      ]
+     },
+     "equal_work": "none: an arm changes a sampler setting, so the work is not held (40.06M and 39.51M calls); data, priors and likelihood are r1's",
+     "held": [
+      "image",
+      "instance",
+      "workers",
+      "layout",
+      "data_path",
+      "generation"
+     ],
+     "id": "nlive",
+     "note": "flat on the answer, at the precision the runs give: two seeds at nlive=1000 give mean tail mass 0.0422 and 0.0400 (mean 0.0411) against 0.0385 for the three runs at r1's settings, a shift of 0.0026 +- 0.0015 (1.7 SE), not established, and 0.009 short of 0.05 either way. The tails are not shown to move under 2x chains or 2x nlive, over two seeds",
+     "size_key": "nlive",
+     "verdict": {
+      "shape": "flat",
+      "through": 1000
+     }
+    }
+   ],
    "status": "fail-reported",
+   "timing": {
+    "billed_basis": "spawn-task",
+    "wall": "chip rows: search + PE, each timed in run.sh (phases.txt search_wall_s + pe_wall_s); arm rows: arms.sh's whole wall (phases.txt wall_s)"
+   },
    "unpinned": [],
    "upstream": [
     {
@@ -25098,7 +25633,17 @@
      "ref": "bilby-dev/bilby#1162",
      "role": "cited"
     }
-   ]
+   ],
+   "workload": {
+    "note": "PyCBC search over 4,096 s of H1 and L1 strain (946-template bank), then Bilby/dynesty PE: IMRPhenomXPHM, 15 BBH parameters, calibration marginalised over 250 response curves, acceptance-walk, 64 pool processes, seeded",
+    "size": {
+     "calibration_curves": 250,
+     "events": 1,
+     "maxmcmc": 5000,
+     "naccept": 60,
+     "nlive": 500
+    }
+   }
   },
   "healpy-real": {
    "check": [
