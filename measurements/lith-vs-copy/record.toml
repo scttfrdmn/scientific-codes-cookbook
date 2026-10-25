@@ -1,7 +1,19 @@
 # measurements/lith-vs-copy/record.toml -- copy vs lith mount, one bwa alignment, one box.
 # No $ is printed anywhere in the README, so no run carries usd_hr or a cost.
-schema = 1
+# Schema 2: both rows are spawn launch (raw instance) runs on the same c8g.4xlarge; only data_path differs.
+schema = 2
 result_unit = "one bwa mem alignment of SRR062634 (HG00096, 24.1M read pairs) against the published GRCh38 index"
+
+[timing]
+wall = "bwa mem align time, timed in-script; setup (copy 38 s, lith 1 s index + 0 s mount) excluded"
+
+[[series]]
+id = "data-path"
+axis = "data_path"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: the inputs differed -- the copy route omitted the .alt, so the mount route did ALT-aware mapping and 0.88% more records"
+attribution = "same-binary"
+note = "total wall 849 s (copy) vs 856 s (mount), 0.8% apart; the aligner itself 5.4% slower on the mount; bytes moved 8.84 GiB vs 3,368 bytes"
 
 [[dataset]]
 id = "s3://1000genomes/technical/reference/GRCh38_reference_genome (GRCh38_full_analysis_set_plus_decoy_hla BWA index + .alt)"
@@ -16,21 +28,36 @@ pins = "../bwa-real/pins.sha256"
 note = "the RODA objects were hashed in place 2026-10-25, after the runs, and equal the inputs/bwa-real/ copies"
 
 [[run]]
+id = "copy"
+in = ["data-path"]
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 image = "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+launch = "launch"
+data_path = "ebs-copy"
+staged_gib = 8.84
 date = "2026-09-25"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 811
 results = "results/copy-route.txt"
 note = "copy route (aws s3 cp to local disk): align 811 s, plus 38 s setup moving 8.84 GiB at 233 MB/s, 849 s total"
 
 [[run]]
+id = "lith"
+in = ["data-path"]
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
 image = "quay.io/aarchbio/bwa@sha256:19f0eceab80740b821be7ada082d4434acf778912aac658dd1b4c6692dd2e9ba"
+launch = "launch"
+data_path = "lith"
 date = "2026-09-25"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 855
 results = "results/lith-route.txt"
 note = "lith FUSE mount of the public 1000genomes bucket: 3,368 bytes moved (index), 1 s index + 0 s mount, align 855 s, 856 s total"

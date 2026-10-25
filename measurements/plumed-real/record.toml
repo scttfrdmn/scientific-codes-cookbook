@@ -1,5 +1,8 @@
 # measurements/plumed-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window of the --no-mpi runs, exactly (results/billed-windows.txt).
+# The completion records date every run, with-mpi and --no-mpi, 2026-10-20 UTC; the git dates below
+# are left as authored. 16 single-threaded plumed driver workers, one trajectory each: no layout authored.
+schema = 2
 result_unit = "the whole cohort: 16,000 RODA pentapeptide trajectories through PLUMED, cpptraj and every check"
 
 [[dataset]]
@@ -8,7 +11,27 @@ tier = "roda"
 pins = "inputs.sha256"
 note = "bundle (cohort.tar) and its per-object manifest pinned by sha256; each object's MD5 equals RODA's ETag. RODA lists the dataset as not updated, so the bucket bundle is the durable copy"
 
+[workload]
+size = { trajectories = 16000, frames = 3200000 }
+note = "a process-start workload: one plumed driver + cpptraj call per 200-frame trajectory, 16 workers in parallel; paid for in process starts, not CV evaluation"
+
+[timing]
+wall = "the whole cohort through PLUMED, cpptraj and the checks, timed in-script"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "generation"]
+equal_work = "frames-conserved"
+attribution = "same-version-other-build"
+attribution_note = "PLUMED 2.9.2 and cpptraj V7.6.2 from the aarch.science md image on Graviton4 and its linux-64 lock twin on both x86 chips; Intel's 16 vCPUs are 8 cores x 2 SMT"
+verdict = { shape = "flat", on = "wall" }
+note = "the three chips finish within 4% of each other, so the hourly price decides: Graviton4 cheapest per result"
+
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/graviton4/"
@@ -26,6 +49,8 @@ peak_kind = "cgroup-memory.peak"
 note = "peak is the container cgroup; each worker peaks at 0.22 GiB (ru_maxrss)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/intel/"
@@ -43,6 +68,8 @@ peak_kind = "cgroup-memory.peak"
 note = "container cgroup peak also counts the env twin installed at start; each worker 0.31 GiB (ru_maxrss)"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -61,8 +88,10 @@ note = "container cgroup peak also counts the env twin; each worker 0.31 GiB (ru
 
 # --- the first pass, without --no-mpi: byte-identical COLVARs, not priced ----------------
 [[run]]
+id = "with-mpi-c8g"
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
+variant = "without plumed --no-mpi"
 results = "results/with-mpi/graviton4/"
 host = "results/with-mpi/graviton4/host.txt"
 date = "2026-10-02"
@@ -72,8 +101,10 @@ wall_s = 1982
 note = "first pass without plumed --no-mpi: MPI_Init holds each serial driver call 1.06 s"
 
 [[run]]
+id = "with-mpi-c8i"
 instance = "c8i.4xlarge"
 purpose = "diagnostic"
+variant = "without plumed --no-mpi"
 results = "results/with-mpi/intel/"
 host = "results/with-mpi/intel/host.txt"
 date = "2026-10-02"
@@ -83,8 +114,10 @@ wall_s = 2018
 note = "first pass without plumed --no-mpi"
 
 [[run]]
+id = "with-mpi-c8a"
 instance = "c8a.4xlarge"
 purpose = "diagnostic"
+variant = "without plumed --no-mpi"
 results = "results/with-mpi/amd/"
 host = "results/with-mpi/amd/host.txt"
 date = "2026-10-20"

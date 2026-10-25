@@ -1,0 +1,117 @@
+# measurements/flye-threads/record.toml -- Flye -t 1/2/4/8 on the same E. coli ONT reads, one run per
+# rung, 2026-09-09, us-east-1: wall falls and the contig count wanders. Written from scratch at schema 2.
+# Not kept (README): the spec, the image digest, the read-mode flag and the instance type. The
+# instance below is the README's "session record says m8g.2xlarge", not an artifact; no $ for that
+# reason (no usd_hr on any row). No completion records exist for this session.
+schema = 2
+result_unit = "one Flye 2.9.6 assembly of DRR242223 (-g 4.6m)"
+
+[workload]
+size = { bases = 254841156, read_n50 = 9487 }
+note = "E. coli ONT reads, whole read set per rung; genome size -g 4.6m"
+
+[timing]
+wall = "timing.txt WALL_SEC; agrees with flye.log's span from 'Starting Flye' to 'Final assembly'"
+
+[[series]]
+id = "threads"
+axis = "workers"
+held = ["image", "input", "instance", "size"]
+equal_work = "none: thread count changes the assembly (10, 12, 11, 14 contigs at -t 1/2/4/8), so the rungs do not compute the same thing"
+attribution = "same-binary"
+verdict = { shape = "answer-moves", through = 8 }
+note = "speed is sublinear too: 3.23x at 4 threads, 4.81x at 8, so the second four threads buy 1.49x; one run per rung, so it shows the answer moves, not how far it moves at a fixed -t"
+
+[[dataset]]
+id = "DDBJ/SRA run DRR242223 (E. coli ONT, 254,841,156 bases); s3://scicookbook-942542972736-us-east-1/inputs/flye-ecoli-drr242223/DRR242223.fastq.gz (237,399,109 bytes)"
+tier = "durable-id"
+unpinned = "not re-hashed; the logs do not name the file, and the identification rests on the total read length, which matches the bucket's runs/flye-drr242223/r2/flye.log to the base"
+
+[[run]]
+id = "t1"
+in = ["threads"]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "Flye 2.9.6-b1802; the recipe's pin then was quay.io/aarchbio/flye@sha256:d87ccd4e29f2... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 1
+ranks = 1
+threads_per_rank = 1
+wall_s = 1733
+results = "results/t1/timing.txt"
+note = "instance from the session record, not an artifact; 10 contigs, 5,478,608 bp, largest 2,384,169"
+
+[[run]]
+id = "t2"
+in = ["threads"]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "Flye 2.9.6-b1802; the recipe's pin then was quay.io/aarchbio/flye@sha256:d87ccd4e29f2... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 2
+ranks = 1
+threads_per_rank = 2
+wall_s = 955
+results = "results/t2/timing.txt"
+note = "instance from the session record, not an artifact; 12 contigs, 5,470,958 bp, largest 2,004,519"
+
+[[run]]
+id = "t4"
+in = ["threads"]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "Flye 2.9.6-b1802; the recipe's pin then was quay.io/aarchbio/flye@sha256:d87ccd4e29f2... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 4
+ranks = 1
+threads_per_rank = 4
+wall_s = 537
+results = "results/t4/timing.txt"
+note = "instance from the session record, not an artifact; 11 contigs, 5,400,307 bp, largest 2,004,513"
+
+[[run]]
+id = "t8"
+in = ["threads"]
+instance = "m8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "Flye 2.9.6-b1802; the recipe's pin then was quay.io/aarchbio/flye@sha256:d87ccd4e29f2... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 360
+results = "results/t8/timing.txt"
+note = "instance from the session record, not an artifact; 14 contigs, 5,502,781 bp, largest 2,004,517"
+
+# --- checks: the README's stated observations (no checks table; claims copied from its prose) --
+[[check]]
+id = "final-assembly-sentinel"
+claim = "the span from `Starting Flye` to `Final assembly`"
+kind = "sentinel"
+observed = "INFO: Final assembly: /tmp/out/assembly.fasta in every flye.log"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "logs-agree"
+claim = "Each `timing.txt` holds the wall and the counts, and each `flye.log` agrees with it: its `Fragments`, `Total length` and `Largest frg` lines"
+kind = "reported"
+observed = "10 / 12 / 11 / 14 contigs; 5,478,608 / 5,470,958 / 5,400,307 / 5,502,781 bp"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "contigs-by-threads"
+claim = "On the same reads, `-t 1/2/4/8` gave 10, 12, 11 and 14 contigs."
+kind = "reported"
+observed = "10, 12, 11, 14"
+outcome = "reported"
+across_chips = "n/a"

@@ -1,7 +1,25 @@
 # measurements/openmm-mdanalysis-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (README: "EC2 launch to terminate"), matched by CloudTrail to within
+# 1 s (results/billed-windows.txt). throughput is JAC's ns/day (STMV's rate is in the note).
+schema = 2
 result_unit = "the whole task: every single point (CPU, Reference, split by term), 1 ns of JAC and 1,000 steps of STMV"
 throughput_unit = "ns/day"
+
+[workload]
+size = { jac_atoms = 23558, jac_steps = 250000, stmv_atoms = 1067095, stmv_steps = 1000 }
+note = "one task: every single point (CPU, Reference, split by term), 1 ns of JAC (DHFR) and 1,000 steps of STMV, 4 fs HMR, PME, NVE"
+
+[timing]
+wall = "real.py start to finish"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "atoms-constraints"
+attribution = "same-version-other-build"
+attribution_note = "x86 chips run the comp-chem env's linux-64 twin (same OpenMM 8.6.1.dev-b399af4); c8i's 32 vCPUs are 16 cores x 2 hyperthreads, so 32 threads share cores pairwise"
 
 [[dataset]]
 id = "Amber20_Benchmark_Suite.tar.gz (ambermd.org; JAC/DHFR 23,558 atoms and STMV 1,067,095 atoms)"
@@ -10,6 +28,8 @@ pins = "inputs.sha256"
 note = "no DOI; the archive OpenMM's own examples/benchmarks/benchmark.py fetches, unchanged since 2020-05-23 (Last-Modified)"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 results = "results/graviton4/"
@@ -17,6 +37,8 @@ host = "results/graviton4/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 1986
 billed_s = 2147
 usd_hr = 1.2762
@@ -28,6 +50,8 @@ note = "JAC 1 ns 1300 s (66.5 ns/day), STMV 1,000 steps 204 s (1.70 ns/day); Gra
 throughput = 66.5
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 results = "results/intel/"
@@ -35,6 +59,8 @@ host = "results/intel/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 2508
 billed_s = 2626
 usd_hr = 1.4994
@@ -46,6 +72,8 @@ note = "JAC 1683 s (51.3 ns/day), STMV 355 s (0.97 ns/day); peak counts the x86 
 throughput = 51.3
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -53,6 +81,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 2179
 billed_s = 2263
 usd_hr = 1.7243

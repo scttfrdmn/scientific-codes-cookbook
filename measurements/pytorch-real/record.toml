@@ -1,6 +1,25 @@
 # measurements/pytorch-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: each chip's task ran BOTH trainings, so its EC2 window (results/billed-windows.txt: 1726 /
+# 946 / 642 s) is shared by the two and the one-training rows carry billed_basis = "shared-window".
+schema = 2
 result_unit = "one 15-epoch ResNet-20 training run on the complete CIFAR-10"
+throughput_unit = "samples/s"
+
+[workload]
+size = { epochs = 15, train_images = 50000, test_images = 10000, parameters = 269722 }
+note = "one training process, 16 threads, deterministic algorithms and a fixed seed; the dataset fits in RAM as uint8 tensors"
+
+[timing]
+wall = "the train column: the task's command window halved (two trainings per task), so it includes data loading and per-epoch evaluation"
+billed_basis = "shared-window"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size"]
+equal_work = "pixels-sha256"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the env's linux-64 twin of the same PyTorch build; aarch64's oneDNN backward-weights convolution falls back to gemm:ref while x86 runs jit:avx512_core; Intel's 16 vCPU are 8 cores with SMT"
 
 [[dataset]]
 id = "s3://fast-ai-imageclas/cifar10.tgz (CIFAR-10, AWS Open Data)"
@@ -9,46 +28,64 @@ pins = "pins.sha256"
 note = "copied from stage-inputs.sh, verified before upload and re-verified in-task"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64-c8g.4xlarge"
 threads_per_core = 1
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-17"
 date_source = "git"
 wall_s = 791
 usd_hr = 0.6381
 compute_usd = 0.14
 peak_gib = 3.0
+throughput = 1004
+simd_path = "gemm:ref (backward-weights); brgconv:sve_128 (forward)"
 note = "wall_s is the train column (task command window halved). README bills the task covering both trainings (1726 s, $0.306), so billed is left out of a one-training row. $/hr from the AWS Price List; spawn printed none"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64-c8i.4xlarge"
 threads_per_core = 2
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-17"
 date_source = "git"
 wall_s = 411
 usd_hr = 0.7497
 compute_usd = 0.086
 peak_gib = 3.1
+throughput = 2099
+simd_path = "jit:avx512_core"
 note = "wall_s is the train column (task command window halved). README bills the task covering both trainings (946 s, $0.197), so billed is left out of a one-training row. $/hr from the AWS Price List; spawn printed none"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd-c8a.4xlarge"
 host = "results/amd-c8a.4xlarge/host.txt"
 spawn_version = "0.131.1"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 date = "2026-10-20"
 date_source = "git"
 wall_s = 283
 usd_hr = 0.8622
 compute_usd = 0.068
 peak_gib = 3.1
+throughput = 3243
+simd_path = "jit:avx512_core"
 note = "wall_s is the train column (task command window halved). README bills the task covering both trainings (641 s, $0.154), so billed is left out of a one-training row. $/hr from the AWS Price List; spawn printed none"
 
 # checks table in '## What was asserted at scale, on all three chips': columns ['identity', 'graviton4', 'intel', 'amd']

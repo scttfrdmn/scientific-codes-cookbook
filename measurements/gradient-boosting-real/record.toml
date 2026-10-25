@@ -1,6 +1,7 @@
 # measurements/gradient-boosting-real/record.toml -- drafted by the #118 extraction, then authored.
-# No results/ committed: every number is the README's.
-schema = 1
+# No results/ committed: every number is the README's, except the billed windows (results/billed-windows.txt).
+# Schema 2: billed is the EC2 window (README: "launch to terminate"), matched exactly by CloudTrail.
+schema = 2
 result_unit = "one whole verified run: all of HIGGS loaded, a 500-round xgboost and a 500-round LightGBM fit, six 100-round verification fits and SHAP"
 
 [[dataset]]
@@ -9,14 +10,34 @@ tier = "durable-id"
 pins = "pins.sha256"
 note = "copied from the README's Pins table and stage-inputs.sh"
 
+[workload]
+size = { rows = 11000000, features = 28, rounds = 500 }
+note = "all of UCI HIGGS; two 500-round fits (xgboost, LightGBM) plus six 100-round verification fits and SHAP in one task"
+
+[timing]
+wall = "task compute: the whole real.py script (CSV load, both main fits, verification fits, SHAP)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "layout"]
+equal_work = "margins-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs use the recipe's geo-ml env twin (xgboost 3.4.2, LightGBM 4.7.0, numpy 2.5.3); Intel's 8 vCPU are 4 cores with SMT"
+
 # Compound "fit wall: xgboost / LightGBM" and "compute $/fit" cells share one task and one bill,
 # so they are not split into rows; wall_s is the README's "task compute" (the whole script).
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 1
 wall_s = 552
 billed_s = 707
@@ -27,11 +48,15 @@ peak_kind = "rss"
 note = "fit wall xgboost / LightGBM 92.6 / 160.0 s, compute $/fit 0.0092 / 0.0160 (per fit, not per result, so not compute_usd); cgroup memory.peak 17.3 GiB"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 2
 wall_s = 771
 billed_s = 888
@@ -42,11 +67,15 @@ peak_kind = "rss"
 note = "fit wall 149.7 / 205.9 s, compute $/fit 0.0176 / 0.0242; cgroup memory.peak 20.1 GiB (x86 twin env installs at run time)"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 threads_per_core = 1
 wall_s = 575
 billed_s = 701

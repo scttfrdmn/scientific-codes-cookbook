@@ -1,6 +1,25 @@
 # measurements/iqtree-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the printed billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances,
+# results/billed-windows.txt), to within 1 s. The README's "peak RSS" is times.txt's peak_anon_gib.
+# Task 1 (01-iqtree) only: the eval, raxml and repeat tasks are not priced in the README.
+schema = 2
 result_unit = "one gene-family tree as shipped: ModelFinder, ML search and 1,000 ultrafast bootstraps on Pfam 38.2 PF01255.25 (919 sequences x 533 columns)"
+
+[workload]
+size = { sequences = 919, columns = 533 }
+note = "ModelFinder over 29 fits (-mset LG,WAG,JTT,Q.pfam), then ML search with 1,000 ultrafast bootstraps; the search's iteration count (400 to the 1,001 cap) is a draw, so per-unit work is the README's second table"
+
+[timing]
+wall = "the iqtree3 task-1 command, timed in-script (times.txt 'iqtree exit 0 in N s')"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "none: the search ran 1,001, 1,001 and 400 iterations -- when a run stops is a draw, so the rows are not the same work; the README's per-iteration table is the comparison"
+attribution = "same-version-other-build"
+attribution_note = "IQ-TREE 3.1.3, aarch.bio arm64 build vs bioconda x86; the arm64 build runs IQ-TREE's 128-bit SSE2 kernel, both x86 runs its 256-bit AVX+FMA one, so this compares builds as well as chips; Intel's 8 vCPUs are 4 cores x 2"
 
 [[dataset]]
 id = "Pfam 38.2 Pfam-A.seed.gz, family PF01255.25 seed alignment (919 x 533)"
@@ -14,6 +33,8 @@ tier = "run-output"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -28,9 +49,16 @@ compute_usd = 3.0969
 billed_usd = 3.1144
 peak_gib = 1.53
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 7.96
+simd_path = "Kernel:  SSE2 - 8 threads (8 CPU cores detected)"
+task = "01-iqtree"
 note = "ran to the 1,001-iteration cap (bootstrap did not converge); per-unit-of-work $ is the README's second table"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -45,9 +73,16 @@ compute_usd = 2.8748
 billed_usd = 2.8845
 peak_gib = 1.61
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 7.95
+simd_path = "Kernel:  AVX+FMA - 8 threads (8 CPU cores detected)"
+task = "01-iqtree"
 note = "ran to the 1,001-iteration cap (bootstrap did not converge)"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -62,6 +97,11 @@ compute_usd = 0.7027
 billed_usd = 0.7163
 peak_gib = 1.51
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 7.92
+simd_path = "Kernel:  AVX+FMA - 8 threads (8 CPU cores detected)"
+task = "01-iqtree"
 note = "bootstrap converged at 400 iterations, so this row's $/result is mostly the path, not the chip"
 
 # checks: the README's "What held at scale, on all three chips" rows; observed = the Graviton4 cell

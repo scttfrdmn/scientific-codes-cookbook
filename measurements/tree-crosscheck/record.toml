@@ -1,5 +1,7 @@
 # measurements/tree-crosscheck/record.toml
-schema = 1
+# Schema 2: one generation series (RAxML-NG, --threads 8 --workers 1, same seed). No $/hr and no
+# billed figure is printed, so no $ fields and no billed basis.
+schema = 2
 result_unit = "one RAxML-NG ML search (13 starts) on Pfam 38.2 PF26127.1, 114 taxa x 477 columns, LG+G4"
 
 [[dataset]]
@@ -9,44 +11,76 @@ pins = "pins.sha256"
 from_recipe = "iqtree"
 note = "inputs/iqtree/pfam38.2_seed_alignment.fa; hashed 2026-10-25 on AWS, after the measurement's runs: the pin proves today's bytes, not necessarily the run's; the same sha256 is in iqtree-real/pins.sha256 and checked in-task by recipes/iqtree"
 
+[workload]
+size = { taxa = 114, columns = 477 }
+note = "one ML search, LG+G4, fixed seed 12345, threads pinned"
+
+[timing]
+wall = "search-only elapsed from RAxML-NG's own log"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "workers", "layout", "size"]
+equal_work = "final-is-best"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "wall" }
+note = "2.04x faster Graviton2->5 and 37% cheaper, but Graviton4 is 7.3% dearer per search than Graviton3 (2% of wall for 10% more per hour)"
+
 # --- RAxML-NG across four Graviton generations: same seed, --threads 8 ------------------
 # README prints $/search (0.0482 / 0.0375 / 0.0404 / 0.0303) but no $/hr, so no $ field is recorded.
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.2xlarge"
 purpose = "generation-sweep"
 results = "results/c6g.txt"
 date = "2026-10-01"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 638.1
 note = "search-only elapsed from RAxML-NG's own log; README $/search 0.0482 (no $/hr printed)"
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.2xlarge"
 purpose = "generation-sweep"
 results = "results/c7g.txt"
 date = "2026-10-01"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 465.0
 note = "README $/search 0.0375 (no $/hr printed)"
 
 [[run]]
+id = "gen-c8g"
+in = ["gen"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-01"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 456.0
 note = "the raxml-ng recipe's own run (no per-rung results file here); README $/search 0.0404 (no $/hr printed)"
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.2xlarge"
 purpose = "generation-sweep"
 results = "results/c9g.txt"
 date = "2026-10-01"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 313.0
 note = "README $/search 0.0303 (no $/hr printed)"
 

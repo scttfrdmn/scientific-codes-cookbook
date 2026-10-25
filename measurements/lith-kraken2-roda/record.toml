@@ -1,8 +1,18 @@
 # measurements/lith-kraken2-roda/record.toml -- drafted by the #118 extraction, then authored.
 # An access-pattern study, not a recipe sweep: eleven probe launches, all Graviton, one chip.
-schema = 1
+# Schema 2: every row is a `spawn launch --command` probe; no row carries a billed figure. The
+# probes' rungs (depths, windows, chunk sizes) live in results/, not as rows, so there is no series.
+schema = 2
 result_unit = "one 1M-read human WGS sample (SRR062634) classified against the full 1.1 TiB RefSeq-Complete DB on local NVMe"
-throughput_unit = "lookups/s"
+throughput_unit = "reads/min"
+
+[workload]
+size = { reads = 1000000 }
+input_gib = 1107.6
+note = "the 1107.6 GiB runtime set (hash.k2d + taxo.k2d + opts.k2d) copied once to local NVMe, then a 10k/100k/1M/100k read ladder on the same box"
+
+[timing]
+wall = "the rung's wall (the 1M rung of the ladder; kraken2 itself reports 483.2 s processing); copy rows: the copy wall"
 
 [[dataset]]
 id = "RODA kraken2 RefSeq-Complete v205 (us-west-2), hash.k2d 1,189,091,671,800 bytes"
@@ -18,6 +28,7 @@ note = "the ladder subsets SRR062634_1 from inputs/bwa-real/; hashed 2026-10-25 
 
 # --- the kraken2 result: copy the runtime set to NVMe, then a read-count ladder -------
 [[run]]
+id = "ladder-1m"
 instance = "r8gd.8xlarge"
 purpose = "primary"
 date = "2026-10-04"
@@ -28,8 +39,14 @@ usd_hr = 2.3514
 compute_usd = 0.3331
 results = "results/kraken2-cost-ladder.txt"
 note = "wall_s is the 1M rung's wall (1m_wall_s), on which compute $ 0.3331 is priced; kraken2's own processing time is 483.2 s. Same box: copy 1563 s / $1.0209, whole ladder $1.5643 for 2.11M reads"
+launch = "launch"
+ranks = 1
+threads_per_rank = 32
+throughput = 117647
+data_path = "instance-store-copy"
 
 [[run]]
+id = "copy-mcr64"
 instance = "r8gd.8xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
@@ -39,8 +56,12 @@ usd_hr = 2.3514
 compute_usd = 1.0196
 results = "results/nvme-r8gd-8xl.txt"
 note = "copy of the 1107.6 GiB runtime set to NVMe at max_concurrent_requests 64 (wall_s = copy wall); also the lith mount 4 KiB probe (7.9/s, 23x amplification) and the single-threaded NVMe probe (5,412/s)"
+launch = "launch"
+variant = "copy to NVMe, max_concurrent_requests 64; mount and NVMe probes"
+data_path = "instance-store-copy"
 
 [[run]]
+id = "copy-mcr128"
 instance = "r8gd.8xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
@@ -49,16 +70,23 @@ wall_s = 1686
 usd_hr = 2.3514
 compute_usd = 1.1012
 note = "copy at max_concurrent_requests 128 (wall_s = copy wall); no results file committed for this launch"
+launch = "launch"
+variant = "copy to NVMe, max_concurrent_requests 128"
+data_path = "instance-store-copy"
 
 [[run]]
+id = "threadsweep"
 instance = "r8gd.8xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
 date_source = "git"
 results = "results/threadsweep.txt"
 note = "Python S3 depth sweep on the sustained-15 Gb NIC (plateau 905.1/s) and the kraken2 thread ladder (4/8/16/32 threads, plus 32 after drop_caches: 139.909 s cold vs 1.771 s warm)"
+launch = "launch"
+variant = "Python S3 depth sweep + kraken2 thread ladder"
 
 [[run]]
+id = "canary-us-west-1"
 instance = "r8g.xlarge"
 purpose = "diagnostic"
 region = "us-west-1"
@@ -66,41 +94,60 @@ date = "2026-10-04"
 date_source = "git"
 results = "results/canary-cross-region.txt"
 note = "canary, placed in us-west-1 against the us-west-2 bucket unasked; 1.52 MiB/s cross-region. Its throughput numbers are void"
+launch = "launch"
+data_path = "lith"
+variant = "lith mount canary, cross-region"
 
 [[run]]
+id = "readpath"
 instance = "r8g.xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
 date_source = "git"
 results = "results/readpath-in-region.txt"
 note = "in-region read path: sequential 146 MB/s hash.k2d, 107 MB/s taxo.k2d, aws s3 cp baseline 170.9 MiB/s"
+launch = "launch"
+data_path = "lith"
+variant = "lith mount sequential read path + aws s3 cp baseline"
 
 [[run]]
+id = "py-depth"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
 date_source = "git"
 results = "results/concurrency-sweep.txt"
 note = "Python/boto3 queue-depth sweep: depth 1 6.9/s, depth 64 465.9/s, depth 1024 788.7/s"
+launch = "launch"
+data_path = "s3-native"
+variant = "Python/boto3 range-GET queue-depth sweep"
 
 [[run]]
+id = "go-depth"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
 date_source = "git"
 results = "results/godepth-c8g2xl.txt"
 note = "the same sweep in Go: depth 8192 34,456.5/s, 0 errors"
+launch = "launch"
+data_path = "s3-native"
+variant = "Go range-GET queue-depth sweep"
 
 [[run]]
+id = "density"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
 date_source = "git"
 results = "results/density-sweep.txt"
 note = "coalescing-window sweep at realistic density (39.6 KB spacing): 763 -> 32,128 lookups/s; sparse control 1.0x"
-throughput = 32128
+launch = "launch"
+data_path = "s3-native"
+variant = "coalescing-window sweep at realistic density"
 
 [[run]]
+id = "bandwidth-16xl"
 instance = "c8gn.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
@@ -108,8 +155,12 @@ date_source = "git"
 usd_hr = 3.792
 results = "results/bandwidth-c8gn16xl.txt"
 note = "sequential range-GET bandwidth on hash.k2d: 18.48 GB/s at 8 MiB x 512 (74% of NIC); the README's $/scan is a projection, not this run's bill"
+launch = "launch"
+data_path = "s3-native"
+variant = "sequential range-GET bandwidth"
 
 [[run]]
+id = "sharding-4xl"
 instance = "c8gn.4xlarge"
 purpose = "diagnostic"
 date = "2026-10-04"
@@ -117,6 +168,9 @@ date_source = "git"
 usd_hr = 0.9480
 results = "results/sharding-c8gn4xl.txt"
 note = "bandwidth (5.64 GB/s at 8 MiB x 512) and prefix sharding: flat 44,790/s vs 64 prefixes 47,388/s at conc 2048"
+launch = "launch"
+data_path = "s3-native"
+variant = "bandwidth + prefix sharding"
 
 # --- checks: no checks table; the identities and observations the prose states -------
 [[check]]

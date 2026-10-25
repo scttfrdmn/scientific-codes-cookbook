@@ -1,6 +1,23 @@
 # measurements/signac-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 launch -> terminate window (README; CloudTrail in results/billed-windows.txt).
+schema = 2
 result_unit = "one complete 10x scATAC run (10k_pbmc_ATACv2_nextgem_Chromium_Controller, 257.6M fragments, 10,246 cells) through the Signac vignette's QC and reduction path"
+
+[workload]
+size = { fragments = 257638540, cells = 10246, peaks = 165434, genes = 19628 }
+note = "one whole 10x scATAC lane through the vignette's QC and reduction path; FeatureMatrix and GeneActivity are single-threaded scanTabix loops, 58-63% of the wall"
+
+[timing]
+wall = "signac-real.R from start to finish, checks included"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "input"]
+equal_work = "feature-matrix"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run quay.io/biocontainers/r-signac, bioconda's linux-64 build of the same 1.17.1; the 8i vCPUs are SMT threads, the 8a vCPUs whole cores"
 
 [[dataset]]
 id = "10x Genomics cell-atac/2.1.0 10k_pbmc_ATACv2_nextgem_Chromium_Controller: fragments.tsv.gz (+ .tbi), peaks.bed, singlecell.csv"
@@ -20,6 +37,8 @@ tier = "built"
 pins = "ref.sha256"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -28,6 +47,8 @@ threads_per_core = 1            # cpu.txt's sibling line is not in host_facts' s
 date = "2026-10-17"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 1652
 billed_s = 1848
 usd_hr = 0.2356
@@ -38,6 +59,8 @@ peak_kind = "vmhwm"
 note = "r2; the first Graviton run failed a cell-order check and printed the same md5s"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -46,6 +69,8 @@ threads_per_core = 2            # thread_siblings_list 0,2
 date = "2026-10-17"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 1842
 billed_s = 2028
 usd_hr = 0.2778
@@ -55,6 +80,8 @@ peak_gib = 17.88
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -63,6 +90,8 @@ threads_per_core = 1
 date = "2026-10-17"
 date_source = "git"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 1456
 billed_s = 1603
 usd_hr = 0.3195

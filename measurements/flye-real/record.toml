@@ -1,8 +1,34 @@
 # measurements/flye-real/record.toml -- apparatus dir: the README is a pointer to recipes/flye and
 # prints no timings or prices; walls come from the per-rung results files. No $ here (the cost table
 # lives on the recipe page, not in this dir's README or results).
-schema = 1
+# Schema 2: the x86 rows' billed_s is the EC2 window (results/billed-windows.txt): the README's
+# combined "$0.083 billed" for the two x86 legs is those two EC2 windows, not the spawn windows.
+schema = 2
 result_unit = "one assembly of ERR10114907 (Flye --nano-hq -t 8)"
+
+[timing]
+wall = "Flye's wall, timed in-task (smoke check wall_s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size"]
+equal_work = "assembly-bytes"
+attribution = "same-binary"
+attribution_note = "the c8g rung here is the recipe's later run under the exact assertions (312 s); the sweep's own Graviton4 rung (306 s, on recipes/flye) was not kept"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "assembly-bytes"
+attribution = "same-version-other-build"
+attribution_note = "bioconda's linux/amd64 build of 2.9.6 on x86; 8 vCPU is 4 cores x 2 hyperthreads on c8i and 8 cores on c8a"
+
+[[not_swept]]
+axis = "workers"
+reason = "Flye's contig count moves with thread count, so every rung pins the same -t: a different contig count is a different assembly, not a faster one"
 
 [[dataset]]
 id = "ENA run ERR10114907 (MinION, 55,898 reads / 299,527,299 bases)"
@@ -12,46 +38,68 @@ from_recipe = "flye"
 note = "inputs/flye/; every spec checks this same sha256 in-task, so the runs read these bytes; re-hashed 2026-10-25 on AWS and unchanged"
 
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.2xlarge"
 purpose = "generation-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 511
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.75
 results = "results/smoke-check-c6g-2xl.txt"
 note = "generation rungs asserted bands, not the exact values"
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.2xlarge"
 purpose = "generation-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 377
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.751
 results = "results/smoke-check-c7g-2xl.txt"
 
 
 [[run]]
+id = "gen-c8g"
+in = ["gen", "chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 312
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.75
 results = "results/smoke-check-c8g-2xl.txt"
 note = "the recipe's run under the exact assertions; recipes/flye's table prints 306 s, from the sweep rung (band assertions) whose output was not kept"
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.2xlarge"
 purpose = "generation-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 245
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.75
 results = "results/smoke-check-c9g-2xl.txt"
 
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
@@ -60,10 +108,16 @@ date_source = "git"
 workers = 8
 host = "results/topology-c8i-2xl.txt"
 wall_s = 306
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.75
+billed_s = 404
 results = "results/smoke-check-c8i-2xl.txt"
 note = "chip.task.json with the inline command moved into a staged sha256-checked file (spawn#1063/#1246)"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
@@ -72,6 +126,10 @@ date_source = "git"
 workers = 8
 host = "results/topology-c8a-2xl.txt"
 wall_s = 226
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 0.749
+billed_s = 341
 results = "results/smoke-check-c8a-2xl.txt"
 note = "the two x86 legs cost $0.083 billed together"
 

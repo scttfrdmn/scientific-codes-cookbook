@@ -1,6 +1,25 @@
 # measurements/scipy-stack-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is "launch to terminate as EC2 reports it" = CloudTrail RunInstances ->
+# TerminateInstances, to within 1 s (results/billed-windows.txt). avg_cores is cgroup cpu.stat over
+# the workload window (size-*.txt).
+schema = 2
 result_unit = "one full pass over GHCN-Daily 2024: pandas aggregation, NumPy cross-check, SciPy 0.25-degree gridding"
+
+[workload]
+size = { rows = 38470120, stations = 44882, unknowns = 1036800 }
+note = "one in-memory pandas pass (pyarrow CSV parse, groupbys, merge, resample), a NumPy cross-check, then a 0.25-degree SciPy gridding solve (SuperLU and Jacobi-CG); mostly single-threaded"
+
+[timing]
+wall = "the python3 ghcn_workload.py call, timed in-task (size-*.txt workload_wall_s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "integer-digests"
+attribution = "same-version-other-build"
+attribution_note = "aarch.science geo-ml image on Graviton4, its geo-ml-d3f7ea36e8bf linux-64 twin on x86 (same versions); the bill is set by image pull vs offline env install, not the work; the AMD leg ran under spawn 0.139.1, which installs Docker during stage-in, so its overhead is not comparable"
 
 [[dataset]]
 id = "NOAA GHCN-Daily 3.35-upd-2026101517: s3://noaa-ghcn-pds/csv/by_year/2024.csv + ghcnd-stations.txt"
@@ -9,6 +28,8 @@ pins = "pins.sha256"
 note = "copied from stage-inputs.sh's data.sha256 heredoc; NOAA rewrites the by-year file daily, so a re-stage after its next update fails its own check"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/result-m8g.txt"
@@ -22,8 +43,13 @@ compute_usd = 0.0072
 billed_usd = 0.0225
 peak_gib = 11.3
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 2.76
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -38,9 +64,14 @@ compute_usd = 0.0082
 billed_usd = 0.0196
 peak_gib = 11.2
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 1.9
 note = "geo-ml-d3f7ea36e8bf linux-64 twin; 4 cores x 2"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -56,9 +87,13 @@ compute_usd = 0.0062
 billed_usd = 0.0216
 peak_gib = 11.2
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 1.77
 note = "spawn 0.139.1 installs Docker during stage-in, so overhead is not comparable with the other rows; staged a sha256-checked task.sh (spawn#1246)"
 
 [[run]]
+id = "probe-r8g"
 instance = "r8g.2xlarge"
 purpose = "diagnostic"
 results = "results/result-r8g.txt"
@@ -72,6 +107,9 @@ compute_usd = 0.0085
 billed_usd = 0.0299
 peak_gib = 11.3
 peak_kind = "rss"
+ranks = 1
+threads_per_rank = 8
+avg_cores = 2.72
 note = "sizing probe; 64 GiB measured 11.3 GiB peak and 2.7 average cores busy, so the real runs went to m8g/m8i"
 
 # --- checks: "What held at scale, on all three chips" (AMD identical to Intel in every value)

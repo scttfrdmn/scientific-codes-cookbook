@@ -1,9 +1,54 @@
 # measurements/gromacs-real/record.toml -- drafted by the #118 extraction, then authored.
 # The decomposition leg only: the generation ladder lives on recipes/gromacs. README prices in
 # $/ns from ns/day, which is not wall x rate, so no row carries a $ figure (usd_hr only).
-schema = 1
+# Schema 2: each chip ran all five splits in ONE task, so the billed window is shared by five rows
+# (results/billed-windows.txt; README prints the x86 windows, 382 s and 242 s).
+schema = 2
 result_unit = "one simulated nanosecond of benchMEM (81,743 atoms, PME, NPT)"
 throughput_unit = "ns/day"
+throughput_is_result = true
+
+[workload]
+size = { atoms = 81743, steps = 10000 }
+note = "benchMEM tpr's own 10,000 steps, CPU nonbonded (-nb cpu), five rank x thread splits at 16 vCPU on one box per chip"
+
+[timing]
+wall = "the mpiexec + mdrun call, timed in-script with date +%s ('mdrun only')"
+billed_basis = "shared-window"
+
+[[series]]
+id = "layout-g4"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "splits-run"
+attribution = "same-binary"
+verdict = { shape = "flat", on = "throughput" }
+note = "best / worst 1.096; 16 x 1 and 1 x 16 within 0.4%"
+
+[[series]]
+id = "layout-intel"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "splits-run"
+attribution = "same-binary"
+verdict = { shape = "flat", on = "throughput" }
+note = "best / worst 1.107; 16 x 1 and 1 x 16 within 0.4%"
+
+[[series]]
+id = "layout-amd"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "splits-run"
+attribution = "same-binary"
+note = "the splits span 41% (best / worst 1.414); pure MPI 16 x 1 is 23% faster than pure OpenMP 1 x 16: tune the split on AMD"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "generation"]
+equal_work = "splits-run"
+attribution = "same-version-other-build"
+attribution_note = "GROMACS 2026.3 throughout, but Graviton4 ran the previous md digest (OpenBLAS) and x86 the current env's linux-64 twin (MKL, AVX2 build on Intel); Intel's 16 vCPUs are 8 hyperthreaded cores. Intel and AMD run the same build, so their gap is the chips"
 
 [[dataset]]
 id = "benchMEM (81,743 atoms, PME, Berendsen NPT) tpr"
@@ -13,6 +58,8 @@ from_recipe = "gromacs"
 note = "sha256 copied from recipes/gromacs/stage-inputs.sh, which checks it at stage time"
 
 [[run]]
+id = "g4-16x1"
+in = ["layout-g4", "chip"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
@@ -26,8 +73,11 @@ note = "16 ranks x 1 OpenMP threads, 25.538 ns/day; wall_s is mdrun only. Gravit
 throughput = 25.538
 ranks = 16
 threads_per_rank = 1
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "g4-8x2"
+in = ["layout-g4"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
@@ -41,8 +91,11 @@ note = "8 ranks x 2 OpenMP threads, 24.860 ns/day; wall_s is mdrun only. Gravito
 throughput = 24.860
 ranks = 8
 threads_per_rank = 2
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "g4-4x4"
+in = ["layout-g4"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
@@ -56,8 +109,11 @@ note = "4 ranks x 4 OpenMP threads, 24.168 ns/day; wall_s is mdrun only. Gravito
 throughput = 24.168
 ranks = 4
 threads_per_rank = 4
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "g4-2x8"
+in = ["layout-g4"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
@@ -71,8 +127,11 @@ note = "2 ranks x 8 OpenMP threads, 23.292 ns/day; wall_s is mdrun only. Gravito
 throughput = 23.292
 ranks = 2
 threads_per_rank = 8
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "g4-1x16"
+in = ["layout-g4"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
@@ -86,8 +145,11 @@ note = "1 ranks x 16 OpenMP threads, 25.432 ns/day; wall_s is mdrun only. Gravit
 throughput = 25.432
 ranks = 1
 threads_per_rank = 16
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "intel-16x1"
+in = ["layout-intel", "chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -101,8 +163,11 @@ note = "16 ranks x 1 OpenMP threads, 28.981 ns/day; wall_s is mdrun only. md env
 throughput = 28.981
 ranks = 16
 threads_per_rank = 1
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "intel-8x2"
+in = ["layout-intel"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -116,8 +181,11 @@ note = "8 ranks x 2 OpenMP threads, 28.440 ns/day; wall_s is mdrun only. md env 
 throughput = 28.440
 ranks = 8
 threads_per_rank = 2
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "intel-4x4"
+in = ["layout-intel"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -131,8 +199,11 @@ note = "4 ranks x 4 OpenMP threads, 27.044 ns/day; wall_s is mdrun only. md env 
 throughput = 27.044
 ranks = 4
 threads_per_rank = 4
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "intel-2x8"
+in = ["layout-intel"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -146,8 +217,11 @@ note = "2 ranks x 8 OpenMP threads, 26.272 ns/day; wall_s is mdrun only. md env 
 throughput = 26.272
 ranks = 2
 threads_per_rank = 8
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "intel-1x16"
+in = ["layout-intel"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -161,8 +235,11 @@ note = "1 ranks x 16 OpenMP threads, 29.093 ns/day; wall_s is mdrun only. md env
 throughput = 29.093
 ranks = 1
 threads_per_rank = 16
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "amd-16x1"
+in = ["layout-amd", "chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -176,8 +253,11 @@ note = "16 ranks x 1 OpenMP threads, 58.432 ns/day; wall_s is mdrun only. md env
 throughput = 58.432
 ranks = 16
 threads_per_rank = 1
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "amd-8x2"
+in = ["layout-amd"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -191,8 +271,11 @@ note = "8 ranks x 2 OpenMP threads, 52.582 ns/day; wall_s is mdrun only. md env 
 throughput = 52.582
 ranks = 8
 threads_per_rank = 2
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "amd-4x4"
+in = ["layout-amd"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -206,8 +289,11 @@ note = "4 ranks x 4 OpenMP threads, 46.435 ns/day; wall_s is mdrun only. md env 
 throughput = 46.435
 ranks = 4
 threads_per_rank = 4
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "amd-2x8"
+in = ["layout-amd"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -221,8 +307,11 @@ note = "2 ranks x 8 OpenMP threads, 41.323 ns/day; wall_s is mdrun only. md env 
 throughput = 41.323
 ranks = 2
 threads_per_rank = 8
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 [[run]]
+id = "amd-1x16"
+in = ["layout-amd"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -236,6 +325,7 @@ note = "1 ranks x 16 OpenMP threads, 47.461 ns/day; wall_s is mdrun only. md env
 throughput = 47.461
 ranks = 1
 threads_per_rank = 16
+bind = "mpiexec --oversubscribe; mdrun -pin off"
 
 # --- checks: the README's "Checks hold on both" bullet
 [[check]]

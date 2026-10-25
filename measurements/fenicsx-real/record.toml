@@ -1,6 +1,24 @@
 # measurements/fenicsx-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's cost_estimate over the task window (README caveats) = the completion
+# record's started_at -> ended_at (cookbook-fenicsx-real-real{,-x8664,-amd}-r1, to the second).
+schema = 2
 result_unit = "the whole run: P1 and P2 refinement ladders to N = 128 (16,974,593 P2 unknowns), both preconditioners, serial and 32-rank passes"
+
+[workload]
+size = { dofs = 16974593, tetrahedra = 12582912 }
+note = "the finest rung (P2, N = 128); one result is the whole ladder: P1 and P2 rungs, BoomerAMG then GAMG on the finest system, a serial pass (to 2.1 M unknowns) and a 32-rank pass"
+
+[timing]
+wall = "the two python passes, serial + 32-rank (times.tsv)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "p2-order"
+attribution = "same-version-other-build"
+attribution_note = "aarch.science fem-cfd on Graviton4, its linux-64 lock twin on both x86 chips (dolfinx 0.11.0, PETSc 3.25.6, hypre 3.2.0, Open MPI 5.0.11); Intel's 32 vCPUs are 16 cores x 2 threads, so 32 ranks share 16 cores"
 
 [[dataset]]
 id = "manufactured solution u = sin πx sin πy sin πz on the unit cube, mesh and forms built in-code by poisson3d.py"
@@ -9,6 +27,8 @@ pins = "pins.sha256"
 note = "data tier synthetic: nothing to download; the generating scripts (real.sh, poisson3d.py) are sha256-pinned and re-checked in-task"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +36,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 32
+ranks = 32
+threads_per_rank = 1
 wall_s = 168
 billed_s = 267
 usd_hr = 1.4362
@@ -26,6 +48,8 @@ peak_kind = "cgroup-memory.peak"
 note = "wall = serial 76 s + 32-rank 92 s; finest P2 solve 40.5 s BoomerAMG / 20.5 s GAMG"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -33,6 +57,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 32
+ranks = 32
+threads_per_rank = 1
 wall_s = 240
 billed_s = 283
 usd_hr = 1.6934
@@ -43,6 +69,8 @@ peak_kind = "cgroup-memory.peak"
 note = "wall = 94 + 146 s; 32 ranks on 16 cores x 2 threads; finest P2 solve 67.6 s / 35.4 s"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -50,6 +78,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 32
+ranks = 32
+threads_per_rank = 1
 wall_s = 164
 billed_s = 209
 usd_hr = 1.9475
@@ -60,11 +90,14 @@ peak_kind = "cgroup-memory.peak"
 note = "wall = 72 + 92 s; finest P2 solve 43.1 s / 21.4 s"
 
 [[run]]
+id = "probe-m8g"
 instance = "m8g.8xlarge"
 purpose = "diagnostic"
 date = "2026-10-19"
 date_source = "git"
 workers = 32
+ranks = 32
+threads_per_rank = 1
 note = "sizing probe, identical configuration: 79 + 91 s against 76 + 92 s (about 4% noise per pass); not priced, compound wall so no wall_s"
 
 # --- checks: '## What held at scale, on all three chips' -------------------------------

@@ -1,6 +1,25 @@
 # measurements/lammps-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (README: "launch to terminate"), matched by CloudTrail to within 1 s
+# (results/billed-windows.txt). Those completion records date the 5k runs 2026-10-18; the rows' existing dates are kept.
+schema = 2
 result_unit = "the whole 10 ps run (5,000 steps of the 2,048,000-atom scaled rhodopsin benchmark)"
+throughput_unit = "ns/day"
+
+[workload]
+size = { atoms = 2048000, steps = 5000 }
+note = "upstream's scaled rhodopsin benchmark at 32,000 atoms per rank (4x4x4 replica), CHARMM + PPPM, NPT, 2 fs"
+
+[timing]
+wall = "the production lmp_mpi alone"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "topology"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the md env's linux-64 twin (same LAMMPS 22 Jul 2025 Update 6, MKL in place of OpenBLAS); c8i's 64 vCPUs are 32 cores x 2 hyperthreads, so 64 ranks share cores pairwise"
 
 [[dataset]]
 id = "lammps/lammps patch_22Jul2025 bench/data.rhodo"
@@ -22,6 +41,8 @@ note = "step-0 values embedded in check.py; the file hashed 2026-10-25 from its 
 
 # --- 5,000-step runs; the 1,000-step runs (results/1k/) print ns/day only, no wall or bill -
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.16xlarge"
 purpose = "primary"
 date = "2026-09-30"
@@ -36,8 +57,13 @@ billed_usd = 0.840
 peak_gib = 8.2
 peak_kind = "cgroup-memory.peak"
 results = "results/5k/arm64/"
+ranks = 64
+threads_per_rank = 1
+throughput = 0.845
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.16xlarge"
 purpose = "cross-chip"
 date = "2026-09-30"
@@ -52,9 +78,14 @@ billed_usd = 1.288
 peak_gib = 13.8
 peak_kind = "cgroup-memory.peak"
 results = "results/5k/x86_64/"
+ranks = 64
+threads_per_rank = 1
+throughput = 0.615
 note = "cgroup peak higher on x86 because the env is installed into the container at start and its page cache is counted"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.16xlarge"
 purpose = "cross-chip"
 date = "2026-09-30"
@@ -69,6 +100,9 @@ billed_usd = 1.075
 peak_gib = 13.8
 peak_kind = "cgroup-memory.peak"
 results = "results/5k/amd/"
+ranks = 64
+threads_per_rank = 1
+throughput = 0.869
 note = "cgroup peak higher on x86 because the env is installed into the container at start and its page cache is counted"
 
 # --- checks: "What held at scale, on all three chips" ----------------------------------

@@ -1,5 +1,7 @@
 # measurements/archr-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the README's "instance launch to terminate" = the EC2 window (CloudTrail,
+# results/billed-windows.txt), exact on all three; the Graviton4 row is task -r3 (r1 was the first of two).
+schema = 2
 result_unit = "one complete 10x scATAC run (10k_pbmc_ATACv2_nextgem_Chromium_Controller, 245.9M fragments, 10,246 cells) through the ArchR tutorial path"
 
 [[dataset]]
@@ -20,7 +22,26 @@ id = "recount/ outputs (cells, chrom sizes, gene/TSS/peak tables, matrix stats) 
 tier = "built"
 pins = "ref.sha256"
 
+[workload]
+size = { fragments = 245920471, cells = 10246 }
+note = "one 10x lane through createArrowFiles, addPeakMatrix, iterative LSI, clusters and markers; the in-task checks read every matrix back (25-31% of the wall)"
+
+[timing]
+wall = "archr-real.R from start to finish, checks included"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "size", "layout", "generation"]
+equal_work = "nfrags"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's linux-64 build of ArchR 1.0.3 (quay.io/biocontainers/r-archr); Intel's 8 vCPUs are 4 cores with SMT, Graviton4's and AMD's whole cores"
+note = "AMD fastest (1.10x Graviton4), Graviton4 cheapest per result; LSI and clusters split by OpenBLAS kernel"
+
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -29,6 +50,8 @@ threads_per_core = 1            # cpu.txt's sibling line is not in host_facts' s
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1577
 billed_s = 1727
 usd_hr = 0.4713
@@ -39,6 +62,8 @@ peak_kind = "vmhwm"
 note = "cgroup memory.peak 18.1-19.1 GiB across chips (forked workers + page cache)"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -47,6 +72,8 @@ threads_per_core = 2            # thread_siblings_list 0,4
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1990
 billed_s = 2148
 usd_hr = 0.5557
@@ -56,6 +83,8 @@ peak_gib = 7.31
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -64,6 +93,8 @@ threads_per_core = 1
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1438
 billed_s = 1600
 usd_hr = 0.639

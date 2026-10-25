@@ -1,6 +1,29 @@
 # measurements/openbabel-pdbfixer-real/record.toml
-schema = 1
+# Schema 2: two workloads (task obabel / pdbfixer), each with its own per-row size and chip series.
+# Billed is spawn's completion window (README: "spawn's completion window"; results/*/*/completion.json,
+# results/billed-windows.txt).
+schema = 2
 result_unit = "the whole workload with every check passing: all 2,897,819 ChEMBL 37 compounds (Open Babel rows), or 247 PDB entries classified and 240 prepared (PDBFixer rows)"
+
+[timing]
+wall = "the script (ob_real.py / fix_real.py), start to exit"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-ob"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "ob-rows"
+attribution = "same-version-other-build"
+attribution_note = "x86 chips run the comp-chem env's linux-64 twin (same Open Babel 3.2.1); Intel's 8 vCPU are 4 cores"
+
+[[series]]
+id = "chip-fix"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "fix-classified"
+attribution = "same-version-other-build"
+attribution_note = "x86 twin has the same PDBFixer 1.12, OpenMM 8.6.1; the minimiser's path differs by chip, so the per-chip timings include different iteration counts as well as different cores; Intel's 16 vCPU are 8 cores"
 
 [[dataset]]
 id = "ChEMBL 37 chembl_37_chemreps.txt.gz (EBI)"
@@ -22,7 +45,11 @@ pins = "cohort.sha256"
 note = "the cohort gemmi-real read and cctbx-real rescored; 181 files equal cctbx-real's pins"
 
 [[run]]
+id = "ob-c8g"
+in = ["chip-ob"]
 instance = "c8g.2xlarge"
+task = "obabel"
+size = { compounds = 2897819 }
 purpose = "primary"
 results = "results/arm64/ob/"
 host = "results/arm64/ob/host-ob.txt"
@@ -37,7 +64,11 @@ billed_usd = 0.0876
 note = "Open Babel, whole ChEMBL 37; peak RSS printed as worker / box 1.35 / 11.2 GiB (compound cell, peak_gib omitted)"
 
 [[run]]
+id = "ob-c8i"
+in = ["chip-ob"]
 instance = "c8i.2xlarge"
+task = "obabel"
+size = { compounds = 2897819 }
 purpose = "cross-chip"
 results = "results/x86_64/ob/"
 host = "results/x86_64/ob/host-ob.txt"
@@ -52,7 +83,11 @@ billed_usd = 0.1255
 note = "Open Babel; peak RSS worker / box 1.36 / 12.9 GiB (box includes the env install; peak_gib omitted)"
 
 [[run]]
+id = "ob-c8a"
+in = ["chip-ob"]
 instance = "c8a.2xlarge"
+task = "obabel"
+size = { compounds = 2897819 }
 purpose = "cross-chip"
 results = "results/amd/ob/"
 host = "results/amd/ob/host-ob.txt"
@@ -67,7 +102,11 @@ billed_usd = 0.0874
 note = "Open Babel; peak RSS worker / box 1.36 / 12.8 GiB (peak_gib omitted)"
 
 [[run]]
+id = "fix-m8g"
+in = ["chip-fix"]
 instance = "m8g.4xlarge"
+task = "pdbfixer"
+size = { entries = 247 }
 purpose = "primary"
 results = "results/arm64/fix/"
 host = "results/arm64/fix/host-fix.txt"
@@ -82,7 +121,11 @@ billed_usd = 0.331
 note = "PDBFixer, 247 entries; summed entry time 16,586 s; peak RSS entry / box 1.93 / 7.1 GiB (peak_gib omitted)"
 
 [[run]]
+id = "fix-m8i"
+in = ["chip-fix"]
 instance = "m8i.4xlarge"
+task = "pdbfixer"
+size = { entries = 247 }
 purpose = "cross-chip"
 results = "results/x86_64/fix/"
 host = "results/x86_64/fix/host-fix.txt"
@@ -97,7 +140,11 @@ billed_usd = 0.866
 note = "PDBFixer; summed entry time 40,802 s; peak RSS entry / box 1.94 / 8.9 GiB (peak_gib omitted)"
 
 [[run]]
+id = "fix-m8a"
+in = ["chip-fix"]
 instance = "m8a.4xlarge"
+task = "pdbfixer"
+size = { entries = 247 }
 purpose = "cross-chip"
 results = "results/amd/fix/"
 host = "results/amd/fix/host-fix.txt"

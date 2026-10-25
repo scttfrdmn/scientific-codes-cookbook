@@ -1,6 +1,27 @@
 # measurements/vina-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window and cost_estimate (README; results/<chip>/completion.json).
+schema = 2
 result_unit = "the whole benchmark: 513 PoseBusters redocks (85 Astex Diverse + 428 PoseBusters Benchmark) and every check"
+
+[workload]
+size = { complexes = 513 }
+note = "32 single-threaded Vina processes (cpu=1, seed=42), one complex each, longest first; the wall is the longest dock (7PK0_BYC)"
+
+[timing]
+wall = "dock.py's tool wall, all 513 docks plus the in-task checks"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "all-docked"
+attribution = "same-version-other-build"
+attribution_note = "Graviton4 runs the recipe's aarch.science comp-chem image, Intel and AMD its linux-64 twin; the search path depends on the build (Graviton4's poses differ, Intel == AMD); Intel's 32 vCPU are 16 cores x 2 SMT"
+
+[[not_swept]]
+axis = "workers"
+reason = "The wall is one ligand: a box with more cores would not finish sooner, and giving that ligand more threads would change its search path"
 
 [[dataset]]
 id = "Zenodo 10.5281/zenodo.8278563 posebusters_paper_data.zip + posebusters_paper_results.csv"
@@ -20,6 +41,8 @@ pins = "pins.sha256"
 note = "receptor preparation is not reproducible run to run, so the tar is the pin; a re-prepared tar is a new input"
 
 [[run]]
+id = "c8g"
+in = ["chip"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -34,9 +57,15 @@ billed_usd = 1.306
 peak_gib = 2.12
 peak_kind = "rss"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+avg_cores = 29.48
 note = "wall is one ligand: 7PK0_BYC took 3,596 s of 3,609; box cgroup peak 27–30 GiB, mostly page cache"
 
 [[run]]
+id = "c8i"
+in = ["chip"]
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -51,8 +80,14 @@ billed_usd = 2.045
 peak_gib = 2.12
 peak_kind = "rss"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+avg_cores = 31.26
 
 [[run]]
+id = "c8a"
+in = ["chip"]
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -67,6 +102,10 @@ billed_usd = 1.342
 peak_gib = 2.12
 peak_kind = "rss"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
+avg_cores = 29.8
 
 # checks: dock.py's in-task asserts, the README's "What held at scale" table (observed = Graviton4)
 [[check]]

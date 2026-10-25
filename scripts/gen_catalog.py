@@ -180,32 +180,44 @@ def sig(x, n=4):
     return float(f"{x:.{n}g}")
 
 
+PLATEAU_MIN = 5
+
+
 def gpu_summary(path):
-    """The plateau rule (decision 3, #118): median utilisation over the active window, the first to the
-    last sample >= 50% of the series max. Mean, peak and active fraction alongside, because the gap
-    between mean and plateau IS the startup artifact. Reads an nvidia-smi --format=csv log."""
+    """The plateau rule (#118 v2): threshold = half the series' 90th-percentile sample, so a spike
+    shorter than a tenth of the run cannot set it (the first rule, half the MAX, let one startup
+    sample make a 53% "plateau" for PME-on-CPU). The active window runs from the first to the last
+    sample at or above it, and the plateau is that window's median, derived only when the window
+    holds >= PLATEAU_MIN samples. Mean, peak and active fraction alongside: the gap between mean
+    and plateau IS the startup artifact. Reads the committed 1 Hz `util%, mem_MB` series
+    (headerless, as the GPU scripts write it) or an nvidia-smi --format=csv log with a header."""
     import csv
-    rows = [r for r in csv.reader(open(path, encoding="utf-8", errors="replace")) if r]
-    head = [h.strip().lower() for h in rows[0]]
-    ui = next(i for i, h in enumerate(head) if "utilization.gpu" in h)
-    mi = next((i for i, h in enumerate(head) if "memory.used" in h), None)
-    di = next((i for i, h in enumerate(head) if h == "index"), None)
-    num = lambda s: float(re.sub(r"[^\d.]", "", s))
+    rows = [r for r in csv.reader(open(path, encoding="utf-8", errors="replace")) if r and r[0].strip()]
+    num = lambda s: float(re.sub(r"[^\d.]", "", s) or 0)
+    if re.fullmatch(r"[\d.]+\s*%?", rows[0][0].strip()):
+        ui, mi, di = 0, (1 if len(rows[0]) > 1 else None), None
+    else:
+        head = [h.strip().lower() for h in rows.pop(0)]
+        ui = next(i for i, h in enumerate(head) if "utilization.gpu" in h)
+        mi = next((i for i, h in enumerate(head) if "memory.used" in h), None)
+        di = next((i for i, h in enumerate(head) if h == "index"), None)
     dev = {}
-    for r in rows[1:]:
+    for r in rows:
         dev.setdefault(r[di].strip() if di is not None else "0", []).append(r)
     out, plats, hbm = {}, [], 0
     for d in sorted(dev):
         u = [num(r[ui]) for r in dev[d]]
-        act = [i for i, x in enumerate(u) if x >= 0.5 * max(u)] if max(u) > 0 else []
-        w = sorted(u[act[0]:act[-1] + 1]) if act else [0.0]
-        plats.append(sig((w[(len(w) - 1) // 2] + w[len(w) // 2]) / 2, 3))
+        thr = 0.5 * sorted(u)[max(0, -(-9 * len(u) // 10) - 1)]
+        act = [i for i, x in enumerate(u) if x >= thr]
+        w = sorted(u[act[0]:act[-1] + 1])
+        plats.append(sig((w[(len(w) - 1) // 2] + w[len(w) // 2]) / 2, 3) if len(w) >= PLATEAU_MIN else None)
         out.setdefault("util_mean_pct", sig(sum(u) / len(u), 3))
         out.setdefault("util_peak_pct", max(u))
-        out.setdefault("active_fraction", sig(len(w) / len(u), 3) if act else 0.0)
+        out.setdefault("active_fraction", sig(len(w) / len(u), 3))
         if mi is not None:
             hbm += int(max(num(r[mi]) for r in dev[d]))
-    out["util_plateau_pct"] = plats[0]
+    if plats[0] is not None:
+        out["util_plateau_pct"] = plats[0]
     if len(plats) > 1:
         out["per_device_plateau_pct"] = plats
     if mi is not None:
@@ -254,6 +266,8 @@ def curve(e, s):
         for p in pts:
             sp = p["throughput"] / b["throughput"] if all("throughput" in x for x in (p, b)) else \
                 b["wall_s"] / p["wall_s"] if all("wall_s" in x for x in (p, b)) else None
+            if sp and s["axis"] == "concurrent" and "throughput" not in p:
+                sp *= p["axis"] / b["axis"]       # wall times all N packed jobs: the aggregate rate is N / wall
             if sp:
                 p["speedup"] = round(sp, 3)
                 if s["axis"] in ("workers", "concurrent") and b["axis"]:
@@ -289,9 +303,11 @@ def derive_perf(e, mdir):
                 r["usd_per_result"] = round(r["usd_per_unit"], 4)
         if "request_usd" in r:
             r["total_usd"] = round(r.get("billed_usd", 0) + r["request_usd"], 4)
-        if r.get("phase_s"):
+        if {"tool", "stage_in"} <= set(r.get("phase_s", {})):     # a total only when it can be one
             r["phase_total_s"] = sum(x for k, x in r["phase_s"].items() if k not in ("acquire", "source"))
         g = r.get("gpu")
+        if g:
+            g["offload_basis"] = "log" if "offload_evidence" in g else "flags"
         if g and g.get("util_series") and os.path.exists(os.path.join(mdir, g["util_series"])):
             g.update(gpu_summary(os.path.join(mdir, g["util_series"])))
         util = {}
@@ -311,11 +327,12 @@ def derive_perf(e, mdir):
         if r["run_outcome"] == "completed":
             groups.setdefault(config_key(r), []).append(r)
     for rows in groups.values():
-        walls = [x["wall_s"] for x in rows if "wall_s" in x]
         for x in rows:
             x["n"] = len(rows)
-            if len(walls) > 1:
-                x["wall_spread"] = [min(walls), max(walls)]
+            for k in ("wall_s", "throughput"):
+                v = [y[k] for y in rows if k in y]
+                if len(v) > 1:
+                    x[k.split("_")[0] + "_spread"] = [min(v), max(v)]
     for r in e.get("run", []):
         r.setdefault("n", 0)              # a run that did not complete is no sample of its configuration
     pipe = {}

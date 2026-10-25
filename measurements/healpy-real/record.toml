@@ -1,6 +1,25 @@
 # measurements/healpy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window, as the README defines it (results/billed-windows.txt; the
+# r2 tasks). peak is real.py's ru_maxrss. 8 threads = OMP_NUM_THREADS=8 (run.sh).
+schema = 2
 result_unit = "one full-resolution analysis of the Planck PR3 SMICA IQU map at Nside 2048, with every check"
+
+[workload]
+size = { pixels = 50331648, lmax = 6143 }
+note = "I, Q, U at Nside 2048 plus two masks; two polarised map2alm passes at lmax 6143 are about half the wall, the scipy Y_lm check is single-threaded"
+
+[timing]
+wall = "real.py's own wall_s (results.json)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "npix"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the astro env's astro-903b8d412bd4 linux-64 twin; Intel and AMD are bit-identical; Intel's 8 vCPUs are 4 cores x 2 threads"
+note = "AMD runs the polarised map2alm passes 1.85x faster than Graviton4, and that is the whole cost ranking"
 
 [[dataset]]
 id = "Planck PR3 (PLA R3.00 / R3.01) via IRSA irsa.ipac.caltech.edu/data/Planck/release_3/: COM_CMB_IQU-smica_2048_R3.00_full.fits, COM_Mask_CMB-common-Mask-{Int,Pol}_2048_R3.00.fits, COM_PowerSpect_CMB-TT-full_R3.01.txt, best-fit minimum-theory R3.01"
@@ -9,6 +28,8 @@ pins = "pins.sha256"
 note = "IRSA publishes no checksums; sha256 recorded by 00-fetch on AWS and re-checked in-task (results/<chip>/staged.sha256). The EE file is staged and not used"
 
 [[run]]
+id = "m8g"
+in = ["chip"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +37,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 432
 billed_s = 586
 usd_hr = 0.3590
@@ -25,6 +48,8 @@ peak_gib = 8.69
 peak_kind = "rss"
 
 [[run]]
+id = "m8i"
+in = ["chip"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -32,6 +57,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 532
 billed_s = 651
 usd_hr = 0.4234
@@ -42,6 +69,8 @@ peak_kind = "rss"
 note = "cgroup memory.peak 12.0 GB, because the env install's page cache counts"
 
 [[run]]
+id = "m8a"
+in = ["chip"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -49,6 +78,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 272
 billed_s = 402
 usd_hr = 0.4869

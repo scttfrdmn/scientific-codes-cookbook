@@ -1,6 +1,33 @@
 # measurements/hmmer-real/record.toml -- Graviton generation ladder + same-generation Intel/AMD.
-schema = 1
+# Schema 2: the x86 rows' billed is the spawn window; the Graviton rows' printed billed matches no
+# surviving completion record or CloudTrail window (results/billed-windows.txt), so it is unattributed.
+schema = 2
 result_unit = "one proteome annotated: all 30,134 Pfam-A 38.2 families against 23,879 human proteins at --cut_ga"
+
+[workload]
+size = { families = 30134, sequences = 23879 }
+note = "one hmmsearch --cut_ga --cpu 8 of the whole Pfam-A library against one protein per gene of the Ensembl 116 human proteome"
+
+[timing]
+wall = "hmmsearch, timed in search.sh (wall_s in smoke-check-*.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size"]
+equal_work = "tblout-hits"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "wall" }
+note = "per-step speedup 1.43x, 1.06x, 1.26x; the weak Gv3 -> Gv4 step makes Graviton4 4% dearer per result on compute (6% billed) than Graviton3; why the step is weak is not established"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "tblout-hits"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's x86 build of HMMER 3.4 (quay.io/biocontainers); SIMD filters are NEON vs SSE/AVX; c8i's 8 vCPUs are 4 cores x 2 threads, c8a's 8 full cores; the x86 legs ran 20 days later on spawn 0.139.1"
 
 [[dataset]]
 id = "Pfam releases/Pfam38.2/Pfam-A.hmm.gz"
@@ -22,9 +49,14 @@ purpose = "generation-sweep"
 results = "results/smoke-check-c6g-2xl.txt"
 date = "2026-10-01"
 date_source = "git"
+id = "c6g"
+in = ["gen"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 2514
 billed_s = 2760
+billed_basis = "unattributed"
 usd_hr = 0.272
 compute_usd = 0.19
 billed_usd = 0.2085
@@ -35,9 +67,14 @@ purpose = "generation-sweep"
 results = "results/smoke-check-c7g-2xl.txt"
 date = "2026-10-01"
 date_source = "git"
+id = "c7g"
+in = ["gen"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1763
 billed_s = 1911
+billed_basis = "unattributed"
 usd_hr = 0.29
 compute_usd = 0.142
 billed_usd = 0.1539
@@ -48,9 +85,14 @@ purpose = "primary"
 results = "results/smoke-check-c8g-2xl.txt"
 date = "2026-10-01"
 date_source = "git"
+id = "c8g"
+in = ["gen", "chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1669
 billed_s = 1845
+billed_basis = "unattributed"
 usd_hr = 0.319
 compute_usd = 0.1479
 billed_usd = 0.1635
@@ -61,9 +103,14 @@ purpose = "generation-sweep"
 results = "results/smoke-check-c9g-2xl.txt"
 date = "2026-10-01"
 date_source = "git"
+id = "c9g"
+in = ["gen"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1322
 billed_s = 1421
+billed_basis = "unattributed"
 usd_hr = 0.3478
 compute_usd = 0.1277
 billed_usd = 0.1373
@@ -76,7 +123,11 @@ host = "results/host-x86_64.txt"
 spawn_version = "0.139.1"
 date = "2026-10-21"
 date_source = "run"
+id = "c8i"
+in = ["chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 1352
 billed_s = 1412
 usd_hr = 0.3748
@@ -91,7 +142,11 @@ host = "results/host-amd.txt"
 spawn_version = "0.139.1"
 date = "2026-10-21"
 date_source = "run"
+id = "c8a"
+in = ["chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 922
 billed_s = 970
 usd_hr = 0.4311

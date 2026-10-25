@@ -1,6 +1,25 @@
 # measurements/mrbayes-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed_s is spawn's completion record window (cookbook-mrbayes-real-mcmc-r1 / -x8664-r1 /
+# -amd-r1, 2026-10-20, matched to the second). Throughput is MrBayes generations per second.
+schema = 2
 result_unit = "one converged posterior (2 runs x 4 chains to ASDSF < 0.01, 114 taxa, LG+G4)"
+throughput_unit = "generations/s"
+
+[workload]
+size = { sequences = 114, alignment_columns = 477, generations = 560000 }
+note = "mb-mpi, 2 runs x 4 chains, one chain per rank; the stop rule ended all three chips at the same generation"
+
+[timing]
+wall = "the mb-mpi run (mcmc_wall_s in score.tsv)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "layout", "size", "generation"]
+equal_work = "sample-count"
+attribution = "same-version-other-build"
+attribution_note = "MrBayes 3.2.8: aarch.bio's build on Graviton4 has no vector likelihood kernel (non-SSE), bioconda's x86 build uses SSE, so this compares builds as well as chips; Intel's 8 vCPU are 4 cores x 2 threads"
 
 [[dataset]]
 id = "Pfam 38.2 PF26127.1 seed alignment (114 sequences x 477 columns), aln.fa"
@@ -16,6 +35,8 @@ from_recipe = "iqtree"
 note = "RAxML-NG's from recipes/raxml-ng; both staged and pinned by stage-inputs.sh"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-20"
@@ -31,8 +52,15 @@ peak_gib = 0.48
 peak_kind = "cgroup-memory.peak"
 results = "results/arm64/"
 note = "README's column says peak RSS; score.tsv's source is cgroup_memory_peak_bytes 515653632. Non-SSE likelihood calculator"
+ranks = 8
+threads_per_rank = 1
+bind = "mpirun --oversubscribe --bind-to none -np 8"
+throughput = 85.8
+simd_path = "Using standard non-SSE likelihood calculator for division 1 (single-precision)"
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -48,8 +76,15 @@ peak_gib = 0.48
 peak_kind = "cgroup-memory.peak"
 results = "results/x86_64/"
 note = "4 cores x 2 threads; SSE likelihood calculator"
+ranks = 8
+threads_per_rank = 1
+bind = "mpirun --oversubscribe --bind-to none -np 8"
+throughput = 91.8
+simd_path = "Using standard SSE likelihood calculator for division 1 (single-precision)"
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -65,6 +100,11 @@ peak_gib = 0.48
 peak_kind = "cgroup-memory.peak"
 results = "results/amd/"
 note = "SSE likelihood calculator; cost_limit 1.45 (others 1.50)"
+ranks = 8
+threads_per_rank = 1
+bind = "mpirun --oversubscribe --bind-to none -np 8"
+throughput = 317.3
+simd_path = "Using standard SSE likelihood calculator for division 1 (single-precision)"
 
 # --- checks: '## What held at scale, on all three chips' -------------------------------
 [[check]]

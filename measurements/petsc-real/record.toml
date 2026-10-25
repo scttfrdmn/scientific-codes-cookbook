@@ -1,6 +1,28 @@
 # measurements/petsc-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: billed is the EC2 window, CloudTrail RunInstances -> Terminate (README: "Billed is EC2
+# launch to termination"), reproduced to within 1 s in results/billed-windows.txt.
+schema = 2
 result_unit = "all six SuiteSparse matrices, each solved four ways (MUMPS LDLT, SuperLU_DIST LU, CG+GAMG, CG+BoomerAMG) and checked"
+
+[workload]
+size = { matrices = 6 }
+note = "six SuiteSparse SPD matrices (0.53-1.59 M rows, 3.7-77.7 M nonzeros), each solved by MUMPS LDLT, SuperLU_DIST LU, CG+GAMG and CG+BoomerAMG under 16 MPI ranks; BoomerAMG on audikw_1 is 45-59% of the tool wall"
+
+[timing]
+wall = "the six mpiexec solves, including the matrix load; the serial conversion (19-28 s) is not counted"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "cross-chip-integers"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's aarch.science fem-cfd image on Graviton4, the env's linux-64 twin (petsc 3.25.5, MUMPS 5.8.2, SuperLU_DIST 9.2.1, hypre 3.2.0) on Intel and AMD; OpenBLAS picks neoversev2 on Graviton4, Cooperlake on both x86 chips"
+
+[[not_swept]]
+axis = "workers"
+reason = "One rank count (16), one rtol (1e-8), one planted solution. No knee sweep. Rank and thread scaling for a sparse solve is a separate measurement from this one."
 
 [[dataset]]
 id = "SuiteSparse Matrix Collection ids 1853 parabolic_fem, 1423 apache2, 1883 ecology2, 1403 thermal2, 1421 G3_circuit, 1252 audikw_1 (Matrix Market archives)"
@@ -9,6 +31,8 @@ pins = "pins.sha256"
 note = "fetched once on AWS from the collection's original University of Florida host (the TAMU host refuses AWS downloads since 2026-10-14); kept only if size and entry count match the published values"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +40,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 585
 billed_s = 768
 usd_hr = 0.9426
@@ -26,6 +52,8 @@ peak_kind = "cgroup-memory.peak"
 note = "largest single rank ru_maxrss 18.6-19.0 GiB across chips (audikw_1)"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -33,6 +61,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 797
 billed_s = 948
 usd_hr = 1.1114
@@ -43,6 +73,8 @@ peak_kind = "cgroup-memory.peak"
 note = "fem-cfd env linux-64 twin; cgroup peak includes the env install"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -50,6 +82,8 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 16
+threads_per_rank = 1
 wall_s = 490
 billed_s = 582
 usd_hr = 1.2781

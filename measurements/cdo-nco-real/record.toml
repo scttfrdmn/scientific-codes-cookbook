@@ -1,6 +1,23 @@
 # measurements/cdo-nco-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (launch to terminate; CloudTrail, results/billed-windows.txt).
+schema = 2
 result_unit = "every product of one year (2023) of hourly ERA5 2 m temperature: global, daily, monthly, annual and hour-of-day means, anomalies and a 1-degree conservative regrid"
+
+[workload]
+size = { hours = 8760, files = 12, cells = 1038240 }
+note = "waves of single-threaded operator processes, each decompressing and summing the whole year"
+
+[timing]
+wall = "workload wall: cell areas, remap weights, the nine full reads of the year and the products of products"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "cdo-eq-nco"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the climate env's x86 twin (CDO 2.6.1, NCO 5.3.9 on all chips); Intel's 8 vCPUs are 4 cores with SMT"
 
 [[dataset]]
 id = "s3://nsf-ncar-era5 e5.oper.an.sfc.128_167_2t.ll025sc.2023MM*.nc (12 monthly files, 2023)"
@@ -17,6 +34,8 @@ from_recipe = "measurements/climate-real"
 note = "the x86 run wrote byte-identical files (same ETag, checked by stage-inputs.sh)"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -31,8 +50,11 @@ billed_usd = 0.1083
 note = "billed includes check.py and a third wave timing the two slow defaults on January; without it 550 s, $0.072"
 peak_gib = 2.07
 peak_kind = "rss"
+phase_s = { pull = 54 }
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -49,6 +71,8 @@ peak_gib = 2.1
 peak_kind = "rss"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

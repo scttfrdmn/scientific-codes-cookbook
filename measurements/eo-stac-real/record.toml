@@ -1,6 +1,26 @@
 # measurements/eo-stac-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> Terminate, results/billed-windows.txt,
+# within 1 s of every printed figure); the README's "task window" is the spawn window.
+schema = 2
 result_unit = "the whole search plus every check (Earth Search v1 sentinel-2-l2a, California, 2024)"
+
+[workload]
+size = { items = 18346, pages = 184, bucket_items = 53706, objects_listed = 1124914 }
+note = "a live STAC search paginated serially, then the bucket's own item files listed and fetched over 32 HTTP threads; the wait is the API and S3"
+
+[timing]
+wall = "real.py's wall (search, invariance searches, listing, bucket GETs and checks)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "snapshot"
+attribution = "same-version-other-build"
+attribution_note = "the aarch.science earth-observation arm64 image and its linux-64 twin, the same versions; Intel's 8 vCPU are 4 cores x 2 threads"
+verdict = { shape = "flat", on = "wall" }
+note = "the chip barely matters: the search is server time and the bucket phase is HTTPS GETs; AMD 10% faster end to end, Graviton4 cheapest per result"
 
 [[dataset]]
 id = "Earth Search v1 sentinel-2-l2a over s3://sentinel-cogs/sentinel-s2-l2a-cogs/, bbox [-124.5, 32.5, -114.1, 42.0], datetime 2024"
@@ -22,9 +42,14 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
+id = "m8g"
+in = ["chip"]
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 208.1
 billed_s = 346
+ec2_s = 347
 usd_hr = 0.359
 compute_usd = 0.0208
 billed_usd = 0.0345
@@ -38,9 +63,14 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "run"
+id = "m8i"
+in = ["chip"]
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 206.7
 billed_s = 347
+ec2_s = 346
 usd_hr = 0.4234
 compute_usd = 0.0243
 billed_usd = 0.0408
@@ -54,9 +84,14 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-21"
 date_source = "run"
+id = "m8a"
+in = ["chip"]
 workers = 32
+ranks = 1
+threads_per_rank = 32
 wall_s = 187.8
 billed_s = 282
+ec2_s = 283
 usd_hr = 0.4869
 compute_usd = 0.0254
 billed_usd = 0.0381

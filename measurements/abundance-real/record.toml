@@ -1,7 +1,26 @@
 # measurements/abundance-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the completion record's window (README "Billed"; spawn's records match
+# 69/77/48 s, cookbook-abundance-real-bracken-{,x8664-,amd-}17609010NN, state failed exit 1 by design:
+# the closed-list check fails on every chip, the run itself finished).
+schema = 2
 result_unit = "one sample at both ranks (species and genus)"
 results_per_run = 2             # billed $/result divides the box by the two samples
+
+[workload]
+size = { samples = 2 }
+note = "one task = Bracken at S and G on two whole-run kraken2 reports (8,785,731 and 47,832,553 read pairs) plus the 5.5 MB kmer_distrib; neither input grows with the reads"
+
+[timing]
+wall = "Bracken's own wall per call (run.py); the per-chip rows carry none, the README's cells are compound"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "generation"]
+equal_work = "total-unclassified"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's Bracken 3.1p1 build on Graviton4, bioconda's on Intel and AMD (est_abundance.py sha256 575c327f in both; Python 3.14.6 vs 3.14.5); at sub-second compute the differences are boot time"
 
 [[dataset]]
 id = "kraken2-real whole-run reports of ENA ERR2984773 (D6300 even) and ERR2935805 (D6310 log), PRJEB29504"
@@ -24,6 +43,7 @@ pins = "pins.sha256"
 note = "kraken2-real's truth table, read from its prefix"
 
 [[run]]
+id = "extract"
 instance = "r8g.large"
 purpose = "diagnostic"
 results = "results/extract/"
@@ -33,6 +53,8 @@ wall_s = 59
 note = "00-extract: one-time gunzip of the 5.96 GB tarball to the seven kmer_distrib files; serves all three chips"
 
 [[run]]
+id = "bracken-c8g"
+in = ["chip"]
 instance = "c8g.large"
 purpose = "primary"
 results = "results/arm64/"
@@ -47,6 +69,8 @@ peak_kind = "rss"
 note = "README prints Bracken wall 0.35 / 0.38 s and compute $/result 7.8e-6 / 8.4e-6 per sample (even / log); compound cells sharing one bill, so wall_s and compute_usd are omitted"
 
 [[run]]
+id = "bracken-c8i"
+in = ["chip"]
 instance = "c8i.large"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -61,6 +85,8 @@ peak_kind = "rss"
 note = "README prints Bracken wall 0.32 / 0.39 s and compute $/result 8.3e-6 / 1.0e-5 (even / log); compound cells, omitted"
 
 [[run]]
+id = "bracken-c8a"
+in = ["chip"]
 instance = "c8a.large"
 purpose = "cross-chip"
 results = "results/amd/"

@@ -1,5 +1,8 @@
 # measurements/pointcloud-real/record.toml -- a whole 3DEP project through PDAL, three chips.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt); it also holds
+# the laspy check pass. avg_cores = cgroup cpu.stat over the PDAL phase (results/<chip>/times.tsv).
+# peak_gib = the largest pdal ru_maxrss (the README's "pdal" figure); the box cgroup memory.peak is in the notes.
+schema = 2
 result_unit = "the whole CA_LassenNP_2020 project tiled, exported, gridded and checked (4,642,900,288 points)"
 
 [[dataset]]
@@ -8,7 +11,26 @@ tier = "roda"
 pins = "pins.sha256"
 note = "pins.sha256 pins pins.tsv (key, size, sha256 of every object, written by 00-pin.task.json); pins.tsv itself stays in the bucket"
 
+[workload]
+size = { points = 4642900288, tiles = 125, ept_nodes = 107501 }
+note = "read in place from RODA's EPT; 130 tile jobs of two PDAL pipelines (EPT -> LAZ, LAZ -> ground DTM), 16 at a time, --stream; compute-bound"
+
+[timing]
+wall = "PDAL wall: the 130 tiles' A and B pipelines, launch of the first to exit of the last"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "data_path", "generation"]
+equal_work = "tiling-conserves"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs use the recipe's pointcloud-792583991793 env twin: PDAL 2.10.1, laspy 2.7.0, lazrs-python 0.8.2 as on arm64, but a different PDAL build (git 660b06 vs arm64's 27c27c); Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "AMD 1.33x faster than Graviton4, Intel 1.27x slower; Graviton4 cheapest per result, billed and on compute"
+
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -21,9 +43,15 @@ billed_s = 1300
 usd_hr = 0.6381
 compute_usd = 0.115
 billed_usd = 0.23
-note = "peak cell is compound (1.40 GiB pdal ru_maxrss / 8.3 GiB box cgroup memory.peak), so no peak_gib; billed holds the laspy check pass (545 s)"
+peak_gib = 1.40
+peak_kind = "rss"
+avg_cores = 15.54
+data_path = "s3-native"
+note = "peak is the largest pdal ru_maxrss; box cgroup memory.peak 8.3 GiB; billed holds the laspy check pass (545 s)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -36,9 +64,15 @@ billed_s = 1380
 usd_hr = 0.7497
 compute_usd = 0.171
 billed_usd = 0.287
-note = "peak cell compound (1.27 / 10.1 GiB), omitted; env twin pointcloud-792583991793, a different PDAL build (git 660b06 vs arm64's 27c27c)"
+peak_gib = 1.27
+peak_kind = "rss"
+avg_cores = 15.66
+data_path = "s3-native"
+note = "peak is the largest pdal ru_maxrss; box 10.1 GiB; env twin pointcloud-792583991793, a different PDAL build (git 660b06 vs arm64's 27c27c)"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -51,7 +85,11 @@ billed_s = 1146
 usd_hr = 0.8622
 compute_usd = 0.116
 billed_usd = 0.274
-note = "peak cell compound (1.24 / 9.8 GiB), omitted"
+peak_gib = 1.24
+peak_kind = "rss"
+avg_cores = 15.59
+data_path = "s3-native"
+note = "peak is the largest pdal ru_maxrss; box 9.8 GiB"
 
 # --- checks: "What held at scale, on all three chips" (real.py) --------------------------
 [[check]]

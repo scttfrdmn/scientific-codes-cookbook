@@ -1,6 +1,8 @@
 # measurements/nwchem-real/record.toml -- one family (c8g), three experiments: rank sweep,
-# right-sized boxes, packing. The README prices nothing, so no $ fields.
-schema = 1
+# right-sized boxes, packing. The README prices nothing, so no $ fields (and no billed basis).
+# Schema 2: three series (rank sweep on one box, right-sized boxes, packing J x R at 16 cores).
+# The 16-rank rank-sweep and right-sized rows are one configuration run twice (attempt r1/r2).
+schema = 2
 result_unit = "one caffeine B3LYP/6-31G* single-point energy (217 basis functions)"
 
 [[dataset]]
@@ -9,156 +11,275 @@ tier = "built"
 from_recipe = "nwchem"
 note = "nothing staged: the molecule is the spec; basis sets ship in the env"
 
+[workload]
+size = { basis_functions = 217 }
+note = "one caffeine B3LYP/6-31G* SCF to -625.538048 Ha; OMP_NUM_THREADS=1 throughout, nothing staged"
+
+[timing]
+wall = "the NWChem run(s), timed in-task; for a packed row, wall for all J concurrent jobs"
+
+[[series]]
+id = "rank-sweep"
+axis = "workers"
+held = ["instance", "image", "size"]
+equal_work = "dft-energy"
+attribution = "same-binary"
+note = "5.33x at 16 ranks, 33.3% efficiency; the marginal return per doubling rises (1.28 -> 1.71) while efficiency falls. The README calls the knee-at-16 reading defensible but the wrong question (see packing)"
+
+[[series]]
+id = "rightsized"
+axis = "workers"
+held = ["family", "image", "size"]
+equal_work = "dft-energy"
+attribution = "same-binary"
+note = "ranks matched to the box: 95-98.5% core utilisation, except 1 rank on 2 vCPU (50.0%, no 1-vCPU box); utilisation is the wrong metric"
+
+[[series]]
+id = "packing"
+axis = "concurrent"
+held = ["instance", "image", "size", "workers"]
+equal_work = "dft-energy"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 16, on = "throughput" }
+note = "J jobs x R ranks on 16 cores, --bind-to none: per calculation 25.00 -> 9.19 s, 2.72x the 1x16 throughput; each job within 0.0-6.5% of its cost alone. wall_s is for all J jobs"
+
 # --- 1. one calculation, ranks varied, one c8g.4xlarge --------------------------------------
 [[run]]
+id = "rs-1"
+in = ["rank-sweep"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 1
 wall_s = 128
+ranks = 1
+threads_per_rank = 1
 results = "results/rank-sweep-one-box-c8g-4xl.txt"
 note = "rank sweep, 1 rank on 16 vCPU"
 
 [[run]]
+id = "rs-2"
+in = ["rank-sweep"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 2
 wall_s = 100
+ranks = 2
+threads_per_rank = 1
 results = "results/rank-sweep-one-box-c8g-4xl.txt"
 note = "rank sweep, 2 ranks"
 
 [[run]]
+id = "rs-4"
+in = ["rank-sweep"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 4
 wall_s = 67
+ranks = 4
+threads_per_rank = 1
 results = "results/rank-sweep-one-box-c8g-4xl.txt"
 note = "rank sweep, 4 ranks"
 
 [[run]]
+id = "rs-8"
+in = ["rank-sweep"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 41
+ranks = 8
+threads_per_rank = 1
 results = "results/rank-sweep-one-box-c8g-4xl.txt"
 note = "rank sweep, 8 ranks"
 
 [[run]]
+id = "rs-16"
+in = ["rank-sweep"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 16
 wall_s = 24
+ranks = 16
+threads_per_rank = 1
+attempt = "r1"
 results = "results/rank-sweep-one-box-c8g-4xl.txt"
 note = "rank sweep, 16 ranks: 5.33x, 33.3% efficiency"
 
 # --- 2. right-sized boxes (instance from each spec's cpu/memory on c8g) ---------------------
 [[run]]
+id = "rz-1"
+in = ["rightsized"]
 instance = "c8g.large"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 1
 wall_s = 138
+ranks = 1
+threads_per_rank = 1
+avg_cores = 1.00
 results = "results/rightsized-1.txt"
 note = "1 rank on 2 vCPU: 50.0% core utilisation (no 1-vCPU box)"
 
 [[run]]
+id = "rz-2"
+in = ["rightsized"]
 instance = "c8g.large"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 2
 wall_s = 111
+ranks = 2
+threads_per_rank = 1
+avg_cores = 1.97
 results = "results/rightsized-2.txt"
 
 
 [[run]]
+id = "rz-4"
+in = ["rightsized"]
 instance = "c8g.xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 4
 wall_s = 72
+ranks = 4
+threads_per_rank = 1
+avg_cores = 3.94
 results = "results/rightsized-4.txt"
 
 
 [[run]]
+id = "rz-8"
+in = ["rightsized"]
 instance = "c8g.2xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 8
 wall_s = 42
+ranks = 8
+threads_per_rank = 1
+avg_cores = 7.85
 results = "results/rightsized-8.txt"
 
 
 [[run]]
+id = "rz-16"
+in = ["rightsized"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-02"
 date_source = "git"
 workers = 16
 wall_s = 24
+ranks = 16
+threads_per_rank = 1
+avg_cores = 15.27
+attempt = "r2"
 results = "results/rightsized-16.txt"
 note = "95.4% utilised, 33.3% efficient"
 
 # --- 3. packing: J concurrent jobs x R ranks on one c8g.4xlarge, --bind-to none ------------
 [[run]]
+id = "pack-1x16"
+in = ["packing"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-03"
 date_source = "git"
 workers = 16
 wall_s = 25
+ranks = 16
+threads_per_rank = 1
+concurrent = 1
+bind = "--bind-to none"
+avg_cores = 14.96
+variant = "packed: J concurrent mpiexec, --bind-to none"
 results = "results/pack-1x16.txt"
 note = "1 job x 16 ranks; wall is for all jobs (25.00 s per calculation)"
 
 [[run]]
+id = "pack-2x8"
+in = ["packing"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-03"
 date_source = "git"
 workers = 16
 wall_s = 42
+ranks = 8
+threads_per_rank = 1
+concurrent = 2
+bind = "--bind-to none"
+avg_cores = 15.69
+variant = "packed: J concurrent mpiexec, --bind-to none"
 results = "results/pack-2x8.txt"
 note = "2 jobs x 8 ranks; wall for both (21.00 s per calculation)"
 
 [[run]]
+id = "pack-4x4"
+in = ["packing"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-03"
 date_source = "git"
 workers = 16
 wall_s = 72
+ranks = 4
+threads_per_rank = 1
+concurrent = 4
+bind = "--bind-to none"
+avg_cores = 15.64
+variant = "packed: J concurrent mpiexec, --bind-to none"
 results = "results/pack-4x4.txt"
 note = "4 jobs x 4 ranks; wall for all 4 (18.00 s per calculation)"
 
 [[run]]
+id = "pack-8x2"
+in = ["packing"]
 instance = "c8g.4xlarge"
 purpose = "core-sweep"
 date = "2026-10-03"
 date_source = "git"
 workers = 16
 wall_s = 110
+ranks = 2
+threads_per_rank = 1
+concurrent = 8
+bind = "--bind-to none"
+avg_cores = 15.81
+variant = "packed: J concurrent mpiexec, --bind-to none"
 results = "results/pack-8x2.txt"
 note = "8 jobs x 2 ranks; wall for all 8 (13.75 s per calculation)"
 
 [[run]]
+id = "pack-16x1"
+in = ["packing"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-10-03"
 date_source = "git"
 workers = 16
 wall_s = 147
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+bind = "--bind-to none"
+avg_cores = 15.87
+variant = "packed: J concurrent mpiexec, --bind-to none"
 results = "results/pack-16x1.txt"
 note = "16 jobs x 1 rank, the README's recommendation: wall for all 16 (9.19 s per calculation, 2.72x the 1x16 throughput)"
 

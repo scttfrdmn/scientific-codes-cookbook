@@ -1,6 +1,27 @@
 # measurements/viennarna-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: each task's spawn window (results/billed-windows.txt: 3,748 / 6,195 / 3,679 s, as the README
+# prints) covers both whole-set folds, the -j1 rerun, the checks and the enumeration, so a row (wall = the
+# mean of the two folds) has no billed window of its own: billed_basis = shared-window. The README's billed
+# $/result adds a per-chip overhead it does not print, so billed_usd stays out.
+schema = 2
 result_unit = "one whole-set fold of every Rfam 15.1 seed sequence (109,390 RNAs) by RNAfold -p -j16"
+
+[workload]
+size = { sequences = 109390, families = 4227, bases = 12929797 }
+note = "embarrassingly parallel over sequences (RNAfold -j16); O(n^3), so the 622 sequences over 1 kb carry 96% of the work"
+
+[timing]
+wall = "the mean of the two whole-set RNAfold -p -j16 folds in one task"
+billed_basis = "shared-window"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "fold-out-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "RNAfold 2.7.2 is aarch.bio's arm64 build on Graviton4 and bioconda's x86 build on Intel and AMD; Intel's 16 vCPU are 8 cores with SMT"
+note = "Graviton4 and AMD take the same time, so Graviton4 is the cheapest result; Intel takes 1.68x as long and costs 1.94x per result"
 
 [[dataset]]
 id = "EBI /pub/databases/Rfam/15.1/Rfam.seed.gz"
@@ -9,6 +30,8 @@ pins = "pins.sha256"
 note = "Rfam publishes no checksum; pins.sha256 holds ours (also real.sh and real.py), checked in-task"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +39,9 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+avg_cores = 15.99
 wall_s = 1743
 usd_hr = 0.6381
 compute_usd = 0.309
@@ -24,6 +50,8 @@ peak_kind = "rss"
 note = "wall = mean of two whole-set folds (1743.2, 1741.8 s); README billed $/result 0.320 = wall + this chip's overhead (range 48-61 s across chips, per-chip value not printed), so billed_usd is left out; whole task window 3,748 s"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -31,6 +59,9 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+avg_cores = 15.99
 wall_s = 2935
 usd_hr = 0.7497
 compute_usd = 0.611
@@ -39,6 +70,8 @@ peak_kind = "rss"
 note = "README billed $/result 0.621 left out: its overhead seconds are not printed per chip; whole task window 6,195 s"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -46,6 +79,9 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+avg_cores = 15.99
 wall_s = 1731
 usd_hr = 0.8622
 compute_usd = 0.415

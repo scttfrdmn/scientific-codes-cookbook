@@ -2,8 +2,36 @@
 # Two single-tool tasks per chip on two boxes: 01-ncref (climate env, xlarge) and 02-zarr (the
 # recipe's pathology image, 4xlarge). The README's $/result columns are the SUM of both tasks, so
 # neither row carries that figure; the zarr row's billed_usd is its own spawn cost_estimate.
-schema = 1
+# Schema 2: the rows are pipeline tasks (attempt r3); the ncref rows have no printed $/hr, so the
+# generator's per-chip sum carries wall and billed seconds but no $. billed is the spawn completion
+# window, exactly (results/billed-windows.txt), though the README calls it launch to terminate.
+schema = 2
 result_unit = "the whole verified run: both tasks (netCDF reference + zarr/dask) and every check"
+
+[workload]
+size = { days = 60225, cells = 51840 }
+note = "one variable x one experiment x one member: 60,225 x 180 x 288 float32 (12.49 GB decoded; a 7.78 GB Zarr v2 store, 72 chunks); 02-zarr rewrites it at seven layouts in tmpfs and reduces each"
+
+[timing]
+wall = "each task's tool, timed in run.sh (ncref-times.txt / times.txt tool_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-zarr"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "zarr-eq-netcdf"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's pathology image on Graviton4, its pathology-c817c8dd8540 linux-64 twin on x86 (zarr, dask, numcodecs at the same versions); Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "AMD finishes 1.45x faster than Graviton4 and 1.75x faster than Intel, and is cheapest per result"
+
+[[series]]
+id = "chip-ncref"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "zarr-eq-netcdf"
+attribution = "same-version-other-build"
+attribution_note = "the climate env on Graviton4, its climate-60e8dca4df0d twin on x86; netCDF4 single-threaded"
 
 [[dataset]]
 id = "CMIP6 CMIP.NOAA-GFDL.GFDL-CM4.historical.r1i1p1f1.day.tas.gr1 v20180701 Zarr v2 store, s3://cmip6-pds (102 objects) + fx/areacella/gr1/v20180701 (21)"
@@ -19,24 +47,36 @@ note = "the SHA256 the ESGF index publishes, identical at all four replicas it l
 
 # --- Graviton4
 [[run]]
+id = "ncref-r8g"
+in = ["chip-ncref"]
 instance = "r8g.xlarge"
 purpose = "primary"
 image = "quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7"
 date = "2026-10-20"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+task = "01-ncref"
+attempt = "r3"
 host = "results/arm64/ncref-host.txt"
 wall_s = 40
 billed_s = 179
 results = "results/arm64/"
-note = "01-ncref, netCDF4 single-threaded; $ only printed summed with the zarr task (compute 0.0715, billed 0.104)"
+note = "01-ncref, netCDF4 single-threaded; compute $ only printed summed with the zarr task (0.0715); its own cost_estimate (ncref-completion.json) has no printed rate to pair with, so no billed_usd"
 
 [[run]]
+id = "zarr-r8g"
+in = ["chip-zarr"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+task = "02-zarr"
+attempt = "r3"
 host = "results/arm64/host.txt"
 wall_s = 263
 billed_s = 352
@@ -49,24 +89,36 @@ note = "02-zarr, 16 dask threads; billed_usd is zarr-completion.json's cost_esti
 
 # --- Intel
 [[run]]
+id = "ncref-r8i"
+in = ["chip-ncref"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
 date = "2026-10-20"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+task = "01-ncref"
+attempt = "r3"
 host = "results/x86_64/ncref-host.txt"
 wall_s = 54
 billed_s = 128
 results = "results/x86_64/"
-note = "01-ncref on the climate-60e8dca4df0d linux-64 twin (spec_arch.py's micromamba base); $ only printed summed (compute 0.1026, billed 0.131)"
+note = "01-ncref on the climate-60e8dca4df0d linux-64 twin (spec_arch.py's micromamba base); compute $ only printed summed (0.1026); its own cost_estimate (ncref-completion.json) has no printed rate to pair with, so no billed_usd"
 
 [[run]]
+id = "zarr-r8i"
+in = ["chip-zarr"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+task = "02-zarr"
+attempt = "r3"
 host = "results/x86_64/host.txt"
 wall_s = 319
 billed_s = 391
@@ -79,24 +131,36 @@ note = "02-zarr on the pathology-c817c8dd8540 twin; billed_usd is zarr-completio
 
 # --- AMD
 [[run]]
+id = "ncref-r8a"
+in = ["chip-ncref"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
 date = "2026-10-20"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+task = "01-ncref"
+attempt = "r3"
 host = "results/amd/ncref-host.txt"
 wall_s = 31
 billed_s = 91
 results = "results/amd/"
-note = "01-ncref on the climate twin; $ only printed summed (compute 0.0674, billed 0.094)"
+note = "01-ncref on the climate twin; compute $ only printed summed (0.0674); its own cost_estimate (ncref-completion.json) has no printed rate to pair with, so no billed_usd"
 
 [[run]]
+id = "zarr-r8a"
+in = ["chip-zarr"]
 instance = "r8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
+task = "02-zarr"
+attempt = "r3"
 host = "results/amd/host.txt"
 wall_s = 182
 billed_s = 243

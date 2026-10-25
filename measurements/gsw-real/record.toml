@@ -1,5 +1,7 @@
 # measurements/gsw-real/record.toml -- the whole Argo GDAC through TEOS-10, three chips.
-schema = 1
+# Schema 2: billed is the EC2 window (README: "launch to terminate"), matched exactly by CloudTrail
+# (results/billed-windows.txt). phase_s.stage_in is spawn's stage-in stamps (results/<chip>/phases.txt).
+schema = 2
 result_unit = "the whole Argo archive (30,229 daily files, 1,196,275,148 QC-good levels) converted and verified"
 
 [[dataset]]
@@ -8,8 +10,30 @@ tier = "roda"
 pins = "argo.sha256"
 note = "the GDAC is live (files rewritten as delayed-mode QC arrives); argo.source.tsv.gz holds key, ETag, LastModified, size. Frozen citable copy: SEANOE doi:10.17882/42182"
 
+[workload]
+size = { files = 30229, profiles = 3388543, levels = 1196275148 }
+note = "every daily Argo GDAC profile file, July 1997 to 20 October 2026; 64-process pool over files; the 215.1 GB stage-in is the bill"
+
+[timing]
+wall = "argo.py, the README's argo.py column (convert wall in the note)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "level-counts"
+attribution = "same-version-other-build"
+attribution_note = "x86 legs run the climate env's linux-64 lock twin (gsw 3.6.23, numpy 2.5.3); Intel's task lacked the timeout 40m wrapper and called free; Intel is 32 cores x 2 SMT"
+
+[[not_swept]]
+axis = "workers"
+reason = "Work per file is 0.09 s of CPU on average and 0.6 s at most, and 64 workers reached ~94% parallel efficiency. So more cores buys nothing here, and nor does a sweep: the knee is not the question for this code."
+
 # wall_s = the README's argo.py column, which compute $/result is computed from (convert wall in note).
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.16xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -25,8 +49,11 @@ billed_usd = 1.43
 peak_gib = 6.7
 peak_kind = "cgroup-memory.peak"
 note = "convert wall 46.1 s; stage-in 1202 s of the bill"
+phase_s = { stage_in = 1202, source = "results/arm64/phases.txt" }
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.16xlarge"
 purpose = "cross-chip"
 results = "results/intel/"
@@ -42,8 +69,11 @@ billed_usd = 2.06
 peak_gib = 9.7
 peak_kind = "cgroup-memory.peak"
 note = "convert wall 61.2 s; stage-in 1509 s. Ran an argo.task.json without the `timeout 40m` wrapper and with a cpu.txt line calling `free`; argo.py, inputs and box the same"
+phase_s = { stage_in = 1509, source = "results/intel/phases.txt" }
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.16xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -59,6 +89,7 @@ billed_usd = 1.85
 peak_gib = 9.5
 peak_kind = "cgroup-memory.peak"
 note = "convert wall 35.8 s; stage-in 1149 s"
+phase_s = { stage_in = 1149, source = "results/amd/phases.txt" }
 
 # --- checks: "What held at scale, on all three chips" (each involution's bound is 1e-9) ---
 [[check]]

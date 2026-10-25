@@ -1,9 +1,41 @@
 # measurements/salmon-real/record.toml -- the SIMPLE case.
 # Everything not here (owner recipe = salmon, tool/version, arm64 + x86 pins, last_verified*,
 # spec paths, families/TTL/cost_limit, staging, chip names) is derived by gen_catalog.py.
-schema = 1
+# Schema 2: billed = wall + overhead = the spawn wrapper's window (the README: stage-in start to stage-out
+# done), matching cookbook-salmon-quant-c{6,7,8,9}g-v2 and -c8g-v2-{x8664-x1,amd-a1} to within 1 s.
+schema = 2
 result_unit = "one complete RNA-seq run quantified (ERR188026, 15.8M reads, all 453,553 Ensembl 116 transcripts)"
 throughput_unit = "reads/s"
+
+[workload]
+size = { reads = 15800127, transcripts = 453553 }
+note = "one complete run against one shared 1.68 GB index tar, built once by recipes/salmon/01-index"
+
+[timing]
+wall = "salmon quant (quant_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "input", "workers", "size", "spawn_version"]
+equal_work = "numreads-conservation"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "billed_usd" }
+note = "2.04x faster Gv2 -> Gv5; 37% cheaper compute, 33% cheaper billed; overhead also shrinks 74 -> 43 s"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "size", "generation"]
+equal_work = "quant-sf-bytes"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run bioconda's linux/amd64 salmon 2.7.0 and read the index their own salmon built (a different tar); Intel's 16 vCPUs are 8 cores with SMT"
+note = "AMD fastest and, by a hair, cheapest billed; Graviton4 ties it on compute (0.0131 vs 0.0132)"
+
+[[not_swept]]
+axis = "workers"
+reason = "At 16 threads quant finishes in about a minute against 43-78 s of fixed overhead. There is nothing for more cores to buy"
 
 [[dataset]]
 id = "Ensembl 116 Homo_sapiens.GRCh38.cdna.all.fa.gz"
@@ -25,12 +57,16 @@ note = "arm64 and x86 indexes are different tars; quant.sf is byte-identical reg
 
 # --- Graviton generation sweep: 16 threads, 4xlarge, same digest, same bytes -------------
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.4xlarge"
 purpose = "generation-sweep"
 spawn_version = "0.111.1"
 date = "2026-09-25"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1            # no host file in results/; author it
 wall_s = 116
 overhead_s = 74
@@ -44,12 +80,16 @@ avg_cores = 15.11
 throughput = 136208
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.4xlarge"
 purpose = "generation-sweep"
 spawn_version = "0.111.1"
 date = "2026-09-25"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 83
 overhead_s = 78
@@ -63,12 +103,16 @@ avg_cores = 15.17
 throughput = 190363
 
 [[run]]
+id = "c8g"
+in = ["gen", "chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 spawn_version = "0.111.1"
 date = "2026-09-25"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 74
 overhead_s = 51
@@ -82,12 +126,16 @@ avg_cores = 15.12
 throughput = 213515
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.4xlarge"
 purpose = "generation-sweep"
 spawn_version = "0.111.1"
 date = "2026-09-25"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 57
 overhead_s = 43
@@ -102,6 +150,8 @@ throughput = 277195
 
 # --- same generation, three chips ------------------------------------------------------
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 image = "recipe"                # resolves to images_x86_64[0] (biocontainers salmon 2.7.0)
@@ -109,9 +159,12 @@ spawn_version = "0.139.1"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 2            # 8 cores x 2 SMT
 wall_s = 90
 overhead_s = 43
+ec2_s = 166
 usd_hr = 0.7497
 compute_usd = 0.0187
 billed_usd = 0.0277
@@ -123,15 +176,20 @@ avg_cores = 14.67
 throughput = 175557
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 threads_per_core = 1
 wall_s = 55
 overhead_s = 33
+ec2_s = 160
 usd_hr = 0.8622
 compute_usd = 0.0132
 billed_usd = 0.0210

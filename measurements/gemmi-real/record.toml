@@ -1,6 +1,27 @@
 # measurements/gemmi-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (README: "EC2 launch to termination"; CloudTrail, results/billed-windows.txt).
+schema = 2
 result_unit = "the whole wwPDB archive (RCSB 2026-01-01 snapshot, 246,905 entries) read and checked"
+
+[workload]
+size = { entries = 246905, files = 672176, atoms = 2878368146, reflections = 15791827832 }
+note = "streams every mmCIF, PDB-format and structure-factor object over HTTPS from the public bucket, ETag-checked; 64 workers plus a 6-worker pool for the 91 big entries"
+
+[timing]
+wall = "real.py, from launch to exit"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "data_path"]
+equal_work = "atom-count"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs use the recipe's md env twin, which has the same gemmi 0.7.5; Intel's 32 vCPUs are 16 cores x 2 SMT"
+
+[[not_swept]]
+axis = "workers"
+reason = "This is a streaming job, not a compute job ... the box is half idle on every chip. More workers might raise throughput, but that setting was not run. Data movement is the dial here, not cores."
 
 [[dataset]]
 id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/{mmCIF,pdb,structure_factors}/ (672,176 objects)"
@@ -9,6 +30,8 @@ pins = "pins.sha256"
 note = "pinned via manifest.tsv.gz (key, size, ETag per object); stage-inputs.sh rebuilds it from the bucket listing and refuses a mismatch; streamed over HTTPS, nothing copied"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -23,8 +46,13 @@ billed_usd = 0.591
 peak_gib = 41.3
 peak_kind = "cgroup-memory.peak"
 note = "64 worker processes plus 6 for the 91 big entries; largest single worker ru_maxrss 5.4 GiB"
+workers = 64
+avg_cores = 15.45
+data_path = "s3-native"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -39,8 +67,13 @@ billed_usd = 0.744
 peak_gib = 44.8
 peak_kind = "cgroup-memory.peak"
 note = "largest single worker ru_maxrss 5.4 GiB"
+workers = 64
+avg_cores = 19.39
+data_path = "s3-native"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -55,6 +88,9 @@ billed_usd = 0.71
 peak_gib = 44.2
 peak_kind = "cgroup-memory.peak"
 note = "largest single worker ru_maxrss 5.4 GiB"
+workers = 64
+avg_cores = 13.74
+data_path = "s3-native"
 
 # checks: the README's "What held at scale, on all three chips" rows
 [[check]]

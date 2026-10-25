@@ -1,0 +1,8 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The README calls its billed column "launch to terminate for both tasks", but each chip's billed (2242/2215/1759 s) is exactly the sum of its two tasks' spawn windows (1553+689, 1558+657, 1257+502); ec2 not retrieved. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+cookbook-hic-real-pairs-r2-r2	c8g.4xlarge	-	0.638100	2026-10-19T17:53:30Z	2026-10-19T18:19:23Z	1553	0.2753	-	-	-	-	-
+cookbook-hic-real-cool-r2-r2	c8g.4xlarge	-	0.638100	2026-10-19T18:27:04Z	2026-10-19T18:38:33Z	689	0.1221	-	-	-	-	-
+cookbook-hic-real-pairs-r2-x8664-r2	c8i.4xlarge	-	0.749700	2026-10-19T18:28:55Z	2026-10-19T18:54:53Z	1558	0.3245	-	-	-	-	-
+cookbook-hic-real-cool-r2-x8664-r2	c8i.4xlarge	-	0.749700	2026-10-19T19:01:06Z	2026-10-19T19:12:03Z	657	0.1368	-	-	-	-	-
+cookbook-hic-real-pairs-r2-amd-r2	c8a.4xlarge	-	0.862200	2026-10-19T18:30:27Z	2026-10-19T18:51:24Z	1257	0.3011	-	-	-	-	-
+cookbook-hic-real-cool-r2-amd-r2	c8a.4xlarge	-	0.862200	2026-10-19T19:02:43Z	2026-10-19T19:11:05Z	502	0.1202	-	-	-	-	-

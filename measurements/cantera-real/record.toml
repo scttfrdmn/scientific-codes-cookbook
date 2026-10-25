@@ -1,6 +1,25 @@
 # measurements/cantera-real/record.toml -- GRI-Mech 3.0 validation set, three chips.
-schema = 1
+# Schema 2: billed is the spawn completion window of cookbook-cantera-real-r2{,-x8664,-amd}-r2
+# (started 2026-10-20 UTC; the rows' date is the git date). avg_cores is footprint.txt's
+# avg_cores_whole_task (cgroup over the whole task, not only real.py).
+schema = 2
 result_unit = "the whole study (224 flames, 252 reactors, 2,420 equilibrium states x 3 solvers), every check passed"
+
+[workload]
+size = { flames = 224, reactors = 252, equilibrium_states = 2420 }
+note = "498 independent single-threaded jobs run 8 at a time; flames are 97% of the CPU"
+
+[timing]
+wall = "real.py, the whole study (tool wall)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "layout"]
+equal_work = "flames-converge"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the comp-chem env's linux-64 twin (cantera 3.2.0, numpy 2.5.4 on all chips); Intel's 8 vCPUs are 4 cores x 2 threads"
 
 [[dataset]]
 id = "GRI-Mech 3.0 (combustion.berkeley.edu/gri-mech/version30): files30/grimech30.dat, thermo30.dat, transport.dat + 24 targets30/ pages"
@@ -9,6 +28,8 @@ pins = "sources.sha256"
 note = "1999 release, no DOI; sha256 of every file is the pin, re-checked in every run; targets.tsv transcribed from the pages and re-asserted"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +37,9 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 496
 billed_s = 577
 usd_hr = 0.319
@@ -23,8 +47,11 @@ compute_usd = 0.044
 billed_usd = 0.0511
 peak_gib = 1.74
 peak_kind = "cgroup-memory.peak"
+avg_cores = 7.98
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -32,6 +59,9 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 602
 billed_s = 657
 usd_hr = 0.3748
@@ -39,9 +69,12 @@ compute_usd = 0.0627
 billed_usd = 0.0684
 peak_gib = 4.52
 peak_kind = "cgroup-memory.peak"
+avg_cores = 8.00
 note = "peak counts page cache, including the linux-64 env twin installed at task start"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -49,6 +82,9 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 294
 billed_s = 342
 usd_hr = 0.4311

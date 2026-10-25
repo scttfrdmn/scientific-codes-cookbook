@@ -1,7 +1,34 @@
 # measurements/neuroimaging-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: two single-tool tasks per chip (dtifit, then DIPY) share attempt r1. billed is spawn's
+# wrapper start -> stage-out done from command.log (results/billed-windows.txt); the completion
+# records end at command exit, 3-6 s earlier.
+schema = 2
 result_unit = "one subject (NFBS / Enhanced Rockland ses-BAS1 DIFF_137_AP diffusion scan)"
 results_per_run = 123
+
+[workload]
+size = { samples = 123 }
+note = "123 independent subjects, 16 single-threaded processes at a time (OPENBLAS_NUM_THREADS=1); dtifit task first, DIPY task reads the same chip's dtifit maps through S3"
+
+[timing]
+wall = "the task's cohort wall, timed in-script (cohort_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-dipy"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "xchip-mask"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's aarch.science neuroimaging image on Graviton4, its env_x86_64 twin on x86; m8i's 16 vCPU are 8 cores x 2 hyperthreads, which is why Intel is last"
+
+[[series]]
+id = "chip-dtifit"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "xchip-dtifit"
+attribution = "same-version-other-build"
+attribution_note = "fsl-fdt 2604.0 from fsl-dtifit-linux-{aarch64,64}.lock in the pinned micromamba image per architecture"
 
 [[dataset]]
 id = "s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDSLatest/sub-*/ses-BAS1/dwi/ (the 123 subjects in subjects.txt, 492 files, 9.21 GB)"
@@ -11,6 +38,8 @@ note = "the prefix says 'Latest', so the pin is dwi.sha256, computed on AWS by p
 
 # --- DIPY task (mask, OLS, WLS and every check); peak is the container cgroup incl. 11.7 GiB of /tmp
 [[run]]
+id = "dipy-m8g"
+in = ["chip-dipy"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -26,8 +55,17 @@ billed_usd = 0.000551
 peak_gib = 22.4
 peak_kind = "cgroup-memory.peak"
 note = "DIPY task; 16 single-threaded subject processes at a time"
+task = "dipy-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+avg_cores = 15.29
+tmpfs_peak_gib = 11.6885
 
 [[run]]
+id = "dipy-m8i"
+in = ["chip-dipy"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -43,8 +81,17 @@ billed_usd = 0.000679
 peak_gib = 23.9
 peak_kind = "cgroup-memory.peak"
 note = "DIPY task, env_x86_64 twin"
+task = "dipy-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+avg_cores = 15.33
+tmpfs_peak_gib = 11.9346
 
 [[run]]
+id = "dipy-m8a"
+in = ["chip-dipy"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -60,10 +107,20 @@ billed_usd = 0.00053
 peak_gib = 23.1
 peak_kind = "cgroup-memory.peak"
 note = "DIPY task, env_x86_64 twin"
+task = "dipy-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+avg_cores = 15.34
+tmpfs_peak_gib = 11.9307
 
 # --- dtifit task (FSL fsl-fdt 2604.0 installed from fsl-dtifit-linux-{aarch64,64}.lock); the
 # --- README prints compute $/subject only, no billed $
+
 [[run]]
+id = "dtifit-m8g"
+in = ["chip-dtifit"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 image = "docker.io/mambaorg/micromamba@sha256:26c186ed2c9fdfd7aab1e7f8416b6ef54358557db8a0d9a7d11a07d1d224f1b2"
@@ -79,8 +136,16 @@ compute_usd = 0.000162
 peak_gib = 8.0
 note = "dtifit task; image from fsl-cohort.task.json"
 avg_cores = 15.35
+task = "fsl-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+tmpfs_peak_gib = 11.6934
 
 [[run]]
+id = "dtifit-m8i"
+in = ["chip-dtifit"]
 instance = "m8i.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
@@ -96,8 +161,16 @@ compute_usd = 0.000260
 peak_gib = 8.0
 note = "dtifit task; image is spec_arch.py's MICROMAMBA_X86, which the README's spec_arch invocation substitutes"
 avg_cores = 15.40
+task = "fsl-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+tmpfs_peak_gib = 11.7627
 
 [[run]]
+id = "dtifit-m8a"
+in = ["chip-dtifit"]
 instance = "m8a.4xlarge"
 purpose = "cross-chip"
 image = "docker.io/mambaorg/micromamba@sha256:9a2239d03b9464c761ac87c13f45b37ec0f774db7d1b152a5f9add146bee2e72"
@@ -113,6 +186,12 @@ compute_usd = 0.000152
 peak_gib = 8.0
 note = "dtifit task; image is spec_arch.py's MICROMAMBA_X86"
 avg_cores = 15.50
+task = "fsl-cohort"
+attempt = "r1"
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
+tmpfs_peak_gib = 11.7832
 
 # --- checks: "What held at scale, on all three chips"
 [[check]]

@@ -2,8 +2,34 @@
 # The README's per-chip $/result sums five instances of three sizes ($/hr "0.0798–0.6381"), which no
 # single [[run]] row can carry. So the rows are the direct run's MUSCLE (4xlarge, the peak-memory
 # process) and TREE (mafft) (xlarge, the like-for-like slowest process); the workflow totals are in notes.
-schema = 1
+# Schema 2: each row's billed_s is the DIRECT task's own spawn window (results/billed-windows.txt, also
+# timing.tsv direct_billed_s), not the README's engine total, which stays in the TREE rows' notes.
+schema = 2
 result_unit = "one run of the DAG: two alignments, two ML trees and their RF distance"
+
+[workload]
+size = { sequences = 919, residues = 207712 }
+note = "five processes, one instance each: MAFFT and MUSCLE in parallel, an ML tree from each, then RF; the trees are 93-96% of the billed time"
+
+[timing]
+wall = "the direct run's tool wall per process (results/<chip>/timing.tsv direct_tool_wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "tree-chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size"]
+equal_work = "tree-mafft-across-chips"
+attribution = "same-version-other-build"
+attribution_note = "IQ-TREE 3.1.3: aarch.bio's arm64 build runs its 128-bit SSE2 kernel, bioconda's x86 build AVX+FMA, so this compares builds as well as chips; Intel's xlarge is 2 cores with SMT, AMD's 4 cores"
+
+[[series]]
+id = "muscle-chip"
+axis = "chip"
+held = ["input", "size"]
+equal_work = "none: AMD's MUSCLE alignment places one sequence differently from Graviton4's and Intel's (muscle-across-chips)"
+attribution = "same-version-other-build"
+attribution_note = "MUSCLE 5.3, aarch.bio arm64 build vs bioconda x86 build"
 
 [[dataset]]
 id = "Pfam 38.2 seed PF01255.25 (Prenyltransf), 919 sequences, gaps removed: pf01255.25_unaligned.fa"
@@ -12,6 +38,9 @@ pins = "pins.sha256"
 note = "mafft-real's staged bytes, read in place (md5-checked against EBI by mafft-real's staging); pins.sha256 also pins the direct run's rendered scripts"
 
 [[run]]
+id = "muscle-c8g"
+in = ["muscle-chip"]
+task = "muscle"
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
@@ -21,21 +50,35 @@ wall_s = 865
 usd_hr = 0.6381
 peak_gib = 5.19
 peak_kind = "cgroup-memory.peak"
+billed_s = 913
+billed_usd = 0.1618
+avg_cores = 9.55
 results = "results/arm64/direct/muscle/"
 note = "direct-run MUSCLE (muscle -align); peaks above a large's 4 GiB, hence the 4xlarge"
 
 [[run]]
+id = "tree-mafft-c8g"
+in = ["tree-chip"]
+task = "tree-mafft"
 instance = "c8g.xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 host = "results/arm64/direct/tree-mafft/host.txt"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 17809
+billed_s = 17858
+avg_cores = 3.98
+simd_path = "SSE2 - 4 threads (4 CPU cores detected)"
 results = "results/arm64/direct/tree-mafft/"
 note = "direct-run TREE (mafft), -T 4, 697 iterations. Whole DAG on Graviton4: workflow wall 17,999 s, billed 27,630 s over 5 windows, compute $1.325 / billed $1.346 per result"
 
 [[run]]
+id = "muscle-c8i"
+in = ["muscle-chip"]
+task = "muscle"
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -44,21 +87,34 @@ host = "results/x86_64/direct/muscle/host.txt"
 wall_s = 955
 peak_gib = 5.19
 peak_kind = "cgroup-memory.peak"
+billed_s = 996
+avg_cores = 10.54
 results = "results/x86_64/direct/muscle/"
 note = "direct-run MUSCLE"
 
 [[run]]
+id = "tree-mafft-c8i"
+in = ["tree-chip"]
+task = "tree-mafft"
 instance = "c8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 host = "results/x86_64/direct/tree-mafft/host.txt"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 13146
+billed_s = 13190
+avg_cores = 3.98
+simd_path = "AVX+FMA - 4 threads (4 CPU cores detected)"
 results = "results/x86_64/direct/tree-mafft/"
 note = "direct-run TREE (mafft), 2 cores with SMT. Whole DAG on Intel: workflow wall 13,303 s, billed 23,824 s, compute $1.400 / billed $1.408 per result"
 
 [[run]]
+id = "muscle-c8a"
+in = ["muscle-chip"]
+task = "muscle"
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -67,17 +123,27 @@ host = "results/amd/direct/muscle/host.txt"
 wall_s = 811
 peak_gib = 5.19
 peak_kind = "cgroup-memory.peak"
+billed_s = 845
+avg_cores = 9.98
 results = "results/amd/direct/muscle/"
 note = "direct-run MUSCLE"
 
 [[run]]
+id = "tree-mafft-c8a"
+in = ["tree-chip"]
+task = "tree-mafft"
 instance = "c8a.xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 host = "results/amd/direct/tree-mafft/host.txt"
 workers = 4
+ranks = 1
+threads_per_rank = 4
 wall_s = 5887
+billed_s = 5926
+avg_cores = 3.97
+simd_path = "AVX+FMA - 4 threads (4 CPU cores detected)"
 results = "results/amd/direct/tree-mafft/"
 note = "direct-run TREE (mafft). Whole DAG on AMD: workflow wall 7,964 s, billed 13,870 s, compute $0.962 / billed $0.985 per result"
 

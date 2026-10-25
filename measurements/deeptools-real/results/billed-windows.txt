@@ -1,0 +1,8 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The README's "windows (01 + 03)" are the spawn windows, exact on all six; spawn_window_usd summed per chip is the README's billed $/result (0.0324 / 0.0334 / 0.0294). Graviton4's tasks ran 2026-10-08, the x86 pairs 2026-10-21 UTC; ec2 not retrieved. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+deeptoolsreal-index-stats	m8g.xlarge	-	0.179500	2026-10-08T04:44:41Z	2026-10-08T04:46:35Z	114	0.0057	-	-	-	-	-
+deeptoolsreal-identity-r2	m8g.4xlarge	-	0.718100	2026-10-08T04:57:28Z	2026-10-08T04:59:42Z	134	0.0267	-	-	-	-	-
+deeptoolsreal-index-stats-x8664-20261020c	m8i.xlarge	-	0.211700	2026-10-21T05:48:09Z	2026-10-21T05:49:53Z	104	0.0061	-	-	-	-	-
+deeptoolsreal-identity-r2-x8664-20261020c	m8i.4xlarge	-	0.846700	2026-10-21T05:50:19Z	2026-10-21T05:52:15Z	116	0.0273	-	-	-	-	-
+deeptoolsreal-index-stats-amd-20261020c	m8a.xlarge	-	0.243400	2026-10-21T05:48:42Z	2026-10-21T05:50:09Z	87	0.0059	-	-	-	-	-
+deeptoolsreal-identity-r2-amd-20261020c	m8a.4xlarge	-	0.973800	2026-10-21T05:50:38Z	2026-10-21T05:52:05Z	87	0.0235	-	-	-	-	-

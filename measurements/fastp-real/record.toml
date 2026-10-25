@@ -1,6 +1,64 @@
 # measurements/fastp-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the x86 rows' billed is the EC2 window (CloudTrail, results/billed-windows.txt, to the
+# second). The Graviton4 rows' 226 s reproduces no surviving window (spawn: 154 s c8g, 162 s m8g):
+# unattributed. tmpfs_peak_gib is the smoke check's tmpfs_peak_used_mb / 1024.
+schema = 2
 result_unit = "one complete SRR062634 run QC'd and trimmed (48,297,986 reads, 4.83 Gbp)"
+
+[workload]
+size = { reads = 48297986, bases = 4829798600, read_length = 100 }
+input_gib = 3.6
+note = "gzip decompression and recompression around a cheap per-read filter; input and ~3.4 GiB of output both live in host /tmp (tmpfs = half of RAM), which picks the box"
+
+[timing]
+wall = "fastp's wall, timed in-task (smoke check wall_s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "threads-graviton4"
+axis = "workers"
+held = ["image", "input", "size", "generation"]
+equal_work = "filter-conservation"
+attribution = "same-binary"
+attribution_note = "8 threads on m8g.2xlarge vs 16 on c8g.4xlarge: the family changes with the core count, because both need 32 GiB for staging"
+verdict = { shape = "cost-climbs", through = 16, on = "billed_usd" }
+note = "8 -> 16 threads bought 1.16x; the 8-vCPU m box is 44% cheaper"
+
+[[series]]
+id = "threads-intel"
+axis = "workers"
+held = ["image", "input", "size", "generation"]
+equal_work = "filter-conservation"
+attribution = "same-binary"
+attribution_note = "m8i.2xlarge vs c8i.4xlarge; Intel's 8 vCPU is 4 cores x 2 hyperthreads"
+verdict = { shape = "cost-climbs", through = 16, on = "billed_usd" }
+note = "8 -> 16 threads bought 1.79x; even so c8i does not pay for itself"
+
+[[series]]
+id = "threads-amd"
+axis = "workers"
+held = ["image", "input", "size", "generation"]
+equal_work = "filter-conservation"
+attribution = "same-binary"
+attribution_note = "m8a.2xlarge vs c8a.4xlarge"
+verdict = { shape = "cost-climbs", through = 16, on = "billed_usd" }
+note = "8 -> 16 threads bought 1.45x"
+
+[[series]]
+id = "chip-8t"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "filter-conservation"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's arm64 image on Graviton4; bioconda's linux/amd64 build of fastp 1.3.6 on both x86 chips"
+
+[[series]]
+id = "chip-16t"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "filter-conservation"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's arm64 image on Graviton4; bioconda's linux/amd64 build of fastp 1.3.6 on both x86 chips"
 
 [[dataset]]
 id = "SRA SRR062634 (complete run, 100 bp paired)"
@@ -10,6 +68,8 @@ from_recipe = "bwa-samtools"
 note = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz as staged by bwa-samtools (fastp reads bwa's reads); R1/R2 sha256 printed in each results/smoke-check-*.txt but no committed manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[run]]
+id = "c8g-16t"
+in = ["threads-graviton4", "chip-16t"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/smoke-check-c8g4xl-16t.txt"
@@ -21,9 +81,15 @@ wall_s = 31
 billed_s = 226
 usd_hr = 0.6381
 billed_usd = 0.0401
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 6.9492
+billed_basis = "unattributed"
 note = "tmpfs peak 7,116 MB (staging high-water mark, not process memory; no peak_kind fits)"
 
 [[run]]
+id = "m8g-8t"
+in = ["threads-graviton4", "chip-8t"]
 instance = "m8g.2xlarge"
 purpose = "primary"
 results = "results/smoke-check-m8g2xl-8t.txt"
@@ -36,9 +102,15 @@ billed_s = 226
 usd_hr = 0.3590
 compute_usd = 0.0036
 billed_usd = 0.0225
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 6.9863
+billed_basis = "unattributed"
 note = "the shipped rung; tmpfs peak 7,154 MB (staging high-water mark, no peak_kind fits)"
 
 [[run]]
+id = "c8i-16t"
+in = ["threads-intel", "chip-16t"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-c8i4xl-16t.txt"
@@ -50,9 +122,15 @@ wall_s = 29
 billed_s = 226
 usd_hr = 0.7497
 billed_usd = 0.0471
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 6.8545
+spawn_version = "0.139.1"
 note = "tmpfs peak 7,019 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
 
 [[run]]
+id = "m8i-8t"
+in = ["threads-intel", "chip-8t"]
 instance = "m8i.2xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-m8i2xl-8t.txt"
@@ -65,9 +143,15 @@ billed_s = 226
 usd_hr = 0.4234
 compute_usd = 0.0061
 billed_usd = 0.0266
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 6.9619
+spawn_version = "0.139.1"
 note = "tmpfs peak 7,129 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
 
 [[run]]
+id = "c8a-16t"
+in = ["threads-amd", "chip-16t"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-c8a4xl-16t.txt"
@@ -79,9 +163,15 @@ wall_s = 22
 billed_s = 160
 usd_hr = 0.8622
 billed_usd = 0.0383
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 7.0605
+spawn_version = "0.139.1"
 note = "tmpfs peak 7,230 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
 
 [[run]]
+id = "m8a-8t"
+in = ["threads-amd", "chip-8t"]
 instance = "m8a.2xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-m8a2xl-8t.txt"
@@ -94,6 +184,10 @@ billed_s = 159
 usd_hr = 0.4869
 compute_usd = 0.0043
 billed_usd = 0.0215
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 7.0117
+spawn_version = "0.139.1"
 note = "tmpfs peak 7,180 MB; x86 leg on spawn 0.139.1 with the inline command moved to a staged sha256-checked file"
 
 # --- checks: the four in-task assertions in results/smoke-check-*.txt -----------------

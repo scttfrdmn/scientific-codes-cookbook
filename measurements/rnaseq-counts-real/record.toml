@@ -1,6 +1,67 @@
 # measurements/rnaseq-counts-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt), although the
+# README describes it as launch to terminate. featureCounts -T 1 ran in the -T 8 task: shared window.
+# wall and peak (VmHWM) are each script's timing.txt.
+schema = 2
 result_unit = "one sample's verified count table (ERR188026, 15,800,127 pairs, 78,941 Ensembl 116 genes), per counting tool"
+
+[workload]
+size = { read_pairs = 15800127, genes = 78941 }
+note = "one STAR-aligned BAM (2.9 GB, staged to tmpfs) counted per gene against the whole Ensembl 116 GTF"
+
+[timing]
+wall = "the counting command alone, timed in-script (timing.txt wall_s)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip-fc-t8"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "subread 2.1.1: aarch.bio on Graviton4, bioconda's x86 build on Intel and AMD; Intel's 8 vCPUs are 4 cores x 2 threads"
+note = "for featureCounts the boot is the bill: the chips differ by $0.001 per sample"
+
+[[series]]
+id = "chip-fc-t1"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "as chip-fc-t8"
+
+[[series]]
+id = "chip-htseq"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "cross-chip-bytes"
+attribution = "same-version-other-build"
+attribution_note = "HTSeq 2.1.2: aarch.bio on Graviton4, bioconda's x86 build on Intel and AMD; r8i.large is one core x 2 threads"
+note = "HTSeq is one Python process; AMD is 1.71x faster than Graviton4 and Intel and the cheapest per result"
+
+[[series]]
+id = "threads-c8g"
+axis = "workers"
+held = ["image", "instance", "input", "size"]
+equal_work = "fc-threads"
+attribution = "same-binary"
+note = "featureCounts -T 8 then -T 1 in one task on one box; counts and summary byte-identical"
+
+[[series]]
+id = "threads-c8i"
+axis = "workers"
+held = ["image", "instance", "input", "size"]
+equal_work = "fc-threads"
+attribution = "same-binary"
+note = "featureCounts -T 8 then -T 1 in one task on one box; counts and summary byte-identical"
+
+[[series]]
+id = "threads-c8a"
+axis = "workers"
+held = ["image", "instance", "input", "size"]
+equal_work = "fc-threads"
+attribution = "same-binary"
+note = "featureCounts -T 8 then -T 1 in one task on one box; counts and summary byte-identical"
 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
@@ -28,6 +89,8 @@ note = "every counting task, on every chip, reads these same bytes"
 
 # --- featureCounts -T 8; the billed window covers both thread counts ------------------------
 [[run]]
+id = "fc-t8-c8g"
+in = ["chip-fc-t8", "threads-c8g"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/featurecounts/"
@@ -35,6 +98,8 @@ host = "results/arm64/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 26
 billed_s = 168
 usd_hr = 0.3191
@@ -45,6 +110,8 @@ peak_kind = "vmhwm"
 note = "featureCounts -T 8; container memory.peak 5.5 GB, mostly page cache"
 
 [[run]]
+id = "fc-t8-c8i"
+in = ["chip-fc-t8", "threads-c8i"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/featurecounts/"
@@ -52,6 +119,8 @@ host = "results/x86_64/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 26
 billed_s = 154
 usd_hr = 0.3748
@@ -62,6 +131,8 @@ peak_kind = "vmhwm"
 note = "featureCounts -T 8"
 
 [[run]]
+id = "fc-t8-c8a"
+in = ["chip-fc-t8", "threads-c8a"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/featurecounts/"
@@ -69,6 +140,8 @@ host = "results/amd/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 17
 billed_s = 124
 usd_hr = 0.4311
@@ -79,7 +152,10 @@ peak_kind = "vmhwm"
 note = "featureCounts -T 8"
 
 # --- featureCounts -T 1, same task and box; no separate bill -----------------------------
+# (each chip's -T 8 and -T 1 rows also form a two-rung threads series on one box)
 [[run]]
+id = "fc-t1-c8g"
+in = ["chip-fc-t1", "threads-c8g"]
 instance = "c8g.2xlarge"
 purpose = "core-sweep"
 results = "results/arm64/featurecounts/"
@@ -87,6 +163,9 @@ host = "results/arm64/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 63
 usd_hr = 0.3191
 compute_usd = 0.0056
@@ -95,6 +174,8 @@ peak_kind = "vmhwm"
 note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
 
 [[run]]
+id = "fc-t1-c8i"
+in = ["chip-fc-t1", "threads-c8i"]
 instance = "c8i.2xlarge"
 purpose = "core-sweep"
 results = "results/x86_64/featurecounts/"
@@ -102,6 +183,9 @@ host = "results/x86_64/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 60
 usd_hr = 0.3748
 compute_usd = 0.0062
@@ -110,6 +194,8 @@ peak_kind = "vmhwm"
 note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
 
 [[run]]
+id = "fc-t1-c8a"
+in = ["chip-fc-t1", "threads-c8a"]
 instance = "c8a.2xlarge"
 purpose = "core-sweep"
 results = "results/amd/featurecounts/"
@@ -117,6 +203,9 @@ host = "results/amd/featurecounts/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 44
 usd_hr = 0.4311
 compute_usd = 0.0053
@@ -126,6 +215,8 @@ note = "featureCounts -T 1 in the same task as -T 8; billed window shared"
 
 # --- HTSeq, one process --------------------------------------------------------------------
 [[run]]
+id = "htseq-r8g"
+in = ["chip-htseq"]
 instance = "r8g.large"
 purpose = "primary"
 results = "results/arm64/htseq/"
@@ -133,6 +224,8 @@ host = "results/arm64/htseq/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 898
 billed_s = 988
 usd_hr = 0.1178
@@ -143,6 +236,8 @@ peak_kind = "vmhwm"
 note = "HTSeq"
 
 [[run]]
+id = "htseq-r8i"
+in = ["chip-htseq"]
 instance = "r8i.large"
 purpose = "cross-chip"
 results = "results/x86_64/htseq/"
@@ -150,6 +245,8 @@ host = "results/x86_64/htseq/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 902
 billed_s = 993
 usd_hr = 0.1389
@@ -160,6 +257,8 @@ peak_kind = "vmhwm"
 note = "HTSeq"
 
 [[run]]
+id = "htseq-r8a"
+in = ["chip-htseq"]
 instance = "r8a.large"
 purpose = "cross-chip"
 results = "results/amd/htseq/"
@@ -167,6 +266,8 @@ host = "results/amd/htseq/host.txt"
 date = "2026-10-19"
 date_source = "run"
 workers = 1
+ranks = 1
+threads_per_rank = 1
 wall_s = 525
 billed_s = 580
 usd_hr = 0.1598
@@ -182,8 +283,10 @@ purpose = "diagnostic"
 results = "results/align/"
 date = "2026-10-19"
 date_source = "run"
+id = "align"
 wall_s = 66
-note = "task 0, STAR alignment of the pinned input, Graviton4 only; README prints $0.080 billed but no billed seconds, so no $ is recorded"
+billed_s = 306
+note = "task 0, STAR alignment of the pinned input, Graviton4 only; README prints $0.080 billed but no rate, so no $ field; billed_s is the align-r1-r1 spawn window (results/billed-windows.txt), whose cost_estimate is 0.080118"
 
 # --- checks: "The identities, at scale, on all three chips"; observed is every chip's ------
 [[check]]

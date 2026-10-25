@@ -1,6 +1,23 @@
 # measurements/raxml-ng-real/record.toml
-schema = 1
+# Schema 2: billed is spawn's completion window (cookbook-raxml-ng-real-pf01255{,-x8664,-amd}-r1).
+schema = 2
 result_unit = "one gene-family tree: the adaptive ML search (13 starts) plus 20 bootstrap replicates and supports, PF01255.25 seed, 919 sequences x 533 columns"
+
+[workload]
+size = { sequences = 919, columns = 533, replicates = 20 }
+note = "one gene-family tree: adaptive ML search under LG+G4 (13 starts), 20 nonparametric bootstrap replicates, supports mapped onto the best tree; task 01-raxml only (the IQ-TREE cross-check task is not a row)"
+
+[timing]
+wall = "the search plus the bootstraps (results/<chip>/times.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "final-is-best"
+attribution = "same-version-other-build"
+attribution_note = "RAxML-NG 2.0.2: aarch.bio's arm64 build runs the 128-bit SSE3 kernel, bioconda's x86 build the 256-bit AVX2 one, so this compares builds as well as chips"
 
 [[dataset]]
 id = "Pfam 38.2 seed alignment PF01255.25 (Prenyltransf), extracted from EBI's Pfam-A.seed.gz"
@@ -10,6 +27,8 @@ from_recipe = "measurements/iqtree-real"
 note = "iqtree-real streamed Pfam-A.seed.gz, checked EBI's md5 and pinned the extracted family; this measurement reads that one object"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -17,6 +36,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8                     # --threads 8 --workers 1
+ranks = 1
+threads_per_rank = 8
 wall_s = 30812
 billed_s = 30934
 usd_hr = 0.319
@@ -24,9 +45,12 @@ compute_usd = 2.7306
 billed_usd = 2.7414
 peak_gib = 0.74
 peak_kind = "rss"
+simd_path = "SSE3"
 note = "search 14,320 s + 20 bootstraps 16,492 s; aarch.bio arm64 build runs the SSE3 kernel"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -34,6 +58,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 24394
 billed_s = 24511
 usd_hr = 0.3748
@@ -41,9 +67,12 @@ compute_usd = 2.54
 billed_usd = 2.5521
 peak_gib = 0.79
 peak_kind = "rss"
+simd_path = "AVX2"
 note = "search 11,448 s + bootstraps 12,946 s; bioconda x86 build, AVX2 kernel"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -51,6 +80,8 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
 wall_s = 9361
 billed_s = 9449
 usd_hr = 0.4311
@@ -58,6 +89,7 @@ compute_usd = 1.1209
 billed_usd = 1.1315
 peak_gib = 0.8
 peak_kind = "rss"
+simd_path = "AVX2"
 note = "search 4,269 s + bootstraps 5,092 s; bioconda x86 build, AVX2 kernel"
 
 # --- "What held at scale" (in-task, results/<chip>/checks.txt); observed = Graviton4 --

@@ -83,9 +83,11 @@
             "sum-of-tasks",
             "unavailable",
             "shared-window",
-            "unattributed"
+            "unattributed",
+            "spawn-task-partial",
+            "ec2-to-spawn-end"
           ],
-          "description": "spawn-task = the completion record's started_at -> ended_at (wrapper start to stage-out done); ec2 = CloudTrail RunInstances -> TerminateInstances (adds boot and shutdown); spawn-task-minus-baseline = spawn-task minus a measured no-tool copy (lith-vs-copy-real); sum-of-tasks = derived for a pipeline, never authored on a row. unavailable = the README prints a billed figure but no completion record survives, so billed_s/billed_usd stay absent; shared-window = one billed window covers this row and others (two walls in one task, five aligns on one box), so no per-row billed figure exists; unattributed = the README prints this billed window but neither a surviving completion record nor CloudTrail reproduces it (warns: a README number nobody can source)."
+          "description": "spawn-task = the completion record's started_at -> ended_at (wrapper start to stage-out done); ec2 = CloudTrail RunInstances -> TerminateInstances (adds boot and shutdown); spawn-task-minus-baseline = spawn-task minus a measured no-tool copy (lith-vs-copy-real); sum-of-tasks = derived for a pipeline from its task rows; authored only on an aggregate row whose README billed is the sum of its tasks' windows (the header comment says which windows). unavailable = the README prints a billed figure but no completion record survives, so billed_s/billed_usd stay absent; shared-window = one billed window covers this row and others (two walls in one task, five aligns on one box), so no per-row billed figure exists; unattributed = the README prints this billed window but neither a surviving completion record nor CloudTrail reproduces it (warns: a README number nobody can source). spawn-task-partial = from spawn's started_at to a marker inside the task that the README names (cromwell-wdl-real: to the end of the workflow run, before the cross-check), a sub-window of the completion record. ec2-to-spawn-end = CloudTrail RunInstances -> spawn's ended_at (pyscf-real: 'instance launch to stage-out'). spawn-task-minus-baseline also covers a spawn window minus a measured interval the README names (squidpy-real: a replicate pass)."
         }
       }
     },
@@ -162,7 +164,8 @@
         "properties": {
           "instance": {
             "type": "string",
-            "pattern": "^[a-z]+[0-9]+[a-z-]*\\.(?:[0-9]*x?large|metal[a-z0-9-]*)$"
+            "pattern": "^[a-z]+[0-9]+[a-z-]*\\.(?:[0-9]*x?large|medium|metal[a-z0-9-]*|unrecorded)$",
+            "description": "EC2 instance type. '<family>.unrecorded' when an artifact names the family but not the size (vCPUs are then not derived): never a guessed size."
           },
           "purpose": {
             "enum": [
@@ -179,7 +182,7 @@
           "image": {
             "type": "string",
             "default": "recipe",
-            "description": "'recipe' = the owner recipe's pin for this run's arch (resolved and compared at generation time); otherwise a full @sha256 reference."
+            "description": "'recipe' = the owner recipe's pin for this run's arch (resolved and compared at generation time); otherwise a full @sha256 reference, or 'unrecorded' when no artifact names the image (absent would claim the recipe's pin)."
           },
           "spawn_version": {
             "type": "string"
@@ -332,7 +335,10 @@
               "spawn-task-minus-baseline",
               "unavailable",
               "shared-window",
-              "unattributed"
+              "unattributed",
+              "spawn-task-partial",
+              "ec2-to-spawn-end",
+              "sum-of-tasks"
             ],
             "description": "Overrides timing.billed_basis for this row."
           },
@@ -407,10 +413,11 @@
               "ebs-copy",
               "ebs-snapshot",
               "s3-native",
-              "none"
+              "none",
+              "instance-store-copy"
             ],
             "default": "stage-default",
-            "description": "How inputs reached the tool. stage-default = spawn's stage-in at the AWS CLI default (10 requests, 8 MiB parts) -- its meaning is tied to spawn_version (spawn#1256 would change it); stage-crt = the CRT transfer client, peak-NIC target, 16 MiB parts."
+            "description": "How inputs reached the tool. stage-default = spawn's stage-in at the AWS CLI default (10 requests, 8 MiB parts) -- its meaning is tied to spawn_version (spawn#1256 would change it); stage-crt = the CRT transfer client, peak-NIC target, 16 MiB parts. instance-store-copy = copied to the instance's local NVMe before the tool reads it."
           },
           "request_usd": {
             "type": "number",
@@ -432,7 +439,7 @@
               "rate-card"
             ],
             "default": "spawn",
-            "description": "Where usd_hr came from. 'spawn' = the hourly spawn printed at launch. A historical fact: never a current price."
+            "description": "Where usd_hr came from. 'spawn' = the hourly spawn printed at launch; 'truffle' / 'pricing-api' = looked up for the run's date; 'rate-card' = a published list rate the README quotes, which no run artifact records. A historical fact: never a current price."
           },
           "simd_path": {
             "type": "string",
@@ -459,8 +466,7 @@
             "additionalProperties": false,
             "required": [
               "model",
-              "count",
-              "offload_evidence"
+              "count"
             ],
             "description": "Present iff the row used an accelerator. The card view; the row's avg_cores / peak_gib stay the system view, so a GPU row shows all four rented resources. The utilisation summary is derived from util_series (see there); the plateau is never authored.",
             "properties": {
@@ -500,7 +506,7 @@
               },
               "offload_evidence": {
                 "type": "string",
-                "description": "The tool's own log line(s) proving offload ('1 GPU selected', 'PME tasks will do all aspects on the GPU'). Required: card presence is not GPU use."
+                "description": "The tool's own log line(s) proving offload ('1 GPU selected', 'PME tasks will do all aspects on the GPU'). Required unless offload_evidence_absent says why it is not: card presence is not GPU use."
               },
               "util_series": {
                 "type": "string",
@@ -513,8 +519,24 @@
               "mps_clients": {
                 "type": "integer",
                 "description": "NVIDIA MPS clients sharing each device (== concurrent when packing one card)."
+              },
+              "offload_evidence_absent": {
+                "type": "string",
+                "description": "Why no log line is quoted (only the launch flags survive). The offload is then ASSERTED FROM FLAGS, not proven by a log: gen_catalog derives offload_basis = 'flags' (else 'log'). One of this or offload_evidence is required."
               }
-            }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "offload_evidence"
+                ]
+              },
+              {
+                "required": [
+                  "offload_evidence_absent"
+                ]
+              }
+            ]
           }
         }
       }

@@ -1,0 +1,8 @@
+# Billed windows per task. spawn_window = the durable completion record (`spawn task status <id> -o json`, started_at -> ended_at). ec2_window = CloudTrail RunInstances -> TerminateInstances (us-west-2), which adds boot before the wrapper and shutdown after it; '-' where CloudTrail returned no event. The README defines billed as "spawn's completion window" (988/1205/730 and 1660/3683/1869 s), the spawn window exactly. Retrieved 2026-10-24 (#118 v2).
+task_id	instance	instance_id	usd_hr	spawn_started_at	spawn_ended_at	spawn_window_s	spawn_window_usd	ec2_run_at	ec2_terminate_at	ec2_window_s	cloudtrail_RunInstances_event	cloudtrail_TerminateInstances_event
+cookbook-openbabel-real-chembl37-r2	c8g.2xlarge	-	0.319000	2026-10-20T21:07:33Z	2026-10-20T21:24:01Z	988	0.0875	-	-	-	-	-
+cookbook-openbabel-real-chembl37-x8664-r2	c8i.2xlarge	i-0be48059b94cf318d	0.374800	2026-10-20T21:26:53Z	2026-10-20T21:46:58Z	1205	0.1255	2026-10-20T21:26:39Z	2026-10-20T21:47:29Z	1250	bffd7cd5-112e-4879-b148-7c6572e9bbb9	53bc270f-8d88-4f80-9c52-2a5d3c5fcb9c
+cookbook-openbabel-real-chembl37-amd-r2	c8a.2xlarge	-	0.431100	2026-10-20T21:28:37Z	2026-10-20T21:40:47Z	730	0.0874	-	-	-	-	-
+cookbook-pdbfixer-real-ab-r3	m8g.4xlarge	i-08da6b3ec041a8df9	0.718100	2026-10-20T23:47:51Z	2026-10-21T00:15:31Z	1660	0.3311	2026-10-20T23:47:37Z	2026-10-21T00:16:24Z	1727	4432b2e0-86e9-4c76-a638-5c04273ea608	298d4995-6682-4cbc-93b2-0c388de3d070
+cookbook-pdbfixer-real-ab-x8664-r3	m8i.4xlarge	-	0.846700	2026-10-21T00:19:37Z	2026-10-21T01:21:00Z	3683	0.8662	-	-	-	-	-
+cookbook-pdbfixer-real-ab-amd-r3	m8a.4xlarge	-	0.973800	2026-10-21T00:23:31Z	2026-10-21T00:54:40Z	1869	0.5056	-	-	-	-	-

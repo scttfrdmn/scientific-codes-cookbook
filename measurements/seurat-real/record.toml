@@ -1,6 +1,25 @@
 # measurements/seurat-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed = the EC2 window (CloudTrail RunInstances -> TerminateInstances, results/billed-windows.txt;
+# the README's "launch to terminate"); it also carries the ~60 s determinism replicate.
+schema = 2
 result_unit = "one complete pbmc_10k_v3 run: Scanpy leg + Seurat leg with FindAllMarkers (11,043 cells after QC)"
+
+[workload]
+size = { cells = 11043, genes = 20244 }
+note = "11,769 x 33,538 raw, 11,043 x 20,244 after QC; FindAllMarkers (single-threaded R Wilcoxon, no presto) is 98.5-98.8% of the tool wall"
+
+[timing]
+wall = "the one result: Scanpy leg + Seurat leg with FindAllMarkers"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "library-size"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the linux-64 env twin (envs-x86_64/single-cell-ff275bd07c2f); OpenBLAS neoversev2 vs Cooperlake; Intel's 4 vCPUs are 2 cores x 2 threads; the AMD leg ran 2026-10-21, the other two 2026-10-17"
+note = "x86 1.19x (Intel) and 1.39x (AMD) faster on the serial Wilcoxon and 18% / 36% dearer per hour, so compute $/result is a wash"
 
 [[dataset]]
 id = "10x Genomics pbmc_10k_v3_filtered_feature_bc_matrix.tar.gz (Cell Ranger 3.0.0 release path)"
@@ -9,6 +28,8 @@ pins = "pins.sha256"
 note = "copied from stage-inputs.sh and pbmc10k.task.json (verified before upload and in-task)"
 
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.xlarge"
 purpose = "primary"
 date = "2026-10-17"
@@ -25,6 +46,8 @@ peak_kind = "vmhwm"
 note = "FindAllMarkers 4962 s (98.8%); billed also carries the ~60 s determinism replicate"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.xlarge"
 purpose = "cross-chip"
 date = "2026-10-17"
@@ -41,6 +64,8 @@ peak_kind = "vmhwm"
 note = "FindAllMarkers 4169 s (98.5%); container cgroup peak 9.53 GiB also counts the env twin's install"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

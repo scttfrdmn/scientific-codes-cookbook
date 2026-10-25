@@ -1,6 +1,25 @@
 # measurements/foldseek-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window of the second (verifying) run per chip, exactly
+# (results/billed-windows.txt).
+schema = 2
 result_unit = "the whole AFDB v6 human proteome (23,586 models) searched against itself, with the alignment table written"
+
+[workload]
+size = { models = 23586, residues = 15088388 }
+note = "all-vs-all: one tar read by createdb, then search (prefilter + 3Di+AA alignment) and convertalis with TM-score/LDDT, about half each; memory is not the constraint (4 GiB of 32)"
+
+[timing]
+wall = "tool wall = createdb + search + convertalis (results/<chip>/phases.tsv); billed also holds the 2-thread subset re-search check"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "entry-count"
+attribution = "same-version-other-build"
+attribution_note = "foldseek 8.ef4e960: aarch.bio's arm64 build vs bioconda's x86-64 build, each compiled for its own SIMD set, so the chip comparison is also a build comparison; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "AMD 1.7x faster than Graviton4 and cheapest per result; Graviton4 17% cheaper than Intel per result"
 
 [[dataset]]
 id = "AlphaFold DB v6 UP000005640_9606_HUMAN_v6.tar, ftp.ebi.ac.uk/pub/databases/alphafold/v6/ (UniProt 2025_03)"
@@ -9,6 +28,8 @@ pins = "pins.sha256"
 note = "EBI publishes no checksum: trust on first fetch; fetch.py checks size (5,177,506,304 bytes) and model count; also listed in diag.sha256"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +37,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 2930
 billed_s = 3504
 usd_hr = 0.6381
@@ -26,6 +49,8 @@ peak_kind = "cgroup-memory.peak"
 note = "second of two runs per chip; billed includes the 2-thread subset re-search check (448 s)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -33,6 +58,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 3144
 billed_s = 3579
 usd_hr = 0.7497
@@ -42,6 +69,8 @@ peak_gib = 3.98
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -49,6 +78,8 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 1715
 billed_s = 2091
 usd_hr = 0.8622

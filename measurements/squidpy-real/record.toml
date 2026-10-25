@@ -1,6 +1,25 @@
 # measurements/squidpy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window (cookbook-squidpy-real-farm / -x8664-fint / -amd-famd,
+# 2026-10-20) minus the r2 replicate's two section walls (results/<chip>/times.txt), exact on all three
+# (results/billed-windows.txt). The subtracted interval is a replicate pass, not a no-tool copy.
+schema = 2
 result_unit = "one verified pass over both sections (Slide-seqV2 puck + Visium capture area): every squidpy call plus every check"
+
+[workload]
+size = { beads = 44588, spots = 3420, puck_genes_tested = 19428, slide_genes_tested = 14828 }
+note = "two whole sections, run twice in fresh processes (r1, r2); the 100-permutation Moran's I on 2,000 HVGs with n_jobs=16 is the only step that uses the box"
+
+[timing]
+wall = "r1: both sections from a cold numba cache, real.py timed by real.sh"
+billed_basis = "spawn-task-minus-baseline"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "knn-exhaustive"
+attribution = "same-version-other-build"
+attribution_note = "the single-cell env (squidpy 1.8.2, scanpy 1.12.4, numba 0.68.0) and its linux-64 twin at the same versions; Intel's 16 vCPU are 8 cores x 2 threads"
 
 [[dataset]]
 id = "CELLxGENE Census LTS 2025-01-30, h5ads/88b7da92-178d-4f27-bc18-b0165b256c67.h5ad (Slide-seqV2 Puck_200903_13)"
@@ -14,6 +33,8 @@ tier = "roda"
 pins = "inputs.sha256"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -29,8 +50,11 @@ billed_usd = 0.1446
 peak_gib = 9.4
 peak_kind = "rss"
 note = "tool wall is r1; billed is spawn's window minus the r2 replicate; container cgroup peak 14.8 GiB"
+ec2_s = 1608
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -46,8 +70,11 @@ billed_usd = 0.1678
 peak_gib = 9.5
 peak_kind = "rss"
 note = "container cgroup peak 20.6 GiB (incl. env install)"
+ec2_s = 1607
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -63,6 +90,7 @@ billed_usd = 0.1403
 peak_gib = 9.5
 peak_kind = "rss"
 note = "container cgroup peak 20.6 GiB"
+ec2_s = 1180
 
 # --- checks: the README's "What held at scale, on all three chips" rows (real.py) ------
 [[check]]

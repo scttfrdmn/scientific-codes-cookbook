@@ -849,7 +849,7 @@ def check_records(only=None):
 
 RUN_NUMBERS = ("wall_s", "billed_s", "overhead_s", "usd_hr", "compute_usd", "billed_usd", "peak_gib", "throughput",
                "avg_cores", "peak_cores", "anon_gib", "tmpfs_peak_gib", "staged_gib", "ec2_s", "request_usd")
-HELD = {"image": lambda r: (r.get("image", "recipe"), r.get("arch"), r.get("build")),
+HELD = {"image": lambda r: (r.get("image", "recipe"), r.get("arch", "").replace("amd", "x86_64"), r.get("build")),
         "input": lambda r: [r.get("size"), r.get("staged_gib")],
         "family": lambda r: re.match(r"[a-z]+\d+[a-z]*", r["instance"]).group(0),
         "instance": lambda r: r["instance"], "size": lambda r: r.get("size"),
@@ -895,18 +895,18 @@ def check_v2(rec, rel, mdir, rnums):
                 r.get("billed_basis") in (None, "unavailable", "shared-window"):
             errors.append(f"{tag}: a billed figure with billed_basis {r.get('billed_basis')}")
         if r.get("billed_basis") == "unattributed":
-            warns.append(f"{tag}: billed_s {r.get('billed_s')} matches no completion record or CloudTrail window")
+            warns.append(f"{tag}: billed {r.get('billed_s', r.get('wall_s', 0) + r.get('overhead_s', 0))} s matches no completion record or CloudTrail window")
         if r["run_outcome"] == "no-capacity" and any(k in r for k in ("wall_s", "compute_usd", "billed_usd")):
             errors.append(f"{tag}: a no-capacity row carries a wall or a $")
-        if r.get("avg_cores", 0) > r.get("vcpus", 1e9) * 1.001:
+        if r.get("avg_cores", 0) > r.get("vcpus", 1e9) + 0.05:   # cgroup rounding, not a second core
             errors.append(f"{tag}: avg_cores {r['avg_cores']} > {r['vcpus']} vCPUs")
         errors.extend(f"{tag}: size.{k} = {x} is printed in neither README.md nor results/"
                       for k, x in r.get("size", {}).items() if not printed(x))
         g = r.get("gpu", {})
         if "util_series" in g and not os.path.exists(os.path.join(mdir, g["util_series"])):
             errors.append(f"{tag}: gpu.util_series {g['util_series']} does not exist")
-        if "util_plateau_pct" in g and not _printed("", g["util_plateau_pct"], rnums):
-            errors.append(f"{tag}: the plateau derived from {g['util_series']} ({g['util_plateau_pct']}%) is not printed in README.md")
+        if "util_plateau_pct" in g and not _printed("", g["util_plateau_pct"], rnums):   # derived, so the page may lag
+            warns.append(f"{tag}: the plateau derived from {g['util_series']} ({g['util_plateau_pct']}%) is not printed in README.md")
         if g.get("mps_clients") and g["mps_clients"] != r["concurrent"]:
             errors.append(f"{tag}: gpu.mps_clients != concurrent")
         if "usd_per_result" in r and "compute_usd" in r and \

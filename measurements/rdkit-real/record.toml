@@ -1,6 +1,23 @@
 # measurements/rdkit-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+schema = 2
 result_unit = "the whole verified ChEMBL 37 release: 2,897,819 compounds and every check"
+throughput_unit = "compounds/s"
+
+[workload]
+size = { compounds = 2897819 }
+note = "fixed 10,000-row chunks to an 8-process fork pool, written back in input order; integer and graph code, no floating point"
+
+[timing]
+wall = "real.py (tool_wall_s in times.txt): the whole release and every check"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "size", "generation"]
+equal_work = "output-sha256"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the comp-chem env's linux-64 twin of the same versions; Intel's 8 vCPU are 4 cores x 2 threads, so 8 workers ran on half the cores"
 
 [[dataset]]
 id = "EBI ChEMBL releases/chembl_37/chembl_37_chemreps.txt.gz (292,540,141 bytes; sha256 published in that directory's checksums.txt)"
@@ -15,7 +32,12 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "run"
+id = "c8g"
+in = ["chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 483
 billed_s = 571
 usd_hr = 0.319
@@ -23,6 +45,8 @@ compute_usd = 0.0428
 billed_usd = 0.0506
 peak_gib = 0.46
 peak_kind = "rss"
+throughput = 6000
+avg_cores = 7.92
 
 [[run]]
 instance = "c8i.2xlarge"
@@ -31,7 +55,12 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "run"
+id = "c8i"
+in = ["chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 678
 billed_s = 750
 usd_hr = 0.3748
@@ -39,6 +68,8 @@ compute_usd = 0.0706
 billed_usd = 0.0781
 peak_gib = 0.46
 peak_kind = "rss"
+throughput = 4274
+avg_cores = 7.93
 
 [[run]]
 instance = "c8a.2xlarge"
@@ -47,7 +78,12 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "run"
+id = "c8a"
+in = ["chip"]
 workers = 8
+ranks = 1
+threads_per_rank = 1
+concurrent = 8
 wall_s = 367
 billed_s = 423
 usd_hr = 0.4311
@@ -55,6 +91,8 @@ compute_usd = 0.0439
 billed_usd = 0.0507
 peak_gib = 0.5
 peak_kind = "rss"
+throughput = 7896
+avg_cores = 7.91
 
 # --- checks: '## What held at scale' (asserted in-task by real.py; same on all three chips) ---
 [[check]]

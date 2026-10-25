@@ -1,0 +1,218 @@
+# measurements/gpaw-scaling/record.toml -- GPAW 25.7.0 on 64-atom bulk Si, 1 -> 48 MPI ranks
+# (OMP_NUM_THREADS=1), Graviton4, 2026-09-09, us-east-1. Written from scratch at schema 2.
+# INSTANCE SIZES ARE NOT RECORDED: the README says only "the session record says c8g throughout".
+# So every row is c8g.unrecorded: the family is the README's, the size is not guessed, no vCPUs are
+# derived, and no $ (no usd_hr). The 64/96-rank failures have no surviving artifact: the rows carry the
+# README's claim, not a file. results/legible-r5/ (the 2026-09-07 recipe run) is check evidence
+# only (the rank-count guard), not a run row: its box is not recorded either.
+schema = 2
+result_unit = "one GPAW SCF energy of 64-atom bulk Si (PW 400 eV, LDA, 4x4x4 MP)"
+
+[workload]
+size = { atoms = 64, kpoints = 64, bands = 158 }
+note = "2x2x2 supercell of the 8-atom conventional cell; 4 irreducible k-points; OMP_NUM_THREADS=1 throughout"
+
+[timing]
+wall = "timing.txt WALL_SEC (the script's own timer; the script was not kept)"
+
+[[series]]
+id = "ranks"
+axis = "workers"
+held = ["image", "family", "size"]
+equal_work = "rank-independent-energy"
+attribution = "same-binary"
+verdict = { shape = "wall", at = 48, through = 96, on = "wall" }
+note = "618.0 s -> 22.3 s, 27.7x at 48 ranks (58% efficiency); the 64- and 96-rank failures are the session record's and the sizing page's account, with no artifact here"
+
+[[dataset]]
+id = "bulk Si 2x2x2 supercell built in-script (ASE 3.29.0), GPAW's bundled Si.LDA setup"
+tier = "built"
+unpinned = "the input script was written to /tmp in the session and not kept; the system is fully described by results/legible-r5/gpaw-8.log"
+
+# --- the rank ladder ------------------------------------------------------------------------
+[[run]]
+id = "n1"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 1
+ranks = 1
+threads_per_rank = 1
+wall_s = 618.0
+results = "results/sweep/n1/timing.txt"
+note = "instance size not recorded (README: c8g throughout)"
+
+[[run]]
+id = "n2"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 2
+ranks = 2
+threads_per_rank = 1
+wall_s = 320.5
+results = "results/sweep/n2/timing.txt"
+note = "instance size not recorded (README: c8g throughout)"
+
+[[run]]
+id = "n4"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 4
+ranks = 4
+threads_per_rank = 1
+wall_s = 177.5
+results = "results/sweep/n4/timing.txt"
+note = "instance size not recorded (README: c8g throughout)"
+
+[[run]]
+id = "n8"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 8
+threads_per_rank = 1
+wall_s = 108.4
+results = "results/sweep/n8/timing.txt"
+note = "instance size not recorded (README: c8g throughout); energy -380.305360"
+
+[[run]]
+id = "n16"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 16
+ranks = 16
+threads_per_rank = 1
+wall_s = 53.8
+results = "results/knee/n16/timing.txt"
+note = "instance size not recorded (README: c8g throughout)"
+
+[[run]]
+id = "n32"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 32
+ranks = 32
+threads_per_rank = 1
+wall_s = 32.1
+results = "results/knee/n32/timing.txt"
+note = "instance size not recorded (README: c8g throughout); energy -380.305360"
+
+[[run]]
+id = "n48"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 48
+ranks = 48
+threads_per_rank = 1
+wall_s = 22.3
+results = "results/knee/n48/timing.txt"
+note = "instance size not recorded (README: c8g throughout); the last good rung"
+
+[[run]]
+id = "n64"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 64
+threads_per_rank = 1
+run_outcome = "failed"
+note = "the sizing page and the session record say n = 64 failed, with the cell unable to be divided further; no artifact survives. Size not recorded; the README names c8g.16xlarge / c8g.24xlarge only for a re-run"
+
+[[run]]
+id = "n96"
+in = ["ranks"]
+instance = "c8g.unrecorded"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "aarchsci dft env, GPAW 25.7.0; the gpaw recipe's pin on the run date was quay.io/aarchsci/dft@sha256:0740fab9721d... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 96
+ranks = 96
+threads_per_rank = 1
+run_outcome = "failed"
+note = "the sizing page and the session record say n = 96 failed, with the cell unable to be divided further; no artifact survives. Size not recorded; the README names c8g.16xlarge / c8g.24xlarge only for a re-run"
+
+# --- checks ---------------------------------------------------------------------------------
+[[check]]
+id = "rank-independent-energy"
+claim = "the extrapolated energy is −380.305329 eV on five of seven rungs and −380.305360 on the other two, 3.1e-5 eV apart. More ranks change the speed, not the answer."
+kind = "invariance"
+bound = "<1e-4 eV (legible-r5 smoke check, 4 vs 8 ranks)"
+observed = "−380.305329 (n = 1, 2, 4, 16, 48) / −380.305360 (n = 8, 32); 3.10e-05 eV"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "world-size"
+claim = "`gpaw.mpi.world.size` reads back 4 and 8"
+kind = "rank-count"
+bound = "exactly 4 and exactly 8"
+observed = "4 and 8 (legible-r5 only; the sweep rungs' RANKS may be echoed, not read back)"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "natoms"
+claim = "natoms want 64 (2x2x2 supercell of the 8-atom conventional cell)"
+kind = "identity"
+bound = "64"
+observed = "64"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "energy-physical"
+claim = "energy_physical want -7..-4 (bulk Si LDA)"
+kind = "band"
+bound = "-7..-4 eV/atom"
+observed = "-5.9423 eV/atom"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "knee-ok"
+claim = "`timing.txt` records `RANKS` (the count launched) and, for 16–48, `OK True`"
+kind = "reported"
+observed = "OK True on n = 16, 32, 48"
+outcome = "reported"
+across_chips = "n/a"

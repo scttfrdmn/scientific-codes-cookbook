@@ -1,0 +1,579 @@
+# measurements/gpu-gromacs/record.toml -- written from scratch at schema 2 (#118), from README.md and
+# the committed results/ and cfg/ (S3 reads only, $0).
+# GPU rows: spawn launch on the DLAMI (spawn#601), NGC GROMACS 2023.2 by the full digest that every
+# host.log prints. Prices are the README's rate-card $/hr (no artifact carries a price); $/ns is
+# derived from usd_hr / ns/day, never authored. The util plateau / mean / HBM peak are derived from
+# the committed gpu_util*.csv, never authored.
+# Dates: the S3 LastModified of each run's artifacts, in the session's local time (PDT), the
+# convention the README uses (in UTC the evening runs of 09-15 fall on 09-16).
+# CPU leg: the README says "the instance *size* is not recorded", so those rows are
+# '<family>.unrecorded' (families from the README's CPU table and the result prefixes); no vCPUs
+# derived, no price. NOT a row: RUN 1 (results/run1-a10g/): no artifact names its instance family
+# ("The A10G size is printed by RUN 2" only); its md.log lines and 465.827 ns/day live in the
+# 'run1-auto-offload' check.
+# The p5 / g7e capacity watches in cfg/ have no outcome in any artifact, so they are not rows.
+schema = 2
+result_unit = "one simulated nanosecond of a 21,087-atom SPC water box (PME, 1.0 nm cut-offs, 2 fs, h-bond constraints, V-rescale 300 K)"
+throughput_unit = "ns/day"
+throughput_is_result = true
+
+[workload]
+size = { atoms = 21087, steps = 25000 }
+note = "gmx solvate -cs spc216 -box 6 6 6 (7,029 SOL), built in-task; one job per card unless MPS-packed"
+
+[timing]
+wall = "mdrun's own Wall t from md.log (the scripts' wall_s)"
+
+[[series]]
+id = "card"
+axis = "gpu_model"
+held = ["image", "size", "layout", "workers"]
+equal_work = "gpu-runs-complete"
+attribution = "same-binary"
+note = "-nb gpu -pme gpu -update gpu -ntmpi 1 -ntomp 8 on each card; the README states no shape. The Blackwell (g7) member failed in mdrun"
+
+[[series]]
+id = "offload"
+axis = "offload"
+held = ["image", "instance", "size", "layout", "workers"]
+equal_work = "gpu-runs-complete"
+attribution = "same-binary"
+note = "one A10G, one box, four configs: full offload is 6.47x the CPU-only run; moving PME alone to the CPU costs 2.57x, moving the update 1.17x"
+
+[[series]]
+id = "mps"
+axis = "concurrent"
+held = ["image", "instance", "size"]
+equal_work = "gpu-runs-complete"
+attribution = "same-binary"
+verdict = { shape = "knee", at = 2, through = 4, on = "throughput" }
+note = "aggregate gains 73.2% from 1 to 2 jobs, then 1.7% and 0.1% (flat after two); per-system ns/day falls 2.27x from N = 1 to 4"
+
+[[series]]
+id = "accelerator"
+axis = "accelerator"
+held = ["size", "workers"]
+equal_work = "none: the GPU and CPU legs ran the same .mdp and solvate at 25,000 steps but are different builds; each leg's completion is its own check (gpu-runs-complete, cpu-runs-complete)"
+attribution = "other-version"
+attribution_note = "GPU legs run NGC GROMACS 2023.2 (CUDA, full offload); CPU legs conda-forge GROMACS 2026.3 (miniforge3:latest + run-time install, except the pinned aarchsci md on c8g). The NGC image never completed a CPU-only run, so any GPU-vs-CPU multiple carries the build difference too"
+note = "CPU instance sizes are not recorded; 8 OpenMP threads on every member"
+
+[[dataset]]
+id = "gmx solvate -cs spc216 -box 6 6 6, OPLS-AA SPC water (7,029 SOL), GROMACS's own spc216"
+tier = "built"
+unpinned = "built in-task by gmx solvate + grompp from the image's own spc216.gro and a .mdp the script writes; nothing is staged"
+
+# --- one job per card: results/tradeoff/g6, g6e, g7 (gpu_measure.sh) -------------------------
+[[run]]
+id = "l4"
+in = ["accelerator", "card"]
+instance = "g6.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 11.0
+usd_hr = 0.978
+price_source = "rate-card"
+throughput = 392.759
+results = "results/tradeoff/g6"
+gpu = { model = "NVIDIA L4", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/tradeoff/g6/gpu_util.csv" }
+note = "size from the pattern page (host.log names the card, not the instance; this run's config is not in the bucket)"
+
+[[run]]
+id = "l40s"
+in = ["accelerator", "card"]
+instance = "g6e.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 8.822
+usd_hr = 2.242
+price_source = "rate-card"
+throughput = 489.703
+results = "results/tradeoff/g6e"
+gpu = { model = "NVIDIA L40S", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/tradeoff/g6e/gpu_util.csv" }
+note = "size from the pattern page (host.log names the card, not the instance; this run's config is not in the bucket)"
+
+[[run]]
+id = "blackwell"
+in = ["card"]
+instance = "g7.2xlarge"
+purpose = "diagnostic"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-21"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+run_outcome = "failed"
+results = "results/tradeoff/g7"
+gpu = { model = "NVIDIA RTX PRO 4500 Blackwell Server Edition", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "the run failed: status: FAIL reason: mdrun, and mdrun.log was not uploaded, so only the launch flags survive", util_series = "results/tradeoff/g7/gpu_util.csv" }
+note = "placed, then failed: pulled the image and allocated 263-269 MB, but every utilisation sample is 0 and the result is status: FAIL reason: mdrun; mdrun.log was not uploaded, so the cause is not known. A capacity watch that fired (both g7 us-east-1 cfgs carry this ami)"
+
+# --- which stage the GPU is for: results/run2-a10g-offload (gpu_canary2.sh), one box ------------
+[[run]]
+id = "a10g-allgpu"
+in = ["accelerator", "card", "offload"]
+instance = "g5.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 15.037
+usd_hr = 1.212
+price_source = "rate-card"
+throughput = 287.294
+results = "results/run2-a10g-offload/smoke-check.txt"
+gpu = { model = "NVIDIA A10G", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence = "results/run2-a10g-offload/smoke-check.txt, allgpu md.log: '1 GPU selected for this run.', 'PP:0,PME:0', 'PP tasks will do (non-perturbed) short-ranged interactions on the GPU', 'PP task will update and constrain coordinates on the GPU', 'PME tasks will do all aspects on the GPU'", util_series = "results/run2-a10g-offload/gpu_util-allgpu.csv" }
+note = "-nb gpu -pme gpu -update gpu"
+
+[[run]]
+id = "a10g-pmecpu"
+in = ["offload"]
+instance = "g5.2xlarge"
+purpose = "control"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 38.576
+usd_hr = 1.212
+price_source = "rate-card"
+throughput = 111.991
+results = "results/run2-a10g-offload/smoke-check.txt"
+gpu = { model = "NVIDIA A10G", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme cpu -update gpu); md.log's assignment lines were captured for the allgpu config only", util_series = "results/run2-a10g-offload/gpu_util-pmecpu.csv" }
+note = "-nb gpu -pme cpu -update gpu: PME forced off the GPU"
+
+[[run]]
+id = "a10g-updcpu"
+in = ["offload"]
+instance = "g5.2xlarge"
+purpose = "control"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 17.629
+usd_hr = 1.212
+price_source = "rate-card"
+throughput = 245.067
+results = "results/run2-a10g-offload/smoke-check.txt"
+gpu = { model = "NVIDIA A10G", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update cpu); md.log's assignment lines were captured for the allgpu config only", util_series = "results/run2-a10g-offload/gpu_util-updcpu.csv" }
+note = "-nb gpu -pme gpu -update cpu: the update forced off the GPU"
+
+[[run]]
+id = "a10g-allcpu"
+in = ["offload"]
+instance = "g5.2xlarge"
+purpose = "control"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 97.366
+usd_hr = 1.212
+price_source = "rate-card"
+throughput = 44.371
+results = "results/run2-a10g-offload/smoke-check.txt"
+note = "-nb cpu on the GPU box: no gpu table, nothing offloaded (util mean 0.3%, results/run2-a10g-offload/gpu_util-allcpu.csv). The NGC image's only completed CPU-only run"
+
+# --- packing one L4 with MPS: results/mps-l4 (gpu_mps.sh, cfg/mps_us-east-1.yaml) ---------------
+[[run]]
+id = "mps-n1"
+in = ["mps"]
+instance = "g6.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-18"
+date_source = "run"
+variant = "MPS on"
+concurrent = 1
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 14.6
+wall_basis = "date +%s.%N around the N concurrent mdrun processes (first start to last exit)"
+usd_hr = 0.978
+price_source = "rate-card"
+throughput = 430.1
+results = "results/mps-l4/smoke-check.txt"
+gpu = { model = "NVIDIA L4", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/mps-l4/gpu_util-N1.csv", mps_clients = 1 }
+note = "per-system 430.1 ns/day; the README's utilisation column is the series mean (27%), not a plateau"
+
+[[run]]
+id = "mps-n2"
+in = ["mps"]
+instance = "g6.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-18"
+date_source = "run"
+variant = "MPS on"
+concurrent = 2
+workers = 8
+ranks = 1
+threads_per_rank = 4
+wall_s = 12.3
+wall_basis = "date +%s.%N around the N concurrent mdrun processes (first start to last exit)"
+usd_hr = 0.978
+price_source = "rate-card"
+throughput = 744.9
+results = "results/mps-l4/smoke-check.txt"
+gpu = { model = "NVIDIA L4", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/mps-l4/gpu_util-N2.csv", mps_clients = 2 }
+note = "per-system 372.5 ns/day, ntomp 4 each; throughput is the aggregate"
+
+[[run]]
+id = "mps-n3"
+in = ["mps"]
+instance = "g6.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-18"
+date_source = "run"
+variant = "MPS on"
+concurrent = 3
+workers = 6
+ranks = 1
+threads_per_rank = 2
+wall_s = 18.0
+wall_basis = "date +%s.%N around the N concurrent mdrun processes (first start to last exit)"
+usd_hr = 0.978
+price_source = "rate-card"
+throughput = 757.4
+results = "results/mps-l4/smoke-check.txt"
+gpu = { model = "NVIDIA L4", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/mps-l4/gpu_util-N3.csv", mps_clients = 3 }
+note = "per-system 252.5 ns/day, ntomp 2 each (6 of 8 vCPUs); throughput is the aggregate"
+
+[[run]]
+id = "mps-n4"
+in = ["mps"]
+instance = "g6.2xlarge"
+purpose = "primary"
+image = "nvcr.io/hpc/gromacs@sha256:d1ed1e13321db8914a84c50348ab4859f258e78f70e6444ebee81b28563f9223"
+build = "NGC GROMACS 2023.2 (avx2_256)"
+launch = "launch"
+ami = "ami-041c64b236b082fe4"
+region = "us-east-1"
+date = "2026-09-18"
+date_source = "run"
+variant = "MPS on"
+concurrent = 4
+workers = 8
+ranks = 1
+threads_per_rank = 2
+wall_s = 23.8
+wall_basis = "date +%s.%N around the N concurrent mdrun processes (first start to last exit)"
+usd_hr = 0.978
+price_source = "rate-card"
+throughput = 758.2
+results = "results/mps-l4/smoke-check.txt"
+gpu = { model = "NVIDIA L4", count = 1, runtime = "docker-privileged", offload = ["nonbonded", "pme", "update"], offload_evidence_absent = "only the launch flags survive (-nb gpu -pme gpu -update gpu); GROMACS refuses explicit GPU tasks it cannot run", util_series = "results/mps-l4/gpu_util-N4.csv", mps_clients = 4 }
+note = "per-system 189.6 ns/day, ntomp 2 each; throughput is the aggregate"
+
+# --- the CPU leg: results/tradeoff/cpu-* (cpu_canary.sh), -nb cpu, 25,000 steps --------------
+
+# Instance size not recorded (README), so '<family>.unrecorded'. No usd_hr: the README prints none.
+
+[[run]]
+id = "cpu-c8a"
+in = ["accelerator"]
+instance = "c8a.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 26.915
+throughput = 160.513
+results = "results/tradeoff/cpu-c8a"
+
+[[run]]
+id = "cpu-c7a-cf"
+in = ["accelerator"]
+instance = "c7a.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 39.071
+throughput = 110.572
+results = "results/tradeoff/cpu-c7a-cf"
+
+[[run]]
+id = "cpu-c9g"
+in = ["accelerator"]
+instance = "c9g.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 64.435
+throughput = 67.047
+results = "results/tradeoff/cpu-c9g"
+note = "aarch64, yet host.log shows condaforge/miniforge3:latest: the README says only the x86 rows ran miniforge3"
+
+[[run]]
+id = "cpu-c7i-cf"
+in = ["accelerator"]
+instance = "c7i.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 65.051
+throughput = 66.412
+results = "results/tradeoff/cpu-c7i-cf"
+
+[[run]]
+id = "cpu-c6a"
+in = ["accelerator"]
+instance = "c6a.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 68.433
+throughput = 63.130
+results = "results/tradeoff/cpu-c6a"
+
+[[run]]
+id = "cpu-c8i"
+in = ["accelerator"]
+instance = "c8i.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 68.459
+throughput = 63.106
+results = "results/tradeoff/cpu-c8i"
+
+[[run]]
+id = "cpu-c6i"
+in = ["accelerator"]
+instance = "c6i.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 77.02
+throughput = 56.092
+results = "results/tradeoff/cpu-c6i"
+
+[[run]]
+id = "cpu-c8g3"
+in = ["accelerator"]
+instance = "c8g.unrecorded"
+purpose = "primary"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+build = "conda-forge GROMACS 2026.3 from the aarchsci md env (the only pinned CPU-leg image)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+wall_s = 85.192
+throughput = 50.711
+results = "results/tradeoff/cpu-c8g3"
+note = "-nb cpu -ntomp 8 without -ntmpi 1, so the thread-MPI rank split is GROMACS's choice; the README's c8g row"
+
+[[run]]
+id = "cpu-c5"
+in = ["accelerator"]
+instance = "c5.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 96.011
+throughput = 44.997
+results = "results/tradeoff/cpu-c5"
+
+[[run]]
+id = "cpu-c7g"
+in = ["accelerator"]
+instance = "c7g.unrecorded"
+purpose = "primary"
+image = "unrecorded"
+build = "conda-forge GROMACS 2026.3 installed at run time into condaforge/miniforge3:latest (a tag and a solve, not a pin; host.log shows miniforge3 sha256:3a41fcca...)"
+launch = "launch"
+date = "2026-09-16"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+wall_s = 98.203
+throughput = 43.992
+results = "results/tradeoff/cpu-c7g"
+note = "aarch64, yet host.log shows condaforge/miniforge3:latest: the README says only the x86 rows ran miniforge3"
+
+[[run]]
+id = "cpu-c8g"
+instance = "c8g.unrecorded"
+purpose = "diagnostic"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+build = "conda-forge GROMACS 2026.3 from the aarchsci md env (the only pinned CPU-leg image)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+run_outcome = "failed"
+results = "results/tradeoff/cpu-c8g"
+note = "status: FAIL reason: no-gmx-on-path on the aarchsci md image; kept as a failure (README)"
+
+[[run]]
+id = "cpu-c8g2"
+instance = "c8g.unrecorded"
+purpose = "diagnostic"
+image = "quay.io/aarchsci/md@sha256:1ee941664add6f83b367c012d0cc670ffc837e83ee491125993de72e88c22ab9"
+build = "conda-forge GROMACS 2026.3 from the aarchsci md env (the only pinned CPU-leg image)"
+launch = "launch"
+date = "2026-09-15"
+date_source = "run"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+run_outcome = "failed"
+results = "results/tradeoff/cpu-c8g2"
+note = "status: FAIL reason: no-gmx-on-path on the aarchsci md image; kept as a failure (README)"
+
+# --- checks --------------------------------------------------------------------------------------
+[[check]]
+id = "gpu-runs-complete"
+claim = "GROMACS refuses explicit GPU tasks it cannot run, so a completed run is evidence the offload happened."
+kind = "offload"
+bound = "status: OK / rc=0 under explicit -nb gpu -pme gpu -update gpu, on the same tpr (25,000 steps)"
+observed = "status: OK on L4 and L40S; rc=0 on all four RUN 2 configs; a per-system ns/day for N = 1 to 4 under MPS"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "md-log-assignment"
+claim = "Only the A10G runs also capture `md.log`'s own assignment lines (`1 GPU selected`, `PP:0,PME:0`, `PME tasks will do all aspects on the GPU`)."
+kind = "offload"
+observed = "1 GPU selected for this run.; PP:0,PME:0; PME tasks will do all aspects on the GPU (RUN 2 allgpu)"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "run1-auto-offload"
+claim = "GROMACS 2023 under `-nb gpu` alone already offloads PME and the update (RUN 1's `md.log`), so a stage's contribution is measured by forcing it off."
+kind = "offload"
+observed = "RUN 1 (-nb gpu alone, 50,000 steps): PP:0,PME:0; PP task will update and constrain coordinates on the GPU; PME tasks will do all aspects on the GPU; 465.827 ns/day, plateau 55-68% over its last ten samples (median 59)"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "mps-on"
+claim = "`MPS=on` (`nvidia-cuda-mps-control -d`, inside the privileged container)."
+kind = "sentinel"
+observed = "MPS=on"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "blackwell-mdrun"
+claim = "every utilisation sample is 0 and the result is `status: FAIL reason: mdrun`"
+kind = "sentinel"
+observed = "status: FAIL reason: mdrun; max=0 mean=0.0 over 18 samples"
+outcome = "fail"
+across_chips = "n/a"
+
+[[check]]
+id = "cpu-runs-complete"
+claim = "Same `.mdp` and solvate, `-nb cpu -ntomp 8`, conda-forge GROMACS 2026.3, 25,000 steps"
+kind = "sentinel"
+bound = "status: OK and an md.log Performance line"
+observed = "status: OK on the ten CPU boxes; cpu-c8g and cpu-c8g2 status: FAIL reason: no-gmx-on-path (failed rows)"
+outcome = "pass"
+across_chips = "n/a"
+
+[[upstream]]
+ref = "spawn#601"
+role = "blocker"
+note = "spawn task run cannot provision a GPU AMI; every GPU row is spawn launch on the DLAMI"

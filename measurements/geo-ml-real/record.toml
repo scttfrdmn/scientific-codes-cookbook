@@ -1,6 +1,28 @@
 # measurements/geo-ml-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion-record window (cookbook-geo-ml-real{,-x8664,-amd}-g2, to the
+# second; the copies are results/*/completion.json), although the README calls it EC2 launch to terminate.
+schema = 2
 result_unit = "the whole workload plus every check: all 85,529 US tracts (vector leg) and Colorado's DEM by 1,447 tracts (raster leg)"
+
+[workload]
+size = { tracts = 85529, counties = 3235, colorado_tracts = 1447, tract_files = 56, dem_tiles = 28 }
+note = "vector leg over every US tract (areas, dissolve, sjoin, contiguity two ways, Moran's I, OLS), then a raster leg: Colorado's DEM summarised by tract; sized by memory (the raster leg)"
+
+[timing]
+wall = "real.py wall, timed in-task (results/*/wall.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size"]
+equal_work = "zonal-cells"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the recipe's geo-ml-5ca5b99c000d linux-64 twin, same library versions; Intel's 4 vCPU are 2 cores; the x86 route skips the 0.9 GB image pull"
+
+[[not_swept]]
+axis = "workers"
+reason = "libpysal's contiguity builders are 40% of the run ... Both are single-threaded, so more cores would not help this workload."
 
 [[dataset]]
 id = "Census TIGER/Line 2024 TRACT/tl_2024_{56 FIPS}_tract.zip"
@@ -29,6 +51,8 @@ from_recipe = "measurements/r-spatial-real"
 note = "its sha256 is recorded in each chip's results.json"
 
 [[run]]
+id = "chip-r8g"
+in = ["chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -44,6 +68,8 @@ peak_gib = 22.9
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-r8i"
+in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -59,6 +85,8 @@ peak_gib = 25.7
 peak_kind = "cgroup-memory.peak"
 
 [[run]]
+id = "chip-r8a"
+in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"

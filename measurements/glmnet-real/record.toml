@@ -1,6 +1,26 @@
 # measurements/glmnet-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances, to within 1 s;
+# results/billed-windows.txt). peak_gib is real.R's own peak-resident line (score.tsv peak_rss);
+# anon_gib and avg_cores are real.sh's 5 s cgroup sampler (times.txt).
+schema = 2
 result_unit = "the whole verified run: both lasso fits (A binomial, B gaussian), their CV, and every check"
+
+[workload]
+size = { genes = 20531, samples = 11069 }
+note = "two lasso fits on one in-memory matrix: A binomial n = 10,885, p = 16,335; B gaussian n = 1,090, p = 20,250; coordinate descent is single-threaded, only the checks' BLAS uses more"
+
+[timing]
+wall = "real.sh's date stamps around Rscript real.R (rscript_wall_s: both fits, their CV and every check)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "generation"]
+equal_work = "support"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the r env's linux-64 locked twin; Intel and AMD are byte-identical (same build, OpenBLAS Cooperlake on both), Graviton4 runs neoversev2; Intel's 4 vCPU are 2 cores x 2 threads"
+note = "AMD is 1.61x Graviton4 overall and 17% cheaper billed; Intel is 1.34x slower than Graviton4"
 
 [[dataset]]
 id = "GDC PanCanAtlas EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv (Hoadley et al. 2018, Cell; 20,531 genes x 11,069 samples)"
@@ -14,6 +34,8 @@ tier = "durable-id"
 pins = "pins.sha256"
 
 [[run]]
+id = "r8g"
+in = ["chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -27,8 +49,12 @@ compute_usd = 0.1007
 billed_usd = 0.113
 peak_gib = 9.09
 peak_kind = "rss"
+anon_gib = 9.07
+avg_cores = 1.10
 
 [[run]]
+id = "r8i"
+in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -42,9 +68,13 @@ compute_usd = 0.1589
 billed_usd = 0.1657
 peak_gib = 9.09
 peak_kind = "rss"
+anon_gib = 9.07
+avg_cores = 1.13
 note = "the r env's linux-64 locked twin"
 
 [[run]]
+id = "r8a"
+in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -58,6 +88,8 @@ compute_usd = 0.0847
 billed_usd = 0.0943
 peak_gib = 9.09
 peak_kind = "rss"
+anon_gib = 9.08
+avg_cores = 1.24
 note = "the r env's linux-64 locked twin"
 
 # --- checks: '## What held at scale, on all three chips' -----------------------------

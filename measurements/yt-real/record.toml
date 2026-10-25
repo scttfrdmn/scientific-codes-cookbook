@@ -1,5 +1,9 @@
 # measurements/yt-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt); the README
+# calls it "spawn's launch-to-terminate window". footprint.txt's avg_cores (7.84 / 8.07 / 8.12) is the
+# container's whole usage_usec over the 29-50 s tool wall, so it counts the pre-tool pin check
+# (AMD's exceeds 8 vCPUs): not authored as avg_cores.
+schema = 2
 result_unit = "the whole Enzo_64 run analysed: all 51 outputs (z = 99 to 0)"
 
 [[dataset]]
@@ -8,7 +12,26 @@ tier = "durable-id"
 pins = "files.sha256"
 note = "fetched and checked against the registry on AWS; the 1,065 unpacked files pinned in files.sha256 and re-checked in-task"
 
+[workload]
+size = { outputs = 51, files = 1065 }
+note = "a DatasetSeries over a whole 64^3 Enzo AMR run, one output per worker in a Pool of 8; per-output cost tracks leaf cells; the box is sized by the staged 4 GB in tmpfs"
+
+[timing]
+wall = "real.py, timed in run.sh"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "generation"]
+equal_work = "enzo-level-info"
+attribution = "same-version-other-build"
+attribution_note = "the astro env: aarch.science on arm64, its astro-ed5afa726bbe linux-64 twin on both x86 chips; Intel's 8 vCPUs are 4 cores x 2 SMT"
+note = "Graviton4 cheapest billed (AMD 9% dearer, Intel 32%); AMD fastest; boot is most of the bill"
+
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 date = "2026-10-19"
@@ -26,6 +49,8 @@ results = "results/arm64/"
 note = "peak is the largest single worker's ru_maxrss (8 workers)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-19"
@@ -43,6 +68,8 @@ results = "results/x86_64/"
 note = "peak is the largest single worker's ru_maxrss (8 workers); astro-ed5afa726bbe linux-64 twin"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 date = "2026-10-19"

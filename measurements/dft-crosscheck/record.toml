@@ -1,6 +1,23 @@
 # measurements/dft-crosscheck/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the four rows are SIESTA's half only (GPAW's scan and the crosscheck task carry no
+# timing here); no billed figure, no $ -- this README prints no rate.
+schema = 2
 result_unit = "one bulk-Si lattice-constant scan (seven lattice constants, LDA, 6x6x6 k; SIESTA's task adds its 5.4.2 reference SCF)"
+
+[workload]
+size = { scfs = 8, lattice_constants = 7 }
+note = "SIESTA: 1 reference SCF + a 7-point lattice-constant scan, bulk Si, LDA, 6x6x6 k-mesh"
+
+[timing]
+wall = "SIESTA task wall for the 8 SCFs (results/<gen>-siesta.txt wall_s)"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "workers", "size", "layout"]
+equal_work = "siesta-reference"
+attribution = "same-binary"
+note = "SIESTA Graviton2 -> Graviton5 1.86x, the least of the four codes in the README's table"
 
 [[dataset]]
 id = "siesta-project/siesta 5.4.2 Tests/Pseudos/Si.psf"
@@ -11,41 +28,57 @@ note = "sha256 copied from recipes/siesta/stage-inputs.sh, which checks it at st
 
 # --- SIESTA generation rows: wall_s from results/<gen>-siesta.txt; no $ (this README prints no rate)
 [[run]]
+id = "siesta-c6g"
+in = ["gen"]
 instance = "c6g.xlarge"
 purpose = "generation-sweep"
 date = "2026-09-30"
 date_source = "git"
 workers = 2
+ranks = 2
+threads_per_rank = 1
 wall_s = 52
 results = "results/c6g-siesta.txt"
 note = "SIESTA, 8 SCFs (1 reference + 7 scan points), 2 MPI ranks; size and price are in recipes/siesta's table; 2026-09-30 is recipes/siesta last_verified"
 
 [[run]]
+id = "siesta-c7g"
+in = ["gen"]
 instance = "c7g.xlarge"
 purpose = "generation-sweep"
 date = "2026-09-30"
 date_source = "git"
 workers = 2
+ranks = 2
+threads_per_rank = 1
 wall_s = 36
 results = "results/c7g-siesta.txt"
 note = "SIESTA, 8 SCFs, 2 MPI ranks"
 
 [[run]]
+id = "siesta-c8g"
+in = ["gen"]
 instance = "c8g.xlarge"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
 workers = 2
+ranks = 2
+threads_per_rank = 1
 wall_s = 33
 results = "results/c8g-siesta.txt"
 note = "SIESTA, 8 SCFs, 2 MPI ranks"
 
 [[run]]
+id = "siesta-c9g"
+in = ["gen"]
 instance = "c9g.xlarge"
 purpose = "generation-sweep"
 date = "2026-09-30"
 date_source = "git"
 workers = 2
+ranks = 2
+threads_per_rank = 1
 wall_s = 28
 results = "results/c9g-siesta.txt"
 note = "SIESTA, 8 SCFs, 2 MPI ranks"

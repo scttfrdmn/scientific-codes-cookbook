@@ -1,6 +1,25 @@
 # measurements/spades-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: billed is the spawn completion window of cookbook-spades-real-assemble-*; peak is the
+# sampled max of cgroup memory.stat anon (times.txt sampled_anon_max_bytes), avg_cores times.txt's avg_busy_cpus.
+schema = 2
 result_unit = "one whole-isolate assembly: DRR171213 (E. coli K-12 MG1655, 760,683 MiSeq 2x300 pairs) with spades.py --isolate"
+
+[workload]
+size = { read_pairs = 760683, bases = 450083225 }
+note = "one isolate at about 97x, six k-mer passes (K21-K127); the work directory spills 18 GB to the root disk"
+
+[timing]
+wall = "spades.py's wall (spades_wall_s in times.txt)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "contigs-byte-identical"
+attribution = "same-version-other-build"
+attribution_note = "SPAdes 4.3.0: aarch.bio's build on Graviton4, bioconda's on x86; Intel's 8 vCPU are 4 cores x 2 SMT"
+note = "AMD 1.16x and Intel 1.12x faster than Graviton4, both dearer per assembly; most of the gap is K21 and K33"
 
 [[dataset]]
 id = "DRR171213 (PRJDB8030, library Ecoli_MG1655_NN), RODA .sra converted to FASTQ.gz by 00-prep"
@@ -22,13 +41,20 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+id = "c8g"
+in = ["chip"]
+ranks = 1
+threads_per_rank = 8
 wall_s = 1182
 billed_s = 1242
 usd_hr = 0.319
 compute_usd = 0.1047
 billed_usd = 0.1101
 peak_gib = 4.39
-note = "peak is cgroup anon (README 'peak RSS'; SPAdes logs 4,641 MB); cgroup memory.peak 10.8 GiB counts work-dir page cache, so peak_kind is unset. Work dir peaked 18.2-18.4 GB on the root disk"
+peak_kind = "cgroup-anon-max"
+avg_cores = 4.15
+tmpfs_peak_gib = 0.33
+note = "peak is cgroup anon (README 'peak RSS'; SPAdes logs 4,641 MB); cgroup memory.peak 10.8 GiB counts work-dir page cache, so peak_kind is cgroup-anon-max. Work dir peaked 18.2-18.4 GB on the root disk"
 
 [[run]]
 instance = "c8i.2xlarge"
@@ -38,12 +64,19 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+id = "c8i"
+in = ["chip"]
+ranks = 1
+threads_per_rank = 8
 wall_s = 1057
 billed_s = 1109
 usd_hr = 0.3748
 compute_usd = 0.1101
 billed_usd = 0.1155
 peak_gib = 4.39
+peak_kind = "cgroup-anon-max"
+avg_cores = 4.45
+tmpfs_peak_gib = 0.33
 note = "bioconda SPAdes 4.3.0; peak as on Graviton4 (cgroup anon)"
 
 [[run]]
@@ -54,12 +87,19 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 8
+id = "c8a"
+in = ["chip"]
+ranks = 1
+threads_per_rank = 8
 wall_s = 1023
 billed_s = 1066
 usd_hr = 0.4311
 compute_usd = 0.1225
 billed_usd = 0.1276
 peak_gib = 4.39
+peak_kind = "cgroup-anon-max"
+avg_cores = 4.31
+tmpfs_peak_gib = 0.33
 note = "bioconda SPAdes 4.3.0; peak as on Graviton4 (cgroup anon)"
 
 # --- checks: '## What held at scale, on all three chips' -----------------------------

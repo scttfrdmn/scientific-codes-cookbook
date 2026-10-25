@@ -1,5 +1,8 @@
 # measurements/specutils-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the README's "EC2 launch to terminate" = the CloudTrail window, exact on all
+# three (results/billed-windows.txt): tasks -r1-v4 / -x8664-v4 / -amd-v4. The x86 tasks' spawn state
+# is failed (exit 1) because the success-flag assertion fails there; the runs themselves finished.
+schema = 2
 result_unit = "the whole healpix group: 40,800 DESI DR1 spectra, 149,477 Gaussian fits by each of specutils and DESI's function, every check"
 
 [[dataset]]
@@ -14,8 +17,27 @@ tier = "versioned-release"
 pins = "sfd.sha256"
 note = "checked by git blob id on AWS (stage_sfd.py), then by sha256"
 
+[workload]
+size = { spectra = 40800, fits = 149477 }
+note = "one process per healpix pixel (100 pixels), 16 workers, one OpenBLAS thread each; ~1 CPU-second per 15 spectra"
+
+[timing]
+wall = "real.py"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["workers", "size", "generation"]
+equal_work = "cont-catalogue"
+attribution = "same-version-other-build"
+attribution_note = "x86 rows run the astro-e2ee19affec3 linux-64 env twin, and their billed includes installing it; Intel's 16 vCPUs are 8 cores x 2 SMT"
+note = "Graviton4 cheapest per result billed (11% under AMD, 22% under Intel); AMD 1.35x faster; compute $/result a tie"
+
 # --- three chips, 16 workers, one OpenBLAS thread each --------------------------------------
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 date = "2026-10-20"
@@ -33,6 +55,8 @@ results = "results/arm64/"
 note = "peak is the largest worker's ru_maxrss (x 16 workers); cgroup memory.peak 9.4 GiB"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
@@ -50,6 +74,8 @@ results = "results/x86_64/"
 note = "astro-e2ee19affec3 linux-64 twin; billed includes its install; largest worker x 16, cgroup memory.peak 13.6 GiB"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"

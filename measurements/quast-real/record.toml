@@ -1,6 +1,24 @@
 # measurements/quast-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window of the cookbook-quast-real-evaluate tasks
+# (2026-10-20); avg_cores is results/<chip>/times.txt avg_busy_cpus (tmpfs_used_kib there is an end-of-run df, not a high-water mark, so not tmpfs_peak_gib).
+schema = 2
 result_unit = "one QUAST report covering all fourteen assemblies"
+
+[workload]
+size = { assemblies = 14 }
+note = "one reference-based QUAST run (-r U00096.3, -g its 9,523-feature annotation) over fourteen 4.6 Mb genomes"
+
+[timing]
+wall = "QUAST wall (quast_wall_s, timed in run.sh)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "layout"]
+equal_work = "length-stats"
+attribution = "same-version-other-build"
+attribution_note = "QUAST 5.3.0 from aarch.bio on Graviton4 (bundling minimap2 2.31) and bioconda on x86 (minimap2 2.28); Intel runs 2 threads per core (host.txt)"
 
 [[dataset]]
 id = "NCBI RefSeq GCF_000005845.2 (E. coli K-12 MG1655, U00096.3) + its annotation GFF (9,523 features)"
@@ -25,6 +43,8 @@ tier = "built"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -32,6 +52,10 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
+avg_cores = 2.96
+task = "01-evaluate"
 wall_s = 12.6
 billed_s = 103
 usd_hr = 0.319
@@ -41,6 +65,8 @@ peak_gib = 0.2422
 peak_kind = "rss"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -48,6 +74,10 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
+avg_cores = 3.11
+task = "01-evaluate"
 wall_s = 14.3
 billed_s = 144
 usd_hr = 0.3749
@@ -58,6 +88,8 @@ peak_kind = "rss"
 note = "bioconda's x86 QUAST 5.3.0, which bundles minimap2 2.28 (aarch.bio's arm64 image ships 2.31)"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -65,6 +97,10 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 8
+ranks = 1
+threads_per_rank = 8
+avg_cores = 2.84
+task = "01-evaluate"
 wall_s = 9.9
 billed_s = 90
 usd_hr = 0.4311

@@ -1,5 +1,8 @@
 # measurements/z3-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt). 64
+# independent single-threaded Z3 processes at a time: concurrent = 64. avg_cores, tmpfs_peak_gib and
+# the peak are real.sh's 5 s cgroup sampler (times.txt).
+schema = 2
 result_unit = "the whole verified run: 4,536 SMT-LIB solves (QF_IDL + QF_RDL + QF_LRA) plus every model check and unsat-core check"
 
 [[dataset]]
@@ -8,9 +11,28 @@ tier = "durable-id"
 pins = "pins.sha256"
 note = "00-fetch checks each archive against Zenodo's md5, then writes the sha256 pins; archives unpack under non-incremental/"
 
-# peak_gib is the box's anonymous memory with 64 solves running (times.txt peak_anon_gib), which is
-# none of the schema's peak_kind values, so peak_kind is left out.
+[workload]
+size = { benchmarks = 4536 }
+note = "QF_IDL + QF_RDL + QF_LRA whole (2,528 + 255 + 1,753 files, 6.8 GB uncompressed), largest file first, 60 s limit per solve; about 1,000 per chip run out the limit, so the limit sets the wall"
+
+[timing]
+wall = "driver.py's wall (driver_wall_s): all 4,536 solves plus the model and core checks"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "every-benchmark-ran"
+attribution = "same-version-other-build"
+attribution_note = "Z3 5.1.0: the recipe's image on Graviton4, the optimization env's linux-64 twin on x86; Intel's 64 vCPU are 32 cores x 2 threads, so two solves share each core; which benchmarks finish inside 60 s moves with chip speed"
+note = "billed $ per decided benchmark ranks them: Graviton4 cheapest, AMD decides 85 more for a 36% dearer hour"
+
+# peak_gib is the box's anonymous memory with 64 solves running (times.txt peak_anon_gib), sampled
+# every 5 s, so peak_kind = cgroup-anon-max.
 [[run]]
+id = "m8g"
+in = ["chip"]
 instance = "m8g.16xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -18,15 +40,23 @@ host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 2373
 billed_s = 2427
 usd_hr = 2.872
 compute_usd = 1.893
 billed_usd = 1.936
 peak_gib = 94.3
+peak_kind = "cgroup-anon-max"
+avg_cores = 54.58
+tmpfs_peak_gib = 6.91
 note = "decided in 60 s: 3,475; billed $/decided 0.000557"
 
 [[run]]
+id = "m8i"
+in = ["chip"]
 instance = "m8i.16xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -34,15 +64,23 @@ host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 2388
 billed_s = 2438
 usd_hr = 3.387
 compute_usd = 2.247
 billed_usd = 2.294
 peak_gib = 81.6
+peak_kind = "cgroup-anon-max"
+avg_cores = 56.85
+tmpfs_peak_gib = 7.09
 note = "decided in 60 s: 3,419; billed $/decided 0.000671"
 
 [[run]]
+id = "m8a"
+in = ["chip"]
 instance = "m8a.16xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -50,12 +88,18 @@ host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
 workers = 64
+ranks = 1
+threads_per_rank = 1
+concurrent = 64
 wall_s = 1963
 billed_s = 2006
 usd_hr = 3.895
 compute_usd = 2.124
 billed_usd = 2.17
 peak_gib = 93.0
+peak_kind = "cgroup-anon-max"
+avg_cores = 58.94
+tmpfs_peak_gib = 7.09
 note = "decided in 60 s: 3,560; billed $/decided 0.000610"
 
 [[run]]

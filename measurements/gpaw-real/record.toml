@@ -1,6 +1,66 @@
 # measurements/gpaw-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: no row carries a billed figure; the x86 same-box tasks' spawn windows (one task ran all
+# three rank rungs) are in results/billed-windows.txt and are shared by their rows.
+schema = 2
 result_unit = "one converged SCF (Pt(111) 3x3x4 slab, PW 400 eV, 4x4x1 k, PBE, 36 atoms)"
+
+[workload]
+size = { atoms = 36, scf_iterations = 27 }
+note = "plane-wave DFT on a periodic slab, MPI over plane waves and k-points; OMP_NUM_THREADS=1"
+
+[timing]
+wall = "the SCF wall only"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "workers", "size"]
+equal_work = "energy"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "wall" }
+note = "2.33x over four generations; Graviton3 -> 4 is the weak step, 1.08x for a higher hourly rate"
+
+[[series]]
+id = "samebox-gv4"
+axis = "workers"
+held = ["image", "instance", "size"]
+equal_work = "decomposition-invariance"
+attribution = "same-binary"
+note = "4 -> 16 is 2.71x (67.8%) on one 16-vCPU box: the scaling number"
+
+[[series]]
+id = "rightsized-gv4"
+axis = "workers"
+held = ["image", "family", "generation", "size"]
+equal_work = "energy"
+attribution = "same-binary"
+note = "4 -> 16 is 3.27x (81.7%) on boxes sized to the ranks: the purchasing number, which includes the bandwidth of idle cores"
+
+[[series]]
+id = "samebox-intel"
+axis = "workers"
+held = ["image", "instance", "size"]
+equal_work = "decomposition-invariance"
+attribution = "same-binary"
+verdict = { shape = "knee", at = 8, through = 16, on = "wall" }
+note = "8 cores x 2 hyperthreads: ranks 9-16 buy nothing (282.8 s at 8, 285.9 s at 16); 1.61x (40%) 4 -> 16"
+
+[[series]]
+id = "samebox-amd"
+axis = "workers"
+held = ["image", "instance", "size"]
+equal_work = "decomposition-invariance"
+attribution = "same-binary"
+note = "16 full cores: 2.42x (60.5%) 4 -> 16"
+
+[[series]]
+id = "chip-16"
+axis = "chip"
+held = ["workers", "layout", "size", "generation"]
+equal_work = "energy"
+attribution = "same-version-other-build"
+attribution_note = "the dft env's linux-64 twin, same GPAW 25.7.0 but a different build (OpenBLAS Cooperlake on x86, neoversev2 on Graviton4); the Intel/AMD gap is the chips, the ARM/x86 gap includes the build"
+note = "at 16 ranks AMD is 3.0x Graviton4 and 1.9x Intel, and the cheapest SCF measured"
 
 [[dataset]]
 id = "Pt(111) 3x3x4 slab, 36 atoms, built by ase in knee.sh"
@@ -15,6 +75,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 16
 threads_per_core = 1
+id = "gen-c6g"
+in = ["gen"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 779.3
 results = "results/c6g-smoke-check.txt"
 note = "SCF wall only"
@@ -26,6 +90,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 16
 threads_per_core = 1
+id = "gen-c7g"
+in = ["gen"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 479.8
 results = "results/c7g-smoke-check.txt"
 note = "SCF wall only"
@@ -37,6 +105,11 @@ date = "2026-09-30"
 date_source = "git"
 workers = 16
 threads_per_core = 1
+id = "gen-c8g"
+in = ["gen", "rightsized-gv4"]
+ranks = 16
+threads_per_rank = 1
+attempt = "r1"
 wall_s = 442.5
 results = "results/c8g-smoke-check.txt"
 note = "SCF wall only; also the right-sized 16-rank rung"
@@ -48,6 +121,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 16
 threads_per_core = 1
+id = "gen-c9g"
+in = ["gen"]
+ranks = 16
+threads_per_rank = 1
 wall_s = 334.6
 results = "results/c9g-smoke-check.txt"
 note = "SCF wall only"
@@ -60,6 +137,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 4
 threads_per_core = 1
+id = "rightsized-4"
+in = ["rightsized-gv4"]
+ranks = 4
+threads_per_rank = 1
 wall_s = 1446.2
 results = "results/rightsized-r4.txt"
 
@@ -71,6 +152,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 8
 threads_per_core = 1
+id = "rightsized-8"
+in = ["rightsized-gv4"]
+ranks = 8
+threads_per_rank = 1
 wall_s = 789.4
 results = "results/rightsized-r8.txt"
 
@@ -83,6 +168,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 4
 threads_per_core = 1
+id = "samebox-gv4-4"
+in = ["samebox-gv4"]
+ranks = 4
+threads_per_rank = 1
 wall_s = 1227.0
 results = "results/knee-samebox.txt"
 note = "one task ran all three rungs"
@@ -94,6 +183,10 @@ date = "2026-09-30"
 date_source = "git"
 workers = 8
 threads_per_core = 1
+id = "samebox-gv4-8"
+in = ["samebox-gv4"]
+ranks = 8
+threads_per_rank = 1
 wall_s = 726.2
 results = "results/knee-samebox.txt"
 
@@ -105,6 +198,11 @@ date = "2026-09-30"
 date_source = "git"
 workers = 16
 threads_per_core = 1
+id = "samebox-gv4-16"
+in = ["samebox-gv4", "chip-16"]
+ranks = 16
+threads_per_rank = 1
+attempt = "r2"
 wall_s = 452.2
 usd_hr = 0.6381
 compute_usd = 0.0802
@@ -118,6 +216,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 4
 host = "results/host-x86_64.txt"
+id = "samebox-intel-4"
+in = ["samebox-intel"]
+ranks = 4
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 459.5
 results = "results/knee-samebox-x86_64.txt"
 
@@ -128,6 +231,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 8
 host = "results/host-x86_64.txt"
+id = "samebox-intel-8"
+in = ["samebox-intel"]
+ranks = 8
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 282.8
 results = "results/knee-samebox-x86_64.txt"
 
@@ -138,6 +246,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 16
 host = "results/host-x86_64.txt"
+id = "samebox-intel-16"
+in = ["samebox-intel", "chip-16"]
+ranks = 16
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 285.9
 usd_hr = 0.7497
 compute_usd = 0.0595
@@ -151,6 +264,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 4
 host = "results/host-amd.txt"
+id = "samebox-amd-4"
+in = ["samebox-amd"]
+ranks = 4
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 364.8
 results = "results/knee-samebox-amd.txt"
 
@@ -161,6 +279,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 8
 host = "results/host-amd.txt"
+id = "samebox-amd-8"
+in = ["samebox-amd"]
+ranks = 8
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 226.5
 results = "results/knee-samebox-amd.txt"
 
@@ -171,6 +294,11 @@ date = "2026-10-21"
 date_source = "run"
 workers = 16
 host = "results/host-amd.txt"
+id = "samebox-amd-16"
+in = ["samebox-amd", "chip-16"]
+ranks = 16
+threads_per_rank = 1
+billed_basis = "shared-window"
 wall_s = 150.8
 usd_hr = 0.8622
 compute_usd = 0.0361

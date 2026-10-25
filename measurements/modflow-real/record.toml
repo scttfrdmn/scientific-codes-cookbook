@@ -1,5 +1,8 @@
 # measurements/modflow-real/record.toml -- #118 backfill.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances, within 1 s), as the
+# README says (results/billed-windows.txt). Each box runs the two simulations as two concurrent
+# single-threaded mf6 processes (concurrent = 2).
+schema = 2
 result_unit = "both published Mobile Bay simulations (postcal and precal), solved and checked"
 
 [[dataset]]
@@ -8,13 +11,40 @@ tier = "durable-id"
 pins = "pins.sha256"
 note = "fetched on AWS by 00-fetch.task.json, kept only if size, ScienceBase MD5 and every entry's CRC-32 match. Two edits at run time: Windows path separators to '/', SAVE_FLOWS in the name file"
 
+[workload]
+size = { cells = 42822, stress_periods = 97, sfr_reaches = 14797, uzf_cells = 30761 }
+note = "two published simulations (postcal, precal) of one 1-layer Newton model, each a serial mf6 process, run side by side; nonlinear outer iterations, each a sparse linear solve"
+
+[timing]
+wall = "postcal's mf6 process, launch to exit (the longer of the two; it sets the compute cost)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "output-shape"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs use the recipe's geoscience env twin (same modflow6 6.8.1 and flopy 3.11.0, linux-64 builds); Intel's 4 vCPUs are 2 cores x 2 SMT; Graviton4 took 26,992 outer iterations on postcal vs 26,771 on x86"
+note = "AMD 1.44x faster than Graviton4 and cheapest per result; Graviton4 and Intel tie on cost"
+
+[[not_swept]]
+axis = "workers"
+reason = "One model and one instance size. There is no knee to sweep, because the solver is serial."
+
 # Two single-threaded mf6 processes run at once on each box; wall_s is postcal, which the README
 # says sets the compute cost.
 [[run]]
+id = "chip-m8g"
+in = ["chip"]
 instance = "m8g.xlarge"
 purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
+workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 date = "2026-10-20"
 date_source = "git"
 wall_s = 4090
@@ -27,10 +57,16 @@ peak_kind = "rss"
 note = "precal ran concurrently, 2598 s. Peak is each mf6's ru_maxrss (552 MiB); box cgroup memory.peak 3.4 GiB"
 
 [[run]]
+id = "chip-m8i"
+in = ["chip"]
 instance = "m8i.xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
+workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 date = "2026-10-20"
 date_source = "git"
 wall_s = 3467
@@ -43,10 +79,16 @@ peak_kind = "rss"
 note = "geoscience env x86 twin. precal 2131 s concurrently. mf6 ru_maxrss 554 MiB; box 4.5 GiB including the env install"
 
 [[run]]
+id = "chip-m8a"
+in = ["chip"]
 instance = "m8a.xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/host.txt"
+workers = 2
+ranks = 1
+threads_per_rank = 1
+concurrent = 2
 date = "2026-10-20"
 date_source = "git"
 wall_s = 2831

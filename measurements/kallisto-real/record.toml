@@ -1,6 +1,24 @@
 # measurements/kallisto-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the "billed window" (669 / 685 / 476 s) is spawn's completion record to the second
+# (results/<chip>/completion.json), although the README calls it launch to terminate.
+schema = 2
 result_unit = "one sample quantified at the defaults (run A): ERR188026, 15,800,127 pairs, all 465,769 Ensembl 116 transcripts"
+
+[workload]
+size = { read_pairs = 15800127, transcripts = 465769 }
+note = "one whole Geuvadis run against the whole Ensembl 116 cDNA index, kallisto quant at its defaults; the task also runs the -l 200 -s 30 control (B)"
+
+[timing]
+wall = "kallisto quant end to end for run A, index load included"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "layout", "generation"]
+equal_work = "n-pseudoaligned"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's kallisto 0.52.0 on Graviton4, bioconda's x86 build of the same version on Intel and AMD; Intel's 16 vCPU are 8 cores"
 
 [[dataset]]
 id = "ENA ERR188026_{1,2}.fastq.gz (complete Geuvadis run)"
@@ -29,9 +47,11 @@ pins = "siblings.sha256"
 from_recipe = "measurements/salmon-real"
 note = "RSEM outputs are measurements/rsem-real's"
 
-# billed: the README's billed $/result is the billed window less the B control (389, 392, 270 s),
+# billed: the README's billed $/result is the billed window (spawn-task) less the B control (389, 392, 270 s),
 # a seconds figure it never prints; billed_s is the whole window and billed_usd is left out.
 [[run]]
+id = "quant-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -39,6 +59,8 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 221
 billed_s = 669
 usd_hr = 0.6381
@@ -48,6 +70,8 @@ peak_kind = "vmhwm"
 note = "README billed $/result 0.0496 = window less B; window as charged $0.1186"
 
 [[run]]
+id = "quant-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -55,6 +79,8 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 233
 billed_s = 685
 usd_hr = 0.7497
@@ -64,6 +90,8 @@ peak_kind = "vmhwm"
 note = "README billed $/result 0.0610 = window less B; window as charged $0.1426"
 
 [[run]]
+id = "quant-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -71,6 +99,8 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "run"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 162
 billed_s = 476
 usd_hr = 0.8622

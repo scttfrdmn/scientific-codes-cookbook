@@ -1,0 +1,819 @@
+# measurements/gromacs-scaling/record.toml -- GROMACS benchMEM on one Graviton4 node: the 8 -> 192 core
+# ladder, five decompositions at 64 cores, the launch cliff at 8, and a size leg. Phase B of the sizing
+# work, 2026-09-09, us-east-1. Written from scratch at schema 2.
+# Instances: the README says "one c8g box sized to the core count" and each run.log reports
+# "Running on 1 node with total N cores", so the c8g size is the one with N vCPUs. The launch section
+# names only 8 cores; its rows use the ladder's 8-core c8g. The image is not recorded (image =
+# "unrecorded"); the specs were not kept. No row has usd_hr: the README's price is a per-vCPU rate card
+# that no artifact carries, and its ns/day per $/hr column is derived from it. Throughput is
+# GROMACS' own ns/day from a -maxh-bounded run, not compute cost. No completion records exist.
+schema = 2
+result_unit = "one simulated nanosecond (benchMEM, 81,743 atoms; benchSMALL, 20,028 atoms, on the size rows)"
+throughput_unit = "ns/day"
+throughput_is_result = true
+
+[workload]
+size = { atoms = 81743 }
+note = "benchMEM.tpr, mdrun -maxh-bounded (0.05 h ladder and decomposition, 0.08 h launch, 0.06 h small, 0.2 h benchRIB) with -nsteps 100000000 -pin off"
+
+[timing]
+wall = "no wall is recorded: each rung is mdrun's own ns/day over a -maxh-bounded run"
+
+[[series]]
+id = "knee"
+axis = "workers"
+held = ["image", "family", "size", "generation"]
+equal_work = "none: -maxh-bounded runs, so each rung runs as many steps as fit in its time limit; the same benchMEM.tpr and mdrun line throughout"
+attribution = "same-binary"
+attribution_note = "the image digest is not recorded; every run.log reports GROMACS 2026.3-conda_forge, ARM_NEON_ASIMD, CPU part 0xd4f"
+verdict = { shape = "cost-climbs", through = 192 }
+note = "12.995 -> 147.669 ns/day, 11.4x on 24x the cores; ns/day per $/hr falls 40.7 -> 19.3 at the README's c8g $0.03988/vCPU-hr (a rate card no artifact carries, so no row has usd_hr). 59% step efficiency at 192, where the box spans two NUMA nodes and atoms per rank halve: the measurement cannot separate the two"
+
+[[series]]
+id = "small"
+axis = "workers"
+held = ["image", "family", "size", "generation"]
+equal_work = "none: -maxh-bounded runs, so each rung runs as many steps as fit in its time limit; the same benchSMALL.tpr throughout"
+attribution = "same-binary"
+attribution_note = "the image digest is not recorded; every run.log reports GROMACS 2026.3-conda_forge"
+note = "efficiency vs 8 cores falls to 53% at 192"
+
+[[series]]
+id = "size-c8"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 8 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c16"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 16 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c32"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 32 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c48"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 48 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c64"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 64 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c96"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 96 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "size-c192"
+axis = "size"
+size_key = "atoms"
+held = ["image", "instance", "workers", "layout"]
+equal_work = "none: -maxh-bounded runs on two different systems (benchMEM, benchSMALL)"
+attribution = "same-binary"
+note = "one column of the README's size table at 192 cores; benchRIB produced no result, so it is not a member"
+
+[[series]]
+id = "decomp64"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "none: -maxh-bounded runs, so each layout runs as many steps as fit in its time limit"
+attribution = "same-binary"
+note = "best / worst 1.253; 32 x 2 beats 8 x 8 by 17.2%. The 64-vCPU box is one NUMA node, so the spread is not NUMA"
+
+[[series]]
+id = "launch-default"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "none: -maxh-bounded runs, so each layout runs as many steps as fit in its time limit"
+attribution = "same-binary"
+note = "the first sweep: 1 x 8 ran 7.14x slower than in the re-run; the session record attributes it to the default mpirun -np R binding"
+
+[[series]]
+id = "launch-bound"
+axis = "layout"
+held = ["image", "instance", "workers", "size"]
+equal_work = "none: -maxh-bounded runs, so each layout runs as many steps as fit in its time limit"
+attribution = "same-binary"
+verdict = { shape = "flat" }
+note = "the re-run: the four layouts fall within 4.4% of each other"
+
+# --- 1. the core ladder: benchMEM, ntomp = 4, ranks = cores / 4 (results/knee/) ---------------
+
+[[run]]
+id = "knee-c8"
+in = ["knee", "size-c8"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 2
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 12.995
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c8/timing.txt"
+
+[[run]]
+id = "knee-c16"
+in = ["knee", "size-c16"]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 16
+ranks = 4
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 24.660
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c16/timing.txt"
+
+[[run]]
+id = "knee-c32"
+in = ["knee", "size-c32"]
+instance = "c8g.8xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 32
+ranks = 8
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 47.189
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c32/timing.txt"
+
+[[run]]
+id = "knee-c48"
+in = ["knee", "size-c48"]
+instance = "c8g.12xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 48
+ranks = 12
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 66.084
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c48/timing.txt"
+
+[[run]]
+id = "knee-c64"
+in = ["knee", "size-c64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 16
+threads_per_rank = 4
+size = { atoms = 81743 }
+attempt = "r1"
+throughput = 82.763
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c64/timing.txt"
+note = "same configuration as decomp-16x4 (78.345), run 10 min later on another box: two samples of 16 x 4 at 64 cores"
+
+[[run]]
+id = "knee-c96"
+in = ["knee", "size-c96"]
+instance = "c8g.24xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 96
+ranks = 24
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 124.114
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c96/timing.txt"
+
+[[run]]
+id = "knee-c192"
+in = ["knee", "size-c192"]
+instance = "c8g.48xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 192
+ranks = 48
+threads_per_rank = 4
+size = { atoms = 81743 }
+throughput = 147.669
+simd_path = "ARM_NEON_ASIMD"
+results = "results/knee/c192/timing.txt"
+note = "two NUMA nodes (knee/c192/topo.txt: node0 0-95, node1 96-191); rank count read from run.log's Using 48 MPI processes"
+
+# --- 2. decomposition at 64 cores (results/decomp64/), one NUMA node -----------------------
+
+[[run]]
+id = "decomp-64x1"
+in = ["decomp64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 64
+threads_per_rank = 1
+size = { atoms = 81743 }
+throughput = 81.623
+simd_path = "ARM_NEON_ASIMD"
+results = "results/decomp64/r64t1/timing.txt"
+
+[[run]]
+id = "decomp-32x2"
+in = ["decomp64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 32
+threads_per_rank = 2
+size = { atoms = 81743 }
+throughput = 90.317
+simd_path = "ARM_NEON_ASIMD"
+results = "results/decomp64/r32t2/timing.txt"
+
+[[run]]
+id = "decomp-16x4"
+in = ["decomp64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 16
+threads_per_rank = 4
+size = { atoms = 81743 }
+attempt = "r2"
+throughput = 78.345
+simd_path = "ARM_NEON_ASIMD"
+results = "results/decomp64/r16t4/timing.txt"
+
+[[run]]
+id = "decomp-8x8"
+in = ["decomp64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 8
+threads_per_rank = 8
+size = { atoms = 81743 }
+throughput = 77.093
+simd_path = "ARM_NEON_ASIMD"
+results = "results/decomp64/r8t8/timing.txt"
+
+[[run]]
+id = "decomp-4x16"
+in = ["decomp64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 4
+threads_per_rank = 16
+size = { atoms = 81743 }
+throughput = 72.089
+simd_path = "ARM_NEON_ASIMD"
+results = "results/decomp64/r4t16/timing.txt"
+
+# --- 3. the launch at 8 cores: first sweep vs re-run (results/launch-{default,bound}/) ------
+# The mdrun lines are identical; the mpirun invocation is the session record's account (specs not kept).
+# The 8-core box's family is not stated for this section; c8g.2xlarge is the ladder's 8-core box.
+
+[[run]]
+id = "launch-default-1x8"
+in = ["launch-default"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+size = { atoms = 81743 }
+variant = "first sweep: default mpirun -np R binding (session record)"
+bind = "mpirun -np R default binding (session record; not in the logs)"
+throughput = 1.891
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-default/r1t8/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-default-2x4"
+in = ["launch-default"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 2
+threads_per_rank = 4
+size = { atoms = 81743 }
+variant = "first sweep: default mpirun -np R binding (session record)"
+bind = "mpirun -np R default binding (session record; not in the logs)"
+throughput = 3.686
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-default/r2t4/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-default-4x2"
+in = ["launch-default"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 4
+threads_per_rank = 2
+size = { atoms = 81743 }
+variant = "first sweep: default mpirun -np R binding (session record)"
+bind = "mpirun -np R default binding (session record; not in the logs)"
+throughput = 7.132
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-default/r4t2/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-default-8x1"
+in = ["launch-default"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 8
+threads_per_rank = 1
+size = { atoms = 81743 }
+variant = "first sweep: default mpirun -np R binding (session record)"
+bind = "mpirun -np R default binding (session record; not in the logs)"
+throughput = 13.469
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-default/r8t1/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-bound-1x8"
+in = ["launch-bound"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+size = { atoms = 81743 }
+variant = "re-run: --map-by slot:PE=T --bind-to core (session record)"
+bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
+throughput = 13.503
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-bound/r1t8/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-bound-2x4"
+in = ["launch-bound"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 2
+threads_per_rank = 4
+size = { atoms = 81743 }
+variant = "re-run: --map-by slot:PE=T --bind-to core (session record)"
+bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
+throughput = 12.929
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-bound/r2t4/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-bound-4x2"
+in = ["launch-bound"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 4
+threads_per_rank = 2
+size = { atoms = 81743 }
+variant = "re-run: --map-by slot:PE=T --bind-to core (session record)"
+bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
+throughput = 13.168
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-bound/r4t2/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+[[run]]
+id = "launch-bound-8x1"
+in = ["launch-bound"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 8
+threads_per_rank = 1
+size = { atoms = 81743 }
+variant = "re-run: --map-by slot:PE=T --bind-to core (session record)"
+bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
+throughput = 13.486
+simd_path = "ARM_NEON_ASIMD"
+results = "results/launch-bound/r8t1/timing.txt"
+note = "family of the 8-core box not stated in the README for this section"
+
+# --- 4. size: benchSMALL (20,028 atoms), same launch, same ladder (results/size-small-20k/) ----
+
+[[run]]
+id = "small-c8"
+in = ["small", "size-c8"]
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 2
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 38.859
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c8/timing.txt"
+
+[[run]]
+id = "small-c16"
+in = ["small", "size-c16"]
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 16
+ranks = 4
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 74.680
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c16/timing.txt"
+
+[[run]]
+id = "small-c32"
+in = ["small", "size-c32"]
+instance = "c8g.8xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 32
+ranks = 8
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 137.678
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c32/timing.txt"
+
+[[run]]
+id = "small-c48"
+in = ["small", "size-c48"]
+instance = "c8g.12xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 48
+ranks = 12
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 192.628
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c48/timing.txt"
+
+[[run]]
+id = "small-c64"
+in = ["small", "size-c64"]
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 16
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 239.070
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c64/timing.txt"
+
+[[run]]
+id = "small-c96"
+in = ["small", "size-c96"]
+instance = "c8g.24xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 96
+ranks = 24
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 330.852
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c96/timing.txt"
+
+[[run]]
+id = "small-c192"
+in = ["small", "size-c192"]
+instance = "c8g.48xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 192
+ranks = 48
+threads_per_rank = 4
+size = { atoms = 20028 }
+throughput = 495.097
+simd_path = "ARM_NEON_ASIMD"
+results = "results/size-small-20k/c192/timing.txt"
+
+# --- 5. benchRIB (2M atoms): no result at any core count (results/size-benchRIB/) -----------
+
+[[run]]
+id = "rib-c8"
+instance = "c8g.2xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 8
+ranks = 2
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c8/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c16"
+instance = "c8g.4xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 16
+ranks = 4
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c16/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c32"
+instance = "c8g.8xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 32
+ranks = 8
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c32/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c48"
+instance = "c8g.12xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 48
+ranks = 12
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c48/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c64"
+instance = "c8g.16xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 64
+ranks = 16
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c64/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c96"
+instance = "c8g.24xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 96
+ranks = 24
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c96/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[run]]
+id = "rib-c192"
+instance = "c8g.48xlarge"
+purpose = "core-sweep"
+image = "unrecorded"
+build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
+date = "2026-09-09"
+region = "us-east-1"
+workers = 192
+ranks = 48
+threads_per_rank = 4
+size = { tpr_bytes = 57476346 }
+simd_path = "ARM_NEON_ASIMD"
+run_outcome = "failed"
+results = "results/size-benchRIB/c192/timing.txt"
+note = "run.log stops after the citation banner, before the tpr is read; ns_per_day=NA. Cause not established: a truncated download and a setup hang are both open"
+
+[[dataset]]
+id = "benchMEM.tpr (81,743 atoms), the gromacs recipe's input"
+tier = "versioned-release"
+pins = "../gromacs-real/datasets.sha256"
+from_recipe = "gromacs"
+note = "the gromacs recipe's pin (sha256 5099268bf3a3...); the S3 copy was re-hashed 2026-10-24"
+
+[[dataset]]
+id = "benchSMALL.tpr (20,028 atoms), S3 copy"
+tier = "built"
+unpinned = "its provenance was not recorded; the README prints the S3 copy's sha256 but no manifest is committed"
+
+[[dataset]]
+id = "benchRIB.tpr (2M atoms), 57,476,346 bytes, S3 ETag f3e3e13573a1fac14577bd64f2c287fb-7"
+tier = "built"
+unpinned = "not re-hashed"
+
+# --- checks: the README's stated invariants (no checks table; claims copied from its prose) --
+[[check]]
+id = "rank-count"
+claim = "Every rung's `mpi_reported` (or, at 192, `Using 48 MPI processes` in `run.log`) equals the ranks launched."
+kind = "rank-count"
+observed = "mpi_reported equals ranks on every knee and launch rung; Using N MPI processes in every completed run.log"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "native-arch"
+claim = "GROMACS 2026.3-conda_forge, `gmx_mpi`, `ARM_NEON_ASIMD`, CPU part `0xd4f` (Graviton4) on every rung, as each `run.log` records."
+kind = "native-arch"
+observed = "ARM_NEON_ASIMD, Brand 0xd4f in all 34 run.logs"
+outcome = "pass"
+across_chips = "n/a"
+
+[[check]]
+id = "numa-192"
+claim = "The 192-vCPU box reports **two NUMA nodes** (`node0` 0–95, `node1` 96–191, `knee/c192/topo.txt`)"
+kind = "reported"
+observed = "node0 0-95, node1 96-191"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "numa-64"
+claim = "The 64-vCPU box is **one NUMA node** (`decomp64/*/topo.txt`: `NUMA node(s): 1`, 0–63), so the spread is not NUMA."
+kind = "reported"
+observed = "NUMA node(s): 1, 0-63"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "benchrib-no-result"
+claim = "**benchRIB (2M atoms) produced no result at any core count.** Each `run.log` stops after the citation banner, before the tpr is read, so `ns_per_day=NA` on all seven rungs."
+kind = "reported"
+observed = "ns_per_day=NA on all seven rungs"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "launch-effect"
+claim = "1 × 8 ran 7.14× slower in the first sweep, and the four layouts of the re-run fall within 4.4% of each other."
+kind = "reported"
+observed = "1.891 vs 13.503 ns/day at 1 x 8; re-run 12.929-13.503"
+outcome = "reported"
+across_chips = "n/a"
+
+[[check]]
+id = "benchmem-pin"
+claim = "benchMEM.tpr sha256 `5099268bf3a3…`, the gromacs recipe's pin (S3 copy re-hashed 2026-10-24)"
+kind = "pin"
+observed = "matches the gromacs recipe's pin"
+outcome = "pass"
+across_chips = "n/a"

@@ -1,8 +1,26 @@
 # measurements/seqkit-real/record.toml -- drafted by the #118 extraction, then authored.
 # The Graviton generation rungs (c6g/c7g/c9g) are priced only on recipes/seqkit's page, not in
 # this README; their walls are in results/ but no run date is stated, so they are not recorded here.
-schema = 1
+# Schema 2: billed is "launch -> terminate" (README), the EC2 window; CloudTrail reproduces the x86
+# legs (165 / 161 s, results/billed-windows.txt) but does not reach the 2026-10-02 Graviton4 run.
+schema = 2
 result_unit = "seqkit stats + fq2fa over the complete SRR062634 run (48,297,986 reads, both mates)"
+
+[workload]
+size = { reads = 48297986, bases = 4829798600 }
+note = "seqkit stats over both mates, then fq2fa and stats again, -j 8"
+
+[timing]
+wall = "stats + fq2fa, timed in-script"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "size", "workers", "layout", "generation"]
+equal_work = "total-seqs"
+attribution = "same-version-other-build"
+attribution_note = "bioconda's x86 seqkit 2.13.0 on Intel and AMD; Intel's 8 vCPU are 4 cores x 2 SMT"
 
 [[dataset]]
 id = "RODA s3://1000genomes SRR062634_{1,2}.filt.fastq.gz (HG00096), complete run"
@@ -12,6 +30,8 @@ from_recipe = "bwa-samtools"
 note = "reused byte-for-byte from bwa-samtools' staged prefix; no committed sha256 manifest; the sha256 it points at was hashed 2026-10-25 on AWS, after the measurement's runs: it proves today's bytes, not necessarily the run's"
 
 [[run]]
+id = "c8g"
+in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/smoke-check-c8g-2xl.txt"
@@ -23,9 +43,16 @@ billed_s = 227
 usd_hr = 0.3190
 compute_usd = 0.0082
 billed_usd = 0.0201
+billed_basis = "unattributed"
+workers = 8
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 5.4805
 note = "tmpfs high-water 5,612 MB"
 
 [[run]]
+id = "c8i"
+in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-c8i-2xl.txt"
@@ -38,9 +65,15 @@ billed_s = 166
 usd_hr = 0.3748
 compute_usd = 0.0090
 billed_usd = 0.0173
+workers = 8
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 5.4805
 note = "inline script staged as a sha256-checked file (spawn 0.139.1's user-data budget); tmpfs high-water 5,612 MB"
 
 [[run]]
+id = "c8a"
+in = ["chip"]
 instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/smoke-check-c8a-2xl.txt"
@@ -53,6 +86,10 @@ billed_s = 161
 usd_hr = 0.4311
 compute_usd = 0.0086
 billed_usd = 0.0193
+workers = 8
+ranks = 1
+threads_per_rank = 8
+tmpfs_peak_gib = 5.4805
 note = "inline script staged as a sha256-checked file; tmpfs high-water 5,612 MB"
 
 # --- checks: the in-task asserts in results/smoke-check-*.txt -------------------------

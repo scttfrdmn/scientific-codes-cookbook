@@ -1,8 +1,35 @@
 # measurements/ambertools-real/record.toml -- drafted by the #118 extraction, then authored.
 # Graviton generation ladder for sander's 100 ps NVE, plus two OPENBLAS_CORETYPE controls.
-schema = 1
+# Schema 2: billed is spawn's completion-record window (all four rungs match one; c8g's is the
+# recipe's own verifying task). throughput is the NVE segment's ns/day, not the result's rate.
+schema = 2
 result_unit = "one 100 ps solvated NVE run of capped alanine dipeptide (tleap build, minimisation, heating and checks included)"
 throughput_unit = "ns/day"
+
+[workload]
+size = { atoms = 2101, steps = 100000 }
+note = "one serial sander trajectory (PME, SHAKE, dt = 1 fs) after an in-task tleap build, minimisation and heating; nothing staged"
+
+[timing]
+wall = "the README's 'compute' column: tleap build, minimisation, heating, the 100 ps NVE and the checks (the NVE segment alone is in each row's note)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "gen"
+axis = "generation"
+held = ["image", "workers", "size"]
+equal_work = "atom-counts"
+attribution = "same-binary"
+verdict = { shape = "monotonic", through = 9, on = "compute_usd" }
+note = "2.50x faster Graviton2 -> Graviton5 on the NVE segment; $/hr +27.8%, $/result -49%; Graviton3 -> 4 is the weak step (1.16x)"
+
+[[not_swept]]
+axis = "workers"
+reason = "sander is single-threaded throughout, no thread flag at all"
+
+[[not_swept]]
+axis = "chip"
+reason = "it needs an image that does not exist yet: biocontainers carries AmberTools only at 20.4 and 21.10, while this recipe is 26.0"
 
 [[dataset]]
 id = "ff14SB + TIP3P leaprc files shipped in the ambertools 26.0 package; system built in-task by tleap"
@@ -11,8 +38,13 @@ unpinned = "nothing staged: tleap builds the system in-task from force-field fil
 
 # --- Graviton generation ladder, 2 vCPU, same digest -----------------------------------
 [[run]]
+id = "gen-c6g"
+in = ["gen"]
 instance = "c6g.large"
 purpose = "generation-sweep"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 date = "2026-10-03"
 date_source = "git"
 host = "results/cpu-c6g.txt"
@@ -27,8 +59,13 @@ note = "wall_s is the README's 'compute' column; the NVE 100 ps segment alone is
 throughput = 5.36
 
 [[run]]
+id = "gen-c7g"
+in = ["gen"]
 instance = "c7g.large"
 purpose = "generation-sweep"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 date = "2026-10-03"
 date_source = "git"
 host = "results/cpu-c7g.txt"
@@ -43,8 +80,13 @@ note = "NVE 100 ps segment 1062 s"
 throughput = 8.14
 
 [[run]]
+id = "gen-c8g"
+in = ["gen"]
 instance = "c8g.large"
 purpose = "primary"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 date = "2026-10-03"
 date_source = "git"
 host = "results/cpu-c8g.txt"
@@ -59,8 +101,13 @@ note = "the recipe's own verified run is this rung; NVE 100 ps segment 914 s"
 throughput = 9.45
 
 [[run]]
+id = "gen-c9g"
+in = ["gen"]
 instance = "c9g.large"
 purpose = "generation-sweep"
+workers = 1
+ranks = 1
+threads_per_rank = 1
 date = "2026-10-03"
 date_source = "git"
 host = "results/cpu-c9g.txt"
@@ -76,8 +123,13 @@ throughput = 13.42
 
 # --- controls: one env var changed on one Graviton4 host -------------------------------
 [[run]]
+id = "coretype-n1-gv4"
 instance = "c8g.large"
 purpose = "diagnostic"
+workers = 1
+ranks = 1
+threads_per_rank = 1
+variant = "OPENBLAS_CORETYPE=NEOVERSEN1"
 date = "2026-10-03"
 date_source = "git"
 results = "results/smoke-coretype-n1-on-gv4.txt"
@@ -85,8 +137,10 @@ note = "OPENBLAS_CORETYPE=NEOVERSEN1 on Graviton4: NVE 100 ps 918 s vs 914 s nat
 throughput = 9.41
 
 [[run]]
+id = "nwchem-coretype-n1"
 instance = "c8g.2xlarge"
 purpose = "diagnostic"
+variant = "nwchem B3LYP/6-31G* under OPENBLAS_CORETYPE=NEOVERSEN1"
 date = "2026-10-03"
 date_source = "git"
 results = "results/smoke-nwchem-coretype-n1.txt"

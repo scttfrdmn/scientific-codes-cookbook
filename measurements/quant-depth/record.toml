@@ -1,5 +1,7 @@
 # measurements/quant-depth/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: no timing or $ anywhere, so no [timing] and no series; the two rows are the two
+# tasks on the 200,000-pair subset (task + the spec's -t/-p 16).
+schema = 2
 result_unit = "one depth comparison: kallisto vs salmon agreement at 200,000 and 15,800,127 fragments (README prices nothing)"
 
 [[dataset]]
@@ -19,22 +21,35 @@ id = "salmon index of Ensembl 116 cDNA (salmon-index.tar) and full-depth quant-c
 tier = "run-output"
 from_recipe = "salmon"
 
+[workload]
+size = { fragments = 200000, transcripts = 465769 }
+note = "the 200,000-pair subset quantified by both tools; the full-depth tables (15,800,127 fragments) are the kallisto and salmon recipes' run outputs"
+
 # --- the README times and prices no run; instance sizes follow from the specs' resources
 # (cpu 16 in family c8g / r8g).
 [[run]]
+id = "kallisto-sub"
 instance = "c8g.4xlarge"
+task = "01-kallisto-sub"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 results = "results/"
 note = "01-kallisto-sub: kallisto quant -t 16 on the 200,000-pair subset. Instance inferred from the spec (cpu 16, c8g)"
 
 [[run]]
+id = "salmon-sub-compare"
 instance = "r8g.4xlarge"
+task = "02-salmon-sub-and-compare"
 purpose = "primary"
 date = "2026-09-30"
 date_source = "git"
+workers = 16
+ranks = 1
+threads_per_rank = 16
 results = "results/depth.txt"
 note = "02-salmon-sub-and-compare: salmon on the subset plus the metric code. Instance inferred from the spec (cpu 16, r8g)"
 

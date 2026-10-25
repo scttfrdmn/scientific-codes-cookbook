@@ -1,6 +1,25 @@
 # measurements/spacy-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed_s is spawn's completion record window (cookbook-spacy-real-r1-r1a / -x8664-r1a /
+# -amd-r1a, 2026-10-20, to the second; results/<chip>/completion.json), although the README describes
+# it as "from EC2 launch to the end of the task".
+schema = 2
 result_unit = "the whole corpus annotated and checked (89,339 PMC OA articles, 795M tokens), plus the UD English-EWT evaluation"
+
+[workload]
+size = { articles = 89339, paragraphs = 15136783, tokens = 795195869, ewt_sentences = 16622 }
+note = "one Doc per paragraph through nlp.pipe in 32 worker processes; nlp.pipe is 81-88% of worker time, the rest is this measurement's own checks"
+
+[timing]
+wall = "the whole task command (tool_wall_s in footprint.txt: the PMC phase plus the 45-58 s EWT evaluation)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "articles-once"
+attribution = "same-version-other-build"
+attribution_note = "the nlp env (aarch.science arm64) and its linux-64 twin, spaCy 3.8.16 / en_core_web_sm 3.8.0 / thinc 8.3.13 on all chips; Intel's 32 vCPUs are 16 cores x 2 threads, one process per vCPU"
 
 [[dataset]]
 id = "s3://pmc-oa-opendata PMCIDs 10000000–10099999, latest version of each (89,339 articles, 4,416,694,237 bytes)"
@@ -20,11 +39,16 @@ tier = "versioned-release"
 pins = "ewt.sha256"
 
 [[run]]
+id = "g4"
+in = ["chip"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
 host = "results/arm64/host.txt"
 wall_s = 2299
 billed_s = 2364
@@ -36,11 +60,16 @@ peak_kind = "cgroup-memory.peak"
 results = "results/arm64/"
 
 [[run]]
+id = "intel"
+in = ["chip"]
 instance = "c8i.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
 host = "results/x86_64/host.txt"
 wall_s = 2708
 billed_s = 2766
@@ -53,11 +82,16 @@ results = "results/x86_64/"
 note = "32 processes on 16 cores x 2 threads"
 
 [[run]]
+id = "amd"
+in = ["chip"]
 instance = "c8a.8xlarge"
 purpose = "cross-chip"
 date = "2026-10-20"
 date_source = "run"
 workers = 32
+ranks = 1
+threads_per_rank = 1
+concurrent = 32
 host = "results/amd/host.txt"
 wall_s = 2531
 billed_s = 2577

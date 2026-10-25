@@ -1,6 +1,25 @@
 # measurements/dada2-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the README's "launch to terminate" = the EC2 window (CloudTrail,
+# results/billed-windows.txt). Peak is the 2 s max of memory.stat anon. The runs are 2026-10-18
+# (completion records); the rows carry the git date.
+schema = 2
 result_unit = "one whole 16S study denoised (Kozich 2013 stability run, 362 samples) plus the tutorial reproduction"
+
+[workload]
+size = { samples = 362, read_pairs = 3651784 }
+note = "part A (the tutorial's 20 samples) then part B (the whole study) in one task; samples are the parallel axis, mergePairs is single-threaded (70-79 s of part B)"
+
+[timing]
+wall = "all of dada2-real.R: R start-up, unpacking, part A and part B (footprint.txt tool_wall_s)"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "asv-table-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "DADA2 1.38.0 on both; arm64 aarchbio R 4.5.3 / OpenBLAS 0.3.34, x86 biocontainers R 4.5.2 / OpenBLAS 0.3.30 (the error matrices differ in the last bits by build, not vendor); c8i's 16 vCPUs are 8 cores with SMT"
 
 [[dataset]]
 id = "s3://mothur/data/MiSeqDevelopmentData/StabilityNoMetaG.tar (Kozich et al. 2013, doi:10.1128/AEM.01043-13)"
@@ -14,6 +33,8 @@ tier = "durable-id"
 pins = "pins.sha256"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -27,8 +48,14 @@ usd_hr = 0.6381
 compute_usd = 0.0628
 billed_usd = 0.0932
 peak_gib = 18.1
+peak_kind = "cgroup-anon-max"
+ranks = 1
+threads_per_rank = 16
+avg_cores = 5.65
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -42,8 +69,14 @@ usd_hr = 0.7497
 compute_usd = 0.0922
 billed_usd = 0.122
 peak_gib = 11.3
+peak_kind = "cgroup-anon-max"
+ranks = 1
+threads_per_rank = 16
+avg_cores = 7.45
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -57,6 +90,10 @@ usd_hr = 0.8622
 compute_usd = 0.0746
 billed_usd = 0.1104
 peak_gib = 11.9
+peak_kind = "cgroup-anon-max"
+ranks = 1
+threads_per_rank = 16
+avg_cores = 5.49
 
 # checks table (stopifnot-style asserts in-task) in '## What held at scale, on all three chips': columns ['claim', 'kind', 'observed (all three chips)']
 [[check]]

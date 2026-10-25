@@ -1,6 +1,33 @@
 # measurements/snakemake-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: the cold-run rows' billed is the sum of twelve per-instance CloudTrail windows
+# (results/<chip>/r1.instances.tsv; README); the direct rows' is the spawn window
+# (results/billed-windows.txt). phase_s.acquire is the summed pre-RunInstances dispatch wait.
+schema = 2
 result_unit = "the cohort table: eleven whole FASTQ files (446.0M reads) checked and joined"
+
+[workload]
+size = { files = 11, reads = 445999501, bases = 32158518768 }
+note = "one seqkit stats -j 2 job per FASTQ, one instance each, dispatched one at a time (--jobs 1), then one join; direct.sh runs the same eleven on one box"
+
+[timing]
+wall = "cold run: seqkit (the docker run around it) summed over the eleven stats jobs; the workflow wall is in the note"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["size", "workers", "layout", "generation"]
+equal_work = "published-counts"
+attribution = "same-version-other-build"
+attribution_note = "seqkit 2.13.0: aarch.bio's build on arm64, bioconda's on x86; Intel's 2 vCPU are 1 core x 2 SMT"
+
+[[series]]
+id = "chip-direct"
+axis = "chip"
+held = ["size", "generation"]
+equal_work = "eq-direct"
+attribution = "same-version-other-build"
+attribution_note = "seqkit 2.13.0: aarch.bio's build on arm64, bioconda's on x86"
 
 [[dataset]]
 id = "FASTQs on RODA: 1000 Genomes s3://1000genomes (bwa-real, incl. SRR062634) and SRA (metaphlan-real), as assembled by qc-aggregate-real"
@@ -23,6 +50,8 @@ note = "stage-inputs.sh uploads one small truth file per FASTQ"
 
 # --- cold run r1: 12 instances per chip; usd_hr is the stats instance's price ------------
 [[run]]
+id = "cold-c8g"
+in = ["chip"]
 instance = "c8g.large"
 purpose = "primary"
 results = "results/arm64/"
@@ -36,9 +65,14 @@ usd_hr = 0.0798
 compute_usd = 0.0072
 peak_gib = 0.0244
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 2
+phase_s = { acquire = 4257, source = "results/summary.txt" }
 note = "11 x c8g.large + a c8g.medium (0.0399 $/hr) for the join; wall_s is seqkit summed over 11 jobs, billed_s the 12 CloudTrail windows summed; README billed $/result 0.0460 mixes the two rates, so billed_usd is left out; workflow wall 5,881 s"
 
 [[run]]
+id = "cold-c8i"
+in = ["chip"]
 instance = "c8i.large"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -53,9 +87,14 @@ compute_usd = 0.0094
 billed_usd = 0.0577
 peak_gib = 0.0244
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 2
+phase_s = { acquire = 2227, source = "results/summary.txt" }
 note = "12 x c8i.large (the join too); workflow wall 3,828 s"
 
 [[run]]
+id = "cold-c8a"
+in = ["chip"]
 instance = "c8a.large"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -69,12 +108,17 @@ usd_hr = 0.1078
 compute_usd = 0.0072
 peak_gib = 0.0244
 peak_kind = "vmhwm"
+ranks = 1
+threads_per_rank = 2
+phase_s = { acquire = 3749, source = "results/summary.txt" }
 note = "11 x c8a.large + a c8a.medium (0.0539 $/hr) for the join; README billed $/result 0.0478 mixes the two rates, so billed_usd is left out; workflow wall 5,009 s"
 
 # --- direct.sh: the same eleven files on one large, no Snakemake ---------------------------
 [[run]]
+id = "direct-c8g"
+in = ["chip-direct"]
 instance = "c8g.large"
-purpose = "diagnostic"
+purpose = "control"
 results = "results/arm64/direct/"
 host = "results/arm64/direct/host.txt"
 date = "2026-10-21"
@@ -82,11 +126,15 @@ date_source = "run"
 billed_s = 574
 usd_hr = 0.0798
 billed_usd = 0.0127
+billed_basis = "spawn-task"
+variant = "direct.sh: the eleven files in one task, no Snakemake"
 note = "direct run, the control the workflow outputs are compared against; window is spawn's started-to-ended"
 
 [[run]]
+id = "direct-c8i"
+in = ["chip-direct"]
 instance = "c8i.large"
-purpose = "diagnostic"
+purpose = "control"
 results = "results/x86_64/direct/"
 host = "results/x86_64/direct/host.txt"
 date = "2026-10-20"
@@ -94,11 +142,15 @@ date_source = "run"
 billed_s = 636
 usd_hr = 0.0937
 billed_usd = 0.0166
+billed_basis = "spawn-task"
+variant = "direct.sh: the eleven files in one task, no Snakemake"
 note = "direct run"
 
 [[run]]
+id = "direct-c8a"
+in = ["chip-direct"]
 instance = "c8a.large"
-purpose = "diagnostic"
+purpose = "control"
 results = "results/amd/direct/"
 host = "results/amd/direct/host.txt"
 date = "2026-10-20"
@@ -106,6 +158,8 @@ date_source = "run"
 billed_s = 507
 usd_hr = 0.1078
 billed_usd = 0.0152
+billed_basis = "spawn-task"
+variant = "direct.sh: the eleven files in one task, no Snakemake"
 note = "direct run"
 
 # --- checks: "The identities, at scale, on all three chips"; observed is every chip's ------

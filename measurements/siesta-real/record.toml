@@ -1,6 +1,29 @@
 # measurements/siesta-real/record.toml -- SIESTA 5.4.2's own suite + a 1,359-atom Si quantum dot at DZP.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail, results/billed-windows.txt, within 1 s of each printed
+# figure). Layout is mixed within a row (suite: 4 concurrent tests x 4 ranks; dot: 16 ranks), so no ranks.
+schema = 2
 result_unit = "the whole verified job: the 5.4.2 regression suite and its checks, plus the Si987H372 dot at SZ (three runs) and DZP (two runs)"
+
+[workload]
+size = { atoms = 1359, orbitals = 14691 }
+note = "133-134 small suite tests 4 at a time x 4 ranks, then the quantum dot at 16 ranks; the DZP dot (dense eigensolver) is 95% of the wall"
+
+[timing]
+wall = "the task's tool wall: suite, dot at SZ and the two DZP dot runs"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "dot-dzp-cross-chip"
+attribution = "same-version-other-build"
+attribution_note = "the recipe's arm64 image vs the dft env's linux-64 twin; OpenBLAS neoversev2 vs Cooperlake; the x86 build has DFT-D3, so x86 runs one more suite test (134 vs 133); Intel's 16 vCPU are 8 cores x 2 threads"
+note = "AMD 1.9x faster than Graviton4 and 29% cheaper billed; Intel 9% sooner and 5% dearer; ELPA is where the chips differ most"
+
+[[not_swept]]
+axis = "workers"
+reason = "No rank sweep. The DZP dot is 95% eigensolver, so its scaling is ScaLAPACK's or ELPA's, not SIESTA's."
 
 [[dataset]]
 id = "siesta-project/siesta tag 5.4.2 (commit 0e2722c), Tests/: 396 files listed in manifest.tsv with git blob ids"
@@ -16,8 +39,12 @@ host = "results/arm64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16                    # 4 tests x 4 ranks in the suite; 16 ranks for the dot
+id = "c8g"
+in = ["chip"]
+bind = "--bind-to none --map-by :OVERSUBSCRIBE"
 wall_s = 4506
 billed_s = 4667
+ec2_s = 4667
 usd_hr = 0.6381
 compute_usd = 0.799
 billed_usd = 0.827
@@ -33,8 +60,12 @@ host = "results/x86_64/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+id = "c8i"
+in = ["chip"]
+bind = "--bind-to none --map-by :OVERSUBSCRIBE"
 wall_s = 4094
 billed_s = 4185
+ec2_s = 4184
 usd_hr = 0.7497
 compute_usd = 0.853
 billed_usd = 0.872
@@ -50,8 +81,12 @@ host = "results/amd/host.txt"
 date = "2026-10-19"
 date_source = "git"
 workers = 16
+id = "c8a"
+in = ["chip"]
+bind = "--bind-to none --map-by :OVERSUBSCRIBE"
 wall_s = 2321
 billed_s = 2442
+ec2_s = 2441
 usd_hr = 0.8622
 compute_usd = 0.556
 billed_usd = 0.585

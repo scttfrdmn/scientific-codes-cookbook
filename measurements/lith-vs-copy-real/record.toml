@@ -2,10 +2,68 @@
 # Graviton4 only; the variable is the data path. Three arms per workload: today (spawn's
 # stage-in, the source measurement's own run, not re-run), tuned copy (CLI CRT client), lith.
 # wall_s = the tool's own wall column; billed_s = spawn's window minus the two baseline copies.
-# Peak memory is host MemTotal - MemAvailable (counts the tmpfs): no peak_kind in the enum fits.
-# Request charges ($0.001-0.159) have no field; they are in each row's note.
-schema = 1
+# Peak memory is host MemTotal - MemAvailable (counts the tmpfs): peak_kind host-used.
+# Schema 2: request charges are request_usd; tmpfs_peak_gib and phase_s are row.json's (new arms) or
+# the README's (today). The today rows' billed is the plain spawn window (controls.txt), except
+# tomography, whose billed excludes the astra/compare check phases on every arm.
+schema = 2
 result_unit = "one workload result: the BBii TomoPy reconstruction / one 0.25-degree GFS cycle / one SV caller on HG002 30x / the whole Argo GDAC archive"
+
+[timing]
+wall = "the tool's own wall: TomoPy / gfs.py / the SV caller / argo.py"
+billed_basis = "spawn-task-minus-baseline"
+
+[[series]]
+id = "tomography"
+axis = "data_path"
+held = ["image", "size", "generation"]
+equal_work = "tomography-arms"
+attribution = "same-binary"
+attribution_note = "the arms' boxes differ by family as well as by data path: r8g for the copies, m8g for lith (the smallest box it allows)"
+note = "ties before request charges and loses after them; on the TomoPy result the tuned copy wins"
+
+[[series]]
+id = "gfs"
+axis = "data_path"
+held = ["image", "size", "generation"]
+equal_work = "gfs-arms"
+attribution = "same-binary"
+attribution_note = "r8g for the copies, m8g for lith"
+note = "requests included, lith is $0.130 against $0.131: a tie, on a box with half the RAM"
+
+[[series]]
+id = "manta"
+axis = "data_path"
+held = ["image", "size", "generation"]
+equal_work = "manta-arms"
+attribution = "same-binary"
+attribution_note = "r8g for the copies, c8g for lith"
+note = "manta runs 32 region readers against one 64 GB object: 7.6x slower through lith"
+
+[[series]]
+id = "delly"
+axis = "data_path"
+held = ["image", "size", "generation"]
+equal_work = "delly-arms"
+attribution = "same-binary"
+attribution_note = "r8g for the copies, c8g for lith"
+note = "delly streams the BAM: lith wins, $0.50 a genome against $0.73 tuned"
+
+[[series]]
+id = "gsw"
+axis = "data_path"
+held = ["image", "size", "generation"]
+equal_work = "gsw-identities"
+attribution = "same-binary"
+attribution_note = "r8g for the copies, c8g for lith; the lith arm did not finish"
+
+[[not_swept]]
+axis = "chip"
+reason = "Graviton4 only, because the variable is the data path"
+
+[[not_swept]]
+axis = "workers"
+reason = "A smaller vCPU count was not run, because thread count was held fixed to keep the tool's run unchanged"
 
 [[dataset]]
 id = "tomography-real: the whole BBii scan, 42.4 GB of zips (Zenodo DOI)"
@@ -32,8 +90,10 @@ pins = "../gsw-real/argo.sha256"
 note = "gsw-real's staged inputs"
 
 [[run]]
+id = "tomography-today"
+in = ["tomography"]
 instance = "r8g.4xlarge"
-purpose = "diagnostic"
+purpose = "control"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 279
@@ -41,9 +101,18 @@ billed_s = 495
 usd_hr = 0.9426
 billed_usd = 0.13
 results = "results/controls.txt"
+size = { tiffs = 1731, input_gb = 42.4 }
+variant = "tomography"
+data_path = "stage-default"
+billed_basis = "spawn-task-minus-baseline"
+tmpfs_peak_gib = 39.5
+request_usd = 0.002
+phase_s = { stage_in = 149, tool = 279, source = "results/controls.txt" }
 note = "tomography today: control: tomography-real-a1, spawn's stage-in at the CLI default, recomputed from its completion record, not re-run; 5,055 requests ($0.002); tmpfs 39.5 GiB; whole task 5,710 s / $1.495"
 
 [[run]]
+id = "tomography-copy"
+in = ["tomography"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -55,9 +124,18 @@ usd_hr = 0.9426
 billed_usd = 0.092
 peak_gib = 74.6
 results = "results/tomography-copy-a1/"
+size = { tiffs = 1731, input_gb = 42.4 }
+variant = "tomography"
+data_path = "stage-crt"
+peak_kind = "host-used"
+tmpfs_peak_gib = 39.6
+request_usd = 0.001
+phase_s = { stage_in = 27.3, tool = 279.1, source = "results/tomography-copy-a1/row.json" }
 note = "tomography tuned copy: CRT copy 27 s (1.55 GB/s); 2,530 requests ($0.001); tmpfs 39.6 GiB; whole task 5,579 s / $1.461"
 
 [[run]]
+id = "tomography-lith"
+in = ["tomography"]
 instance = "m8g.4xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -69,11 +147,20 @@ usd_hr = 0.7181
 billed_usd = 0.095
 peak_gib = 35.1
 results = "results/tomography-lith-b1/"
+size = { tiffs = 1731, input_gb = 42.4 }
+variant = "tomography"
+data_path = "lith"
+peak_kind = "host-used"
+tmpfs_peak_gib = 2.8
+request_usd = 0.0735
+phase_s = { setup = 25.0, tool = 364.5, source = "results/tomography-lith-b1/row.json" }
 note = "tomography lith: lith v1.18.1, --mem-cache 4GiB; 183,830 requests ($0.074), 422.5 GB fetched to serve 42.4 GB; whole task 6,292 s / $1.255"
 
 [[run]]
+id = "gfs-today"
+in = ["gfs"]
 instance = "r8g.8xlarge"
-purpose = "diagnostic"
+purpose = "control"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 127.6
@@ -81,9 +168,18 @@ billed_s = 689
 usd_hr = 1.8851
 billed_usd = 0.361
 results = "results/controls.txt"
+size = { files = 418, input_gb = 113.1 }
+variant = "gfs"
+data_path = "stage-default"
+billed_basis = "spawn-task"
+tmpfs_peak_gib = 107
+request_usd = 0.006
+phase_s = { stage_in = 477, source = "results/controls.txt" }
 note = "gfs today: control: gfs-thickness-real-r2, recomputed, not re-run; 13,804 requests ($0.006); tmpfs 107 GiB"
 
 [[run]]
+id = "gfs-copy"
+in = ["gfs"]
 instance = "r8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -95,9 +191,18 @@ usd_hr = 1.8851
 billed_usd = 0.128
 peak_gib = 153.9
 results = "results/gfs-copy-a1/"
+size = { files = 418, input_gb = 113.1 }
+variant = "gfs"
+data_path = "stage-crt"
+peak_kind = "host-used"
+tmpfs_peak_gib = 107.0
+request_usd = 0.0028
+phase_s = { stage_in = 63.1, tool = 124.6, source = "results/gfs-copy-a1/row.json" }
 note = "gfs tuned copy: CRT copy 63 s (1.79 GB/s); 7,060 requests ($0.003); tmpfs 107.0 GiB"
 
 [[run]]
+id = "gfs-lith"
+in = ["gfs"]
 instance = "m8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -109,11 +214,20 @@ usd_hr = 1.4362
 billed_usd = 0.117
 peak_gib = 75.3
 results = "results/gfs-lith-b1/"
+size = { files = 418, input_gb = 113.1 }
+variant = "gfs"
+data_path = "lith"
+peak_kind = "host-used"
+tmpfs_peak_gib = 2.9
+request_usd = 0.0131
+phase_s = { setup = 24.7, tool = 149.0, source = "results/gfs-lith-b1/row.json" }
 note = "gfs lith: 32,702 requests ($0.013); lith read 226.3 GB, 2.0x"
 
 [[run]]
+id = "manta-today"
+in = ["manta"]
 instance = "r8g.8xlarge"
-purpose = "diagnostic"
+purpose = "control"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 230
@@ -121,9 +235,18 @@ billed_s = 690
 usd_hr = 1.8851
 billed_usd = 0.361
 results = "results/controls.txt"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "manta"
+data_path = "stage-default"
+billed_basis = "spawn-task"
+tmpfs_peak_gib = 62.5
+request_usd = 0.003
+phase_s = { stage_in = 229, source = "results/controls.txt" }
 note = "manta today: control: structural-variants-real-manta-r2, recomputed, not re-run; 8,029 requests ($0.003); tmpfs 62.5 GiB"
 
 [[run]]
+id = "manta-copy"
+in = ["manta"]
 instance = "r8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -135,9 +258,18 @@ usd_hr = 1.8851
 billed_usd = 0.252
 peak_gib = 68.5
 results = "results/manta-copy-a1/"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "manta"
+data_path = "stage-crt"
+peak_kind = "host-used"
+tmpfs_peak_gib = 62.5
+request_usd = 0.0016
+phase_s = { stage_in = 39.9, tool = 230.0, source = "results/manta-copy-a1/row.json" }
 note = "manta tuned copy: CRT copy 40 s (1.68 GB/s); 4,027 requests ($0.002); tmpfs 62.5 GiB"
 
 [[run]]
+id = "manta-lith"
+in = ["manta"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -149,11 +281,20 @@ usd_hr = 1.2762
 billed_usd = 0.706
 peak_gib = 22.5
 results = "results/manta-lith-b1/"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "manta"
+data_path = "lith"
+peak_kind = "host-used"
+tmpfs_peak_gib = 3.0
+request_usd = 0.1594
+phase_s = { setup = 27.0, tool = 1747.0, source = "results/manta-lith-b1/row.json" }
 note = "manta lith: 398,579 requests ($0.159); lith fetched 308.2 GB (4.6x); manta 7.6x slower than from tmpfs"
 
 [[run]]
+id = "delly-today"
+in = ["delly"]
 instance = "r8g.8xlarge"
-purpose = "diagnostic"
+purpose = "control"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 1140
@@ -161,9 +302,18 @@ billed_s = 1607
 usd_hr = 1.8851
 billed_usd = 0.842
 results = "results/controls.txt"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "delly"
+data_path = "stage-default"
+billed_basis = "spawn-task"
+tmpfs_peak_gib = 62.5
+request_usd = 0.003
+phase_s = { stage_in = 234, source = "results/controls.txt" }
 note = "delly today: control: structural-variants-real-delly-r1, recomputed, not re-run; 8,029 requests ($0.003); tmpfs 62.5 GiB"
 
 [[run]]
+id = "delly-copy"
+in = ["delly"]
 instance = "r8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -175,9 +325,18 @@ usd_hr = 1.8851
 billed_usd = 0.726
 peak_gib = 67.2
 results = "results/delly-copy-a1/"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "delly"
+data_path = "stage-crt"
+peak_kind = "host-used"
+tmpfs_peak_gib = 62.5
+request_usd = 0.0016
+phase_s = { stage_in = 43.9, tool = 1144.0, source = "results/delly-copy-a1/row.json" }
 note = "delly tuned copy: CRT copy 44 s (1.53 GB/s); 4,027 requests ($0.002); tmpfs 62.5 GiB"
 
 [[run]]
+id = "delly-lith"
+in = ["delly"]
 instance = "c8g.8xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -189,11 +348,20 @@ usd_hr = 1.2762
 billed_usd = 0.499
 peak_gib = 22.2
 results = "results/delly-lith-b1/"
+size = { bam_gb = 63.9, reference_gb = 3.2 }
+variant = "delly"
+data_path = "lith"
+peak_kind = "host-used"
+tmpfs_peak_gib = 3.0
+request_usd = 0.0119
+phase_s = { setup = 25.9, tool = 1165.0, source = "results/delly-lith-b1/row.json" }
 note = "delly lith: 29,688 requests ($0.012); lith served the BAM as whole-object fills (245.2 GB)"
 
 [[run]]
+id = "gsw-today"
+in = ["gsw"]
 instance = "r8g.16xlarge"
-purpose = "diagnostic"
+purpose = "control"
 date = "2026-10-20"
 date_source = "run"
 wall_s = 51
@@ -201,9 +369,18 @@ billed_s = 1332
 usd_hr = 3.7702
 billed_usd = 1.395
 results = "results/controls.txt"
+size = { files = 30230, input_gb = 215.1 }
+variant = "gsw"
+data_path = "stage-default"
+billed_basis = "spawn-task"
+tmpfs_peak_gib = 200
+request_usd = 0.018
+phase_s = { stage_in = 1202, source = "results/controls.txt" }
 note = "gsw today: control: gsw-real-a2, recomputed, not re-run; 44,412 + 31 LIST requests ($0.018); tmpfs 200 GiB"
 
 [[run]]
+id = "gsw-copy"
+in = ["gsw"]
 instance = "r8g.16xlarge"
 purpose = "primary"
 date = "2026-10-24"
@@ -214,16 +391,49 @@ usd_hr = 3.7702
 billed_usd = 0.156
 peak_gib = 216.7
 results = "results/gsw-copy-a1/"
+size = { files = 30230, input_gb = 215.1 }
+variant = "gsw"
+data_path = "stage-crt"
+peak_kind = "host-used"
+tmpfs_peak_gib = 200.5
+request_usd = 0.0135
+phase_s = { stage_in = 80.4, tool = 50.0, source = "results/gsw-copy-a1/row.json" }
 note = "gsw tuned copy: CRT copy 80 s (2.68 GB/s); 33,391 + 31 requests ($0.014); tmpfs 200.5 GiB"
 
 [[run]]
+id = "gsw-lith-b2"
+in = ["gsw"]
 instance = "c8g.16xlarge"
 purpose = "diagnostic"
 date = "2026-10-24"
 date_source = "run"
 usd_hr = 2.5523
 results = "results/gsw-lith-b2/"
+size = { files = 30230, input_gb = 215.1 }
+variant = "gsw"
+data_path = "lith"
+run_outcome = "killed-cost-limit"
+billed_s = 1877
+billed_basis = "spawn-task"
+billed_usd = 1.3307
 note = "gsw lith: not finished; stopped twice by its own cost_limit ($2.01, then $1.33); billed >= 1,877 s, >= $1.33, no result; >= 742,216 requests (>= $0.30). Pins passed through lith (553 s, 389 MB/s). b1 log in results/gsw-lith-b1/"
+
+[[run]]
+id = "gsw-lith-b1"
+instance = "c8g.16xlarge"
+purpose = "diagnostic"
+date = "2026-10-24"
+date_source = "run"
+usd_hr = 2.5523
+results = "results/gsw-lith-b1/"
+size = { files = 30230, input_gb = 215.1 }
+variant = "gsw"
+data_path = "lith"
+run_outcome = "killed-cost-limit"
+billed_s = 2837
+billed_basis = "spawn-task"
+billed_usd = 2.0114
+note = "gsw lith, first attempt: stopped by its own cost_limit at $2.01 and left no container log (arm.sh 7330406e; the second attempt streams one); window in results/billed-windows.txt"
 
 # --- checks: "What held, per arm" (outcome keys are the arms, not chips: Graviton4 only)
 [[check]]

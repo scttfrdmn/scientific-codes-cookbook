@@ -1,6 +1,23 @@
 # measurements/mash-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is spawn's completion window of the r2 tasks (results/billing.txt).
+schema = 2
 result_unit = "the genus sketched and compared all against all: 3,158 GTDB R232 g__Corynebacterium genomes"
+
+[workload]
+size = { genomes = 3158, distances = 9972964 }
+note = "sketch every genome, all-vs-all dist, then screen every genome against the 321 species representatives"
+
+[timing]
+wall = "mash sketch plus mash dist (sourmash rows: its sketch plus a single-threaded jaccard_ani loop)"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation", "layout"]
+equal_work = "rows"
+attribution = "same-version-other-build"
+attribution_note = "aarch.bio's mash 2.3 on Graviton4, bioconda's x86 build of the same version on Intel and AMD; c8i.4xlarge is eight cores x 2 SMT"
 
 [[dataset]]
 id = "GTDB R232 bac120_metadata_r232.tsv.gz + sp_clusters_r232.tsv (g__Corynebacterium: 3,165 genomes, 321 species)"
@@ -15,13 +32,18 @@ pins = "pins.sha256"
 note = "each genome checked against NCBI's md5checksums.txt and GTDB's genome_size; the reproducible pin is the per-genome md5 set, the tar is its envelope; 7 non-representative genomes withdrawn by NCBI (results/prep/missing.tsv)"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
+task = "01-mash"
 results = "results/arm64/"
 host = "results/arm64/results.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 68.8
 billed_s = 192
 usd_hr = 0.6381
@@ -32,13 +54,18 @@ peak_kind = "vmhwm"
 note = "mash sketch 13.3 + dist 55.5 s; billed also covers the invariance runs and checks; container memory.peak 4.4 GB (page cache)"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
+task = "01-mash"
 results = "results/x86_64/"
 host = "results/x86_64/results.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 99.9
 billed_s = 284
 usd_hr = 0.7497
@@ -48,13 +75,18 @@ peak_gib = 0.72
 peak_kind = "vmhwm"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
+task = "01-mash"
 results = "results/amd/"
 host = "results/amd/results.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 16
 wall_s = 69.9
 billed_s = 211
 usd_hr = 0.8622
@@ -65,8 +97,10 @@ peak_kind = "vmhwm"
 
 # --- sourmash cross-check task (02), same bytes; runs the sourmash image, not mash's pin (digest not printed in the README)
 [[run]]
+id = "sourmash-c8g"
 instance = "c8g.4xlarge"
 purpose = "diagnostic"
+task = "02-sourmash"
 results = "results/arm64/sourmash/"
 threads_per_core = 1
 date = "2026-10-20"
@@ -81,8 +115,10 @@ peak_gib = 0.18
 note = "sourmash cross-check: sketch plus a single-threaded Python loop over 910,677 genome-representative pairs; image is sourmash's, not the mash pin"
 
 [[run]]
+id = "sourmash-c8i"
 instance = "c8i.4xlarge"
 purpose = "diagnostic"
+task = "02-sourmash"
 results = "results/x86_64/sourmash/"
 threads_per_core = 2
 date = "2026-10-20"
@@ -97,8 +133,10 @@ peak_gib = 0.18
 note = "sourmash cross-check; image is sourmash's, not the mash pin"
 
 [[run]]
+id = "sourmash-c8a"
 instance = "c8a.4xlarge"
 purpose = "diagnostic"
+task = "02-sourmash"
 results = "results/amd/sourmash/"
 threads_per_core = 1
 date = "2026-10-20"

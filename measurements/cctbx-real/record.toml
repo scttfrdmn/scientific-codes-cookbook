@@ -1,6 +1,24 @@
 # measurements/cctbx-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+# Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances, to the second;
+# results/billed-windows.txt), as the README says. 16 single-threaded worker processes, one entry each.
+schema = 2
 result_unit = "the whole cohort: 181 entries of PDB hash directory ab classified, 167 rescored, every check passed"
+
+[workload]
+size = { entries = 181, rescored = 167, files = 362 }
+note = "one PDB hash directory, 16 independent worker processes pulling one entry each; the largest entries set the wall"
+
+[timing]
+wall = "real.py, start to finish"
+billed_basis = "ec2"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "layout"]
+equal_work = "all-classified"
+attribution = "same-version-other-build"
+attribution_note = "x86 runs the structbio-e0104a505be2 env twin (same cctbx and gemmi versions); Intel's 16 vCPUs are 8 cores x 2 threads"
 
 [[dataset]]
 id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/{mmCIF,structure_factors}/ab/ (181 entries x model + sf)"
@@ -9,6 +27,8 @@ pins = "cohort.sha256"
 note = "362 files, copied server-side with S3's SHA-256 checksum and re-checked at stage-in"
 
 [[run]]
+id = "chip-c8g"
+in = ["chip"]
 instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
@@ -16,6 +36,9 @@ host = "results/arm64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 245
 billed_s = 349
 usd_hr = 0.6381
@@ -26,6 +49,8 @@ peak_kind = "cgroup-memory.peak"
 note = "peak is the box's cgroup memory.peak; the largest single worker's ru_maxrss is 922 MiB"
 
 [[run]]
+id = "chip-c8i"
+in = ["chip"]
 instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
@@ -33,6 +58,9 @@ host = "results/x86_64/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 285
 billed_s = 406
 usd_hr = 0.7497
@@ -43,6 +71,8 @@ peak_kind = "cgroup-memory.peak"
 note = "box peak also counts the x86 env-twin install; largest worker ru_maxrss 835 MiB"
 
 [[run]]
+id = "chip-c8a"
+in = ["chip"]
 instance = "c8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
@@ -50,6 +80,9 @@ host = "results/amd/host.txt"
 date = "2026-10-20"
 date_source = "git"
 workers = 16
+ranks = 1
+threads_per_rank = 1
+concurrent = 16
 wall_s = 188
 billed_s = 282
 usd_hr = 0.8622

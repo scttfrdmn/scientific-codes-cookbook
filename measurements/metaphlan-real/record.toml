@@ -1,8 +1,27 @@
 # measurements/metaphlan-real/record.toml -- drafted by the #118 extraction, then authored.
-schema = 1
+schema = 2
 # The README prices billed $ for the whole two-sample task and compute $ per sample (even / log),
 # with no per-sample bill. The record's unit is the task; per-sample compute $ are in each run's note.
+# Schema 2: billed is the spawn completion window of cookbook-metaphlan-real-profile-*; tmpfs is
+# times.txt's df after the index untar (the README's "54-55 of 62 GiB used").
 result_unit = "the two-sample task: ERR2984773 (D6300 even) and ERR2935805 (D6310 log) profiled one after the other on one box"
+
+[workload]
+size = { samples = 2 }
+note = "two whole Zymo mock-community runs (17,571,462 and 95,665,106 reads) profiled serially in one task against one 23 GB index held in tmpfs"
+
+[timing]
+wall = "the two metaphlan invocations' walls summed (tool wall); billed adds 229-345 s of stage-in, Docker and pull"
+billed_basis = "spawn-task"
+
+[[series]]
+id = "chip"
+axis = "chip"
+held = ["input", "workers", "size", "generation"]
+equal_work = "bowtie2-hits"
+attribution = "same-version-other-build"
+attribution_note = "MetaPhlAn 4.2.5: aarch.bio's build on Graviton4, bioconda's on x86; both x86 chips ran bowtie2's baseline build, not x86-64-v3"
+note = "AMD 1.42x Graviton4 on the log run and 5% cheaper per sample; Intel's 8 cores x 2 SMT match Graviton4 within 3% and are 20% dearer"
 
 [[dataset]]
 id = "RODA s3://sra-pub-run-odp/sra/{ERR2984773,ERR2935805} (ENA PRJEB29504, Nicholls et al. 2019 ZymoBIOMICS D6300 / D6310 shotgun runs), dumped to FASTQ by 00-prep"
@@ -28,7 +47,12 @@ results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "r8g"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 55
 wall_s = 1313
 billed_s = 1658
 usd_hr = 0.9426
@@ -44,7 +68,12 @@ results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "r8i"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 54
 wall_s = 1352
 billed_s = 1687
 usd_hr = 1.1114
@@ -60,7 +89,12 @@ results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-18"
 date_source = "git"
+id = "r8a"
+in = ["chip"]
 workers = 16
+ranks = 1
+threads_per_rank = 16
+tmpfs_peak_gib = 54
 wall_s = 934
 billed_s = 1163
 usd_hr = 1.2781
