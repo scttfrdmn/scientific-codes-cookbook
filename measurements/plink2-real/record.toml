@@ -69,8 +69,10 @@ results = "results/arm64/"
 date = "2026-10-17"
 date_source = "git"
 wall_s = 496
+billed_s = 573
 usd_hr = 0.9426
-note = "PLINK 1.9 cross-check task. README prints '496 s / $0.151 billed'; 496 s x $0.9426/hr = $0.130, so 496 s is not the billed window and the billed seconds are not printed; $ left out"
+billed_usd = 0.150
+note = "PLINK 1.9 cross-check task; wall_s is wall_task. billed_s from spawn's completion record for plink2real-p19-r4 (results/billed-windows.txt, #122); CloudTrail's RunInstances -> TerminateInstances for the same instance is 646 s"
 
 [[run]]
 instance = "r8i.4xlarge"
@@ -80,8 +82,10 @@ results = "results/x86_64/"
 date = "2026-10-17"
 date_source = "git"
 wall_s = 632
+billed_s = 709
 usd_hr = 1.1114
-note = "PLINK 1.9 cross-check task. README prints '632 s / $0.219'; 632 s x $1.1114/hr = $0.195, billed seconds not printed; $ left out"
+billed_usd = 0.219
+note = "PLINK 1.9 cross-check task; wall_s is wall_task. billed_s from spawn's completion record for plink2real-p19-x8664-r4 (results/billed-windows.txt, #122); CloudTrail window 766 s"
 
 [[run]]
 instance = "r8a.4xlarge"
@@ -91,8 +95,10 @@ results = "results/amd/"
 date = "2026-10-21"
 date_source = "git"
 wall_s = 494
+billed_s = 534
 usd_hr = 1.2781
-note = "PLINK 1.9 cross-check task. README prints '494 s / $0.190'; 494 s x $1.2781/hr = $0.175, billed seconds not printed; $ left out"
+billed_usd = 0.190
+note = "PLINK 1.9 cross-check task; wall_s is wall_task. billed_s from spawn's completion record for plink2real-p19-amd-1020c (results/billed-windows.txt, #122); CloudTrail window 583 s"
 
 # --- '## What held at scale, on all three chips' ---------------------------------------
 [[check]]

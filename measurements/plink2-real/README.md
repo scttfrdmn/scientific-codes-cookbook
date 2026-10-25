@@ -63,8 +63,9 @@ checks identities over 78 M rows. Billed is spawn's window, wrapper start to sta
 - **Peak memory 33 GiB on all three** is the container cgroup, which includes the ~27 GiB of `/tmp` the task
   wrote (merged `.pgen`, counts); `/tmp` held 40.8 GiB at the end, with the 14.6 GB of staged VCFs.
   That, not PLINK, is why this is an `r8g`: a 64 GiB box has a 32 GiB tmpfs.
-- PLINK 1.9's side (`p19.sh`, 8 chromosomes at a time): 496 s / $0.151 billed on Graviton4,
-  632 s / $0.219 on Intel, 494 s / $0.190 on AMD. Per chromosome, 1.9's single-threaded VCF
+- PLINK 1.9's side (`p19.sh`, 8 chromosomes at a time), task wall / billed: 496 / 573 s, $0.150
+  billed on Graviton4; 632 / 709 s, $0.219 on Intel; 494 / 534 s, $0.190 on AMD (billed windows
+  from spawn's completion records, [`results/billed-windows.txt`](results/billed-windows.txt)). Per chromosome, 1.9's single-threaded VCF
   conversion was ~1.2× faster on Intel (chr2 209 vs 254 s) and 1.5× on AMD (167 s), but the 1.9
   builds differ (bioconda x86 `1.90b7.7`, aarchbio `1.9.0-b.8`), so that is an observation, not an
   attribution.

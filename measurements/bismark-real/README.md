@@ -62,7 +62,8 @@ aarch.bio's images on Graviton4, bioconda's on the other two:
 
 A result is one whole sample through both aligners and both callers. The tool wall is the main
 path: sort and the three MethylDackel calls (5–13 s) are included. Billed is all four tasks,
-Started to Ended, so it also covers the check that reruns Bismark with `--multicore 4 -p 2`
+Started to Ended, each at its own instance's rate (the sort at the 2xlarge's; per-task windows
+from spawn's completion records in [`results/billed-windows.txt`](results/billed-windows.txt)), so it also covers the check that reruns Bismark with `--multicore 4 -p 2`
 (389 / 426 / 303 s).
 
 - **AMD is 1.30× Graviton4 on Bismark (bowtie2) and 1.15× on bwa-meth.** At 36% more per hour,
