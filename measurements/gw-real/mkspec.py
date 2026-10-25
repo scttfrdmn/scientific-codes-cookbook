@@ -99,7 +99,8 @@ for name, cmd, extra, ttl, cost in (
          [{"source": S3 + "runs/gw-real/r1/", "destination": G + "r1/"}], "1h", 1.0),
         ("naccept120", "bash arms.sh sampler 120\n", [], "5h", 7.5),
         ("maxmcmc10k", "bash arms.sh sampler 60 10000\n", [], "7h", 9.0),
-        ("nlive1000", "bash arms.sh sampler 60 5000 1000\n", [], "8h", 9.5)):
+        ("nlive1000", "bash arms.sh sampler 60 5000 1000\n", [], "8h", 9.5),
+        ("nlive1000-seed2", "GW_SAMPLER_SEED=20261024 bash arms.sh sampler 60 5000 1000\n", [], "8h", 9.0)):
     write("arm-%s.task.json" % name, {
         "task_id": "cookbook-gw-real-arm-%s" % name,
         "container": IMAGE,
