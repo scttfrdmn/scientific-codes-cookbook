@@ -2,8 +2,8 @@
 schema = 2
 # The README prices billed $ for the whole two-sample task and compute $ per sample (even / log),
 # with no per-sample bill. The record's unit is the task; per-sample compute $ are in each run's note.
-# Schema 2: billed is the spawn completion window of cookbook-metaphlan-real-profile-*; tmpfs is
-# times.txt's df after the index untar (the README's "54-55 of 62 GiB used").
+# Schema 2: billed is the spawn completion window of cookbook-metaphlan-real-profile-*; no tmpfs_peak_gib:
+# times.txt has only a df after the index untar (the README's "54-55 of 62 GiB used"), not a high-water mark.
 result_unit = "the two-sample task: ERR2984773 (D6300 even) and ERR2935805 (D6310 log) profiled one after the other on one box"
 
 [workload]
@@ -52,7 +52,6 @@ in = ["chip"]
 workers = 16
 ranks = 1
 threads_per_rank = 16
-tmpfs_peak_gib = 55
 wall_s = 1313
 billed_s = 1658
 usd_hr = 0.9426
@@ -73,7 +72,6 @@ in = ["chip"]
 workers = 16
 ranks = 1
 threads_per_rank = 16
-tmpfs_peak_gib = 54
 wall_s = 1352
 billed_s = 1687
 usd_hr = 1.1114
@@ -94,7 +92,6 @@ in = ["chip"]
 workers = 16
 ranks = 1
 threads_per_rank = 16
-tmpfs_peak_gib = 54
 wall_s = 934
 billed_s = 1163
 usd_hr = 1.2781

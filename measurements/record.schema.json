@@ -34,14 +34,14 @@
       "required": [
         "size"
       ],
-      "description": "What one result computed, as numbers a consumer can MATCH against (never extrapolate from). Defaults every run's size.",
+      "description": "What one run row computed (results_per_run results when that is > 1), as numbers a consumer can MATCH against (never extrapolate from). Defaults every run's size.",
       "properties": {
         "size": {
           "type": "object",
           "additionalProperties": {
             "type": "number"
           },
-          "description": "Named magnitudes of one result's input/work. Prefer the common keys: reads, read_pairs, bases, atoms, steps, simulated_ns, basis_functions, kpoints, events, samples, files, cells, voxels, sequences, families, generations. A key is a claim: it must be printed in the README."
+          "description": "Named magnitudes of one run row's input/work. Prefer the common keys: reads, read_pairs, bases, atoms, steps, simulated_ns, basis_functions, kpoints, events, samples, files, cells, voxels, sequences, families, generations. A key is a claim: it must be printed in the README."
         },
         "input_gib": {
           "type": "number",
@@ -87,7 +87,7 @@
             "spawn-task-partial",
             "ec2-to-spawn-end"
           ],
-          "description": "spawn-task = the completion record's started_at -> ended_at (wrapper start to stage-out done); ec2 = CloudTrail RunInstances -> TerminateInstances (adds boot and shutdown); spawn-task-minus-baseline = spawn-task minus a measured no-tool copy (lith-vs-copy-real); sum-of-tasks = derived for a pipeline from its task rows; authored only on an aggregate row whose README billed is the sum of its tasks' windows (the header comment says which windows). unavailable = the README prints a billed figure but no completion record survives, so billed_s/billed_usd stay absent; shared-window = one billed window covers this row and others (two walls in one task, five aligns on one box), so no per-row billed figure exists; unattributed = the README prints this billed window but neither a surviving completion record nor CloudTrail reproduces it (warns: a README number nobody can source). spawn-task-partial = from spawn's started_at to a marker inside the task that the README names (cromwell-wdl-real: to the end of the workflow run, before the cross-check), a sub-window of the completion record. ec2-to-spawn-end = CloudTrail RunInstances -> spawn's ended_at (pyscf-real: 'instance launch to stage-out'). spawn-task-minus-baseline also covers a spawn window minus a measured interval the README names (squidpy-real: a replicate pass)."
+          "description": "spawn-task = the completion record's started_at -> ended_at (wrapper start to stage-out done; on older spawn records ended_at is the command's exit, a few seconds earlier); ec2 = CloudTrail RunInstances -> TerminateInstances (adds boot and shutdown); spawn-task-minus-baseline = spawn-task minus a measured no-tool copy (lith-vs-copy-real); sum-of-tasks = derived for a pipeline from its task rows; authored only on an aggregate row whose README billed is the sum of its tasks' windows (the header comment says which windows). unavailable = the README prints a billed figure but no completion record survives, so billed_s/billed_usd stay absent; shared-window = one billed window covers this row and others (two walls in one task, five aligns on one box), so no per-row billed figure exists; unattributed = the README prints this billed window but neither a surviving completion record nor CloudTrail reproduces it (warns: a README number nobody can source). spawn-task-partial = from spawn's started_at to a marker inside the task that the README names (cromwell-wdl-real: to the end of the workflow run, before the cross-check), a sub-window of the completion record. ec2-to-spawn-end = CloudTrail RunInstances -> spawn's ended_at (pyscf-real: 'instance launch to stage-out'). spawn-task-minus-baseline also covers a spawn window minus a measured interval the README names (squidpy-real: a replicate pass)."
         }
       }
     },
@@ -307,7 +307,7 @@
           "concurrent": {
             "type": "integer",
             "default": 1,
-            "description": "Independent jobs sharing the box (layout packing, MPS clients). throughput is then the AGGREGATE; per-job is derived."
+            "description": "Independent units of work sharing the box at once: packed jobs, MPS clients, or a pool of single-threaded worker processes each taking its own item (16 subjects at a time). throughput is then the AGGREGATE; per-job is derived."
           },
           "bind": {
             "type": "string",

@@ -26,6 +26,7 @@ axis = "chip"
 held = ["size", "workers", "layout", "generation"]
 equal_work = "outputs-byte-identical"
 attribution = "same-version-other-build"
+verdict = { shape = "flat", on = "billed_usd" }
 attribution_note = "x86 rows run bioconda's x86 builds of deeptools 4.0.0 and samtools 1.24 (quay.io/biocontainers)"
 note = "task 03 rows. The chip is not a lever: compute is 32-45 s inside a 174-248 s bill, billed $/result 0.0294-0.0334; the window is too short to rank chips by"
 

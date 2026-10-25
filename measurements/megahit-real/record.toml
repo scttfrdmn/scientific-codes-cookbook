@@ -1,8 +1,8 @@
 # measurements/megahit-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the spawn completion window, exactly (results/billed-windows.txt). The -t 16
 # rows are one task that assembles BOTH runs (size carries both); the -t 1 rows are the even run.
-# peak is ru_maxrss; avg_cores and tmpfs_peak_gib are assemble.sh's sampler
-# (times.txt / footprint.txt; for the -t 16 rows the log run's, the larger).
+# peak is ru_maxrss; avg_cores (-t 1 rows only) and tmpfs_peak_gib are assemble.sh's sampler
+# (times.txt / footprint.txt; tmpfs on the -t 16 rows is the log run's, the larger).
 schema = 2
 result_unit = "one metagenome assembly (one whole ZymoBIOMICS run)"
 

@@ -290,8 +290,9 @@ def derive_perf(e, mdir):
         r.setdefault("run_outcome", "completed")
         r.setdefault("concurrent", 1)
         r.setdefault("data_path", "stage-default")
-        if any(k in r for k in ("billed_s", "overhead_s", "billed_usd")) and "billed_basis" in e.get("timing", {}):
-            r.setdefault("billed_basis", e["timing"]["billed_basis"])
+        tb = e.get("timing", {}).get("billed_basis")
+        if tb and (any(k in r for k in ("billed_s", "overhead_s", "billed_usd")) or tb in ("shared-window", "unavailable")):
+            r.setdefault("billed_basis", tb)
         v = vcpus_of(r)
         if v:
             r["vcpus"] = v

@@ -26,7 +26,8 @@ held = ["image", "family", "size", "generation"]
 equal_work = "none: -maxh-bounded runs, so each rung runs as many steps as fit in its time limit; the same benchMEM.tpr and mdrun line throughout"
 attribution = "same-binary"
 attribution_note = "the image digest is not recorded; every run.log reports GROMACS 2026.3-conda_forge, ARM_NEON_ASIMD, CPU part 0xd4f"
-verdict = { shape = "cost-climbs", through = 192 }
+# no verdict: the README reads "the cost per nanosecond more than doubles" on a rate card no row carries,
+# so no $ curve can confirm it. Throughput rises through 192 (derived).
 note = "12.995 -> 147.669 ns/day, 11.4x on 24x the cores; ns/day per $/hr falls 40.7 -> 19.3 at the README's c8g $0.03988/vCPU-hr (a rate card no artifact carries, so no row has usd_hr). 59% step efficiency at 192, where the box spans two NUMA nodes and atoms per rank halve: the measurement cannot separate the two"
 
 [[series]]

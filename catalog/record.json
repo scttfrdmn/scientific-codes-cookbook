@@ -11855,7 +11855,11 @@
       "generation"
      ],
      "id": "chip",
-     "note": "task 03 rows. The chip is not a lever: compute is 32-45 s inside a 174-248 s bill, billed $/result 0.0294-0.0334; the window is too short to rank chips by"
+     "note": "task 03 rows. The chip is not a lever: compute is 32-45 s inside a 174-248 s bill, billed $/result 0.0294-0.0334; the window is too short to rank chips by",
+     "verdict": {
+      "on": "billed_usd",
+      "shape": "flat"
+     }
     }
    ],
    "status": "pass",
@@ -21591,6 +21595,7 @@
    "run": [
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "chip": "Graviton4",
      "concurrent": 1,
@@ -21624,6 +21629,7 @@
     },
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "chip": "Graviton4",
      "concurrent": 1,
@@ -21656,6 +21662,7 @@
     },
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "chip": "Graviton4",
      "concurrent": 1,
@@ -21688,6 +21695,7 @@
     },
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "chip": "Graviton4",
      "concurrent": 1,
@@ -21720,6 +21728,7 @@
     },
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "chip": "Graviton4",
      "concurrent": 1,
@@ -21752,6 +21761,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21793,6 +21803,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21833,6 +21844,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21873,6 +21885,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21913,6 +21926,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21953,6 +21967,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -21994,6 +22009,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -22034,6 +22050,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -22074,6 +22091,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -22114,6 +22132,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "bind": "mpiexec --oversubscribe; mdrun -pin off",
      "blas": "libmkl_rt.so.3",
      "concurrent": 1,
@@ -23681,11 +23700,7 @@
       "generation"
      ],
      "id": "knee",
-     "note": "12.995 -> 147.669 ns/day, 11.4x on 24x the cores; ns/day per $/hr falls 40.7 -> 19.3 at the README's c8g $0.03988/vCPU-hr (a rate card no artifact carries, so no row has usd_hr). 59% step efficiency at 192, where the box spans two NUMA nodes and atoms per rank halve: the measurement cannot separate the two",
-     "verdict": {
-      "shape": "cost-climbs",
-      "through": 192
-     }
+     "note": "12.995 -> 147.669 ns/day, 11.4x on 24x the cores; ns/day per $/hr falls 40.7 -> 19.3 at the README's c8g $0.03988/vCPU-hr (a rate card no artifact carries, so no row has usd_hr). 59% step efficiency at 192, where the box spans two NUMA nodes and atoms per rank halve: the measurement cannot separate the two"
     },
     {
      "attribution": "same-binary",
@@ -34709,7 +34724,6 @@
      "run_outcome": "completed",
      "threads_per_core": 1,
      "threads_per_rank": 16,
-     "tmpfs_peak_gib": 55,
      "usd_hr": 0.9426,
      "vcpus": 16,
      "vendor": "AWS",
@@ -34750,7 +34764,6 @@
      "run_outcome": "completed",
      "threads_per_core": 2,
      "threads_per_rank": 16,
-     "tmpfs_peak_gib": 54,
      "usd_hr": 1.1114,
      "vcpus": 16,
      "vendor": "Intel",
@@ -34791,7 +34804,6 @@
      "run_outcome": "completed",
      "threads_per_core": 1,
      "threads_per_rank": 16,
-     "tmpfs_peak_gib": 54,
      "usd_hr": 1.2781,
      "vcpus": 16,
      "vendor": "AMD",
@@ -36927,6 +36939,7 @@
     },
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "chip": "Graviton4",
      "concurrent": 1,
      "data_path": "stage-default",
@@ -36953,6 +36966,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "concurrent": 1,
      "data_path": "stage-default",
      "date": "2026-10-20",
@@ -48770,6 +48784,7 @@
    "run": [
     {
      "arch": "arm64",
+     "billed_basis": "shared-window",
      "chip": "Graviton4",
      "compute_usd": 0.14,
      "concurrent": 1,
@@ -48809,6 +48824,7 @@
     },
     {
      "arch": "x86_64",
+     "billed_basis": "shared-window",
      "compute_usd": 0.086,
      "concurrent": 1,
      "data_path": "stage-default",
@@ -48845,6 +48861,7 @@
     },
     {
      "arch": "amd",
+     "billed_basis": "shared-window",
      "compute_usd": 0.068,
      "concurrent": 1,
      "data_path": "stage-default",
@@ -54183,7 +54200,11 @@
       "generation"
      ],
      "id": "chip-fc-t8",
-     "note": "for featureCounts the boot is the bill: the chips differ by $0.001 per sample"
+     "note": "for featureCounts the boot is the bill: the chips differ by $0.001 per sample",
+     "verdict": {
+      "on": "billed_usd",
+      "shape": "flat"
+     }
     },
     {
      "attribution": "same-version-other-build",
@@ -66399,6 +66420,7 @@
     {
      "arch": "arm64",
      "avg_cores": 15.99,
+     "billed_basis": "shared-window",
      "binding": "cpu",
      "chip": "Graviton4",
      "compute_usd": 0.309,
@@ -66444,6 +66466,7 @@
     {
      "arch": "x86_64",
      "avg_cores": 15.99,
+     "billed_basis": "shared-window",
      "binding": "cpu",
      "compute_usd": 0.611,
      "concurrent": 1,
@@ -66488,6 +66511,7 @@
     {
      "arch": "amd",
      "avg_cores": 15.99,
+     "billed_basis": "shared-window",
      "binding": "cpu",
      "compute_usd": 0.415,
      "concurrent": 1,
