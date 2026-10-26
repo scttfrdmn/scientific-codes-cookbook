@@ -109,12 +109,13 @@ work: the two measures rank the *same* runs differently, and only one of them is
 thread on top of the shared index. Size memory for the thread count you will actually use;
 the 16-thread figure will OOM a 64-thread run on a 16 GiB box.
 
-## 3. Shape: a fourth kind of scaling
+## 3. Shape: no speed knee through 64, cost minimum at 16
 
 [`patterns/sizing.md`](../../patterns/sizing.md) sorts codes into three shapes — *the answer
-moves* (flye), *the cost climbs* (GROMACS), *it hits a wall* (GPAW). bwa is a fourth:
-**the answer is stable, the speedup is near-linear, and compute cost is flat — so the only
-thing that bends the curve is the fixed overhead.** For codes of this shape the sizing
+moves* (flye), *the cost climbs* (GROMACS), *it hits a wall* (GPAW). bwa is none of them, and it
+reads the same way as [bowtie2-real](../bowtie2-real/README.md): **no speed knee through 64 cores**
+(on wall: near-linear, the answer stable, compute cost flat) **and the cost minimum at 16** (on
+billed) — so the only thing that bends the curve is the fixed overhead. For codes of this shape the sizing
 question stops being about the chip and becomes about the data path, which is why
 [copy, mount, or share?](../../patterns/data-movement.md) is the page that matters next: the
 94 seconds of staging is the entire reason 64 cores loses.
@@ -128,9 +129,13 @@ to the container disk and nothing else is on the timed path; the counts are take
 
 | chip | instance | threads/core | wall | reads/s | avg cores | anon RSS | $/hr | compute $/result | **billed** | **billed $/result** |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `c8g.4xlarge` | 1 | 756 s | 64,011 | 15.18 | 8.68 GiB | 0.6381 | **0.1340** | 946 s | **0.1677** |
-| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1081 s | 44,766 | 15.31 | 8.68 GiB | 0.7497 | 0.2251 | 1306 s | 0.2720 |
-| EPYC 9R45 | `c8a.4xlarge` | 1 | **718 s** | **67,399** | 15.19 | 8.68 GiB | 0.8622 | 0.1720 | 880 s | 0.2108 |
+| Graviton4 | `c8g.4xlarge` | 1 | 756 s | 64,011 | 15.18 | 8.68 GiB | 0.6381 | **0.1340** | 887 s | **0.1572** |
+| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1081 s | 44,766 | 15.31 | 8.68 GiB | 0.7497 | 0.2251 | 1239 s | 0.2580 |
+| EPYC 9R45 | `c8a.4xlarge` | 1 | **718 s** | **67,399** | 15.19 | 8.68 GiB | 0.8622 | 0.1720 | 851 s | 0.2038 |
+
+*Billed* is spawn's task window (wrapper start to stage-out done) here as in sections 1 and 2, from
+each task's completion record in [`results/billed-windows.txt`](results/billed-windows.txt), matched
+by task id (`bwareal-c8g-16t{,-x8664,-amd}-fix121`); boot before the wrapper is not in it.
 
 The recipe's own align task ([bwa-samtools](../../recipes/bwa-samtools/README.md) `01-align`,
 ALT-aware, the same boxes, `-t 16`, SAM to disk) is a second clean run per chip:
@@ -154,7 +159,7 @@ ALT-aware, the same boxes, `-t 16`, SAM to disk) is a second clean run per chip:
 - **The earlier rows (757 / 1014 / 646 s) had an `awk` counter on the timed path**, BusyBox awk on
   the x86 images. It was not what made them: Graviton4 reproduced 757 s at 756, and both x86 chips
   came out *slower* without it (1081 and 718 s), which is run-to-run spread, not the reader.
-  Billed is higher than before (946 s against 851 on Graviton4) because counting a 16 GB SAM on disk
+  Billed is higher than before (887 s against 851 on Graviton4) because counting a 16 GB SAM on disk
   is now its own pass after the timer, where the old reader did it in flight.
 - Anonymous memory peaks at 8.68 GiB on every chip; memory belongs to the index, not the silicon.
   (The cgroup's `memory.current` now reads up to 20 GiB, which is page cache from the SAM write.)
@@ -164,7 +169,7 @@ ALT-aware, the same boxes, `-t 16`, SAM to disk) is a second clean run per chip:
 The task script is staged and pinned by sha256 (`align.sh`, `inputs/bwa-real/align.sh`), because
 spawn's wrapper leaves too little of EC2's 16 KiB user data for the inline form (spawn#1063,
 which `gen-c8g`'s comment cites; the root cause is spawn#1246).
-`gen-c8g` carries `disk_gib: 40` for the SAM. Spend for the three re-run legs: $0.65 billed.
+`gen-c8g` carries `disk_gib: 40` for the SAM. Spend for the three re-run legs: $0.62 on spawn's task windows, $0.65 EC2 launch to terminate (CloudTrail).
 
 ## Caveats
 
@@ -173,7 +178,7 @@ are comparable to each other; the knee rows share one generation and family. `av
 cgroup `cpu.stat usage_usec` over wall. It is physical-core-equivalent everywhere except `c8i`,
 whose 16 vCPUs are 8 SMT cores. Rates are us-west-2 on-demand at time of measurement. The
 generation and core tables share one Graviton4 16-core run (757 s, $0.1508). The cross-chip table
-uses the 2026-10-24 re-run (756 s, $0.1677), which also counts the SAM in a separate pass. The x86 rows
+uses the 2026-10-24 re-run (756 s, $0.1572), which also counts the SAM in a separate pass. The x86 rows
 come from a different image (bioconda's x86 build of the same version), so they compare chips
 running the same version, not one binary on two chips. Their output file keeps the spec's
 `c8g-16t-disk` label and lands under `measurements-{x86_64,amd}/`. The copies here are renamed

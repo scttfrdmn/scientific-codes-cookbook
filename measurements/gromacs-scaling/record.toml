@@ -3,7 +3,8 @@
 # work, 2026-09-09, us-east-1. Written from scratch at schema 2.
 # Instances: the README says "one c8g box sized to the core count" and each run.log reports
 # "Running on 1 node with total N cores", so the c8g size is the one with N vCPUs. The launch section
-# names only 8 cores; its rows use the ladder's 8-core c8g. The image is not recorded (image =
+# names only 8 cores and no log records its box, so its rows are c8g.unrecorded (the session reported
+# c8g.2xlarge; kept in each row's note as the session's account). The image is not recorded (image =
 # "unrecorded"); the specs were not kept. No row has usd_hr: the README's price is a per-vCPU rate card
 # that no artifact carries, and its ns/day per $/hr column is derived from it. Throughput is
 # GROMACS' own ns/day from a -maxh-bounded run, not compute cost. No completion records exist.
@@ -341,12 +342,12 @@ results = "results/decomp64/r4t16/timing.txt"
 
 # --- 3. the launch at 8 cores: first sweep vs re-run (results/launch-{default,bound}/) ------
 # The mdrun lines are identical; the mpirun invocation is the session record's account (specs not kept).
-# The 8-core box's family is not stated for this section; c8g.2xlarge is the ladder's 8-core box.
+# No log records this section's box: c8g.unrecorded. The session reported c8g.2xlarge; each row's note keeps that, as the session's account.
 
 [[run]]
 id = "launch-default-1x8"
 in = ["launch-default"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -361,12 +362,12 @@ bind = "mpirun -np R default binding (session record; not in the logs)"
 throughput = 1.891
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-default/r1t8/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-default-2x4"
 in = ["launch-default"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -381,12 +382,12 @@ bind = "mpirun -np R default binding (session record; not in the logs)"
 throughput = 3.686
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-default/r2t4/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-default-4x2"
 in = ["launch-default"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -401,12 +402,12 @@ bind = "mpirun -np R default binding (session record; not in the logs)"
 throughput = 7.132
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-default/r4t2/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-default-8x1"
 in = ["launch-default"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -421,12 +422,12 @@ bind = "mpirun -np R default binding (session record; not in the logs)"
 throughput = 13.469
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-default/r8t1/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-bound-1x8"
 in = ["launch-bound"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -441,12 +442,12 @@ bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
 throughput = 13.503
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-bound/r1t8/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-bound-2x4"
 in = ["launch-bound"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -461,12 +462,12 @@ bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
 throughput = 12.929
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-bound/r2t4/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-bound-4x2"
 in = ["launch-bound"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -481,12 +482,12 @@ bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
 throughput = 13.168
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-bound/r4t2/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 [[run]]
 id = "launch-bound-8x1"
 in = ["launch-bound"]
-instance = "c8g.2xlarge"
+instance = "c8g.unrecorded"
 purpose = "core-sweep"
 image = "unrecorded"
 build = "GROMACS 2026.3-conda_forge gmx_mpi (every run.log); the recipe's pin on the run date was quay.io/aarchsci/md@sha256:1ee941664add... (tail not recorded)"
@@ -501,7 +502,7 @@ bind = "--map-by slot:PE=T --bind-to core (session record; not in the logs)"
 throughput = 13.486
 simd_path = "ARM_NEON_ASIMD"
 results = "results/launch-bound/r8t1/timing.txt"
-note = "family of the 8-core box not stated in the README for this section"
+note = "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded"
 
 # --- 4. size: benchSMALL (20,028 atoms), same launch, same ladder (results/size-small-20k/) ----
 
