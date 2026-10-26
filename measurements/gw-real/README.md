@@ -4,10 +4,12 @@
 > rebuilds the published GWTC-2.1 likelihood from the release's own config and reproduces it: the
 > noise evidence to its printed digits, and the log-likelihood at 500 published posterior samples to
 > 0.041.** The full 15-parameter run with calibration lands on the published Bayes factor (304.23
-> against 303.45 ± 0.14) and the published medians. It does **not** pass a 5-SE quantile test against
-> the published posterior: its tails are narrower in the same direction on every chip (max |z| 9.6
-> on Graviton4, 14.0 on x86). More calibration curves do not move the tails, walks twice as long do
-> not, and twice the live points do not move them measurably over two seeds ([the split](#calibration-or-sampler-the-split)). Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
+> against 303.45 ± 0.14) and the published medians. Its tails are narrower than the published
+> posterior's on every chip, so a 5-SE quantile test fails (max |z| 9.6 on Graviton4, 14.0 on x86)
+> and is left failing: a reported, characterised discrepancy. Calibration is ruled out, and twice the
+> chain length and twice the live points (two seeds) move the tails by nothing measurable; a 4× chain
+> and the release's own sampler setup are untested ([the split](#calibration-or-sampler-the-split)).
+> Graviton4 is cheapest at $3.17 per event billed. AMD is fastest
 > (3,543 s billed) at $3.39, and Intel is $3.86.
 
 Workload: **GW150914**, the event every CBC analysis tutorial starts from, run the way a
@@ -204,11 +206,22 @@ cause at the precision two or three runs give; a 1/`nlive` bias would have halve
   run-to-run SD is the same at both settings, so one run carries ±0.0017 on its own. The
   estimate, 0.0026 ± 0.0015, is not distinguishable from zero with these five runs, and even its
   upper end leaves most of the 0.009–0.012 gap to the published 0.05.
-- **What is left:** chains long enough to reach `naccept`. On [`results/walks-probe/walks.tsv`](results/walks-probe/walks.tsv)'s
-  acceptance, the walk needed passes 20,000 by about the 7,000th chain and is still rising, so
-  `maxmcmc=20,000` would be ~3.3× r1's calls, ~$10 on `c8g.16xlarge`, and still capped late. Not
-  run. The other candidate is the release's own
-  sampler (`rwalk`, 4 × `nlive=2000`); bilby-dev/bilby#1162 is the report that the cap is silent.
+- **Where it stands: reported, not resolved.** The 5-SE test fails on every run and stays
+  asserted. Calibration is ruled out (arm 1); 2× chain length (arm 3) and 2× live points over two
+  seeds (arms 4, 4b) leave the mean tail mass where r1's settings put it. Two candidates are
+  **untested**, and neither was run:
+  - **`maxmcmc=20,000`, a 4× chain.** On [`results/walks-probe/walks.tsv`](results/walks-probe/walks.tsv)'s
+    acceptance the walk needed passes 20,000 by about the 7,000th chain and is still rising, so it
+    would cost ~3.3× r1's calls (~$10 on `c8g.16xlarge`) and still hit the cap late. It is the
+    weaker test: 2× moved nothing, and a capped 4× still cannot reach `naccept`, so a null would not
+    clear chain length either.
+  - **The release's own sampler setup** (`rwalk`, 4 × `nlive=2000`). It is the informative one,
+    because it is what made the published posterior: matching the published tails would locate the
+    discrepancy in our sampler settings, and missing them would point at what else differs (bilby
+    2.8.2 against 1.0.4, lalsimulation 6.1.0 against 2.4.0, GWOSC's file against the C02 frames).
+    Its cost is unmeasured; a ~$1 probe would price it.
+
+  bilby-dev/bilby#1162 is the report that the `maxmcmc` cap is silent.
 
 ```sh
 python3 measurements/gw-real/mkspec.py r1 c8g 64 500 6h 6.0     # writes arm-*.task.json and arms.sha256
@@ -222,11 +235,13 @@ done
 the cap-hit fraction as it runs; arm 4b is arm 4 with `GW_SAMPLER_SEED=20261024`.
 
 **Re-verified on the current pin (2026-10-25).** Adding the seed override moved `arms.py`, so
-`arms.sha256` moved in every arm spec; arms 1–3 were re-run from their committed specs on it
-([`results/reverify`](results/reverify)). All three reproduce exactly. Arm 1: `quantiles_reweighted.tsv`
+`arms.sha256` moved in every arm spec; arms 1–4 were re-run from their committed specs on it
+([`results/reverify`](results/reverify)). All four reproduce exactly. Arm 1: `quantiles_reweighted.tsv`
 and every non-timing line of `score.tsv` identical, `lnL.npz` byte-identical (same S3 ETag), $0.15 (217 s billed).
 Arm 2: 20,534,663 calls, ln BF 304.515 ± 0.247, `quantiles.tsv` identical, $3.17 (4,467 s). Arm 3:
-`quantiles.tsv` and `walks.tsv` identical, $5.75 (8,117 s). Only timings differ (≤1.1%), so the seeded sampler
+`quantiles.tsv` and `walks.tsv` identical, $5.75 (8,117 s). Arm 4 (2026-10-26): `quantiles.tsv`,
+`walks.tsv` and every non-timing line of `score.tsv` identical, ln BF 304.165 ± 0.178, $6.09 (8,592 s).
+Only timings differ (≤2.4%), so the seeded sampler
 path is deterministic on `c8g.16xlarge` at 64 processes; the result `.hdf5` files differ in bytes
 but not in any recorded statistic.
 

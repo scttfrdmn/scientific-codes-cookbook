@@ -25100,7 +25100,7 @@
       "nlive"
      ],
      "instance": "c8g.16xlarge",
-     "n": 2,
+     "n": 3,
      "note": "arm 4, sampler: nlive 500 -> 1,000 at r1's maxmcmc 5,000, sampler seed 20261019; 40.06M calls (1.96x r1), 98% of walks at the cap, mean tail mass 0.0422 vs published 0.05; max |z| 15.06, 19 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-r1 (completion record 2026-10-25T01:46Z-04:12Z UTC)",
      "peak_gib": 7.14,
      "peak_kind": "cgroup-memory.peak",
@@ -25156,7 +25156,7 @@
       "nlive"
      ],
      "instance": "c8g.16xlarge",
-     "n": 2,
+     "n": 3,
      "note": "arm 4b, sampler: arm 4 with the sampler seed 20261019 -> 20261024, a second attempt of the nlive=1000 configuration; 39.51M calls, 96% of walks at the cap, mean tail mass 0.0400 vs published 0.05 (arm 4: 0.0422); max |z| 16.25, 21 of 51 past 5 SE, fails; spawn task cookbook-gw-real-arm-nlive1000-seed2-rv1024",
      "peak_gib": 7.24,
      "peak_kind": "cgroup-memory.peak",
@@ -25346,6 +25346,62 @@
      "wall_spread": [
       7952,
       8037
+     ],
+     "workers": 64
+    },
+    {
+     "arch": "arm64",
+     "attempt": "rv1026",
+     "billed_basis": "spawn-task",
+     "billed_s": 8592,
+     "billed_usd": 6.09,
+     "chip": "Graviton4",
+     "concurrent": 64,
+     "data_path": "stage-default",
+     "date": "2026-10-26",
+     "date_source": "run",
+     "generation": 8,
+     "host": "results/reverify/arm-nlive1000/host.txt",
+     "id": "reverify-arm-nlive1000",
+     "image": "recipe",
+     "image_resolved": [
+      "quay.io/aarchsci/gw@sha256:18e0856fcb6cdde0725acbed3f4efcaa34a7654eaf42f372ddac55ecd2f052d5"
+     ],
+     "in": [
+      "nlive"
+     ],
+     "instance": "c8g.16xlarge",
+     "n": 3,
+     "note": "arm 4 re-run on the new arms.py pin: quantiles.tsv and walks.tsv identical, every non-timing line of score.tsv identical (ln BF 304.165 +- 0.178); exact; spawn task cookbook-gw-real-arm-nlive1000-rv1026 (completion record 2026-10-26T20:36Z-22:59Z UTC)",
+     "peak_gib": 7.29,
+     "peak_kind": "cgroup-memory.peak",
+     "phase_s": {
+      "source": "results/reverify/arm-nlive1000/phases.txt",
+      "tool": 8503
+     },
+     "physical_cores": 64,
+     "pin_current": true,
+     "purpose": "diagnostic",
+     "ranks": 1,
+     "region": "us-west-2",
+     "results": "results/reverify/arm-nlive1000/",
+     "run_outcome": "completed",
+     "size": {
+      "calibration_curves": 250,
+      "events": 1,
+      "maxmcmc": 5000,
+      "naccept": 60,
+      "nlive": 1000
+     },
+     "threads_per_core": 1,
+     "threads_per_rank": 1,
+     "usd_hr": 2.5524,
+     "vcpus": 64,
+     "vendor": "AWS",
+     "wall_s": 8503,
+     "wall_spread": [
+      8401,
+      8711
      ],
      "workers": 64
     },
@@ -25587,7 +25643,7 @@
         "billed_usd": 6.23,
         "id": "arm-nlive1000",
         "instance": "c8g.16xlarge",
-        "n": 2,
+        "n": 3,
         "speedup": 0.506,
         "wall_s": 8711
        },
@@ -25596,9 +25652,18 @@
         "billed_usd": 6.01,
         "id": "arm-nlive1000-seed2",
         "instance": "c8g.16xlarge",
-        "n": 2,
+        "n": 3,
         "speedup": 0.525,
         "wall_s": 8401
+       },
+       {
+        "axis": 1000,
+        "billed_usd": 6.09,
+        "id": "reverify-arm-nlive1000",
+        "instance": "c8g.16xlarge",
+        "n": 3,
+        "speedup": 0.519,
+        "wall_s": 8503
        }
       ]
      },
