@@ -35,9 +35,9 @@ bwa mem -t 16 -R '@RG\tID:SRR062634\tSM:HG00096\tPL:ILLUMINA' \
 | Graviton3 | `c7g.4xlarge` | 890 s | 54,373 | 0.5800 | 0.1621 |
 | Graviton4 | `c8g.4xlarge` | 757 s | 63,926 | 0.6381 | 0.1508 |
 | **Graviton5** | `c9g.4xlarge` | **590 s** | **82,021** | 0.6955 | **0.1320** |
-| Graviton4, SAM to disk | `c8g.4xlarge` | 756 s | 64,011 | 0.6381 | 0.1677 |
-| Intel Xeon 6975P-C, SAM to disk | `c8i.4xlarge` | 1081 s | 44,766 | 0.7497 | 0.2720 |
-| AMD EPYC 9R45, SAM to disk | `c8a.4xlarge` | 718 s | 67,399 | 0.8622 | 0.2108 |
+| Graviton4, SAM to disk | `c8g.4xlarge` | 756 s | 64,011 | 0.6381 | 0.1572 |
+| Intel Xeon 6975P-C, SAM to disk | `c8i.4xlarge` | 1081 s | 44,766 | 0.7497 | 0.2580 |
+| AMD EPYC 9R45, SAM to disk | `c8a.4xlarge` | 718 s | 67,399 | 0.8622 | 0.2038 |
 
 **Take the newest generation, and 16 cores.** Graviton2→5: rate card +28%, wall −46%, result **28% cheaper**; peak RSS is 8.7 GiB on all four, so 32 GiB is right. More cores scale almost perfectly (3.8× on 4×) and compute-only cost barely moves (+5.7%) — but **billed cost rises 40%**, because ~95 s of boot-and-staging is charged whatever the box costs. 64 cores buys wall-clock, not savings. Same generation on x86 (bioconda's x86 build of the same version, compared against Graviton4's SAM-to-disk row, whose billed time includes counting the SAM afterwards): over two clean runs AMD is 1.05–1.19× faster than Graviton4 but 14–28% dearer per result on compute, and Intel is 1.22–1.43× slower, on 8 SMT cores. The SAM record counts are identical on all three ([measured](../../measurements/bwa-real/README.md)).
 
@@ -104,9 +104,10 @@ it is 11% of the 16-core run and **33% of the 64-core run**, charged at 4× the 
 measures rank the same runs differently and only one is the invoice. Full method and raw
 results: [measurements/bwa-real](../../measurements/bwa-real/README.md).
 
-**bwa is a fourth scaling shape** beyond the three in [sizing](../../patterns/sizing.md): the
-answer is stable, the speedup near-linear, and compute cost flat — so the only thing bending
-its curve is fixed overhead, which makes the data path the lever, not the chip.
+**No speed knee through 64 cores, and the cost minimum at 16** — none of the three shapes in
+[sizing](../../patterns/sizing.md), and the same reading as [bowtie2](../bowtie2/README.md): the
+answer is stable and compute cost flat, so the only thing bending its curve is fixed overhead,
+which makes the data path the lever, not the chip.
 
 ### The data path
 

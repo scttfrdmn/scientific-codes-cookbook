@@ -5075,7 +5075,7 @@
       "size"
      ],
      "id": "knee",
-     "note": "4.00x on 4x the cores, 100.1% parallel efficiency; compute $ invariant ($0.1730-0.1737), billed $ rises only because ~84 s of fixed overhead is billed at the higher rate",
+     "note": "no speed knee through 64 (on wall): 4.00x on 4x the cores, 100.1% parallel efficiency, compute $ invariant ($0.1730-0.1737). The cost minimum is at 16 (on billed; the derived cost knee): billed $ rises only because ~84 s of fixed overhead is billed at the higher rate",
      "verdict": {
       "on": "wall",
       "shape": "no-knee",
@@ -6031,9 +6031,9 @@
     {
      "arch": "arm64",
      "avg_cores": 15.18,
-     "billed_basis": "ec2",
-     "billed_s": 946,
-     "billed_usd": 0.1677,
+     "billed_basis": "spawn-task",
+     "billed_s": 887,
+     "billed_usd": 0.1572,
      "binding": "cpu",
      "chip": "Graviton4",
      "compute_usd": 0.134,
@@ -6041,6 +6041,7 @@
      "data_path": "stage-default",
      "date": "2026-10-24",
      "date_source": "run",
+     "ec2_s": 946,
      "effective_usd_hr": 0.672,
      "generation": 8,
      "id": "chip-c8g",
@@ -6053,7 +6054,7 @@
      ],
      "instance": "c8g.4xlarge",
      "n": 1,
-     "note": "memory.current reads 20.19 GiB: page cache from the SAM write",
+     "note": "task bwareal-c8g-16t-fix121; memory.current reads 20.19 GiB: page cache from the SAM write",
      "peak_gib": 8.68,
      "peak_kind": "cgroup-anon-max",
      "pin_current": true,
@@ -6078,15 +6079,16 @@
     {
      "arch": "x86_64",
      "avg_cores": 15.31,
-     "billed_basis": "ec2",
-     "billed_s": 1306,
-     "billed_usd": 0.272,
+     "billed_basis": "spawn-task",
+     "billed_s": 1239,
+     "billed_usd": 0.258,
      "binding": "cpu",
      "compute_usd": 0.2251,
      "concurrent": 1,
      "data_path": "stage-default",
      "date": "2026-10-24",
      "date_source": "run",
+     "ec2_s": 1305,
      "effective_usd_hr": 0.783,
      "generation": 8,
      "id": "chip-c8i",
@@ -6100,7 +6102,7 @@
      ],
      "instance": "c8i.4xlarge",
      "n": 1,
-     "note": "bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT",
+     "note": "task bwareal-c8g-16t-x8664-fix121; bioconda x86 build of the same 0.7.19-r1273; 16 vCPUs = 8 cores x 2 SMT",
      "peak_gib": 8.68,
      "peak_kind": "cgroup-anon-max",
      "pin_current": true,
@@ -6125,15 +6127,16 @@
     {
      "arch": "amd",
      "avg_cores": 15.19,
-     "billed_basis": "ec2",
-     "billed_s": 880,
-     "billed_usd": 0.2108,
+     "billed_basis": "spawn-task",
+     "billed_s": 851,
+     "billed_usd": 0.2038,
      "binding": "cpu",
      "compute_usd": 0.172,
      "concurrent": 1,
      "data_path": "stage-default",
      "date": "2026-10-24",
      "date_source": "run",
+     "ec2_s": 881,
      "effective_usd_hr": 0.909,
      "generation": 8,
      "id": "chip-c8a",
@@ -6147,7 +6150,7 @@
      ],
      "instance": "c8a.4xlarge",
      "n": 1,
-     "note": "bioconda x86 build of the same 0.7.19-r1273",
+     "note": "task bwareal-c8g-16t-amd-fix121; bioconda x86 build of the same 0.7.19-r1273",
      "peak_gib": 8.68,
      "peak_kind": "cgroup-anon-max",
      "pin_current": true,
@@ -6479,10 +6482,10 @@
       "size"
      ],
      "id": "knee",
-     "note": "3.79x faster on 4x the cores; compute $ +5.7%, billed +40% because 93-97 s of fixed overhead is billed at 4x the rate",
+     "note": "no speed knee through 64 (on wall): 3.79x faster on 4x the cores, compute $ +5.7%. The cost minimum is at 16 (on billed; the derived cost knee): billed +40% because 93-97 s of fixed overhead is billed at 4x the rate",
      "verdict": {
-      "on": "billed_usd",
-      "shape": "cost-climbs",
+      "on": "wall",
+      "shape": "no-knee",
       "through": 64
      }
     },
@@ -6498,7 +6501,7 @@
       "points": [
        {
         "axis": "AMD",
-        "billed_usd": 0.2108,
+        "billed_usd": 0.2038,
         "compute_usd": 0.172,
         "id": "chip-c8a",
         "instance": "c8a.4xlarge",
@@ -6508,7 +6511,7 @@
        },
        {
         "axis": "AWS Graviton4",
-        "billed_usd": 0.1677,
+        "billed_usd": 0.1572,
         "compute_usd": 0.134,
         "id": "chip-c8g",
         "instance": "c8g.4xlarge",
@@ -6518,7 +6521,7 @@
        },
        {
         "axis": "Intel",
-        "billed_usd": 0.272,
+        "billed_usd": 0.258,
         "compute_usd": 0.2251,
         "id": "chip-c8i",
         "instance": "c8i.4xlarge",
@@ -22955,9 +22958,9 @@
      "in": [
       "launch-default"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 1,
      "region": "us-east-1",
@@ -22970,7 +22973,6 @@
      "threads_per_rank": 8,
      "throughput": 1.891,
      "variant": "first sweep: default mpirun -np R binding (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -22989,9 +22991,9 @@
      "in": [
       "launch-default"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 2,
      "region": "us-east-1",
@@ -23004,7 +23006,6 @@
      "threads_per_rank": 4,
      "throughput": 3.686,
      "variant": "first sweep: default mpirun -np R binding (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23023,9 +23024,9 @@
      "in": [
       "launch-default"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 4,
      "region": "us-east-1",
@@ -23038,7 +23039,6 @@
      "threads_per_rank": 2,
      "throughput": 7.132,
      "variant": "first sweep: default mpirun -np R binding (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23057,9 +23057,9 @@
      "in": [
       "launch-default"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 8,
      "region": "us-east-1",
@@ -23072,7 +23072,6 @@
      "threads_per_rank": 1,
      "throughput": 13.469,
      "variant": "first sweep: default mpirun -np R binding (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23091,9 +23090,9 @@
      "in": [
       "launch-bound"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 1,
      "region": "us-east-1",
@@ -23106,7 +23105,6 @@
      "threads_per_rank": 8,
      "throughput": 13.503,
      "variant": "re-run: --map-by slot:PE=T --bind-to core (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23125,9 +23123,9 @@
      "in": [
       "launch-bound"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 2,
      "region": "us-east-1",
@@ -23140,7 +23138,6 @@
      "threads_per_rank": 4,
      "throughput": 12.929,
      "variant": "re-run: --map-by slot:PE=T --bind-to core (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23159,9 +23156,9 @@
      "in": [
       "launch-bound"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 4,
      "region": "us-east-1",
@@ -23174,7 +23171,6 @@
      "threads_per_rank": 2,
      "throughput": 13.168,
      "variant": "re-run: --map-by slot:PE=T --bind-to core (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -23193,9 +23189,9 @@
      "in": [
       "launch-bound"
      ],
-     "instance": "c8g.2xlarge",
+     "instance": "c8g.unrecorded",
      "n": 1,
-     "note": "family of the 8-core box not stated in the README for this section",
+     "note": "no log records the instance: run.log gives 8 cores, the README names no box for this section. The session reported c8g.2xlarge (the session's account, not an artifact), so the size is not recorded",
      "purpose": "core-sweep",
      "ranks": 8,
      "region": "us-east-1",
@@ -23208,7 +23204,6 @@
      "threads_per_rank": 1,
      "throughput": 13.486,
      "variant": "re-run: --map-by slot:PE=T --bind-to core (session record)",
-     "vcpus": 8,
      "vendor": "AWS",
      "workers": 8
     },
@@ -24095,28 +24090,28 @@
        {
         "axis": "1x8",
         "id": "launch-default-1x8",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 1.891
        },
        {
         "axis": "2x4",
         "id": "launch-default-2x4",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 3.686
        },
        {
         "axis": "4x2",
         "id": "launch-default-4x2",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 7.132
        },
        {
         "axis": "8x1",
         "id": "launch-default-8x1",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 13.469
        }
@@ -24140,28 +24135,28 @@
        {
         "axis": "1x8",
         "id": "launch-bound-1x8",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 13.503
        },
        {
         "axis": "2x4",
         "id": "launch-bound-2x4",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 12.929
        },
        {
         "axis": "4x2",
         "id": "launch-bound-4x2",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 13.168
        },
        {
         "axis": "8x1",
         "id": "launch-bound-8x1",
-        "instance": "c8g.2xlarge",
+        "instance": "c8g.unrecorded",
         "n": 1,
         "throughput": 13.486
        }
