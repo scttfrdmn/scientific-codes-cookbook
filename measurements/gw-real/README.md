@@ -55,7 +55,7 @@ locked linux-64 twin:
 | AMD (EPYC 9R45) | `c8a.16xlarge` | **3,498 s** | **3,543 s** | 33.5 GiB | 3.4486 | 3.35 | 3.39 |
 
 A *result* is one event, searched and fully characterised. *Tool wall* is search plus PE; *billed* is
-launch to the end of the task. Peak memory is the cgroup's `memory.peak` (page cache included); the
+spawn's task window, wrapper start to stage-out done (boot is before it). Peak memory is the cgroup's `memory.peak` (page cache included); the
 largest single process was 0.97 GiB.
 
 - **The sampler is 96% of the run.** The search takes 52–88 s. Sampling takes 3,376 s (AMD), 4,234 s
@@ -229,6 +229,13 @@ Arm 2: 20,534,663 calls, ln BF 304.515 ± 0.247, `quantiles.tsv` identical, $3.1
 `quantiles.tsv` and `walks.tsv` identical, $5.75 (8,117 s). Only timings differ (≤1.1%), so the seeded sampler
 path is deterministic on `c8g.16xlarge` at 64 processes; the result `.hdf5` files differ in bytes
 but not in any recorded statistic.
+
+**Spend the tables leave out** (spawn's `cost_estimate`, [`results/billed-windows.txt`](results/billed-windows.txt)):
+arm 1's failed first attempt (`a1`, 237 s, $0.17); the naccept probe's first attempt on a `c8g.xlarge`
+(`p1`, $0.01) and the `c8g.16xlarge` attempt whose results are the ones used (`p2`, 339 s, $0.24);
+`00-fetch` ($0.01); and the pre-r1 tasks of 2026-10-19/20: probes `p1` ($0.004) and `p2` ($0.03), debug
+tasks `debug1` and `debug2` ($0.004 each), `p4` (failed, 5,880 s, $1.04) and `p3`, killed by its cost
+limit after 8,479 s, whose record carries no cost estimate.
 
 ## Fixed point or path
 

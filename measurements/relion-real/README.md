@@ -43,8 +43,11 @@ on every chip (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
 |---|---|---|---|---|---|---|---|
 | **Graviton4** | `c8g.16xlarge` | 444 s | 550 s | 20.3 GiB | 2.5523 | **0.315** | **0.390** |
 | Intel (Xeon 6) | `c8i.16xlarge` | 648 s | 734 s | 22.9 GiB | 2.9987 | 0.540 | 0.611 |
-| AMD (EPYC 9R45) | `c8a.16xlarge` | **384 s** | **521 s** | 24.2 GiB | 3.4486 | 0.368 | 0.499 |
+| AMD (EPYC 9R45) | `c8a.16xlarge` | **384 s** | **470 s** | 24.2 GiB | 3.4486 | 0.368 | 0.450 |
 | Intel, `--cpu` kernels | `c8i.16xlarge` | 751 s | 854 s | 21.2 GiB | 2.9987 | 0.626 | 0.711 |
+
+*Billed* is spawn's task window, wrapper start to stage-out done, from each task's completion
+record ([`results/billed-windows.txt`](results/billed-windows.txt)).
 
 - **1.46× faster and 42% cheaper in compute (36% billed) on Graviton4**, on the same code path.
   Per vCPU, which is what is rented: 64 cores on `c8g`, 32 cores × 2 hyperthreads on `c8i`.
@@ -52,7 +55,7 @@ on every chip (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
   Expectation passes are the gap.
 - **AMD is 1.16× faster than Graviton4 and 1.69× faster than Intel**, on the same code path, with
   64 full cores on `c8a` (`avg_cores` 48.2 of 64). Its hour is 35% dearer than Graviton4's, so it
-  costs 17% more in compute and 28% more billed; against Intel it is 32% cheaper in compute.
+  costs 17% more in compute and 15% more billed; against Intel it is 32% cheaper in compute.
 - **n = 3 on Graviton4 (444, 444, 451 s), n = 2 on Intel (648, 651 s) and n = 1 on AMD**, so the
   Graviton4–Intel difference is 30× the run-to-run spread. The rows show the first run of each. On
   AMD only the 9 × 8 default path was run; the `--cpu`, 9 × 1 and 3 × 1 rungs were not.
@@ -63,8 +66,8 @@ on every chip (aarch.bio arm64 / bioconda x86 builds), same staged bytes:
 - **Fewer, wider ranks pay.** The same refinement at 9 ranks × 1 thread on an `m8g.2xlarge`
   (8 vCPU) took 2,439–2,480 s, and at 3 ranks × 1 thread on an `m8g.xlarge` 8,141–8,329 s
   (~$0.41): 64 vCPU is 5.5× the speed of 8 for 8× the cores.
-- **Compute-dominated:** 86–106 s of boot, Docker install, image pull and staging around 7–11 min
-  of RELION. The 0.88 GB of particles and references stage in seconds.
+- **Compute-dominated:** 86–106 s of Docker install, image pull and staging around 7–11 min
+  of RELION (boot comes before the billed window). The 0.88 GB of particles and references stage in seconds.
 - Peak RSS is the container cgroup, 20–24 GiB of 128: 8 followers each pre-read the 0.58 GB
   particle stack (`--preread_images`).
 - Prices are on-demand us-west-2 from the AWS Price List API; spawn printed none on these
@@ -162,7 +165,7 @@ stacks, so it cannot feed a refinement. The RELION authors' tutorial release is 
 filename and has not changed since 2023-10-26; `fetch.sh` streams it on an `m8g.large` (446 s, the
 11.3 GB never written to disk) and keeps 0.88 GB.
 
-**AMD leg:** one launch, first-attempt green, $0.499 billed; its check output and digests are in
+**AMD leg:** one launch, first-attempt green, $0.450 billed; its check output and digests are in
 [`results/amd/`](results/amd/). It ran the committed spec with spawn
 0.131.1 built from its release tag, because the installed 0.139.1's own wrapper leaves too little of
 EC2's 16 KiB user data (spawn#1246), and with `cost_limit` lowered from the resolved $6.40 to $3.00.

@@ -55,7 +55,9 @@ Same staged bytes, same thread count:
 
 A *result* is the whole set, all 66 dimers with every check passed: $0.022 per dimer billed on AMD.
 The set also includes the 12 control jobs below. *Tool wall* is `psi4_s66.py`. *Billed* is EC2 launch
-to termination, at spawn's printed price. *Process* is the largest single Psi4 `ru_maxrss`. *Box* is
+to termination (CloudTrail, [`results/billed-windows.txt`](results/billed-windows.txt)), at spawn's printed
+price. It is EC2's window rather than spawn's because the AMD run reused Graviton4's task id
+`cookbook-psi4-real-real-r2` and overwrote its completion record, so Graviton4 has no spawn window. *Process* is the largest single Psi4 `ru_maxrss`. *Box* is
 the cgroup's `memory.peak`, which also counts page cache.
 
 - **AMD is 1.89× faster than Graviton4, and 27% cheaper per set billed.** Intel is 1.55× faster and

@@ -41,11 +41,11 @@ mageck mle  -k screen.count.txt -d design.txt --control-sgrna controls.txt --thr
 
 | chip | instance | count / RRA / MLE | $/hr | **billed $/result** |
 |---|---|---|---|---|
-| Graviton4 | `m8g.2xlarge` | 1224 / 11 / 86 s | 0.3590 | 0.142 |
-| Xeon 6975P-C | `m8i.2xlarge` | 738 / 8 / 91 s | 0.4234 | 0.111 |
-| **EPYC 9R45** | `m8a.2xlarge` | **530** / 7 / 55 s | 0.4869 | **0.097** |
+| Graviton4 | `m8g.2xlarge` | 1224 / 11 / 86 s | 0.3590 | 0.294 |
+| Xeon 6975P-C | `m8i.2xlarge` | 738 / 8 / 91 s | 0.4234 | 0.219 |
+| **EPYC 9R45** | `m8a.2xlarge` | **530** / 7 / 55 s | 0.4869 | **0.184** |
 
-**Take AMD: 2.2× faster, 32% cheaper, byte-identical output.** `count` is single-threaded Python and 93% of the run. The arm64 image's Python has no PGO/LTO, so part of the gap is the build.
+**Take AMD: 2.2× faster, 37% cheaper, byte-identical output.** `count` is single-threaded Python and 93% of the run. The arm64 image's Python has no PGO/LTO, so part of the gap is the build. Billed is spawn's task window, which includes 700–1,500 s of in-task verification your own run would skip.
 
 ## Shape, size, cost
 

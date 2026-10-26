@@ -68,7 +68,7 @@ Stranding is the on-prem problem (a node's core:memory ratio is welded in) and t
 
 | recipe | what binds | move | result |
 |---|---|---|---|
-| [fastp](../recipes/fastp/README.md) | staging footprint | `c8g.4xlarge` → `m8g.2xlarge` | 44% cheaper, 16 unusable cores shed |
+| [fastp](../recipes/fastp/README.md) | staging footprint | `c8g.4xlarge` → `m8g.2xlarge` | 41% cheaper per run, 16 unusable cores shed |
 | [flye](../recipes/flye/README.md) | assembler working set | `m8g` → `c8g.2xlarge` | 11% cheaper, idle RAM shed |
 | [kraken2](../recipes/kraken2/README.md) | index + its compressed copy | forced to 64 GiB | 8 vCPU arrive unneeded |
 

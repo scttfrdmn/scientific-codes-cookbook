@@ -51,7 +51,7 @@ arm64, its `astro-ed5afa726bbe` linux-64 twin on both x86 chips) and the same st
 | AMD (EPYC 9R45) | `c8a.2xlarge` | **29 s** | **87 s** | 0.86 GiB | 0.4311 | 0.0035 | 0.0104 |
 
 A *result* is the whole run analysed, all 51 outputs. *Tool wall* is `real.py`, and *billed* is
-spawn's launch-to-terminate window. Peak RSS is the largest single worker's `ru_maxrss`.
+spawn's task window, wrapper start to stage-out done. Peak RSS is the largest single worker's `ru_maxrss`.
 
 - **Graviton4 is cheapest billed: AMD is 9% dearer and Intel 32% dearer.** AMD is 1.1x faster
   than Graviton4, but its hour costs 35% more, so it is also 24% dearer on compute alone. Intel's 8 vCPUs are 4 cores × 2

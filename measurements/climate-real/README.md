@@ -2,7 +2,7 @@
 
 > **A full year of hourly ERA5 at 0.25° reproduces Copernicus's published 2023 numbers to
 > 0.003 °C on all three chips, and every non-timing output is byte-identical across them.**
-> AMD is the fastest and cheapest (1.33× Graviton4, 9% cheaper billed). Graviton4 beats Intel
+> AMD is the fastest and cheapest (1.33× Graviton4, 5% cheaper billed). Graviton4 beats Intel
 > by 1.13× and is 20% cheaper.
 
 Workload: **all 8,760 hours of 2023** of ERA5 2 m temperature on the native 721 × 1,440 grid —
@@ -36,20 +36,20 @@ data (spawn#1246). Neither change touches what is computed or asserted.
 
 | chip | instance | read passes: dask ×3 / eager | era5.py wall | $/hr | compute $/result | billed | **billed $/result** | peak RSS |
 |---|---|---|---|---|---|---|---|---|
-| Graviton4 | `r8g.2xlarge` | 239 / 240 / 237 / 163 s | 884 s | 0.4713 | 0.1157 | 1068 s | **0.1398** | 30.9 GiB |
-| Xeon 6975P-C | `r8i.2xlarge` | 266 / 269 / 255 / 206 s | 1001 s | 0.5557 | 0.1545 | 1129 s | **0.1743** | 32.7 GiB |
+| Graviton4 | `r8g.2xlarge` | 239 / 240 / 237 / 163 s | 884 s | 0.4713 | 0.1157 | 1021 s | **0.1337** | 30.9 GiB |
+| Xeon 6975P-C | `r8i.2xlarge` | 266 / 269 / 255 / 206 s | 1001 s | 0.5557 | 0.1545 | 1084 s | **0.1673** | 32.7 GiB |
 | EPYC 9R45 | `r8a.2xlarge` | 180 / 186 / 174 / 120 s | **663 s** | 0.6390 | **0.1177** | 716 s | **0.1271** | 33.1 GiB |
 
-A *result* is the whole verified year: every reduction and check below. **Billed** is launch to
-terminate.
+A *result* is the whole verified year: every reduction and check below. **Billed** is spawn's task
+window, wrapper start to stage-out done ([`results/billed-windows.txt`](results/billed-windows.txt)).
 
 - **AMD is 1.33× faster than Graviton4 on every pass, which more than covers its 36% dearer
-  hour: 9% cheaper billed.** Its 8 vCPUs are 8 full cores (`Thread(s) per core: 1`), while
+  hour: 5% cheaper billed.** Its 8 vCPUs are 8 full cores (`Thread(s) per core: 1`), while
   Intel's are 4 cores × 2 SMT threads. Graviton4 is 1.13× faster than Intel and 20% cheaper
   billed (25% on compute alone). The run is four full reads of the year. The work per pass is
   netCDF4 decode plus a float64 reduction, the same on every chip.
-- **Compute-dominated**: boot, Docker, image pull and staging are 1–3 minutes of a 12–19 minute
-  bill. Staging 13.35 GB from the bucket into `/tmp` took 32 s (Graviton4), 41 s (Intel) and
+- **Compute-dominated**: Docker, image pull and staging are 53–137 s of a 12–18 minute billed
+  window (boot comes before it). Staging 13.35 GB from the bucket into `/tmp` took 32 s (Graviton4), 41 s (Intel) and
   31 s (AMD).
 - **Memory picks the family, not the cores.** Staging lives in tmpfs (½ RAM), so 13.35 GB of
   input needs a 32 GiB `/tmp` before any compute, and the run peaks at 31–33 GiB on top: `r8g`.

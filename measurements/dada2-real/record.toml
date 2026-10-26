@@ -1,7 +1,7 @@
 # measurements/dada2-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the README's "launch to terminate" = the EC2 window (CloudTrail,
 # results/billed-windows.txt). Peak is the 2 s max of memory.stat anon. The runs are 2026-10-18
-# (completion records); the rows carry the git date.
+# (completion records), the date the rows carry.
 schema = 2
 result_unit = "one whole 16S study denoised (Kozich 2013 stability run, 362 samples) plus the tutorial reproduction"
 
@@ -40,8 +40,8 @@ purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/box.txt"
 workers = 16
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 354
 billed_s = 526
 usd_hr = 0.6381
@@ -61,8 +61,8 @@ purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/box.txt"
 workers = 16
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 443
 billed_s = 586
 usd_hr = 0.7497
@@ -82,8 +82,8 @@ purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/box.txt"
 workers = 16
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 311
 billed_s = 461
 usd_hr = 0.8622

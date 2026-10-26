@@ -39,16 +39,18 @@ vol = tomopy.recon(t, theta, center=1323.11, algorithm="gridrec", filter_name="s
 runs use the `tomography` env's linux-64 twin (tomopy 1.15.3, astra 2.5.0, numpy 2.5.4, FFTW 3.3.11).
 Same staged bytes, same `ncore`:
 
-| chip | instance | cores × threads | TomoPy wall (one volume) | billed | peak RSS (main / box) | $/hr | compute $/result | billed $/result |
-|---|---|---|---|---|---|---|---|---|
-| **Graviton4** | `r8g.4xlarge` | 16 × 1 | **279 s** | 463 s | 22.7 / 24.2 GiB | 0.9426 | **0.073** | **0.121** |
-| Xeon 6975P-C | `r8i.4xlarge` | 8 × 2 | 466 s | 673 s | 23.0 / 24.4 GiB | 1.1114 | 0.144 | 0.208 |
-| EPYC 9R45 | `r8a.4xlarge` | 16 × 1 | 282 s | 443 s | 23.0 / 23.9 GiB | 1.2781 | 0.100 | 0.157 |
+| chip | instance | cores × threads | TomoPy wall (one volume) | + overhead | billed (whole task) | peak RSS (main / box) | $/hr | compute $/result | $/volume, checks excluded | billed $ (whole task) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Graviton4** | `r8g.4xlarge` | 16 × 1 | **279 s** | 463 s | 5710 s | 22.7 / 24.2 GiB | 0.9426 | **0.073** | **0.121** | **1.50** |
+| Xeon 6975P-C | `r8i.4xlarge` | 8 × 2 | 466 s | 673 s | 8321 s | 23.0 / 24.4 GiB | 1.1114 | 0.144 | 0.208 | 2.57 |
+| EPYC 9R45 | `r8a.4xlarge` | 16 × 1 | 282 s | 443 s | 5113 s | 23.0 / 23.9 GiB | 1.2781 | 0.100 | 0.157 | 1.82 |
 
 **TomoPy wall** is the pipeline: read all 1,731 TIFFs into RAM, find the centre (Vo on 9 rows plus
-the 0/180° mirror), normalise and `-log`, and gridrec on all 2,160 rows. **Billed** is that plus
-spawn's overhead (stage-in of 42.4 GB, Docker, image pull or env install, stage-out: 161–207 s). The
-checks are excluded and costed separately below. $/hr is spawn's estimate. **Peak RSS**: *main* is
+the 0/180° mirror), normalise and `-log`, and gridrec on all 2,160 rows. **+ overhead** adds
+spawn's overhead (stage-in of 42.4 GB, Docker, image pull or env install, stage-out: 161–207 s) and
+is what one volume costs without the checks; it is constructed, not a window. **Billed** is the
+whole task, spawn's window from wrapper start to stage-out done
+([`results/billed-windows.txt`](results/billed-windows.txt)), checks included. $/hr is spawn's estimate. **Peak RSS**: *main* is
 `ru_maxrss`; *box* is the container cgroup's `memory.peak`.
 
 | phase (s) | Graviton4 | Xeon | EPYC |
@@ -63,7 +65,8 @@ checks are excluded and costed separately below. $/hr is spawn's estimate. **Pea
 - **Gridrec is 54% of the pipeline, and Vo's centre search over a third.** `find_center_vo` on 9 rows
   costs as much as two thirds of the whole volume's gridrec. A centre found once per scan, not per
   slice, is the right habit.
-- **Graviton4 is cheapest per result: 23% under AMD and 42% under Intel, billed.** AMD's cores are as
+- **Graviton4 is cheapest per volume: 23% under AMD and 42% under Intel, checks excluded** (18% and
+  42% on the whole billed task). AMD's cores are as
   fast (gridrec within 6%), but its hour costs 36% more. Intel's box has 8 physical cores with SMT,
   and its gridrec is 1.5× slower.
 - **The box is picked by staging, not by TomoPy.** The process peaks at 23 GiB, of which 15.5 GiB is
@@ -73,12 +76,12 @@ checks are excluded and costed separately below. $/hr is spawn's estimate. **Pea
   at tuned concurrency stages both zips in 27 s instead of 149 s. Reading them through lith on a
   64 GiB `m8g.4xlarge` works, with every assertion identical, but fetches 10× the bytes
   ([lith-vs-copy-real](../lith-vs-copy-real/README.md)).
-- **The checks are the bill here, not TomoPy.** Whole-task windows were 5,713 s / 8,323 s / 5,116 s
+- **The checks are the bill here, not TomoPy.** Whole-task windows were 5,710 s / 8,321 s / 5,113 s
   ($1.50 / $2.57 / $1.82). 86% of that is astra's CPU CGLS: 30 iterations on 2656² takes 78 min on
   Graviton4, and one forward projection of a 2656² slice takes 54–75 s depending on the chip.
 - n = 1 per chip; run-to-run repeatability was not measured. Within a chip, re-pairing slices moves
   a voxel by < 1e-6 of the peak (below), too little to move any asserted decision. These timings
-  are not compute cost: boot and staging are in the billed column.
+  are not compute cost: staging is in the overhead and billed columns (boot comes before the window).
 
 ## What held at scale, on all three chips
 

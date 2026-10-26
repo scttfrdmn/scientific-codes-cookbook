@@ -40,16 +40,16 @@ until the staged input stops fitting.
 
 | generation | instance | `stats` + `fq2fa` | compute $ | billed $ |
 |---|---|---|---|---|
-| Graviton2 | `c6g.2xlarge` | 143 s | 0.0108 | 0.0227 |
-| Graviton3 | `c7g.2xlarge` | 110 s | 0.0089 | 0.0186 |
-| Graviton4 | `c8g.2xlarge` | 93 s | 0.0082 | 0.0201 |
-| **Graviton5** | `c9g.2xlarge` | **76 s** | **0.0073** | **0.0160** |
-| Intel Xeon 6975P-C | `c8i.2xlarge` (4 cores × 2) | 86 s | 0.0090 | 0.0173 |
-| AMD EPYC 9R45 | `c8a.2xlarge` (8 cores) | 72 s | 0.0086 | 0.0193 |
+| Graviton2 | `c6g.2xlarge` | 143 s | 0.0108 | 0.0227 ‡ |
+| Graviton3 | `c7g.2xlarge` | 110 s | 0.0089 | 0.0186 ‡ |
+| Graviton4 | `c8g.2xlarge` | 93 s | 0.0082 | **0.0121** |
+| **Graviton5** | `c9g.2xlarge` | **76 s** | **0.0073** | 0.0160 ‡ |
+| Intel Xeon 6975P-C | `c8i.2xlarge` (4 cores × 2) | 86 s | 0.0090 | 0.0132 |
+| AMD EPYC 9R45 | `c8a.2xlarge` (8 cores) | 72 s | 0.0086 | 0.0127 |
 
 **1.88× over four generations**; in the 8th, AMD is fastest and Graviton4 cheapest per result, and every
-count is identical on all six chips. **Read the compute column:** at ~90 s of work the billed one is boot
-noise — it puts Graviton3 ahead of Graviton4 ([which comparison applies](../../patterns/cost-per-result.md)).
+count is identical on all six chips. **Read the compute column:** at ~90 s of work a third of the billed window is fixed
+startup, and ‡ the Graviton2/3/5 billed windows are not in the committed record, so billed is not compared across generations ([which comparison applies](../../patterns/cost-per-result.md)). Billed is spawn's task window on the 8th-generation rows.
 
 <details>
 <summary>As shipped: a read count three tools agree on, conversion conservation, pins</summary>

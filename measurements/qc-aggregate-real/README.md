@@ -2,8 +2,8 @@
 
 > **446M reads in eleven whole runs, every FastQC count exact against a recount and a published
 > number, every output byte-identical on all three chips.** AMD is 1.40× faster than Graviton4.
-> Graviton4 is still the cheapest per billed result, because a FastQC cohort spends a third of its
-> bill staging the reads.
+> Graviton4 is still the cheapest per billed result, because a FastQC cohort spends half of its
+> billed window outside FastQC, staging and re-verifying the reads.
 
 Workload: **eleven complete FASTQ files from seven public runs and four assays**, 22.9 GB
 compressed, 446.0M reads, 32.2 Gbp. This is the size of a sequencing core's mixed project
@@ -44,22 +44,24 @@ staged script sha256-pinned in the command.
 
 11 FastQC threads, one `4xlarge` (16 vCPU, 64 GiB) per chip, same input bytes:
 
-| chip | instance | FastQC wall | MultiQC wall | overhead | peak RSS | $/hr | compute $/result | **billed $/result** |
-|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `m8g.4xlarge` | 231 s | 2 s | 109 s | 4.41 GiB | 0.7181 | 0.0461 | **0.0695** |
-| Xeon 6975P-C | `m8i.4xlarge` | 220 s | 2 s | 128 s | 3.95 GiB | 0.8467 | 0.0518 | 0.0843 |
-| **EPYC 9R45** | `m8a.4xlarge` | **165 s** | 2 s | **96 s** | 4.22 GiB | 0.9738 | **0.0447** | 0.0724 |
+| chip | instance | FastQC wall | MultiQC wall | overhead | FastQC billed | peak RSS | $/hr | compute $/result | **billed $/result** |
+|---|---|---|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.4xlarge` | 231 s | 2 s | 109 s | 482 s | 4.41 GiB | 0.7181 | 0.0461 | **0.0978** |
+| Xeon 6975P-C | `m8i.4xlarge` | 220 s | 2 s | 128 s | 477 s | 3.95 GiB | 0.8467 | 0.0518 | 0.1147 |
+| **EPYC 9R45** | `m8a.4xlarge` | **165 s** | 2 s | **96 s** | 361 s | 4.22 GiB | 0.9738 | **0.0447** | 0.0994 |
 
 *Overhead* is the FastQC task's spawn window minus its command: stage-in of 22.9 GB (71–98 s),
-Docker install, image pull, stage-out. *Billed $/result* is FastQC wall plus overhead at spawn's
-printed price, plus the whole MultiQC task (`c8g/c8i/c8a.large`, 60–95 s, under $0.003). The
-windows also hold 95–135 s of verification (re-hashing 22.9 GB, the recount) that a user would not
-run. Peak RSS is the container's anon memory over all eleven JVMs. **These timings are not compute
+Docker install, image pull, stage-out. *FastQC billed* is that whole window, wrapper start to
+stage-out done ([`results/billed-windows.txt`](results/billed-windows.txt)); besides FastQC and the
+overhead it holds 100–142 s of in-task verification (re-hashing 22.9 GB, the recount and its
+bookkeeping) that a user would not run. *Billed $/result* is the FastQC window at spawn's printed
+price plus the whole MultiQC task (`c8g/c8i/c8a.large`, 60–95 s, under $0.003), the two completion
+records' `cost_estimate`. Peak RSS is the container's anon memory over all eleven JVMs. **These timings are not compute
 cost:** boot before spawn's wrapper starts is not in any window.
 
 - **AMD is 1.40× and Intel 1.05× faster than Graviton4.** AMD's lead covers its 36% higher hourly
-  price on compute (3% cheaper). Billed, Graviton4 is cheapest (4% under AMD, 18% under Intel),
-  because overhead is a third of every bill and costs more per second on the dearer chips.
+  price on compute (3% cheaper). Billed, Graviton4 is cheapest (2% under AMD, 15% under Intel),
+  because overhead and verification are half of every window and costs more per second on the dearer chips.
 - **The cohort's wall is its largest file.** FastQC parallelises across files, one thread each,
   so the two ~95M-read CRISPR replicates set the wall (99.1M reads in ≤231 s is ≥430k reads/s on one Graviton4 core) and the
   small files finish in the first minute. Average busy cores were **6.3–6.4 of 16** on every chip.

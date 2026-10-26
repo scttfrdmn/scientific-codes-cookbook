@@ -1,6 +1,6 @@
 # FSL on a real workload — a 125-subject T1 cohort, Graviton4, Intel and AMD
 
-> **Graviton4 is the cheapest per subject (44% under Intel, 23% under AMD); AMD is the fastest
+> **Graviton4 is the cheapest per subject (44% under Intel, 21% under AMD); AMD is the fastest
 > (7% under Graviton4, 39% under Intel). Every assertion holds on all three — but on real scans BET
 > is an ARM-vs-x86 path, not a fixed point:** the template mask that was byte-identical across chips
 > in [the recipe](../../recipes/fsl/README.md) is identical for only 102 of 125 subjects here, while
@@ -38,22 +38,26 @@ same lock-verified FSL, same bytes:
 
 | chip | instance | cohort wall | billed | $/hr | compute $/subject | billed $/subject | peak RSS |
 |---|---|---|---|---|---|---|---|
-| **Graviton4** | `c8g.4xlarge` | **2,332 s** | 2,403 s | 0.6381 | **0.00331** | **0.00341** | 15.9 GiB |
-| Intel Xeon 6975P-C | `c8i.4xlarge` | 3,577 s | 3,645 s | 0.7497 | 0.00596 | 0.00607 | 16.1 GiB |
-| AMD EPYC 9R45 | `c8a.4xlarge` | **2,181 s** | 2,321 s | 0.8622 | 0.00418 | 0.00445 | 16.1 GiB |
+| **Graviton4** | `c8g.4xlarge` | **2,332 s** | 2,400 s | 0.6381 | **0.00331** | **0.00340** | 15.9 GiB |
+| Intel Xeon 6975P-C | `c8i.4xlarge` | 3,577 s | 3,642 s | 0.7497 | 0.00596 | 0.00607 | 16.1 GiB |
+| AMD EPYC 9R45 | `c8a.4xlarge` | **2,181 s** | 2,237 s | 0.8622 | 0.00418 | 0.00429 | 16.1 GiB |
+
+*Billed* is spawn's task window, wrapper start to stage-out done (completion records,
+[`results/billed-windows.txt`](results/billed-windows.txt)).
 
 - **1.53× faster, 44% cheaper per subject on Graviton4.** By step (summed over the cohort), Intel
   took 1.37× as long for `robustfov`+`bet`, 1.96× for the 6-DOF FLIRT, 1.71× for the 12-DOF
   FLIRT and 1.52× for FNIRT, which is 80% of the work (212 s of a 267 s subject on Graviton4).
 - **AMD is the fastest box and still not the cheapest:** 7% under Graviton4's wall, but its hour
-  costs 35% more, so Graviton4 stays 23% cheaper per subject. Against Intel, AMD is 1.64× faster
+  costs 35% more, so Graviton4 stays 21% cheaper per subject. Against Intel, AMD is 1.64× faster
   (FNIRT 0.60×, 6-DOF FLIRT 0.56× of Intel's time); against Graviton4 it is faster on BET and FNIRT
   (0.81×, 0.91×) and slower on both FLIRTs (1.09×, 1.23×).
 - **That is per vCPU, which is what is rented:** 16 vCPU is 16 cores on `c8g` and `c8a`
   (`lscpu`: 1 thread per core) and 8 cores × 2 hyperthreads on `c8i`. 16 single-threaded jobs fill
   all three (`avg_cores` 15.17, 15.43, 15.27). AMD's OpenBLAS 0.3.34 selects `Cooperlake` (no Zen 5
   kernel); the Graviton4 and Intel legs did not record theirs.
-- **Compute-dominated:** 68–140 s of boot, install, staging and stage-out against 36–60 min of FSL.
+- **Compute-dominated:** 56–68 s of install, staging and stage-out against 36–60 min of FSL (boot
+  comes before the billed window).
 - Peak RSS is the container cgroup, including the 5.5 GiB of `/tmp` the extracted cohort occupies
   (tmpfs high-water 5.6 GiB on both). ~0.6 GiB per FNIRT, so 2 GiB/vCPU (`c8g`) is ample.
 - n = 1 per cell. FSL is deterministic on a given chip, but not across chips (below).
@@ -110,7 +114,7 @@ each holds on each chip by its own bound, and the cohort statistics agree to thr
 
 Raw per-subject rows for all three chips are in [`results/`](results/), with the cross-chip
 comparisons from [`compare.py`](compare.py) in `results/compare*.txt` (`compare.py arm64 amd`,
-`compare.py x86_64 amd`). Spend for the AMD leg: $0.56 billed.
+`compare.py x86_64 amd`). Spend for the AMD leg: $0.54 billed.
 
 ## Caveats
 

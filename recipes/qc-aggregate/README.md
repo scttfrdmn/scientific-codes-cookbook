@@ -45,11 +45,11 @@ Two tasks on `c8g.large` (2 vCPU / 4 GiB), TTL 15m and 12m, caps $0.05 each. Fas
 
 | chip | instance | FastQC wall | $/hr | compute $ | **billed $/result** | overhead |
 |---|---|---|---|---|---|---|
-| Graviton4 | `m8g.4xlarge` | 231 s | 0.7181 | 0.0461 | **0.0695** | 109 s |
-| Xeon 6975P-C | `m8i.4xlarge` | 220 s | 0.8467 | 0.0518 | 0.0843 | 128 s |
-| EPYC 9R45 | `m8a.4xlarge` | **165 s** | 0.9738 | **0.0447** | 0.0724 | 96 s |
+| Graviton4 | `m8g.4xlarge` | 231 s | 0.7181 | 0.0461 | **0.0978** | 109 s |
+| Xeon 6975P-C | `m8i.4xlarge` | 220 s | 0.8467 | 0.0518 | 0.1147 | 128 s |
+| EPYC 9R45 | `m8a.4xlarge` | **165 s** | 0.9738 | **0.0447** | 0.0994 | 96 s |
 
-**AMD is fastest, Graviton4 cheapest billed:** staging 22.9 GB is a third of every bill. FastQC runs one thread per file, so the wall is the largest file and 16 vCPU averaged 6.3 busy; the box is sized by [tmpfs](../../practices/container-path.md) (21 GiB staged), not cores. Every count was exact against a recount and the published counts, and every output byte-identical on all three chips.
+**AMD is fastest, Graviton4 cheapest billed:** staging and re-verifying 22.9 GB are half of every billed window. FastQC runs one thread per file, so the wall is the largest file and 16 vCPU averaged 6.3 busy; the box is sized by [tmpfs](../../practices/container-path.md) (21 GiB staged), not cores. Every count was exact against a recount and the published counts, and every output byte-identical on all three chips.
 
 <details>
 <summary>As shipped: exact metrics by construction, the silently-short cohort report, the 1000-vs-1000.0 trap, pins</summary>

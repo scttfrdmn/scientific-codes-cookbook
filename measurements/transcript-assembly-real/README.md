@@ -72,8 +72,8 @@ gffcompare is single-threaded and ran on an `xlarge` (4 vCPU, 16 GiB).
 | | Xeon | `m8i.xlarge` | 84 s | 407 s | 6.3 GB† | 0.2117 | 0.0049 | 0.0239 |
 | | EPYC | `m8a.xlarge` | **27 s** | **171 s** | 6.3 GB† | 0.2434 | **0.0018** | **0.0116** |
 
-A *result* is one sample's assembly, checked. *Billed* runs from launch to terminate at spawn's
-printed price. The StringTie window covers all four assemblies and the checks, and the gffcompare
+A *result* is one sample's assembly, checked. *Billed* is spawn's task window, wrapper start to stage-out done, at
+spawn's printed price. The StringTie window covers all four assemblies and the checks, and the gffcompare
 window covers four comparisons (both modes, with and without `-R`). *Peak RSS* is `ru_maxrss` of
 StringTie itself. † gffcompare has no `ru_maxrss` here, so that column is the container's
 `memory.peak`, which includes page cache for the uncompressed annotation. Threads per core: 1 on

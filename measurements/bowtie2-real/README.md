@@ -18,6 +18,9 @@ alignment rate, identical on every rung. Same image digest, same input objects, 
 | Graviton4 | `c8g.4xlarge` | `0xd4f` | 977 s | 1063 s | 0.6381 | **0.1884** | 0.1732 |
 | **Graviton5** | `c9g.4xlarge` | `0xd84` | **746 s** | 824 s | 0.6955 | **0.1592** | **0.1441** |
 
+*Billed* is spawn's task window, wrapper start to stage-out done, in every table here (completion
+records, [`results/billed-windows.txt`](results/billed-windows.txt)).
+
 **2.06× faster and 36.8% cheaper per result** from Graviton2 to Graviton5.
 
 Per-step speedup is **1.37×, 1.15×, 1.31×** — and that middle step is the interesting one.
@@ -36,12 +39,12 @@ biocontainers bowtie2 2.5.5, the same index tar (sha256-checked in task) and the
 | chip | instance | threads/core | bowtie2 | billed | $/hr | **$/run** | compute-only $ | avg_cores |
 |---|---|---|---|---|---|---|---|---|
 | Graviton4 | `c8g.4xlarge` | 1 | 977 s | 1063 s | 0.6381 | 0.1884 | 0.1732 | 15.95 |
-| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1097 s | 1246 s | 0.7497 | 0.2595 | 0.2285 | 15.97 |
-| **EPYC 9R45** | `c8a.4xlarge` | 1 | **666 s** | 761 s | 0.8622 | **0.1823** | **0.1595** | 15.96 |
+| Xeon 6975P-C | `c8i.4xlarge` | 2 | 1097 s | 1164 s | 0.7497 | 0.2424 | 0.2285 | 15.97 |
+| **EPYC 9R45** | `c8a.4xlarge` | 1 | **666 s** | 715 s | 0.8622 | **0.1712** | **0.1595** | 15.96 |
 
-- **AMD is 1.47× faster than Graviton4 and 3% cheaper per run** (8% cheaper on compute). Only
+- **AMD is 1.47× faster than Graviton4 and 9% cheaper per run** (8% cheaper on compute). Only
   Graviton5 (746 s) comes near it. **Intel is the slowest and dearest of the three**: 12% slower
-  than Graviton4 and 38% dearer per run.
+  than Graviton4 and 29% dearer per run.
 - **The likely reason is cores, not instruction set.** 16 vCPU on `c8i` is 8 physical cores with
   SMT; on `c8a` and `c8g` it is 16. bowtie2 scales linearly with cores (the knee sweep below), so
   Intel runs 16 threads on half the cores. Not separated by a measurement here.
@@ -183,7 +186,7 @@ the entire reason this index exists.
 
 ## Caveats
 
-**n = 1 per rung.** Defensible because all eight runs agree on every output statistic to the read,
+**n = 1 per rung.** Defensible because all ten runs agree on every output statistic to the read,
 and because the generation steps and the scaling curve are each smooth. A rung landing off trend
 would need repeating before it could be reported.
 

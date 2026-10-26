@@ -39,7 +39,7 @@ three (aarch.science arm64; its linux-64 twin on both x86 chips), on the same st
 | **AMD (EPYC 9R45)** | `c8a.4xlarge` | **439 s** | **484 s** | 15.5 GiB | 0.8622 | **0.105** | **0.116** |
 
 A *result* is the complete calculation: both GPAW force sets plus the phonopy analysis of all
-four. *Tool wall* is GPAW plus phonopy. *Billed* is spawn's launch-to-terminate window.
+four. *Tool wall* is GPAW plus phonopy. *Billed* is spawn's task window, wrapper start to stage-out done.
 
 - **Almost all of the cost is the DFT forces, not phonopy.** The 64-atom SCF (42 iterations) is
   1,009 / 769 / 398 s. The 16-atom one is 32 / 31 / 18 s. Phonopy's whole analysis of four force

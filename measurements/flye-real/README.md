@@ -13,7 +13,8 @@ measurements/flye-real/chip.task.json` onto bioconda's `linux/amd64` build of 2.
 moved, byte for byte, into a staged sha256-checked file. Both passed every assertion, and
 `assembly.fasta` is byte-identical to Graviton4's (sha256 `0451707a…`), as it is on every
 generation rung: a fixed point. 8 vCPU is 4 cores × 2 hyperthreads on `c8i` and 8 cores on `c8a`
-(`lscpu`). Spend for the two legs: $0.083 billed. Raw per-rung output is in `results/`, with one
+(`lscpu`). Spend for the two legs: $0.0697 billed on spawn's task windows (362 s + 267 s,
+[`results/billed-windows.txt`](results/billed-windows.txt)); $0.083 on their EC2 launch-to-terminate windows. Raw per-rung output is in `results/`, with one
 exception: the recipe page's Graviton4 row (306 s) is the sweep rung, whose output was not kept.
 `smoke-check-c8g-2xl.txt` is the recipe's later run under the exact assertions, at 312 s.
 

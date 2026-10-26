@@ -55,8 +55,8 @@ bioconda on both x86 chips. Same staged bytes on all three:
 | **EPYC 9R45** | `r8a.8xlarge` | manta | **199 s** | 510 s | 3.3 GiB | 2.5562 | 0.141 | 0.362 |
 | | | delly | **890 s** | 1,191 s | 1.1 GiB | | 0.632 | 0.846 |
 
-A *result* is one whole genome called and checked by one caller. *Billed* runs from launch to
-terminate, at spawn's printed price. *Peak RSS* is the largest single process (`ru_maxrss` over
+A *result* is one whole genome called and checked by one caller. *Billed* is spawn's task
+window, wrapper start to stage-out done, at spawn's printed price. *Peak RSS* is the largest single process (`ru_maxrss` over
 manta's pyflow tasks; delly's `VmHWM`); the container's cgroup `memory.peak` is 3.4 and 1.1 GiB.
 Neither caller links a BLAS. Threads per core: 1 on Graviton4 and AMD, 2 on Intel (16 cores).
 

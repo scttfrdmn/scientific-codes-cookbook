@@ -38,17 +38,17 @@ hmmsearch --cpu 8 --cut_ga --noali --tblout hits.tbl -o hmmer.out Pfam-A.hmm pep
 
 | chip | instance | `hmmsearch` | **compute $** | billed $ |
 |---|---|---|---|---|
-| Graviton2 | `c6g.2xlarge` | 2514 s | 0.1900 | 0.2085 |
-| Graviton3 | `c7g.2xlarge` | 1763 s | **0.1420** | **0.1539** |
-| Graviton4 | `c8g.2xlarge` | 1669 s | 0.1479 | 0.1635 |
-| **Graviton5** | `c9g.2xlarge` | **1322 s** | **0.1277** | 0.1373 |
+| Graviton2 | `c6g.2xlarge` | 2514 s | 0.1900 | 0.1971 |
+| Graviton3 | `c7g.2xlarge` | 1763 s | **0.1420** | **0.1479** |
+| Graviton4 | `c8g.2xlarge` | 1669 s | 0.1479 | 0.1635 † |
+| **Graviton5** | `c9g.2xlarge` | **1322 s** | **0.1277** | 0.1328 |
 | Intel (same gen) | `c8i.2xlarge` | 1352 s | 0.1408 | 0.1470 |
 | **AMD (same gen)** | `c8a.2xlarge` | **922 s** | **0.1104** | **0.1162** |
 
 **1.90× over four generations — but Graviton4 is the wrong buy.** It is only 1.06× faster than
-Graviton3 for 10% more per hour, so it costs **4% more per result on compute and 6% more billed**.
-This is the clearest instance of that reversal in the catalog: the job is long enough that boot is a
-tenth of the bill, so compute and billed agree on the direction
+Graviton3 for 10% more per hour, so it costs **4% more per result on compute** († its billed window is unattributed, so billed is not
+compared). This is the clearest instance of that reversal in the catalog: the job is long enough that
+overhead is under 4% of the bill, so compute and billed agree on the direction
 ([the weak rung](../../patterns/cost-per-result.md)). On Graviton3, skip to Graviton5. **AMD `c8a` beats every Graviton generation**: 1.81× Graviton4 at the lowest cost per proteome. The hit set is identical on all six chips; scores differ in the last digits between ARM and x86.
 
 <details>

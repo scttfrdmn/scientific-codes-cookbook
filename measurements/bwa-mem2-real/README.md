@@ -33,7 +33,7 @@ tar. Every chip reads the same bytes, and `collect.sh` checks each input's sha25
 
 16 threads on an `r8*.4xlarge` (16 vCPU, 128 GiB) of each chip, using the recipe's images: aarch.bio
 on Graviton4 and bioconda on both x86 chips. *Align* is the three `mem` invocations summed, index
-load included. *Billed* runs from launch to terminate. A *result* is one genome aligned.
+load included. *Billed* is spawn's task window, wrapper start to stage-out done. A *result* is one genome aligned.
 
 | chip | instance | tool | kernel | align | billed | peak RSS | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|---|---|

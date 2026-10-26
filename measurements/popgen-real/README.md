@@ -48,7 +48,7 @@ twin, installed offline (the same msprime 1.4.4, tskit 1.0.3, scikit-allel 1.3.1
 | **EPYC 9R45** | `m8a.4xlarge` | **1,166 s** | **1,240 s** | 0.9738 | **0.3154** | **0.3354** | 2.91 GiB |
 
 A result is both workloads over the whole genome, with every check. *Tool wall* is `real.py`.
-*Billed* is spawn's window, from launch to terminate, with $/hr taken from its `cost_estimate`.
+*Billed* is spawn's window, wrapper start to stage-out done, with $/hr taken from its `cost_estimate`.
 *Peak RSS* is the largest single worker (`ru_maxrss`, a fresh process per job). The container
 cgroup peaked at 18.0 / 20.8 / 20.8 GiB with 16 workers. The 15 GB of staged VCFs sit in the
 host's tmpfs and come on top of that.

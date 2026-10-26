@@ -1,7 +1,7 @@
 # measurements/plumed-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the spawn completion window of the --no-mpi runs, exactly (results/billed-windows.txt).
-# The completion records date every run, with-mpi and --no-mpi, 2026-10-20 UTC; the git dates below
-# are left as authored. 16 single-threaded plumed driver workers, one trajectory each: no layout authored.
+# The completion records date every run, with-mpi (g1/i1/a1) and --no-mpi (g2/i2/a2), 2026-10-20 UTC;
+# #123 set the run dates from them. 16 single-threaded plumed driver workers, one trajectory each: no layout authored.
 schema = 2
 result_unit = "the whole cohort: 16,000 RODA pentapeptide trajectories through PLUMED, cpptraj and every check"
 
@@ -36,8 +36,8 @@ instance = "c8g.4xlarge"
 purpose = "primary"
 results = "results/graviton4/"
 host = "results/graviton4/host.txt"
-date = "2026-10-02"
-date_source = "git"
+date = "2026-10-20"
+date_source = "run"
 workers = 16
 wall_s = 891
 billed_s = 1085
@@ -55,8 +55,8 @@ instance = "c8i.4xlarge"
 purpose = "cross-chip"
 results = "results/intel/"
 host = "results/intel/host.txt"
-date = "2026-10-02"
-date_source = "git"
+date = "2026-10-20"
+date_source = "run"
 workers = 16
 wall_s = 912
 billed_s = 983
@@ -75,7 +75,7 @@ purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-20"
-date_source = "git"
+date_source = "run"
 workers = 16
 wall_s = 879
 billed_s = 937
@@ -94,8 +94,8 @@ purpose = "diagnostic"
 variant = "without plumed --no-mpi"
 results = "results/with-mpi/graviton4/"
 host = "results/with-mpi/graviton4/host.txt"
-date = "2026-10-02"
-date_source = "git"
+date = "2026-10-20"
+date_source = "run"
 workers = 16
 wall_s = 1982
 note = "first pass without plumed --no-mpi: MPI_Init holds each serial driver call 1.06 s"
@@ -107,8 +107,8 @@ purpose = "diagnostic"
 variant = "without plumed --no-mpi"
 results = "results/with-mpi/intel/"
 host = "results/with-mpi/intel/host.txt"
-date = "2026-10-02"
-date_source = "git"
+date = "2026-10-20"
+date_source = "run"
 workers = 16
 wall_s = 2018
 note = "first pass without plumed --no-mpi"
@@ -121,7 +121,7 @@ variant = "without plumed --no-mpi"
 results = "results/with-mpi/amd/"
 host = "results/with-mpi/amd/host.txt"
 date = "2026-10-20"
-date_source = "git"
+date_source = "run"
 workers = 16
 wall_s = 1956
 note = "first pass without plumed --no-mpi"

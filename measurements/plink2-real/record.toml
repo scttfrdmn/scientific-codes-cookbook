@@ -1,8 +1,8 @@
 # measurements/plink2-real/record.toml -- drafted by the #118 extraction, then authored.
-# Schema 2: billed is spawn's completion window (README: "wrapper start to stage-out done") for the
-# p19 rows and the AMD p2 row. The Graviton4 and Intel p2 rows print 1,213 / 2,395 s, which matches
-# neither their spawn window (1,206 / 2,389 s) nor CloudTrail's (1,246 / 2,447 s): unattributed
-# (results/billed-windows.txt). p2 and p19 are separate tasks; p19 is the PLINK 1.9 cross-check.
+# Schema 2: billed is spawn's completion window (README: "wrapper start to stage-out done") on every
+# row (results/billed-windows.txt, by task id: plink2real-p2-r4 / -p2-x8664-r4 / -p2-amd-1020c, from
+# p2.task.json). The Graviton4 and Intel p2 rows printed 1,213 / 2,395 s, matching no source, until #123
+# restated them on 1,206 / 2,389 s (CloudTrail 1,246 / 2,447 s, kept as ec2_s). p2 and p19 are separate tasks; p19 is the PLINK 1.9 cross-check.
 schema = 2
 result_unit = "one genome-wide run of the workflow: 1000 Genomes Phase 3 chr1-22, 2,504 samples, VCF import to PC-adjusted GWAS"
 
@@ -35,19 +35,18 @@ in = ["chip"]
 instance = "r8g.4xlarge"
 purpose = "primary"
 results = "results/arm64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 16
 threads_per_core = 1
 wall_s = 681
-billed_s = 1213
+billed_s = 1206
 ec2_s = 1246
 usd_hr = 0.9426
 compute_usd = 0.178
-billed_basis = "unattributed"
-billed_usd = 0.318
+billed_usd = 0.316
 peak_gib = 33.2
 task = "p2"
 peak_kind = "cgroup-memory.peak"
@@ -59,19 +58,18 @@ in = ["chip"]
 instance = "r8i.4xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 16
 threads_per_core = 2
 wall_s = 804
-billed_s = 2395
+billed_s = 2389
 ec2_s = 2447
 usd_hr = 1.1114
 compute_usd = 0.248
-billed_basis = "unattributed"
-billed_usd = 0.739
+billed_usd = 0.738
 peak_gib = 33.1
 task = "p2"
 peak_kind = "cgroup-memory.peak"
@@ -84,7 +82,7 @@ instance = "r8a.4xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 16
@@ -107,8 +105,8 @@ purpose = "primary"
 task = "p19"
 image = "quay.io/aarchbio/plink@sha256:9d0a839edcdba396b6a6d374f60c3ea28fdc10954dbcbc5edef5795a1ae4f4f7"
 results = "results/arm64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 496
 billed_s = 573
 ec2_s = 646
@@ -123,8 +121,8 @@ purpose = "cross-chip"
 task = "p19"
 image = "quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a"
 results = "results/x86_64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 632
 billed_s = 709
 ec2_s = 766
@@ -140,7 +138,7 @@ task = "p19"
 image = "quay.io/biocontainers/plink@sha256:b9fa98615d2117da61cfacbc69eb283c6824701e7befd0b65baa03add7180b0a"
 results = "results/amd/"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 wall_s = 494
 billed_s = 534
 ec2_s = 583

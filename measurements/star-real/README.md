@@ -26,7 +26,7 @@ STAR logs its own genome-load boundary, so the data path's share is separable.
 | copy → tmpfs (RAM) | 58 s | 28.6 GiB | 9 s | — | 126 s |
 | EFS (hydrated from S3) | 86 s | 28.6 GiB | 57 s | 514 MiB/s | 203 s |
 | FSx Lustre (S3-linked) | ~9 min to create | metadata only | **174 s** | 168 MiB/s | 233 s |
-| copy → local EBS | 118 s | 28.6 GiB | **231 s** | 127 MiB/s | **409 s** |
+| copy → local EBS | 118 s | 28.6 GiB | **231 s** | 127 MiB/s | **411 s** |
 
 ## Steady state — the same box aligning another sample
 
@@ -40,13 +40,13 @@ STAR logs its own genome-load boundary, so the data path's share is separable.
 
 So there are exactly two regimes, and which one you're in decides everything:
 
-- **One sample per box** (a cohort fanned out): **mount.** 89 s against 126–409 s, no setup,
+- **One sample per box** (a cohort fanned out): **mount.** 89 s against 126–411 s, no setup,
   nothing to clean up.
 - **Many samples on one box:** **copy into tmpfs.** 58 s once, then 68 s each. Against lith's
   ~90 s per sample the break-even is **N = 3** (`58 + 68N` vs `90N`).
 
 Copying to **EBS is dominated on every axis** — 2× slower to stage than tmpfs (118 s vs 58 s)
-and 4.3× slower on the first align (291 s vs 68 s), with no compensating advantage. If you are
+and 4.3× slower on the first align (293 s vs 68 s), with no compensating advantage. If you are
 going to copy, copy into RAM.
 
 ## Why the local EBS copy loses
@@ -141,7 +141,7 @@ STAR 2.7.11b (the recipe's `images_x86_64` pin) and lith 1.1.3's amd64 binary. S
 |---|---|---|---|---|
 | **lith mount** | 89 s · $0.036 | 83 s · $0.039 | **79 s** · $0.043 | 28 / 23 / 25 s |
 | copy → tmpfs | 58 + 68 s · $0.050 | 62 + 73 s · $0.064 | 54 + 62 s · $0.063 | 9 / 11 / 8 s |
-| copy → local EBS | 118 + 291 s · $0.163 | 117 + 291 s · $0.192 | 117 + 285 s · $0.217 | 231 / 230 / 230 s |
+| copy → local EBS | 118 + 293 s · $0.164 | 117 + 291 s · $0.192 | 117 + 285 s · $0.217 | 231 / 230 / 230 s |
 
 Compute $ at $1.4362 / $1.6934 / $1.9475 per hour. Each x86 box billed one launch → terminate
 window for all five aligns: **1,327 s ($0.624) on Intel, 1,265 s ($0.684) on AMD**.

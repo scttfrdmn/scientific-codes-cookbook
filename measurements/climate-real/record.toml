@@ -1,6 +1,6 @@
 # measurements/climate-real/record.toml
-# Schema 2: billed for Graviton4 and Intel is the EC2 window (CloudTrail, results/billed-windows.txt);
-# the AMD leg's printed billed is its spawn completion window (same file).
+# Schema 2: billed is spawn's completion window on every row (results/billed-windows.txt). Graviton4
+# and Intel printed their EC2 window (1068/1129 s, kept as ec2_s) until #123 restated them on spawn.
 schema = 2
 result_unit = "the whole verified year: every reduction and check over all 8,760 hours of 2023 ERA5 2 m temperature"
 
@@ -10,7 +10,7 @@ note = "one hourly variable for one year on the native 721 x 1,440 grid; read la
 
 [timing]
 wall = "era5.py wall: the four read passes and every reduction and check"
-billed_basis = "ec2"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "chip"
@@ -43,15 +43,16 @@ purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/cpu.txt"
 date = "2026-10-17"
-date_source = "git"
+date_source = "run"
 workers = 8
 ranks = 1
 threads_per_rank = 8
 wall_s = 884
-billed_s = 1068
+billed_s = 1021
 usd_hr = 0.4713
 compute_usd = 0.1157
-billed_usd = 0.1398
+billed_usd = 0.1337
+ec2_s = 1068
 peak_gib = 30.9
 peak_kind = "rss"
 note = "wall_s is era5.py wall; four read passes 239 / 240 / 237 / 163 s"
@@ -63,17 +64,18 @@ instance = "r8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/cpu.txt"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 workers = 8
 threads_per_core = 2            # README: 4 cores x 2 SMT; cpu.txt does not state it
 ranks = 1
 threads_per_rank = 8
 wall_s = 1001
-billed_s = 1129
+billed_s = 1084
 usd_hr = 0.5557
 compute_usd = 0.1545
-billed_usd = 0.1743
+billed_usd = 0.1673
+ec2_s = 1129
 peak_gib = 32.7
 peak_kind = "rss"
 
@@ -91,13 +93,12 @@ ranks = 1
 threads_per_rank = 8
 wall_s = 663
 billed_s = 716
-billed_basis = "spawn-task"
 usd_hr = 0.639
 compute_usd = 0.1177
 billed_usd = 0.1271
 peak_gib = 33.1
 peak_kind = "rss"
-note = "README states the AMD leg ran 2026-10-21; the git date of results/amd is 2026-10-20"
+note = "README states the AMD leg ran 2026-10-21, as its completion record does; the git date of results/amd is 2026-10-20"
 
 # --- "What held at scale" rows; the AMD column is identical to Intel's in every row ---
 [[check]]

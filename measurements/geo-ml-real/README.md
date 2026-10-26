@@ -52,7 +52,7 @@ outputs are the cross-code reference.
 | Xeon 6975P-C | `r8i.xlarge` | 373 s | 429 s | 0.2778 | 0.0288 | 0.0331 | 25.7 GiB |
 | **EPYC 9R45** | `r8a.xlarge` | **275 s** | **324 s** | 0.3195 | **0.0244** | **0.0288** | 25.7 GiB |
 
-A *result* is the whole workload plus every check below. *Billed* runs from EC2 launch to terminate,
+A *result* is the whole workload plus every check below. *Billed* is spawn's task window, wrapper start to stage-out done,
 at spawn's estimate. Peak memory is the container cgroup's `memory.peak`; `ru_maxrss` was 22.97 GiB
 on all three. Threads per core: 1 on Graviton4 and AMD, 2 on Intel, whose 4 vCPU are 2 cores.
 OpenBLAS selects `neoversev2` on Graviton4 and `Cooperlake` on both x86 chips.

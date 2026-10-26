@@ -1,6 +1,6 @@
 # Graviton4 is the wrong buy for hmmsearch, on compute and on the bill
 
-> **Graviton3 → Graviton4 costs 4% more per result on compute and 6% more billed**, because it is only
+> **Graviton3 → Graviton4 costs 4% more per result on compute**, because it is only
 > 1.06× faster for 10% more per hour. Four codes now show that rung failing; this is the first where
 > the job is long enough that boot cannot be blamed.
 
@@ -9,12 +9,17 @@ HMMER 3.4, all 30,134 Pfam-A 38.2 families against 23,879 human proteins (one pe
 
 | chip | instance | `hmmsearch` | billed | $/hr | **compute $** | billed $ |
 |---|---|---|---|---|---|---|
-| Graviton2 | `c6g.2xlarge` | 2514 s | 2760 s | 0.2720 | 0.1900 | 0.2085 |
-| Graviton3 | `c7g.2xlarge` | 1763 s | 1911 s | 0.2900 | **0.1420** | **0.1539** |
-| Graviton4 | `c8g.2xlarge` | 1669 s | 1845 s | 0.3190 | 0.1479 | 0.1635 |
-| **Graviton5** | `c9g.2xlarge` | **1322 s** | 1421 s | 0.3478 | **0.1277** | 0.1373 |
+| Graviton2 | `c6g.2xlarge` | 2514 s | 2609 s | 0.2720 | 0.1900 | 0.1971 |
+| Graviton3 | `c7g.2xlarge` | 1763 s | 1836 s | 0.2900 | **0.1420** | **0.1479** |
+| Graviton4 | `c8g.2xlarge` | 1669 s | 1845 s † | 0.3190 | 0.1479 | 0.1635 † |
+| **Graviton5** | `c9g.2xlarge` | **1322 s** | 1375 s | 0.3478 | **0.1277** | 0.1328 |
 | Intel Xeon 6975P-C (2 threads/core) | `c8i.2xlarge` | 1352 s | 1412 s | 0.3748 | 0.1408 | 0.1470 |
 | **AMD EPYC 9R45** (1 thread/core) | `c8a.2xlarge` | **922 s** | 970 s | 0.4311 | **0.1104** | **0.1162** |
+
+*Billed* is spawn's task window, wrapper start to stage-out done (completion records,
+[`results/billed-windows.txt`](results/billed-windows.txt)). † Graviton4's window is unattributed: no
+completion record of its 2026-10-01/02 run survives, and 1845 s matches no other source, so its billed
+figures are not on the same basis as the other rows.
 
 Per-step speedup: **1.43×, 1.06×, 1.26×.** Over the full ladder, 1.90×.
 
@@ -49,11 +54,11 @@ The catalog had three prior Graviton3→Graviton4 cost reversals — GPAW +1.4%,
 RAxML-NG +7.3% — and the first two are small enough to be a tie at n=1. hmmsearch is different in
 three ways that matter:
 
-- **Boot is a tenth of the bill.** At 28–46 minutes of compute in a 31–46 minute window, the
-  billed/compute ratio is ~1.10. Compute and billed therefore agree on the direction, which is not
+- **Overhead is under 4% of the bill.** At 22–42 minutes of compute in a 23–43 minute window, the
+  billed/compute ratio is ~1.04 on every attributed rung. Compute and billed therefore agree on the direction, which is not
   true for the short jobs in this catalog — [seqkit](../../recipes/seqkit/README.md) and
-  [bedtools](../bedtools-real/README.md) both show an apparent Gv3-beats-Gv4 on *billed* that
-  disappears on compute, because at 90–280 s the billed column is mostly boot.
+  [bedtools](../bedtools-real/README.md), where at 90–280 s of work the billed column carries a fixed
+  startup cost that compute does not.
 - **The time step is the anomaly, not the price.** The rate card rises a steady ~9–10% per
   generation here; what is unusual is 1.06× of speed for it, against 1.43× and 1.26× either side.
 - **The result is identical across all four rungs** (65,607 hits / 9,473 families / 22,740 proteins,

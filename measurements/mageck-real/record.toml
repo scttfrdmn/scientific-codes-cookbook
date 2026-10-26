@@ -1,8 +1,9 @@
 # measurements/mageck-real/record.toml -- Brunello in A375, three chips; everything identical but MLE's
 # unseeded permutation columns.
-# Schema 2: the README's billed = tool wall + overhead, where overhead is the EC2 window
-# (results/billed-windows.txt: 2987 / 1908 / 1427 s, CloudTrail) minus the task's command; the
-# in-task verification is excluded, so no window reproduces it and the rows are unattributed.
+# Schema 2: billed is spawn's task window (results/billed-windows.txt: 2951 / 1864 / 1360 s), which
+# includes ~1,500 / 1,000 / 700 s of in-task verification. Until #123 the README billed tool wall +
+# overhead (overhead = the launch-to-terminate window minus the command), which no window reproduces;
+# overhead is still printed, not recorded. peak is peak_anon_gib_tool (memory.stat anon, sampled).
 schema = 2
 result_unit = "one genome-wide screen analysed (count + RRA + MLE; 253M reads, 77,441 guides)"
 
@@ -12,7 +13,7 @@ note = "mageck count (single-threaded, 93% of the tool wall), RRA, then MLE --th
 
 [timing]
 wall = "count + RRA + MLE, the tool steps of run.sh (steps.tsv tool_wall_s); the in-task verification is not in it"
-billed_basis = "unattributed"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "chip"
@@ -46,17 +47,17 @@ purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-18"
-date_source = "git"
+date_source = "run"
 wall_s = 1321
-overhead_s = 99
 usd_hr = 0.359
 compute_usd = 0.132
-billed_usd = 0.142
+billed_usd = 0.294
+billed_s = 2951
 peak_gib = 2.05
-peak_kind = "rss"
+peak_kind = "cgroup-anon-max"
 avg_cores = 1.21
 tmpfs_peak_gib = 7.24
-note = "wall = count 1224 + RRA 11 + MLE 86 s; billed excludes ~1,500 s of in-task verification (measured window 2987 s); an earlier pass r2 took 1363 s"
+note = "wall = count 1224 + RRA 11 + MLE 86 s; the billed window holds ~1,500 s of in-task verification; an earlier pass r2 took 1363 s"
 
 [[run]]
 id = "m8i"
@@ -66,17 +67,17 @@ purpose = "cross-chip"
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-18"
-date_source = "git"
+date_source = "run"
 wall_s = 837
-overhead_s = 107
 usd_hr = 0.4234
 compute_usd = 0.098
-billed_usd = 0.111
+billed_usd = 0.219
+billed_s = 1864
 peak_gib = 1.92
-peak_kind = "rss"
+peak_kind = "cgroup-anon-max"
 avg_cores = 1.45
 tmpfs_peak_gib = 7.24
-note = "wall = 738 / 8 / 91 s; measured window 1908 s incl. ~1,000 s of verification; r2 took 850 s"
+note = "wall = 738 / 8 / 91 s; billed window incl. ~1,000 s of verification; r2 took 850 s"
 
 [[run]]
 id = "m8a"
@@ -86,17 +87,17 @@ purpose = "cross-chip"
 results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-18"
-date_source = "git"
+date_source = "run"
 wall_s = 592
-overhead_s = 122
 usd_hr = 0.4869
 compute_usd = 0.08
-billed_usd = 0.097
+billed_usd = 0.184
+billed_s = 1360
 peak_gib = 1.78
-peak_kind = "rss"
+peak_kind = "cgroup-anon-max"
 avg_cores = 1.27
 tmpfs_peak_gib = 7.24
-note = "wall = 530 / 7 / 55 s; measured window 1427 s incl. ~700 s of verification; r2 took 598 s"
+note = "wall = 530 / 7 / 55 s; billed window incl. ~700 s of verification; r2 took 598 s"
 
 # --- checks: "What held at scale, on all three chips" ------------------------------------
 [[check]]

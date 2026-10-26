@@ -35,7 +35,9 @@ Every rung's `mpi_reported` (or, at 192, `Using 48 MPI processes` in `run.log`) 
 |---|---|---|---|---|---|
 | ns/day | 81.623 | **90.317** | 78.345 | 77.093 | 72.089 |
 
-Best ÷ worst is 1.253, and 32 × 2 beats 8 × 8 by 17.2%. The 64-vCPU box is **one NUMA node**
+Best ÷ worst is 1.253, and 32 × 2 beats 8 × 8 by 17.2%. The 16 × 4 cell is the same configuration
+as the knee's 64-core rung, run separately: 78.345 here against 82.763 there, a 5.6% spread between two
+samples of one setting, so differences of that size between cells are not resolved. The 64-vCPU box is **one NUMA node**
 (`decomp64/*/topo.txt`: `NUMA node(s): 1`, 0–63), so the spread is not NUMA. Each `timing.txt`
 carries GROMACS' own DD grid, separate-PME-rank count and load imbalance.
 

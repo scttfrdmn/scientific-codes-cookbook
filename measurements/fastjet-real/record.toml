@@ -7,7 +7,7 @@ size = { events = 1100000, particles = 195918046 }
 note = "1,000,000 QCD dijet + 100,000 W' -> XY events; 20,000 events per ClusterSequence call across 8 worker processes; the checks cost more than the clustering"
 
 [timing]
-wall = "the whole cluster task (FastJet pass + checks), real.sh's timer"
+wall = "cluster.py's worker pool (FastJet pass + checks), its wall_s_pass; the whole cluster.py process is times.txt's 170 / 219 / 123 s"
 billed_basis = "spawn-task"
 
 [[series]]
@@ -30,7 +30,7 @@ tier = "built"
 pins = "pins.sha256"
 note = "zero padding dropped; the convert task asserts re-padding gives back every source row exactly"
 
-# wall_s = the README's "whole task (pass + checks)" column, which is what compute $ is computed from;
+# wall_s = the README's "worker pool (pass + checks)" column, which is what compute $ is computed from;
 # billed_s = the task window (wrapper start to stage-out done, excludes boot) = results/<chip>/completion.json.
 [[run]]
 instance = "m8g.2xlarge"

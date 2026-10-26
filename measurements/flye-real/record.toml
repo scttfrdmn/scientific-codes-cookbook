@@ -1,14 +1,15 @@
 # measurements/flye-real/record.toml -- apparatus dir: the README is a pointer to recipes/flye and
 # prints no timings or prices; walls come from the per-rung results files. No $ here (the cost table
 # lives on the recipe page, not in this dir's README or results).
-# Schema 2: the x86 rows' billed_s is the EC2 window (results/billed-windows.txt): the README's
-# combined "$0.083 billed" for the two x86 legs is those two EC2 windows, not the spawn windows.
+# Schema 2: the x86 rows' billed_s is spawn's task window (results/billed-windows.txt). The README's
+# combined "$0.083 billed" was the two EC2 windows (404/341 s, kept as ec2_s); #123 restated it on
+# spawn's windows, $0.0697 (cost_estimate 0.037692 + 0.031972).
 schema = 2
 result_unit = "one assembly of ERR10114907 (Flye --nano-hq -t 8)"
 
 [timing]
 wall = "Flye's wall, timed in-task (smoke check wall_s)"
-billed_basis = "ec2"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "gen"
@@ -104,14 +105,15 @@ instance = "c8i.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 workers = 8
 host = "results/topology-c8i-2xl.txt"
 wall_s = 306
 ranks = 1
 threads_per_rank = 8
 tmpfs_peak_gib = 0.75
-billed_s = 404
+billed_s = 362
+ec2_s = 404
 results = "results/smoke-check-c8i-2xl.txt"
 note = "chip.task.json with the inline command moved into a staged sha256-checked file (spawn#1063/#1246)"
 
@@ -122,16 +124,17 @@ instance = "c8a.2xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 workers = 8
 host = "results/topology-c8a-2xl.txt"
 wall_s = 226
 ranks = 1
 threads_per_rank = 8
 tmpfs_peak_gib = 0.749
-billed_s = 341
+billed_s = 267
+ec2_s = 341
 results = "results/smoke-check-c8a-2xl.txt"
-note = "the two x86 legs cost $0.083 billed together"
+note = "the two x86 legs cost $0.0697 billed together on spawn's windows ($0.083 on EC2's)"
 
 # --- checks: the in-task asserts in results/smoke-check-*.txt ------------------------------
 [[check]]

@@ -2,7 +2,7 @@
 
 > **253M reads, 77,441 guides: the count table equals an independent recount exactly, and
 > every output but MLE's permutation p-value is byte-identical on all three chips.** AMD is
-> 2.2× faster than Graviton4 and 32% cheaper per billed result. MAGeCK is single-threaded Python, and
+> 2.2× faster than Graviton4 and 37% cheaper per billed result. MAGeCK is single-threaded Python, and
 > the arm64 Python build has no PGO or LTO.
 
 Workload: the **complete** Brunello dropout screen in A375 from Sanson et al. 2018
@@ -31,24 +31,25 @@ from bioconda.
 
 8 vCPU, one `2xlarge` per chip, same input bytes, `mle --threads 8`:
 
-| chip | instance | tool wall: count / RRA / MLE | tool wall | overhead | $/hr | compute $/result | **billed $/result** | peak RSS |
-|---|---|---|---|---|---|---|---|---|
-| Graviton4 | `m8g.2xlarge` | 1224 / 11 / 86 s | 1321 s | 99 s | 0.3590 | 0.132 | **0.142** | 2.05 GiB |
-| Xeon 6975P-C | `m8i.2xlarge` | 738 / 8 / 91 s | 837 s | 107 s | 0.4234 | 0.098 | **0.111** | 1.92 GiB |
-| **EPYC 9R45** | `m8a.2xlarge` | **530** / 7 / 55 s | **592 s** | 122 s | 0.4869 | **0.080** | **0.097** | 1.78 GiB |
+| chip | instance | tool wall: count / RRA / MLE | tool wall | overhead | billed | $/hr | compute $/result | **billed $/result** | peak RSS |
+|---|---|---|---|---|---|---|---|---|---|
+| Graviton4 | `m8g.2xlarge` | 1224 / 11 / 86 s | 1321 s | 99 s | 2951 s | 0.3590 | 0.132 | **0.294** | 2.05 GiB |
+| Xeon 6975P-C | `m8i.2xlarge` | 738 / 8 / 91 s | 837 s | 107 s | 1864 s | 0.4234 | 0.098 | **0.219** | 1.92 GiB |
+| **EPYC 9R45** | `m8a.2xlarge` | **530** / 7 / 55 s | **592 s** | 122 s | 1360 s | 0.4869 | **0.080** | **0.184** | 1.78 GiB |
 
-*Overhead* is boot, Docker install, image pull and staging 7.7 GB in and out: the billed
-window minus the task's command. *Billed $/result* is tool wall plus overhead at spawn's
-printed price. The measured windows (2987, 1908 and 1427 s) also hold about 1,500, 1,000
-and 700 s of verification: a second count, four extra tests and the recount. A user does not
-pay for those.
+*Billed* is spawn's task window, wrapper start to stage-out done
+([`results/billed-windows.txt`](results/billed-windows.txt)), at spawn's printed price. It holds
+about 1,500, 1,000 and 700 s of verification (a second count, four extra tests and the recount)
+that a user's own run would not pay for. *Overhead* is boot, Docker install, image pull and
+staging 7.7 GB in and out: the measured windows (2987, 1908 and 1427 s; launch to terminate per
+CloudTrail on Intel and AMD, unattributed on Graviton4) minus the task's command.
 
 - **`mageck count` is 93% of the tool wall, and it runs on one core.** Average busy cores were
   1.2–1.45 of 8, the extra coming from MLE's workers. So this is a single-thread race, and
   the 8 vCPU only buy 16 GiB of tmpfs for the 7.7 GB of FASTQ. More cores buy `count`
   nothing.
 - **AMD is 2.23× and Intel 1.58× faster than Graviton4, and both are cheaper per result**
-  despite the higher hourly price: 39% and 25% less compute $, 32% and 22% less billed.
+  despite the higher hourly price: 39% and 25% less compute $, 37% and 26% less billed.
   Graviton4 is the most expensive chip for this code.
 - **Part of the gap is the image, not the chip.** The arm64 image's CPython (conda-forge
   3.12.13, cross-compiled) was built without `--enable-optimizations` or `--with-lto`. The
