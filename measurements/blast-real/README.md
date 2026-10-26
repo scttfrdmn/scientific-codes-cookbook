@@ -58,7 +58,7 @@ diamond blastp -q queries.fa -d sp --very-sensitive --max-target-seqs 500 -p 16
 | Xeon | 64 s | 128 s | 2.98 GiB | 0.027 |
 | EPYC | **32 s** | 85 s | 3.00 GiB | **0.020** |
 
-A *result* is one whole verified search with its checks. *Billed* runs from launch to terminate, at
+A *result* is one whole verified search with its checks. *Billed* is spawn's task window, wrapper start to stage-out done, at
 spawn's printed price. *Peak RSS* is `blastp`'s (or `diamond`'s) own `VmHWM`. The BLAST container's
 cgroup `memory.peak` was 1.03–1.05 GB on every chip. BLAST+ links no BLAS, so there is no OpenBLAS
 kernel to record. Threads per core: 1 on Graviton4 and AMD, 2 on Intel.

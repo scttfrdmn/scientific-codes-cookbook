@@ -1,7 +1,7 @@
 # measurements/astropy-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the EC2 window (CloudTrail RunInstances -> TerminateInstances), exactly, for
-# all three rows (results/billed-windows.txt). Dates are git dates; the runs' own are 2026-10-18
-# (arm64, Intel) and 2026-10-21 (AMD) UTC per the completion records.
+# all three rows (results/billed-windows.txt). Dates are the runs' own UTC dates from the
+# completion records: 2026-10-18 (arm64, Intel) and 2026-10-21 (AMD).
 schema = 2
 result_unit = "one HEALPix order-4 pixel (808) cross-matched, Gaia DR3 x Pan-STARRS1, plus 100 PS1 skycells round-tripped through their WCS"
 
@@ -44,8 +44,8 @@ id = "chip-r8g"
 in = ["chip"]
 instance = "r8g.xlarge"
 purpose = "primary"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 wall_s = 866.3
 billed_s = 1079
 usd_hr = 0.2356
@@ -60,8 +60,8 @@ id = "chip-r8i"
 in = ["chip"]
 instance = "r8i.xlarge"
 purpose = "cross-chip"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 threads_per_core = 2
 wall_s = 811.2
 billed_s = 951
@@ -78,8 +78,8 @@ in = ["chip"]
 instance = "r8a.xlarge"
 purpose = "cross-chip"
 spawn_version = "0.139.1"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-21"
+date_source = "run"
 threads_per_core = 1
 wall_s = 651.0
 billed_s = 761

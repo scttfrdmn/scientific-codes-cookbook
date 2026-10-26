@@ -8,13 +8,16 @@ Picard MarkDuplicates 3.5.0 on bwa's whole-genome sorted BAM (48,817,006 records
 
 | generation | instance | MarkDuplicates | billed | $/hr | **$/run** | compute-only $ |
 |---|---|---|---|---|---|---|
-| Graviton2 | `r6g.2xlarge` | 928 s | 1150 s | 0.4032 | **0.1288** | 0.1039 |
-| Graviton3 | `r7g.2xlarge` | 747 s | 961 s | 0.4284 | **0.1144** | 0.0889 |
-| Graviton4 | `r8g.2xlarge` | 591 s | 826 s | 0.4713 | **0.1081** | 0.0774 |
-| **Graviton5** | `r9g.2xlarge` | **482 s** | 647 s | 0.5137 | **0.0923** | **0.0688** |
+| Graviton2 | `r6g.2xlarge` | 928 s | 1048 s | 0.4032 | **0.1174** | 0.1039 |
+| Graviton3 | `r7g.2xlarge` | 747 s | 907 s | 0.4284 | **0.1079** | 0.0889 |
+| Graviton4 | `r8g.2xlarge` | 591 s | 702 s | 0.4713 | **0.0919** | 0.0774 |
+| **Graviton5** | `r9g.2xlarge` | **482 s** | 570 s | 0.5137 | **0.0813** | **0.0688** |
+
+*Billed* is spawn's task window, wrapper start to stage-out done, in both tables (completion
+records, [`results/billed-windows.txt`](results/billed-windows.txt)).
 
 Per-step speedup is remarkably flat: **1.24×, 1.26×, 1.23×**. Cost falls monotonically on both the
-billed window and the compute-only basis, so the conclusion does not depend on how boot is attributed.
+billed window and the compute-only basis, so the conclusion does not depend on how overhead is attributed.
 
 ## What this corrects
 
@@ -52,16 +55,15 @@ parts, so its ETag cannot show byte identity.
 
 | chip | instance | MarkDuplicates | billed | $/hr | **$/run** | compute-only $ |
 |---|---|---|---|---|---|---|
-| Graviton4 | `r8g.2xlarge` | 591 s | 826 s | 0.4713 | **0.1081** | **0.0774** |
-| Xeon 6975P-C | `r8i.2xlarge` | 533 s | 707 s | 0.5557 | 0.1091 | 0.0823 |
-| **EPYC 9R45** | `r8a.2xlarge` | **459 s** | 581 s | 0.6390 | **0.1031** | 0.0815 |
+| Graviton4 | `r8g.2xlarge` | 591 s | 702 s | 0.4713 | **0.0919** | **0.0774** |
+| Xeon 6975P-C | `r8i.2xlarge` | 533 s | 622 s | 0.5557 | 0.0960 | 0.0823 |
+| **EPYC 9R45** | `r8a.2xlarge` | **459 s** | 530 s | 0.6390 | 0.0941 | 0.0815 |
 
 - **AMD is 1.29× faster than Graviton4 and Intel 1.11×.** The recipe's own verifying runs of the
   same command, a week apart, gave 536 s (Intel) and 457 s (AMD), so these are repeatable to <1%.
-- **The cost order depends on the basis.** Billed per run, AMD is cheapest (5% under Graviton4) and
-  Intel dearest. On MarkDuplicates' own time, Graviton4 is cheapest, 5% under AMD. The gap between
-  those two bases is the boot, staging and image pull: 235 s on Graviton4 and 122 s on AMD in these
-  runs. So the billed ranking is partly about launch overhead and not only the chip.
+- **Graviton4 is cheapest on both bases.** Billed per run it is 2% under AMD and 4% under Intel; on
+  MarkDuplicates' own time, 5% under AMD. The gap between the two bases is Docker install, staging
+  and image pull: 111 s on Graviton4, 89 s on Intel and 71 s on AMD (boot comes before the window).
 - **The 8a vCPUs are 8 whole cores; the 8i vCPUs are 4 cores with SMT** (`/proc/cpuinfo`: `siblings`
   8, `cpu cores` 8 on `r8a` and 4 on `r8i`). So the Intel row is fewer physical cores, not a slower
   core.
@@ -73,7 +75,7 @@ parts, so its ETag cannot show byte identity.
   sampler, not the chip.
 - MarkDuplicates is a JVM and links no OpenBLAS, so there is no BLAS kernel to record. n = 1 per
   chip, made defensible by the identical result and the repeat above. Spend for the two new legs:
-  $0.21 billed.
+  $0.19 billed ($0.21 EC2 launch to terminate).
 
 ## Run it
 

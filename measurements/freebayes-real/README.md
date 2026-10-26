@@ -30,8 +30,8 @@ output prefix; bioconda's `linux/amd64` build of 1.3.10 on both x86 chips):
 | chip | instance | calling | billed | $/hr | **compute $** | billed $ | variants |
 |---|---|---|---|---|---|---|---|
 | Graviton4 | `c8g.xlarge` | 644 s | 704 s | 0.1595 | 0.0285 | 0.0312 | 385,371 |
-| Intel Xeon 6975P-C | `c8i.xlarge` | 476 s | 587 s | 0.1874 | 0.0248 | 0.0306 | 385,371 |
-| **AMD EPYC 9R45** | `c8a.xlarge` | **357 s** | 460 s | 0.2155 | **0.0214** | **0.0275** | 385,371 |
+| Intel Xeon 6975P-C | `c8i.xlarge` | 476 s | 543 s | 0.1874 | 0.0248 | 0.0283 | 385,371 |
+| **AMD EPYC 9R45** | `c8a.xlarge` | **357 s** | 404 s | 0.2155 | **0.0214** | **0.0242** | 385,371 |
 
 - **AMD is 1.80× faster than Graviton4 and 25% cheaper per call; Intel 1.35× and 13%.** Even
   Graviton5 (509 s) is slower than both. freebayes is single-threaded, so this is one core's speed:
@@ -48,7 +48,8 @@ output prefix; bioconda's `linux/amd64` build of 1.3.10 on both x86 chips):
 - **Each chip reproduces itself:** the VCF body is byte-identical to the recipe's own earlier run on
   the same chip (Intel, AMD, and Graviton4 against the `c6g` rung). So the count is a fixed point
   across chips and the low-`QUAL` tail is an ARM-vs-x86 path.
-- Spend for the two x86 legs: $0.058 billed.
+- Spend for the two x86 legs: $0.053 billed. *Billed* is spawn's task window, wrapper start to
+  stage-out done, in both tables ([`results/billed-windows.txt`](results/billed-windows.txt)).
 
 ## The even ladder is the finding
 

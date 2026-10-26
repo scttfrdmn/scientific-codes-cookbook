@@ -67,7 +67,7 @@ threads on a `2xlarge` (8 vCPU, 32 GiB).
 | | Xeon | `m8i.2xlarge` | 391 s | 484 s | 0.45 GiB† | 0.4234 | 0.046 | 0.057 |
 | | EPYC | `m8a.2xlarge` | **205 s** | **289 s** | 0.45 GiB† | 0.4869 | **0.028** | **0.039** |
 
-A *result* is 100,000 genomes assigned and checked. *Billed* runs from launch to terminate at
+A *result* is 100,000 genomes assigned and checked. *Billed* is spawn's task window, wrapper start to stage-out done, at
 spawn's printed price. It includes the 2,000-genome single-thread run (pangolin 70–115 s,
 Nextclade 29–48 s) and the checks. *Peak RSS* is `ru_maxrss` of pangolin's largest process.
 † Nextclade's is the container's `memory.peak`. Threads per core: 1 on Graviton4 and AMD, 2 on

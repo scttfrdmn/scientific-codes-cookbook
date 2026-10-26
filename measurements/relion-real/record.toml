@@ -1,6 +1,6 @@
 # measurements/relion-real/record.toml -- drafted by the #118 extraction, then authored.
-# Schema 2: billed is the spawn window for Graviton4 and both Intel rows, but the EC2 window for the
-# AMD row (results/billed-windows.txt). workers = 9 counts MPI ranks on the 9 x 8 rows, so their
+# Schema 2: billed is the spawn window on every row (results/billed-windows.txt); the AMD row's
+# README figure was its EC2 window (521 s, kept as ec2_s) until #123 restated it on spawn's 470 s. workers = 9 counts MPI ranks on the 9 x 8 rows, so their
 # ranks/threads_per_rank are not authored (9 x 8 = 72 would contradict workers).
 schema = 2
 result_unit = "one complete gold-standard 3D auto-refinement (RELION 5.0 tutorial Refine3D/job019, 4,452 particles) run to convergence and post-processed"
@@ -30,8 +30,8 @@ note = "the 40 extracted files are each pinned and re-checked in-task; the archi
 [[run]]
 instance = "c8g.16xlarge"
 purpose = "primary"
-date = "2026-10-20"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 id = "c8g"
 in = ["chip"]
 workers = 9
@@ -50,8 +50,8 @@ note = "9 MPI ranks x 8 threads; first of n = 3 (444, 444, 451 s). Prices from t
 [[run]]
 instance = "c8i.16xlarge"
 purpose = "cross-chip"
-date = "2026-10-20"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 id = "c8i"
 in = ["chip"]
 workers = 9
@@ -72,18 +72,18 @@ instance = "c8a.16xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 spawn_version = "0.131.1"
-date = "2026-10-20"
-date_source = "git"
+date = "2026-10-21"
+date_source = "run"
 id = "c8a"
 in = ["chip"]
 workers = 9
 threads_per_core = 1
 wall_s = 384
-billed_s = 521
-billed_basis = "ec2"
+billed_s = 470
 usd_hr = 3.4486
 compute_usd = 0.368
-billed_usd = 0.499
+billed_usd = 0.45
+ec2_s = 521
 peak_gib = 24.2
 peak_kind = "cgroup-memory.peak"
 avg_cores = 48.22
@@ -94,8 +94,8 @@ note = "9 x 8, n = 1; spawn 0.131.1 built from its release tag because 0.139.1's
 [[run]]
 instance = "c8i.16xlarge"
 purpose = "diagnostic"
-date = "2026-10-20"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 id = "c8i-cpu-kernels"
 variant = "x86 --cpu vectorised kernels"
 workers = 9

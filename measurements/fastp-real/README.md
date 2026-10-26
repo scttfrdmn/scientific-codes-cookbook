@@ -1,6 +1,6 @@
 # fastp: the cheaper box has half the cores
 
-> **44% cheaper for 5 seconds slower.** `m8g.2xlarge` against `c8g.4xlarge` on the same 48M-read run —
+> **41% cheaper per run for 5 seconds slower.** `m8g.2xlarge` against `c8g.4xlarge` on the same 48M-read run —
 > and reading the core count right would still have picked the expensive one, because the binding
 > resource was staging space.
 
@@ -10,27 +10,31 @@ of the same version on both x86 chips).
 
 | instance | vCPU | RAM | `-w` | fastp | billed | $/hr | **$/run** | tmpfs peak |
 |---|---|---|---|---|---|---|---|---|
-| `c8g.4xlarge` | 16 | 32 GiB | 16 | **31 s** | 226 s | 0.6381 | 0.0401 | 7,116 MB |
-| **`m8g.2xlarge`** | 8 | 32 GiB | 8 | 36 s | 226 s | **0.3590** | **0.0225** | 7,154 MB |
-| `c8i.4xlarge` | 16 | 32 GiB | 16 | 29 s | 226 s | 0.7497 | 0.0471 | 7,019 MB |
-| `m8i.2xlarge` | 8 | 32 GiB | 8 | 52 s | 226 s | 0.4234 | 0.0266 | 7,129 MB |
-| `c8a.4xlarge` | 16 | 32 GiB | 16 | 22 s | 160 s | 0.8622 | 0.0383 | 7,230 MB |
-| `m8a.2xlarge` | 8 | 32 GiB | 8 | 32 s | 159 s | 0.4869 | **0.0215** | 7,180 MB |
+| `c8g.4xlarge` | 16 | 32 GiB | 16 | **31 s** | 154 s | 0.6381 | 0.0273 | 7,116 MB |
+| **`m8g.2xlarge`** | 8 | 32 GiB | 8 | 36 s | 162 s | **0.3590** | **0.0162** | 7,154 MB |
+| `c8i.4xlarge` | 16 | 32 GiB | 16 | 29 s | 143 s | 0.7497 | 0.0298 | 7,019 MB |
+| `m8i.2xlarge` | 8 | 32 GiB | 8 | 52 s | 169 s | 0.4234 | 0.0199 | 7,129 MB |
+| `c8a.4xlarge` | 16 | 32 GiB | 16 | 22 s | 120 s | 0.8622 | 0.0287 | 7,230 MB |
+| `m8a.2xlarge` | 8 | 32 GiB | 8 | 32 s | 130 s | 0.4869 | 0.0176 | 7,180 MB |
+
+*Billed* is spawn's task window (wrapper start to stage-out done, from each task's completion record in
+[`results/billed-windows.txt`](results/billed-windows.txt)); boot before the wrapper is not in it.
 
 Every count in the six runs is identical — reads in, each filter bucket, both output read counts,
 Q30 rate and fastp's duplication estimate — so all four assertions (the exact read count, the
 conservation identity, mates paired, outputs == passed) hold on all three chips, and the counts are
 a fixed point across chips. Only the wall clock and the tmpfs high-water mark (7,019–7,230 MB) differ.
 
-- **The m-over-c lesson holds on every chip:** the 8-vCPU `m` box is 44% cheaper than the 16-vCPU
-  `c` box on Graviton4, Intel and AMD alike, because all three need 32 GiB for staging.
+- **The m-over-c lesson holds on every chip:** the 8-vCPU `m` box costs 56% of the 16-vCPU `c` box's
+  hourly price on Graviton4, Intel and AMD alike, because all three need 32 GiB for staging; per run it
+  is 41% cheaper on Graviton4, 39% on AMD and 33% on Intel.
 - **Threads are worth more on Intel**, where 8 vCPU is 4 cores × 2 hyperthreads (`lscpu`; Graviton4
   and AMD 8a are 1 thread per core): 8 → 16 threads bought 1.79× there, 1.45× on AMD, 1.16× on
   Graviton4. Even so, `c8i` does not pay for itself.
-- **AMD's `m8a.2xlarge` billed 4% under Graviton4's**, on a 159 s window against 226 s; most of that
-  gap is boot, the in-task hashing and gzip counts, and termination lag, not fastp, which is cheapest
-  on Graviton4 ($0.0036 of fastp seconds against AMD's $0.0043 and Intel's $0.0061). n = 1 per
-  cell, so read the billed ordering of Graviton4 and AMD as a tie.
+- **AMD's `m8a.2xlarge` billed 9% over Graviton4's `m8g.2xlarge`**: a shorter window (130 s against
+  162 s) at a 36% higher hourly rate. Most of each window is the image pull, the in-task hashing and
+  gzip counts, and stage-out, not fastp, which is also cheapest on Graviton4 ($0.0036 of fastp seconds
+  against AMD's $0.0043 and Intel's $0.0061). n = 1 per cell, so the 9% is one pair of observations.
 
 ## Why RAM picks the box and cores do not
 
@@ -54,8 +58,8 @@ that reads only CPU time and peak RSS misses it entirely.
 
 ## Boot dominates, by a lot
 
-36 s of fastp inside a 226 s billed window: **84% of what you pay for is boot, Docker install and image
-pull.** For a tool this fast the task boundary costs more than the task, which is an argument for
+36 s of fastp inside a 162 s billed window: **78% of the task window is Docker install, image pull,
+staging and the in-task checks**, and boot comes on top of it. For a tool this fast the task boundary costs more than the task, which is an argument for
 putting QC in the same task as whatever consumes its output rather than paying a second boot — the one
 place where [one tool per image](../../practices/container-path.md) has a real cost rather than just a
 shape.
@@ -73,7 +77,7 @@ The x86 legs are [`m8-2xl.task.json`](m8-2xl.task.json) and [`c8-4xl.task.json`]
 the recipe's spec with those changes, its own output prefix, and a topology record — resolved by
 `python3 scripts/spec_arch.py fastp x86_64|amd <bucket> <nonce> measurements/fastp-real/<rung>.task.json`.
 On spawn 0.139.1 these exceed EC2's 16 KiB user data (spawn#1063/#1246), so they ran with the inline
-command moved, byte for byte, into a staged sha256-checked file. Spend for the four x86 legs: $0.13.
+command moved, byte for byte, into a staged sha256-checked file. Spend for the four x86 legs: $0.13 (EC2 launch to terminate, CloudTrail).
 
 ## Caveats
 

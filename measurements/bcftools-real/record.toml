@@ -1,7 +1,7 @@
 # measurements/bcftools-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the EC2 window (CloudTrail RunInstances -> Terminate) on all three chips,
-# to within 1 s (results/billed-windows.txt). Dates are the git dates results/ landed; the runs
-# themselves were 2026-10-18 (arm64, Intel) and 2026-10-21 (AMD).
+# to within 1 s (results/billed-windows.txt). Dates are the runs' UTC dates from the completion
+# records: 2026-10-18 (arm64, Intel) and 2026-10-21 (AMD).
 schema = 2
 result_unit = "the whole verified run: chromosomes 20, 21 and 22 of 1000 Genomes Phase 3 (2,504 samples) normalised, annotated, filtered, concatenated and merged, with every check"
 
@@ -46,8 +46,8 @@ in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/arm64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 workers = 4
 ranks = 1
 threads_per_rank = 4
@@ -66,8 +66,8 @@ in = ["chip"]
 instance = "c8i.2xlarge"
 purpose = "cross-chip"
 results = "results/x86_64/"
-date = "2026-10-17"
-date_source = "git"
+date = "2026-10-18"
+date_source = "run"
 workers = 4
 ranks = 1
 threads_per_rank = 4
@@ -87,8 +87,8 @@ instance = "c8a.2xlarge"
 purpose = "cross-chip"
 results = "results/amd/"
 spawn_version = "0.139.1"
-date = "2026-10-20"
-date_source = "git"
+date = "2026-10-21"
+date_source = "run"
 workers = 4
 ranks = 1
 threads_per_rank = 4

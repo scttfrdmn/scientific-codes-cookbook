@@ -43,7 +43,7 @@ env (aarch.science arm64 on Graviton4, its linux-64 twin on both x86 chips) and 
 | AMD (EPYC 9R45) | `c8a.8xlarge` | 2,531 s | 2,577 s | 30.3 GiB | 1.7243 | 1.212 | 1.234 |
 
 A *result* is the whole corpus annotated and checked, plus the EWT evaluation (45–58 s of each wall).
-*Billed* runs from EC2 launch to the end of the task. Peak memory is the cgroup's `memory.peak`.
+*Billed* is spawn's task window, wrapper start to stage-out done. Peak memory is the cgroup's `memory.peak`.
 
 - **Graviton4 annotates 356k tokens/s, Intel 300k, AMD 324k.** That is 1.18× Intel and 1.10× AMD
   on the PMC phase (2,251 / 2,663 / 2,473 s). Graviton4's hour is also the cheapest, so per corpus it

@@ -1,6 +1,9 @@
 # measurements/picard-real/record.toml -- drafted by the #118 extraction, then authored.
-# Schema 2: the Intel/AMD billed is the EC2 window (CloudTrail, results/billed-windows.txt); the four
-# 2026-10-02 generation rows' billed matches no surviving window (unattributed). tmpfs peaks are each
+# Schema 2: billed is spawn's task window on every row (results/billed-windows.txt, matched by task
+# id: cookbook-picard-gen-r{6,7,9}g-* from gen-r*.task.json, cookbook-picard-wgs-r2 from the recipe's
+# 01-markdup spec, cookbook-picard-chip-r8g-* from chip-r8g.task.json). Until #123 the README printed
+# the x86 rows' EC2 window (707/581 s, kept as ec2_s) and unattributed generation windows
+# (1150/961/826/647 s). tmpfs peaks are each
 # smoke check's tmpfs_peak_used_mb.
 schema = 2
 result_unit = "one MarkDuplicates run on bwa's whole-genome sorted BAM (48,817,006 records, 4.5 GB)"
@@ -11,7 +14,7 @@ note = "one MarkDuplicates pass over a whole-genome coordinate-sorted BAM (4,568
 
 [timing]
 wall = "MarkDuplicates alone, timed in-script"
-billed_basis = "ec2"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "gen"
@@ -47,15 +50,14 @@ in = ["gen"]
 instance = "r6g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-r6g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 928
-billed_s = 1150
+billed_s = 1048
 usd_hr = 0.4032
 compute_usd = 0.1039
-billed_usd = 0.1288
+billed_usd = 0.1174
 tmpfs_peak_gib = 8.627
-billed_basis = "unattributed"
 
 [[run]]
 id = "gen-r7g"
@@ -63,15 +65,14 @@ in = ["gen"]
 instance = "r7g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-r7g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 747
-billed_s = 961
+billed_s = 907
 usd_hr = 0.4284
 compute_usd = 0.0889
-billed_usd = 0.1144
+billed_usd = 0.1079
 tmpfs_peak_gib = 8.627
-billed_basis = "unattributed"
 
 [[run]]
 id = "gen-r8g"
@@ -82,12 +83,11 @@ results = "results/smoke-check-r8g2xl.txt"
 date = "2026-10-02"
 date_source = "run"
 wall_s = 591
-billed_s = 826
+billed_s = 702
 usd_hr = 0.4713
 compute_usd = 0.0774
-billed_usd = 0.1081
+billed_usd = 0.0919
 tmpfs_peak_gib = 8.627
-billed_basis = "unattributed"
 note = "date from dup_metrics-r8g2xl.txt '# Started on: Fri Oct 02 01:15:59 UTC 2026'"
 
 [[run]]
@@ -96,15 +96,14 @@ in = ["gen"]
 instance = "r9g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-r9g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 482
-billed_s = 647
+billed_s = 570
 usd_hr = 0.5137
 compute_usd = 0.0688
-billed_usd = 0.0923
+billed_usd = 0.0813
 tmpfs_peak_gib = 8.625
-billed_basis = "unattributed"
 
 # --- same generation, three chips (bioconda x86 Picard 3.5.0)
 [[run]]
@@ -117,10 +116,11 @@ date = "2026-10-21"
 date_source = "run"
 threads_per_core = 2
 wall_s = 533
-billed_s = 707
+billed_s = 622
 usd_hr = 0.5557
 compute_usd = 0.0823
-billed_usd = 0.1091
+billed_usd = 0.096
+ec2_s = 707
 tmpfs_peak_gib = 8.627
 note = "README: 8i vCPUs are 4 cores with SMT. Date from dup_metrics-r8i-2xl.txt, which is byte-identical to the AMD file including its '# Started on: Wed Oct 21 06:00:08 GMT 2026' line"
 
@@ -134,10 +134,11 @@ date = "2026-10-21"
 date_source = "run"
 threads_per_core = 1
 wall_s = 459
-billed_s = 581
+billed_s = 530
 usd_hr = 0.639
 compute_usd = 0.0815
-billed_usd = 0.1031
+billed_usd = 0.0941
+ec2_s = 581
 tmpfs_peak_gib = 8.6084
 note = "README: 8a vCPUs are 8 whole cores. Date from dup_metrics-r8a-2xl.txt"
 

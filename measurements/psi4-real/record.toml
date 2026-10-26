@@ -1,7 +1,10 @@
 # measurements/psi4-real/record.toml -- drafted by the #118 extraction, then authored.
 # Schema 2: billed is the EC2 window (README: "EC2 launch to termination"), CloudTrail RunInstances ->
 # Terminate, reproduced to the second on all three chips (results/billed-windows.txt). The Graviton4
-# run's completion record was overwritten by the AMD run, which reused task id real-r2.
+# run's completion record was overwritten by the AMD run, which reused task id real-r2 (the README says
+# so). The committed specs already carry distinct ids per chip (cookbook-psi4-real-real / -real-x8664 /
+# -real-amd, from mkspec.py, plus spec_arch.py's nonce); the AMD run was not launched under real-amd's id.
+# Dates: each run's EC2 launch date in results/billed-windows.txt (all 2026-10-20 UTC).
 # avg_cores is footprint.txt's avg_cores_whole_task (the README's "box averages 12.0-13.6 busy cores").
 schema = 2
 result_unit = "the whole DESS66 set: all 66 dimers with every check passed (plus the 12 control jobs)"
@@ -36,7 +39,7 @@ purpose = "primary"
 results = "results/arm64/"
 host = "results/arm64/host.txt"
 date = "2026-10-20"
-date_source = "git"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 4
@@ -60,7 +63,7 @@ image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb1
 results = "results/x86_64/"
 host = "results/x86_64/host.txt"
 date = "2026-10-20"
-date_source = "git"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 4
@@ -84,7 +87,7 @@ image = "docker.io/psi4/psi4@sha256:8c4c13f5e4e11b7506d2fd9f76751a7b45f41cb9fbb1
 results = "results/amd/"
 host = "results/amd/host.txt"
 date = "2026-10-20"
-date_source = "git"
+date_source = "run"
 workers = 16
 ranks = 1
 threads_per_rank = 4

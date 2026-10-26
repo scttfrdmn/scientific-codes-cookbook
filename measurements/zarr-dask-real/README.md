@@ -43,8 +43,8 @@ single-threaded on an `xlarge`:
 | Xeon 6975P-C | `r8i.xlarge` + `r8i.4xlarge` | 54 + 319 s | 128 + 391 s | 45.4 GiB | 1.1114 | 0.1026 | 0.131 |
 | **EPYC 9R45** | `r8a.xlarge` + `r8a.4xlarge` | **31 + 182 s** | **91 + 243 s** | 45.8 GiB | 1.2781 | **0.0674** | **0.094** |
 
-A *result* is the whole verified run: both tasks and every check below. **Billed** is launch to
-terminate, from spawn's `cost_estimate`. $/hr is that estimate divided by the billed window.
+A *result* is the whole verified run: both tasks and every check below. **Billed** is spawn's task
+window, wrapper start to stage-out done, from its `cost_estimate`. $/hr is that estimate divided by the billed window.
 
 - **AMD finishes 1.45× faster than Graviton4 and 1.75× faster than Intel.** That beats AMD's 36%
   higher hourly price, so AMD is 10% cheaper per result billed than Graviton4 and 28% cheaper than

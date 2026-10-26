@@ -1,8 +1,9 @@
-# measurements/bedtools-real/record.toml -- drafted by the #118 extraction, then authored.
-# Schema 2: the x86 rows' billed is the EC2 window (README; CloudTrail in results/billed-windows.txt
-# matches 226/221 s exactly). The Graviton rows' billed is 58-87 s longer than their spawn windows and
-# CloudTrail no longer reaches 2026-10-02, so it is unattributed. Dates are the git date results/ landed;
-# the completion records put the Graviton runs on 2026-10-02 and the x86 legs on 2026-10-21.
+# measurements/bedtools-real/record.toml
+# Schema 2: billed is spawn's task window (results/billed-windows.txt, matched by task id:
+# cookbook-bedtools-gen-c{6,7,9}g-* from gen-c*.task.json; the x86 legs' gen-c8g-{x8664,amd}-*).
+# Until #123 the README printed the x86 rows' EC2 window (226/221 s, kept as ec2_s) and Graviton
+# windows 58-87 s over spawn. The c8g row stays unattributed: its spec is gen-c8g.task.json, and the
+# batch's only c8g window is the recipe's genomecov task, a different task id.
 schema = 2
 result_unit = "one genomecov -ibam pass over the whole-genome BAM (48,817,006 records, 3,366 contigs)"
 
@@ -12,7 +13,7 @@ note = "one serial genomecov pass over bwa's sorted BAM (4.5 GB) on 8 vCPU; the 
 
 [timing]
 wall = "genomecov alone, timed in-script"
-billed_basis = "ec2"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "gen"
@@ -21,7 +22,7 @@ held = ["image", "input", "size"]
 equal_work = "genome-bases-fai"
 attribution = "same-binary"
 verdict = { shape = "monotonic", through = 9, on = "wall" }
-note = "2.33x Graviton2 -> Graviton5; per-step 1.69x, 1.16x, 1.19x; billed is boot-dominated and ranks Graviton3 ahead of Graviton4"
+note = "2.33x Graviton2 -> Graviton5; per-step 1.69x, 1.16x, 1.19x; Graviton4's billed window is unattributed, so billed is not compared across its rung"
 
 [[series]]
 id = "chip"
@@ -49,14 +50,13 @@ in = ["gen"]
 instance = "c6g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-c6g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 286
-billed_s = 420
-billed_basis = "unattributed"
+billed_s = 361
 usd_hr = 0.272
 compute_usd = 0.0216
-billed_usd = 0.0317
+billed_usd = 0.0273
 tmpfs_peak_gib = 4.2568
 
 [[run]]
@@ -65,14 +65,13 @@ in = ["gen"]
 instance = "c7g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-c7g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 169
-billed_s = 290
-billed_basis = "unattributed"
+billed_s = 230
 usd_hr = 0.29
 compute_usd = 0.0136
-billed_usd = 0.0234
+billed_usd = 0.0185
 tmpfs_peak_gib = 4.2568
 
 [[run]]
@@ -98,14 +97,13 @@ in = ["gen"]
 instance = "c9g.2xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-check-c9g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 wall_s = 123
-billed_s = 229
-billed_basis = "unattributed"
+billed_s = 171
 usd_hr = 0.3478
 compute_usd = 0.0119
-billed_usd = 0.0221
+billed_usd = 0.0165
 tmpfs_peak_gib = 4.2568
 
 [[run]]
@@ -116,14 +114,15 @@ purpose = "cross-chip"
 spawn_version = "0.139.1"
 results = "results/smoke-check-c8i-2xl.txt"
 host = "results/hwprobe-c8i-2xl.txt"      # model/siblings/cores only; tpc from the README column
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-21"
+date_source = "run"
 threads_per_core = 2
 wall_s = 130
-billed_s = 226
+billed_s = 176
 usd_hr = 0.3748
 compute_usd = 0.0135
-billed_usd = 0.0235
+billed_usd = 0.0183
+ec2_s = 226
 tmpfs_peak_gib = 4.2578
 
 [[run]]
@@ -134,14 +133,15 @@ purpose = "cross-chip"
 spawn_version = "0.139.1"
 results = "results/smoke-check-c8a-2xl.txt"
 host = "results/hwprobe-c8a-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-21"
+date_source = "run"
 threads_per_core = 1
 wall_s = 101
-billed_s = 221
+billed_s = 134
 usd_hr = 0.4311
 compute_usd = 0.0121
-billed_usd = 0.0265
+billed_usd = 0.016
+ec2_s = 221
 tmpfs_peak_gib = 4.2568
 
 [[check]]

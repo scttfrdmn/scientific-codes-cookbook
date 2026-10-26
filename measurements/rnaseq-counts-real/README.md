@@ -65,7 +65,7 @@ is the tmpfs that holds the 2.9 GB BAM.
 | | Xeon 6975P-C | `r8i.large` | 902 s | 993 s | 0.24 GiB | 0.1389 | 0.0348 | 0.0383 |
 | | EPYC 9R45 | `r8a.large` | **525 s** | **580 s** | 0.24 GiB | 0.1598 | **0.0233** | **0.0257** |
 
-A *result* is one sample's verified count table. *Billed* runs from launch to terminate, at
+A *result* is one sample's verified count table. *Billed* is spawn's task window, wrapper start to stage-out done, at
 spawn's printed price, and the featureCounts window covers both thread counts. *Peak RSS* is the
 tool's own `VmHWM`. Container `memory.peak` was 5.5 GB for featureCounts, which is mostly page cache
 from the uncompressed GTF and the BAM, and 0.24 GB for HTSeq. Threads per core: 1 on Graviton4 and

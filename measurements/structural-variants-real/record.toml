@@ -79,6 +79,17 @@ peak_kind = "rss"
 note = "manta; peak is ru_maxrss over pyflow's tasks (cgroup memory.peak 3.4 GiB)"
 
 [[run]]
+id = "manta-r8g-first"
+task = "01-manta"
+instance = "r8g.8xlarge"
+purpose = "diagnostic"
+date = "2026-10-20"
+date_source = "git"
+run_outcome = "failed"
+superseded_by = "manta-r8g"
+note = "the first Graviton4 manta run, $0.37 of the README's $5.09 spend: its insertion check guessed END == POS and failed the task. No wall, window or results were kept, so no time or $ field. The instance is the spec's only fit (r8g, 32 vCPU, 256 GiB); the re-run, manta-r8g, asserts manta's END convention and its records were identical"
+
+[[run]]
 id = "delly-r8g"
 in = ["chip-delly"]
 task = "02-delly"

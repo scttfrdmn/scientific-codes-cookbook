@@ -38,13 +38,13 @@ directly in `/tmp`, spawn bind-mounts only the staged directories, and `/tmp` is
 
 | chip | instance | PLINK 2 wall | task wall | billed | $/hr | **compute $/result** | billed $/result | peak mem |
 |---|---|---|---|---|---|---|---|---|
-| **Graviton4** | `r8g.4xlarge` | 681 s | 1,127 s | 1,213 s | 0.9426 | **0.178** | **0.318** | 33.2 GiB |
-| Intel Xeon 6 | `r8i.4xlarge` | 804 s | 2,312 s | 2,395 s | 1.1114 | 0.248 | 0.739 | 33.1 GiB |
+| **Graviton4** | `r8g.4xlarge` | 681 s | 1,127 s | 1,206 s | 0.9426 | **0.178** | **0.316** | 33.2 GiB |
+| Intel Xeon 6 | `r8i.4xlarge` | 804 s | 2,312 s | 2,389 s | 1.1114 | 0.248 | 0.738 | 33.1 GiB |
 | AMD EPYC 9R45 | `r8a.4xlarge` | **601 s** | 1,762 s | 1,799 s | 1.2781 | 0.213 | 0.639 | 33.3 GiB |
 
 A result is one genome-wide run of the workflow. **PLINK 2 wall** is the union of PLINK 2's own
 Start/End times from its 75 logs ([`toolwall.py`](toolwall.py)); task wall adds the awk that
-checks identities over 78 M rows. Billed is spawn's window, wrapper start to stage-out done.
+checks identities over 78 M rows. Billed is spawn's window, wrapper start to stage-out done ([`results/billed-windows.txt`](results/billed-windows.txt)).
 
 - **Graviton4: 1.18× faster, 28% cheaper per result** on PLINK 2's own time. VCF import is the bulk
   (422 vs 531 s summed over 22 chromosomes, 1.26×); merge (114 / 112 s) and genome-wide
@@ -58,7 +58,7 @@ checks identities over 78 M rows. Billed is spawn's window, wrapper start to sta
 - **The billed gap is not PLINK.** Bioconda's x86 image has a BusyBox userland, and the non-PLINK
   part of the task (the identity checks: awk, sort, gzip) took 1,508 s there on Intel and 1,161 s
   on AMD, against 446 s in the arm64 image. A run without them would
-  bill ≈ PLINK 2 wall + 37–86 s of boot and staging: about **$0.20 (Graviton4), $0.27 (Intel) and
+  bill ≈ PLINK 2 wall + 37–79 s of Docker install, image pull and staging: about **$0.20 (Graviton4), $0.27 (Intel) and
   $0.23 (AMD)**.
 - **Peak memory 33 GiB on all three** is the container cgroup, which includes the ~27 GiB of `/tmp` the task
   wrote (merged `.pgen`, counts); `/tmp` held 40.8 GiB at the end, with the 14.6 GB of staged VCFs.

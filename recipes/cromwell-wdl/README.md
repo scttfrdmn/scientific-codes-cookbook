@@ -25,7 +25,7 @@ cromwell run sumcheck.wdl -m meta.json # local backend
 
 ## Which box — [measured](../../measurements/cromwell-wdl-real/README.md) on Broad's GVCF workflow, NA12878 chr20 at 36× (16 shards)
 
-| chip | instance | workflow wall | slowest shard | $/hr | **billed $/result** |
+| chip | instance | workflow wall | slowest shard | $/hr | **$/result to workflow end** |
 |---|---|---|---|---|---|
 | Graviton4 | `r8g.4xlarge` | 5,089 s | 4,999 s | 0.9426 | 1.357 |
 | Xeon 6975P-C | `r8i.4xlarge` | 507 s | 452 s | 1.1114 | 0.190 |

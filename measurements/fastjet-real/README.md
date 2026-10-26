@@ -44,7 +44,7 @@ jets, idx = cs.inclusive_jets(), cs.constituent_index()       # 20,000 events pe
 bytes. FastJet 3.5.2 (Python 3.5.2.0) is aarch.science's `hep` image on Graviton4 and its linux-64 lock
 twin on both x86 chips.
 
-| chip | instance | FastJet pass | whole task (pass + checks) | task window | peak RSS / worker | $/hr | compute $/result | billed $/result |
+| chip | instance | FastJet pass | worker pool (pass + checks) | task window | peak RSS / worker | $/hr | compute $/result | billed $/result |
 |---|---|---|---|---|---|---|---|---|
 | Graviton4 | `m8g.2xlarge` | 189.8 cpu-s (23.7 s) | 150.0 s | 378 s | 2.15 GiB | 0.3590 | 0.0150 | 0.0377 |
 | Xeon 6975P-C | `m8i.2xlarge` | 264.9 cpu-s (33.1 s) | 199.3 s | 335 s | 2.15 GiB | 0.4234 | 0.0234 | 0.0394 |
@@ -52,7 +52,8 @@ twin on both x86 chips.
 
 - **FastJet itself clusters 5,800 events/s per worker on Graviton4, 4,150 on Intel and 6,900 on AMD.**
   The pass column is the anti-k_t clustering summed over the 8 workers; in brackets is that time divided
-  by 8. AMD's vCPUs are 8 cores; Intel's are 4 cores × 2 threads (`lscpu`, `results/*/host.txt`). So the
+  by 8. The worker-pool column is `cluster.py`'s `wall_s_pass`, the pool alone; the whole `cluster.py`
+  process ran 170 / 219 / 123 s (`results/*/times.txt`). AMD's vCPUs are 8 cores; Intel's are 4 cores × 2 threads (`lscpu`, `results/*/host.txt`). So the
   Intel row is 8 processes on 4 cores, as an `m8i.2xlarge` is sold.
 - **The checks cost more than the clustering.** Of the workers' CPU time on Graviton4 the FastJet pass is
   about a sixth. The rest is a second clustering with the hardest particle split, N-subjettiness

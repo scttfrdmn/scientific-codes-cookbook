@@ -1,6 +1,6 @@
 # measurements/freebayes-real/record.toml
-# Schema 2: the ladder rows' billed is spawn's completion record; the x86 rows' is the EC2 window
-# (CloudTrail); both in results/billed-windows.txt. freebayes is single-threaded on a 4-vCPU box.
+# Schema 2: billed is spawn's completion record on every row (results/billed-windows.txt); the x86
+# rows printed their EC2 window (587/460 s; CloudTrail 587/461, kept as ec2_s) until #123. freebayes is single-threaded on a 4-vCPU box.
 schema = 2
 result_unit = "one whole-chr20 call: freebayes on NA12878 chr20 at 36x against GRCh38 chr20"
 
@@ -44,8 +44,8 @@ in = ["gen"]
 instance = "c6g.xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-c6g.txt"
-date = "2026-10-03"
-date_source = "git"
+date = "2026-10-04"
+date_source = "run"
 workers = 1                     # freebayes is single-threaded
 ranks = 1
 threads_per_rank = 1
@@ -61,8 +61,8 @@ in = ["gen"]
 instance = "c7g.xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-c7g.txt"
-date = "2026-10-03"
-date_source = "git"
+date = "2026-10-04"
+date_source = "run"
 workers = 1
 ranks = 1
 threads_per_rank = 1
@@ -78,8 +78,8 @@ in = ["gen", "chip"]
 instance = "c8g.xlarge"
 purpose = "primary"
 results = "results/smoke-c8g.txt"
-date = "2026-10-03"
-date_source = "git"
+date = "2026-09-30"
+date_source = "run"
 workers = 1
 ranks = 1
 threads_per_rank = 1
@@ -97,8 +97,8 @@ in = ["gen"]
 instance = "c9g.xlarge"
 purpose = "generation-sweep"
 results = "results/smoke-c9g.txt"
-date = "2026-10-03"
-date_source = "git"
+date = "2026-10-04"
+date_source = "run"
 workers = 1
 ranks = 1
 threads_per_rank = 1
@@ -117,16 +117,16 @@ purpose = "cross-chip"
 results = "results/smoke-c8i.txt"
 host = "results/topology-c8i.txt"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 workers = 1
 ranks = 1
 threads_per_rank = 1
 wall_s = 476
-billed_s = 587
-billed_basis = "ec2"
+billed_s = 543
 usd_hr = 0.1874
 compute_usd = 0.0248
-billed_usd = 0.0306
+billed_usd = 0.0283
+ec2_s = 587
 
 [[run]]
 id = "chip-c8a"
@@ -136,16 +136,16 @@ purpose = "cross-chip"
 results = "results/smoke-c8a.txt"
 host = "results/topology-c8a.txt"
 date = "2026-10-21"
-date_source = "git"
+date_source = "run"
 workers = 1
 ranks = 1
 threads_per_rank = 1
 wall_s = 357
-billed_s = 460
-billed_basis = "ec2"
+billed_s = 404
 usd_hr = 0.2155
 compute_usd = 0.0214
-billed_usd = 0.0275
+billed_usd = 0.0242
+ec2_s = 461
 
 # --- checks: in-task smoke asserts in results/smoke-*.txt, then the README's comparisons
 [[check]]

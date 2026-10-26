@@ -135,16 +135,16 @@ purpose = "primary"
 date = "2026-09-26"
 date_source = "run"
 workers = 32
-wall_s = 409
+wall_s = 411
 usd_hr = 1.4362
-compute_usd = 0.163
-results = "results/copy-route.txt"
+compute_usd = 0.164
+results = "results/four-data-paths.txt"
 launch = "launch"
 data_path = "ebs-copy"
 ranks = 1
 threads_per_rank = 32
 staged_gib = 28.6
-note = "copy -> local EBS (gp3): 118 s copy + 291 s align, 231 s load at 127 MiB/s"
+note = "copy -> local EBS (gp3): 118 s copy + 293 s align (four-data-paths.txt copy_cold_align_s; the README printed 291, warm-leg.txt's ebs_warm1_align_s, until #123), 231 s load at 127 MiB/s"
 
 # --- Graviton4, steady state: the same box aligning another sample (wall_s = the align column)
 [[run]]

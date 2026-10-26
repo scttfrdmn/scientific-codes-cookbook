@@ -57,8 +57,8 @@ Graviton4, bioconda's x86 build on both x86 chips. Same staged bytes on all thre
 | Xeon 6975P-C | `c8i.4xlarge` | 140 s | 10,865 s | 11,005 s | 11,489 s | 17.0 GiB | 0.7497 | 2.292 | 2.393 |
 | **EPYC 9R45** | `c8a.4xlarge` | **121 s** | **5,371 s** | **5,492 s** | **5,902 s** | 17.0 GiB | 0.8622 | **1.315** | **1.414** |
 
-A *result* is one whole proteome searched and checked: database build plus search. *Billed* runs from
-launch to terminate, at spawn's printed price. *Peak RSS* is the `blastp` process's own `VmHWM`;
+A *result* is one whole proteome searched and checked: database build plus search. *Billed* is spawn's
+task window, wrapper start to stage-out done, at spawn's printed price. *Peak RSS* is the `blastp` process's own `VmHWM`;
 `makedb` peaks at 2.1 GiB. DIAMOND links no BLAS, so there is no OpenBLAS kernel to record. Threads
 per core: 1 on Graviton4 and AMD, 2 on Intel (8 cores).
 

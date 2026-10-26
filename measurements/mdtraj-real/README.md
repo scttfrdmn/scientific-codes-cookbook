@@ -55,7 +55,7 @@ arm64, its linux-64 twin on both x86 chips. Same staged bytes.
 | **AMD (EPYC 9R45)** | `c8a.8xlarge` | **784 s** | **832 s** | 38.8 GiB | 1.7243 | **0.376** | **0.399** |
 
 A *result* is the whole dataset: all 60 files through every analysis and cross-check, plus the DHFR
-DCD below. *Tool wall* is `real.py`, start to finish. *Billed* runs from EC2 launch to terminate.
+DCD below. *Tool wall* is `real.py`, start to finish. *Billed* is spawn's task window, wrapper start to stage-out done.
 *Peak mem* is the container's cgroup `memory.peak`; one worker peaks at 1.26–1.28 GiB (`ru_maxrss`).
 
 - **AMD is 1.37× faster than Graviton4 and 2.24× faster than Intel.** Its hour costs 35% more than

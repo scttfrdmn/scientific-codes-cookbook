@@ -37,14 +37,14 @@ picard -Xmx24g MarkDuplicates I=aln.sorted.bam O=marked.bam M=dup_metrics.txt TM
 
 | chip | instance | MarkDuplicates | **$/run** |
 |---|---|---|---|
-| Graviton2 | `r6g.2xlarge` | 928 s | 0.1288 |
-| Graviton3 | `r7g.2xlarge` | 747 s | 0.1144 |
-| Graviton4 | `r8g.2xlarge` | 591 s | 0.1081 |
-| **Graviton5** | `r9g.2xlarge` | **482 s** | **0.0923** |
-| Intel Xeon 6 | `r8i.2xlarge` | 533 s | 0.1091 |
-| AMD EPYC 9R45 | `r8a.2xlarge` | 459 s | 0.1031 |
+| Graviton2 | `r6g.2xlarge` | 928 s | 0.1174 |
+| Graviton3 | `r7g.2xlarge` | 747 s | 0.1079 |
+| Graviton4 | `r8g.2xlarge` | 591 s | 0.0919 |
+| **Graviton5** | `r9g.2xlarge` | **482 s** | **0.0813** |
+| Intel Xeon 6 | `r8i.2xlarge` | 533 s | 0.0960 |
+| AMD EPYC 9R45 | `r8a.2xlarge` | 459 s | 0.0941 |
 
-**~1.24× per generation, 1.93× over four, and every step pays for itself** — no cost-neutral rung, unlike the two DFT codes ([GPAW](../gpaw/README.md), [SIESTA](../siesta/README.md)). And a JVM tool doing integer and IO work gains *more* than SIESTA's 1.86×, so "the FP-heavy codes gain most" does not survive a fifth code. Within Graviton4's generation, AMD is 1.29× faster and 5% cheaper per run. Every chip gives the same metrics file.
+**~1.24× per generation, 1.93× over four, and every step pays for itself** — no cost-neutral rung, unlike the two DFT codes ([GPAW](../gpaw/README.md), [SIESTA](../siesta/README.md)). And a JVM tool doing integer and IO work gains *more* than SIESTA's 1.86×, so "the FP-heavy codes gain most" does not survive a fifth code. Within Graviton4's generation, AMD is 1.29× faster but 2% dearer per run. Every chip gives the same metrics file.
 
 **Size by RAM, not cores.** MarkDuplicates spills to `TMP_DIR`, which here is [tmpfs — RAM](../../practices/container-path.md), so the box pays `-Xmx24g` of heap *plus* a measured **8,834 MB** high-water mark on top of the 4.5 GB staged input — the same double-spend [samtools sort](../bwa-samtools/README.md) hits one step earlier.
 

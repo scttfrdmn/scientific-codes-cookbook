@@ -43,8 +43,8 @@ plink2 --bfile data --freq counts --out p2      # 2.0: ALT_CTS/OBS_CT, ALT = ALT
 
 | chip | instance | PLINK 2 wall | compute $/result | billed $/result |
 |---|---|---|---|---|
-| **Graviton4** | `r8g.4xlarge` | 681 s | **0.178** | **0.318** |
-| Intel / AMD | `r8i` / `r8a.4xlarge` | 804 / **601 s** | 0.248 / 0.213 | 0.739 / 0.639 |
+| **Graviton4** | `r8g.4xlarge` | 681 s | **0.178** | **0.316** |
+| Intel / AMD | `r8i` / `r8a.4xlarge` | 804 / **601 s** | 0.248 / 0.213 | 0.738 / 0.639 |
 
 **Graviton4 is the cheapest per result: 1.18× faster than Intel and 28% cheaper.** AMD is the fastest, 1.13× Graviton4, and costs 20% more, because its hour costs 36% more. VCF import is most of it. Size by the 41 GiB of `/tmp` (staged VCFs plus the merged `.pgen`), not by PLINK. At this scale every allele count still equals PLINK 1.9's and the VCF's own `AC`/`AN`, exactly, and the two PLINKs' exact-PCA eigenvalues are identical. `--glm`'s A1 is the *minor* allele, not ALT — check it before reading a sign — and seed `--pca approx`.
 

@@ -60,7 +60,7 @@ on a `4xlarge` (16 vCPU, 64 GiB) everywhere.
 | Xeon 6975P-C | `m8i.4xlarge` | 3238 s (2572 s) | 3407 s | 10.88 GiB | 0.8467 | 0.7616 | 0.8013 |
 | EPYC 9R45 | `m8a.4xlarge` | **1909 s** (1457 s) | **2052 s** | 10.88 GiB | 0.9738 | 0.5164 | 0.5550 |
 
-A *result* is one sample quantified and checked. *Billed* runs from launch to terminate. *$/hr* is
+A *result* is one sample quantified and checked. *Billed* is spawn's task window, wrapper start to stage-out done. *$/hr* is
 spawn's cost estimate over that window. *RSEM wall* is `rsem-calculate-expression` end to end; the
 EM figure is RSEM's own `Time Used for EM.cpp`, and the rest is single-threaded SAM parsing.
 *Peak RSS* is the kernel's `VmHWM` for `rsem-run-em`, which holds all 394M alignments. Threads per

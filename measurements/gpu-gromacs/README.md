@@ -17,12 +17,13 @@ V-rescale at 300 K.
 
 | card | instance | ns/day | GPU util mean / max | plateau ¹ | peak mem | $/hr ² | $/ns |
 |---|---|---|---|---|---|---|---|
-| **L4** | `g6.2xlarge` ³ | **392.759** | 35.1 / 86% | 56.5% | 222 MB | 0.978 | **0.0598** |
+| **L4** | `g6.2xlarge` ³ | **392.759** | 35.1 / 86% | 51% | 222 MB | 0.978 | **0.0598** |
 | L40S | `g6e.2xlarge` ³ | 489.703 | 29.8 / 61% | 41% | 463 MB | 2.242 | 0.1099 |
 | A10G | `g5.2xlarge` | 287.294 | 24.4 / 74% | 47.5% | 287 MB | 1.212 | 0.1012 |
 
-¹ Median over the active window, from the first to the last sample at or above 50% of the series
-maximum. These runs last 9–15 s, so the series has 11–19 samples and swings 0–86% within the
+¹ Median over the active window, from the first to the last sample at or above half the series'
+90th-percentile sample ([the record's rule](../../practices/measurement-record.md), derived from the
+committed `gpu_util*.csv`). These runs last 9–15 s, so the series has 11–19 samples and swings 0–86% within the
 active window. No row here has a steady plateau. ² The rates the
 [pattern page](../../patterns/gpu-tradeoff.md) used. The artifacts carry no price. ³ Size from the pattern page. The `host.log` names the card,
 not the instance, and these two runs' configs are not in the bucket. The A10G size is printed by RUN 2.
@@ -55,16 +56,16 @@ the update (RUN 1's `md.log`), so a stage's contribution is measured by forcing 
 
 ## Packing one L4 with MPS — `results/mps-l4/`
 
-| N jobs | ntomp each | per-system ns/day | aggregate ns/day | util mean | peak mem | $/ns ² |
-|---|---|---|---|---|---|---|
-| 1 | 8 | 430.1 | 430.1 | 27% | 250 MB | 0.0546 |
-| **2** | 4 | 372.5 | **744.9** | 82% | 463 MB | **0.0315** |
-| 3 | 2 | 252.5 | 757.4 | 91% | 676 MB | 0.0310 |
-| 4 | 2 | 189.6 | 758.2 | 94% | 888 MB | 0.0310 |
+| N jobs | ntomp each | per-system ns/day | aggregate ns/day | util mean | plateau ¹ | peak mem | $/ns ² |
+|---|---|---|---|---|---|---|---|
+| 1 | 8 | 430.1 | 430.1 | 27% | 45% | 250 MB | 0.0546 |
+| **2** | 4 | 372.5 | **744.9** | 82% | 94% | 463 MB | **0.0315** |
+| 3 | 2 | 252.5 | 757.4 | 91% | 99.5% | 676 MB | 0.0310 |
+| 4 | 2 | 189.6 | 758.2 | 94% | 100% | 888 MB | 0.0310 |
 
 `MPS=on` (`nvidia-cuda-mps-control -d`, inside the privileged container). Per-system throughput
 falls 2.27× from N = 1 to 4, while the aggregate rises 1.76×. The aggregate gains 73.2% from 1 to
-2 jobs, then 1.7% and 0.1%. The utilisation column is the series mean, not a plateau.
+2 jobs, then 1.7% and 0.1%. *Util mean* is the series mean; the plateau is the same rule as above.
 
 ## The CPU leg — `results/tradeoff/cpu-*`
 
@@ -79,8 +80,9 @@ Same `.mdp` and solvate, `-nb cpu -ntomp 8`, conda-forge GROMACS 2026.3, 25,000 
 | `c5` | x86_64 | 44.997 | | `c7g` | aarch64 | 43.992 |
 
 **Weaker than the GPU rows, and read it that way:** the instance *size* is not recorded (8 OpenMP
-threads; the cfgs for these runs are not in the bucket). The x86 rows ran `condaforge/miniforge3:latest`
-and installed GROMACS at run time, a tag and a solve rather than a pin. Only `cpu-c8g3` ran a pinned
+threads; the cfgs for these runs are not in the bucket). Every completed row but `cpu-c8g3` ran
+`condaforge/miniforge3:latest` (the x86 rows and Graviton3/5, `cpu-c7g` and `cpu-c9g`, per each
+`host.log`) and installed GROMACS at run time, a tag and a solve rather than a pin. Only `cpu-c8g3` ran a pinned
 image (`quay.io/aarchsci/md@sha256:1ee941664add…`). `cpu-c8g` and `cpu-c8g2` failed `no-gmx-on-path`
 and are kept as failures. `cpu_canary.sh` in the bucket was re-uploaded on 2026-09-16 08:26, after
 the `c7a`, `c7i` and `c8g3` runs on 09-15, so it is the later revision. The GPU and CPU legs

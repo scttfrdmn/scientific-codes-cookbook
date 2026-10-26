@@ -1,8 +1,10 @@
 # measurements/seqkit-real/record.toml -- drafted by the #118 extraction, then authored.
 # The Graviton generation rungs (c6g/c7g/c9g) are priced only on recipes/seqkit's page, not in
 # this README; their walls are in results/ but no run date is stated, so they are not recorded here.
-# Schema 2: billed is "launch -> terminate" (README), the EC2 window; CloudTrail reproduces the x86
-# legs (165 / 161 s, results/billed-windows.txt) but does not reach the 2026-10-02 Graviton4 run.
+# Schema 2: billed is spawn's task window (results/billed-windows.txt). The README names the recipe's
+# 01-stats.task.json (task id cookbook-seqkit-wgs) as the Graviton4 rung, and its 2026-10-02 window is
+# cookbook-seqkit-wgs-20261001202757: 137 s. Until #123 the README printed 227 s (unattributed) for it
+# and the x86 legs' launch-to-terminate windows (166/161 s; CloudTrail 165/161, kept as ec2_s).
 schema = 2
 result_unit = "seqkit stats + fq2fa over the complete SRR062634 run (48,297,986 reads, both mates)"
 
@@ -12,7 +14,7 @@ note = "seqkit stats over both mates, then fq2fa and stats again, -j 8"
 
 [timing]
 wall = "stats + fq2fa, timed in-script"
-billed_basis = "ec2"
+billed_basis = "spawn-task"
 
 [[series]]
 id = "chip"
@@ -35,15 +37,14 @@ in = ["chip"]
 instance = "c8g.2xlarge"
 purpose = "primary"
 results = "results/smoke-check-c8g-2xl.txt"
-date = "2026-10-01"
-date_source = "git"
+date = "2026-10-02"
+date_source = "run"
 threads_per_core = 1
 wall_s = 93
-billed_s = 227
+billed_s = 137
 usd_hr = 0.3190
 compute_usd = 0.0082
-billed_usd = 0.0201
-billed_basis = "unattributed"
+billed_usd = 0.0121
 workers = 8
 ranks = 1
 threads_per_rank = 8
@@ -61,10 +62,11 @@ date_source = "run"
 spawn_version = "0.139.1"
 threads_per_core = 2
 wall_s = 86
-billed_s = 166
+billed_s = 127
 usd_hr = 0.3748
 compute_usd = 0.0090
-billed_usd = 0.0173
+billed_usd = 0.0132
+ec2_s = 165
 workers = 8
 ranks = 1
 threads_per_rank = 8
@@ -82,10 +84,11 @@ date_source = "run"
 spawn_version = "0.139.1"
 threads_per_core = 1
 wall_s = 72
-billed_s = 161
+billed_s = 106
 usd_hr = 0.4311
 compute_usd = 0.0086
-billed_usd = 0.0193
+billed_usd = 0.0127
+ec2_s = 161
 workers = 8
 ranks = 1
 threads_per_rank = 8

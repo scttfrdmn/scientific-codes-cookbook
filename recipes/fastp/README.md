@@ -13,7 +13,7 @@ last_verified: 2026-10-01
 
 Filters and trims the whole SRR062634 run (4.83 Gbp) and balances its books exactly. For anyone putting read QC in front of an aligner.
 
-> **The compute is free; the staging is what you pay for.** 36 s of fastp sits in a 226 s billed
+> **The compute is free; the staging is what you pay for.** 36 s of fastp sits in a 162 s billed
 > window, and the box is chosen by RAM, not cores — see below before you rent a big one.
 
 ## Run it
@@ -40,14 +40,14 @@ by read length or depth; both move the staging footprint, which is the thing tha
 
 ## Shape, size, cost
 
-`m8g.2xlarge` (8 vCPU, 32 GiB): **36 s of fastp in a 226 s billed window, $0.0225.**
+`m8g.2xlarge` (8 vCPU, 32 GiB): **36 s of fastp in a 162 s billed window, $0.0162.**
 
 **Size by RAM, and the reason is counter-intuitive.** Input (3.6 GiB) and output (~3.4 GiB) sit in
 tmpfs *together* — a measured **7,154 MB peak** — and tmpfs is
 [half of RAM](../../practices/container-path.md), so ≥16 GiB of tmpfs means ≥32 GiB of RAM. On `c8g`
 the only 32 GiB box is `4xlarge`, which drags along 16 cores fastp cannot use at $0.6381/hr; `m8g.2xlarge`
-has the same 32 GiB for **$0.3590**. Measured both: **$0.0401 on `c8g.4xlarge` at 16 threads against
-$0.0225 on `m8g.2xlarge` at 8 — 44% cheaper for 5 s slower** — and 44% again on Intel and on AMD (`m8a.2xlarge` $0.0215, `m8i` $0.0266). Reading the core count right would still
+has the same 32 GiB for **$0.3590**. Measured both: **$0.0273 on `c8g.4xlarge` at 16 threads against
+$0.0162 on `m8g.2xlarge` at 8 — 41% cheaper for 5 s slower** — and 39% on AMD, 33% on Intel (`m8a.2xlarge` $0.0176, `m8i` $0.0199). Reading the core count right would still
 have picked the wrong box, because the binding resource was never compute ([measurement](../../measurements/fastp-real/README.md)).
 
 <details>

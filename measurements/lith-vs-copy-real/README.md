@@ -72,7 +72,8 @@ bucket, and every read is from our us-west-2 copy. lith's counts are its own `li
 the copies' are computed from the objects' sizes and the part size. **Peak memory** is host
 `MemTotal − MemAvailable`, sampled each second, which counts the tmpfs. **tmpfs** is `/tmp`'s
 high-water mark (about 3 GiB in lith arms is the baseline object, briefly). The **today** rows use the
-same accounting, so they differ from the source pages' launch-to-terminate figures: gsw $1.395 (page
+same accounting, so they differ from the source pages' billed figures (EC2 launch to terminate for gsw
+and gfs, spawn's task window for manta and delly): gsw $1.395 (page
 $1.43), gfs $0.361 ($0.434), manta $0.361 and delly $0.842 (unchanged). Tomography is $0.130 against
 the page's $0.121, because this page counts the in-task pin check and that page did not.
 

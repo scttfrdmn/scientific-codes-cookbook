@@ -55,7 +55,7 @@ the same version on both x86 chips. Same staged bytes. 16 threads on a `4xlarge`
 | EPYC 9R45 | `c8a.4xlarge` | **162 s** | **476 s** | 2.71 GiB | 0.8622 | **0.0388** | **0.0493** |
 
 A *result* is one sample quantified at the defaults (run A). *Quant wall* is `kallisto quant` end to
-end, index load included. *Billed window* runs from launch to terminate and also holds the B control
+end, index load included. *Billed window* is spawn's task window (wrapper start to stage-out done) and also holds the B control
 (389, 392 and 270 s), so *billed $/result* is that window less B, at spawn's $/hr: what a task running
 only the job would bill. The window cost as charged was $0.1186, $0.1426 and $0.1140. *Peak RSS* is the
 kernel's `VmHWM` for `kallisto`. Threads per core: 1 on Graviton4 and AMD, 2 on Intel, so

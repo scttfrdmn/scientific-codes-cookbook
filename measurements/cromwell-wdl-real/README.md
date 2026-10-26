@@ -56,16 +56,18 @@ rather than `scripts/spec_arch.py` writes the x86 and AMD specs (spec_arch rewri
 aarch.bio's builds on Graviton4, bioconda's x86 builds on both x86 chips. Same staged bytes on all
 three:
 
-| chip | instance | workflow wall | slowest shard | billed (workflow) | peak RSS | $/hr | compute $/result | billed $/result |
+| chip | instance | workflow wall | slowest shard | spawn start → workflow end | peak RSS | $/hr | compute $/result | $/result to workflow end |
 |---|---|---|---|---|---|---|---|---|
 | Graviton4 | `r8g.4xlarge` | 5,089 s | 4,999 s | 5,184 s | 17.0 GiB | 0.9426 | 1.332 | 1.357 |
 | Xeon 6975P-C | `r8i.4xlarge` | 507 s | 452 s | 617 s | 17.9 GiB | 1.1114 | 0.157 | 0.190 |
 | **EPYC 9R45** | `r8a.4xlarge` | **396 s** | **314 s** | **503 s** | 18.0 GiB | 1.2781 | **0.141** | **0.179** |
 
 A *result* is one sample's chr20 GVCF, made by the workflow. *Workflow wall* is Cromwell's first,
-cold run. *Billed (workflow)* is spawn's window up to the end of that run. The task then spent
-another 5,328 / 629 / 509 s on the checks below; the full window was 10,512 / 1,246 / 1,012 s,
-costing $2.752 / $0.385 / $0.359. *$/hr* is spawn's `cost_estimate` divided by its window.
+cold run. *Spawn start → workflow end* is spawn's task window from its wrapper start to the end of that
+run, a sub-window of the billed task. The task then spent another 5,328 / 629 / 509 s on the checks
+below (one of them the same 16 commands again without Cromwell); the full billed window, wrapper
+start to stage-out done (`results/<chip>/completion.json`), was 10,512 / 1,246 / 1,012 s, costing
+$2.752 / $0.385 / $0.359. *$/hr* is spawn's `cost_estimate` divided by its window.
 *Peak RSS* is the `memory.peak` of the cgroup that holds every task container, page cache included,
 while all 16 shards run. One HaplotypeCaller shard peaks at 1.29–1.71 GiB (`ru_maxrss`), and the
 Cromwell JVM at 1.16–1.47 GiB. Threads per core: 1 on Graviton4 and AMD, 2 on Intel. GATK is Java

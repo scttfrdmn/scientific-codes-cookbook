@@ -9,19 +9,23 @@ bedtools 2.31.1, `genomecov -ibam` over bwa's sorted BAM (48,817,006 records, 4.
 
 | generation | instance | `genomecov` | billed | $/hr | **compute $** | billed $ |
 |---|---|---|---|---|---|---|
-| Graviton2 | `c6g.2xlarge` | 286 s | 420 s | 0.2720 | **0.0216** | 0.0317 |
-| Graviton3 | `c7g.2xlarge` | 169 s | 290 s | 0.2900 | **0.0136** | 0.0234 |
-| Graviton4 | `c8g.2xlarge` | 146 s | 284 s | 0.3190 | **0.0129** | 0.0252 |
-| **Graviton5** | `c9g.2xlarge` | **123 s** | 229 s | 0.3478 | **0.0119** | 0.0221 |
+| Graviton2 | `c6g.2xlarge` | 286 s | 361 s | 0.2720 | **0.0216** | 0.0273 |
+| Graviton3 | `c7g.2xlarge` | 169 s | 230 s | 0.2900 | **0.0136** | 0.0185 |
+| Graviton4 | `c8g.2xlarge` | 146 s | 284 s † | 0.3190 | **0.0129** | 0.0252 † |
+| **Graviton5** | `c9g.2xlarge` | **123 s** | 171 s | 0.3478 | **0.0119** | 0.0165 |
 
 Per-step: **1.69×, 1.16×, 1.19×.** The shape is lopsided in a way none of the other ladders here are
 — Graviton2→3 alone is bigger than the other two steps combined.
 
-**The billed column is not the comparison.** At ~2–5 minutes of work, boot and image pull are most of
-the instance's life, so billed puts Graviton3 ($0.0234) ahead of Graviton4 ($0.0252) while
-compute-only has them 5% apart the other way. That is the regime
-[cost-per-result](../../patterns/cost-per-result.md) calls boot-dominated; read compute, or amortise
-boot over more samples per box.
+*Billed* is spawn's task window, wrapper start to stage-out done (completion records,
+[`results/billed-windows.txt`](results/billed-windows.txt)), on every row but one. † Graviton4's
+284 s is unattributed: the batch's only `c8g` window belongs to the recipe's `genomecov` task, not to
+this rung's `gen-c8g` spec, and 284 s matches no source, so its billed figures are not compared.
+
+**Read the compute column.** At 2–6 minutes per window, Docker install, image pull and staging are a
+fifth to a quarter of each window, and boot comes on top of it, so billed carries a fixed cost that
+compute does not ([cost-per-result](../../patterns/cost-per-result.md)); amortise it over more
+samples per box. On the attributed rungs both columns give the same order.
 
 ## The Graviton4 rung on Intel and AMD
 
@@ -32,20 +36,20 @@ re-alignment), so the input bytes are identical on all three chips.
 
 | chip | instance | threads/core | `genomecov` | billed | $/hr | **compute $** | billed $ |
 |---|---|---|---|---|---|---|---|
-| Graviton4 | `c8g.2xlarge` | 1 | 146 s | 284 s | 0.3190 | **0.0129** | 0.0252 |
-| Xeon 6975P-C | `c8i.2xlarge` | 2 | 130 s | 226 s | 0.3748 | **0.0135** | 0.0235 |
-| **EPYC 9R45** | `c8a.2xlarge` | 1 | **101 s** | 221 s | 0.4311 | **0.0121** | 0.0265 |
+| Graviton4 | `c8g.2xlarge` | 1 | 146 s | 284 s † | 0.3190 | **0.0129** | 0.0252 † |
+| Xeon 6975P-C | `c8i.2xlarge` | 2 | 130 s | 176 s | 0.3748 | **0.0135** | 0.0183 |
+| **EPYC 9R45** | `c8a.2xlarge` | 1 | **101 s** | 134 s | 0.4311 | **0.0121** | 0.0160 |
 
 - **AMD is the fastest chip measured here, Graviton5 included** (101 s against c9g's 123 s), and
   the cheapest on compute: 6% below Graviton4, 10% below Intel. Intel is 11% faster than Graviton4
   and 5% dearer on compute.
-- **Billed ranks them the other way round**, for the boot-dominated reason above: 2–3 minutes of
-  each bill is boot and image pull, charged at each chip's hourly rate.
+- **Billed agrees on the x86 pair**: AMD $0.0160 against Intel's $0.0183 on spawn's windows.
+  Graviton4's billed window is unattributed (†), so it is not ranked.
 - **`genomecov-wgs.txt` is byte-identical on all three chips** (sha256 `4b4c4c45…`), and so is
   every number in the table below. Interval counting is integer work, so this is a fixed point, as
   expected; there is no path to report. The BusyBox awk in the x86 image computed the same sums.
-- n = 1 per chip, as for the generations. `wall_s` is `genomecov` alone; billed is EC2 launch to
-  termination.
+- n = 1 per chip, as for the generations. `wall_s` is `genomecov` alone; billed is spawn's
+  task window (EC2 launch to terminate was 226 / 221 s).
 
 These two ran under spawn 0.139.1, whose wrapper takes ~14.7 KB of EC2's 16 KiB user data
 (spawn#1246), so each resolved spec's `command` was staged unchanged as a sha256-checked file and

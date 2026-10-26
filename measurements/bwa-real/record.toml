@@ -1,6 +1,6 @@
 # measurements/bwa-real/record.toml -- bwa mem, a whole 1000 Genomes run vs the whole GRCh38 index:
 # Graviton generations 2-5, the c8g core knee, and three chips at 16 threads.
-# Owner recipe is bwa-samtools (image = its pins). Dates are the git dates results/ landed.
+# Owner recipe is bwa-samtools (image = its pins). Dates are the completion records' UTC dates (#123).
 # Schema 2: the gen/knee billed windows are spawn's completion records (results/billed-windows.txt);
 # the cross-chip rows' printed billed is the EC2 window (CloudTrail, same file). Peak is the README's
 # "peak RSS" = the 1 Hz max of cgroup memory.current (gen/knee) or of memory.stat anon (cross-chip).

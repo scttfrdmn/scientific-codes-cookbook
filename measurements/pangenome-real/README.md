@@ -63,7 +63,7 @@ aarch.bio on Graviton4 and from bioconda on both x86 chips. All three read the s
 | EPYC 9R45 | `m8a.4xlarge` | 385 s | **162 s** | **547 s** | 1,176 s | 3.2 GiB | 0.9738 | 0.148 | 0.318 |
 
 A *result* is one sample's chromosome indexed, mapped and checked. *Index* is `vg convert` plus
-`vg autoindex`. *Tool wall* is index plus Giraffe. *Billed* runs from launch to terminate, at
+`vg autoindex`. *Tool wall* is index plus Giraffe. *Billed* is spawn's task window, wrapper start to stage-out done, at
 spawn's printed price. *Peak RSS* is the largest single process (`VmHWM`), which was autoindex on
 every chip. Giraffe peaked at 2.0 GiB. Threads per core: 1 on Graviton4 and AMD, 2 on Intel (8 cores).
 
