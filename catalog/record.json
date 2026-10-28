@@ -71619,7 +71619,7 @@
   "climate": {
    "env": "climate",
    "inputs": "stage",
-   "last_updated": "2026-10-25",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-03",
@@ -74002,7 +74002,7 @@
     "x86_64": "bioconda's x86 bioconductor-preprocesscore 1.72.0 (r45h01b2380_0) fails inside SeSAMe's normalisation with 'return code from pthread_create() is 22' on Intel (AVX-512, AMX), AMD Zen 5 and AMD Zen 3 (no AVX-512) alike, before any assertion. Measured cause (2026-10-21) - preprocessCore gives each thread a fixed PTHREAD_STACK_MIN + one page (qnorm.c:530), 20,480 bytes on x86_64, and the image's libopenblasp-r0.3.30 carries 143,360 bytes of static TLS, so glibc 2.36 refuses the stack; on arm64 PTHREAD_STACK_MIN is 131,072 and OpenBLAS 0.3.34's TLS is 61,440, so it fits. No environment variable sets that stack (the source reads only R_THREADS, a thread count), and R_THREADS=1 or 4, OPENBLAS_NUM_THREADS=1 and GLIBC_TUNABLES nns=1/optional_static_tls=0 all still fail; the fix is a build with --disable-threading (bioconda/bioconda-recipes#31420). minfi's task passes on x86 (checked 2026-10-13)"
    },
    "inputs": "stage",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "arm64": "2026-10-13"
    },
@@ -74835,7 +74835,7 @@
   "paraview": {
    "env": "viz",
    "inputs": "stage",
-   "last_updated": "2026-10-19",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-17",
@@ -75229,7 +75229,7 @@
   "plumed": {
    "env": "md",
    "inputs": "build-in-task",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-17",
@@ -75272,7 +75272,7 @@
   "pointcloud": {
    "env": "pointcloud",
    "inputs": "stage",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-03",
@@ -75578,7 +75578,7 @@
   "pyscf": {
    "env": "comp-chem",
    "inputs": "build-in-task",
-   "last_updated": "2026-10-20",
+   "last_updated": "2026-10-28",
    "last_verified": {
     "amd": "2026-10-18",
     "arm64": "2026-10-17",
