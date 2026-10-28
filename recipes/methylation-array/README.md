@@ -135,7 +135,7 @@ cache was used, not that the network was unreachable.
 
 First attempt died with `rc=2` on `tar -xf /tmp/sesame-cache.tar -C /tmp`:
 
-```
+```text
 tar: .: Cannot utime: Operation not permitted
 tar: .: Cannot change mode to rwxr-xr-t: Operation not permitted
 tar: Exiting with failure status due to previous errors

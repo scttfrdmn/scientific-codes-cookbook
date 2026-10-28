@@ -320,7 +320,7 @@ def check(path, needs_fm):
                     errors.append(f"{rel}: frontmatter missing required field '{k}'")
             for k in RECOMMENDED_FM:
                 if k not in keys:
-                    warns.append(f"{rel}: frontmatter missing recommended field '{k}' (refresh target fills it)")
+                    warns.append(f"{rel}: frontmatter missing recommended field '{k}' (copy it from the pinned image's env lock or package)")
             if "last_verified" not in keys and "gap_arm64" not in keys:
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
             check_x86_frontmatter(text, keys, rel)

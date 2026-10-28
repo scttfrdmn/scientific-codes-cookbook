@@ -64,7 +64,7 @@ assertion, and it cannot be formed from one run. 513³ is also where this stops 
 | volume at 513³ | < 1e-04 relative | 2.53e-05 |
 | PNG | 400×300, > 50 colours, < 98% one colour | 440 colours, 80.9% |
 
-```
+```text
     grid       points        V        F    chi  area err %   vol err %      s
     65^3      274,625     6918    13832   +2.0     -0.0854     -0.1629    0.1
    129^3    2,146,689    27822    55640   +2.0     -0.0213     -0.0406    0.4

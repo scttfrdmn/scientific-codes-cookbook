@@ -25,7 +25,7 @@ make ls RECIPE=plumed   # COLVAR + smoke-check.txt + every GROMACS log
 gmx_mpi mdrun -s t.tpr -deffnm out -plumed plumed.dat -ntomp 8 -pin on
 ```
 
-```
+```text
 d: DISTANCE ATOMS=1,2            # rigid water geometry: a force-field constant
 a: ANGLE    ATOMS=2,1,3
 c: COORDINATION GROUPA=1,4,7,10,13 GROUPB=<all 7754 O> R_0=0.35
