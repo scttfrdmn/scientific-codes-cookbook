@@ -544,7 +544,7 @@ def main():
         amd = fm.get("last_verified_amd") or ("gap" if fm.get("gap_x86_64") else "—")
         updated = git_updated(os.path.relpath(d, ROOT))
         rows.append((domain, name, retarget_links(lede(text), d), env, inputs, updated,
-                     fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "—"), x86, amd))
+                     fm.get("last_verified") or ("gap" if fm.get("gap_arm64") else "fails" if fm.get("fail_arm64") else "—"), x86, amd))
         rec_recipes[name] = (d, text, inputs, updated)
 
     # group by domain, alphabetical within

@@ -5,6 +5,7 @@ env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:f22ef7a3b0d6e506782596e297472fb355338502aaba668ba64d6e3a3cebe031
 env_x86_64: comp-chem-823f1ef5e11e
 spawn_version: 0.131.0
+fail_arm64: GFN2 gradient wrong on every structure on Graviton, energies right (conda-forge/xtb-feedstock#50); not stamped verified until that is fixed
 last_verified_x86_64: 2026-10-17
 last_verified_amd: 2026-10-18
 ---

@@ -545,7 +545,9 @@ a spawn/staging/instance concept when it's load-bearing.
   `@sha256:`), `spawn_version`, `last_verified`. Pipeline recipes use `images:` (one digest per
   tool). `last_verified` is a date **only a real verifying run may set** — absent is honest
   ("not verified since tracking began") and is a TODO queue, never backfilled to silence the
-  warning; that's the false-green trap one layer up. Page freshness (`last_updated`) is *not*
+  warning; that's the false-green trap one layer up. A verifying run that *failed* on arm64 because
+  of an upstream bug records `fail_arm64: <what fails> (<owner/repo#N>)` instead: explicit, not
+  silent, and never a date (xtb). Page freshness (`last_updated`) is *not*
   frontmatter — it's git-derived and generated into catalog/recipes.md, since git already knows
   it and a stored copy would be a second source that drifts. [auto]
 

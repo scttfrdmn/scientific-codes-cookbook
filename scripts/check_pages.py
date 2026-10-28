@@ -68,7 +68,7 @@ def _outside_details_lines(text):
     in_x86 = False
     for i, line in enumerate(text.split("\n")):
         if i < fm_lines:
-            if re.match(r"^(images_x86_64:|env_x86_64:|last_verified_x86_64:|last_verified_amd:|gap_x86_64:|gap_arm64:)", line):
+            if re.match(r"^(images_x86_64:|env_x86_64:|last_verified_x86_64:|last_verified_amd:|gap_x86_64:|gap_arm64:|fail_arm64:)", line):
                 in_x86 = line.startswith("images_x86_64:")
                 continue
             if in_x86 and re.match(r"^\s+- ", line):
@@ -332,7 +332,9 @@ def check(path, needs_fm):
             for k in RECOMMENDED_FM:
                 if k not in keys:
                     warns.append(f"{rel}: frontmatter missing recommended field '{k}' (copy it from the pinned image's env lock or package)")
-            if "last_verified" not in keys and "gap_arm64" not in keys:
+            if "fail_arm64" in keys and ("last_verified" in keys or not re.search(r"[\w.-]+/[\w.-]+#\d+", text.split("\n---\n", 1)[0])):
+                errors.append(f"{rel}: fail_arm64 needs an upstream issue ref (owner/repo#N) and no last_verified -- it records a run that failed, not a pass")
+            if "last_verified" not in keys and "gap_arm64" not in keys and "fail_arm64" not in keys:
                 warns.append(f"{rel}: no last_verified — awaiting a verifying run (a real run stamps it; never backfilled)")
             check_x86_frontmatter(text, keys, rel)
             check_lock_immutable(text, rel)
