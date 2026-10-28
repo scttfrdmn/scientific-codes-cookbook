@@ -1,0 +1,17 @@
+# The published counts snakemake-real asserts against. Sources (committed, hashed locally 2026-10-28): qc-aggregate-real's cohort.tsv and inputs.sha256, from which stage-inputs.sh writes the truth files.
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# Every bucket truth file equals the one stage-inputs.sh's logic regenerates from the two committed sources, byte for byte.
+5c5905a553e49592ca50ec921c444580361a37a792c9a895a105248b098935e7  ../qc-aggregate-real/cohort.tsv
+aefd6f9c06547f3af37b5b5785b7eeb51e1197e9852e25c350f36709aaae8336  ../qc-aggregate-real/inputs.sha256
+1996360065db0250be6f611f5393b5da1cf9bd143bbb7ae9f314146c9c16387b  inputs/snakemake-real/cohort-truth.tsv
+759d3cb825cd54a8876144f146231d7c7c139cdb0ce7f8aa5aeb73e59bba1633  inputs/snakemake-real/truth/ERR188026_1.fastq.gz.tsv
+f092d1e92aecef09336eb115e5438283f2f695cf2b115d3b846311949eacf23d  inputs/snakemake-real/truth/ERR188026_2.fastq.gz.tsv
+941f5de451c7c6b1e537d48a19ff53af52b57dfec576e263f0f06141c280da5b  inputs/snakemake-real/truth/ERR2935805_1.fastq.gz.tsv
+494da955b2aeb318e8f84700eacde596b89e77b5f697479c51a7bb2efd87a367  inputs/snakemake-real/truth/ERR2935805_2.fastq.gz.tsv
+593fa7a7892d6123f3a97e9d2b59ff4631c89aebd75e2af0f24c4930541ae189  inputs/snakemake-real/truth/ERR2984773_1.fastq.gz.tsv
+c0518547bd817d0ac61c2e206c48a1bd0ceb242403d56f6fd130057c0780879d  inputs/snakemake-real/truth/ERR2984773_2.fastq.gz.tsv
+e4883099700d6de790ff11e3bbcf40f351b54471333b8e77a0ef07a4ff1cccae  inputs/snakemake-real/truth/SRR062634_1.filt.fastq.gz.tsv
+d9efc0dbab273b3113ece94f65bbcf38c741e5880bb8ec666e9112d2d1988298  inputs/snakemake-real/truth/SRR062634_2.filt.fastq.gz.tsv
+8059d31b06b43b919da13f6cd4a64fab14aaceb6cf253f48b3ba397630f12cf0  inputs/snakemake-real/truth/SRR8279891.fastq.gz.tsv
+378e9b009c1f856238f15438d8809fdd4b04f857684572315f2ddc0ed1b686a9  inputs/snakemake-real/truth/SRR8281054.fastq.gz.tsv
+21540282b6387aeac7f09ccd7538b13ff034958513f7556c1039714de1d3268e  inputs/snakemake-real/truth/SRR8297998.fastq.gz.tsv

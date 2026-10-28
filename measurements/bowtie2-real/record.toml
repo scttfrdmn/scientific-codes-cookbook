@@ -61,8 +61,9 @@ note = "copied from the README and bt2index.tar.sha256 in the bucket (written by
 [[dataset]]
 id = "bwa-real aln.sorted.bam (bwa mem, same reads, same reference)"
 tier = "run-output"
+pins = "../bwa-real/outputs.sha256"
 from_recipe = "bwa"
-note = "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck"
+note = "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck; hashed 2026-10-28 on AWS, after the runs (object last written 2026-09-30, before them)"
 
 # --- generation sweep, 16 threads -----------------------------------------------------
 [[run]]

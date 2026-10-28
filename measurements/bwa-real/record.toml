@@ -245,7 +245,7 @@ peak_gib = 8.68
 peak_kind = "cgroup-anon-max"
 results = "results/size-c8g-16t-disk.txt"
 variant = "SAM to disk; count pass after the timer (billed includes it)"
-note = "task bwareal-c8g-16t-fix121; memory.current reads 20.19 GiB: page cache from the SAM write"
+note = "task bwareal-c8g-16t-fix121; memory.current reads 20.19 GiB: page cache from the SAM write; recipes/bwa-mem2 compares this spawn window with bwa-mem2's recipe run on its own (580 s, $0.1519, ../bwa-mem2-real/results/billed-windows.txt): a tie at n = 1"
 
 [[run]]
 id = "chip-c8i"

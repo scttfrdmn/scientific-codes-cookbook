@@ -1,0 +1,8 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# terra reference CSVs, one pair per chip prefix; read by geo-ml-real (each chip its own). Every hash equals the one geo-ml-real's run recorded as it read the file (results/<chip>/results.json: terra_tract_areas_sha256, terra_zonal_sha256), so these are the run's bytes.
+5ad05be222cce54a859a7478c778442b4b3db69d4bc67a50c39d493bdab5c1bb  runs/r-spatial-real/r1/tract-areas.csv
+664dfb26b2ee42a19ad60e91b4a98900823ec0f52fcbc9308c14cd8efb3fcc42  runs/r-spatial-real/r1/co-tract-zonal.csv
+2fa11b4ee964a09cc785c0d9e25ac89a54482ab5fda4179142b2f7a777c52cd8  runs-x86_64/r-spatial-real/r1/tract-areas.csv
+664dfb26b2ee42a19ad60e91b4a98900823ec0f52fcbc9308c14cd8efb3fcc42  runs-x86_64/r-spatial-real/r1/co-tract-zonal.csv
+2fa11b4ee964a09cc785c0d9e25ac89a54482ab5fda4179142b2f7a777c52cd8  runs-amd/r-spatial-real/r1/tract-areas.csv
+664dfb26b2ee42a19ad60e91b4a98900823ec0f52fcbc9308c14cd8efb3fcc42  runs-amd/r-spatial-real/r1/co-tract-zonal.csv

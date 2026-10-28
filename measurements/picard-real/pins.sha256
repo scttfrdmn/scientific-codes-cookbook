@@ -1,0 +1,9 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# recipes/bwa-samtools' sorted BAM (+ .bai), one per chip prefix; read by picard-real (each chip its own) and bedtools-real (runs/ only, on all six rungs).
+# All three were last written 2026-10-24 by bwa-samtools' #121 re-run, AFTER picard-real's (2026-10-21) and bedtools-real's (2026-10-01 to 10-21) runs; the size is unchanged (4,568,357,482 bytes). Today the three chips' BAMs are byte-identical.
+4a729cb1ec59af688533ff8349564bd2e0042f52731b8b0f3ac65d11fa26b0bf  runs/bwa-samtools/r1/aln.sorted.bam
+e89c651dbb3d336f635c07f61ec3877dfcfef06efd8c12ba78a2e0ef260941f2  runs/bwa-samtools/r1/aln.sorted.bam.bai
+4a729cb1ec59af688533ff8349564bd2e0042f52731b8b0f3ac65d11fa26b0bf  runs-x86_64/bwa-samtools/r1/aln.sorted.bam
+e89c651dbb3d336f635c07f61ec3877dfcfef06efd8c12ba78a2e0ef260941f2  runs-x86_64/bwa-samtools/r1/aln.sorted.bam.bai
+4a729cb1ec59af688533ff8349564bd2e0042f52731b8b0f3ac65d11fa26b0bf  runs-amd/bwa-samtools/r1/aln.sorted.bam
+e89c651dbb3d336f635c07f61ec3877dfcfef06efd8c12ba78a2e0ef260941f2  runs-amd/bwa-samtools/r1/aln.sorted.bam.bai

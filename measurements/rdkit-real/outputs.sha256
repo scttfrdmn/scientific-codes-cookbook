@@ -1,0 +1,8 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# rdkit_real.tsv.gz, one per chip prefix (identical bytes), hashed as stored (.gz rows) and decompressed (.tsv rows, the gunzipped stream of the .gz above; no .tsv object exists); read by openbabel-pdbfixer-real. The decompressed hash equals the rdkit_real_sha256 openbabel-pdbfixer-real's runs recorded in-run (results/<chip>/ob/metrics.txt), so these are the run's bytes.
+bb1e3a044aa3ade641cc6715d393d26a83d4942d0b296257578996a465b268fc  runs/rdkit-real/chembl37/rdkit_real.tsv.gz
+9a84f0adae6bc1ddd7df138277ac1b54750d7452a3ad989a89f8b0a552372244  runs/rdkit-real/chembl37/rdkit_real.tsv
+bb1e3a044aa3ade641cc6715d393d26a83d4942d0b296257578996a465b268fc  runs-x86_64/rdkit-real/chembl37/rdkit_real.tsv.gz
+9a84f0adae6bc1ddd7df138277ac1b54750d7452a3ad989a89f8b0a552372244  runs-x86_64/rdkit-real/chembl37/rdkit_real.tsv
+bb1e3a044aa3ade641cc6715d393d26a83d4942d0b296257578996a465b268fc  runs-amd/rdkit-real/chembl37/rdkit_real.tsv.gz
+9a84f0adae6bc1ddd7df138277ac1b54750d7452a3ad989a89f8b0a552372244  runs-amd/rdkit-real/chembl37/rdkit_real.tsv

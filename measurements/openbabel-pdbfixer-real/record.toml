@@ -35,8 +35,9 @@ note = "sha256 is EBI's published checksum; the same staged bytes rdkit-real rea
 [[dataset]]
 id = "rdkit-real's runs*/rdkit-real/chembl37/rdkit_real.tsv.gz (RDKit keys for the cross-check)"
 tier = "run-output"
+pins = "../rdkit-real/outputs.sha256"
 from_recipe = "measurements/rdkit-real"
-note = "checked in-run against rdkit-real's uncompressed sha256"
+note = "checked in-run against rdkit-real's uncompressed sha256; hashed 2026-10-28 on AWS, after the runs, and the decompressed hash equals the in-run one"
 
 [[dataset]]
 id = "RODA s3://pdbsnapshots/20260101/pub/pdb/data/structures/divided/mmCIF/ab/ (247 entries, 1ab0 to 9abp)"

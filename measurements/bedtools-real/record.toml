@@ -35,8 +35,9 @@ attribution_note = "x86 rows run the recipe's pinned biocontainers bedtools 2.31
 [[dataset]]
 id = "bwa-samtools sorted BAM, runs/bwa-samtools/r1/aln.sorted.bam (4.5 GB)"
 tier = "run-output"
+pins = "../picard-real/pins.sha256"
 from_recipe = "bwa-samtools"
-note = "the same object on all six rungs, including Intel and AMD (not the x86 re-alignment)"
+note = "the same object on all six rungs, including Intel and AMD (not the x86 re-alignment); hashed 2026-10-28 on AWS, after the runs, and the object was rewritten 2026-10-24 by bwa-samtools' #121 re-run (same size), so the pin proves today's bytes, not the run's"
 
 [[dataset]]
 id = "GRCh38_full_analysis_set_plus_decoy_hla.fa.fai (inputs/bwa-real/)"

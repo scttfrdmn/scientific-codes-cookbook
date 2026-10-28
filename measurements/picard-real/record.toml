@@ -40,8 +40,9 @@ reason = "MarkDuplicates' thread usage is modest and not configurable the way an
 [[dataset]]
 id = "bwa's whole-genome sorted BAM (aln.sorted.bam, 48,817,006 records, 4,568,357,482 bytes)"
 tier = "run-output"
+pins = "pins.sha256"
 from_recipe = "bwa-samtools"
-note = "x86 legs read their own chip's bwa-samtools BAM, same size; Intel's has arm64's S3 ETag, AMD's was uploaded in different parts so its ETag cannot show byte identity"
+note = "x86 legs read their own chip's bwa-samtools BAM, same size; Intel's has arm64's S3 ETag, AMD's was uploaded in different parts so its ETag cannot show byte identity; hashed 2026-10-28 on AWS, after the runs: all three are byte-identical today, but were rewritten 2026-10-24 by bwa-samtools' #121 re-run (same size), so the pin proves today's bytes, not the run's"
 
 # --- Graviton generation sweep, 8 vCPU / 64 GiB, -Xmx24g, same digest, same object
 [[run]]

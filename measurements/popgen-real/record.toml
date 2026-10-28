@@ -30,8 +30,9 @@ note = "staged once by plink-real under inputs/plink-real/ and read in place; re
 [[dataset]]
 id = "plink-real/results/arm64/id-all.txt (PLINK 1.9 per-chromosome SNP counts), staged as plink-real-id-all.txt"
 tier = "run-output"
+pins = "../plink-real/outputs.sha256"
 from_recipe = "measurements/plink-real"
-note = "pinned by sha256 in the spec"
+note = "pinned by sha256 in the spec; the committed file hashed locally and the bucket copy on AWS 2026-10-28, after the runs, identical"
 
 [[run]]
 id = "chip-m8g"

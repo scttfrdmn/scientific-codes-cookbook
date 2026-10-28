@@ -14,12 +14,16 @@ note = "ENA's fastq_md5 (md5, not sha256) for the same object (inputs/salmon-rea
 [[dataset]]
 id = "kallisto index of Ensembl 116 cDNA (kallisto.idx) and full-depth abundance.tsv"
 tier = "run-output"
+pins = "pins.sha256"
 from_recipe = "kallisto"
+note = "hashed 2026-10-28 on AWS, after the runs; both objects were last written after this measurement's recorded date, so the pin proves today's bytes, not the run's; they equal kallisto-real's in-run hashes"
 
 [[dataset]]
 id = "salmon index of Ensembl 116 cDNA (salmon-index.tar) and full-depth quant-c8g-16t.sf"
 tier = "run-output"
+pins = "pins.sha256"
 from_recipe = "salmon"
+note = "hashed 2026-10-28 on AWS, after the runs; quant-c8g-16t.sf is in pins.sha256 (last written after this measurement's recorded date), the index in ../salmon-real/index.sha256"
 
 [workload]
 size = { fragments = 200000, transcripts = 465769 }

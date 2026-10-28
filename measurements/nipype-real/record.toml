@@ -33,8 +33,9 @@ note = "checked on every box before any compute"
 [[dataset]]
 id = "neuroimaging-real's DIPY maps on the same chip (runs*/neuroimaging-real/cohort/dipy/dipy-maps.tar)"
 tier = "run-output"
+pins = "../neuroimaging-real/outputs.sha256"
 from_recipe = "measurements/neuroimaging-real"
-note = "the bit-identity reference for masks and float32 FA/MD"
+note = "the bit-identity reference for masks and float32 FA/MD; hashed 2026-10-28 on AWS, after the runs (objects last written 2026-10-18, before them)"
 
 [[run]]
 id = "cohort-m8g"
