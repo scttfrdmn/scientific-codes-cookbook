@@ -1,5 +1,6 @@
 ---
 tool: pdal
+tool_version: "2.10.1"
 env: pointcloud
 image: quay.io/aarchsci/pointcloud@sha256:1e53023e25dc060315e5e693be3f942aa733c4e7ca6cab65fa915a34e2862823
 env_x86_64: pointcloud-792583991793
@@ -22,8 +23,6 @@ spawn task run --spec "$(make -s spec RECIPE=pointcloud)" --wait
 pdal info --summary autzen.laz               # count 10,653,336; bounds
 pdal info --stats --dimensions Z autzen.laz  # mean Z 434.1025 over all points
 ```
-
-One task. The cloud is staged from PDAL's own data repo and pinned.
 
 ## Which box — [measured](../../measurements/pointcloud-real/README.md) (a whole 3DEP project, 4.64 G points)
 

@@ -1,5 +1,6 @@
 ---
 tool: pyscf
+tool_version: "2.14.0"
 env: comp-chem
 image: quay.io/aarchsci/comp-chem@sha256:b5c1b1ec10cfbb5374d0e733310244f84b59dc4ce99620b645c4efb6f49c439d
 env_x86_64: comp-chem-1243f25ebfec

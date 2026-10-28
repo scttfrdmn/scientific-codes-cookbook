@@ -1,5 +1,6 @@
 ---
 tool: xesmf
+tool_version: "0.9.2"
 env: climate
 image: quay.io/aarchsci/climate@sha256:5b3d840e79eabaa222b8766f08e998dea87313696da6cafd8a9740cde69b9ac7
 env_x86_64: climate-60e8dca4df0d
@@ -17,7 +18,6 @@ last_verified_amd: 2026-10-18
 ```bash
 make stage RECIPE=climate && spawn task run --spec "$(make -s spec RECIPE=climate)" --wait
 ```
-
 ```python
 import xesmf as xe
 src = xe.util.grid_global(5, 4)          # 5°×4° global grid
