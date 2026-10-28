@@ -50,7 +50,7 @@ freebayes -f chr20.fa -r chr20 NA12878.chr20.30x.bam > freebayes.vcf
 
 Two tasks on `c8g.xlarge`: **644 s of calling**, then scoring in the bcftools image ([one tool per image](../../practices/container-path.md)). 385,371 variants — 3× the others, which is the QUAL tail above.
 
-**Generation is the biggest lever measured in this catalog: 2.65× Gv2→Gv5** (1349 → 509 s), the same call getting **52% cheaper** while `$/hr` rises 27.9% — and uniquely, with *no weak step* (1.59× / 1.32× / 1.27×). The variant count is identical on all four chips. **But x86 is faster here:** same-generation AMD (`c8a.xlarge`) calls chr20 in 357 s, 1.80× Graviton4 and 25% cheaper, Intel in 476 s — same count, same `QUAL≥30` calls. [Full ladder](../../measurements/freebayes-real/README.md).
+**Generation is the biggest lever measured in this catalog: 2.65× Gv2→Gv5** (1349 → 509 s), the same call getting **52% cheaper** while `$/hr` rises 27.9% — with *no weak step* (1.59× / 1.32× / 1.27×), like MACS2 and picard and unlike most ladders here. The variant count is identical on all four chips. **But x86 is faster here:** same-generation AMD (`c8a.xlarge`) calls chr20 in 357 s, 1.80× Graviton4 and 25% cheaper, Intel in 476 s — same count, same `QUAL≥30` calls. [Full ladder](../../measurements/freebayes-real/README.md).
 
 <details>
 <summary>As shipped: the GIAB accuracy numbers, what is asserted, pins</summary>

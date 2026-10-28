@@ -98,12 +98,10 @@ ns/day figures are **not** comparable — different force fields, different syst
 long-range solvers — and reading 4.425 against GROMACS' 35.741 as a performance verdict would be
 meaningless.
 
-What the pair does support is a modest, quantified version of a claim worth being careful about:
-across these four chips the two MD codes gain **2.24–2.43×** while the integer-and-string-heavy
-genomics recipes here gain **1.84–2.00×** ([bwa](../bwa-samtools/README.md),
-[salmon](../salmon/README.md), [gatk4](../gatk4/README.md)). So FP-heavy codes do benefit more, by
-roughly 15–25% — a real effect, and a much smaller one than "FP-heavy codes benefit dramatically
-more" would imply. Two codes per side is not a survey.
+What the pair does not support is "FP-heavy codes benefit more". The two MD codes gain
+**2.24–2.43×**, but the genomics ladders on these same chips now span **1.84× to 2.65×**
+([bwa](../bwa-samtools/README.md) to [freebayes](../freebayes/README.md);
+[every ladder](../../patterns/cost-per-result.md)), above and below MD.
 
 ### Pins
 

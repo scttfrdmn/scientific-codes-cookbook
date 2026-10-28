@@ -52,12 +52,11 @@ RAxML-NG across four generations, same seed, same 8 threads, search-only elapsed
 buys, and a useful check in its own right: if the chip could move a converged optimum, something
 would be wrong with the determinism the recipes claim.
 
-2.04× faster Graviton2→5 and 37% cheaper, **but Graviton4 is 7.3% dearer than Graviton3**, buying
+2.04× faster Graviton2→5 and 37% cheaper, **but Graviton4 is 7.7% dearer than Graviton3** ($0.0375 → $0.0404), buying
 only 2% of wall for 10% more per hour. That is the sharpest instance in this catalog of that rung
-not paying, and it is now three codes — RAxML-NG here, [GPAW and SIESTA](../dft-crosscheck/README.md)
-at +1.4% and +0.7%. All three have likelihood-or-matrix inner loops rather than the streaming
-throughput the newer chips added. The mechanism is not established; it would need a bandwidth
-measurement.
+not paying, and it is now four codes — RAxML-NG here, [GPAW and SIESTA](../dft-crosscheck/README.md)
+at +1.4% and +0.7%, and [hmmer](../hmmer-real/README.md) at +4%. The mechanism is not established;
+it would need a bandwidth measurement.
 
 ## Run it
 

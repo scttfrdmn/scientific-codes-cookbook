@@ -1,8 +1,8 @@
-# Bayesian variant calling is the catalog's biggest generational gain — and the only even one
+# Bayesian variant calling is the catalog's biggest generational gain — with no weak step
 
 > **freebayes on whole chr20 at 36× is 2.65× faster on Graviton5 than Graviton2**, the largest gain
 > measured here. More interesting than the headline: the per-step gains are **1.59×, 1.32×, 1.27×**
-> — no weak step. Every other long ladder in this catalog stalls at Graviton3→4, and this one does
+> — no weak step. Most ladders in this catalog are weakest at Graviton3→4, and this one is
 > not, which breaks a generalisation that had been forming.
 
 freebayes 1.3.10, NA12878 chr20 at 36× (`NA12878.chr20.30x.bam`, named for the published 30x CRAM it
@@ -59,8 +59,8 @@ output prefix; bioconda's `linux/amd64` build of 1.3.10 on both x86 chips):
 | [ambertools](../ambertools-real/README.md) (serial MD) | 2.50× | 1.52 / **1.16** / 1.42 | 1.16× |
 | bedtools `genomecov` | 2.33× | 1.69 / 1.16 / 1.19 | 1.16× |
 | HMMER | 1.90× | 1.43 / **1.06** / 1.26 | 1.06× |
-| picard | 1.93× | — | — |
-| SIESTA | 1.86× | — | — |
+| picard | 1.93× | 1.24 / 1.26 / 1.23 | 1.26× |
+| SIESTA | 1.86× | 1.44 / **1.09** / 1.18 | 1.09× |
 
 A pattern had been accumulating that Graviton3→4 is nearly free for likelihood and matrix codes —
 HMMER at 1.06× is actually *dearer per result*, and ambertools and bedtools both sit at 1.16×.
@@ -68,8 +68,8 @@ HMMER at 1.06× is actually *dearer per result*, and ambertools and bedtools bot
 squarely a likelihood code, and it gains **1.32×** at exactly that step. So the weak Gv3→Gv4 step is
 a property of particular inner loops, not of likelihood methods as a class, and not of the step.
 
-Together with ambertools this also moves the catalog's spread again. The gains now run **1.86×–2.65×**
-— a 1.43× range — so quoting any single generational multiplier is wrong by up to 40% depending on
+Together with ambertools this also moves the catalog's spread again. The gains now run **1.84×–2.65×**
+([query 8](../../scripts/record-queries.sh), bwa to freebayes) — a 1.44× range — so quoting any single generational multiplier is wrong by up to 44% depending on
 which code you meant.
 
 ## The free cross-generation identity
