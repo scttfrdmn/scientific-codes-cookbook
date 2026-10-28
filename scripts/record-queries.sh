@@ -23,9 +23,13 @@ jq -r "$A"' .measurements["bwa-real"] | "measured at \(.workload.size | tostring
 jq -r "$A $M"' | .run[]? | ok | select(.effective_usd_hr) | [(.effective_usd_hr / .usd_hr * 100 | round / 100), $m, .instance, .binding, .util[.binding]] | @tsv' $R | sort -gr | head -5
 # Q7 where is bwa's knee?
 jq -r '.measurements["bwa-real"].series[] | select(.id == "knee") | (.curve.points[] | "  \(.axis) cores speedup \(.speedup) eff \(.efficiency) billed $\(.billed_usd)"), "  derived cost knee \(.curve.cost_knee | tostring); authored \(.verdict | tostring)"' $R
-# Q8 Graviton2 -> Graviton5 speedup by wall, every generation series
-jq -r "$M"' | .series[]? | select(.axis == "generation") | (.curve.points | map({(.axis | tostring): .wall_s}) | add) as $w
-  | select($w["6"] and $w["9"]) | [($w["6"] / $w["9"] * 100 | round / 100), $m, .equal_work] | @tsv' $R | sort -gr
+# Q8 Graviton2 -> Graviton5, every generation series: speedup by wall, Gv2>3 / Gv3>4 / Gv4>5 step speedups,
+#    % change in compute and billed $/result Gv2->5, the Gv3->4 compute $ change, and whether `held` includes the input
+jq -r "$M"' | .series[]? | select(.axis == "generation") | (.curve.points | map({(.axis | tostring): .}) | add) as $p
+  | select($p["6"].wall_s and $p["9"].wall_s) | def r(f; a; b): if $p[a][f] and $p[b][f] then ($p[b][f] / $p[a][f] * 100 - 100 | round | tostring) + "%" else "-" end;
+  def s(a; b): $p[a].wall_s / $p[b].wall_s * 100 | round / 100;
+  [s("6"; "9"), $m, "\(s("6"; "7")) \(s("7"; "8")) \(s("8"; "9"))", r("compute_usd"; "6"; "9"), r("billed_usd"; "6"; "9"),
+   r("compute_usd"; "7"; "8"), (if (.held | index("input")) then "input-held" else "no-input-key" end), .equal_work] | @tsv' $R | sort -gr
 # Q9 how many concurrent jobs fill a box? every concurrent series
 jq -r "$M"' | .series[]? | select(.axis == "concurrent") | "\($m) \(.id): verdict \(.verdict // {} | tostring)", (.curve.points[] | "  N=\(.axis) speedup \(.speedup) eff \(.efficiency) $\(.compute_usd)")' $R
 # Q10 which configurations rest on more than one run, and their spread

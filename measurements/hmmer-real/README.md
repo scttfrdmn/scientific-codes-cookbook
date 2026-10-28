@@ -51,7 +51,7 @@ Spend for the two legs: $0.263. Raw: `results/smoke-check-{x86_64,amd}-2xl.txt`,
 ## Why this reversal is more than n=1 noise
 
 The catalog had three prior Graviton3→Graviton4 cost reversals — GPAW +1.4%, SIESTA +0.7%,
-RAxML-NG +7.3% — and the first two are small enough to be a tie at n=1. hmmsearch is different in
+RAxML-NG +7.7% — and the first two are small enough to be a tie at n=1. hmmsearch is different in
 three ways that matter:
 
 - **Overhead is under 4% of the bill.** At 22–42 minutes of compute in a 23–43 minute window, the

@@ -33,7 +33,7 @@ mpiexec -n 2 siesta < si.fdf   # DZP basis, 6×6×6 k-grid, 200 Ry mesh, LDA
 | Graviton4 | `c8g.xlarge` | 33 s | 0.00146 | 5.4042 |
 | **Graviton5** | `c9g.xlarge` | **28 s** | **0.00135** | 5.4042 |
 
-Graviton2→5 is **1.86× faster** — the *smallest* gain of the four physics codes here (GROMACS 2.43×, GPAW 2.33×, LAMMPS 2.24×), which is what small dense linear algebra looks like next to plane-wave or particle work. And as in [GPAW](../gpaw/README.md), **Graviton3 and Graviton4 are cost-tied** ($0.00145 vs $0.00146) — two DFT codes now show that step not paying for itself.
+Graviton2→5 is **1.86× faster** — the *smallest* gain of the five physics codes here (AmberTools 2.50×, GROMACS 2.43×, GPAW 2.33×, LAMMPS 2.24×), which is what small dense linear algebra looks like next to plane-wave or particle work. And as in [GPAW](../gpaw/README.md), **Graviton3 and Graviton4 are cost-tied** ($0.00145 vs $0.00146) — two DFT codes now show that step not paying for itself.
 
 **At scale, take AMD — [measured](../../measurements/siesta-real/README.md)** on SIESTA's own 5.4.2 test suite plus its 1,359-atom Si987H372 quantum dot converged at DZP (14,691 orbitals, 16 ranks, 16 vCPU): **`c8a.4xlarge` 39 min, $0.58 billed**; `c8i.4xlarge` 68 min, $0.87; `c8g.4xlarge` 75 min, $0.83. The dot is 95% dense eigensolver, which EPYC runs 1.4× faster than Graviton4. Every SCF-converged suite test matches its committed reference on all three chips, and the dot's energy agrees across chips to 1.3e-5 eV.
 

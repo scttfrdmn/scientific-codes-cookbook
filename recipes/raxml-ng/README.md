@@ -62,7 +62,7 @@ On a [whole 919-taxon gene family](../../measurements/raxml-ng-real/README.md), 
 | Graviton4 | `c8g.2xlarge` | 456.0 s | 0.0404 | −52706.731409 |
 | **Graviton5** | `c9g.2xlarge` | **313.0 s** | **0.0303** | −52706.731409 |
 
-Graviton2→5 is **2.04× faster and 37% cheaper**. But **Graviton4 is 7.3% *dearer* than Graviton3** here — it buys only 2% of wall for 10% more per hour. That is the sharpest instance of a step that does not pay; [two DFT codes show the same thing](../../patterns/cost-per-result.md), and all three have likelihood-or-matrix inner loops rather than the throughput the newer chips added.
+Graviton2→5 is **2.04× faster and 37% cheaper**. But **Graviton4 is 7.7% *dearer* than Graviton3** here — it buys only 2% of wall for 10% more per hour. That is the sharpest instance of a step that does not pay; [three other codes show the same thing](../../patterns/cost-per-result.md).
 
 ### The checks
 

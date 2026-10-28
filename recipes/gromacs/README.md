@@ -13,7 +13,7 @@ last_verified_amd: 2026-10-18
 
 Runs the standard benchMEM benchmark (81,743 atoms, PME, NPT) as shipped and reports ns/day and $/ns. For anyone sizing an MD run on ARM.
 
-> **Graviton5 is 2.43× Graviton2 on this system and 47% cheaper per nanosecond** — the biggest generational gain measured anywhere in this catalog, on a NEON build with no SVE.
+> **Graviton5 is 2.43× Graviton2 on this system and 47% cheaper per nanosecond** on a NEON build with no SVE — inside the 1.84–2.65× span of [every other measured ladder](../../patterns/cost-per-result.md).
 
 ## Run it
 
@@ -38,7 +38,7 @@ mpiexec -n 16 gmx_mpi mdrun -s benchMEM.tpr -deffnm bm -ntomp 1 -nb cpu -pin off
 
 The ladder was measured on the previous `md` digest (`1ee941664add…`); the repinned image re-ran Graviton4 only, at 26.099 ns/day. The x86 rows are the 16×1 rung of the decomposition leg, on the current env's linux-64 twin. **AMD is 2.29× Graviton4 per day and the cheapest nanosecond here.**
 
-**Take the newest generation** — every step is faster *and* cheaper per nanosecond, and the ladder is uneven: Graviton3→4 buys 12.7%, **Graviton4→5 buys 37.6%**. For contrast the integer-heavy genomics recipes gain 1.84–2.0× across these same chips against MD's 2.43×: one data point that FP-heavy codes benefit more, not yet a rule.
+**Take the newest generation** — every step is faster *and* cheaper per nanosecond, and the ladder is uneven: Graviton3→4 buys 12.7%, **Graviton4→5 buys 37.6%**. The genomics recipes gain 1.84× (bwa) to 2.65× (freebayes) across these same chips, so MD's 2.43× is not an FP-heavy premium ([all ladders](../../patterns/cost-per-result.md)).
 
 ## Make it yours
 
