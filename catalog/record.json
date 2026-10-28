@@ -69325,6 +69325,13 @@
     "wall": "the fill pass (fill.py: uproot reads, YODA fills, numpy checks), the README's compute $/result basis"
    },
    "unpinned": [],
+   "upstream": [
+    {
+     "note": "precision= ignored by writeYODA/write: Writer::write resets it to -1 (src/Writer.cc l.86)",
+     "ref": "hepcedar/yoda#172",
+     "role": "filed"
+    }
+   ],
    "workload": {
     "note": "247 jobs of 250,000 events, each filling its own five YODA objects, merged with +; then the 1,955 Rivet reference files read as a check (refs.py, not priced in compute)",
     "size": {
@@ -80796,6 +80803,16 @@
      "measurement": "measurements/xtb-real",
      "note": "multicharge ABI fix; with it the gradient is identical (still wrong)",
      "role": "cited"
+    }
+   ]
+  },
+  {
+   "ref": "hepcedar/yoda#172",
+   "uses": [
+    {
+     "measurement": "measurements/yoda-real",
+     "note": "precision= ignored by writeYODA/write: Writer::write resets it to -1 (src/Writer.cc l.86)",
+     "role": "filed"
     }
    ]
   },

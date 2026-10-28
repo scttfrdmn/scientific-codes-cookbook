@@ -99,7 +99,7 @@ root-real's own formula, and its committed histogram is ROOT's `TH1D` with `Enab
 holds even though YODA's bin edges differ between chips (below): no muon pair sits within a few ulps
 of an edge.
 
-**The text writer, reported.** `writeYODA` prints `%.6e`; `precision=17` writes byte-identical files.
+**The text writer, reported.** `writeYODA` prints `%.6e`; `precision=17` writes byte-identical files (`Writer::write` resets it to −1; [hepcedar/yoda#172](https://gitlab.com/hepcedar/yoda/-/work_items/172)).
 Written and read back, the merged objects change in 72,606 of 180,166 bin fields (worst relative
 4.94e-7, the format's half unit in the 7th digit), 2 bin *counts* at or above 10⁷ change, and the
 re-read objects carry different edges in 27,824–27,830 of 30,001 (mass) and 90–95 of 114 (η, φ). `yodamerge`

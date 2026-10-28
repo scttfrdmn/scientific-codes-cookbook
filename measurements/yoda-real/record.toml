@@ -268,3 +268,8 @@ scope = "data"
 symptom = "hepdata.net serves a Cloudflare challenge to scripted clients"
 cause = "HEPData's own export is not reachable by a scripted fetch"
 fix = "use Rivet's HEPData-derived reference files, pinned to the rivet-4.1.4 commit"
+
+[[upstream]]
+ref = "hepcedar/yoda#172"
+role = "filed"
+note = "precision= ignored by writeYODA/write: Writer::write resets it to -1 (src/Writer.cc l.86)"
