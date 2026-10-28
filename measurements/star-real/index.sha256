@@ -1,0 +1,18 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# The 16 files build-publish.sh published under inputs/star-index-GRCh38-116/ (S3 last-modified 2026-09-25, before every run here, and not rewritten since). Genome, SA, SAindex, sjdbList.out.tab, geneInfo.tab and exonGeTrInfo.tab equal the in-run hashes in ../rnaseq-counts-real/results/align/index.sha256.
+2509f79e33b5e8983f6402797dbcec17b88a68149ebf2ce03b40be4c65a0859f  inputs/star-index-GRCh38-116/Genome
+1ad454d755e0f3953b7754e61a5363acbc53891f23c7f66df7147b62be65af3c  inputs/star-index-GRCh38-116/Log.out
+876f3dfe58bc848a3c1200efddad8f246d2f2f9f40f8d4f87c288b800bb3b284  inputs/star-index-GRCh38-116/SA
+4f5adb6cf68d5ba084f5026bc73feb3b0579a86be76faf8ec37a778d3555d9b1  inputs/star-index-GRCh38-116/SAindex
+b297c2398f93cd3d4c8aa1d4e10d6148c9550a1c2175139c29f9aab505422a17  inputs/star-index-GRCh38-116/chrLength.txt
+bee61239ec4d9bf9f50d8280593b087d6878c43c47ddbef43e7a3969fc78846c  inputs/star-index-GRCh38-116/chrName.txt
+26a124ac4de12e274957140f47cddc96c3b6cd4d228b16c8564439303d6d9e29  inputs/star-index-GRCh38-116/chrNameLength.txt
+09e1d0f13d91fd4540be6e87c62f05c57bb54e465ea67bc1e24d347f623ea121  inputs/star-index-GRCh38-116/chrStart.txt
+9a61ef36782d3cd479c8ab88b7c8297d78c0aaf9b35ad743faa43c51a3e09ca7  inputs/star-index-GRCh38-116/exonGeTrInfo.tab
+831b746cad2305952adfc3abba277df3cb8f57a3411e5897b1ec63ac7fbaf93e  inputs/star-index-GRCh38-116/exonInfo.tab
+a6cd29d8083fb2528244ca7ccca7bde442ad3bbe275d3cf0cf3df3b326f6115f  inputs/star-index-GRCh38-116/geneInfo.tab
+92947060cb929af8bb0283409cfc647e26773e209a17fc7f479f71c918aff8ba  inputs/star-index-GRCh38-116/genomeParameters.txt
+aa2a790034b80d66427774a52be0ac5f8c5ba1dbaf07a682c5da7c8d462ed7ae  inputs/star-index-GRCh38-116/sjdbInfo.txt
+c5f6bd5095ffb64f01157c49d892e0a09c5bd913ee5d08d5b5580adda1b684ed  inputs/star-index-GRCh38-116/sjdbList.fromGTF.out.tab
+f5b7cf64f1ef8e67b848deaeedd3ddd687c58f93b41fa0b6f2145b5651179bc3  inputs/star-index-GRCh38-116/sjdbList.out.tab
+e3036dc2a5f67da0dc9b827881ffe12d9795525507f368ec5c54c560a1e91884  inputs/star-index-GRCh38-116/transcriptInfo.tab

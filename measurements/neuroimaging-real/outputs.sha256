@@ -1,0 +1,5 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# DIPY maps, one tar per chip prefix; read by nipype-real (each chip its own) as its bit-identity reference. S3 last-modified 2026-10-18, before nipype-real's runs (2026-10-19), and not rewritten since. The tars differ by chip (arm64's is 10,240 bytes shorter).
+835d1998391a5a42033d30a04a32d1c3b90a5f3673c3d617caef477bb7bb0f21  runs/neuroimaging-real/cohort/dipy/dipy-maps.tar
+78bbd73bb5db2744357c266f46f03ae10df7c29ba7782b54c36cafc2a02f4098  runs-x86_64/neuroimaging-real/cohort/dipy/dipy-maps.tar
+160b224f994027471c4d050d45b1d97bf531bfd66eb568502f1a7b72426c8068  runs-amd/neuroimaging-real/cohort/dipy/dipy-maps.tar

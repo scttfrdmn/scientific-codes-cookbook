@@ -42,8 +42,9 @@ attribution_note = "x86 rows run bioconda's x86 STAR 2.7.11b (the recipe's image
 [[dataset]]
 id = "STAR 2.7.11b index, GRCh38 + Ensembl 116 (28.6 GiB, 16 files), s3://<bucket>/inputs/star-index-GRCh38-116"
 tier = "run-output"
+pins = "index.sha256"
 from_recipe = "star"
-note = "built and published once by build-publish.sh; lith verifies its sha before mounting"
+note = "built and published once by build-publish.sh; lith verifies its sha before mounting; all 16 files hashed 2026-10-28 on AWS, after the runs (last written 2026-09-25, before them); 6 equal rnaseq-counts-real's in-run hashes"
 
 [[dataset]]
 id = "ENA ERR188026 (complete run, 15,800,127 reads)"

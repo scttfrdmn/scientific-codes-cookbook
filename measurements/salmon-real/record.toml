@@ -53,7 +53,8 @@ note = "ENA's fastq_md5 (md5, not sha256) for this same object (inputs/salmon-re
 id = "salmon index (1.68 GB tar)"
 tier = "run-output"
 from_recipe = "salmon"          # recipes/salmon/01-index.task.json; x86 rows read each chip's own index
-note = "arm64 and x86 indexes are different tars; quant.sf is byte-identical regardless"
+pins = "index.sha256"
+note = "arm64 and x86 indexes are different tars; quant.sf is byte-identical regardless; hashed 2026-10-28 on AWS, after the runs (each tar last written before the runs that read it)"
 
 # --- Graviton generation sweep: 16 threads, 4xlarge, same digest, same bytes -------------
 [[run]]

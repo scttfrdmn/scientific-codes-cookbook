@@ -1,0 +1,7 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# kallisto.idx equals kallisto-real/index.sha256 (hashed in-run by kallisto-real); abundance.tsv equals kallisto-real/results/arm64/results.sha256 (A/abundance.tsv);
+# quant-c8g-16t.sf equals the quant.sf hash in recipes/salmon/README.md and kallisto-real/siblings.sha256. All three objects' S3 last-modified (kallisto.idx 2026-10-01, abundance.tsv 2026-10-13, quant.sf 2026-10-01) is later than this measurement's recorded date (2026-09-30), so these may not be the bytes it read.
+# The salmon index it read (runs/salmon/r1/salmon-index.tar) is in ../salmon-real/index.sha256.
+424b034309f15ae991747c9623f373b845e69bc39db4c295f11f7706f3187faa  inputs/kallisto/kallisto.idx
+67113d3c2dfc624fcb5b53381423a959d0a24fc3e619a141421cd261e6479575  runs/kallisto/r1/abundance.tsv
+7ea70b6183e92ec0b24eaf90651322f9a38bfcf39c4589f02239a8ef1aa0181b  runs/salmon/r1/quant-c8g-16t.sf

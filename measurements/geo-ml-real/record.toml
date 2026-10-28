@@ -47,8 +47,9 @@ note = "read, not copied"
 [[dataset]]
 id = "runs{,-x86_64,-amd}/r-spatial-real/r1/{tract-areas,co-tract-zonal}.csv (terra reference, the same chip's)"
 tier = "run-output"
+pins = "../r-spatial-real/outputs.sha256"
 from_recipe = "measurements/r-spatial-real"
-note = "its sha256 is recorded in each chip's results.json"
+note = "its sha256 is recorded in each chip's results.json; hashed 2026-10-28 on AWS, after the runs, and every hash equals the one the run recorded"
 
 [[run]]
 id = "chip-r8g"

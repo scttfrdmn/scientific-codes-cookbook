@@ -2869,7 +2869,8 @@
     {
      "from_recipe": "bwa-samtools",
      "id": "bwa-samtools sorted BAM, runs/bwa-samtools/r1/aln.sorted.bam (4.5 GB)",
-     "note": "the same object on all six rungs, including Intel and AMD (not the x86 re-alignment)",
+     "note": "the same object on all six rungs, including Intel and AMD (not the x86 re-alignment); hashed 2026-10-28 on AWS, after the runs, and the object was rewritten 2026-10-24 by bwa-samtools' #121 re-run (same size), so the pin proves today's bytes, not the run's",
+     "pins": "../picard-real/pins.sha256",
      "tier": "run-output"
     },
     {
@@ -4557,7 +4558,8 @@
     {
      "from_recipe": "bwa",
      "id": "bwa-real aln.sorted.bam (bwa mem, same reads, same reference)",
-     "note": "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck",
+     "note": "measurements/bwa-real sort-small output; input to 02-bwa-crosscheck; hashed 2026-10-28 on AWS, after the runs (object last written 2026-09-30, before them)",
+     "pins": "../bwa-real/outputs.sha256",
      "tier": "run-output"
     }
    ],
@@ -5315,7 +5317,7 @@
      ],
      "instance": "r8g.4xlarge",
      "n": 1,
-     "note": "bwa-mem2, bwa-mem2 kernel AVX (128-bit); wall = the three mem invocations summed, index load included",
+     "note": "bwa-mem2, bwa-mem2 kernel AVX (128-bit); wall = the three mem invocations summed, index load included; the recipe's single SRR062634 run (2026-10-23, 508 s) has its spawn window in results/billed-windows.txt (580 s, $0.1519), which recipes/bwa-mem2 sets against bwa-real's c8g.4xlarge $0.1572",
      "peak_gib": 25.8,
      "peak_kind": "vmhwm",
      "physical_cores": 16,
@@ -6054,7 +6056,7 @@
      ],
      "instance": "c8g.4xlarge",
      "n": 1,
-     "note": "task bwareal-c8g-16t-fix121; memory.current reads 20.19 GiB: page cache from the SAM write",
+     "note": "task bwareal-c8g-16t-fix121; memory.current reads 20.19 GiB: page cache from the SAM write; recipes/bwa-mem2 compares this spawn window with bwa-mem2's recipe run on its own (580 s, $0.1519, ../bwa-mem2-real/results/billed-windows.txt): a tie at n = 1",
      "peak_gib": 8.68,
      "peak_kind": "cgroup-anon-max",
      "pin_current": true,
@@ -17197,7 +17199,8 @@
     {
      "from_recipe": "measurements/r-spatial-real",
      "id": "runs{,-x86_64,-amd}/r-spatial-real/r1/{tract-areas,co-tract-zonal}.csv (terra reference, the same chip's)",
-     "note": "its sha256 is recorded in each chip's results.json",
+     "note": "its sha256 is recorded in each chip's results.json; hashed 2026-10-28 on AWS, after the runs, and every hash equals the one the run recorded",
+     "pins": "../r-spatial-real/outputs.sha256",
      "tier": "run-output"
     }
    ],
@@ -17518,7 +17521,8 @@
     {
      "from_recipe": "geospatial",
      "id": "PROJ 9.8.1 test/gie (gie.tar)",
-     "note": "the recipe's staged gie.tar",
+     "note": "the recipe's staged gie.tar; hashed 2026-10-28 on AWS, after the runs (object last written 2026-10-17, before them)",
+     "pins": "pins.sha256",
      "tier": "test-suite"
     }
    ],
@@ -39402,7 +39406,8 @@
     {
      "from_recipe": "measurements/neuroimaging-real",
      "id": "neuroimaging-real's DIPY maps on the same chip (runs*/neuroimaging-real/cohort/dipy/dipy-maps.tar)",
-     "note": "the bit-identity reference for masks and float32 FA/MD",
+     "note": "the bit-identity reference for masks and float32 FA/MD; hashed 2026-10-28 on AWS, after the runs (objects last written 2026-10-18, before them)",
+     "pins": "../neuroimaging-real/outputs.sha256",
      "tier": "run-output"
     }
    ],
@@ -41011,7 +41016,8 @@
     {
      "from_recipe": "measurements/rdkit-real",
      "id": "rdkit-real's runs*/rdkit-real/chembl37/rdkit_real.tsv.gz (RDKit keys for the cross-check)",
-     "note": "checked in-run against rdkit-real's uncompressed sha256",
+     "note": "checked in-run against rdkit-real's uncompressed sha256; hashed 2026-10-28 on AWS, after the runs, and the decompressed hash equals the in-run one",
+     "pins": "../rdkit-real/outputs.sha256",
      "tier": "run-output"
     },
     {
@@ -44781,7 +44787,8 @@
     {
      "from_recipe": "bwa-samtools",
      "id": "bwa's whole-genome sorted BAM (aln.sorted.bam, 48,817,006 records, 4,568,357,482 bytes)",
-     "note": "x86 legs read their own chip's bwa-samtools BAM, same size; Intel's has arm64's S3 ETag, AMD's was uploaded in different parts so its ETag cannot show byte identity",
+     "note": "x86 legs read their own chip's bwa-samtools BAM, same size; Intel's has arm64's S3 ETag, AMD's was uploaded in different parts so its ETag cannot show byte identity; hashed 2026-10-28 on AWS, after the runs: all three are byte-identical today, but were rewritten 2026-10-24 by bwa-samtools' #121 re-run (same size), so the pin proves today's bytes, not the run's",
+     "pins": "pins.sha256",
      "tier": "run-output"
     }
    ],
@@ -47530,7 +47537,8 @@
     {
      "from_recipe": "measurements/plink-real",
      "id": "plink-real/results/arm64/id-all.txt (PLINK 1.9 per-chromosome SNP counts), staged as plink-real-id-all.txt",
-     "note": "pinned by sha256 in the spec",
+     "note": "pinned by sha256 in the spec; the committed file hashed locally and the bucket copy on AWS 2026-10-28, after the runs, identical",
+     "pins": "../plink-real/outputs.sha256",
      "tier": "run-output"
     }
    ],
@@ -50627,11 +50635,15 @@
     {
      "from_recipe": "kallisto",
      "id": "kallisto index of Ensembl 116 cDNA (kallisto.idx) and full-depth abundance.tsv",
+     "note": "hashed 2026-10-28 on AWS, after the runs; both objects were last written after this measurement's recorded date, so the pin proves today's bytes, not the run's; they equal kallisto-real's in-run hashes",
+     "pins": "pins.sha256",
      "tier": "run-output"
     },
     {
      "from_recipe": "salmon",
      "id": "salmon index of Ensembl 116 cDNA (salmon-index.tar) and full-depth quant-c8g-16t.sf",
+     "note": "hashed 2026-10-28 on AWS, after the runs; quant-c8g-16t.sf is in pins.sha256 (last written after this measurement's recorded date), the index in ../salmon-real/index.sha256",
+     "pins": "pins.sha256",
      "tier": "run-output"
     }
    ],
@@ -56355,7 +56367,8 @@
     {
      "from_recipe": "salmon",
      "id": "salmon index (1.68 GB tar)",
-     "note": "arm64 and x86 indexes are different tars; quant.sf is byte-identical regardless",
+     "note": "arm64 and x86 indexes are different tars; quant.sf is byte-identical regardless; hashed 2026-10-28 on AWS, after the runs (each tar last written before the runs that read it)",
+     "pins": "index.sha256",
      "tier": "run-output"
     }
    ],
@@ -60631,7 +60644,8 @@
     {
      "from_recipe": "measurements/qc-aggregate-real",
      "id": "published read/base counts per file: ENA read_count/base_count and the 1000 Genomes .filt count, from qc-aggregate-real's cohort.tsv",
-     "note": "stage-inputs.sh uploads one small truth file per FASTQ",
+     "note": "stage-inputs.sh uploads one small truth file per FASTQ; the committed sources hashed locally and the bucket truth files on AWS 2026-10-28, after the runs; every bucket file equals the one regenerated from the committed sources",
+     "pins": "truth.sha256",
      "tier": "durable-id"
     }
    ],
@@ -62817,7 +62831,8 @@
     {
      "from_recipe": "star",
      "id": "STAR 2.7.11b index, GRCh38 + Ensembl 116 (28.6 GiB, 16 files), s3://<bucket>/inputs/star-index-GRCh38-116",
-     "note": "built and published once by build-publish.sh; lith verifies its sha before mounting",
+     "note": "built and published once by build-publish.sh; lith verifies its sha before mounting; all 16 files hashed 2026-10-28 on AWS, after the runs (last written 2026-09-25, before them); 6 equal rnaseq-counts-real's in-run hashes",
+     "pins": "index.sha256",
      "tier": "run-output"
     },
     {

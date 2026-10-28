@@ -45,8 +45,9 @@ from_recipe = "measurements/qc-aggregate-real"
 [[dataset]]
 id = "published read/base counts per file: ENA read_count/base_count and the 1000 Genomes .filt count, from qc-aggregate-real's cohort.tsv"
 tier = "durable-id"
+pins = "truth.sha256"
 from_recipe = "measurements/qc-aggregate-real"
-note = "stage-inputs.sh uploads one small truth file per FASTQ"
+note = "stage-inputs.sh uploads one small truth file per FASTQ; the committed sources hashed locally and the bucket truth files on AWS 2026-10-28, after the runs; every bucket file equals the one regenerated from the committed sources"
 
 # --- cold run r1: 12 instances per chip; usd_hr is the stats instance's price ------------
 [[run]]

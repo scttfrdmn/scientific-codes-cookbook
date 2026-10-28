@@ -1,0 +1,5 @@
+# Hashed 2026-10-28 (UTC) on AWS (c8g.2xlarge, us-west-2), streaming each object where it lives (aws s3 cp <obj> - | sha256sum, CRT client); bytes read == the object's ContentLength for every row. This was AFTER the consuming measurement's runs: it proves today's bytes, not necessarily the bytes the run read.
+# recipes/salmon's index tar, one per chip prefix (x86 rows read their own chip's, a different tar); also quant-depth's (runs/). S3 last-modified: arm64 2026-09-25, Intel 2026-10-13, AMD 2026-10-19, each before the runs that read it and not rewritten since.
+d6d87e01580c98e2262337504e5cf5f010c6b213788930d00d03a392bbf507f5  runs/salmon/r1/salmon-index.tar
+c3472e0337725d6baaa0b14e3c90966d5c631f7c787e4ba7e7a3169c8be8bdad  runs-x86_64/salmon/r1/salmon-index.tar
+83724617bb862d0a2db50a3fd82dbec8bb7d1592f38739e39d73fa71118e6e57  runs-amd/salmon/r1/salmon-index.tar
