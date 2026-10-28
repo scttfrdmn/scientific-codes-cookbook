@@ -43,6 +43,17 @@ def _headings(text):
             if (m := re.match(r"(#{1,6}) (.*)", line))]
 
 
+# Warnings that are permanently correct, each with its reason (Scott approved, 2026-10-28). An entry
+# silences exactly one warning site for one path; anything new or different still warns.
+ALLOW = {
+    ("A3", "patterns/execution-shapes.md"): "the A-G shape map CLAUDE.md names; kept whole as one page",
+    ("no-record", "sizing-ratio"): "a measuring instrument, not a measurement: there is nothing to record",
+    ("mpi-flavour", "recipes/siesta/README.md"): {"elpa", "fftw", "gpaw", "libvdwxc"},   # siesta runs none of them; x86 run shows 2 ranks, same digits
+    ("unattributed", "bedtools-real", "c8g"): "spec gen-c8g's task id has no completion window; README marks the row",
+    ("unattributed", "hmmer-real", "c8g"): "no completion record survives for the c8g rung; README marks the row",
+}
+
+
 def _outside_details_lines(text):
     """Count lines NOT inside a <details>...</details> block (frontmatter + blanks included,
     matching the 'lines before <details>' the ceiling was calibrated against).
@@ -155,7 +166,7 @@ def check_ancillary_contract(text, rel):
     if h1 is not None and not any(l.strip() for l in lines[h1 + 1:h1 + 3]):
         warns.append(f"{rel}: no lede within 2 lines of the H1 (A1, human-check)")
     # A3 — tight.
-    if len(lines) > ANCILLARY_MAX:
+    if len(lines) > ANCILLARY_MAX and ("A3", rel) not in ALLOW:
         warns.append(f"{rel}: {len(lines)} lines — a pattern/practice page over {ANCILLARY_MAX} is likely doing too much (A3)")
 
 
@@ -246,7 +257,7 @@ def check_twin_mpi_flavour(text, rel):
         return
     fa, fx = _mpi_flavours(a), _mpi_flavours(x)
     bad = sorted("%s (arm64 %s, x86 %s)" % (n, fa[n], fx[n]) for n in fa if n in fx and fa[n] != fx[n])
-    if bad:
+    if bad and {b.split()[0] for b in bad} - ALLOW.get(("mpi-flavour", rel), set()):
         warns.append(f"{rel}: its x86 twin's MPI flavour differs from the arm64 image's for {', '.join(bad)} "
                      f"-- fine only if this recipe does not run them")
 
@@ -756,7 +767,8 @@ def check_records(only=None):
         name = os.path.basename(mdir.rstrip("/"))
         rpath = os.path.join(mdir, "record.toml")
         if not os.path.exists(rpath):
-            if (not only or name in only) and os.path.exists(os.path.join(mdir, "README.md")):
+            if (not only or name in only) and os.path.exists(os.path.join(mdir, "README.md")) \
+                    and ("no-record", name) not in ALLOW:
                 warns.append(f"measurements/{name}: no record.toml -- not yet in catalog/record.json (#118)")
             continue
         try:
@@ -894,7 +906,8 @@ def check_v2(rec, rel, mdir, rnums):
         if any(k in r for k in ("billed_s", "overhead_s", "billed_usd")) and \
                 r.get("billed_basis") in (None, "unavailable", "shared-window"):
             errors.append(f"{tag}: a billed figure with billed_basis {r.get('billed_basis')}")
-        if r.get("billed_basis") == "unattributed":
+        if r.get("billed_basis") == "unattributed" and \
+                ("unattributed", tag.split("/")[1], r["instance"].split(".")[0]) not in ALLOW:
             warns.append(f"{tag}: billed {r.get('billed_s', r.get('wall_s', 0) + r.get('overhead_s', 0))} s matches no completion record or CloudTrail window")
         if r["run_outcome"] == "no-capacity" and any(k in r for k in ("wall_s", "compute_usd", "billed_usd")):
             errors.append(f"{tag}: a no-capacity row carries a wall or a $")
